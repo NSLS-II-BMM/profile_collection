@@ -3,23 +3,13 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
 
-class VacuumEpicsMotor(EpicsMotor):
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
-
-    def _done_moving(self, *args, **kwargs):
-        ## this method is originally defined as Positioner, a base class of EpicsMotor
-        ## tack on instructions for killing the motor after movement
-        super()._done_moving(*args, **kwargs)
-        self.kill_cmd.put(1)
-        
-## caput XF:06BMA-OP{Mir:M3-Ax:XU}Mtr_KILL_CMD.PROC 1
 
 ## harmonic rejection mirror
 m3_yu     = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
 m3_ydo    = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDO}Mtr',  name='m3_ydo')
 m3_ydi    = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDI}Mtr',  name='m3_ydi')
-m3_xu     = VacuumEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
-m3_xd     = VacuumEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
+m3_xu     = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
+m3_xd     = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
 
 
 

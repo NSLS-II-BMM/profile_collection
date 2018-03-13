@@ -38,3 +38,8 @@ def shcl(shutter):
         pass
     yield from null()
         
+
+def tune(step=0.004):
+    yield from bp.mvr(dcm_pitch, step)
+    
+    

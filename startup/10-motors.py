@@ -2,14 +2,36 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
+
+class BraggEpicsMotor(EpicsMotor):
+    resolution = Cpt(EpicsSignal, '.MRES')
+    encoder = Cpt(EpicsSignal, '.REP')
+
+
+class VacuumEpicsMotor(EpicsMotor):
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
+
+    def _done_moving(self, *args, **kwargs):
+        ## this method is originally defined as Positioner, a base class of EpicsMotor
+        ## tack on instructions for killing the motor after movement
+        super()._done_moving(*args, **kwargs)
+        self.kill_cmd.put(1)
+        
+## caput XF:06BMA-OP{Mir:M3-Ax:XU}Mtr_KILL_CMD.PROC 1
+
 ## monochromator
-dcm_bragg = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
-dcm_pitch = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
-dcm_roll  = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
-dcm_perp  = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
-dcm_para  = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
+dcm_bragg = BraggEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
+dcm_pitch = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
+dcm_roll  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
+dcm_perp  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
+dcm_para  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
 dcm_x     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
 dcm_y     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
+
+dcm_bragg.hints = {'fields': ['_'.join([dcm_bragg.name, read_attr])
+                              for read_attr in dcm_bragg.read_attrs]}
+
+
 
 ## collimating mirror
 m1_yu     = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
