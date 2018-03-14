@@ -75,13 +75,13 @@ dm2_fs = EpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 
 ## DM3
 dm3_fs      = EpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
-dm3_foils   = EpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
-dm3_bct     = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
+dm3_foils   = VacuumEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
+dm3_bct     = VacuumEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
 dm3_bpm     = EpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
-dm3_slits_o = EpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm2_slits_o')
-dm3_slits_i = EpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm2_slits_i')
-dm3_slits_t = EpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm2_slits_t')
-dm3_slits_b = EpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm2_slits_b')
+dm3_slits_o = EpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
+dm3_slits_i = EpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
+dm3_slits_t = EpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
+dm3_slits_b = EpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
 
 ## XAFS table
 xafs_yu  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')

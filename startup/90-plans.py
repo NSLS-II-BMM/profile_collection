@@ -42,4 +42,16 @@ def shcl(shutter):
 def tune(step=0.004):
     yield from bp.mvr(dcm_pitch, step)
     
+
+def kmv(*args):
+    for m in args[0::2]:
+        if 'Vacuum' in str(type(m)):
+            m.kill_cmd.put(1)
+    yield from mv(*args)
+    
+def kmvr(*args):
+    for m in args[0::2]:
+        if 'Vacuum' in str(type(m)):
+            m.kill_cmd.put(1)
+    yield from mvr(*args)
     

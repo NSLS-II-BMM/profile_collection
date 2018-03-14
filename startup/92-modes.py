@@ -16,8 +16,12 @@ def change_mode(mode=None):
         print('%s is not a mode' % mode)
         return(yield from null())
 
+    dm3_bct.kill_cmd.put(1)     # need to explicitly kill this before
+                                # starting a move, it is one of the
+                                # motors that report MOVN=1 even when
+                                # still
     yield from mv(
-        #dm3_bct,     float(MOTORDATA['dm3_bct'][mode]),
+        dm3_bct,     float(MOTORDATA['dm3_bct'][mode]),
 
         xafs_yu,     float(MOTORDATA['xafs_yu'][mode]),
         xafs_ydo,    float(MOTORDATA['xafs_ydo'][mode]),
@@ -59,9 +63,10 @@ def change_xtals(xtal=None):
                       dcm_x,    -35.4    )
     elif xtal is 'Si(311)':
         yield from mv(dcm_pitch, 4.00454,
-                      dcm_roll, -6.2601,
+                      dcm_roll, -6.2601, # this value is almost certainly wrong
                       dcm_x,     33.0    )
 
+    yield from sleep(0.5)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
     

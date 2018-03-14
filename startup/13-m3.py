@@ -16,7 +16,6 @@ m3_xd     = EpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
 from numpy import tan, arctan2
 
 
-
 class Mirrors(PseudoPositioner):
     def __init__(self, *args, mirror_length, mirror_width, **kwargs):
         self.mirror_length = mirror_length
@@ -30,6 +29,14 @@ class Mirrors(PseudoPositioner):
         self.xd.kill_cmd.put(1)
         self.xu.kill_cmd.put(1)
 
+    def where(self):
+        print("%s:" % self.name.upper())
+        print("\tvertical = %7.3f mm\t\tYU  = %7.3f"   % (self.vertical.readback.value, self.yu.user_readback.value))
+        print("\tlateral  = %7.3f mm\t\tYDO = %7.3f"   % (self.lateral.readback.value,  self.ydo.user_readback.value))
+        print("\tpitch    = %7.3f mrad\t\tYDI = %7.3f" % (self.pitch.readback.value,    self.ydi.user_readback.value))
+        print("\troll     = %7.3f mrad\t\tXU  = %7.3f" % (self.roll.readback.value,     self.xu.user_readback.value))
+        print("\tyaw      = %7.3f mrad\t\tXD  = %7.3f" % (self.yaw.readback.value,      self.xd.user_readback.value))
+        
         
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(-8, 8))
@@ -80,7 +87,7 @@ m1.yaw._limits      = (-5.0, 5.0)
 m2 = Mirrors('XF:06BMA-OP{Mir:M2-Ax:', name='m2', mirror_length=1288, mirror_width=240)
 m2.vertical._limits = (-6.0, 8.0)
 m2.lateral._limits  = (-2, 2)
-m2.pitch._limits    = (0, 5.0)
+m2.pitch._limits    = (-0.5, 5.0)
 m2.roll._limits     = (-2, 2)
 m2.yaw._limits      = (-1, 1)
 

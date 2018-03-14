@@ -37,7 +37,7 @@ class DCM(PseudoPositioner):
         self.perp.kill_cmd.put(1)
 
     def where(self):
-        print("%s = %.1f   %s = %s" % \
+        print("%s = %.1f   %s = Si(%s)" % \
             ('Energy', self.energy.readback.value,
              'reflection', self.crystal))
         print("%s: %s = %8.5f   %s = %7.4f   %s = %8.4f" %\
