@@ -55,5 +55,10 @@ def kmvr(*args):
         if 'Vacuum' in str(type(m)):
             yield from abs_set(m.kill_cmd, 1)
     yield from mvr(*args)
+
+
+def set_integration_time(time=0.5):
+    yield from abs_set(scalar1.auto_count_time, time)
+    yield from abs_set(quadem1.averaging_time, time)
     
 

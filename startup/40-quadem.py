@@ -113,7 +113,7 @@ class BMMQuadEM(QuadEM):
     current3_mean_value_nano = Cpt(Nanoize, derived_from='current3.mean_value')
     current4_mean_value_nano = Cpt(Nanoize, derived_from='current4.mean_value')
     iti0 = Cpt(Normalized, derived_from='current2.mean_value')
-    
+    state = Cpt(EpicsSignal, 'Acquire')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,6 +128,19 @@ class BMMQuadEM(QuadEM):
         self._acquisition_signal = self.acquire
         self.configuration_attrs = ['integration_time', 'averaging_time','em_range','num_averaged','values_per_read']
 
+    def on(self):
+        print('Turning {} on'.format(self.name))
+        self.state.put(1)
+
+    def off(self):
+        print('Turning {} off'.format(self.name))
+        self.state.put(0)
+
+    def on_plan(self):
+        yield from abs_set(self.state, 1)
+
+    def off_plan(self):
+        yield from abs_set(self.state, 0)
 
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.hints = {'fields': ['_'.join([quadem1.name, read_attr])
