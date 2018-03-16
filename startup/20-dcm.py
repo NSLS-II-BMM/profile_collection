@@ -48,7 +48,7 @@ class DCM(PseudoPositioner):
 
         
     # The pseudo positioner axes:
-    energy   = Cpt(PseudoSingle, limits=(4000, 23500))
+    energy   = Cpt(PseudoSingle, limits=(4000, 25000))
 
     
     # The real (or physical) positioners:

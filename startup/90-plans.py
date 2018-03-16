@@ -18,40 +18,42 @@ fluorescence = ionchambers + vortex
 
 def shop(shutter):
     if shutter is 'a':
-        shutter_fe.opn.value = 1
+        yield from abs_set(shutter_fe.opn, 1)
     elif shutter is 'b':
-        shutter_ph.opn.value = 1
+        yield from abs_set(shutter_ph.opn, 1)
     elif shutter is 'fs':
-        fs1.opn.value = 1
+        yield from abs_set(fs1.opn, 1)
     else:
         pass
     yield from null()
         
 def shcl(shutter):
     if shutter is 'a':
-        shutter_fe.cls.value = 1
+        yield from abs_set(shutter_fe.cls, 1)
     elif shutter is 'b':
-        shutter_ph.cls.value = 1
+        yield from abs_set(shutter_ph.cls, 1)
     elif shutter is 'fs':
-        fs1.cls.value = 1
+        yield from abs_set(fs1.cls, 1)
     else:
         pass
     yield from null()
         
 
 def tune(step=0.004):
-    yield from bp.mvr(dcm_pitch, step)
+    abs_set(dcm_pitch.kill_cmd, 1)
+    mvr(dcm_pitch, step)
     
 
 def kmv(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
-            m.kill_cmd.put(1)
+            yield from abs_set(m.kill_cmd, 1)
     yield from mv(*args)
     
 def kmvr(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
-            m.kill_cmd.put(1)
+            yield from abs_set(m.kill_cmd, 1)
     yield from mvr(*args)
     
+

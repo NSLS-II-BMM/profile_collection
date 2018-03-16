@@ -11,13 +11,13 @@ class EPS_Shutter(Device):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.color = 'red'
+        #self.color = 'red'
 
     def open_plan(self):
-        yield from bp.mv(self.opn, 1)
+        yield from mv(self.opn, 1)
 
     def close_plan(self):
-        yield from bp.mv(self.cls, 1)
+        yield from mv(self.cls, 1)
 
     def open(self):
         print('Opening {}'.format(self.name))
@@ -27,10 +27,34 @@ class EPS_Shutter(Device):
         print('Closing {}'.format(self.name))
         self.cls.put(1)
 
-shutter_fe = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'FE Shutter')
-shutter_fe.shutter_type = 'FE'
-shutter_ph = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'PH Shutter')
-shutter_ph.shutter_type = 'PH'
+sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
+sha.shutter_type = 'FE'
+shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
+shb.shutter_type = 'PH'
 
 fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'Fluorescent Screen')
 fs1.shutter_type = 'FS'
+
+
+class Spinner(Device):
+    state = Cpt(EpicsSignal, 'On_Off')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def on(self):
+        print('Turning {} on'.format(self.name))
+        self.state.put(1)
+
+    def off(self):
+        print('Turning {} off'.format(self.name))
+        self.state.put(0)
+
+    def on_plan(self):
+        yield from abs_set(self.state, 1)
+
+    def off_plan(self):
+        yield from abs_set(self.state, 0)
+
+        
+fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
