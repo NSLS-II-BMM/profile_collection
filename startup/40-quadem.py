@@ -1,5 +1,6 @@
 from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal
 
+from numpy import log, exp
 
 # This is cargo-culted from ophyd to fix a bug in it.
 # The next release of ophyd will include a bug fix which has already
@@ -101,19 +102,27 @@ class Normalized(DerivedSignal):
     def inverse(self, value):
         return value / self.parent.current1.mean_value.value
 
+class TransXmu(DerivedSignal):
+    def forward(self, value):
+        return self.parent.current1.mean_value.value / exp(value)
+    def inverse(self, value):
+        arg = self.parent.current1.mean_value.value / value
+        return log(abs(arg))
+
 class BMMQuadEM(QuadEM):
     _default_read_attrs = ['current1_mean_value_nano',
                            'current2_mean_value_nano',
                            'current3_mean_value_nano',
                            'current4_mean_value_nano']
     port_name = Cpt(Signal, value='EM180')
-    em_range = Cpt(EpicsSignalWithRBV, 'Range', string=True)
+    em_range  = Cpt(EpicsSignalWithRBV, 'Range', string=True)
     current1_mean_value_nano = Cpt(Nanoize, derived_from='current1.mean_value')
     current2_mean_value_nano = Cpt(Nanoize, derived_from='current2.mean_value')
     current3_mean_value_nano = Cpt(Nanoize, derived_from='current3.mean_value')
     current4_mean_value_nano = Cpt(Nanoize, derived_from='current4.mean_value')
-    iti0 = Cpt(Normalized, derived_from='current2.mean_value')
-    state = Cpt(EpicsSignal, 'Acquire')
+    iti0   = Cpt(Normalized, derived_from='current2.mean_value')
+    lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
+    state  = Cpt(EpicsSignal, 'Acquire')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

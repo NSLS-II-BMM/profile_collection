@@ -21,4 +21,4 @@ class BMMVortex(EpicsScaler):
 
     
 
-scalar1 = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='scalar1')
+vortex_me4 = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vortex_me4')
