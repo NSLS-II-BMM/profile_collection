@@ -11,6 +11,7 @@ HBARC = 1973.27053324
 class DCM(PseudoPositioner):
     def __init__(self, *args, crystal='111', mode='fixed', offset=30, **kwargs):
         self.crystal = crystal
+        #self.set_crystal()
         self.offset  = offset
         self.mode    = mode
         super().__init__(*args, **kwargs)
@@ -25,7 +26,7 @@ class DCM(PseudoPositioner):
     @property
     def _twod(self):
         if self.crystal is '311':
-            return 2*1.63761489
+            return 2*1.63762644
         else:
             return 2*3.13597211
 
@@ -45,7 +46,8 @@ class DCM(PseudoPositioner):
              'Bragg', self.bragg.user_readback.value,
              '2nd Xtal Perp',  self.perp.user_readback.value,
              '2nd Xtal Para',  self.para.user_readback.value))
-
+    def wh(self):
+        self.where()
         
     # The pseudo positioner axes:
     energy   = Cpt(PseudoSingle, limits=(4000, 25000))
@@ -56,6 +58,14 @@ class DCM(PseudoPositioner):
     para  = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
     perp  = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
 
+    def set_crystal(self, crystal=None):
+        if crystal is not None:
+            self.crystal = crystal
+        if self.crystal is '311':
+            self.bragg.user_offset.put(16.504884)
+        else:
+            self.bragg.user_offset.put(16.5647)
+            
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
@@ -77,5 +87,5 @@ class DCM(PseudoPositioner):
         return self.PseudoPosition(energy = 2*pi*HBARC/(self._twod*sin(real_pos.bragg*pi/180)))
 
 
-dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm111', crystal='111')
+dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
 

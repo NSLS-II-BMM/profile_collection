@@ -36,7 +36,8 @@ class Mirrors(PseudoPositioner):
         print("\tpitch    = %7.3f mrad\t\tYDI = %7.3f" % (self.pitch.readback.value,    self.ydi.user_readback.value))
         print("\troll     = %7.3f mrad\t\tXU  = %7.3f" % (self.roll.readback.value,     self.xu.user_readback.value))
         print("\tyaw      = %7.3f mrad\t\tXD  = %7.3f" % (self.yaw.readback.value,      self.xd.user_readback.value))
-        
+    def wh(self):
+        self.where()
         
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(-8, 8))
