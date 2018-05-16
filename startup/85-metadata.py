@@ -1,4 +1,5 @@
 
+from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal
 import datetime
 
 bmm_metadata_stub = {'Beamline,name': 'BMM (06BM)',
@@ -12,6 +13,14 @@ bmm_metadata_stub = {'Beamline,name': 'BMM (06BM)',
                      'Column,04': 'it nA',
                      'Column,05': 'ir nA'
                      }
+
+
+class Ring(Device):
+        current  = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}I:Real-I')
+        lifetime = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}Lifetime-I')
+        mode     = Cpt(EpicsSignal, '-OPS{}Mode-Sts', string=True)
+
+ring = Ring('SR', name='ring')
 
 def bmm_metadata(measurement = 'transmission',
                  edge        = 'K',
@@ -51,6 +60,8 @@ def bmm_metadata(measurement = 'transmission',
     '''
     
     md                     = bmm_metadata_stub
+    md['Facility,current'] = ring.current.value + ' mA'
+    md['Facility,mode']    = ring.mode.value
     md['Element,edge']     = edge.capitalize()
     md['Element,symbol']   = element.capitalize()
     md['Scan,edge_energy'] = edge_energy
@@ -88,10 +99,10 @@ def bmm_metadata(measurement = 'transmission',
         md['Mono,scan_mode'] = 'fixed exit'
         
     if 'fluo' in measurement:
-        md['Column,06']  = 'roi1 counts'
-        md['Column,07']  = 'icr1 counts'
-        md['Column,08']  = 'ocr1 counts'
-        md['Column,09']  = 'corr1 dead-time corrected counts'
+        md['Column.06'] = 'roi1 counts'
+        md['Column,07'] = 'icr1 counts'
+        md['Column,08'] = 'ocr1 counts'
+        md['Column,09'] = 'corr1 dead-time corrected counts'
         md['Column,10'] = 'roi2 counts'
         md['Column,11'] = 'icr2 counts'
         md['Column,12'] = 'ocr2 counts'
