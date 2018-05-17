@@ -1,6 +1,12 @@
 import bluesky as bs
 import bluesky.plans as bp
 import numpy
+import os
+
+# p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
+# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])  
+# then call bmm_metadata() to get metadata in an XDI-ready format
+
 
 KTOE = 3.8099819442818976
 def etok(ee):
@@ -8,11 +14,169 @@ def etok(ee):
 def ktoe(k):
     return k*k*KTOE
 
-CS_BOUNDS = [-200, -30, 15.3, '14k']
-CS_STEPS  = [10, 0.5, '0.05k']
-CS_TIMES  = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER  = 1.3
 
+CS_BOUNDS     = [-200, -30, 15.3, '14k']
+CS_STEPS      = [10, 0.5, '0.05k']
+CS_TIMES      = [0.5, 0.5, '0.25k']
+CS_MULTIPLIER = 1.3
+CS_DEFAULTS   = {'folder':    os.environ.get('HOME')+'/data/',
+                 'filename':  'data.dat',
+                 'e0':        7112,
+                 'element':   'Fe',
+                 'edge':      'K',
+                 'prep':      '',
+                 'comment':   '',
+                 'nscans':    1,
+                 'start':     0,
+                 'inttime':   1,
+                 'bothways':  False,
+                 'channelcut':True,
+                 'focus':     False,
+                 'hr':        True,
+                 'mode':      'transmission'}
+               
+
+import inspect
+import configparser
+def scan_metadata(inifile=None, folder=None, filename=None,
+                  e0=None, element=None, edge=None, prep=None, comment=None,
+                  nscans=None, start=None, inttime=None,
+                  bothways=None, channelcut=None, focus=None, hr=None,
+                  mode=None, bounds=None, steps=None, times=None):
+    """Typical use is to specify an INI file, which contains all the
+    metadata relevant to a set of scans.  In that case, this is called
+    with one argument:
+
+      parameters = scan_metadata(inifile='/path/to/inifile')
+
+      inifile:  fully resolved path to INI file describing the measurement.
+
+      returns a dictionary of metadata
+
+    As part of a multi-scan plan (i.e. a macro), individual metadatum
+    can be specified to override values in the INI file:
+
+      folder:     folder for saved XDI files
+      filename:   filename stub for saved XDI files
+      e0:         edge energy, reference value for energy grid
+      element:    one- or two-letter element symbol
+      edge:       K, L3, L2, or L1
+      prep:       a short statement about sample preparation
+      comment:    user-supplied comment about the data
+      nscan:      number of repetitions
+      start:      starting scan number, XDI file will be filename.###
+      inttime:    <not used>
+      bothways:   a flag for measuring in both monochromator directions
+      channelcut: a flag for measuring in pseudo-channel-cut mode
+      focus:      a flag indicating whether the focusing mirror is in use
+      hr:         a flag indicating whether the flat harmonic rejection mirror is in use
+      mode:       transmission, fluorescence, or reference -- basically a hint for how to display the data
+      bounds:     a list with the scan grid boundaries
+      steps:      a list with the scan grid step sizes
+      times:      a list with the scan grid dwell times
+
+    Any or all of these can be specified.  Values from the INI file
+    are read first, then overridden with specified values.  If values
+    are specified neither in the INI file nor in the function call,
+    (possibly) sensible defaults are used.
+
+    """
+    #args = dict(zip(scan_metadata.__code__.co_varnames, scan_metadata.__defaults__))
+    #args = locals()
+    frame = inspect.currentframe()         # see https://stackoverflow.com/a/582206 and
+    args = inspect.getargvalues(frame)[3]  # https://docs.python.org/3/library/inspect.html#inspect.getargvalues
+
+    p = dict()
+
+    if inifile is None:
+        print('No inifile specified')
+        return
+    if not os.path.isfile(inifile):
+        print('inifile does not exist')
+        return
+    config = configparser.ConfigParser()
+    config.read_file(open(inifile))
+
+    ## ----- scan regions
+    if bounds is None:
+        bounds = []
+        try:
+            for f in config.get('scan', 'bounds').split():
+                try:
+                    bounds.append(float(f))
+                except:
+                    bounds.append(f)
+        except:
+            bounds = CS_BOUNDS
+
+    if steps is None:
+        steps = []
+        try:
+            for f in config.get('scan', 'steps').split():
+                try:
+                    steps.append(float(f))
+                except:
+                    steps.append(f)
+        except:
+            steps = CS_STEPS
+    
+    if times is None:
+        times = []
+        try:
+            for f in config.get('scan', 'times').split():
+                try:
+                    times.append(float(f))
+                except:
+                    times.append(f)
+        except:
+            times = CS_TIMES
+
+    ## strings
+    for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'prep'):
+        if args[a] is None:
+            try:
+                p[a] = config.get('scan', a)
+            except configparser.NoOptionError:
+                p[a] = CS_DEFAULTS[a]
+        else:
+            p[a] = str(args[a])
+
+    ## integers
+    for a in ('start', 'nscans'):
+        if args[a] is None:
+            try:
+                p[a] = int(config.get('scan', a))
+            except configparser.NoOptionError:
+                p[a] = CS_DEFAULTS[a]
+        else:
+            p[a] = int(args[a])
+        
+    ## floats
+    for a in ('e0', 'inttime'):
+        if args[a] is None:
+            try:
+                p[a] = float(config.get('scan', a))
+            except configparser.NoOptionError:
+                p[a] = CS_DEFAULTS[a]
+        else:
+            p[a] = float(args[a])
+        
+    ## booleans
+    for a in ('bothways', 'channelcut', 'focus', 'hr'):
+        if args[a] is None:
+            try:
+                p[a] = config.getboolean('scan', a)
+            except configparser.NoOptionError:
+                p[a] = CS_DEFAULTS[a]
+        else:
+            p[a] = bool(args[a])
+
+    p['bounds'] = bounds
+    p['steps']  = steps
+    p['times']  = times
+    return p
+
+        
 ## need more error checking:
 ##   * sanitize the '#.#k' strings
 ##   * negative boundaries must be floats
@@ -63,6 +227,10 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
        (grid, inttime, time) = conventional_grid(bounds=[-200, -30, -10, 15, 100, 300, 500, 700, 900],
                                                  steps=[10, 2, 0.5, '0.05k', '0.05k', '0.05k', '0.05k', '0.05k'],
                                                  times=[0.5, 0.5, 0.5, 1, 2, 3, 4, 5], e0=7112)
+
+       (grid, inttime, time) = conventional_grid(bounds=[-10, 40],
+                                                 steps=[0.25,],
+                                                 times=[0.5,], e0=7112)
     '''
     if (len(bounds) - len(steps)) != 1:
         return (None, None)
@@ -110,10 +278,11 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##  5. set OneCount and Single modes on the detectors
 ##  6. begin scan repititions, for each one
 ##     a. scan:
-##          i. move
-##         ii. set acquisition times
-##        iii. trigger
-##         iv. collect
+##          i. make metadata dict
+##         ii. move
+##        iii. set acquisition time for this point
+##         iv. trigger
+##          v. collect
 ##     b. grab dataframe from Mongo
 ##     c. write XDI file
 ##  8. return to fixed exit mode

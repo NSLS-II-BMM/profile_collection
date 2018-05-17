@@ -6,7 +6,7 @@ bmm_metadata_stub = {'Beamline,name': 'BMM (06BM)',
                      'Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
                      'Facility,name': 'NSLS-II',
                      'Facility,energy': '3 GeV',
-                     'Facility,xray_source': 'NSLS-II three-pole wiggler',
+                     'Beamline,xray_source': 'NSLS-II three-pole wiggler',
                      'Column,01': 'energy eV',
                      'Column,02': 'encoder counts',
                      'Column,03': 'i0 nA',
@@ -22,7 +22,7 @@ class Ring(Device):
 
 ring = Ring('SR', name='ring')
 
-def bmm_metadata(measurement = 'transmission',
+def bmm_metadata(mode        = 'transmission',
                  edge        = 'K',
                  element     = 'Fe',
                  edge_energy = '7112',
@@ -42,7 +42,7 @@ def bmm_metadata(measurement = 'transmission',
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 
     Argument list:
-      measurement   -- 'transmission' or 'fluorescence'
+      mode          -- 'transmission' or 'fluorescence'
       edge          -- 'K', 'L3', 'L2', or 'L1'
       element       -- one or two letter element symbol
       edge_energy   -- edge energy used to constructing scan parameters
@@ -60,7 +60,7 @@ def bmm_metadata(measurement = 'transmission',
     '''
     
     md                     = bmm_metadata_stub
-    md['Facility,current'] = ring.current.value + ' mA'
+    md['Facility,current'] = str(ring.current.value) + ' mA'
     md['Facility,mode']    = ring.mode.value
     md['Element,edge']     = edge.capitalize()
     md['Element,symbol']   = element.capitalize()
@@ -98,7 +98,7 @@ def bmm_metadata(measurement = 'transmission',
     else:
         md['Mono,scan_mode'] = 'fixed exit'
         
-    if 'fluo' in measurement:
+    if 'fluo' in mode:
         md['Column.06'] = 'roi1 counts'
         md['Column,07'] = 'icr1 counts'
         md['Column,08'] = 'ocr1 counts'
