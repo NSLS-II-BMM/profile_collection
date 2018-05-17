@@ -3,6 +3,8 @@ from ophyd.scaler import EpicsScaler
 
 
 class BMMVortex(EpicsScaler):
+    maxiter = 20
+    niter = 0
     state = Cpt(EpicsSignal, '.CONT')
     name3 = Cpt(EpicsSignal, '.NM3')
     name4 = Cpt(EpicsSignal, '.NM4')
@@ -58,8 +60,28 @@ class BMMVortex(EpicsScaler):
         yield from abs_set(self.name12, 'OCR2')
         yield from abs_set(self.name13, 'OCR3')
         yield from abs_set(self.name14, 'OCR4')
-        
-        
+
+    def dtcorrect(self, roi, icr, ocr, inttime=1, dt=280):
+        dt = dt*1e-9
+        if dt<1e-9:
+            return roi*icr/ocr
+        totn  = 0.0
+        test  = 1.0
+        count = 0
+        toto  = icr/inttime
+        if icr <= 1:
+            totn = ocr
+            test = 0
+        while test > dt:
+            totn = (icr/inttime) * exp(toto*dt)
+            test = (totn - toto) / toto
+            toto = totn
+            count = count+1
+            if (count > self.maxiter):
+                test = 0
+        self.niter = count
+        return roi * (totn*inttime/ocr)
+            
 
 vortex_me4 = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vortex_me4')
 

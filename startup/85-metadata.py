@@ -30,12 +30,12 @@ def bmm_metadata(mode        = 'transmission',
                  hr          = True,
                  direction   = 1,
                  scan        = 'step',
-                 mode        = 1,
+                 channelcut  = True,
                  mono        = 'Si(111)',
                  i0_gas      = 'N2',
                  it_gas      = 'N2',
                  sample      = 'Fe foil',
-                 prep        = 'none',
+                 prep        = '',
                  stoichiometry = None
              ):
     '''
@@ -50,7 +50,7 @@ def bmm_metadata(mode        = 'transmission',
       hr            -- True/False, True for PDS modes D, E, F
       direction     -- 1/-1, 1 for increasing, -1 for decreasing
       scan          -- 'step' or 'slew'
-      mode          -- 1/0, 0 for fixed exit, 1 for pseudo-channel-cut
+      channelcut    -- True/False, False for fixed exit, True for pseudo-channel-cut
       mono          -- 'Si(111)' or 'Si(311)'
       i0_gas        -- a string using N2, He, Ar, and Kr
       it_gas        -- a string using N2, He, Ar, and Kr
@@ -93,7 +93,7 @@ def bmm_metadata(mode        = 'transmission',
     else:
         md['Mono,scan_type'] = 'slew'
 
-    if mode > 0:
+    if channelcut is True:
         md['Mono,scan_mode'] = 'pseudo channel cut'
     else:
         md['Mono,scan_mode'] = 'fixed exit'

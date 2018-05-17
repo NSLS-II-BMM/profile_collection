@@ -24,6 +24,7 @@ CS_DEFAULTS   = {'folder':    os.environ.get('HOME')+'/data/',
                  'e0':        7112,
                  'element':   'Fe',
                  'edge':      'K',
+                 'sample':    '',
                  'prep':      '',
                  'comment':   '',
                  'nscans':    1,
@@ -39,7 +40,7 @@ CS_DEFAULTS   = {'folder':    os.environ.get('HOME')+'/data/',
 import inspect
 import configparser
 def scan_metadata(inifile=None, folder=None, filename=None,
-                  e0=None, element=None, edge=None, prep=None, comment=None,
+                  e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
                   nscans=None, start=None, inttime=None,
                   bothways=None, channelcut=None, focus=None, hr=None,
                   mode=None, bounds=None, steps=None, times=None):
@@ -61,6 +62,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
       e0:         edge energy, reference value for energy grid
       element:    one- or two-letter element symbol
       edge:       K, L3, L2, or L1
+      sample:     description of sample, perhaps stoichiometry
       prep:       a short statement about sample preparation
       comment:    user-supplied comment about the data
       nscan:      number of repetitions
@@ -132,7 +134,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
             times = CS_TIMES
 
     ## strings
-    for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'prep'):
+    for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'sample', 'prep'):
         if args[a] is None:
             try:
                 p[a] = config.get('scan', a)
@@ -220,14 +222,17 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
                                                  steps=[10, 0.5, '0.05k'],
                                                  times=[0.5, 0.5, '0.25k'], e0=7112)
 
+       -- more regions
        (grid, inttime, time) = conventional_grid(bounds=[-200.0, -20.0, 30.0, '5k', '14.5k'],
                                                  steps=[10.0, 0.5, 2, '0.05k'],
                                                  times=[1, 1, 1, '1k'], e0=7112)
 
+       -- many regions, energy boundaries, k-steps
        (grid, inttime, time) = conventional_grid(bounds=[-200, -30, -10, 15, 100, 300, 500, 700, 900],
                                                  steps=[10, 2, 0.5, '0.05k', '0.05k', '0.05k', '0.05k', '0.05k'],
                                                  times=[0.5, 0.5, 0.5, 1, 2, 3, 4, 5], e0=7112)
 
+       -- a one-region xanes scan
        (grid, inttime, time) = conventional_grid(bounds=[-10, 40],
                                                  steps=[0.25,],
                                                  times=[0.5,], e0=7112)
@@ -278,12 +283,13 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##  5. set OneCount and Single modes on the detectors
 ##  6. begin scan repititions, for each one
 ##     a. scan:
-##          i. make metadata dict
+##          i. make metadata dict, set md argument in call to scan plan
 ##         ii. move
 ##        iii. set acquisition time for this point
 ##         iv. trigger
 ##          v. collect
 ##     b. grab dataframe from Mongo
+##        http://nsls-ii.github.io/bluesky/tutorial.html#aside-access-saved-data
 ##     c. write XDI file
 ##  8. return to fixed exit mode
 ##  9. return detectors to AutoCount and Continuous modes
