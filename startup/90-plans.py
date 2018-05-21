@@ -7,10 +7,10 @@ import bluesky.plans as bp
 
 
 ionchambers = [quadem1.current1_mean_value_nano, quadem1.current2_mean_value_nano, quadem1.current3_mean_value_nano]
-vortex_ch1  = [vortex_me4.channels.chan2, vortex_me4.channels.chan10, vortex_me4.channels.chan18]
-vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan12, vortex_me4.channels.chan20]
-vortex_ch3  = [vortex_me4.channels.chan6, vortex_me4.channels.chan14, vortex_me4.channels.chan22]
-vortex_ch4  = [vortex_me4.channels.chan8, vortex_me4.channels.chan16, vortex_me4.channels.chan24]
+vortex_ch1  = [vortex_me4.channels.chan3, vortex_me4.channels.chan7,  vortex_me4.channels.chan11]
+vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan8,  vortex_me4.channels.chan12]
+vortex_ch3  = [vortex_me4.channels.chan5, vortex_me4.channels.chan9,  vortex_me4.channels.chan13]
+vortex_ch4  = [vortex_me4.channels.chan6, vortex_me4.channels.chan10, vortex_me4.channels.chan14]
 vortex      = vortex_ch1 + vortex_ch2 + vortex_ch3 + vortex_ch4
 
 transmission = ionchambers

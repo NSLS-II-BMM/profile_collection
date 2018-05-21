@@ -14,12 +14,15 @@ def etok(ee):
 def ktoe(k):
     return k*k*KTOE
 
-
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
 CS_MULTIPLIER = 1.3
-CS_DEFAULTS   = {'folder':    os.environ.get('HOME')+'/data/',
+CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
+                 'steps':     [10, 0.5, '0.05k'],
+                 'times':     [0.5, 0.5, '0.25k'],
+                 
+                 'folder':    os.environ.get('HOME')+'/data/',
                  'filename':  'data.dat',
                  'e0':        7112,
                  'element':   'Fe',
@@ -55,27 +58,28 @@ def scan_metadata(inifile=None, folder=None, filename=None,
       returns a dictionary of metadata
 
     As part of a multi-scan plan (i.e. a macro), individual metadatum
-    can be specified to override values in the INI file:
+    can be specified to override values in the INI file.  These are
+    also the keys in the dictionary which is returned:
 
-      folder:     folder for saved XDI files
-      filename:   filename stub for saved XDI files
-      e0:         edge energy, reference value for energy grid
-      element:    one- or two-letter element symbol
-      edge:       K, L3, L2, or L1
-      sample:     description of sample, perhaps stoichiometry
-      prep:       a short statement about sample preparation
-      comment:    user-supplied comment about the data
-      nscan:      number of repetitions
-      start:      starting scan number, XDI file will be filename.###
+      folder:     [str]   folder for saved XDI files
+      filename:   [str]   filename stub for saved XDI files
+      e0:         [float] edge energy, reference value for energy grid
+      element:    [str]   one- or two-letter element symbol
+      edge:       [str]   K, L3, L2, or L1
+      sample:     [str]   description of sample, perhaps stoichiometry
+      prep:       [str]   a short statement about sample preparation
+      comment:    [str]   user-supplied comment about the data
+      nscan:      [int]   number of repetitions
+      start:      [int]   starting scan number, XDI file will be filename.###
       inttime:    <not used>
-      bothways:   a flag for measuring in both monochromator directions
-      channelcut: a flag for measuring in pseudo-channel-cut mode
-      focus:      a flag indicating whether the focusing mirror is in use
-      hr:         a flag indicating whether the flat harmonic rejection mirror is in use
-      mode:       transmission, fluorescence, or reference -- basically a hint for how to display the data
-      bounds:     a list with the scan grid boundaries
-      steps:      a list with the scan grid step sizes
-      times:      a list with the scan grid dwell times
+      bothways:   [bool]  True = measure in both monochromator directions
+      channelcut: [bool]  True = measure in pseudo-channel-cut mode
+      focus:      [bool]  True = focusing mirror is in use
+      hr:         [bool]  True = flat harmonic rejection mirror is in use
+      mode:       [str]   transmission, fluorescence, or reference -- how to display the data
+      bounds:     [list]  scan grid boundaries
+      steps:      [list]  scan grid step sizes
+      times:      [list]  scan grid dwell times
 
     Any or all of these can be specified.  Values from the INI file
     are read first, then overridden with specified values.  If values
@@ -83,12 +87,10 @@ def scan_metadata(inifile=None, folder=None, filename=None,
     (possibly) sensible defaults are used.
 
     """
-    #args = dict(zip(scan_metadata.__code__.co_varnames, scan_metadata.__defaults__))
-    #args = locals()
-    frame = inspect.currentframe()         # see https://stackoverflow.com/a/582206 and
-    args = inspect.getargvalues(frame)[3]  # https://docs.python.org/3/library/inspect.html#inspect.getargvalues
+    frame = inspect.currentframe()          # see https://stackoverflow.com/a/582206 and
+    args  = inspect.getargvalues(frame)[3]  # https://docs.python.org/3/library/inspect.html#inspect.getargvalues
 
-    p = dict()
+    parameters = dict()
 
     if inifile is None:
         print('No inifile specified')
@@ -100,83 +102,59 @@ def scan_metadata(inifile=None, folder=None, filename=None,
     config.read_file(open(inifile))
 
     ## ----- scan regions
-    if bounds is None:
-        bounds = []
-        try:
-            for f in config.get('scan', 'bounds').split():
-                try:
-                    bounds.append(float(f))
-                except:
-                    bounds.append(f)
-        except:
-            bounds = CS_BOUNDS
+    for a in ('bounds', 'steps', 'times'):
+        if args[a] is None:
+            parameters[a] = []
+            try:
+                for f in config.get('scan', a).split():
+                    try:
+                        parameters[a].append(float(f))
+                    except:
+                        parameters[a].append(f)
+            except:
+                parameters[a] = CS_DEFAULTS[a]
 
-    if steps is None:
-        steps = []
-        try:
-            for f in config.get('scan', 'steps').split():
-                try:
-                    steps.append(float(f))
-                except:
-                    steps.append(f)
-        except:
-            steps = CS_STEPS
-    
-    if times is None:
-        times = []
-        try:
-            for f in config.get('scan', 'times').split():
-                try:
-                    times.append(float(f))
-                except:
-                    times.append(f)
-        except:
-            times = CS_TIMES
-
-    ## strings
+    ## ----- strings
     for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'sample', 'prep'):
         if args[a] is None:
             try:
-                p[a] = config.get('scan', a)
+                parameters[a] = config.get('scan', a)
             except configparser.NoOptionError:
-                p[a] = CS_DEFAULTS[a]
+                parameters[a] = CS_DEFAULTS[a]
         else:
-            p[a] = str(args[a])
+            parameters[a] = str(args[a])
 
-    ## integers
+    ## ----- integers
     for a in ('start', 'nscans'):
         if args[a] is None:
             try:
-                p[a] = int(config.get('scan', a))
+                parameters[a] = int(config.get('scan', a))
             except configparser.NoOptionError:
-                p[a] = CS_DEFAULTS[a]
+                parameters[a] = CS_DEFAULTS[a]
         else:
-            p[a] = int(args[a])
+            parameters[a] = int(args[a])
         
-    ## floats
+    ## ----- floats
     for a in ('e0', 'inttime'):
         if args[a] is None:
             try:
-                p[a] = float(config.get('scan', a))
+                parameters[a] = float(config.get('scan', a))
             except configparser.NoOptionError:
-                p[a] = CS_DEFAULTS[a]
+                parameters[a] = CS_DEFAULTS[a]
         else:
-            p[a] = float(args[a])
+            parameters[a] = float(args[a])
         
-    ## booleans
+    ## ----- booleans
     for a in ('bothways', 'channelcut', 'focus', 'hr'):
         if args[a] is None:
             try:
-                p[a] = config.getboolean('scan', a)
+                parameters[a] = config.getboolean('scan', a)
             except configparser.NoOptionError:
-                p[a] = CS_DEFAULTS[a]
+                parameters[a] = CS_DEFAULTS[a]
         else:
-            p[a] = bool(args[a])
+            parameters[a] = bool(args[a])
 
-    p['bounds'] = bounds
-    p['steps']  = steps
-    p['times']  = times
-    return p
+    return parameters
 
         
 ## need more error checking:
@@ -254,11 +232,13 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
         else:
             ar = numpy.arange(e0+bounds[i], e0+bounds[i+1], steps[i])
         grid = grid + list(ar)
+        grid = list(numpy.round(grid, decimals=2))
         if type(times[i]) is str:
             tar = etok(ar-e0)*float(times[i][:-1])
         else:
             tar = times[i]*numpy.ones(len(ar))
         timegrid = timegrid + list(tar)
+        timegrid = list(numpy.round(timegrid, decimals=2))
     approximate_time = "%.1f" % ((sum(timegrid) + float(len(timegrid))*CS_MULTIPLIER) / 60.0)
     return (grid, timegrid, float(approximate_time))
 
@@ -275,7 +255,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ## ... then can get the channel values
 
 ## -----------------------
-##  energy scan plan concept
+##  energy step scan plan concept
 ##  1. collect metadata from an INI file
 ##  2. compute scan grid
 ##  3. move to center of angular range

@@ -2,16 +2,16 @@
 from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal
 import datetime
 
-bmm_metadata_stub = {'Beamline,name': 'BMM (06BM)',
-                     'Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
-                     'Facility,name': 'NSLS-II',
-                     'Facility,energy': '3 GeV',
-                     'Beamline,xray_source': 'NSLS-II three-pole wiggler',
-                     'Column,01': 'energy eV',
-                     'Column,02': 'encoder counts',
-                     'Column,03': 'i0 nA',
-                     'Column,04': 'it nA',
-                     'Column,05': 'ir nA'
+bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM)',
+                     'XDI,Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
+                     'XDI,Facility,name': 'NSLS-II',
+                     'XDI,Facility,energy': '3 GeV',
+                     'XDI,Beamline,xray_source': 'NSLS-II three-pole wiggler',
+                     'XDI,Column,01': 'energy eV',
+                     'XDI,Column,02': 'encoder counts',
+                     'XDI,Column,03': 'i0 nA',
+                     'XDI,Column,04': 'it nA',
+                     'XDI,Column,05': 'ir nA'
                      }
 
 
@@ -22,7 +22,7 @@ class Ring(Device):
 
 ring = Ring('SR', name='ring')
 
-def bmm_metadata(mode        = 'transmission',
+def bmm_metadata(measurement = 'transmission',
                  edge        = 'K',
                  element     = 'Fe',
                  edge_energy = '7112',
@@ -42,7 +42,7 @@ def bmm_metadata(mode        = 'transmission',
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 
     Argument list:
-      mode          -- 'transmission' or 'fluorescence'
+      measurement   -- 'transmission' or 'fluorescence'
       edge          -- 'K', 'L3', 'L2', or 'L1'
       element       -- one or two letter element symbol
       edge_energy   -- edge energy used to constructing scan parameters
@@ -60,67 +60,67 @@ def bmm_metadata(mode        = 'transmission',
     '''
     
     md                     = bmm_metadata_stub
-    md['Facility,current'] = str(ring.current.value) + ' mA'
-    md['Facility,mode']    = ring.mode.value
-    md['Element,edge']     = edge.capitalize()
-    md['Element,symbol']   = element.capitalize()
-    md['Scan,edge_energy'] = edge_energy
-    md['Mono,name']        = mono
-    md['Detector,I0']      = '10 cm ' + i0_gas
-    md['Detector,It']      = '25 cm ' + it_gas
-    md['Sample,name']      = sample
-    md['Sample,prep']      = prep
+    md['XDI,Facility,current'] = str(ring.current.value) + ' mA'
+    md['XDI,Facility,mode']    = ring.mode.value
+    md['XDI,Element,edge']     = edge.capitalize()
+    md['XDI,Element,symbol']   = element.capitalize()
+    md['XDI,Scan,edge_energy'] = edge_energy
+    md['XDI,Mono,name']        = mono
+    md['XDI,Detector,I0']      = '10 cm ' + i0_gas
+    md['XDI,Detector,It']      = '25 cm ' + it_gas
+    md['XDI,Sample,name']      = sample
+    md['XDI,Sample,prep']      = prep
     if stoichiometry is not None:
-        md['Sample,stoichiometry'] = stoichiometry
+        md['XDI,Sample,stoichiometry'] = stoichiometry
 
     if focus:
-        md['Beamline,focusing'] = 'torroidal mirror with bender, 5 nm Rh on 30 nm Pt'
+        md['XDI,Beamline,focusing'] = 'torroidal mirror with bender, 5 nm Rh on 30 nm Pt'
     else:
-        md['Beamline,focusing'] = 'none'
+        md['XDI,Beamline,focusing'] = 'none'
 
     if hr:
-        md['Beamline,harmonic_rejection'] = 'Pt stripe; Si stripe below 8 keV'
+        md['XDI,Beamline,harmonic_rejection'] = 'Pt stripe; Si stripe below 8 keV'
     else:
-        md['Beamline,harmonic_rejection'] = 'none'
+        md['XDI,Beamline,harmonic_rejection'] = 'none'
 
     if direction > 0:
-        md['Mono,direction'] =  'increasing in energy'
+        md['XDI,Mono,direction'] =  'increasing in energy'
     else:
-        md['Mono,direction'] =  'decreasing in energy'
+        md['XDI,Mono,direction'] =  'decreasing in energy'
 
     if 'step' in scan:
-        md['Mono,scan_type'] = 'step'
+        md['XDI,Mono,scan_type'] = 'step'
     else:
-        md['Mono,scan_type'] = 'slew'
+        md['XDI,Mono,scan_type'] = 'slew'
 
     if channelcut is True:
-        md['Mono,scan_mode'] = 'pseudo channel cut'
+        md['XDI,Mono,scan_mode'] = 'pseudo channel cut'
     else:
-        md['Mono,scan_mode'] = 'fixed exit'
+        md['XDI,Mono,scan_mode'] = 'fixed exit'
         
-    if 'fluo' in mode:
-        md['Column.06'] = 'roi1 counts'
-        md['Column,07'] = 'icr1 counts'
-        md['Column,08'] = 'ocr1 counts'
-        md['Column,09'] = 'corr1 dead-time corrected counts'
-        md['Column,10'] = 'roi2 counts'
-        md['Column,11'] = 'icr2 counts'
-        md['Column,12'] = 'ocr2 counts'
-        md['Column,13'] = 'corr2 dead-time corrected counts'
-        md['Column,14'] = 'roi3 counts'
-        md['Column,15'] = 'icr3 counts'
-        md['Column,16'] = 'ocr3 counts'
-        md['Column,17'] = 'corr3 dead-time corrected counts'
-        md['Column,18'] = 'roi4 counts'
-        md['Column,19'] = 'icr4 counts'
-        md['Column,20'] = 'ocr4 counts'
-        md['Column,21'] = 'corr4 dead-time corrected counts'
+    if 'fluo' in measurement:
+        md['XDI,Column,06'] = 'roi1 counts'
+        md['XDI,Column,07'] = 'icr1 counts'
+        md['XDI,Column,08'] = 'ocr1 counts'
+        md['XDI,Column,09'] = 'corr1 dead-time corrected counts'
+        md['XDI,Column,10'] = 'roi2 counts'
+        md['XDI,Column,11'] = 'icr2 counts'
+        md['XDI,Column,12'] = 'ocr2 counts'
+        md['XDI,Column,13'] = 'corr2 dead-time corrected counts'
+        md['XDI,Column,14'] = 'roi3 counts'
+        md['XDI,Column,15'] = 'icr3 counts'
+        md['XDI,Column,16'] = 'ocr3 counts'
+        md['XDI,Column,17'] = 'corr3 dead-time corrected counts'
+        md['XDI,Column,18'] = 'roi4 counts'
+        md['XDI,Column,19'] = 'icr4 counts'
+        md['XDI,Column,20'] = 'ocr4 counts'
+        md['XDI,Column,21'] = 'corr4 dead-time corrected counts'
 
 
-    ## set Scan.start_time & Scan.end_time
+    ## set Scan.start_time & Scan.end_time ... this is how it is done
     # d=datetime.datetime.fromtimestamp(round(header.start['time']))
-    # md['Scan,start_time'] = datetime.datetime.isoformat(d)
+    # md['XDI,Scan,start_time'] = datetime.datetime.isoformat(d)
     # d=datetime.datetime.fromtimestamp(round(header.stop['time']))
-    # md['Scan,end_time']   = datetime.datetime.isoformat(d)
+    # md['XDI,Scan,end_time']   = datetime.datetime.isoformat(d)
     
     return md

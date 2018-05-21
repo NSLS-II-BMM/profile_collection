@@ -31,7 +31,7 @@ class DCM(PseudoPositioner):
             return 2*3.13597211
 
     def _done_moving(self, *args, **kwargs):
-        ## this method is originally defined as Positioner, a base class of EpicsMotor
+        ## this method is originally defined for Positioner, a base class of EpicsMotor
         ## tack on instructions for killing the motor after movement
         super()._done_moving(*args, **kwargs)
         self.para.kill_cmd.put(1)
@@ -50,13 +50,13 @@ class DCM(PseudoPositioner):
         self.where()
         
     # The pseudo positioner axes:
-    energy   = Cpt(PseudoSingle, limits=(4000, 25000))
+    energy = Cpt(PseudoSingle, limits=(4000, 25000))
 
     
     # The real (or physical) positioners:
-    bragg = Cpt(BraggEpicsMotor, 'Bragg}Mtr')
-    para  = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
-    perp  = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
+    bragg  = Cpt(BraggEpicsMotor, 'Bragg}Mtr')
+    para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
+    perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
 
     def set_crystal(self, crystal=None):
         if crystal is not None:
