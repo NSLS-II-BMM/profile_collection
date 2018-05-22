@@ -2,3 +2,7 @@ history.sqlite
 *.save
 *~
 static/
+security/
+db/
+log/
+pid/
