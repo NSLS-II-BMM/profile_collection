@@ -4,9 +4,8 @@ import numpy
 import os
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
-# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])  
+# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
 # then call bmm_metadata() to get metadata in an XDI-ready format
-
 
 KTOE = 3.8099819442818976
 def etok(ee):
@@ -21,7 +20,7 @@ CS_MULTIPLIER = 1.3
 CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'steps':     [10, 0.5, '0.05k'],
                  'times':     [0.5, 0.5, '0.25k'],
-                 
+
                  'folder':    os.environ.get('HOME')+'/data/',
                  'filename':  'data.dat',
                  'e0':        7112,
@@ -38,7 +37,7 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'focus':     False,
                  'hr':        True,
                  'mode':      'transmission'}
-               
+
 
 import inspect
 import configparser
@@ -133,7 +132,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
                 parameters[a] = CS_DEFAULTS[a]
         else:
             parameters[a] = int(args[a])
-        
+
     ## ----- floats
     for a in ('e0', 'inttime'):
         if args[a] is None:
@@ -143,7 +142,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
                 parameters[a] = CS_DEFAULTS[a]
         else:
             parameters[a] = float(args[a])
-        
+
     ## ----- booleans
     for a in ('bothways', 'channelcut', 'focus', 'hr'):
         if args[a] is None:
@@ -156,7 +155,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
 
     return parameters
 
-        
+
 ## need more error checking:
 ##   * sanitize the '#.#k' strings
 ##   * negative boundaries must be floats
@@ -216,13 +215,14 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
                                                  times=[0.5,], e0=7112)
     '''
     if (len(bounds) - len(steps)) != 1:
-        return (None, None)
+        return (None, None, None)
     if (len(bounds) - len(times)) != 1:
-        return (None, None)
+        return (None, None, None)
     for i,s in enumerate(bounds):
         if type(s) is str:
             this = float(s[:-1])
             bounds[i] = ktoe(this)
+
     grid = list()
     timegrid = list()
     for i,s in enumerate(steps):
@@ -273,3 +273,48 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##     c. write XDI file
 ##  8. return to fixed exit mode
 ##  9. return detectors to AutoCount and Continuous modes
+
+
+
+# p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
+# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
+#
+# p['start'] and p['nscans']
+# p['folder'] + '/' + p['filename'] # increment this
+#
+# md = bmm_metadata(measurement = p['mode'],
+#                   edge        = p['edge'],
+#                   element     = p['element'],
+#                   edge_energy = p['e0'],
+#                   focus       = p['focus'],
+#                   hr          = p['hr'],
+#                   direction   = 1,
+#                   scan        = 'step',
+#                   channelcut  = p['channelcut'],
+#                   mono        = 'Si(111)',
+#                   i0_gas      = 'N2',
+#                   it_gas      = 'N2',
+#                   sample      = p['sample'],
+#                   prep        = p['prep'],
+#                   stoichiometry = None
+#               ):
+
+
+
+# energy_trajectory = cycler(dcm.energy, energy_grid)
+# dwelltime_trajectory = cycler(dwell_time, time_grid)
+
+# list(energy_trajectory + dwelltime_trajectory)
+
+# RE(scan_nd([det], energy_trajectory + dwelltime_trajectory, md=md ),
+#    DerivedPlot(dt_norm, xlabel='energy', ylabel='ratio'))
+
+# header = db[-1]
+# squish this around into sensible columns
+# with
+#
+# XDI headers, then
+# ///
+# p['comment']
+# ===
+# then data table

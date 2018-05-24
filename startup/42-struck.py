@@ -2,6 +2,33 @@ from ophyd import Component as Cpt, EpicsSignalWithRBV, Signal
 from ophyd.scaler import EpicsScaler
 
 
+
+
+class DTCorr1(DerivedSignal):
+    def forward(self, value):
+        return self.dtcorrect(value, self.parent.channels.chan7.value, self.parent.channels.chan11.value, _locked_dwell_time.dwell_time.readback.value)
+    def inverse(self, value):
+        return self.parent.channels.chan3.value
+
+class DTCorr2(DerivedSignal):
+    def forward(self, value):
+        return self.dtcorrect(value, self.parent.channels.chan8.value, self.parent.channels.chan12.value, _locked_dwell_time.dwell_time.readback.value)
+    def inverse(self, value):
+        return self.parent.channels.chan4.value
+
+class DTCorr3(DerivedSignal):
+    def forward(self, value):
+        return self.dtcorrect(value, self.parent.channels.chan9.value, self.parent.channels.chan13.value, _locked_dwell_time.dwell_time.readback.value)
+    def inverse(self, value):
+        return self.parent.channels.chan5.value
+
+class DTCorr4(DerivedSignal):
+    def forward(self, value):
+        return self.dtcorrect(value, self.parent.channels.chan10.value, self.parent.channels.chan14.value, _locked_dwell_time.dwell_time.readback.value)
+    def inverse(self, value):
+        return self.parent.channels.chan6.value
+
+
 class BMMVortex(EpicsScaler):
     maxiter = 20
     niter = 0
@@ -18,6 +45,12 @@ class BMMVortex(EpicsScaler):
     name12 = Cpt(EpicsSignal, '.NM12')
     name13 = Cpt(EpicsSignal, '.NM13')
     name14 = Cpt(EpicsSignal, '.NM14')
+
+    dtcorr1 = Cpt(DTCorr1, derived_from='channels.chan3')
+    dtcorr2 = Cpt(DTCorr2, derived_from='channels.chan4')
+    dtcorr3 = Cpt(DTCorr3, derived_from='channels.chan5')
+    dtcorr4 = Cpt(DTCorr4, derived_from='channels.chan6')
+
 
     def on(self):
         print('Turning {} on'.format(self.name))
@@ -46,7 +79,7 @@ class BMMVortex(EpicsScaler):
         self.name12.put('OCR2')
         self.name13.put('OCR3')
         self.name14.put('OCR4')
-        
+
     def channel_names_plan(self):
         yield from abs_set(self.name3,  'ROI1')
         yield from abs_set(self.name4,  'ROI2')
@@ -81,7 +114,16 @@ class BMMVortex(EpicsScaler):
                 test = 0
         self.niter = count
         return roi * (totn*inttime/ocr)
-            
+
 
 vortex_me4 = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vortex_me4')
-
+vortex_me4.dtcorr1.kind = 'hinted'
+vortex_me4.dtcorr2.kind = 'hinted'
+vortex_me4.dtcorr3.kind = 'hinted'
+vortex_me4.dtcorr4.kind = 'hinted'
+for i in range(3,15):
+    text = 'vortex_me4.name%d.kind = \'normal\'' % i
+    exec(text)
+for i in range(1,33):
+    text = 'vortex_me4.channels.chan%d.kind = \'normal\'' % i
+    exec(text)

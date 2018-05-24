@@ -27,6 +27,11 @@ class EPS_Shutter(Device):
         print('Closing {}'.format(self.name))
         self.cls.put(1)
 
+class BMPS_Shutter(Device):
+    state = Cpt(EpicsSignal, 'Sts:BM_BMPS_Opn-Sts')
+
+bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
+
 sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
 sha.shutter_type = 'FE'
 shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
@@ -56,5 +61,5 @@ class Spinner(Device):
     def off_plan(self):
         yield from abs_set(self.state, 0)
 
-        
+
 fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')

@@ -6,7 +6,7 @@ import bluesky.plans as bp
 #import signal
 
 
-ionchambers = [quadem1.current1_mean_value_nano, quadem1.current2_mean_value_nano, quadem1.current3_mean_value_nano]
+ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
 vortex_ch1  = [vortex_me4.channels.chan3, vortex_me4.channels.chan7,  vortex_me4.channels.chan11]
 vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan8,  vortex_me4.channels.chan12]
 vortex_ch3  = [vortex_me4.channels.chan5, vortex_me4.channels.chan9,  vortex_me4.channels.chan13]
@@ -16,7 +16,7 @@ vortex      = vortex_ch1 + vortex_ch2 + vortex_ch3 + vortex_ch4
 transmission = ionchambers
 fluorescence = ionchambers + vortex
 
-        
+
 
 def tune(step=0.004):
     '''
@@ -24,14 +24,14 @@ def tune(step=0.004):
     '''
     dcm_pitch.kill_cmd.value = 1
     dcm_pitch.user_setpoint.value = dcm_pitch.user_readback.value + step
-    
+
 
 def kmv(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
             yield from abs_set(m.kill_cmd, 1)
     yield from mv(*args)
-    
+
 def kmvr(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
@@ -52,5 +52,3 @@ def set_integration_plan(time=0.5):
     '''
     yield from abs_set(vortex_me4.auto_count_time, time)
     yield from abs_set(quadem1.averaging_time, time)
-    
-

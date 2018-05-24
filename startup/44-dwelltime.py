@@ -5,13 +5,9 @@ class QuadEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal, 'AveragingTime')
     readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
 
-quadem_dwell_time = QuadEMDwellTime('XF:06BM-BI{EM:1}EM180:', name='quadem_dwell_time', egu='seconds')
-
 class StruckDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal, 'TP')
     readback = Cpt(EpicsSignalRO, 'TP')
-
-struck_dwell_time = StruckDwellTime('XF:06BM-ES:1{Sclr:1}.', name='struck_dwell_time', egu='seconds')
 
 ####################################################################################################
 
@@ -35,3 +31,34 @@ def test_dwelltimes(dt, md=None):
         args.extend(q)
     args.append(5)              # five steps from 0.5 to 2.5
     yield from scan(*args, md=md)
+
+
+class LockedDwellTimes(PseudoPositioner):
+    "Sync QuadEM and Struck dwell times to one pseudo-axis dwell time."
+    dwell_time = Cpt(PseudoSingle, kind='hinted')
+    quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds')
+    struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.', egu='seconds')
+
+    @property
+    def settle_time(self):
+        return self.quadem_dwell_time.settle_time
+
+    @settle_time.setter
+    def settle_time(self, val):
+        self.quadem_dwell_time.settle_time = val
+        self.struck_dwell_time.settle_time = val
+
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        pseudo_pos = self.PseudoPosition(*pseudo_pos)
+        # logger.debug('forward %s', pseudo_pos)
+        return self.RealPosition(quadem_dwell_time=pseudo_pos.dwell_time,
+                                 struck_dwell_time=pseudo_pos.dwell_time)
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        real_pos = self.RealPosition(*real_pos)
+        return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
+
+_locked_dwell_time = LockedDwellTimes('', name='dwell_time')
+dwell_time = _locked_dwell_time.dwell_time

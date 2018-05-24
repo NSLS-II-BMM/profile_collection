@@ -28,8 +28,9 @@ dcm_para  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_par
 dcm_x     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
 dcm_y     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
 
-dcm_bragg.hints = {'fields': ['_'.join([dcm_bragg.name, read_attr])
-                              for read_attr in dcm_bragg.read_attrs]}
+dcm_bragg.encoder.kind = 'hinted'
+dcm_bragg.user_readback.kind = 'hinted'
+dcm_bragg.user_setpoint.kind = 'normal'
 
 
 
