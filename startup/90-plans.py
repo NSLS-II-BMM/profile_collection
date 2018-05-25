@@ -6,16 +6,6 @@ import bluesky.plans as bp
 #import signal
 
 
-ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
-vortex_ch1  = [vortex_me4.channels.chan3, vortex_me4.channels.chan7,  vortex_me4.channels.chan11]
-vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan8,  vortex_me4.channels.chan12]
-vortex_ch3  = [vortex_me4.channels.chan5, vortex_me4.channels.chan9,  vortex_me4.channels.chan13]
-vortex_ch4  = [vortex_me4.channels.chan6, vortex_me4.channels.chan10, vortex_me4.channels.chan14]
-vortex      = vortex_ch1 + vortex_ch2 + vortex_ch3 + vortex_ch4
-
-transmission = ionchambers
-fluorescence = ionchambers + vortex
-
 
 
 def tune(step=0.004):

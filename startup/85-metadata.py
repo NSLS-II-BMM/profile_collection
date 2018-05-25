@@ -2,7 +2,7 @@
 from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal
 import datetime
 
-bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM)',
+bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM) -- Beamline for Materials Measurement',
                      'XDI,Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
                      'XDI,Facility,name': 'NSLS-II',
                      'XDI,Facility,energy': '3 GeV',
@@ -18,6 +18,7 @@ bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM)',
 class Ring(Device):
         current  = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}I:Real-I')
         lifetime = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}Lifetime-I')
+        energy   = Cpt(EpicsSignal, '{}Energy_SRBend')
         mode     = Cpt(EpicsSignal, '-OPS{}Mode-Sts', string=True)
 
 ring = Ring('SR', name='ring')
@@ -34,6 +35,7 @@ def bmm_metadata(measurement = 'transmission',
                  mono        = 'Si(111)',
                  i0_gas      = 'N2',
                  it_gas      = 'N2',
+                 ir_gas      = 'N2',
                  sample      = 'Fe foil',
                  prep        = '',
                  stoichiometry = None
@@ -58,7 +60,7 @@ def bmm_metadata(measurement = 'transmission',
       prep          -- one-line explanation of sample preparation
       stoichiometry -- None or IUCr stoichiometry string
     '''
-    
+
     md                     = bmm_metadata_stub
     md['XDI,Facility,current'] = str(ring.current.value) + ' mA'
     md['XDI,Facility,mode']    = ring.mode.value
@@ -68,6 +70,7 @@ def bmm_metadata(measurement = 'transmission',
     md['XDI,Mono,name']        = mono
     md['XDI,Detector,I0']      = '10 cm ' + i0_gas
     md['XDI,Detector,It']      = '25 cm ' + it_gas
+    md['XDI,Detector,Ir']      = '25 cm ' + ir_gas
     md['XDI,Sample,name']      = sample
     md['XDI,Sample,prep']      = prep
     if stoichiometry is not None:
@@ -97,30 +100,27 @@ def bmm_metadata(measurement = 'transmission',
         md['XDI,Mono,scan_mode'] = 'pseudo channel cut'
     else:
         md['XDI,Mono,scan_mode'] = 'fixed exit'
-        
+
     if 'fluo' in measurement:
-        md['XDI,Column,06'] = 'roi1 counts'
-        md['XDI,Column,07'] = 'icr1 counts'
-        md['XDI,Column,08'] = 'ocr1 counts'
-        md['XDI,Column,09'] = 'corr1 dead-time corrected counts'
-        md['XDI,Column,10'] = 'roi2 counts'
-        md['XDI,Column,11'] = 'icr2 counts'
-        md['XDI,Column,12'] = 'ocr2 counts'
-        md['XDI,Column,13'] = 'corr2 dead-time corrected counts'
-        md['XDI,Column,14'] = 'roi3 counts'
-        md['XDI,Column,15'] = 'icr3 counts'
-        md['XDI,Column,16'] = 'ocr3 counts'
-        md['XDI,Column,17'] = 'corr3 dead-time corrected counts'
-        md['XDI,Column,18'] = 'roi4 counts'
-        md['XDI,Column,19'] = 'icr4 counts'
-        md['XDI,Column,20'] = 'ocr4 counts'
-        md['XDI,Column,21'] = 'corr4 dead-time corrected counts'
+        md['XDI,Detector,fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
+
+    # if 'fluo' in measurement:
+    #     md['XDI,Column,06'] = 'roi1 counts'
+    #     md['XDI,Column,07'] = 'icr1 counts'
+    #     md['XDI,Column,08'] = 'ocr1 counts'
+    #     md['XDI,Column,09'] = 'corr1 dead-time corrected counts'
+    #     md['XDI,Column,10'] = 'roi2 counts'
+    #     md['XDI,Column,11'] = 'icr2 counts'
+    #     md['XDI,Column,12'] = 'ocr2 counts'
+    #     md['XDI,Column,13'] = 'corr2 dead-time corrected counts'
+    #     md['XDI,Column,14'] = 'roi3 counts'
+    #     md['XDI,Column,15'] = 'icr3 counts'
+    #     md['XDI,Column,16'] = 'ocr3 counts'
+    #     md['XDI,Column,17'] = 'corr3 dead-time corrected counts'
+    #     md['XDI,Column,18'] = 'roi4 counts'
+    #     md['XDI,Column,19'] = 'icr4 counts'
+    #     md['XDI,Column,20'] = 'ocr4 counts'
+    #     md['XDI,Column,21'] = 'corr4 dead-time corrected counts'
 
 
-    ## set Scan.start_time & Scan.end_time ... this is how it is done
-    # d=datetime.datetime.fromtimestamp(round(header.start['time']))
-    # md['XDI,Scan,start_time'] = datetime.datetime.isoformat(d)
-    # d=datetime.datetime.fromtimestamp(round(header.stop['time']))
-    # md['XDI,Scan,end_time']   = datetime.datetime.isoformat(d)
-    
     return md

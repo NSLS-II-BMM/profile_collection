@@ -276,45 +276,71 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 
 
 
-# p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
-# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
-#
-# p['start'] and p['nscans']
-# p['folder'] + '/' + p['filename'] # increment this
-#
-# md = bmm_metadata(measurement = p['mode'],
-#                   edge        = p['edge'],
-#                   element     = p['element'],
-#                   edge_energy = p['e0'],
-#                   focus       = p['focus'],
-#                   hr          = p['hr'],
-#                   direction   = 1,
-#                   scan        = 'step',
-#                   channelcut  = p['channelcut'],
-#                   mono        = 'Si(111)',
-#                   i0_gas      = 'N2',
-#                   it_gas      = 'N2',
-#                   sample      = p['sample'],
-#                   prep        = p['prep'],
-#                   stoichiometry = None
-#               ):
 
 
+_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+_vortex_ch1  = [vortex_me4.channels.chan3, vortex_me4.channels.chan7,  vortex_me4.channels.chan11]
+_vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan8,  vortex_me4.channels.chan12]
+_vortex_ch3  = [vortex_me4.channels.chan5, vortex_me4.channels.chan9,  vortex_me4.channels.chan13]
+_vortex_ch4  = [vortex_me4.channels.chan6, vortex_me4.channels.chan10, vortex_me4.channels.chan14]
+_vortex      = vortex_ch1 + vortex_ch2 + vortex_ch3 + vortex_ch4
+_deadtime_corrected = [vortex_me4.dtcorr1, vortex_me4.dtcorr2, vortex_me4.dtcorr3, vortex_me4.dtcorr4]
 
-# energy_trajectory = cycler(dcm.energy, energy_grid)
-# dwelltime_trajectory = cycler(dwell_time, time_grid)
+transmission = _ionchambers
+fluorescence = _ionchambers + _deadtime_corrected + _vortex
 
-# list(energy_trajectory + dwelltime_trajectory)
+#'/home/bravel/commissioning/scan.ini'
+def xafs(inifile):
 
-# RE(scan_nd([det], energy_trajectory + dwelltime_trajectory, md=md ),
-#    DerivedPlot(dt_norm, xlabel='energy', ylabel='ratio'))
+    ## make sure we are ready to scan
+    yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
+    yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
 
-# header = db[-1]
-# squish this around into sensible columns
-# with
-#
-# XDI headers, then
-# ///
-# p['comment']
-# ===
-# then data table
+    ## user input
+    p = scan_metadata(inifile=inifile)
+
+    ## compute energy and dwell grids
+    (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
+
+    ## organize metadata for injection into database and XDI output
+    md = bmm_metadata(measurement   = p['mode'],
+                      edge          = p['edge'],
+                      element       = p['element'],
+                      edge_energy   = p['e0'],
+                      focus         = p['focus'],
+                      hr            = p['hr'],
+                      direction     = 1,
+                      scan          = 'step',
+                      channelcut    = p['channelcut'],
+                      mono          = 'Si(%s)' % dcm.crystal,
+                      i0_gas        = 'N2', #\
+                      it_gas        = 'N2', # > these three need to go into INI file
+                      ir_gas        = 'N2', #/
+                      sample        = p['sample'],
+                      prep          = p['prep'],
+                      stoichiometry = None
+                  )
+
+    ## compute trajectory
+    energy_trajectory    = cycler(dcm.energy, energy_grid)
+    dwelltime_trajectory = cycler(dwell_time, time_grid)
+    # list(energy_trajectory + dwelltime_trajectory)
+
+    ## loop over scan count
+    for i in range(p['start'], p['start']+p['nscans'], 1):
+        datafile = '%s/%s.%3.3d' % (p['folder'], p['filename'], i)
+
+        if 'trans' in p['mode']:
+            yield from scan_nd(transmission, energy_trajectory + dwelltime_trajectory, md=md )
+            # ??? DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')
+
+        else:
+            yield from scan_nd(fluorescence, energy_trajectory + dwelltime_trajectory, md=md )
+            # ??? DerivedPlot(dt_norm, xlabel='energy (eV)', ylabel='absorption')
+
+        header = db[-1]
+        write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
+
+    ## restore default dwell times
+    yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
+    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)

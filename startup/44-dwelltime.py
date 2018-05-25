@@ -23,6 +23,7 @@ from ophyd.sim import det
 from bluesky.plans import scan
 import bluesky.plan_stubs as bps
 def test_dwelltimes(dt, md=None):
+    md = bmm_metadata(measurement='fluorescence')
     dets  = [det]
     args  = [dets,]
     start = list(0.5*numpy.ones(len(dt)))
