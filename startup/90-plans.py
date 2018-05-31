@@ -1,6 +1,6 @@
 import bluesky as bs
 import bluesky.plans as bp
-#import time as ttime
+import time
 #from subprocess import call
 #import os
 #import signal
@@ -8,12 +8,33 @@ import bluesky.plans as bp
 
 
 
-def tune(step=0.004):
+TUNE_STEP = 0.004
+def tune_plan(step=0):
+    '''
+    Tune 2nd crystal pitch from a plan.  Argument is a value for the step, so a realtive motion.
+    '''
+    yield from abs_set(dcm_pitch.kill_cmd, 1)
+    yield from mvr(dcm_pitch, step)
+    yield from sleep(1.0)
+    yield from abs_set(dcm_pitch.kill_cmd, 1)
+def tune_up():
+    yield from tune_plan(step=TUNE_STEP)
+def tune_down():
+    yield from tune_plan(step=-1*TUNE_STEP)
+
+def tune(step=0):
     '''
     Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a realtive motion.
     '''
-    dcm_pitch.kill_cmd.value = 1
-    dcm_pitch.user_setpoint.value = dcm_pitch.user_readback.value + step
+    dcm_pitch.kill_cmd.put(1)
+    dcm_pitch.user_setpoint.put(dcm_pitch.user_readback.value + step)
+    time.sleep(2.0)
+    dcm_pitch.kill_cmd.put(1)
+def tu():
+    tune(step=TUNE_STEP)
+def td():
+    tune(step=-1*TUNE_STEP)
+
 
 
 def kmv(*args):

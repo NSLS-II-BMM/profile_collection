@@ -32,6 +32,12 @@ class BMPS_Shutter(Device):
 
 bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
 
+class IDPS_Shutter(Device):
+    state = Cpt(EpicsSignal, 'Sts:BM_PS_OpnA3-Sts')
+
+idps = IDPS_Shutter('SR:C06-EPS{PLC:1}', name = 'IDPS')
+
+
 sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
 sha.shutter_type = 'FE'
 shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')

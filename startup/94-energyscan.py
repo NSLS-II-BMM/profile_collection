@@ -283,7 +283,7 @@ _vortex_ch1  = [vortex_me4.channels.chan3, vortex_me4.channels.chan7,  vortex_me
 _vortex_ch2  = [vortex_me4.channels.chan4, vortex_me4.channels.chan8,  vortex_me4.channels.chan12]
 _vortex_ch3  = [vortex_me4.channels.chan5, vortex_me4.channels.chan9,  vortex_me4.channels.chan13]
 _vortex_ch4  = [vortex_me4.channels.chan6, vortex_me4.channels.chan10, vortex_me4.channels.chan14]
-_vortex      = vortex_ch1 + vortex_ch2 + vortex_ch3 + vortex_ch4
+_vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
 _deadtime_corrected = [vortex_me4.dtcorr1, vortex_me4.dtcorr2, vortex_me4.dtcorr3, vortex_me4.dtcorr4]
 
 transmission = _ionchambers
@@ -293,8 +293,10 @@ fluorescence = _ionchambers + _deadtime_corrected + _vortex
 def xafs(inifile):
 
     ## make sure we are ready to scan
-    yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
-    yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
+    #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
+    #yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
+    _locked_dwell_time.quadem_dwell_time.settle_time = 0
+    _locked_dwell_time.struck_dwell_time.settle_time = 0
 
     ## user input
     p = scan_metadata(inifile=inifile)
@@ -324,23 +326,28 @@ def xafs(inifile):
     ## compute trajectory
     energy_trajectory    = cycler(dcm.energy, energy_grid)
     dwelltime_trajectory = cycler(dwell_time, time_grid)
-    # list(energy_trajectory + dwelltime_trajectory)
 
-    ## loop over scan count
-    for i in range(p['start'], p['start']+p['nscans'], 1):
-        datafile = '%s/%s.%3.3d' % (p['folder'], p['filename'], i)
+    yield from scan_nd(transmission, energy_trajectory + dwelltime_trajectory, md=md)
 
-        if 'trans' in p['mode']:
-            yield from scan_nd(transmission, energy_trajectory + dwelltime_trajectory, md=md )
-            # ??? DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')
 
-        else:
-            yield from scan_nd(fluorescence, energy_trajectory + dwelltime_trajectory, md=md )
-            # ??? DerivedPlot(dt_norm, xlabel='energy (eV)', ylabel='absorption')
+    # ## loop over scan count
+    # for i in range(p['start'], p['start']+p['nscans'], 1):
+    #     datafile = '%s/%s.%3.3d' % (p['folder'], p['filename'], i)
 
-        header = db[-1]
-        write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
+    #     if 'trans' in p['mode']:
+    #         yield from scan_nd(transmission, energy_trajectory + dwelltime_trajectory, md=md )
+    #         # ??? DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')
 
-    ## restore default dwell times
-    yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
-    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
+    #     else:
+    #         yield from scan_nd(fluorescence, energy_trajectory + dwelltime_trajectory, md=md )
+    #         # ??? DerivedPlot(dt_norm, xlabel='energy (eV)', ylabel='absorption')
+
+    #     header = db[-1]
+    #     write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
+
+    # ## restore default dwell times
+    # yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
+    # yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
+
+    # ## kill in vacuum motors
+    yield from null()

@@ -58,11 +58,13 @@ class BMMQuadEM(QuadEM):
 
     def on(self):
         print('Turning {} on'.format(self.name))
-        self.state.put(1)
+        self.acquire_mode.put(0)
+        self.acquire.put(1)
 
     def off(self):
         print('Turning {} off'.format(self.name))
-        self.state.put(0)
+        self.acquire_mode.put(2)
+        self.acquire.put(0)
 
     def on_plan(self):
         yield from abs_set(self.state, 1)

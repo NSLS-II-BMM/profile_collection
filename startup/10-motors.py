@@ -1,6 +1,7 @@
 from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
+import time
 
 
 class BraggEpicsMotor(EpicsMotor):
@@ -15,8 +16,9 @@ class VacuumEpicsMotor(EpicsMotor):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
         ## tack on instructions for killing the motor after movement
         super()._done_moving(*args, **kwargs)
+        time.sleep(0.05)
         self.kill_cmd.put(1)
-        
+
 ## caput XF:06BMA-OP{Mir:M3-Ax:XU}Mtr_KILL_CMD.PROC 1
 
 ## monochromator

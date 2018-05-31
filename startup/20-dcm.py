@@ -26,9 +26,11 @@ class DCM(PseudoPositioner):
     @property
     def _twod(self):
         if self.crystal is '311':
-            return 2*1.63762644
+            return 2*1.63763854 # 30 May 2018
+            #return 2*1.63762644
         else:
-            return 2*3.13597211
+            return 2*3.13563694 # 29 May 2018
+            #return 2*3.13597211
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined for Positioner, a base class of EpicsMotor
@@ -48,24 +50,27 @@ class DCM(PseudoPositioner):
              '2nd Xtal Para',  self.para.user_readback.value))
     def wh(self):
         self.where()
-        
+
     # The pseudo positioner axes:
     energy = Cpt(PseudoSingle, limits=(4000, 25000))
 
-    
+
     # The real (or physical) positioners:
     bragg  = Cpt(BraggEpicsMotor, 'Bragg}Mtr')
     para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
     perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
 
+    #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
+
+
     def set_crystal(self, crystal=None):
         if crystal is not None:
             self.crystal = crystal
         if self.crystal is '311':
-            self.bragg.user_offset.put(16.504884)
+            self.bragg.user_offset.put(15.99439325)
         else:
-            self.bragg.user_offset.put(16.5647)
-            
+            self.bragg.user_offset.put(16.05442) # 29 May 2018
+
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
@@ -88,4 +93,3 @@ class DCM(PseudoPositioner):
 
 
 dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
-

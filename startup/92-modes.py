@@ -62,10 +62,10 @@ def mode():
         print("This appears to be mode C")
     else:
         print("This appears to be mode B")
-        
+
 #    yield from null()
-    
-    
+
+
 def change_xtals(xtal=None):
     if xtal is None:
         print('No crystal set specified')
@@ -75,7 +75,7 @@ def change_xtals(xtal=None):
         xtal = 'Si(111)'
     if '311' in xtal:
         xtal = 'Si(311)'
-    
+
     if xtal not in ('Si(111)', 'Si(311)'):
         print('%s is not a crytsal set' % xtal)
         return(yield from null())
@@ -83,19 +83,18 @@ def change_xtals(xtal=None):
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
     if xtal is 'Si(111)':
-        yield from mv(dcm_pitch, 5.583,
+        yield from mv(dcm_pitch, 3.8698,
                       dcm_roll, -6.26,
                       dcm_x,    -35.4    )
         #dcm.crystal = '111'
         dcm.set_crystal('111')  # set d-spacing and bragg offset
     elif xtal is 'Si(311)':
-        yield from mv(dcm_pitch, 3.994,
+        yield from mv(dcm_pitch, 2.28,
                       dcm_roll, -23.86,
-                      dcm_x,     33.0    )
+                      dcm_x,     29.0    )
         #dcm.crystal = '311'
         dcm.set_crystal('311')  # set d-spacing and bragg offset
 
-    yield from sleep(0.5)
+    yield from sleep(2.0)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
-    

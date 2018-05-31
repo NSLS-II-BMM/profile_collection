@@ -16,21 +16,28 @@ def show_shutters():
     else:
         bmps_text += colored('closed', 'red', attrs=['bold'])
 
-    sha_state = bool(sha.enabled.value) and bool(sha.state.value)
-    sha_text = '\t\tFOE Shutter: '
-    if sha_state is True:
-        sha_text += 'open'
+    idps_state = bool(idps.state.value)
+    idps_text = '\t\tIDPS: '
+    if idps_state is True:
+        idps_text += 'open'
     else:
-        sha_text += colored('closed', 'red', attrs=['bold'])
+        idps_text += colored('closed', 'red', attrs=['bold'])
 
-    shb_state = bool(shb.enabled.value) and bool(shb.state.value)
+    # sha_state = bool(sha.enabled.value) and bool(sha.state.value)
+    # sha_text = '\t\tFOE Shutter: '
+    # if sha_state is True:
+    #     sha_text += 'open'
+    # else:
+    #     sha_text += colored('closed', 'red', attrs=['bold'])
+
+    shb_state = bool(shb.state.value)
     shb_text = '\t\tPhoton Shutter: '
-    if shb_state is True:
+    if shb_state is False:
         shb_text += 'open'
     else:
         shb_text += colored('closed', 'red', attrs=['bold'])
 
-    print(bmps_text + sha_text + shb_text)
+    print(bmps_text + idps_text + shb_text)
 
 class Vacuum(Device):
     current  = Cpt(EpicsSignal, '-IP:1}I-I')

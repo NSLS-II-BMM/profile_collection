@@ -9,6 +9,12 @@ from numpy import log
 from bluesky.callbacks import CallbackBase
 
 
+## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:
+# caput XF:06BM-BI{EM:1}EM180:Current1:MeanValue_RBV.PREC 5
+# caput XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC 5
+# caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 5
+
+
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, **kwargs):
         """
@@ -73,6 +79,11 @@ class DerivedPlot(CallbackBase):
 
 #  RE(count([quadem1], 2), DerivedPlot(it_norm, xlabel='energy', ylabel='ratio'))
 
+def i0_alone(doc):
+    i0 = doc['data']['quadem1_I0']
+    x  = doc['slits3_top']
+    return x, i0
+
 def it_norm(doc):
     i0 = doc['data']['quadem1_I0']
     it = doc['data']['quadem1_It']
@@ -83,7 +94,8 @@ def it_norm(doc):
 def trans_xmu(doc):
     i0 = doc['data']['quadem1_I0']
     it = doc['data']['quadem1_It']
-    x  = doc['dcm_energy']
+    #x  = doc['dcm_energy']
+    x  = doc['seq_num']
     y  = numpy.log(i0 / it)
     return x, y
 

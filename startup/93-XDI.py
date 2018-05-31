@@ -51,6 +51,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Facility.name: %s'               % 'NSLS-II',
                 '# Facility.current: %.1f mA'       % ring.current.value,
                 '# Facility.energy: %.1f GeV'       % (ring.energy.value/1000.),
+                '# Facility.mode: %.s'              % ring.mode.value,
                 '# Mono.name: Si(%s)'               % dcm.crystal,
                 '# Mono.d_spacing: %.7f Å'          % (dcm._twod/2),
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],

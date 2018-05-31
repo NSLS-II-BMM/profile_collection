@@ -17,10 +17,10 @@ class Slits(PseudoPositioner):
         print("\thorizontal center = %7.3f mm\t\tInboard  = %7.3f" % (self.hcenter.readback.value, self.inboard.user_readback.value))
     def wh(self):
         self.where()
-        
+
     # The pseudo positioner axes:
-    vsize   = Cpt(PseudoSingle, limits=(-10, 20))
-    vcenter = Cpt(PseudoSingle, limits=(-10, 10))
+    vsize   = Cpt(PseudoSingle, limits=(-15, 20))
+    vcenter = Cpt(PseudoSingle, limits=(-15, 10))
     hsize   = Cpt(PseudoSingle, limits=(-1, 20))
     hcenter = Cpt(PseudoSingle, limits=(-10, 10))
 
@@ -38,7 +38,7 @@ class Slits(PseudoPositioner):
                                  outboard = pseudo_pos.hcenter + pseudo_pos.hsize/2,
                                  inboard  = pseudo_pos.hcenter - pseudo_pos.hsize/2
             )
-    
+
     @real_position_argument
     def inverse(self, real_pos):
         '''Run an inverse (real -> pseudo) calculation'''
@@ -46,10 +46,10 @@ class Slits(PseudoPositioner):
                                    hcenter = (real_pos.outboard + real_pos.inboard)/2,
                                    vsize   =  real_pos.top      - real_pos.bottom,
                                    vcenter = (real_pos.top      + real_pos.bottom )/2,
-                                   
+
         )
-        
 
 
-slits3 = Slits('XF:06BM-BI{Slt:02-Ax:',  name='slits3')
+
+sl = slits3 = Slits('XF:06BM-BI{Slt:02-Ax:',  name='slits3')
 slits2 = Slits('XF:06BM-OP{Slt:01-Ax:',  name='slits2')
