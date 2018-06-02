@@ -61,18 +61,22 @@ def bmm_metadata(measurement = 'transmission',
       stoichiometry -- None or IUCr stoichiometry string
     '''
 
-    md                     = bmm_metadata_stub
-    md['XDI,Facility,current'] = str(ring.current.value) + ' mA'
-    md['XDI,Facility,mode']    = ring.mode.value
-    md['XDI,Element,edge']     = edge.capitalize()
-    md['XDI,Element,symbol']   = element.capitalize()
-    md['XDI,Scan,edge_energy'] = edge_energy
-    md['XDI,Mono,name']        = mono
-    md['XDI,Detector,I0']      = '10 cm ' + i0_gas
-    md['XDI,Detector,It']      = '25 cm ' + it_gas
-    md['XDI,Detector,Ir']      = '25 cm ' + ir_gas
-    md['XDI,Sample,name']      = sample
-    md['XDI,Sample,prep']      = prep
+    md                          = bmm_metadata_stub
+    md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+    md['XDI,Facility,mode']     = ring.mode.value
+    if md['XDI,Facility,mode'] == 'Operations':
+        md['XDI,Facility,mode'] = 'top-off'
+    md['XDI,Element,edge']      = edge.capitalize()
+    md['XDI,Element,symbol']    = element.capitalize()
+    md['XDI,Scan,edge_energy']  = edge_energy
+    md['XDI,Mono,name']         = mono
+    md['XDI,Mono,encoder_resolution']  = dcm.bragg.resolution.value
+    md['XDI,Mono,angle_offset'] = dcm.bragg.user_offset.value
+    md['XDI,Detector,I0']       = '10 cm ' + i0_gas
+    md['XDI,Detector,It']       = '25 cm ' + it_gas
+    md['XDI,Detector,Ir']       = '25 cm ' + ir_gas
+    md['XDI,Sample,name']       = sample
+    md['XDI,Sample,prep']       = prep
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
 

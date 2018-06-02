@@ -13,6 +13,8 @@ def units(label):
         return 'counts'
     elif 'corr' in label:
         return 'dead-time corrected count rate'
+    elif 'DTC' in label:
+        return 'dead-time corrected count rate'
     elif 'encoder' in label:
         return 'counts'
     else:
@@ -21,7 +23,7 @@ def units(label):
 
 
 def write_XDI(datafile, dataframe, mode, comment):
-    #handle = open(datafile, 'w')
+    handle = open(datafile, 'w')
 
     ## set Scan.start_time & Scan.end_time ... this is how it is done
     d=datetime.datetime.fromtimestamp(round(dataframe.start['time']))
@@ -51,9 +53,11 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Facility.name: %s'               % 'NSLS-II',
                 '# Facility.current: %.1f mA'       % ring.current.value,
                 '# Facility.energy: %.1f GeV'       % (ring.energy.value/1000.),
-                '# Facility.mode: %.s'              % ring.mode.value,
+                '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
                 '# Mono.name: Si(%s)'               % dcm.crystal,
                 '# Mono.d_spacing: %.7f Å'          % (dcm._twod/2),
+                '# Mono.encoder_resolution: %.7f deg/ct' % dataframe.start['XDI,Mono,encoder_resolution'],
+                '# Mono.angle_offset: %.7f deg'     % dataframe.start['XDI,Mono,angle_offset'],
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],
                 '# Mono.scan_type: %s'              % dataframe.start['XDI,Mono,scan_type'],
                 '# Mono.direction: %s in energy'    % 'forward',                               # <------- bothways!
@@ -63,14 +67,14 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
                 '# Scan.transient_id: %s'           % dataframe.start['scan_id'],
-                '# Scan.uid: %s'                    % dataframe.stop['uid'],
+                '# Scan.uid: %s'                    % dataframe.start['uid'],
             ])
-    plot_hint = 'ln(I0/It)  --  ln($5/$6)'
+    plot_hint = 'ln(I0/It)  --  ln($4/$5)'
     if 'fluo' in mode:
-        plot_hint = '(dtcorr1 + dtcorr2 + dtcorr3 + dtcorr4) / I0  --  ($8+$9+$10+$11) / $5'
+        plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
-    for i, col in enumerate(('energy', 'requested_energy', 'encoder', 'measurement_time'), start=1):
+    for i, col in enumerate(('energy', 'requested_energy', 'measurement_time'), start=1):     # 'encoder'
         xdi.append('# Column.%d: %s %s' % (i, col, units(col)))
         labels.append(col)
 
@@ -81,32 +85,43 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '6': 'roi4', '10': 'icr4', '14': 'ocr4'}
 
     ## generate a list of column lables & Column.N metadatum lines
-    for i, d in enumerate(detectors, start=5):
+    for i, d in enumerate(detectors, start=4):
         if 'quadem1' in d.name:
             this = re.sub('quadem1_', '', d.name)
-        elif 'vortex_me4_channels_chan' in d.name:
-            this = re.sub('vortex_me4_channels_chan', '', d.name)
+        elif 'vor_channels_chan' in d.name:
+            this = re.sub('vor_channels_chan', '', d.name)
             this = name_map[this]
-        elif 'vortex_me4_' in d.name:
-            this = re.sub('vortex_me4_', '', d.name)
+        elif 'vor_' in d.name:
+            this = re.sub('vor_', '', d.name)
         else:
             this = d.name
         labels.append(this)
         xdi.append('# Column.%d: %s %s' % (i, this, units(this)))
 
     ## write it all out
+    eol = '\n'
     for line in xdi:
-        print(line)             # handle.write(line)
-    print('# ///////////')
-    print('# ' + comment)
-    print('# -----------')
-    print('# ' + '  '.join(labels))
-    # handle.flush()
+        handle.write(line + eol)
+    handle.write('# ///////////' + eol)
+    handle.write('# ' + comment + eol)
+    handle.write('# -----------' + eol)
+    handle.write('# ' + '  '.join(labels) + eol)
+    table = dataframe.table()
+    if 'fluo' in mode:
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir',
+                       'DTC1', 'DTC2', 'DTC3', 'DTC4',
+                       'ROI1', 'ICR1', 'OCR1',
+                       'ROI2', 'ICR2', 'OCR2',
+                       'ROI3', 'ICR3', 'OCR3',
+                       'ROI4', 'ICR4', 'OCR4']
+    else:
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f\n"
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
 
-    ## grab columns
-    # table = dataframe.table()
-    ## munge rows/columns
-    # handle.write(row)
+    this = table.loc[:,column_list]
 
-    # handle.flush()
-    # handle.close
+    for i in range(1,len(this)):
+        handle.write(template % tuple(this.iloc[i]))
+    handle.flush()
+    handle.close

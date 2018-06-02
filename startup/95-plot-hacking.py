@@ -79,51 +79,51 @@ class DerivedPlot(CallbackBase):
 
 #  RE(count([quadem1], 2), DerivedPlot(it_norm, xlabel='energy', ylabel='ratio'))
 
-def i0_alone(doc):
-    i0 = doc['data']['quadem1_I0']
-    x  = doc['slits3_top']
-    return x, i0
+# def i0_alone(doc):
+#     i0 = doc['data']['I0']
+#     x  = doc['data']['slits3_top']
+#     return x, i0
 
 def it_norm(doc):
-    i0 = doc['data']['quadem1_I0']
-    it = doc['data']['quadem1_It']
-    x  = doc['dcm_energy']
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['dcm_energy']
     y  = it / i0
     return x, y
 
 def trans_xmu(doc):
-    i0 = doc['data']['quadem1_I0']
-    it = doc['data']['quadem1_It']
-    #x  = doc['dcm_energy']
-    x  = doc['seq_num']
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['dcm_energy']
+    #x  = doc['seq_num']
     y  = numpy.log(i0 / it)
     return x, y
 
 def trans_ref(doc):
-    it = doc['data']['quadem1_It']
-    ir = doc['data']['quadem1_Ir']
-    x  = doc['dcm_energy']
+    it = doc['data']['It']
+    ir = doc['data']['Ir']
+    x  = doc['data']['dcm_energy']
     y  = numpy.log(it / ir)
     return x, y
 
-#  RE(count([quadem1, vortex_me4], 2), DerivedPlot(dt_norm, xlabel='energy', ylabel='ratio'))
+#  RE(count([quadem1, vor], 2), DerivedPlot(dt_norm, xlabel='energy', ylabel='ratio'))
 
 def roi_norm(doc):
-    i0   = doc['data']['quadem1_I0']
-    roi1 = doc['data']['vortex_me4_channels_chan3']
-    roi2 = doc['data']['vortex_me4_channels_chan7']
-    roi3 = doc['data']['vortex_me4_channels_chan11']
-    roi4 = doc['data']['vortex_me4_channels_chan15']
-    x    = doc['dcm_energy']
+    i0   = doc['data']['I0']
+    roi1 = doc['data']['ROI1']
+    roi2 = doc['data']['ROI2']
+    roi3 = doc['data']['ROI3']
+    roi4 = doc['data']['ROI4']
+    x    = doc['data']['dcm_energy']
     y    = (roi1 + roi2 + roi3 + roi4) / i0
     return x, y
 
 def dt_norm(doc):
-    i0  = doc['data']['quadem1_I0']
-    dt1 = doc['data']['vortex_me4_dtcorr1']
-    dt2 = doc['data']['vortex_me4_dtcorr2']
-    dt3 = doc['data']['vortex_me4_dtcorr3']
-    dt4 = doc['data']['vortex_me4_dtcorr4']
-    x   = doc['dcm_energy']
+    i0  = doc['data']['I0']
+    dt1 = doc['data']['DTC1']
+    dt2 = doc['data']['DTC2']
+    dt3 = doc['data']['DTC3']
+    dt4 = doc['data']['DTC4']
+    x   = doc['data']['dcm_energy']
     y   = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y

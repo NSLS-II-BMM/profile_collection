@@ -38,7 +38,7 @@ class Mirrors(PseudoPositioner):
         print("\tyaw      = %7.3f mrad\t\tXD  = %7.3f" % (self.yaw.readback.value,      self.xd.user_readback.value))
     def wh(self):
         self.where()
-        
+
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(-8, 8))
     lateral  = Cpt(PseudoSingle, limits=(-16, 16))
@@ -46,7 +46,7 @@ class Mirrors(PseudoPositioner):
     roll     = Cpt(PseudoSingle, limits=(-3, 3))
     yaw      = Cpt(PseudoSingle, limits=(-3, 3))
 
-    
+
     # The real (or physical) positioners:
     yu  = Cpt(EpicsMotor, 'YU}Mtr')
     ydo = Cpt(EpicsMotor, 'YDO}Mtr')
@@ -59,10 +59,10 @@ class Mirrors(PseudoPositioner):
         '''Run a forward (pseudo -> real) calculation'''
         return self.RealPosition(xu  = pseudo_pos.lateral  - 0.5 * self.mirror_length * tan(pseudo_pos.yaw   / 1000),
                                  xd  = pseudo_pos.lateral  + 0.5 * self.mirror_length * tan(pseudo_pos.yaw   / 1000),
-                                 
+
                                  yu  = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
                                  ydo = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
-                                 ydi = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000) 
+                                 ydi = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
                                  )
 
     @real_position_argument
@@ -100,9 +100,48 @@ m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
 
 
-xafs_table = Mirrors('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
-xafs_table.vertical._limits = (5, 135)
-xafs_table.lateral._limits = (4, 8)
-xafs_table.pitch._limits = (-8, 1)
-xafs_table.roll._limits = (-2, 2)
-xafs_table.yaw._limits = (16, 20)
+
+class XAFSTable(PseudoPositioner):
+    def __init__(self, *args, mirror_length, mirror_width, **kwargs):
+        self.mirror_length = mirror_length
+        self.mirror_width  = mirror_width
+        super().__init__(*args, **kwargs)
+
+    def where(self):
+        print("%s:" % self.name.upper())
+        print("\tvertical = %7.3f mm\t\tYU  = %7.3f"   % (self.vertical.readback.value, self.yu.user_readback.value))
+        print("\tpitch    = %7.3f mrad\t\tYDO = %7.3f" % (self.pitch.readback.value,    self.ydo.user_readback.value))
+        print("\troll     = %7.3f mrad\t\tYDI = %7.3f" % (self.roll.readback.value,     self.ydi.user_readback.value))
+    def wh(self):
+        self.where()
+
+    # The pseudo positioner axes:
+    vertical = Cpt(PseudoSingle, limits=(5, 145))
+    pitch    = Cpt(PseudoSingle, limits=(-8, 1))
+    roll     = Cpt(PseudoSingle, limits=(5, 5))
+
+
+    # The real (or physical) positioners:
+    yu  = Cpt(EpicsMotor, 'YU}Mtr')
+    ydo = Cpt(EpicsMotor, 'YDO}Mtr')
+    ydi = Cpt(EpicsMotor, 'YDI}Mtr')
+
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        '''Run a forward (pseudo -> real) calculation'''
+        return self.RealPosition(yu  = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
+                                 ydo = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
+                                 ydi = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
+                                 )
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        '''Run an inverse (real -> pseudo) calculation'''
+        return self.PseudoPosition(vertical = (real_pos.yu + (real_pos.ydo + real_pos.ydi) / 2 ) / 2,
+                                   pitch    = 1000*arctan2( (real_pos.ydo + real_pos.ydi)/2 - real_pos.yu, self.mirror_length),
+                                   roll     = 1000*arctan2( real_pos.ydo - real_pos.ydi,                   self.mirror_width ))
+
+
+
+
+xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)

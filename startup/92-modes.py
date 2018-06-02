@@ -4,7 +4,10 @@ import bluesky.plans as bp
 import json
 
 LOCATION = '/home/bravel/git/BMM-beamline-configuration/'
-MODEDATA = json.load(open(os.path.join(LOCATION, 'Modes.json')))
+MODEDATA = None
+def read_mode_data():
+     return json.load(open(os.path.join(LOCATION, 'Modes.json')))
+MODEDATA = read_mode_data()
 
 def change_mode(mode=None):
     if mode is None:
@@ -27,21 +30,25 @@ def change_mode(mode=None):
         xafs_ydo,    float(MODEDATA['xafs_ydo'][mode]),
         xafs_ydi,    float(MODEDATA['xafs_ydi'][mode]),
 
-        m2_yu,       float(MODEDATA['m2_yu'][mode]),
-        m2_ydo,      float(MODEDATA['m2_ydo'][mode]),
-        m2_ydi,      float(MODEDATA['m2_ydi'][mode]),
+        m2.yu,       float(MODEDATA['m2_yu'][mode]),
+        m2.ydo,      float(MODEDATA['m2_ydo'][mode]),
+        m2.ydi,      float(MODEDATA['m2_ydi'][mode]),
 
-        m3_yu,       float(MODEDATA['m3_yu'][mode]),
-        m3_ydo,      float(MODEDATA['m3_ydo'][mode]),
-        m3_ydi,      float(MODEDATA['m3_ydi'][mode]),
-        m3_xu,       float(MODEDATA['m3_xu'][mode]),
-        m3_xd,       float(MODEDATA['m3_xd'][mode]),
+        m3.yu,       float(MODEDATA['m3_yu'][mode]),
+        m3.ydo,      float(MODEDATA['m3_ydo'][mode]),
+        m3.ydi,      float(MODEDATA['m3_ydi'][mode]),
+        m3.xu,       float(MODEDATA['m3_xu'][mode]),
+        m3.xd,       float(MODEDATA['m3_xd'][mode]),
 
-        dm3_slits_t, float(MODEDATA['dm3_slits_t'][mode]),
-        dm3_slits_b, float(MODEDATA['dm3_slits_b'][mode]),
-        dm3_slits_i, float(MODEDATA['dm3_slits_i'][mode]),
-        dm3_slits_o, float(MODEDATA['dm3_slits_o'][mode])
+        slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+        slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+        slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+        slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
     )
+
+    yield from sleep(2.0)
+    yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+
 
 def mode():
     print("Motor positions:")
@@ -51,7 +58,7 @@ def mode():
         print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
     if xafs_yu.user_readback.value > 126.5:
         print("This appears to be mode A")
-    elif xafs_yu.user_readback.value > 100:
+    elif xafs_yu.user_readback.value > 120:
         if m3_xu.user_readback.value > 0:
             print("This appears to be mode D")
         else:

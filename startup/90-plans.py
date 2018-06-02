@@ -54,12 +54,12 @@ def set_integration_time(time=0.5):
     '''
     set integration times for electrometer and Struck from the command line
     '''
-    vortex_me4.auto_count_time.value = time
+    vor.auto_count_time.value = time
     quadem1.averaging_time.value = time
 
 def set_integration_plan(time=0.5):
     '''
     set integration times for electrometer and Struck from a plan
     '''
-    yield from abs_set(vortex_me4.auto_count_time, time)
+    yield from abs_set(vor.auto_count_time, time)
     yield from abs_set(quadem1.averaging_time, time)

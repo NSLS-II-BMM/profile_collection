@@ -61,5 +61,6 @@ class LockedDwellTimes(PseudoPositioner):
         real_pos = self.RealPosition(*real_pos)
         return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
 
-_locked_dwell_time = LockedDwellTimes('', name='dwell_time')
+_locked_dwell_time = LockedDwellTimes('', name='dwti')
 dwell_time = _locked_dwell_time.dwell_time
+dwell_time.name = 'inttime'

@@ -73,9 +73,13 @@ class BMMQuadEM(QuadEM):
         yield from abs_set(self.state, 0)
 
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
+
 quadem1.I0.kind = 'hinted'
 quadem1.It.kind = 'hinted'
 quadem1.Ir.kind = 'hinted'
-#quadem1.current1_mean_value_nano.kind = 'hinted'
-#quadem1.current2_mean_value_nano.kind = 'hinted'
-#quadem1.current3_mean_value_nano.kind = 'hinted'
+
+quadem1.I0.name = 'I0'
+quadem1.It.name = 'It'
+quadem1.Ir.name = 'Ir'
+
+quadem1.current4_mean_value_nano.kind = 'omitted'

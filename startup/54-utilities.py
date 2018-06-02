@@ -6,6 +6,8 @@ def colored(text, color='white', attrs=[]):
         return '\x1b[01m\x1b[31m' + text + '\x1b[0m'
     if color is 'yellow':
         return '\x1b[01m\x1b[33m' + text + '\x1b[0m'
+    if color is 'white':
+        return '\x1b[01m\x1b[37m' + text + '\x1b[0m'
 
 
 def show_shutters():
@@ -158,8 +160,10 @@ def show_thermocouples():
         print('  %-28s     %s' % (t.name, t._state()))
 
 
-
+import datetime
 def show_utilities():
+    print('  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p'))
+    print('')
     show_shutters()
     print('')
     ltcs = len(tcs)
