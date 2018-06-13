@@ -57,7 +57,15 @@ class Spinner(Device):
         print('Turning {} on'.format(self.name))
         self.state.put(1)
 
+    def start(self):
+        print('Turning {} on'.format(self.name))
+        self.state.put(1)
+
     def off(self):
+        print('Turning {} off'.format(self.name))
+        self.state.put(0)
+
+    def stop(self):
         print('Turning {} off'.format(self.name))
         self.state.put(0)
 

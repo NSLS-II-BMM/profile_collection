@@ -10,9 +10,9 @@ from numpy import log, exp
 
 class Nanoize(DerivedSignal):
     def forward(self, value):
-        return value * 1e-9
+        return value * 1e-9 / _locked_dwell_time.dwell_time.readback.value
     def inverse(self, value):
-        return value * 1e9
+        return value * 1e9 * _locked_dwell_time.dwell_time.readback.value
 
 class Normalized(DerivedSignal):
     def forward(self, value):

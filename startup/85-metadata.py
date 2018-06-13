@@ -15,6 +15,13 @@ bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM) -- Beamline for Materials 
                      }
 
 
+class TC(Device):
+    temperature = Cpt(EpicsSignal, 'T-I-I')
+
+first_crystal = TC('XF:06BMA-OP{Mono:DCM-Crys:1}', name='first_crystal')
+compton_shield = TC('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}', name='compton_shield')
+
+
 class Ring(Device):
         current  = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}I:Real-I')
         lifetime = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}Lifetime-I')
@@ -38,8 +45,10 @@ def bmm_metadata(measurement = 'transmission',
                  ir_gas      = 'N2',
                  sample      = 'Fe foil',
                  prep        = '',
-                 stoichiometry = None
-             ):
+                 stoichiometry = None,
+                 mode        = 'transmission',
+                 comment     = ''
+                ):
     '''
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 
@@ -59,13 +68,14 @@ def bmm_metadata(measurement = 'transmission',
       sample        -- one-line sample description
       prep          -- one-line explanation of sample preparation
       stoichiometry -- None or IUCr stoichiometry string
+      mode          -- transmission, fluorescence, reference
+      comment       -- user-supplied, free-form comment string
     '''
 
     md                          = bmm_metadata_stub
-    md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
-    md['XDI,Facility,mode']     = ring.mode.value
-    if md['XDI,Facility,mode'] == 'Operations':
-        md['XDI,Facility,mode'] = 'top-off'
+    md['XDI,_mode']             = mode,
+    md['XDI,_comment']          = comment,
+    md['XDI,_scantype']         = 'xafs step scan',
     md['XDI,Element,edge']      = edge.capitalize()
     md['XDI,Element,symbol']    = element.capitalize()
     md['XDI,Scan,edge_energy']  = edge_energy
@@ -77,6 +87,9 @@ def bmm_metadata(measurement = 'transmission',
     md['XDI,Detector,Ir']       = '25 cm ' + ir_gas
     md['XDI,Sample,name']       = sample
     md['XDI,Sample,prep']       = prep
+    md['XDI,Sample,x_position'] = xafs_linx.user_readback.value
+    md['XDI,Sample,y_position'] = xafs_liny.user_readback.value
+    ## what about roll, pitch, rotX ???
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
 

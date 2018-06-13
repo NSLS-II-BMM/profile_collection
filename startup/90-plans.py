@@ -35,6 +35,15 @@ def tu():
 def td():
     tune(step=-1*TUNE_STEP)
 
+def tweak_bct(step):
+    if step is None:
+        step = 0
+    dm3_bct.kill_cmd.put(1)
+    print(dm3_bct.user_readback.value, step, dm3_bct.user_readback.value + step)
+    dm3_bct.user_setpoint.put(dm3_bct.user_readback.value + step)
+    time.sleep(3.0)
+    dm3_bct.kill_cmd.put(1)
+
 
 
 def kmv(*args):

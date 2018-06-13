@@ -32,6 +32,7 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'nscans':    1,
                  'start':     0,
                  'inttime':   1,
+                 'snapshots': True,
                  'bothways':  False,
                  'channelcut':True,
                  'focus':     False,
@@ -44,7 +45,7 @@ import configparser
 def scan_metadata(inifile=None, folder=None, filename=None,
                   e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
                   nscans=None, start=None, inttime=None,
-                  bothways=None, channelcut=None, focus=None, hr=None,
+                  snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
                   mode=None, bounds=None, steps=None, times=None):
     """Typical use is to specify an INI file, which contains all the
     metadata relevant to a set of scans.  In that case, this is called
@@ -71,6 +72,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
       nscan:      [int]   number of repetitions
       start:      [int]   starting scan number, XDI file will be filename.###
       inttime:    <not used>
+      snapshots:  [bool]  True = capture analog and XAS cameras before scan sequence
       bothways:   [bool]  True = measure in both monochromator directions
       channelcut: [bool]  True = measure in pseudo-channel-cut mode
       focus:      [bool]  True = focusing mirror is in use
@@ -100,8 +102,11 @@ def scan_metadata(inifile=None, folder=None, filename=None,
     config = configparser.ConfigParser()
     config.read_file(open(inifile))
 
+    found = dict()
+
     ## ----- scan regions
     for a in ('bounds', 'steps', 'times'):
+        found[a] = False
         if args[a] is None:
             parameters[a] = []
             try:
@@ -110,14 +115,17 @@ def scan_metadata(inifile=None, folder=None, filename=None,
                         parameters[a].append(float(f))
                     except:
                         parameters[a].append(f)
+                    found[a] = True
             except:
                 parameters[a] = CS_DEFAULTS[a]
 
     ## ----- strings
     for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'sample', 'prep'):
+        found[a] = False
         if args[a] is None:
             try:
                 parameters[a] = config.get('scan', a)
+                found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
@@ -125,9 +133,11 @@ def scan_metadata(inifile=None, folder=None, filename=None,
 
     ## ----- integers
     for a in ('start', 'nscans'):
+        found[a] = False
         if args[a] is None:
             try:
                 parameters[a] = int(config.get('scan', a))
+                found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
@@ -135,25 +145,29 @@ def scan_metadata(inifile=None, folder=None, filename=None,
 
     ## ----- floats
     for a in ('e0', 'inttime'):
+        found[a] = False
         if args[a] is None:
             try:
                 parameters[a] = float(config.get('scan', a))
+                found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
             parameters[a] = float(args[a])
 
     ## ----- booleans
-    for a in ('bothways', 'channelcut', 'focus', 'hr'):
+    for a in ('snapshots', 'bothways', 'channelcut', 'focus', 'hr'):
+        found[a] = False
         if args[a] is None:
             try:
                 parameters[a] = config.getboolean('scan', a)
+                found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
             parameters[a] = bool(args[a])
 
-    return parameters
+    return parameters, found
 
 
 ## need more error checking:
@@ -275,7 +289,31 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##  9. return detectors to AutoCount and Continuous modes
 
 
+from numpy import pi, arcsin
+HBARC = 1973.27053324
 
+
+def channelcut_energy(e0, bounds):
+    for i,s in enumerate(bounds):
+        if type(s) is str:
+            this = float(s[:-1])
+            bounds[i] = ktoe(this)
+    amin = dcm.e2a(e0+bounds[0])
+    amax = dcm.e2a(e0+bounds[-1])
+    aave = (amin + amax) / 2
+    wavelength = dcm.wavelength(aave)
+    eave = e2l(wavelength)
+    return eave
+
+
+def ini_sanity(found):
+    ok = True
+    missing = []
+    for a in ('bounds', 'steps', 'times', 'e0', 'element', 'edge', 'folder', 'filename', 'nscans', 'start'):
+        if found[a] is False:
+            ok = False
+            missing.append(a)
+    return (ok, missing)
 
 
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
@@ -292,9 +330,19 @@ fluorescence = _ionchambers + _deadtime_corrected + _vortex
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-
 #'/home/bravel/commissioning/scan.ini'
 def xafs(inifile):
+
+    if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
+        print(colored('The DCM is in the 311 position, configured as 111', color='red'))
+        print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+        yield from null()
+        return
+    if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
+        print(colored('The DCM is in the 111 position, configured as 311', color='red'))
+        print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+        yield from null()
+        return
 
     ## make sure we are ready to scan
     #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
@@ -303,14 +351,34 @@ def xafs(inifile):
     _locked_dwell_time.struck_dwell_time.settle_time = 0
 
     ## user input
-    print(colored('reding ini file: %s' % inifile, color='white'))
-    p = scan_metadata(inifile=inifile)
-    print("Does this look right?")
-    pp.pprint(p)
-    action = input("q to quit -- any other key to start scans > ")
-    if action is 'q':
+    print(colored('reading ini file: %s' % inifile, color='white'))
+    (p, f) = scan_metadata(inifile=inifile)
+    (ok, missing) = ini_sanity(f)
+    if not ok:
+        print(colored('\nThe following keywords are missing from your INI file: ', color='red'), '%s\n' % str.join(', ', missing))
         yield from null()
         return
+
+
+    eave = channelcut_energy(p['e0'], p['bounds'])
+    if dcm.prompt:
+        print("Does this look right?")
+        for (k,v) in p.items():
+            print('\t%-12s : %s' % (k,v))
+        if not dcm.suppress_channel_cut:
+            print('pseudo-channel-cut energy = %.1f\n' % eave)
+        action = input("q to quit -- any other key to start scans > ")
+        if action is 'q':
+            yield from null()
+            return
+
+    ## perhaps enter pseudo-channel-cut mode
+    if not dcm.suppress_channel_cut:
+        print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, color='white'))
+        dcm.mode = 'fixed'
+        yield from mv(dcm.energy, eave)
+        dcm.mode = 'channelcut'
+
 
     ## compute energy and dwell grids
     print(colored('computing energy and dwell grids', color='white'))
@@ -333,12 +401,20 @@ def xafs(inifile):
                       ir_gas        = 'N2', #/
                       sample        = p['sample'],
                       prep          = p['prep'],
-                      stoichiometry = None
+                      stoichiometry = None,
+                      mode          = p['mode'],
+                      comment       = p['comment'],
                   )
 
-    ## compute trajectory
-    energy_trajectory    = cycler(dcm.energy, energy_grid)
-    dwelltime_trajectory = cycler(dwell_time, time_grid)
+    for (k, v) in md.items():
+        print('\t%-28s : %s' % (k[4:].replace(',','.'),v))
+
+    ## snap photos
+    if p['snapshots']:
+        image = os.path.join(p['folder'], "%s_analog_%s.jpg" % (p['filename'], datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
+        snap('analog', filename=image)
+        image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
+        snap('XAS', filename=image)
 
     ## loop over scan count
     count = 0
@@ -352,6 +428,25 @@ def xafs(inifile):
             return
         print(colored('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid)), color='white'))
 
+        ## compute trajectory
+        energy_trajectory    = cycler(dcm.energy, energy_grid)
+        dwelltime_trajectory = cycler(dwell_time, time_grid)
+        md['XDI,Mono,direction'] = 'forward'
+        if p['bothways'] and count%2 == 0:
+            energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
+            dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
+            md['XDI,Mono,direction'] = 'backward'
+
+        ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
+        ## mono direction, ... things that can change during the scan sequence
+        md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
+        md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
+        md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+        md['XDI,Facility,mode']     = ring.mode.value
+        if md['XDI,Facility,mode'] == 'Operations':
+            md['XDI,Facility,mode'] = 'top-off'
+
+
         if 'trans' in p['mode']:
             yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory, md=md)
         else:
@@ -361,6 +456,10 @@ def xafs(inifile):
         print(colored('wrote %s' % datafile, color='white'))
 
 
+    print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
+    dcm.mode = 'fixed'
+    yield from mv(dcm.energy, eave)
+
     print('Restoring default dwell times at end of scan sequence')
     yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
     yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
@@ -369,3 +468,13 @@ def xafs(inifile):
     print('Cutting power to in-vacuum motors at end of scan sequence')
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
+
+
+def db2xdi(datafile, key):
+    if os.path.isfile(datafile):
+        print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
+        return
+    header = db[key]
+    ## sanity check, make sure that db returned a header AND that the header was an xafs scan
+    write_XDI(datafile, header, header['XDI,_mode'], header['XDI,_comment'])
+    print(colored('wrote %s' % datafile, color='white'))

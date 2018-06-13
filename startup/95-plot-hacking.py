@@ -87,7 +87,9 @@ class DerivedPlot(CallbackBase):
 def it_norm(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
-    x  = doc['data']['dcm_energy']
+    #x  = doc['data']['dcm_energy']
+    #x  = doc['data']['xafs_roll']
+    x  = doc['data']['xafs_liny']
     y  = it / i0
     return x, y
 
@@ -99,11 +101,34 @@ def trans_xmu(doc):
     y  = numpy.log(i0 / it)
     return x, y
 
-def trans_ref(doc):
+def ref_xmu(doc):
     it = doc['data']['It']
     ir = doc['data']['Ir']
     x  = doc['data']['dcm_energy']
     y  = numpy.log(it / ir)
+    return x, y
+
+def yscan(doc):
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['xafs_liny']
+    y  = it / i0
+    return x, y
+def xscan(doc):
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['xafs_linx']
+    y  = it / i0
+    return x, y
+
+def bctscan(doc):
+    x  = doc['data']['dm3_bct']
+    y  = doc['data']['I0']
+    return x, y
+
+def tablescan(doc):
+    x  = doc['data']['xafs_table_vertical']
+    y  = doc['data']['I0']
     return x, y
 
 #  RE(count([quadem1, vor], 2), DerivedPlot(dt_norm, xlabel='energy', ylabel='ratio'))
@@ -119,11 +144,33 @@ def roi_norm(doc):
     return x, y
 
 def dt_norm(doc):
-    i0  = doc['data']['I0']
-    dt1 = doc['data']['DTC1']
-    dt2 = doc['data']['DTC2']
-    dt3 = doc['data']['DTC3']
-    dt4 = doc['data']['DTC4']
-    x   = doc['data']['dcm_energy']
-    y   = (dt1 + dt2 + dt3 + dt4) / i0
+    i0   = doc['data']['I0']
+    dt1  = doc['data']['DTC1']
+    dt2  = doc['data']['DTC2']
+    dt3  = doc['data']['DTC3']
+    dt4  = doc['data']['DTC4']
+    x    = doc['data']['dcm_energy']
+    #dwti = doc['data']['dwti_dwell_time']
+    #x    = doc['data']['xafs_liny']
+    y    = (dt1 + dt2 + dt3 + dt4) / i0
+    return x, y
+
+def dt_x(doc):
+    i0   = doc['data']['I0']
+    dt1  = doc['data']['DTC1']
+    dt2  = doc['data']['DTC2']
+    dt3  = doc['data']['DTC3']
+    dt4  = doc['data']['DTC4']
+    x    = doc['data']['xafs_linx']
+    y    = (dt1 + dt2 + dt3 + dt4) / i0
+    return x, y
+
+def dt_y(doc):
+    i0   = doc['data']['I0']
+    dt1  = doc['data']['DTC1']
+    dt2  = doc['data']['DTC2']
+    dt3  = doc['data']['DTC3']
+    dt4  = doc['data']['DTC4']
+    x    = doc['data']['xafs_liny']
+    y    = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y

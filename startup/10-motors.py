@@ -8,6 +8,13 @@ class BraggEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')
     encoder = Cpt(EpicsSignal, '.REP')
 
+class XAFSEpicsMotor(EpicsMotor):
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+
+    def wh(self):
+        return self.user_readback.value
+
 
 class VacuumEpicsMotor(EpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
@@ -87,22 +94,22 @@ dm3_slits_t = EpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
 dm3_slits_b = EpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
 
 ## XAFS table
-xafs_yu  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
-xafs_ydo = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDO}Mtr', name='xafs_ydo')
-xafs_ydi = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_ydi')
-xafs_xu  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
-xafs_xd  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
+xafs_yu  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
+xafs_ydo = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDO}Mtr', name='xafs_ydo')
+xafs_ydi = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_ydi')
+xafs_xu  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
+xafs_xd  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
 
 ## XAFS stages
-xafs_rotb  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_rotb')
-xafs_roth  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
-xafs_rots  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
-xafs_lins  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
-xafs_linxs = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
-xafs_linx  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
-xafs_liny  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
-xafs_pitch = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_pitch')
-xafs_roll  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_roll')
+xafs_rotb  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_rotb')
+xafs_roth  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
+xafs_rots  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
+xafs_lins  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
+xafs_linxs = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
+xafs_linx  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
+xafs_liny  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
+xafs_pitch = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_pitch')
+xafs_roll  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_roll')
 
 
 

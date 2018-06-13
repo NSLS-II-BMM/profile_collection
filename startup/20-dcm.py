@@ -14,14 +14,18 @@ class DCM(PseudoPositioner):
         #self.set_crystal()
         self.offset  = offset
         self.mode    = mode
+        self.suppress_channel_cut = False
+        self.prompt  = True
         super().__init__(*args, **kwargs)
 
     @property
     def _pseudo_channel_cut(self):
-        if self.mode is 'channelcut':
-            return 1
+        if self.suppress_channel_cut:
+            return False
+        if 'channel' in self.mode:
+            return True
         else:
-            return 0
+            return False
 
     @property
     def _twod(self):
@@ -70,6 +74,17 @@ class DCM(PseudoPositioner):
             self.bragg.user_offset.put(15.99439325)
         else:
             self.bragg.user_offset.put(16.05442) # 29 May 2018
+
+    def e2a(self,energy):
+        """convert absolute energy to monochromator angle"""
+        wavelength = 2*pi*HBARC / energy
+        angle = 180 * arcsin(wavelength / dcm._twod) / pi
+        return angle
+
+    def wavelength(self,val):
+        """convert between mono angle and photon wavelength"""
+        return self._twod * sin(val*pi/180)
+
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

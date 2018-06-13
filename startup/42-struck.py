@@ -8,25 +8,25 @@ class DTCorr1(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan3.value
     def inverse(self, value):
-        return self.parent.dtcorrect(value, self.parent.channels.chan7.value, self.parent.channels.chan11.value, inttime=_locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan3.value, self.parent.channels.chan7.value, self.parent.channels.chan11.value, _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr2(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan4.value
     def inverse(self, value):
-        return self.parent.dtcorrect(value, self.parent.channels.chan8.value, self.parent.channels.chan12.value, inttime=_locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan4.value, self.parent.channels.chan8.value, self.parent.channels.chan12.value, _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr3(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan5.value
     def inverse(self, value):
-        return self.parent.dtcorrect(value, self.parent.channels.chan9.value, self.parent.channels.chan13.value, inttime=_locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan5.value, self.parent.channels.chan9.value, self.parent.channels.chan13.value, _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr4(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan6.value
     def inverse(self, value):
-        return self.parent.dtcorrect(value, self.parent.channels.chan10.value, self.parent.channels.chan14.value, inttime=_locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan6.value, self.parent.channels.chan10.value, self.parent.channels.chan14.value, _locked_dwell_time.dwell_time.readback.value)
 
 
 class BMMVortex(EpicsScaler):
@@ -83,32 +83,40 @@ class BMMVortex(EpicsScaler):
         yield from abs_set(self.names.name13, 'OCR3')
         yield from abs_set(self.names.name14, 'OCR4')
 
-    def dtcorrect(self, roi, icr, ocr, inttime=1.0, dt=280.0):
+    def dtcorrect(self, roi, icr, ocr, inttime, dt=280.0):
+        if roi is None: roi = 1.0
+        if icr is None: icr = 1.0
+        if ocr is None: ocr = 1.0
+        if inttime is None: inttime = 1.0
+        if icr is None or icr<1.0:
+            icr=1.0
+        if ocr is None or ocr<1.0:
+            ocr=1.0
+        rr = float(roi)
+        ii = float(icr)
+        oo = float(ocr)
+        tt = float(inttime)
         dt = dt*1e-9
-        if icr<1:
-            icr=1
-        if ocr<1:
-            ocr=1
-        if inttime<0.001:
-            inttime=0.001
+        if tt<0.001:
+            tt=0.001
         if dt<1e-9:
-            return float(roi*icr)/float(ocr)
+            return rr*ii/oo
         totn  = 0.0
         test  = 1.0
         count = 0
-        toto  = float(icr)/float(inttime)
-        if icr <= 1:
-            totn = float(ocr)
+        toto  = ii/tt
+        if icr <= 1.0:
+            totn = oo
             test = 0
         while test > dt:
-            totn = (icr/inttime) * exp(toto*dt)
+            totn = (ii/tt) * exp(toto*dt)
             test = (totn - toto) / toto
             toto = totn
             count = count+1
             if (count > self.maxiter):
                 test = 0
         self.niter = count
-        return float(roi) * (totn*inttime/float(ocr))
+        return rr * (totn*tt/oo)
 
 
 vor = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vor')

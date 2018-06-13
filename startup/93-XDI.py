@@ -60,9 +60,13 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Mono.angle_offset: %.7f deg'     % dataframe.start['XDI,Mono,angle_offset'],
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],
                 '# Mono.scan_type: %s'              % dataframe.start['XDI,Mono,scan_type'],
-                '# Mono.direction: %s in energy'    % 'forward',                               # <------- bothways!
+                '# Mono.direction: %s in energy'    % dataframe.start['XDI,Mono,direction'],
+                '# Mono.first_crystal_temperature: %.1f C'  % dataframe.start['XDI,Mono,first_crystal_temperature'],
+                '# Mono.compton_shield_temperature: %.1f C' % dataframe.start['XDI,Mono,compton_shield_temperature'],
                 '# Sample.name: %s'                 % dataframe.start['XDI,Sample,name'],
                 '# Sample.prep: %s'                 % dataframe.start['XDI,Sample,prep'],
+                '# Sample.x_position: %.3f'         % dataframe.start['XDI,Sample,x_position'],
+                '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about roll, pitch, rotX ???
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
                 '# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
@@ -108,13 +112,13 @@ def write_XDI(datafile, dataframe, mode, comment):
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
     if 'fluo' in mode:
-        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',
                        'ROI2', 'ICR2', 'OCR2',
                        'ROI3', 'ICR3', 'OCR3',
                        'ROI4', 'ICR4', 'OCR4']
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f\n"
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
