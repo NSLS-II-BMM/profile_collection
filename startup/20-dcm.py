@@ -55,6 +55,13 @@ class DCM(PseudoPositioner):
     def wh(self):
         self.where()
 
+    def restore(self):
+        self.mode = 'fixed'
+        if dcm_x.user_readback.value < 0:
+            self.crystal = '111'
+        elif dcm_x.user_readback.value > 0:
+            self.crystal = '311'
+
     # The pseudo positioner axes:
     energy = Cpt(PseudoSingle, limits=(4000, 25000))
 

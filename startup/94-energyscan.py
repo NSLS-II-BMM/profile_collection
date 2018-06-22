@@ -300,7 +300,7 @@ def channelcut_energy(e0, bounds):
             bounds[i] = ktoe(this)
     amin = dcm.e2a(e0+bounds[0])
     amax = dcm.e2a(e0+bounds[-1])
-    aave = (amin + amax) / 2
+    aave = amin + 1.0*(amax - amin) / 2.0
     wavelength = dcm.wavelength(aave)
     eave = e2l(wavelength)
     return eave
@@ -334,12 +334,12 @@ pp = pprint.PrettyPrinter(indent=4)
 def xafs(inifile):
 
     if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
-        print(colored('The DCM is in the 311 position, configured as 111', color='red'))
+        print(colored('The DCM is in the 111 position, configured as 311', color='red'))
         print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
         yield from null()
         return
     if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
-        print(colored('The DCM is in the 111 position, configured as 311', color='red'))
+        print(colored('The DCM is in the 311 position, configured as 111', color='red'))
         print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
         yield from null()
         return
@@ -415,6 +415,7 @@ def xafs(inifile):
         snap('analog', filename=image)
         image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
         snap('XAS', filename=image)
+
 
     ## loop over scan count
     count = 0

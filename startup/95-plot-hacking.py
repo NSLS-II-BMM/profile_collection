@@ -84,6 +84,12 @@ class DerivedPlot(CallbackBase):
 #     x  = doc['data']['slits3_top']
 #     return x, i0
 
+def dcmpitch(doc):
+    y = doc['data']['I0']
+    x = doc['data']['dcm_pitch']
+    return x, y
+
+
 def it_norm(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
@@ -108,6 +114,12 @@ def ref_xmu(doc):
     y  = numpy.log(it / ir)
     return x, y
 
+def rollscan(doc):
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['xafs_roll']
+    y  = it / i0
+    return x, y
 def yscan(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
