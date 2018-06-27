@@ -8,6 +8,9 @@ class BraggEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')
     encoder = Cpt(EpicsSignal, '.REP')
 
+    def wh(self):
+        return self.user_readback.value
+
 class XAFSEpicsMotor(EpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
@@ -18,6 +21,9 @@ class XAFSEpicsMotor(EpicsMotor):
 
 class VacuumEpicsMotor(EpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
+
+    def wh(self):
+        return self.user_readback.value
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
@@ -34,8 +40,8 @@ dcm_pitch = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pit
 dcm_roll  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
 dcm_perp  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
 dcm_para  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
-dcm_x     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
-dcm_y     = EpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
+dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
+dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
 
 dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
@@ -44,19 +50,19 @@ dcm_bragg.user_setpoint.kind = 'normal'
 
 
 ## collimating mirror
-m1_yu     = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
-m1_ydo    = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
-m1_ydi    = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
-m1_xu     = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
-m1_xd     = EpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XD}Mtr',   name='m1_yxd')
+m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
+m1_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
+m1_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
+m1_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
+m1_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XD}Mtr',   name='m1_yxd')
 
 ## focusing mirror
-m2_yu     = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
-m2_ydo    = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
-m2_ydi    = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
-m2_xu     = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
-m2_xd     = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
-m2_bender = EpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
+m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
+m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
+m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
+m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
+m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
+m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
 
 ## front end slits
 fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr', name='fe_slits_horizontal1')
@@ -73,25 +79,25 @@ fe_slits_hcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}center', name='fe_s
 fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_slits_vcenter')
 
 ## DM1
-dm1_filters1 = EpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
-dm1_filters2 = EpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
+dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
+dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
 
 ## DM2
-dm2_slits_o = EpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr', name='dm2_slits_o')
-dm2_slits_i = EpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr', name='dm2_slits_i')
-dm2_slits_t = EpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr', name='dm2_slits_o')
-dm2_slits_b = EpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr', name='dm2_slits_b')
-dm2_fs = EpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
+dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr', name='dm2_slits_o')
+dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr', name='dm2_slits_i')
+dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr', name='dm2_slits_o')
+dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr', name='dm2_slits_b')
+dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 
 ## DM3
-dm3_fs      = EpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
+dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
 dm3_foils   = VacuumEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
 dm3_bct     = VacuumEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
-dm3_bpm     = EpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
-dm3_slits_o = EpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
-dm3_slits_i = EpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
-dm3_slits_t = EpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
-dm3_slits_b = EpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
+dm3_bpm     = XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
+dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
+dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
+dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
+dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
 
 ## XAFS table
 xafs_yu  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
