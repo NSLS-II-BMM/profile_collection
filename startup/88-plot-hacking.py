@@ -89,6 +89,8 @@ def dcmpitch(doc):
     x = doc['data']['dcm_pitch']
     return x, y
 
+Plot_pitch_i0 = "DerivedPlot(dcmpitch, xlabel='2nd crystal pitch', ylabel='I0')"
+
 
 def it_norm(doc):
     i0 = doc['data']['I0']
@@ -104,28 +106,60 @@ def trans_xmu(doc):
     it = doc['data']['It']
     x  = doc['data']['dcm_energy']
     #x  = doc['seq_num']
-    y  = numpy.log(i0 / it)
+    y  = log(i0 / it)
     return x, y
+
+Plot_e_trans = "DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')"
+
 
 def ref_xmu(doc):
     it = doc['data']['It']
     ir = doc['data']['Ir']
     x  = doc['data']['dcm_energy']
-    y  = numpy.log(it / ir)
+    y  = log(it / ir)
     return x, y
 
-def rollscan(doc):
+def rollscan_trans(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
     x  = doc['data']['xafs_roll']
     y  = it / i0
     return x, y
+def rollscan_fluo(doc):
+    i0 = doc['data']['I0']
+    dt1  = doc['data']['DTC1']
+    dt2  = doc['data']['DTC2']
+    dt3  = doc['data']['DTC3']
+    dt4  = doc['data']['DTC4']
+    x  = doc['data']['xafs_roll']
+    y  = (dt1 + dt2 + dt3 + dt4) / i0
+    return x, y
+def pitchscan_trans(doc):
+    i0 = doc['data']['I0']
+    it = doc['data']['It']
+    x  = doc['data']['xafs_pitch']
+    y  = it / i0
+    return x, y
+def pitchscan_fluo(doc):
+    i0 = doc['data']['I0']
+    dt1  = doc['data']['DTC1']
+    dt2  = doc['data']['DTC2']
+    dt3  = doc['data']['DTC3']
+    dt4  = doc['data']['DTC4']
+    x  = doc['data']['xafs_pitch']
+    y  = (dt1 + dt2 + dt3 + dt4) / i0
+    return x, y
+
 def yscan(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
     x  = doc['data']['xafs_liny']
     y  = it / i0
     return x, y
+
+Plot_y_it = "DerivedPlot(yscan, xlabel='Y', ylabel='it/i0')"
+
+
 def xscan(doc):
     i0 = doc['data']['I0']
     it = doc['data']['It']
@@ -133,10 +167,16 @@ def xscan(doc):
     y  = it / i0
     return x, y
 
+Plot_x_it = "DerivedPlot(xscan, xlabel='X', ylabel='it/i0')"
+
+
 def bctscan(doc):
     x  = doc['data']['dm3_bct']
     y  = doc['data']['I0']
     return x, y
+
+Plot_slits_i0 = "DerivedPlot(bctscan, xlabel='slit height', ylabel='I0')"
+
 
 def tablescan(doc):
     x  = doc['data']['xafs_table_vertical']
@@ -167,6 +207,10 @@ def dt_norm(doc):
     y    = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y
 
+Plot_e_fluo = "DerivedPlot(dt_norm, xlabel='energy (eV)', ylabel='absorption')"
+
+
+
 def dt_x(doc):
     i0   = doc['data']['I0']
     dt1  = doc['data']['DTC1']
@@ -177,6 +221,8 @@ def dt_x(doc):
     y    = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y
 
+Plot_x_if = "DerivedPlot(dt_x, xlabel='X', ylabel='if/i0')"
+
 def dt_y(doc):
     i0   = doc['data']['I0']
     dt1  = doc['data']['DTC1']
@@ -186,3 +232,5 @@ def dt_y(doc):
     x    = doc['data']['xafs_liny']
     y    = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y
+
+Plot_y_if = "DerivedPlot(dt_y, xlabel='Y', ylabel='if/i0')"
