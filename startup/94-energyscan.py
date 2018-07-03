@@ -316,162 +316,17 @@ def ini_sanity(found):
     return (ok, missing)
 
 
-_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
-_vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
-_vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
-_vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
-_vortex_ch4  = [vor.channels.chan6, vor.channels.chan10, vor.channels.chan14]
-_vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
-_deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
+# _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+# _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
+# _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
+# _vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
+# _vortex_ch4  = [vor.channels.chan6, vor.channels.chan10, vor.channels.chan14]
+# _vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
+# _deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
 
-transmission = _ionchambers
-fluorescence = _ionchambers + _deadtime_corrected + _vortex
+# transmission = _ionchambers
+# fluorescence = _ionchambers + _deadtime_corrected + _vortex
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-
-#'/home/bravel/commissioning/scan.ini'
-# def xafs(inifile):
-
-#     if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
-#         print(colored('The DCM is in the 111 position, configured as 311', color='red'))
-#         print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
-#         yield from null()
-#         return
-#     if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
-#         print(colored('The DCM is in the 311 position, configured as 111', color='red'))
-#         print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
-#         yield from null()
-#         return
-
-#     ## make sure we are ready to scan
-#     #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
-#     #yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
-#     _locked_dwell_time.quadem_dwell_time.settle_time = 0
-#     _locked_dwell_time.struck_dwell_time.settle_time = 0
-
-#     ## user input
-#     print(colored('reading ini file: %s' % inifile, color='white'))
-#     (p, f) = scan_metadata(inifile=inifile)
-#     (ok, missing) = ini_sanity(f)
-#     if not ok:
-#         print(colored('\nThe following keywords are missing from your INI file: ', color='red'), '%s\n' % str.join(', ', missing))
-#         yield from null()
-#         return
-
-
-#     eave = channelcut_energy(p['e0'], p['bounds'])
-#     if dcm.prompt:
-#         print("Does this look right?")
-#         for (k,v) in p.items():
-#             print('\t%-12s : %s' % (k,v))
-
-#         print('first data file to be written to "%s"' % os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start'])))
-#         if not dcm.suppress_channel_cut:
-#             print('pseudo-channel-cut energy = %.1f\n' % eave)
-
-#         action = input("q to quit -- any other key to start scans > ")
-#         if action is 'q':
-#             yield from null()
-#             return
-
-#     ## perhaps enter pseudo-channel-cut mode
-#     if not dcm.suppress_channel_cut:
-#         print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, color='white'))
-#         dcm.mode = 'fixed'
-#         yield from mv(dcm.energy, eave)
-#         dcm.mode = 'channelcut'
-
-
-#     ## compute energy and dwell grids
-#     print(colored('computing energy and dwell grids', color='white'))
-#     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
-
-#     ## organize metadata for injection into database and XDI output
-#     print(colored('gathering metadata', color='white'))
-#     md = bmm_metadata(measurement   = p['mode'],
-#                       edge          = p['edge'],
-#                       element       = p['element'],
-#                       edge_energy   = p['e0'],
-#                       focus         = p['focus'],
-#                       hr            = p['hr'],
-#                       direction     = 1,
-#                       scan          = 'step',
-#                       channelcut    = p['channelcut'],
-#                       mono          = 'Si(%s)' % dcm.crystal,
-#                       i0_gas        = 'N2', #\
-#                       it_gas        = 'N2', # > these three need to go into INI file
-#                       ir_gas        = 'N2', #/
-#                       sample        = p['sample'],
-#                       prep          = p['prep'],
-#                       stoichiometry = None,
-#                       mode          = p['mode'],
-#                       comment       = p['comment'],
-#                   )
-
-#     for (k, v) in md.items():
-#         print('\t%-28s : %s' % (k[4:].replace(',','.'),v))
-
-#     ## snap photos
-#     if p['snapshots']:
-#         image = os.path.join(p['folder'], "%s_analog_%s.jpg" % (p['filename'], datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
-#         snap('analog', filename=image)
-#         image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")))
-#         snap('XAS', filename=image)
-
-
-#     ## loop over scan count
-#     count = 0
-#     for i in range(p['start'], p['start']+p['nscans'], 1):
-#         count += 1
-#         fname = "%s.%3.3d" % (p['filename'], i)
-#         datafile = os.path.join(p['folder'], fname)
-#         if os.path.isfile(datafile):
-#             print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
-#             yield from null()
-#             return
-#         print(colored('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid)), color='white'))
-
-#         ## compute trajectory
-#         energy_trajectory    = cycler(dcm.energy, energy_grid)
-#         dwelltime_trajectory = cycler(dwell_time, time_grid)
-#         md['XDI,Mono,direction'] = 'forward'
-#         if p['bothways'] and count%2 == 0:
-#             energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
-#             dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
-#             md['XDI,Mono,direction'] = 'backward'
-
-#         ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
-#         ## mono direction, ... things that can change during the scan sequence
-#         md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
-#         md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
-#         md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
-#         md['XDI,Facility,mode']     = ring.mode.value
-#         if md['XDI,Facility,mode'] == 'Operations':
-#             md['XDI,Facility,mode'] = 'top-off'
-
-
-#         if 'trans' in p['mode']:
-#             yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory, md=md)
-#         else:
-#             yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory, md=md)
-#         header = db[-1]
-#         write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
-#         print(colored('wrote %s' % datafile, color='white'))
-
-
-#     print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
-#     dcm.mode = 'fixed'
-#     yield from mv(dcm.energy, eave)
-
-#     print('Restoring default dwell times at end of scan sequence')
-#     yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
-#     yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
-
-#     yield from sleep(2.0)
-#     print('Cutting power to in-vacuum motors at end of scan sequence')
-#     yield from abs_set(dcm_pitch.kill_cmd, 1)
-#     yield from abs_set(dcm_roll.kill_cmd, 1)
 
 
 def db2xdi(datafile, key):
@@ -487,8 +342,11 @@ def db2xdi(datafile, key):
 
 
 
-import bluesky.preprocessors as bpp
+import bluesky.preprocessors
 from bluesky.preprocessors import subs_decorator
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+
 
 def xafs(inifile):
     def main_plan(inifile):
@@ -544,14 +402,18 @@ def xafs(inifile):
             if action is 'q':
                 yield from null()
                 return
+
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription
-        if 'fluo' in p['mode']:
-            plot = DerivedPlot(dt_norm, xlabel='energy (eV)', ylabel='absorption (fluorescence)')
+        if 'fluo'    in p['mode']:
+            plot =  DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption (fluorescence)')
         elif 'trans' in p['mode']:
-            plot = DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)')
-        elif 'ref' in p['mode']:
-            plot = DerivedPlot(ref_xmu, xlabel='energy (eV)', ylabel='absorption (reference)')
+            plot =  DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)')
+        elif 'ref'   in p['mode']:
+            plot =  DerivedPlot(ref_xmu,   xlabel='energy (eV)', ylabel='absorption (reference)')
+        elif 'both'  in p['mode']:
+            plot = [DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)'),
+                    DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
         else:
             print(colored('Plotting mode not specified, falling back to a transmission plot', color='red'))
             plot = DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)')
@@ -646,7 +508,7 @@ def xafs(inifile):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan plan with the correct detectors
-                if 'trans' in p['mode']:
+                if 'trans' in p['mode'] or 'ref' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory, md=md)
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory, md=md)
@@ -656,7 +518,7 @@ def xafs(inifile):
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## finsh up, close out
+            ## finish up, close out
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from mv(dcm.energy, eave)
@@ -674,4 +536,4 @@ def xafs(inifile):
         yield from abs_set(dcm_pitch.kill_cmd, 1)
         yield from abs_set(dcm_roll.kill_cmd, 1)
 
-    yield from bpp.finalize_wrapper(main_plan(inifile), cleanup_plan())
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())

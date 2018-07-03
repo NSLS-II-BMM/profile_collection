@@ -63,41 +63,41 @@ def linescan(axis, detector, start, stop, nsteps):
         yield from null()
         return
 
-    if axis == 'x' and detector == 'it':
-        plot  = DerivedPlot(xscan, xlabel='sample X', ylabel='It / I0')
+    if axis == 'x':
         motor = xafs_linx
         dets  = [quadem1,]
-    elif axis == 'x' and detector == 'if':
-        plot  = DerivedPlot(dt_x,  xlabel='sample X', ylabel='If / I0')
-        motor = xafs_linx
-        dets  = [quadem1, vor]
+        if detector == 'it':
+            plot  = DerivedPlot(xscan, xlabel='sample X', ylabel='It / I0')
+        elif detector == 'if':
+            plot  = DerivedPlot(dt_x,  xlabel='sample X', ylabel='If / I0')
+            dets.append(vor)
 
-    elif axis == 'y' and detector == 'it':
-        plot  = DerivedPlot(yscan, xlabel='sample Y', ylabel='It / I0')
+    elif axis == 'y':
         motor = xafs_liny
         dets  = [quadem1,]
-    elif axis == 'y' and detector == 'if':
-        plot  = DerivedPlot(dt_y,  xlabel='sample Y', ylabel='If / I0')
-        motor = xafs_liny
-        dets  = [quadem1, vor]
+        if detector == 'it':
+            plot  = DerivedPlot(yscan, xlabel='sample X', ylabel='It / I0')
+        elif detector == 'if':
+            plot  = DerivedPlot(dt_y,  xlabel='sample X', ylabel='If / I0')
+            dets.append(vor)
 
-    elif axis == 'roll' and detector == 'it':
-        plot  = DerivedPlot(rollscan_trans, xlabel='sample roll', ylabel='It / I0')
+    elif axis == 'roll':
         motor = xafs_roll
         dets  = [quadem1,]
-    elif axis == 'roll' and detector == 'if':
-        plot  = DerivedPlot(rollscan_fluo,  xlabel='sample roll', ylabel='If / I0')
-        motor = xafs_roll
-        dets  = [quadem1, vor]
+        if detector == 'it':
+            plot  = DerivedPlot(rollscan_trans, xlabel='sample roll', ylabel='It / I0')
+        elif detector == 'if':
+            plot  = DerivedPlot(rollscan_fluo,  xlabel='sample roll', ylabel='If / I0')
+            dets.append(vor)
 
-    elif axis == 'pitch' and detector == 'it':
-        plot  = DerivedPlot(pitchscan_trans, xlabel='sample pitch', ylabel='It / I0')
+    elif axis == 'pitch':
         motor = xafs_pitch
         dets  = [quadem1,]
-    elif axis == 'pitch' and detector == 'if':
-        plot  = DerivedPlot(pitchscan_fluo,  xlabel='sample pitch', ylabel='If  /  I0')
-        motor = xafs_pitch
-        dets  = [quadem1, vor]
+        if detector == 'it':
+            plot  = DerivedPlot(pitchscan_trans, xlabel='sample roll', ylabel='It / I0')
+        elif detector == 'if':
+            plot  = DerivedPlot(pitchscan_fluo,  xlabel='sample roll', ylabel='If / I0')
+            dets.append(vor)
 
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):

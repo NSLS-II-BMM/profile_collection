@@ -31,10 +31,12 @@ def write_XDI(datafile, dataframe, mode, comment):
     d=datetime.datetime.fromtimestamp(round(dataframe.stop['time']))
     end_time   = datetime.datetime.isoformat(d)
 
-    if 'fluo' in mode:
-        detectors = fluorescence
-    else:
+    if 'trans' in mode:
         detectors = transmission
+    elif 'ref' in mode:
+        detectors = transmission
+    else:
+        detectors = fluorescence
 
     ## snarf XDI metadata from the dataframe and elsewhere
     xdi = list(['# XDI/1.0 BlueSky/%s'              % bluesky_version,
@@ -46,7 +48,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Detector.I0: %s'                 % dataframe.start['XDI,Detector,I0'],
                 '# Detector.I1: %s'                 % dataframe.start['XDI,Detector,It'],
                 '# Detector.I2: %s'                 % dataframe.start['XDI,Detector,Ir'],])
-    if 'fluo' in mode:
+    if 'fluo' in mode or 'both' in mode:
         xdi.append('# Detector.fluorescence: %s' % dataframe.start['XDI,Detector,fluorescence'])
     xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
                 '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],
@@ -74,7 +76,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Scan.uid: %s'                    % dataframe.start['uid'],
             ])
     plot_hint = 'ln(I0/It)  --  ln($4/$5)'
-    if 'fluo' in mode:
+    if 'fluo' in mode or 'both' in mode:
         plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
@@ -111,7 +113,7 @@ def write_XDI(datafile, dataframe, mode, comment):
     handle.write('# -----------' + eol)
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
-    if 'fluo' in mode:
+    if 'fluo' in mode or 'both' in mode:
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',

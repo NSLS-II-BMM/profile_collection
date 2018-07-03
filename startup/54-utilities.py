@@ -1,14 +1,5 @@
 from ophyd import Component as Cpt, EpicsSignal, Signal, Device
 
-#from termcolor import colored
-def colored(text, color='white', attrs=[]):
-    if color is 'red':
-        return '\x1b[01m\x1b[31m' + text + '\x1b[0m'
-    if color is 'yellow':
-        return '\x1b[01m\x1b[33m' + text + '\x1b[0m'
-    if color is 'white':
-        return '\x1b[01m\x1b[37m' + text + '\x1b[0m'
-
 
 def show_shutters():
     bmps_state = bool(bmps.state.value)
