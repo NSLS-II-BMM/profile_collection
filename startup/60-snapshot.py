@@ -113,7 +113,7 @@ def anacam(filename    = None,
     if filename is None:
         filename = folder + '/analog_camera_' + now() + '.jpg'
 
-    command = "fswebcam %s-i %s -d %s -r 640x480 --title \"%s\" --timestamp \"%s\" -S %d -F %d --set brightness=%s%% %s" %\
+    command = "fswebcam %s-i %s -d %s -r 640x480 --title \"%s\" --timestamp \"%s\" -S %d -F %d --set brightness=%s%% \"%s\"" %\
               (quiet, camera, device, title, timestamp, skip, frames, brightness, filename)
     system(command)
 

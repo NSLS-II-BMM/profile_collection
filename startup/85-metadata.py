@@ -1,5 +1,5 @@
 
-from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal
+from ophyd import QuadEM, Component as Cpt, EpicsSignal, EpicsSignalRO, EpicsSignalWithRBV, Signal
 import datetime
 
 bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM) -- Beamline for Materials Measurement',
@@ -23,10 +23,11 @@ compton_shield = TC('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}', name='compton_shield')
 
 
 class Ring(Device):
-        current  = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}I:Real-I')
-        lifetime = Cpt(EpicsSignal, ':OPS-BI{DCCT:1}Lifetime-I')
-        energy   = Cpt(EpicsSignal, '{}Energy_SRBend')
-        mode     = Cpt(EpicsSignal, '-OPS{}Mode-Sts', string=True)
+        current    = Cpt(EpicsSignalRO, ':OPS-BI{DCCT:1}I:Real-I')
+        lifetime   = Cpt(EpicsSignalRO, ':OPS-BI{DCCT:1}Lifetime-I')
+        energy     = Cpt(EpicsSignalRO, '{}Energy_SRBend')
+        mode       = Cpt(EpicsSignalRO, '-OPS{}Mode-Sts', string=True)
+        filltarget = Cpt(EpicsSignalRO, '-HLA{}FillPattern:DesireImA')
 
 ring = Ring('SR', name='ring')
 
