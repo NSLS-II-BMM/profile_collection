@@ -21,6 +21,17 @@ def units(label):
         return ''
 
 
+_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+_vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
+_vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
+_vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
+_vortex_ch4  = [vor.channels.chan6, vor.channels.chan10, vor.channels.chan14]
+_vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
+_deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
+
+transmission = _ionchambers
+fluorescence = _ionchambers + _deadtime_corrected + _vortex
+
 
 def write_XDI(datafile, dataframe, mode, comment):
     handle = open(datafile, 'w')
@@ -53,11 +64,11 @@ def write_XDI(datafile, dataframe, mode, comment):
     xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
                 '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],
                 '# Facility.name: %s'               % 'NSLS-II',
-                '# Facility.current: %.1f mA'       % ring.current.value,
-                '# Facility.energy: %.1f GeV'       % (ring.energy.value/1000.),
+                '# Facility.current: %s'            % dataframe.start['XDI,Facility,current'],
+                '# Facility.energy: %s'             % dataframe.start['XDI,Facility,energy'],
                 '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
-                '# Mono.name: Si(%s)'               % dcm.crystal,
-                '# Mono.d_spacing: %.7f Å'          % (dcm._twod/2),
+                '# Mono.name: %s'                   % dataframe.start['XDI,Mono,name'],
+                '# Mono.d_spacing: %.7f Å'          % dataframe.start['XDI,Mono,d_spacing'],
                 '# Mono.encoder_resolution: %.7f deg/ct' % dataframe.start['XDI,Mono,encoder_resolution'],
                 '# Mono.angle_offset: %.7f deg'     % dataframe.start['XDI,Mono,angle_offset'],
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],

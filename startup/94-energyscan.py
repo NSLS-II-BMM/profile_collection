@@ -37,7 +37,7 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'channelcut':True,
                  'focus':     False,
                  'hr':        True,
-                 'mode':      'transmission'}
+                 'mode':      'transmission',}
 
 
 import inspect
@@ -335,7 +335,7 @@ def db2xdi(datafile, key):
         return
     header = db[key]
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
-    write_XDI(datafile, header, header['XDI,_mode'], header['XDI,_comment'])
+    write_XDI(datafile, header, header.start['XDI,_mode'][0], header.start['XDI,_comment'][0])
     print(colored('wrote %s' % datafile, color='white'))
 
 
@@ -402,6 +402,9 @@ def xafs(inifile):
             if action is 'q':
                 yield from null()
                 return
+
+        with open(inifile, 'r') as fd: content = fd.read()
+        BMM_log_info('starting XAFS scan using %s:\n%s' % (inifile, content))
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription
@@ -497,10 +500,13 @@ def xafs(inifile):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
-                ## mono direction, ... things that can change during the scan sequence
+                ## mono direction, ... things that can change during or between scan sequences
+                md['XDI,Mono,name']         = 'Si(%s)' % dcm.crystal
+                md['XDI,Mono,d_spacing']    = '%.7f Å' % dcm._twod/2
                 md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
                 md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
                 md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+                md['XDI,Facility,energy']   = str(ring.energy.value/1000.) + ' GeV'
                 md['XDI,Facility,mode']     = ring.mode.value
                 if md['XDI,Facility,mode'] == 'Operations':
                     md['XDI,Facility,mode'] = 'top-off'

@@ -33,6 +33,9 @@ def move_m3(target=5):
         yield from null()
         return
 
+    BMM_log_info('Moving mirror 3: target = %.2f, M3 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'
+                 % (target, thetanot-theta, bct, upstr, dnstr, correction))
+
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
 
     yield from mv(m3.pitch,       thetanot-theta,
@@ -76,6 +79,9 @@ def move_m2(target=3.5):
     if action is 'q':
         yield from null()
         return
+
+    BMM_log_info('Moving mirror 2: target = %.2f, M2 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'
+                 % (target, thetanot-theta, bct, upstr, dnstr, correction))
 
     yield from abs_set(dm3_bct.kill_cmd, 1)
 

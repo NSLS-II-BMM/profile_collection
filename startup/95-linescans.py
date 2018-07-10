@@ -7,30 +7,38 @@ from bluesky.preprocessors import subs_decorator
 
 def slit_height(start=-3.0, stop=3.0, nsteps=61):
     plot = DerivedPlot(bctscan, xlabel='slit height', ylabel='I0')
+    motor = dm3_bct
+
+    BMM_log_info('slit height scan: %s, %s, %.3f, %.3f, %d -- starting at %.3f'
+                 % (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value))
 
     @subs_decorator(plot)
     def scan_slit():
         yield from abs_set(quadem1.averaging_time, 0.1)
-        yield from abs_set(dm3_bct.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1)
 
-        yield from rel_scan([quadem1], dm3_bct, start, stop, nsteps)
+        yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
         yield from sleep(3.0)
         yield from abs_set(quadem1.averaging_time, 0.5)
-        yield from abs_set(dm3_bct.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_slit()
 
 
 def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
     plot = DerivedPlot(dcmpitch, xlabel='2nd crystal pitch', ylabel='I0')
+    motor = dcm_pitch
+
+    BMM_log_info('rocking curve scan: %s, %s, %.3f, %.3f, %d -- starting at %.3f'
+                 % (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value))
 
     @subs_decorator(plot)
     def scan_dcmpitch():
         yield from abs_set(quadem1.averaging_time, 0.1)
-        yield from abs_set(dcm_pitch.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1)
 
-        yield from rel_scan([quadem1], dcm_pitch, start, stop, nsteps)
+        yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
         df = db[-1]
         t  = df.table()
@@ -40,11 +48,11 @@ def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
 
         yield from sleep(3.0)
         yield from abs_set(quadem1.averaging_time, 0.5)
-        yield from abs_set(dcm_pitch.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1)
 
-        yield from mv(dcm_pitch, top)
+        yield from mv(motor, top)
         yield from sleep(3.0)
-        yield from abs_set(dcm_pitch.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_dcmpitch()
 
@@ -98,6 +106,9 @@ def linescan(axis, detector, start, stop, nsteps):
         elif detector == 'if':
             plot  = DerivedPlot(pitchscan_fluo,  xlabel='sample roll', ylabel='If / I0')
             dets.append(vor)
+
+    BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f'
+                 % (motor.name, detector, start, stop, nsteps, motor.user_readback.value))
 
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):

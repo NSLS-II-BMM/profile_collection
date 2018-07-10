@@ -19,6 +19,7 @@ def change_mode(mode=None):
         print('%s is not a mode' % mode)
         return(yield from null())
 
+    BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
                                             # starting a move, it is one of the
                                             # motors that report MOVN=1 even when
@@ -87,6 +88,7 @@ def change_xtals(xtal=None):
         print('%s is not a crytsal set' % xtal)
         return(yield from null())
 
+    BMM_log_info('Moving to %s crystals' % xtal)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
     if xtal is 'Si(111)':

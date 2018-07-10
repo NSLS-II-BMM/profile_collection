@@ -1,5 +1,7 @@
 from numpy import pi, sin, cos, arcsin, sqrt
 
+BMM_logfile = '/home/bravel/BMM_master.log'
+
 KTOE = 3.8099819442818976
 def etok(ee):
     '''convert relative energy to wavenumber'''
