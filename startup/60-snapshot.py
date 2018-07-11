@@ -38,6 +38,7 @@ def xas_webcam(filename=None):
         filename = os.environ['HOME'] + '/XAS_camera_' + now() + '.jpg'
     r=requests.get(XASURL, proxies=CAM_PROXIES)
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
+    BMM_log_info('XAS webcam image written to %s' % filename)
     print('Wrote ' + filename)
 
 def xrd_webcam(filename=None):
@@ -45,6 +46,7 @@ def xrd_webcam(filename=None):
         filename = os.environ['HOME'] + '/XRD_camera_' + now() + '.jpg'
     r=requests.get(XRDURL, proxies=CAM_PROXIES)
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
+    BMM_log_info('XRD webcam image written to %s' % filename)
     print('Wrote ' + filename)
 
 
@@ -117,6 +119,7 @@ def anacam(filename    = None,
               (quiet, camera, device, title, timestamp, skip, frames, brightness, filename)
     system(command)
 
+    BMM_log_info('Analog camera image written to %s' % filename)
     print('Wrote ' + filename)
 
     ## crosshairs

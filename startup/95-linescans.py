@@ -24,6 +24,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_slit()
+    BMM_log_info('slit height scan finished, uid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
 
 
 def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
@@ -55,6 +56,7 @@ def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_dcmpitch()
+    BMM_log_info('rocking curve scan finished, uid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
 
 def linescan(axis, detector, start, stop, nsteps):
     motors = ('x', 'y', 'roll', 'pitch') # roth, rotb, rots, linxs, linx
@@ -115,3 +117,36 @@ def linescan(axis, detector, start, stop, nsteps):
         yield from rel_scan(dets, motor, start, stop, nsteps)
 
     yield from scan_xafs_motor(dets, motor, start, stop, nsteps)
+    BMM_log_info('linescan finished, uid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
+
+
+def ls2dat(datafile, key):
+    if os.path.isfile(datafile):
+        print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
+        return
+    handle = open(datafile, 'w')
+    dataframe = db[key]
+    devices = dataframe.devices()
+    if 'vor' in devices:
+        abscissa = (devices - {'quadem1', 'vor'}).pop()
+        column_list = [abscissa, 'I0', 'It', 'Ir',
+                       'DTC1', 'DTC2', 'DTC3', 'DTC4',
+                       'ROI1', 'ICR1', 'OCR1',
+                       'ROI2', 'ICR2', 'OCR2',
+                       'ROI3', 'ICR3', 'OCR3',
+                       'ROI4', 'ICR4', 'OCR4']
+        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+    else:
+        abscissa = (devices - {'quadem1',}).pop()
+        template = "  %.3f  %.6f  %.6f  %.6f\n"
+        column_list = [abscissa, 'I0', 'It', 'Ir']
+
+    table = dataframe.table()
+    this = table.loc[:,column_list]
+
+    handle.write('# ' + '  '.join(column_list) + '\n')
+    for i in range(0,len(this)):
+        handle.write(template % tuple(this.iloc[i]))
+    handle.flush()
+    handle.close
+    print(colored('wrote %s' % datafile, color='white'))

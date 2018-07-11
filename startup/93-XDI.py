@@ -68,7 +68,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Facility.energy: %s'             % dataframe.start['XDI,Facility,energy'],
                 '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
                 '# Mono.name: %s'                   % dataframe.start['XDI,Mono,name'],
-                '# Mono.d_spacing: %.7f Å'          % dataframe.start['XDI,Mono,d_spacing'],
+                '# Mono.d_spacing: %s'              % dataframe.start['XDI,Mono,d_spacing'],
                 '# Mono.encoder_resolution: %.7f deg/ct' % dataframe.start['XDI,Mono,encoder_resolution'],
                 '# Mono.angle_offset: %.7f deg'     % dataframe.start['XDI,Mono,angle_offset'],
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],
@@ -138,7 +138,7 @@ def write_XDI(datafile, dataframe, mode, comment):
 
     this = table.loc[:,column_list]
 
-    for i in range(1,len(this)):
+    for i in range(0,len(this)):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
     handle.close

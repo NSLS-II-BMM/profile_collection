@@ -427,6 +427,7 @@ def xafs(inifile):
         def scan_sequence():
             ## perhaps enter pseudo-channel-cut mode
             if not dcm.suppress_channel_cut:
+                BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
                 print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, color='white'))
                 dcm.mode = 'fixed'
                 yield from mv(dcm.energy, eave)
@@ -502,7 +503,7 @@ def xafs(inifile):
                 ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
                 ## mono direction, ... things that can change during or between scan sequences
                 md['XDI,Mono,name']         = 'Si(%s)' % dcm.crystal
-                md['XDI,Mono,d_spacing']    = '%.7f Å' % dcm._twod/2
+                md['XDI,Mono,d_spacing']    = '%.7f Å' % (dcm._twod/2)
                 md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
                 md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
                 md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
@@ -521,6 +522,8 @@ def xafs(inifile):
                 header = db[-1]
                 write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
                 print(colored('wrote %s' % datafile, color='white'))
+                BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
+                             % (db[-1].start['uid'], db[-1].start['scan_id'], datafile))
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -535,6 +538,8 @@ def xafs(inifile):
 
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
+        BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
+                     % (db[-1].start['uid'], db[-1].start['scan_id']))
         dcm.mode = 'fixed'
         yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
         yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
