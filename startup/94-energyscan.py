@@ -2,6 +2,7 @@ import bluesky as bs
 import bluesky.plans as bp
 import numpy
 import os
+import re
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
@@ -42,24 +43,26 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
 
 import inspect
 import configparser
-def scan_metadata(inifile=None, folder=None, filename=None,
-                  e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
-                  nscans=None, start=None, inttime=None,
-                  snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
-                  mode=None, bounds=None, steps=None, times=None):
+def scan_metadata(inifile=None, **kwargs):
+    #folder=None, filename=None,
+    #e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
+    #nscans=None, start=None, inttime=None,
+    #snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
+    #mode=None, bounds=None, steps=None, times=None):
     """Typical use is to specify an INI file, which contains all the
-    metadata relevant to a set of scans.  In that case, this is called
-    with one argument:
+    metadata relevant to a set of scans.  This function is called with
+    one argument:
 
       parameters = scan_metadata(inifile='/path/to/inifile')
 
       inifile:  fully resolved path to INI file describing the measurement.
 
-      returns a dictionary of metadata
+    A dictionary of metadata is returned.
 
-    As part of a multi-scan plan (i.e. a macro), individual metadatum
-    can be specified to override values in the INI file.  These are
-    also the keys in the dictionary which is returned:
+    As part of a multi-scan plan (i.e. a macro), individual metadata
+    can be specified as kwargs to override values in the INI file.
+    The kwarg keys are the same as the keys in the dictionary which is
+    returned:
 
       folder:     [str]   folder for saved XDI files
       filename:   [str]   filename stub for saved XDI files
@@ -71,16 +74,15 @@ def scan_metadata(inifile=None, folder=None, filename=None,
       comment:    [str]   user-supplied comment about the data
       nscan:      [int]   number of repetitions
       start:      [int]   starting scan number, XDI file will be filename.###
-      inttime:    <not used>
       snapshots:  [bool]  True = capture analog and XAS cameras before scan sequence
       bothways:   [bool]  True = measure in both monochromator directions
       channelcut: [bool]  True = measure in pseudo-channel-cut mode
       focus:      [bool]  True = focusing mirror is in use
       hr:         [bool]  True = flat harmonic rejection mirror is in use
       mode:       [str]   transmission, fluorescence, or reference -- how to display the data
-      bounds:     [list]  scan grid boundaries
-      steps:      [list]  scan grid step sizes
-      times:      [list]  scan grid dwell times
+      bounds:     [list]  scan grid boundaries (not kwarg-able at this time)
+      steps:      [list]  scan grid step sizes (not kwarg-able at this time)
+      times:      [list]  scan grid dwell times (not kwarg-able at this time)
 
     Any or all of these can be specified.  Values from the INI file
     are read first, then overridden with specified values.  If values
@@ -107,7 +109,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
     ## ----- scan regions
     for a in ('bounds', 'steps', 'times'):
         found[a] = False
-        if args[a] is None:
+        if a not in kwargs:
             parameters[a] = []
             try:
                 for f in config.get('scan', a).split():
@@ -122,50 +124,54 @@ def scan_metadata(inifile=None, folder=None, filename=None,
     ## ----- strings
     for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'sample', 'prep'):
         found[a] = False
-        if args[a] is None:
+        if a not in kwargs:
             try:
                 parameters[a] = config.get('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
-            parameters[a] = str(args[a])
+            parameters[a] = str(kwargs[a])
+            found[a] = True
 
     ## ----- integers
     for a in ('start', 'nscans'):
         found[a] = False
-        if args[a] is None:
+        if a not in kwargs:
             try:
                 parameters[a] = int(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
-            parameters[a] = int(args[a])
+            parameters[a] = int(kwargs[a])
+            found[a] = True
 
     ## ----- floats
     for a in ('e0', 'inttime'):
         found[a] = False
-        if args[a] is None:
+        if a not in kwargs:
             try:
                 parameters[a] = float(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
-            parameters[a] = float(args[a])
+            parameters[a] = float(kwargs[a])
+            found[a] = True
 
     ## ----- booleans
     for a in ('snapshots', 'bothways', 'channelcut', 'focus', 'hr'):
         found[a] = False
-        if args[a] is None:
+        if a not in kwargs:
             try:
                 parameters[a] = config.getboolean('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
                 parameters[a] = CS_DEFAULTS[a]
         else:
-            parameters[a] = bool(args[a])
+            parameters[a] = bool(kwargs[a])
+            found[a] = True
 
     return parameters, found
 
@@ -176,6 +182,7 @@ def scan_metadata(inifile=None, folder=None, filename=None,
 ##   * steps cannot be negative
 ##   * times cannot be negative
 ##   * steps smaller than, say, '0.01k'
+##   * steps smaller than 0.01
 ##   * k^2 times
 def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112):
     '''Input:
@@ -328,7 +335,9 @@ def ini_sanity(found):
 # fluorescence = _ionchambers + _deadtime_corrected + _vortex
 
 
-
+##########################################################
+# --- export a database energy scan entry to an XDI file #
+##########################################################
 def db2xdi(datafile, key):
     if os.path.isfile(datafile):
         print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
@@ -348,7 +357,20 @@ import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
 
-def xafs(inifile):
+
+##################################################
+# --- a simple class for managing scan logistics #
+##################################################
+class xafs_scan_parameters():
+    def __init__(self):
+        self.prompt = True
+        self.final_log_entry = True
+BMM_xsp = xafs_scan_parameters()
+
+#########################
+# -- the main XAFS scan #
+#########################
+def xafs(inifile, **kwargs):
     def main_plan(inifile):
         if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
             print(colored('The DCM is in the 111 position, configured as 311', color='red'))
@@ -371,20 +393,22 @@ def xafs(inifile):
         ## user input, find and parse the INI file
         if not os.path.isfile(inifile):
             print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='red'))
+            BMM_xsp.final_log_entry = False
             yield from null()
             return
         print(colored('reading ini file: %s' % inifile, color='white'))
-        (p, f) = scan_metadata(inifile=inifile)
+        (p, f) = scan_metadata(inifile=inifile, **kwargs)
         (ok, missing) = ini_sanity(f)
         if not ok:
             print(colored('\nThe following keywords are missing from your INI file: ', color='red'), '%s\n' % str.join(', ', missing))
+            BMM_xsp.final_log_entry = False
             yield from null()
             return
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## user verification (disabled by dcm.prompt)
+        ## user verification (disabled by BMM_xsp.prompt)
         eave = channelcut_energy(p['e0'], p['bounds'])
-        if dcm.prompt:
+        if BMM_xsp.prompt:
             print("Does this look right?")
             for (k,v) in p.items():
                 print('\t%-12s : %s' % (k,v))
@@ -393,6 +417,7 @@ def xafs(inifile):
             print('\nfirst data file to be written to "%s"' % outfile)
             if os.path.isfile(outfile):
                 print(colored('%s already exists!  Bailing out....' % outfile, color='red'))
+                BMM_xsp.final_log_entry = False
                 yield from null()
                 return
 
@@ -400,11 +425,13 @@ def xafs(inifile):
                 print('\npseudo-channel-cut energy = %.1f' % eave)
             action = input("\nq to quit -- any other key to start scans > ")
             if action is 'q':
+                BMM_xsp.final_log_entry = False
                 yield from null()
                 return
 
         with open(inifile, 'r') as fd: content = fd.read()
-        BMM_log_info('starting XAFS scan using %s:\n%s' % (inifile, content))
+        output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
+        BMM_log_info('starting XAFS scan using %s:\n%s\nkwargs = %s' % (inifile, output, str(kwargs)))
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription
@@ -449,7 +476,7 @@ def xafs(inifile):
                               focus         = p['focus'],
                               hr            = p['hr'],
                               direction     = 1,
-                              scan          = 'step',
+                              scantype      = 'step',
                               channelcut    = p['channelcut'],
                               mono          = 'Si(%s)' % dcm.crystal,
                               i0_gas        = 'N2', #\
@@ -538,8 +565,9 @@ def xafs(inifile):
 
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
-        BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
-                     % (db[-1].start['uid'], db[-1].start['scan_id']))
+        if BMM_xsp.final_log_entry is True:
+            BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
+                         % (db[-1].start['uid'], db[-1].start['scan_id']))
         dcm.mode = 'fixed'
         yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
         yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
@@ -547,4 +575,5 @@ def xafs(inifile):
         yield from abs_set(dcm_pitch.kill_cmd, 1)
         yield from abs_set(dcm_roll.kill_cmd, 1)
 
+    BMM_xsp.final_log_entry = True
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())

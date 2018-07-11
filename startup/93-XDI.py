@@ -141,4 +141,4 @@ def write_XDI(datafile, dataframe, mode, comment):
     for i in range(0,len(this)):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
-    handle.close
+    handle.close()

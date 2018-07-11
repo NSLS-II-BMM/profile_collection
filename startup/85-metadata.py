@@ -38,7 +38,7 @@ def bmm_metadata(measurement = 'transmission',
                  focus       = False,
                  hr          = True,
                  direction   = 1,
-                 scan        = 'step',
+                 scantype    = 'step',
                  channelcut  = True,
                  mono        = 'Si(111)',
                  i0_gas      = 'N2',
@@ -109,7 +109,7 @@ def bmm_metadata(measurement = 'transmission',
     else:
         md['XDI,Mono,direction'] =  'decreasing in energy'
 
-    if 'step' in scan:
+    if 'step' in scantype:
         md['XDI,Mono,scan_type'] = 'step'
     else:
         md['XDI,Mono,scan_type'] = 'slew'

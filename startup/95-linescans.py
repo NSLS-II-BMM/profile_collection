@@ -4,6 +4,8 @@ import numpy
 import os
 
 from bluesky.preprocessors import subs_decorator
+## see 88-plot-hacking.py for definitions of plot functions for DerivedPlot
+## see 10-motors.py and 20-dcm.py for motor definitions
 
 def slit_height(start=-3.0, stop=3.0, nsteps=61):
     plot = DerivedPlot(bctscan, xlabel='slit height', ylabel='I0')
@@ -148,5 +150,5 @@ def ls2dat(datafile, key):
     for i in range(0,len(this)):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
-    handle.close
+    handle.close()
     print(colored('wrote %s' % datafile, color='white'))
