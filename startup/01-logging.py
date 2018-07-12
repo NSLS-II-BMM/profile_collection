@@ -6,10 +6,12 @@ BMM_logger.handlers = []
 
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
 BMM_log_master_file = '/home/bravel/BMM_Data/BMM_master.log'
+chmod(BMM_log_master_file, 0o644)
 BMM_log_master      = logging.FileHandler(BMM_log_master_file)
 BMM_log_master.setFormatter(BMM_formatter)
 BMM_logger.addHandler(BMM_log_master)
 BMM_logger.setLevel(logging.INFO)
+chmod(BMM_log_master_file, 0o444)
 
 BMM_log_user = None
 
