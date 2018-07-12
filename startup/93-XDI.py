@@ -80,6 +80,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Sample.prep: %s'                 % dataframe.start['XDI,Sample,prep'],
                 '# Sample.x_position: %.3f'         % dataframe.start['XDI,Sample,x_position'],
                 '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about roll, pitch, rotX ???
+                '# Sample.roll_position: %.3f'      % dataframe.start['XDI,Sample,roll_position'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
                 '# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,

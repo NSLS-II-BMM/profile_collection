@@ -1,5 +1,6 @@
 import bluesky as bs
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
 
 import json
 
@@ -47,7 +48,7 @@ def change_mode(mode=None):
         slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
     )
 
-    yield from sleep(2.0)
+    yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
 
 
@@ -88,7 +89,7 @@ def change_xtals(xtal=None):
         print('%s is not a crytsal set' % xtal)
         return(yield from null())
 
-    BMM_log_info('Moving to %s crystals' % xtal)
+    BMM_log_info('Moving to the %s crystals' % xtal)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
     if xtal is 'Si(111)':
@@ -104,6 +105,6 @@ def change_xtals(xtal=None):
         #dcm.crystal = '311'
         dcm.set_crystal('311')  # set d-spacing and bragg offset
 
-    yield from sleep(2.0)
+    yield from bps.sleep(2.0)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)

@@ -1,4 +1,5 @@
 
+import bluesky.plan_stubs as bps
 from numpy import tan, pi
 
 def move_m3(target=5):
@@ -44,7 +45,7 @@ def move_m3(target=5):
                   xafs_table.ydo, dnstr,
                   xafs_table.ydi, dnstr)
 
-    yield from sleep(2.0)
+    yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
 
 
@@ -91,5 +92,5 @@ def move_m2(target=3.5):
                   xafs_table.ydo, dnstr,
                   xafs_table.ydi, dnstr)
 
-    yield from sleep(2.0)
+    yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after

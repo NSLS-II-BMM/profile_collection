@@ -95,8 +95,8 @@ def tablescan(doc):
     y  = doc['data']['I0']
     return x, y
 
-Plot_pitch_i0 = "DerivedPlot(dcmpitch, xlabel='2nd crystal pitch', ylabel='I0')"
-Plot_slits_i0 = "DerivedPlot(bctscan,  xlabel='slit height',       ylabel='I0')"
+#Plot_pitch_i0 = "DerivedPlot(dcmpitch, xlabel='2nd crystal pitch', ylabel='I0')"
+#Plot_slits_i0 = "DerivedPlot(bctscan,  xlabel='slit height',       ylabel='I0')"
 ### ===============================================================================
 
 
@@ -140,8 +140,8 @@ def dt_norm(doc):
     y    = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y
 
-Plot_e_trans = "DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')"
-Plot_e_fluo  = "DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption')"
+#Plot_e_trans = "DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption')"
+#Plot_e_fluo  = "DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption')"
 ### ===============================================================================
 
 
@@ -215,8 +215,8 @@ def pitchscan_fluo(doc):
     y   = (dt1 + dt2 + dt3 + dt4) / i0
     return x, y
 
-Plot_x_it = "DerivedPlot(xscan, xlabel='X', ylabel='it/i0')"
-Plot_x_if = "DerivedPlot(dt_x,  xlabel='X', ylabel='if/i0')"
-Plot_y_it = "DerivedPlot(yscan, xlabel='Y', ylabel='it/i0')"
-Plot_y_if = "DerivedPlot(dt_y,  xlabel='Y', ylabel='if/i0')"
+#Plot_x_it = "DerivedPlot(xscan, xlabel='X', ylabel='it/i0')"
+#Plot_x_if = "DerivedPlot(dt_x,  xlabel='X', ylabel='if/i0')"
+#Plot_y_it = "DerivedPlot(yscan, xlabel='Y', ylabel='it/i0')"
+#Plot_y_if = "DerivedPlot(dt_y,  xlabel='Y', ylabel='if/i0')"
 ### ===============================================================================

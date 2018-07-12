@@ -1,5 +1,6 @@
 import bluesky as bs
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
 import numpy
 import os
 
@@ -21,7 +22,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
 
         yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
-        yield from sleep(3.0)
+        yield from bps.sleep(3.0)
         yield from abs_set(quadem1.averaging_time, 0.5)
         yield from abs_set(motor.kill_cmd, 1)
 
@@ -49,12 +50,12 @@ def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
         top = float(t[t['I0'] == maxval]['dcm_pitch']) # position of max intensity
         ## see https://pandas.pydata.org/pandas-docs/stable/10min.html#boolean-indexing
 
-        yield from sleep(3.0)
+        yield from bps.sleep(3.0)
         yield from abs_set(quadem1.averaging_time, 0.5)
         yield from abs_set(motor.kill_cmd, 1)
 
         yield from mv(motor, top)
-        yield from sleep(3.0)
+        yield from bps.sleep(3.0)
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_dcmpitch()

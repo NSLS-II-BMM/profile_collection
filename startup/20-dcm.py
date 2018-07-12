@@ -15,7 +15,7 @@ class DCM(PseudoPositioner):
         self.offset  = offset
         self.mode    = mode
         self.suppress_channel_cut = False
-        self.prompt  = True
+        #self.prompt  = True
         super().__init__(*args, **kwargs)
 
     @property

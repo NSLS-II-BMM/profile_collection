@@ -1,5 +1,6 @@
 import bluesky as bs
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
 import numpy
 import os
 import re
@@ -41,14 +42,15 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'mode':      'transmission',}
 
 
-import inspect
+#import inspect
 import configparser
-def scan_metadata(inifile=None, **kwargs):
     #folder=None, filename=None,
     #e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
     #nscans=None, start=None, inttime=None,
     #snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
     #mode=None, bounds=None, steps=None, times=None):
+
+def scan_metadata(inifile=None, **kwargs):
     """Typical use is to specify an INI file, which contains all the
     metadata relevant to a set of scans.  This function is called with
     one argument:
@@ -90,8 +92,8 @@ def scan_metadata(inifile=None, **kwargs):
     (possibly) sensible defaults are used.
 
     """
-    frame = inspect.currentframe()          # see https://stackoverflow.com/a/582206 and
-    args  = inspect.getargvalues(frame)[3]  # https://docs.python.org/3/library/inspect.html#inspect.getargvalues
+    #frame = inspect.currentframe()          # see https://stackoverflow.com/a/582206 and
+    #args  = inspect.getargvalues(frame)[3]  # https://docs.python.org/3/library/inspect.html#inspect.getargvalues
 
     parameters = dict()
 
@@ -296,10 +298,6 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##  9. return detectors to AutoCount and Continuous modes
 
 
-from numpy import pi, arcsin
-HBARC = 1973.27053324
-
-
 def channelcut_energy(e0, bounds):
     for i,s in enumerate(bounds):
         if type(s) is str:
@@ -323,18 +321,6 @@ def ini_sanity(found):
     return (ok, missing)
 
 
-# _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
-# _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
-# _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
-# _vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
-# _vortex_ch4  = [vor.channels.chan6, vor.channels.chan10, vor.channels.chan14]
-# _vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
-# _deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
-
-# transmission = _ionchambers
-# fluorescence = _ionchambers + _deadtime_corrected + _vortex
-
-
 ##########################################################
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
@@ -346,8 +332,6 @@ def db2xdi(datafile, key):
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
     write_XDI(datafile, header, header.start['XDI,_mode'][0], header.start['XDI,_comment'][0])
     print(colored('wrote %s' % datafile, color='white'))
-
-
 
 
 
@@ -431,7 +415,7 @@ def xafs(inifile, **kwargs):
 
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
-        BMM_log_info('starting XAFS scan using %s:\n%s\nkwargs = %s' % (inifile, output, str(kwargs)))
+        BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription
@@ -463,7 +447,7 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
-            print(colored('computing energy and dwell grids', color='white'))
+            print(colored('computing energy and dwell time grids', color='white'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -571,7 +555,7 @@ def xafs(inifile, **kwargs):
         dcm.mode = 'fixed'
         yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
         yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
-        yield from sleep(2.0)
+        yield from bps.sleep(2.0)
         yield from abs_set(dcm_pitch.kill_cmd, 1)
         yield from abs_set(dcm_roll.kill_cmd, 1)
 

@@ -1,5 +1,6 @@
 import bluesky as bs
 import bluesky.plans as bp
+import bluesky.plan_stubs as bps
 import time
 #from subprocess import call
 #import os
@@ -15,7 +16,7 @@ def tune_plan(step=0):
     '''
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from mvr(dcm_pitch, step)
-    yield from sleep(1.0)
+    yield from bps.sleep(1.0)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
 def tune_up():
     yield from tune_plan(step=TUNE_STEP)

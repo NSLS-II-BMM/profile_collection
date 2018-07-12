@@ -8,7 +8,7 @@ import os
 # RE(sample_stack())                                                        #
 #############################################################################
 
-def sample_stack():
+def sample_macro():
 
     BMM_xsp.prompt = False
 
