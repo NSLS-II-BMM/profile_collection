@@ -358,12 +358,12 @@ def xafs(inifile, **kwargs):
     def main_plan(inifile):
         if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
             print(colored('The DCM is in the 111 position, configured as 311', color='red'))
-            print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+            print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
             yield from null()
             return
         if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
             print(colored('The DCM is in the 311 position, configured as 111', color='red'))
-            print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %f' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+            print(colored('\tdcm_x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
             yield from null()
             return
 
@@ -418,19 +418,25 @@ def xafs(inifile, **kwargs):
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## set up a plotting subscription
+        ## set up a plotting subscription, anonymous functions for plotting 3 forms of XAFS
+        trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
+        ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
+        fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data']['DTC1'] +
+                                                         doc['data']['DTC2'] +
+                                                         doc['data']['DTC3'] +
+                                                         doc['data']['DTC4']) / doc['data']['I0'])
         if 'fluo'    in p['mode']:
-            plot =  DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption (fluorescence)')
+            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')
         elif 'trans' in p['mode']:
-            plot =  DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)')
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
         elif 'ref'   in p['mode']:
-            plot =  DerivedPlot(ref_xmu,   xlabel='energy (eV)', ylabel='absorption (reference)')
+            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)')
         elif 'both'  in p['mode']:
-            plot = [DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)'),
-                    DerivedPlot(dt_norm,   xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
+            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
+                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
         else:
             print(colored('Plotting mode not specified, falling back to a transmission plot', color='red'))
-            plot = DerivedPlot(trans_xmu, xlabel='energy (eV)', ylabel='absorption (transmission)')
+            plot =  DerivedPlot(trans,  xlabel='energy (eV)', ylabel='absorption (transmission)')
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
@@ -518,7 +524,7 @@ def xafs(inifile, **kwargs):
                 md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
                 md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
                 md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
-                md['XDI,Facility,energy']   = str(ring.energy.value/1000.) + ' GeV'
+                md['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
                 md['XDI,Facility,mode']     = ring.mode.value
                 if md['XDI,Facility,mode'] == 'Operations':
                     md['XDI,Facility,mode'] = 'top-off'

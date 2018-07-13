@@ -13,7 +13,7 @@ def units(label):
         return 'counts'
     elif 'corr' in label:
         return 'dead-time corrected count rate'
-    elif 'DTC' in label:
+    elif 'dtc' in label:
         return 'dead-time corrected count rate'
     elif 'encoder' in label:
         return 'counts'
@@ -90,6 +90,8 @@ def write_XDI(datafile, dataframe, mode, comment):
     plot_hint = 'ln(I0/It)  --  ln($4/$5)'
     if 'fluo' in mode or 'both' in mode:
         plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
+    elif: 'ref' in mode:
+        plot_hint = 'ln(It/Ir  --  ln($5/$6)'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
     for i, col in enumerate(('energy', 'requested_energy', 'measurement_time'), start=1):     # 'encoder'

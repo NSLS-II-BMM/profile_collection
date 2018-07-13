@@ -9,21 +9,21 @@ class BraggEpicsMotor(EpicsMotor):
     encoder = Cpt(EpicsSignal, '.REP')
 
     def wh(self):
-        return self.user_readback.value
+        return(round(self.user_readback.value, 3))
 
 class XAFSEpicsMotor(EpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
 
     def wh(self):
-        return self.user_readback.value
+        return(round(self.user_readback.value, 3))
 
 
 class VacuumEpicsMotor(EpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
 
     def wh(self):
-        return self.user_readback.value
+        return(round(self.user_readback.value, 3))
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
