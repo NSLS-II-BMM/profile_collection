@@ -9,16 +9,10 @@ import re
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
 # then call bmm_metadata() to get metadata in an XDI-ready format
 
-KTOE = 3.8099819442818976
-def etok(ee):
-    return numpy.sqrt(ee/KTOE)
-def ktoe(k):
-    return k*k*KTOE
-
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 1.3
+CS_MULTIPLIER = 1.425
 CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'steps':     [10, 0.5, '0.05k'],
                  'times':     [0.5, 0.5, '0.25k'],
@@ -262,8 +256,8 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
             tar = times[i]*numpy.ones(len(ar))
         timegrid = timegrid + list(tar)
         timegrid = list(numpy.round(timegrid, decimals=2))
-    approximate_time = "%.1f" % ((sum(timegrid) + float(len(timegrid))*CS_MULTIPLIER) / 60.0)
-    return (grid, timegrid, float(approximate_time))
+    approximate_time = (sum(timegrid) + float(len(timegrid))*CS_MULTIPLIER) / 60.0
+    return (grid, timegrid, round(approximate_time, 1))
 
 ## vor.count_mode.put(0)               put the Struck in OneCount mode (1 is AutoCount)
 ## vor.preset_time.put(0.5)            set the OneCount accumulation time
@@ -325,6 +319,18 @@ def ini_sanity(found):
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
 def db2xdi(datafile, key):
+    '''
+    Export a database entry for an XAFS scan to an XDI file.
+
+       db2xdi('/path/to/myfile.xdi', 1533)
+
+    or
+
+       db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+
+    The arguments are th resolved path to the output XDI file and
+    a database key.
+    '''
     if os.path.isfile(datafile):
         print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
         return
@@ -355,6 +361,9 @@ BMM_xsp = xafs_scan_parameters()
 # -- the main XAFS scan #
 #########################
 def xafs(inifile, **kwargs):
+    '''
+    Read an INI file for scan matadata, then perform an XAFS scan sequence.
+    '''
     def main_plan(inifile):
         if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
             print(colored('The DCM is in the 111 position, configured as 311', color='red'))
@@ -384,7 +393,8 @@ def xafs(inifile, **kwargs):
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         (ok, missing) = ini_sanity(f)
         if not ok:
-            print(colored('\nThe following keywords are missing from your INI file: ', color='red'), '%s\n' % str.join(', ', missing))
+            print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
+                  '%s\n' % str.join(', ', missing))
             BMM_xsp.final_log_entry = False
             yield from null()
             return
@@ -436,7 +446,7 @@ def xafs(inifile, **kwargs):
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
         else:
             print(colored('Plotting mode not specified, falling back to a transmission plot', color='red'))
-            plot =  DerivedPlot(trans,  xlabel='energy (eV)', ylabel='absorption (transmission)')
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
@@ -504,23 +514,24 @@ def xafs(inifile, **kwargs):
                     print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
                     yield from null()
                     return
-                print(colored('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid)), color='white'))
+                print(colored('starting scan %d of %d, %d energy points, should take about %.1f minutes' %
+                              (count, p['nscans'], len(energy_grid), approx_time), color='white'))
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
                 energy_trajectory    = cycler(dcm.energy, energy_grid)
                 dwelltime_trajectory = cycler(dwell_time, time_grid)
+
+                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+                ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
+                ## mono direction, ... things that can change during or between scan sequences
                 md['XDI,Mono,direction'] = 'forward'
                 if p['bothways'] and count%2 == 0:
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['XDI,Mono,direction'] = 'backward'
-
-                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-                ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
-                ## mono direction, ... things that can change during or between scan sequences
-                md['XDI,Mono,name']         = 'Si(%s)' % dcm.crystal
-                md['XDI,Mono,d_spacing']    = '%.7f Å' % (dcm._twod/2)
+                #md['XDI,Mono,name']         = 'Si(%s)' % dcm.crystal
+                #md['XDI,Mono,d_spacing']    = '%.7f Å' % (dcm._twod/2)
                 md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
                 md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
                 md['XDI,Facility,current']  = str(ring.current.value) + ' mA'

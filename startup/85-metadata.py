@@ -80,7 +80,8 @@ def bmm_metadata(measurement   = 'transmission',
     md['XDI,Element,edge']            = edge.capitalize()
     md['XDI,Element,symbol']          = element.capitalize()
     md['XDI,Scan,edge_energy']        = edge_energy
-    md['XDI,Mono,name']               = mono
+    md['XDI,Mono,name']               = 'Si(%s)' % dcm.crystal
+    md['XDI,Mono,d_spacing']          = '%.7f Å' % (dcm._twod/2)
     md['XDI,Mono,encoder_resolution'] = dcm.bragg.resolution.value
     md['XDI,Mono,angle_offset']       = dcm.bragg.user_offset.value
     md['XDI,Detector,I0']             = '10 cm ' + i0_gas
@@ -91,7 +92,7 @@ def bmm_metadata(measurement   = 'transmission',
     md['XDI,Sample,x_position']       = xafs_linx.user_readback.value
     md['XDI,Sample,y_position']       = xafs_liny.user_readback.value
     md['XDI,Sample,roll_position']    = xafs_roll.user_readback.value
-    ## what about roll, pitch, rotX ???
+    ## what about pitch, linxs, rotX ???
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
 
@@ -101,7 +102,7 @@ def bmm_metadata(measurement   = 'transmission',
         md['XDI,Beamline,focusing'] = 'none'
 
     if hr:
-        md['XDI,Beamline,harmonic_rejection'] = 'Pt stripe; Si stripe below 8 keV'
+        md['XDI,Beamline,harmonic_rejection'] = 'flat, Pt stripe; Si stripe below 8 keV'
     else:
         md['XDI,Beamline,harmonic_rejection'] = 'none'
 
@@ -122,22 +123,5 @@ def bmm_metadata(measurement   = 'transmission',
 
     if 'fluo' in measurement:
         md['XDI,Detector,fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
-        # md['XDI,Column,06'] = 'roi1 counts'
-        # md['XDI,Column,07'] = 'icr1 counts'
-        # md['XDI,Column,08'] = 'ocr1 counts'
-        # md['XDI,Column,09'] = 'corr1 dead-time corrected counts'
-        # md['XDI,Column,10'] = 'roi2 counts'
-        # md['XDI,Column,11'] = 'icr2 counts'
-        # md['XDI,Column,12'] = 'ocr2 counts'
-        # md['XDI,Column,13'] = 'corr2 dead-time corrected counts'
-        # md['XDI,Column,14'] = 'roi3 counts'
-        # md['XDI,Column,15'] = 'icr3 counts'
-        # md['XDI,Column,16'] = 'ocr3 counts'
-        # md['XDI,Column,17'] = 'corr3 dead-time corrected counts'
-        # md['XDI,Column,18'] = 'roi4 counts'
-        # md['XDI,Column,19'] = 'icr4 counts'
-        # md['XDI,Column,20'] = 'ocr4 counts'
-        # md['XDI,Column,21'] = 'corr4 dead-time corrected counts'
-
 
     return md

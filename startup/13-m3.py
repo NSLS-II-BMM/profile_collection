@@ -145,3 +145,47 @@ class XAFSTable(PseudoPositioner):
 
 
 xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
+
+
+class GonioTable(PseudoPositioner):
+    def __init__(self, *args, mirror_length, mirror_width, **kwargs):
+        self.mirror_length = mirror_length
+        self.mirror_width  = mirror_width
+        super().__init__(*args, **kwargs)
+
+    def where(self):
+        print("%s:" % self.name.upper())
+        print("\tvertical = %7.3f mm\t\tYUO = %7.3f"   % (self.vertical.readback.value, self.yuo.user_readback.value))
+        print("\tpitch    = %7.3f mrad\t\tYUI = %7.3f" % (self.pitch.readback.value,    self.yui.user_readback.value))
+        print("\troll     = %7.3f mrad\t\tYD  = %7.3f" % (self.roll.readback.value,     self.yd.user_readback.value))
+    def wh(self):
+        self.where()
+
+    # The pseudo positioner axes:
+    vertical = Cpt(PseudoSingle, limits=(291, 412))
+    pitch    = Cpt(PseudoSingle, limits=(-8, 1))
+    roll     = Cpt(PseudoSingle, limits=(5, 5))
+
+
+    # The real (or physical) positioners:
+    yui = Cpt(EpicsMotor, 'YUI}Mtr')
+    yuo = Cpt(EpicsMotor, 'YUO}Mtr')
+    yd  = Cpt(EpicsMotor, 'YD}Mtr')
+
+    @pseudo_position_argument
+    def forward(self, pseudo_pos):
+        '''Run a forward (pseudo -> real) calculation'''
+        return self.RealPosition(yd  = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
+                                 yuo = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
+                                 yui = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
+                                 )
+
+    @real_position_argument
+    def inverse(self, real_pos):
+        '''Run an inverse (real -> pseudo) calculation'''
+        return self.PseudoPosition(vertical = (real_pos.yd + (real_pos.yuo + real_pos.yui) / 2 ) / 2,
+                                   pitch    = 1000*arctan2( real_pos.yd - (real_pos.yuo + real_pos.yui)/2, self.mirror_length),
+                                   roll     = 1000*arctan2( real_pos.yuo - real_pos.yui,                   self.mirror_width ))
+
+
+gonio_table = GonioTable('XF:06BM-ES{SixC-Ax:Tbl_', name='gonio_table', mirror_length=1117.6,  mirror_width=711.12)

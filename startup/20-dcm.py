@@ -31,10 +31,8 @@ class DCM(PseudoPositioner):
     def _twod(self):
         if self.crystal is '311':
             return 2*1.63763854 # 30 May 2018
-            #return 2*1.63762644
         else:
             return 2*3.13563694 # 29 May 2018
-            #return 2*3.13597211
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined for Positioner, a base class of EpicsMotor

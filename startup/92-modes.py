@@ -16,9 +16,15 @@ def change_mode(mode=None):
         return(yield from null())
 
     mode = mode.upper()
-    if mode not in ('A', 'B', 'C', 'D', 'E', 'F'):
+    if mode not in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
         print('%s is not a mode' % mode)
         return(yield from null())
+
+    print('Moving to mode %s' % mode)
+    action = input("q to quit -- any other key to begin moving motors > ")
+    if action is 'q':
+        yield from null()
+        return
 
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
@@ -88,6 +94,12 @@ def change_xtals(xtal=None):
     if xtal not in ('Si(111)', 'Si(311)'):
         print('%s is not a crytsal set' % xtal)
         return(yield from null())
+
+    print('Moving to %s crystals' % mode)
+    action = input("q to quit -- any other key to begin moving motors > ")
+    if action is 'q':
+        yield from null()
+        return
 
     BMM_log_info('Moving to the %s crystals' % xtal)
     yield from abs_set(dcm_pitch.kill_cmd, 1)

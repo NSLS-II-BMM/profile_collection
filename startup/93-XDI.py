@@ -79,7 +79,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Sample.name: %s'                 % dataframe.start['XDI,Sample,name'],
                 '# Sample.prep: %s'                 % dataframe.start['XDI,Sample,prep'],
                 '# Sample.x_position: %.3f'         % dataframe.start['XDI,Sample,x_position'],
-                '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about roll, pitch, rotX ???
+                '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about linxs, pitch, rotX ???
                 '# Sample.roll_position: %.3f'      % dataframe.start['XDI,Sample,roll_position'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
                 '# Scan.start_time: %s'             % start_time,
@@ -90,7 +90,7 @@ def write_XDI(datafile, dataframe, mode, comment):
     plot_hint = 'ln(I0/It)  --  ln($4/$5)'
     if 'fluo' in mode or 'both' in mode:
         plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
-    elif: 'ref' in mode:
+    elif 'ref' in mode:
         plot_hint = 'ln(It/Ir  --  ln($5/$6)'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
@@ -99,18 +99,18 @@ def write_XDI(datafile, dataframe, mode, comment):
         labels.append(col)
 
     ## keeping this up-to-date is key!
-    name_map = {'3': 'roi1',  '7': 'icr1', '11': 'ocr1',
-                '4': 'roi2',  '8': 'icr2', '12': 'ocr2',
-                '5': 'roi3',  '9': 'icr3', '13': 'ocr3',
-                '6': 'roi4', '10': 'icr4', '14': 'ocr4'}
+    # name_map = {'3': 'roi1',  '7': 'icr1', '11': 'ocr1',
+    #             '4': 'roi2',  '8': 'icr2', '12': 'ocr2',
+    #             '5': 'roi3',  '9': 'icr3', '13': 'ocr3',
+    #             '6': 'roi4', '10': 'icr4', '14': 'ocr4'}
 
     ## generate a list of column lables & Column.N metadatum lines
     for i, d in enumerate(detectors, start=4):
         if 'quadem1' in d.name:
             this = re.sub('quadem1_', '', d.name)
-        elif 'vor_channels_chan' in d.name:
-            this = re.sub('vor_channels_chan', '', d.name)
-            this = name_map[this]
+        # elif 'vor_channels_chan' in d.name:
+        #     this = re.sub('vor_channels_chan', '', d.name)
+        #     this = name_map[this]
         elif 'vor_' in d.name:
             this = re.sub('vor_', '', d.name)
         else:

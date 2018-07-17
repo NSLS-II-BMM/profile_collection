@@ -1,4 +1,4 @@
-from ophyd import Component as Cpt, EpicsSignal, Signal, Device
+from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
 
 
 def show_shutters():
@@ -43,6 +43,16 @@ class Vacuum(Device):
             return colored(self.pressure.value, 'yellow', attrs=['bold'])
         return(self.pressure.value)
 
+class TCG(Device):
+    pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
+
+    def _pressure(self):
+        if float(self.pressure.value) > 1e-1:
+            return colored(self.pressure.value, 'red', attrs=['bold'])
+        if float(self.pressure.value) > 6e-3:
+            return colored(self.pressure.value, 'yellow', attrs=['bold'])
+        return(self.pressure.value)
+
 vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
        Vacuum('XF:06BMA-VA{Mono:DCM', name='Monochromator'),
        Vacuum('XF:06BMA-VA{FS:2',     name='Diagnostic Module 2'),
@@ -51,13 +61,17 @@ vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
        Vacuum('XF:06BMB-VA{BT:1',     name='Transport Pipe'),
        Vacuum('XF:06BMB-VA{FS:3',     name='Diagnostic Module 3')]
 
+flight_path = TCG('XF:06BMB-VA{FltPth:1', name='Flight Path')
+
 #Failed to connect to XF:06BMA-VA{Mono:DCM:OPS-BI{DCCT:1}I:Real-I
+
 
 def show_vacuum():
     print(' Vacuum section       pressure    current')
     print('==================================================')
     for v in vac:
         print('%-20s  %s    %5.1f μA' % (v.name, v._pressure(), 1e6 * float(v.current.value)))
+    print('%-20s  %s' % (flight_path.name, flight_path._pressure()))
 
 
 class GateValve(Device):
@@ -166,6 +180,9 @@ def show_utilities():
         if i < lvac and i < lgv:
             print('  %-28s     %s C        %-5s   %s        %-20s  %s    %5.1f μA' %
                   (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value)))
+        elif i == lvac:
+            print('  %-28s     %s C        %-5s   %s        %-20s  %s   ' %
+                  (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure()))
         elif i < lgv:
             print('  %-28s     %s C        %-5s   %s' %
                   (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state()))
