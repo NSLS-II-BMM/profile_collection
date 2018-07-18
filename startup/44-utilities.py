@@ -1,5 +1,7 @@
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
 
+run_report(__file__)
+
 
 def show_shutters():
     bmps_state = bool(bmps.state.value)

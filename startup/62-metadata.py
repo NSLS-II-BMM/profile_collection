@@ -2,6 +2,8 @@
 from ophyd import QuadEM, Component as Cpt, EpicsSignal, EpicsSignalRO, EpicsSignalWithRBV, Signal
 import datetime
 
+run_report(__file__)
+
 bmm_metadata_stub = {'XDI,Beamline,name': 'BMM (06BM) -- Beamline for Materials Measurement',
                      'XDI,Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
                      'XDI,Facility,name': 'NSLS-II',

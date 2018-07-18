@@ -1,6 +1,8 @@
 from ophyd import Component as Cpt, EpicsSignalWithRBV, Signal
 from ophyd.scaler import EpicsScaler
 
+run_report(__file__)
+
 
 ##################################################################################################################################
 ####                         ROI                 ICR                                OCR                            time       ####

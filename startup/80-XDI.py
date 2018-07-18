@@ -1,6 +1,8 @@
 from bluesky import __version__ as bluesky_version
 import re
 
+run_report(__file__)
+
 def units(label):
     label = label.lower()
     if 'energy' in label:

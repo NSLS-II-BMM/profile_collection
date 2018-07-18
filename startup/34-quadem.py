@@ -3,6 +3,8 @@ from ophyd.quadem import QuadEMPort
 
 from numpy import log, exp
 
+run_report(__file__)
+
 ## need to do something like this:
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
 ## to get a sensible reporting precision from the Ix channels

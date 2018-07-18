@@ -3,6 +3,8 @@ import bluesky.plans as bp
 import numpy
 import os
 
+run_report(__file__)
+
 #############################################################################
 # %run -i /home/bravel/.ipython/profile_collection/startup/99-user_plans.py #
 # RE(sample_stack())                                                        #

@@ -4,6 +4,8 @@ from ophyd.pseudopos import (pseudo_position_argument,
 
 from numpy import pi, sin, cos, arcsin
 
+run_report(__file__)
+
 #from colorama import Fore, Back, Style
 
 HBARC = 1973.27053324
@@ -113,3 +115,5 @@ class DCM(PseudoPositioner):
 
 
 dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
+if dcm_x.user_readback.value > 0: dcm.set_crystal('311')
+## dcm_x is 29 for Si(311), -35 for Si(111)

@@ -1,5 +1,7 @@
 from bluesky.callbacks import LivePlot
 
+run_report(__file__)
+
 # LivePlot does not provide very good hooks for doing anything
 # beyond very simple data processing. For example, it can't combine
 # values from two different fields. Here, we cargo cult most of

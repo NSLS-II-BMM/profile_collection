@@ -1,6 +1,8 @@
 from ophyd import PVPositionerPC, EpicsSignal, EpicsSignalRO, PseudoPositioner, PseudoSingle
 from ophyd import Component as Cpt
 
+run_report(__file__)
+
 class QuadEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal, 'AveragingTime')
     readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')

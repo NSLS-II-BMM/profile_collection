@@ -1,5 +1,7 @@
 from bluesky.suspenders import SuspendFloor, SuspendBoolHigh, SuspendBoolLow
 
+run_report(__file__)
+
 RE.clear_suspenders()
 all_BMM_suspenders = list()
 

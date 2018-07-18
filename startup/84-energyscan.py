@@ -5,6 +5,8 @@ import numpy
 import os
 import re
 
+run_report(__file__)
+
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
 # then call bmm_metadata() to get metadata in an XDI-ready format

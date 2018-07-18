@@ -3,6 +3,7 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 import time
 
+run_report(__file__)
 
 class BraggEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')

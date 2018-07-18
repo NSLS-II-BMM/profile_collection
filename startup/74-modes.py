@@ -2,6 +2,8 @@ import bluesky as bs
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
 
+run_report(__file__)
+
 import json
 
 LOCATION = '/home/bravel/git/BMM-beamline-configuration/'

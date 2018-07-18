@@ -8,6 +8,8 @@ from numpy import log
 
 from bluesky.callbacks import CallbackBase
 
+run_report(__file__)
+
 
 ## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:
 # caput XF:06BM-BI{EM:1}EM180:Current1:MeanValue_RBV.PREC 5

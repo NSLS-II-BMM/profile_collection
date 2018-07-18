@@ -8,6 +8,8 @@ from bluesky.preprocessors import subs_decorator
 ## see 88-plot-hacking.py for definitions of plot functions for DerivedPlot
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
+run_report(__file__)
+
 def slit_height(start=-3.0, stop=3.0, nsteps=61):
     '''
     Perform a relative scan of the DM# BCT motor around the current

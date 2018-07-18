@@ -6,6 +6,7 @@ import time
 #import os
 #import signal
 
+run_report(__file__)
 
 
 

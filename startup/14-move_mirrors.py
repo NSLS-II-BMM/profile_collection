@@ -2,6 +2,9 @@
 import bluesky.plan_stubs as bps
 from numpy import tan, pi
 
+run_report(__file__)
+
+
 def move_m3(target=5):
     alpha = 9002                # distance M3 to Be window
     beta  = 9637                # distance M3 to xafs_yu

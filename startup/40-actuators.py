@@ -1,5 +1,7 @@
 from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsSignal)
 
+run_report(__file__)
+
 class EPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
     cls = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')

@@ -5,6 +5,8 @@ import datetime
 from PIL import Image
 from io import BytesIO
 
+run_report(__file__)
+
 ## grab a snapshot from the XAS camera
 ##    snap('XAS', filename='/path/to/saved/image.jpg')
 ##

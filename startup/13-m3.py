@@ -2,6 +2,7 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
+run_report(__file__)
 
 
 ## harmonic rejection mirror
