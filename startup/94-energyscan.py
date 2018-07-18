@@ -174,12 +174,15 @@ def scan_metadata(inifile=None, **kwargs):
 
 ## need more error checking:
 ##   * sanitize the '#.#k' strings
+##   * check that bounds are float or float+'k'
 ##   * negative boundaries must be floats
 ##   * steps cannot be negative
 ##   * times cannot be negative
 ##   * steps smaller than, say, '0.01k'
 ##   * steps smaller than 0.01
 ##   * k^2 times
+##   * switch back to energy units afetr a k-valued boundary?
+##   * out of order boundaries -- sort?
 def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112):
     '''Input:
        bounds:   (list) N relative energy values denoting the region boundaries of the step scan
@@ -465,6 +468,12 @@ def xafs(inifile, **kwargs):
             ## compute energy and dwell grids
             print(colored('computing energy and dwell time grids', color='white'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
+            if energy_grid is None or time_grid is None or approx_time is None:
+                print(colored('Cannot interpret scan grid parameters!  Bailing out....' % outfile, color='red'))
+                BMM_xsp.final_log_entry = False
+                yield from null()
+                return
+
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## organize metadata for injection into database and XDI output

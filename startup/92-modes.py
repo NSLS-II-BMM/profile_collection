@@ -95,7 +95,7 @@ def change_xtals(xtal=None):
         print('%s is not a crytsal set' % xtal)
         return(yield from null())
 
-    print('Moving to %s crystals' % mode)
+    print('Moving to %s crystals' % xtal)
     action = input("q to quit -- any other key to begin moving motors > ")
     if action is 'q':
         yield from null()
@@ -118,5 +118,8 @@ def change_xtals(xtal=None):
         dcm.set_crystal('311')  # set d-spacing and bragg offset
 
     yield from bps.sleep(2.0)
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
+
+    yield from rocking_curve()
+    yield from bps.sleep(2.0)
+    yield from abs_set(dcm_pitch.kill_cmd, 1)
