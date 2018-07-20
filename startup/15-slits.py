@@ -12,10 +12,14 @@ class Slits(PseudoPositioner):
 
     def where(self):
         print("%s:" % self.name.upper())
-        print("\tvertical   size   = %7.3f mm\t\tTop      = %7.3f" % (self.vsize.readback.value,   self.top.user_readback.value))
-        print("\tvertical   center = %7.3f mm\t\tBottom   = %7.3f" % (self.vcenter.readback.value, self.bottom.user_readback.value))
-        print("\thorizontal size   = %7.3f mm\t\tOutboard = %7.3f" % (self.hsize.readback.value,   self.outboard.user_readback.value))
-        print("\thorizontal center = %7.3f mm\t\tInboard  = %7.3f" % (self.hcenter.readback.value, self.inboard.user_readback.value))
+        print("\tvertical   size   = %7.3f mm\t\tTop      = %7.3f" %
+              (self.vsize.readback.value,   self.top.user_readback.value))
+        print("\tvertical   center = %7.3f mm\t\tBottom   = %7.3f" %
+              (self.vcenter.readback.value, self.bottom.user_readback.value))
+        print("\thorizontal size   = %7.3f mm\t\tOutboard = %7.3f" %
+              (self.hsize.readback.value,   self.outboard.user_readback.value))
+        print("\thorizontal center = %7.3f mm\t\tInboard  = %7.3f" %
+              (self.hcenter.readback.value, self.inboard.user_readback.value))
     def wh(self):
         self.where()
 

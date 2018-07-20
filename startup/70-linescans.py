@@ -39,7 +39,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
                  (db[-1].start['uid'], db[-1].start['scan_id']))
 
 
-def rocking_curve(start=-0.15, stop=0.15, nsteps=151):
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     '''
     Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  At the end, move
@@ -134,6 +134,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
         yield from null()
         return
 
+    yield from abs_set(_locked_dwell_time, 0.5)
     dets  = [quadem1,]
     denominator = ''
 

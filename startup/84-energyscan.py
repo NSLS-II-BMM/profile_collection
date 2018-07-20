@@ -21,6 +21,7 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
 
                  'folder':    os.environ.get('HOME')+'/data/',
                  'filename':  'data.dat',
+                 'experimenters': '',
                  'e0':        7112,
                  'element':   'Fe',
                  'edge':      'K',
@@ -64,6 +65,7 @@ def scan_metadata(inifile=None, **kwargs):
 
       folder:     [str]   folder for saved XDI files
       filename:   [str]   filename stub for saved XDI files
+      experimenters [str] names of people involved in this measurements
       e0:         [float] edge energy, reference value for energy grid
       element:    [str]   one- or two-letter element symbol
       edge:       [str]   K, L3, L2, or L1
@@ -99,7 +101,7 @@ def scan_metadata(inifile=None, **kwargs):
     if not os.path.isfile(inifile):
         print('inifile does not exist')
         return
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     config.read_file(open(inifile))
 
     found = dict()
@@ -120,7 +122,8 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = CS_DEFAULTS[a]
 
     ## ----- strings
-    for a in ('folder', 'element', 'edge', 'filename', 'comment', 'mode', 'sample', 'prep'):
+    for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
+              'mode', 'sample', 'prep'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -481,6 +484,7 @@ def xafs(inifile, **kwargs):
             ## organize metadata for injection into database and XDI output
             print(colored('gathering metadata', color='white'))
             md = bmm_metadata(measurement   = p['mode'],
+                              experimenters = p['experimenters'],
                               edge          = p['edge'],
                               element       = p['element'],
                               edge_energy   = p['e0'],
@@ -541,8 +545,6 @@ def xafs(inifile, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['XDI,Mono,direction'] = 'backward'
-                #md['XDI,Mono,name']         = 'Si(%s)' % dcm.crystal
-                #md['XDI,Mono,d_spacing']    = '%.7f Å' % (dcm._twod/2)
                 md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
                 md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
                 md['XDI,Facility,current']  = str(ring.current.value) + ' mA'

@@ -63,6 +63,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Detector.I2: %s'                 % dataframe.start['XDI,Detector,Ir'],])
     if 'fluo' in mode or 'both' in mode:
         xdi.append('# Detector.fluorescence: %s' % dataframe.start['XDI,Detector,fluorescence'])
+        xdi.append('# Detector.deadtime_correction: %s' % dataframe.start['XDI,Detector,deadtime_correction'])
     xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
                 '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],
                 '# Facility.name: %s'               % 'NSLS-II',
@@ -83,6 +84,7 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Sample.x_position: %.3f'         % dataframe.start['XDI,Sample,x_position'],
                 '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about linxs, pitch, rotX ???
                 '# Sample.roll_position: %.3f'      % dataframe.start['XDI,Sample,roll_position'],
+                '# Scan.experimenters: %s'          % dataframe.start['XDI,Scan,experimenters'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
                 '# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
@@ -138,8 +140,8 @@ def write_XDI(datafile, dataframe, mode, comment):
                        'ROI4', 'ICR4', 'OCR4']
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
-        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f\n"
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f\n"
 
     this = table.loc[:,column_list]
 

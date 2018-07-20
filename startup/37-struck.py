@@ -4,31 +4,43 @@ from ophyd.scaler import EpicsScaler
 run_report(__file__)
 
 
-##################################################################################################################################
-####                         ROI                 ICR                                OCR                            time       ####
+####################################################################################
+####                  ROI           ICR              OCR             time       ####
 class DTCorr1(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan3.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan3.value, self.parent.channels.chan7.value, self.parent.channels.chan11.value, _locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan3.value,
+                                     self.parent.channels.chan7.value,
+                                     self.parent.channels.chan11.value,
+                                     _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr2(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan4.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan4.value, self.parent.channels.chan8.value, self.parent.channels.chan12.value, _locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan4.value,
+                                     self.parent.channels.chan8.value,
+                                     self.parent.channels.chan12.value,
+                                     _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr3(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan5.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan5.value, self.parent.channels.chan9.value, self.parent.channels.chan13.value, _locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan5.value,
+                                     self.parent.channels.chan9.value,
+                                     self.parent.channels.chan13.value,
+                                     _locked_dwell_time.dwell_time.readback.value)
 
 class DTCorr4(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan6.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan6.value, self.parent.channels.chan10.value, self.parent.channels.chan14.value, _locked_dwell_time.dwell_time.readback.value)
+        return self.parent.dtcorrect(self.parent.channels.chan6.value,
+                                     self.parent.channels.chan10.value,
+                                     self.parent.channels.chan14.value,
+                                     _locked_dwell_time.dwell_time.readback.value)
 
 
 class BMMVortex(EpicsScaler):
@@ -70,6 +82,8 @@ class BMMVortex(EpicsScaler):
         self.names.name12.put('OCR2')
         self.names.name13.put('OCR3')
         self.names.name14.put('OCR4')
+        self.names.name25.put('Bicron')
+        self.names.name26.put('APD')
 
     def channel_names_plan(self):
         yield from abs_set(self.names.name3,  'ROI1')
@@ -84,7 +98,10 @@ class BMMVortex(EpicsScaler):
         yield from abs_set(self.names.name12, 'OCR2')
         yield from abs_set(self.names.name13, 'OCR3')
         yield from abs_set(self.names.name14, 'OCR4')
+        yield from abs_set(self.names.name25, 'Bicron')
+        yield from abs_set(self.names.name26, 'APD')
 
+    ## see Woicik et al, https://doi.org/10.1107/S0909049510009064
     def dtcorrect(self, roi, icr, ocr, inttime, dt=280.0):
         if roi is None: roi = 1.0
         if icr is None: icr = 1.0
@@ -118,7 +135,7 @@ class BMMVortex(EpicsScaler):
             if (count > self.maxiter):
                 test = 0
         self.niter = count
-        return rr * (totn*tt/oo)
+        return float(rr * (totn*tt/oo))
 
 
 vor = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vor')
@@ -149,3 +166,5 @@ vor.channels.chan11.name = 'OCR1'
 vor.channels.chan12.name = 'OCR2'
 vor.channels.chan13.name = 'OCR3'
 vor.channels.chan14.name = 'OCR4'
+vor.channels.chan25.name = 'Bicron'
+vor.channels.chan26.name = 'APD'

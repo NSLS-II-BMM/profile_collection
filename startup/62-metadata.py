@@ -34,6 +34,7 @@ class Ring(Device):
 ring = Ring('SR', name='ring')
 
 def bmm_metadata(measurement   = 'transmission',
+                 experimenters = '',
                  edge          = 'K',
                  element       = 'Fe',
                  edge_energy   = '7112',
@@ -82,6 +83,7 @@ def bmm_metadata(measurement   = 'transmission',
     md['XDI,Element,edge']            = edge.capitalize()
     md['XDI,Element,symbol']          = element.capitalize()
     md['XDI,Scan,edge_energy']        = edge_energy
+    md['XDI,Scan,experimenters']      = experimenters
     md['XDI,Mono,name']               = 'Si(%s)' % dcm.crystal
     md['XDI,Mono,d_spacing']          = '%.7f Å' % (dcm._twod/2)
     md['XDI,Mono,encoder_resolution'] = dcm.bragg.resolution.value
@@ -125,5 +127,6 @@ def bmm_metadata(measurement   = 'transmission',
 
     if 'fluo' in measurement:
         md['XDI,Detector,fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
+        md['XDI,Detector,deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
 
     return md

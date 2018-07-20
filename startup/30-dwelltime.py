@@ -40,7 +40,7 @@ class LockedDwellTimes(PseudoPositioner):
     "Sync QuadEM and Struck dwell times to one pseudo-axis dwell time."
     dwell_time = Cpt(PseudoSingle, kind='hinted')
     quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds')
-    struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.', egu='seconds')
+    struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds')
 
     @property
     def settle_time(self):
