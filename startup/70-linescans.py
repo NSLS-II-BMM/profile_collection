@@ -116,13 +116,15 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
     detector = detector.capitalize()
 
     ## sanity checks on axis
-    if axis not in motors.keys() and 'EpicsMotor' not in str(type(axis)):
+    if axis not in motors.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
         print(colored('\n*** %s is not a linescan motor (%s)\n' %
                       (axis, str.join(', ', motors.keys())), color='red'))
         yield from null()
         return
 
     if 'EpicsMotor' in str(type(axis)):
+        thismotor = axis
+    elif 'PseudoSingle' in str(type(axis)):
         thismotor = axis
     else:                       # presume it's an xafs_XXXX motor
         thismotor = motors[axis]
@@ -134,7 +136,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
         yield from null()
         return
 
-    yield from abs_set(_locked_dwell_time, 0.5)
+    yield from abs_set(_locked_dwell_time, 0.1)
     dets  = [quadem1,]
     denominator = ''
 
@@ -160,8 +162,12 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
                        xlabel=thismotor.name,
                        ylabel=detector+denominator)
 
-    BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f' %
-                 (thismotor.name, detector, start, stop, nsteps, thismotor.user_readback.value))
+    if 'PseudoSingle' in str(type(axis)):
+        BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f' %
+                     (thismotor.name, detector, start, stop, nsteps, thismotor.readback.value))
+    else:
+        BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f' %
+                     (thismotor.name, detector, start, stop, nsteps, thismotor.user_readback.value))
 
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):
@@ -171,6 +177,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
     BMM_log_info('linescan finished, uid = %s, scan_id = %d' %
                  (db[-1].start['uid'], db[-1].start['scan_id']))
 
+    yield from abs_set(_locked_dwell_time, 0.5)
 
     # if axis == 'x':
     #     motor = xafs_linx
@@ -262,3 +269,26 @@ def ls2dat(datafile, key):
     handle.flush()
     handle.close()
     print(colored('wrote %s' % datafile, color='white'))
+
+
+def center_sample_y():
+    yield from linescan(xafs_liny, 'it', -1.5, 1.5, 61)
+    table = db[-1].table()
+    diff = -1 * table['It'].diff()
+    inflection = table['xafs_liny'][diff.idxmax()]
+    yield from mv(xafs_liny, inflection)
+    print(colored('Optimal position in y at %.3f' % inflection, color='white'))
+
+def center_sample_roll():
+    yield from linescan(xafs_roll, 'it', -3, 3, 61)
+    table = db[-1].table()
+    peak = table['xafs_roll'][table['It'].idxmax()]
+    yield from mv(xafs_roll, peak)
+    print(colored('Optimal position in roll at %.3f' % peak, color='white'))
+
+def align_flat_sample(angle=2):
+    yield from center_sample_y()
+    yield from center_sample_roll()
+    yield from center_sample_y()
+    yield from center_sample_roll()
+    yield from mv(xafs_roll, angle)

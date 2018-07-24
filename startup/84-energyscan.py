@@ -434,6 +434,7 @@ def xafs(inifile, **kwargs):
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
+        BMM_log_info(motor_status())
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting 3 forms of XAFS
