@@ -28,6 +28,7 @@ def change_mode(mode=None):
         yield from null()
         return
 
+    RE.msg_hook = None
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
                                             # starting a move, it is one of the
@@ -58,6 +59,8 @@ def change_mode(mode=None):
 
     yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info(motor_status())
 
 
 def mode():
@@ -103,6 +106,7 @@ def change_xtals(xtal=None):
         yield from null()
         return
 
+    RE.msg_hook = None
     BMM_log_info('Moving to the %s crystals' % xtal)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from abs_set(dcm_roll.kill_cmd, 1)
@@ -125,3 +129,5 @@ def change_xtals(xtal=None):
     yield from rocking_curve()
     yield from bps.sleep(2.0)
     yield from abs_set(dcm_pitch.kill_cmd, 1)
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info(motor_status())

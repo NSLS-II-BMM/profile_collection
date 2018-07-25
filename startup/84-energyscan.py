@@ -591,4 +591,6 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_roll.kill_cmd, 1)
 
     BMM_xsp.final_log_entry = True
+    RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())
+    RE.msg_hook = BMM_msg_hook

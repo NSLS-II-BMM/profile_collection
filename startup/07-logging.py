@@ -38,3 +38,25 @@ def BMM_log_info(message):
         entry += '    ' + line + '\n'
     BMM_logger.info(entry)
     chmod(BMM_log_master_file, 0o444)
+
+
+
+
+######################################################################################################
+# here is an example of what a message tuple looks like when moving a motor                          #
+# (each item in the tuple is on it's own line):                                                      #
+#     set:                                                                                           #
+#     (XAFSEpicsMotor(prefix='XF:06BMA-BI{XAFS-Ax:LinX}Mtr', name='xafs_linx', ... )                 #
+#     (-91.5999475,),                                                                                #
+#     {'group': '8c8df020-23aa-451e-b411-c427bc80b375'}                                              #
+######################################################################################################
+def BMM_msg_hook(msg):
+    if msg[0] == 'set':
+        if 'EpicsMotor' in str(type(msg[1])):
+            print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+        elif 'EpicsSignal' in str(type(msg[1])):
+            print('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            BMM_log_info('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+
+RE.msg_hook = BMM_msg_hook

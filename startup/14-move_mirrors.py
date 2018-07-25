@@ -37,6 +37,7 @@ def move_m3(target=5):
         yield from null()
         return
 
+    RE.msg_hook = None
     BMM_log_info('Moving mirror 3: target = %.2f, M3 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'
                  % (target, thetanot-theta, bct, upstr, dnstr, correction))
 
@@ -50,6 +51,8 @@ def move_m3(target=5):
 
     yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info(motor_status())
 
 
 def move_m2(target=3.5):
@@ -84,6 +87,7 @@ def move_m2(target=3.5):
         yield from null()
         return
 
+    RE.msg_hook = None
     BMM_log_info('Moving mirror 2: target = %.2f, M2 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'
                  % (target, thetanot-theta, bct, upstr, dnstr, correction))
 
@@ -97,3 +101,5 @@ def move_m2(target=3.5):
 
     yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info(motor_status())

@@ -16,12 +16,13 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     position to find the optimal position for slits3.  No further
     analysis of the scan is done -- YOU must move to the optimal position.
     '''
+    RE.msg_hook = None
     motor = dm3_bct
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
 
-    BMM_log_info('slit height scan: %s, %s, %.3f, %.3f, %d -- starting at %.3f'
-                 % (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value))
+    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+            (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
     @subs_decorator(plot)
     def scan_slit():
@@ -35,8 +36,9 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_slit()
-    BMM_log_info('slit height scan finished, uid = %s, scan_id = %d' %
-                 (db[-1].start['uid'], db[-1].start['scan_id']))
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
+                 (line1, db[-1].start['uid'], db[-1].start['scan_id']))
 
 
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
@@ -45,12 +47,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     position to find the peak of the crystal rocking curve.  At the end, move
     to the position of maximum intensity on I0.
     '''
+    RE.msg_hook = None
     motor = dcm_pitch
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
 
-    BMM_log_info('rocking curve scan: %s, %s, %.3f, %.3f, %d -- starting at %.3f'
-                 % (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value))
+    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+            (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
     @subs_decorator(plot)
     def scan_dcmpitch():
@@ -73,7 +76,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_dcmpitch()
-    BMM_log_info('rocking curve scan finished, uid = %s, scan_id = %d' %
+    RE.msg_hook = BMM_msg_hook
+    BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
                  (db[-1].start['uid'], db[-1].start['scan_id']))
 
 
@@ -111,6 +115,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
               'xs'   : xafs_linxs, 'r'    : xafs_roll,
           }
 
+    RE.msg_hook = None
     ## sanitize input and set thismotor to an actual motor
     if type(axis) is str: axis = axis.lower()
     detector = detector.capitalize()
@@ -163,21 +168,22 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
                        ylabel=detector+denominator)
 
     if 'PseudoSingle' in str(type(axis)):
-        BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f' %
-                     (thismotor.name, detector, start, stop, nsteps, thismotor.readback.value))
+        value = thismotor.readback.value
     else:
-        BMM_log_info('linescan: %s, %s, %.3f, %.3f, %d -- starting at %.3f' %
-                     (thismotor.name, detector, start, stop, nsteps, thismotor.user_readback.value))
+        value = thismotor.user_readback.value
+    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+            (thismotor.name, detector, start, stop, nsteps, value)
 
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):
         yield from rel_scan(dets, motor, start, stop, nsteps)
 
     yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
-    BMM_log_info('linescan finished, uid = %s, scan_id = %d' %
-                 (db[-1].start['uid'], db[-1].start['scan_id']))
+    BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
+                 (line1, db[-1].start['uid'], db[-1].start['scan_id']))
 
     yield from abs_set(_locked_dwell_time, 0.5)
+    RE.msg_hook = BMM_msg_hook
 
     # if axis == 'x':
     #     motor = xafs_linx

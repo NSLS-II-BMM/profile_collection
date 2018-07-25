@@ -69,10 +69,12 @@ class BMMQuadEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.state, 1)
+        yield from abs_set(self.acquire, 1)
+        yield from abs_set(self.acquire_mode, 0)
 
     def off_plan(self):
-        yield from abs_set(self.state, 0)
+        yield from abs_set(self.acquire, 0)
+        yield from abs_set(self.acquire_mode, 2)
 
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 
