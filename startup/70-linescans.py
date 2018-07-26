@@ -10,14 +10,34 @@ from bluesky.preprocessors import subs_decorator
 
 run_report(__file__)
 
+def move_after_scan(thismotor):
+    '''
+    Call this to pluck a point from a plot and move the plotted motor to that x-value.
+    '''
+    if BMM_cpl.motor is None:
+        print(colored('There\'s not a current plot on screen.', color='red'))
+        return(yield from null())
+    if thismotor is not BMM_cpl.motor:
+        print(colored('The motor you are asking to move is not the motor in the current plot.', color='red'))
+        return(yield from null())
+    print('Single click the left mouse button on the plot to pluck a point...')
+    cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click)
+    while BMM_cpl.x is None:
+        yield from sleep(0.5)
+    yield from mv(thismotor, BMM_cpl.x)
+    cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
+    BMM_cpl.x = BMM_cpl.y = None
+
+
 def slit_height(start=-3.0, stop=3.0, nsteps=61):
     '''
-    Perform a relative scan of the DM# BCT motor around the current
+    Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3.  No further
     analysis of the scan is done -- YOU must move to the optimal position.
     '''
     RE.msg_hook = None
     motor = dm3_bct
+    BMM_cpl.motor = dm3_bct
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
 
@@ -39,6 +59,10 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+    action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
+    if action.lower() == 'n' or action.lower() == 'q':
+        return(yield from null())
+    yield from move_after_scan(dm3_bct)
 
 
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
@@ -49,6 +73,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     '''
     RE.msg_hook = None
     motor = dcm_pitch
+    BMM_cpl.motor = motor
+
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
 
@@ -71,14 +97,14 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
         yield from abs_set(quadem1.averaging_time, 0.5)
         yield from abs_set(motor.kill_cmd, 1)
 
+        RE.msg_hook = BMM_msg_hook
+        BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
+                     (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from mv(motor, top)
         yield from bps.sleep(3.0)
         yield from abs_set(motor.kill_cmd, 1)
 
     yield from scan_dcmpitch()
-    RE.msg_hook = BMM_msg_hook
-    BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
-                 (db[-1].start['uid'], db[-1].start['scan_id']))
 
 
 
@@ -133,6 +159,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
         thismotor = axis
     else:                       # presume it's an xafs_XXXX motor
         thismotor = motors[axis]
+    BMM_cpl.motor = thismotor
 
     ## sanity checks on detector
     if detector not in ('It', 'If', 'I0'):
@@ -184,6 +211,10 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
 
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
+    action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
+    if action.lower() == 'n' or action.lower() == 'q':
+        return(yield from null())
+    yield from move_after_scan(thismotor)
 
     # if axis == 'x':
     #     motor = xafs_linx

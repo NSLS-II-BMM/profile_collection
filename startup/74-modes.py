@@ -23,8 +23,8 @@ def change_mode(mode=None):
         return(yield from null())
 
     print('Moving to mode %s' % mode)
-    action = input("q to quit -- any other key to begin moving motors > ")
-    if action is 'q':
+    action = input("Begin moving motors? [Yn] ")
+    if action.lower == 'q' or action.lower == 'n':
         yield from null()
         return
 
@@ -101,8 +101,8 @@ def change_xtals(xtal=None):
         return(yield from null())
 
     print('Moving to %s crystals' % xtal)
-    action = input("q to quit -- any other key to begin moving motors > ")
-    if action is 'q':
+    action = input("Begin moving motors? [Yn] ")
+    if action.lower == 'q' or action.lower == 'n':
         yield from null()
         return
 

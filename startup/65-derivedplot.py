@@ -16,6 +16,31 @@ run_report(__file__)
 # caput XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC 5
 # caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 5
 
+#####################################################################
+# this is used to keep track of mouse events on the plotting window #
+# see 70-linescans.py                                               #
+#####################################################################
+class CurrentPlotLogistics():
+    def __init__(self):
+        self.motor = None
+        self.fig   = None
+        self.ax    = None
+        self.x     = None
+        self.y     = None
+BMM_cpl = CurrentPlotLogistics()
+
+#############################################################################
+# this is the callback that gets assigned to mouse clicks on theplot window #
+#############################################################################
+def interpret_click(ev):
+    print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
+    BMM_cpl.x = ev.xdata
+    BMM_cpl.y = ev.ydata
+
+def handle_close(ev):
+    BMM_cpl.motor = None
+    BMM_cpl.fig   = None
+    BMM_cpl.ax    = None
 
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, **kwargs):
@@ -34,6 +59,9 @@ class DerivedPlot(CallbackBase):
         if ax is None:
             fig, ax = plt.subplots()
         self.ax = ax
+        BMM_cpl.ax = ax
+        BMM_cpl.fig = fig
+        BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
         if xlabel is None:
             xlabel = ''
         if ylabel is None:

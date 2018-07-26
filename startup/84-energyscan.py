@@ -411,7 +411,7 @@ def xafs(inifile, **kwargs):
         ## user verification (disabled by BMM_xsp.prompt)
         eave = channelcut_energy(p['e0'], p['bounds'])
         if BMM_xsp.prompt:
-            print("Does this look right?")
+            print("How does this look?")
             for (k,v) in p.items():
                 print('\t%-12s : %s' % (k,v))
 
@@ -425,8 +425,8 @@ def xafs(inifile, **kwargs):
 
             if not dcm.suppress_channel_cut:
                 print('\npseudo-channel-cut energy = %.1f' % eave)
-            action = input("\nq to quit -- any other key to start scans > ")
-            if action is 'q':
+            action = input("\nBegin scan sequence? [Yn] ")
+            if action.lower() == 'q' or action.lower() == 'n':
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
