@@ -25,6 +25,8 @@ def colored(text, color='white', attrs=[]):
         return '\x1b[01m\x1b[31m' + text + '\x1b[0m'
     if color is 'yellow':
         return '\x1b[01m\x1b[33m' + text + '\x1b[0m'
+    if color is 'brown':
+        return '\x1b[33m'         + text + '\x1b[0m'
     if color is 'cyan':
         return '\x1b[01m\x1b[36m' + text + '\x1b[0m'
     if color is 'white':

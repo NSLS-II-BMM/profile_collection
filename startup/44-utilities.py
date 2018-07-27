@@ -125,12 +125,14 @@ class Thermocouple(Device):
     warning     = Cpt(EpicsSignal, '-I_High-RB')
     alarm       = Cpt(EpicsSignal, '-I_HiHi-RB')
 
-    def _state(self):
+    def _state(self, info=False):
         t = "%.1f" % self.temperature.value
         if self.temperature.value > self.alarm.value:
             return(colored(t, 'red', attrs=['bold']))
         if self.temperature.value > self.warning.value:
             return(colored(t, 'yellow', attrs=['bold']))
+        if info is True and self.temperature.value > (0.5 * self.warning.value):
+            return(colored(t, 'brown'))
         return(t)
 
 
@@ -179,18 +181,20 @@ def show_utilities():
     print('  Thermocouple               Temperature         Valve   state          Vacuum section       pressure     current')
     print('=======================================================================================================================')
     for i in range(0,ltcs):
+        info = False
+        if 'pitch' in tcs[i].name or 'roll' in tcs[i].name: info = True
         if i < lvac and i < lgv:
             print('  %-28s     %s C        %-5s   %s        %-20s  %s    %5.1f μA' %
-                  (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value)))
+                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value)))
         elif i == lvac:
             print('  %-28s     %s C        %-5s   %s        %-20s  %s   ' %
-                  (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure()))
+                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure()))
         elif i < lgv:
             print('  %-28s     %s C        %-5s   %s' %
-                  (tcs[i].name, tcs[i]._state(), gv[i].name, gv[i]._state()))
+                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state()))
         else:
             print('  %-28s     %s C' %
-                  (tcs[i].name, tcs[i]._state()))
+                  (tcs[i].name, tcs[i]._state(info=info)))
 
 def su():
     show_utilities()

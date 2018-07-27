@@ -5,7 +5,7 @@ import numpy
 import os
 
 from bluesky.preprocessors import subs_decorator
-## see 88-plot-hacking.py for definitions of plot functions for DerivedPlot
+## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
 run_report(__file__)
@@ -15,19 +15,25 @@ def move_after_scan(thismotor):
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
     if BMM_cpl.motor is None:
-        print(colored('There\'s not a current plot on screen.', color='red'))
+        print(colored('\nThere\'s not a current plot on screen.\n', color='red'))
         return(yield from null())
     if thismotor is not BMM_cpl.motor:
-        print(colored('The motor you are asking to move is not the motor in the current plot.', color='red'))
+        print(colored('\nThe motor you are asking to move is not the motor in the current plot.\n',
+                      color='red'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
-    cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click)
-    while BMM_cpl.x is None:
+    cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+    while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
         yield from sleep(0.5)
     yield from mv(thismotor, BMM_cpl.x)
     cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
     BMM_cpl.x = BMM_cpl.y = None
 
+def pluck():
+    '''
+    Call this to pluck a point from the most recent plot and move the motor to that point.
+    '''
+    yield from move_after_scan(BMM_cpl.motor)
 
 def slit_height(start=-3.0, stop=3.0, nsteps=61):
     '''
@@ -111,7 +117,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(axis, detector, start, stop, nsteps): # inegration time?
+def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -124,6 +130,7 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
        start:    starting value for a relative scan
        stop:     ending value for a relative scan
        nsteps:   number of steps in scan
+       pluck:    flag for whether to offer to pluck & move motor
 
     The motor is either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -211,54 +218,12 @@ def linescan(axis, detector, start, stop, nsteps): # inegration time?
 
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
-    action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
-    if action.lower() == 'n' or action.lower() == 'q':
-        return(yield from null())
-    yield from move_after_scan(thismotor)
+    if pluck is True:
+        action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
+        if action.lower() == 'n' or action.lower() == 'q':
+            return(yield from null())
+        yield from move_after_scan(thismotor)
 
-    # if axis == 'x':
-    #     motor = xafs_linx
-    #     if detector == 'it':
-    #         plot  = DerivedPlot(xscan, xlabel='sample X', ylabel='It / I0')
-    #     elif detector == 'if':
-    #         plot  = DerivedPlot(dt_x,  xlabel='sample X', ylabel='If / I0')
-    #         dets.append(vor)
-
-    # elif axis == 'q':
-    #     dets  = [quadem1,]
-    #     motor = xafs_liny
-    #     #text  = 'def qscan(doc): return (doc[\'data\'][\'xafs_liny\'], doc[\'data\'][\'It\'])'
-    #     #func = eval(text)
-    #     func = lambda doc: (doc['data']['xafs_liny'], doc['data']['It'])
-    #     plot  = DerivedPlot(func, xlabel='sample Q', ylabel='It')
-
-
-    # elif axis == 'y':
-    #     motor = xafs_liny
-    #     dets  = [quadem1,]
-    #     if detector == 'it':
-    #         plot  = DerivedPlot(yscan, xlabel='sample X', ylabel='It / I0')
-    #     elif detector == 'if':
-    #         plot  = DerivedPlot(dt_y,  xlabel='sample X', ylabel='If / I0')
-    #         dets.append(vor)
-
-    # elif axis == 'roll':
-    #     motor = xafs_roll
-    #     dets  = [quadem1,]
-    #     if detector == 'it':
-    #         plot  = DerivedPlot(rollscan_trans, xlabel='sample roll', ylabel='It / I0')
-    #     elif detector == 'if':
-    #         plot  = DerivedPlot(rollscan_fluo,  xlabel='sample roll', ylabel='If / I0')
-    #         dets.append(vor)
-
-    # elif axis == 'pitch':
-    #     motor = xafs_pitch
-    #     dets  = [quadem1,]
-    #     if detector == 'it':
-    #         plot  = DerivedPlot(pitchscan_trans, xlabel='sample roll', ylabel='It / I0')
-    #     elif detector == 'if':
-    #         plot  = DerivedPlot(pitchscan_fluo,  xlabel='sample roll', ylabel='If / I0')
-    #         dets.append(vor)
 
 
 
@@ -309,7 +274,7 @@ def ls2dat(datafile, key):
 
 
 def center_sample_y():
-    yield from linescan(xafs_liny, 'it', -1.5, 1.5, 61)
+    yield from linescan(xafs_liny, 'it', -1.5, 1.5, 61, pluck=False)
     table = db[-1].table()
     diff = -1 * table['It'].diff()
     inflection = table['xafs_liny'][diff.idxmax()]
@@ -317,7 +282,7 @@ def center_sample_y():
     print(colored('Optimal position in y at %.3f' % inflection, color='white'))
 
 def center_sample_roll():
-    yield from linescan(xafs_roll, 'it', -3, 3, 61)
+    yield from linescan(xafs_roll, 'it', -3, 3, 61, pluck=False)
     table = db[-1].table()
     peak = table['xafs_roll'][table['It'].idxmax()]
     yield from mv(xafs_roll, peak)
