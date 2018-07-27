@@ -4,6 +4,11 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="CA.Client.Exception")
 
+def run_report(thisfile):
+    print(colored('Importing %s ...' % thisfile.split('/')[-1], 'cyan'))
+
+run_report(__file__)
+
 BMM_logfile = '/home/bravel/BMM_master.log'
 
 KTOE = 3.8099819442818976
@@ -31,7 +36,3 @@ def colored(text, color='white', attrs=[]):
         return '\x1b[01m\x1b[36m' + text + '\x1b[0m'
     if color is 'white':
         return '\x1b[01m\x1b[37m' + text + '\x1b[0m'
-
-
-def run_report(thisfile):
-    print(colored('Importing %s ...' % thisfile.split('/')[-1], 'cyan'))

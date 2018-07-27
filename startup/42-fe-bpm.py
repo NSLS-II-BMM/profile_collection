@@ -1,5 +1,6 @@
 from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsSignalRO)
 
+run_report(__file__)
 
 class FEBPM(Device):
     x = Cpt(EpicsSignalRO, 'X-I')
