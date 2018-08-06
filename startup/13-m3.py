@@ -31,12 +31,20 @@ class Mirrors(PseudoPositioner):
         self.xu.kill_cmd.put(1)
 
     def where(self):
-        print("%s:" % self.name.upper())
+        stripe = ''
+        if self.name.lower() == 'm3':
+            if self.xu.user_readback.value > 0:
+                stripe = '(Rh/Pt stripe)'
+            else:
+                stripe = '(Si stripe)'
+        print("%s: %s" % (self.name.upper(), stripe))
         print("\tvertical = %7.3f mm\t\tYU  = %7.3f"   % (self.vertical.readback.value, self.yu.user_readback.value))
         print("\tlateral  = %7.3f mm\t\tYDO = %7.3f"   % (self.lateral.readback.value,  self.ydo.user_readback.value))
         print("\tpitch    = %7.3f mrad\t\tYDI = %7.3f" % (self.pitch.readback.value,    self.ydi.user_readback.value))
         print("\troll     = %7.3f mrad\t\tXU  = %7.3f" % (self.roll.readback.value,     self.xu.user_readback.value))
         print("\tyaw      = %7.3f mrad\t\tXD  = %7.3f" % (self.yaw.readback.value,      self.xd.user_readback.value))
+        if self.name.lower() == 'm2':
+            print('\tbender   = %9.1f steps' % m2_bender.user_readback.value)
     def wh(self):
         self.where()
 
@@ -96,7 +104,7 @@ m2.yaw._limits      = (-1, 1)
 m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
 m3.vertical._limits = (-9, 1)
 m3.lateral._limits  = (-16, 16)
-m3.pitch._limits    = (-1, 6)
+m3.pitch._limits    = (-6, 1)
 m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
 

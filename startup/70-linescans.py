@@ -46,12 +46,12 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     BMM_cpl.motor = dm3_bct
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
-
     line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
             (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
     @subs_decorator(plot)
     def scan_slit():
+
         yield from abs_set(quadem1.averaging_time, 0.1)
         yield from abs_set(motor.kill_cmd, 1)
 
@@ -65,7 +65,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
+    action = input('\n' + colored('Pluck motor position from the plot? [Yn] ', color='white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
     yield from move_after_scan(dm3_bct)
@@ -84,11 +84,11 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
     plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
 
-    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
-
     @subs_decorator(plot)
     def scan_dcmpitch():
+        line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+
         yield from abs_set(quadem1.averaging_time, 0.1)
         yield from abs_set(motor.kill_cmd, 1)
 
@@ -105,7 +105,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
 
         RE.msg_hook = BMM_msg_hook
         BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
-                     (db[-1].start['uid'], db[-1].start['scan_id']))
+                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
         yield from mv(motor, top)
         yield from bps.sleep(3.0)
         yield from abs_set(motor.kill_cmd, 1)

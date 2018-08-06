@@ -12,7 +12,12 @@ def motor_status():
     text += '\troll     = %7.3f mrad\t\tXU  = %7.3f\n'   % (m2.roll.readback.value,     m2.xu.user_readback.value)
     text += '\tyaw      = %7.3f mrad\t\tXD  = %7.3f\n'   % (m2.yaw.readback.value,      m2.xd.user_readback.value)
 
-    text += 'M3\n\tvertical = %7.3f mm\t\tYU  = %7.3f\n' % (m3.vertical.readback.value, m3.yu.user_readback.value)
+    stripe = '(Rh/Pt stripe)'
+    if m3.xu.user_readback.value < 0:
+        stripe = '(Si stripe)'
+
+    text += 'M3  %s\n'                                   % stripe
+    text += '\tvertical = %7.3f mm\t\tYU  = %7.3f\n'     % (m3.vertical.readback.value, m3.yu.user_readback.value)
     text += '\tlateral  = %7.3f mm\t\tYDO = %7.3f\n'     % (m3.lateral.readback.value,  m3.ydo.user_readback.value)
     text += '\tpitch    = %7.3f mrad\t\tYDI = %7.3f\n'   % (m3.pitch.readback.value,    m3.ydi.user_readback.value)
     text += '\troll     = %7.3f mrad\t\tXU  = %7.3f\n'   % (m3.roll.readback.value,     m3.xu.user_readback.value)

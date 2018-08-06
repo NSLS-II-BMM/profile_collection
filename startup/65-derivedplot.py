@@ -38,9 +38,13 @@ def interpret_click(ev):
     BMM_cpl.y = ev.ydata
 
 def handle_close(ev):
-    BMM_cpl.motor = None
-    BMM_cpl.fig   = None
-    BMM_cpl.ax    = None
+    ## if closing a stale plot, take care to preserve current plot in BMM_cpl object
+    recent  = str(BMM_cpl.fig.canvas.__repr__).split()[-1]
+    closing = str(ev.canvas).split()[-1]
+    if recent == closing:
+        BMM_cpl.motor = None
+        BMM_cpl.fig   = None
+        BMM_cpl.ax    = None
 
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, **kwargs):
