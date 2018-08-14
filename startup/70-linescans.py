@@ -41,6 +41,13 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     position to find the optimal position for slits3.  No further
     analysis of the scan is done -- YOU must move to the optimal position.
     '''
+
+    (ok, text) = BMM_clear_to_start()
+    if ok == 0:
+        print(colored(text, color='red'))
+        yield from null()
+        return
+
     RE.msg_hook = None
     motor = dm3_bct
     BMM_cpl.motor = dm3_bct
@@ -77,6 +84,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     position to find the peak of the crystal rocking curve.  At the end, move
     to the position of maximum intensity on I0.
     '''
+
+    (ok, text) = BMM_clear_to_start()
+    if ok == 0:
+        print(colored(text, color='red'))
+        yield from null()
+        return
+
     RE.msg_hook = None
     motor = dcm_pitch
     BMM_cpl.motor = motor
@@ -148,6 +162,13 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
               'xs'   : xafs_linxs, 'r'    : xafs_roll,
           }
 
+    (ok, text) = BMM_clear_to_start()
+    if ok == 0:
+        print(colored(text, color='red'))
+        yield from null()
+        return
+
+
     RE.msg_hook = None
     ## sanitize input and set thismotor to an actual motor
     if type(axis) is str: axis = axis.lower()
@@ -169,9 +190,9 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     BMM_cpl.motor = thismotor
 
     ## sanity checks on detector
-    if detector not in ('It', 'If', 'I0'):
+    if detector not in ('It', 'If', 'I0', 'Iy'):
         print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                      (detector, 'it, if'), color='red'))
+                      (detector, 'it, if, i0, iy'), color='red'))
         yield from null()
         return
 
@@ -188,6 +209,9 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
         func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
     elif detector == 'I0':
         func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
+    elif detector == 'Iy':
+        denominator = ' / I0'
+        func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
     elif detector == 'If':
         dets.append(vor)
         denominator = ' / I0'
@@ -207,6 +231,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
         value = thismotor.user_readback.value
     line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
             (thismotor.name, detector, start, stop, nsteps, value)
+    ##BMM_suspenders()            # engage suspenders
 
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):
@@ -216,6 +241,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
 
+    ##RE.clear_suspenders()       # disable suspenders
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     if pluck is True:

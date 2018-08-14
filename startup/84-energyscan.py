@@ -384,28 +384,40 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
 
+        (ok, text) = BMM_clear_to_start()
+        if ok == 0:
+            print(colored(text, color='red'))
+            yield from null()
+            return
+
         ## make sure we are ready to scan
         #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
         #yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
         _locked_dwell_time.struck_dwell_time.settle_time = 0
 
+
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
-        if not os.path.isfile(inifile):
-            print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='red'))
+        estimate = howlong(inifile, interactive=0, **kwargs)
+        if estimate == -1:
             BMM_xsp.final_log_entry = False
             yield from null()
             return
-        print(colored('reading ini file: %s' % inifile, color='white'))
+        # if not os.path.isfile(inifile):
+        #     print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='red'))
+        #     BMM_xsp.final_log_entry = False
+        #     yield from null()
+        #     return
+        # print(colored('reading ini file: %s' % inifile, color='white'))
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
-        (ok, missing) = ini_sanity(f)
-        if not ok:
-            print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
-                  '%s\n' % str.join(', ', missing))
-            BMM_xsp.final_log_entry = False
-            yield from null()
-            return
+        # (ok, missing) = ini_sanity(f)
+        # if not ok:
+        #     print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
+        #           '%s\n' % str.join(', ', missing))
+        #     BMM_xsp.final_log_entry = False
+        #     yield from null()
+        #     return
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
@@ -422,6 +434,7 @@ def xafs(inifile, **kwargs):
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
+            print(estimate)
 
             if not dcm.suppress_channel_cut:
                 print('\npseudo-channel-cut energy = %.1f' % eave)
@@ -440,6 +453,7 @@ def xafs(inifile, **kwargs):
         ## set up a plotting subscription, anonymous functions for plotting 3 forms of XAFS
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
+        Yield = lambda doc: (doc['data']['dcm_energy'], -1*doc['data']['Iy'] / doc['data']['I0'])
         fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data']['DTC1'] +
                                                          doc['data']['DTC2'] +
                                                          doc['data']['DTC3'] +
@@ -450,12 +464,19 @@ def xafs(inifile, **kwargs):
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
         elif 'ref'   in p['mode']:
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)')
+        elif 'yield' in p['mode']:
+            plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)')
         elif 'both'  in p['mode']:
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
         else:
             print(colored('Plotting mode not specified, falling back to a transmission plot', color='red'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
+
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## engage suspenders right before starting scan sequence
+        BMM_suspenders()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
@@ -530,8 +551,8 @@ def xafs(inifile, **kwargs):
                     print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
                     yield from null()
                     return
-                print(colored('starting scan %d of %d, %d energy points, should take about %.1f minutes' %
-                              (count, p['nscans'], len(energy_grid), approx_time), color='white'))
+                print(colored('starting scan %d of %d, %d energy points' %
+                              (count, p['nscans'], len(energy_grid)), color='white'))
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -557,7 +578,7 @@ def xafs(inifile, **kwargs):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan plan with the correct detectors
-                if 'trans' in p['mode'] or 'ref' in p['mode']:
+                if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory, md=md)
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory, md=md)
@@ -580,6 +601,7 @@ def xafs(inifile, **kwargs):
 
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
+        RE.clear_suspenders()
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
@@ -594,3 +616,27 @@ def xafs(inifile, **kwargs):
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
+
+
+def howlong(inifile, interactive=1, **kwargs):
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## user input, find and parse the INI file
+    if not os.path.isfile(inifile):
+        print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='yellow'))
+        return -1
+    print(colored('reading ini file: %s' % inifile, color='white'))
+    (p, f) = scan_metadata(inifile=inifile, **kwargs)
+    (ok, missing) = ini_sanity(f)
+    if not ok:
+        print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
+              '%s\n' % str.join(', ', missing))
+        return -1
+    (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
+    text = '\nEach scan will take about %.1f minutes\n' % approx_time
+    plural = 's'
+    if int(p['nscans']) == 1: plural = ''
+    text +='The sequence of %d scan%s will take about %.1f hours' % (int(p['nscans']), plural, approx_time * int(p['nscans'])/60)
+    if interactive:
+        print(text)
+    else:
+        return text

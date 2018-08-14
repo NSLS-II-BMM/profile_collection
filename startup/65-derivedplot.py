@@ -39,6 +39,8 @@ def interpret_click(ev):
 
 def handle_close(ev):
     ## if closing a stale plot, take care to preserve current plot in BMM_cpl object
+    if BMM_cpl.fig is None:
+        return
     recent  = str(BMM_cpl.fig.canvas.__repr__).split()[-1]
     closing = str(ev.canvas).split()[-1]
     if recent == closing:

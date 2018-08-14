@@ -33,17 +33,18 @@ class BMMQuadEM(QuadEM):
     _default_read_attrs = ['I0',
                            'It',
                            'Ir',
-                           'current4_mean_value_nano']
+                           'Iy']
     port_name = Cpt(Signal, value='EM180')
     conf = Cpt(QuadEMPort, port_name='EM180')
     em_range  = Cpt(EpicsSignalWithRBV, 'Range', string=True)
     I0 = Cpt(Nanoize, derived_from='current1.mean_value')
     It = Cpt(Nanoize, derived_from='current2.mean_value')
     Ir = Cpt(Nanoize, derived_from='current3.mean_value')
+    Iy = Cpt(Nanoize, derived_from='current4.mean_value')
     #current1_mean_value_nano = Cpt(Nanoize, derived_from='current1.mean_value')
     #current2_mean_value_nano = Cpt(Nanoize, derived_from='current2.mean_value')
     #current3_mean_value_nano = Cpt(Nanoize, derived_from='current3.mean_value')
-    current4_mean_value_nano = Cpt(Nanoize, derived_from='current4.mean_value')
+    #current4_mean_value_nano = Cpt(Nanoize, derived_from='current4.mean_value')
     iti0   = Cpt(Normalized, derived_from='current2.mean_value')
     lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
     state  = Cpt(EpicsSignal, 'Acquire')
@@ -81,9 +82,11 @@ quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.I0.kind = 'hinted'
 quadem1.It.kind = 'hinted'
 quadem1.Ir.kind = 'hinted'
+quadem1.Iy.kind = 'omitted'      # 'hinted'
 
 quadem1.I0.name = 'I0'
 quadem1.It.name = 'It'
 quadem1.Ir.name = 'Ir'
+quadem1.Iy.name = 'Iy'
 
-quadem1.current4_mean_value_nano.kind = 'omitted'
+#quadem1.current4_mean_value_nano.kind = 'omitted'
