@@ -32,7 +32,7 @@ def move_m3(target=5):
     print('\t (correction): %.2f' % correction)
     print('')
 
-    action = input("Begin moving motors> [Yn] ")
+    action = input("Begin moving motors> [Y/n then enter] ")
     if action.lower == 'q' or action.lower() == 'n':
         yield from null()
         return
@@ -82,7 +82,7 @@ def move_m2(target=3.5):
     print('\t (correction): %.2f' % correction)
     print('')
 
-    action = input("Begin moving motors? [Yn] ")
+    action = input("Begin moving motors? [Y/n then enter] ")
     if action.lower() == 'q' or action.lower() == 'n':
         yield from null()
         return

@@ -43,7 +43,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     '''
 
     (ok, text) = BMM_clear_to_start()
-    if ok == 0:
+    if ok is False:
         print(colored(text, color='red'))
         yield from null()
         return
@@ -72,7 +72,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    action = input('\n' + colored('Pluck motor position from the plot? [Yn] ', color='white'))
+    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', color='white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
     yield from move_after_scan(dm3_bct)
@@ -86,7 +86,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     '''
 
     (ok, text) = BMM_clear_to_start()
-    if ok == 0:
+    if ok is False:
         print(colored(text, color='red'))
         yield from null()
         return
@@ -163,7 +163,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
           }
 
     (ok, text) = BMM_clear_to_start()
-    if ok == 0:
+    if ok is False:
         print(colored(text, color='red'))
         yield from null()
         return
@@ -245,7 +245,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Yn]', color='white'))
+        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', color='white'))
         if action.lower() == 'n' or action.lower() == 'q':
             return(yield from null())
         yield from move_after_scan(thismotor)
