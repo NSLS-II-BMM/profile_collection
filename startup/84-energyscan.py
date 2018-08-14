@@ -399,7 +399,7 @@ def xafs(inifile, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
-        estimate = howlong(inifile, interactive=0, **kwargs)
+        estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
             BMM_xsp.final_log_entry = False
             yield from null()
@@ -618,7 +618,7 @@ def xafs(inifile, **kwargs):
     RE.msg_hook = BMM_msg_hook
 
 
-def howlong(inifile, interactive=1, **kwargs):
+def howlong(inifile, interactive=True, **kwargs):
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
     if not os.path.isfile(inifile):
