@@ -39,6 +39,7 @@ def BMM_suspenders():
 def BMM_clear_to_start():
     ok = 1
     text = ''
+    # return (ok, text)
     if shb.state.value == 1:
         ok = 0
         text += 'Photon shutter (shb) is closed\n'
@@ -51,7 +52,7 @@ def BMM_clear_to_start():
     if ring.current.value < 10:
         ok = 0
         text += 'There is no current in the storage ring\n'
-    # if quadem1.I0.value < 0.01:
+    # if quadem1.I0.value < 0.1:
     #     ok = 0
     #     text += 'There is no signal on I0\n'
     return (ok, text)

@@ -91,6 +91,12 @@ def change_xtals(xtal=None):
         print('No crystal set specified')
         return(yield from null())
 
+    (ok, text) = BMM_clear_to_start()
+    if ok == 0:
+        print(colored(text, color='red'))
+        yield from null()
+        return
+
     if '111' in xtal:
         xtal = 'Si(111)'
     if '311' in xtal:
