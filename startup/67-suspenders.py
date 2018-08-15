@@ -42,7 +42,7 @@ def BMM_clear_to_start():
     # return (ok, text)
     if shb.state.value == 1:
         ok = False
-        text += 'Photon shutter (shb) is closed -- do shb.open()\n'
+        text += 'Photon shutter (shb) is closed -- search the hutch then do shb.open()\n'
     if idps.state.value == 0:
         ok = False
         text += 'Front end shutter (sha) is closed -- do sha.open()\n'

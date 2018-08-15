@@ -374,11 +374,13 @@ def xafs(inifile, **kwargs):
     '''
     def main_plan(inifile):
         if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
+            BMM_xsp.final_log_entry = False
             print(colored('The DCM is in the 111 position, configured as 311', color='red'))
             print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
             yield from null()
             return
         if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
+            BMM_xsp.final_log_entry = False
             print(colored('The DCM is in the 311 position, configured as 111', color='red'))
             print(colored('\tdcm_x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
             yield from null()
@@ -386,7 +388,9 @@ def xafs(inifile, **kwargs):
 
         (ok, text) = BMM_clear_to_start()
         if ok is False:
+            BMM_xsp.final_log_entry = False
             print(colored(text, color='red'))
+            print(colored('Quitting scan sequence....\n', color='white'))
             yield from null()
             return
 

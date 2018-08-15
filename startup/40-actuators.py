@@ -1,4 +1,5 @@
 from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsSignal)
+import time
 
 run_report(__file__)
 
@@ -9,6 +10,7 @@ class EPS_Shutter(Device):
     error = Cpt(EpicsSignal,'Err-Sts')
     permit = Cpt(EpicsSignal, 'Permit:Enbl-Sts')
     enabled = Cpt(EpicsSignal, 'Enbl-Sts')
+    maxcount = 3
 
 
     def __init__(self, *args, **kwargs):
@@ -16,18 +18,73 @@ class EPS_Shutter(Device):
         #self.color = 'red'
 
     def open_plan(self):
-        yield from mv(self.opn, 1)
+        RE.msg_hook = None
+        count = 0
+        while self.state.value == 1:
+            count += 1
+            print('>', end='', flush=True)
+            yield from mv(self.opn, 1)
+            if count >= self.maxcount:
+                print('tried %d times and failed to open shutter :(' % self.maxcount)
+                yield from null()
+                return
+            time.sleep(1.5)
+        BMM_log_info('Opened {}'.format(self.name))
+        print(' Opened {}'.format(self.name))
+        RE.msg_hook = BMM_msg_hook
 
     def close_plan(self):
-        yield from mv(self.cls, 1)
+        RE.msg_hook = None
+        count = 0
+        while self.state.value == 0:
+            count += 1
+            print('>', end='', flush=True)
+            yield from mv(self.cls, 1)
+            if count >= self.maxcount:
+                print('tried %d times and failed to close shutter :(' % self.maxcount)
+                yield from null()
+                return
+            time.sleep(1.5)
+        BMM_log_info('Closed {}'.format(self.name))
+        print(' Closed {}'.format(self.name))
+        RE.msg_hook = BMM_msg_hook
 
     def open(self):
-        print('Opening {}'.format(self.name))
-        self.opn.put(1)
+        RE.msg_hook = None
+        if self.state.value == 1:
+            count = 0
+            while self.state.value == 1:
+                count += 1
+                print('>', end='', flush=True)
+                self.opn.put(1)
+                if count >= self.maxcount:
+                    print('tried %d times and failed to open shutter :(' % self.maxcount)
+                    return
+                time.sleep(1.5)
+            print(' Opened {}'.format(self.name))
+            BMM_log_info('Opened {}'.format(self.name))
+        else:
+            print('{} is open'.format(self.name))
+        RE.msg_hook = BMM_msg_hook
 
     def close(self):
-        print('Closing {}'.format(self.name))
-        self.cls.put(1)
+        RE.msg_hook = None
+        if self.state.value == 0:
+            count = 0
+            while self.state.value == 0:
+                count += 1
+                print('>', end='', flush=True)
+                self.cls.put(1)
+                if count >= self.maxcount:
+                    print('tried %d times and failed to close shutter :(' % self.maxcount)
+                    return
+                time.sleep(1.5)
+            print(' Closed {}'.format(self.name))
+            BMM_log_info('Closed {}'.format(self.name))
+        else:
+            print('{} is closed'.format(self.name))
+        RE.msg_hook = BMM_msg_hook
+
 
 class BMPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Sts:BM_BMPS_Opn-Sts')
