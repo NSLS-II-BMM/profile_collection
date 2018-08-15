@@ -22,10 +22,10 @@ class EPS_Shutter(Device):
         count = 0
         while self.state.value == 1:
             count += 1
-            print('>', end='', flush=True)
+            print(u'\u231b', end=' ', flush=True)
             yield from mv(self.opn, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to open shutter :(' % self.maxcount)
+                print('tried %d times and failed to open shutter :(' % count)
                 yield from null()
                 return
             time.sleep(1.5)
@@ -38,10 +38,10 @@ class EPS_Shutter(Device):
         count = 0
         while self.state.value == 0:
             count += 1
-            print('>', end='', flush=True)
+            print(u'\u231b', end=' ', flush=True)
             yield from mv(self.cls, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to close shutter :(' % self.maxcount)
+                print('tried %d times and failed to close shutter :(' % count)
                 yield from null()
                 return
             time.sleep(1.5)
@@ -55,10 +55,10 @@ class EPS_Shutter(Device):
             count = 0
             while self.state.value == 1:
                 count += 1
-                print('>', end='', flush=True)
+                print(u'\u231b', end=' ', flush=True)
                 self.opn.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to open shutter :(' % self.maxcount)
+                    print('tried %d times and failed to open shutter :(' % count)
                     return
                 time.sleep(1.5)
             print(' Opened {}'.format(self.name))
@@ -73,10 +73,10 @@ class EPS_Shutter(Device):
             count = 0
             while self.state.value == 0:
                 count += 1
-                print('>', end='', flush=True)
+                print(u'\u231b', end=' ', flush=True)
                 self.cls.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to close shutter :(' % self.maxcount)
+                    print('tried %d times and failed to close shutter :(' % count)
                     return
                 time.sleep(1.5)
             print(' Closed {}'.format(self.name))
