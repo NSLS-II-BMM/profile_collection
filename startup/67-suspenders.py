@@ -37,21 +37,21 @@ def BMM_suspenders():
 # BMM_suspenders()
 
 def BMM_clear_to_start():
-    ok = 1
+    ok = True
     text = ''
     # return (ok, text)
     if shb.state.value == 1:
-        ok = 0
-        text += 'Photon shutter (shb) is closed\n'
+        ok = False
+        text += 'Photon shutter (shb) is closed -- do shb.open()\n'
     if idps.state.value == 0:
-        ok = 0
-        text += 'Front end shutter (idps) is closed\n'
+        ok = False
+        text += 'Front end shutter (sha) is closed -- do sha.open()\n'
     if bmps.state.value == 0:
-        ok = 0
-        text += 'BM photon shutter (bmps) is closed (call floor coordinator)\n'
+        ok = False
+        text += 'BMPS is closed -- call floor coordinator\n'
     if ring.current.value < 10:
-        ok = 0
-        text += 'There is no current in the storage ring\n'
+        ok = False
+        text += 'There is no current in the storage ring -- wait for beam to come back\n'
     # if quadem1.I0.value < 0.1:
     #     ok = 0
     #     text += 'There is no signal on I0\n'

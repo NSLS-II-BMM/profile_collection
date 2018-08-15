@@ -385,7 +385,7 @@ def xafs(inifile, **kwargs):
             return
 
         (ok, text) = BMM_clear_to_start()
-        if ok == 0:
+        if ok is False:
             print(colored(text, color='red'))
             yield from null()
             return
@@ -429,16 +429,25 @@ def xafs(inifile, **kwargs):
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
             print('\nfirst data file to be written to "%s"' % outfile)
-            if os.path.isfile(outfile):
-                print(colored('%s already exists!  Bailing out....' % outfile, color='red'))
+
+            bail = False
+            for i in range(p['start'], p['start']+p['nscans'], 1):
+                count += 1
+                fname = "%s.%3.3d" % (p['filename'], i)
+                datafile = os.path.join(p['folder'], fname)
+                if os.path.isfile(datafile):
+                    print(colored('%s already exists!' % datafile, color='red'))
+                    bail = True
+            if bail:
+                print(colored('\nOne or more output files already exist!  Quitting scan sequence....', color='red'))
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
             print(estimate)
 
             if not dcm.suppress_channel_cut:
-                print('\npseudo-channel-cut energy = %.1f' % eave)
-            action = input("\nBegin scan sequence? [Yn] ")
+                print('\npseudo-channel-cut energy = %.1f' % eave) ()
+            action = input("\nBegin scan sequence? [Y/n then enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 BMM_xsp.final_log_entry = False
                 yield from null()
@@ -450,7 +459,7 @@ def xafs(inifile, **kwargs):
         BMM_log_info(motor_status())
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## set up a plotting subscription, anonymous functions for plotting 3 forms of XAFS
+        ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], -1*doc['data']['Iy'] / doc['data']['I0'])
@@ -548,6 +557,8 @@ def xafs(inifile, **kwargs):
                 fname = "%s.%3.3d" % (p['filename'], i)
                 datafile = os.path.join(p['folder'], fname)
                 if os.path.isfile(datafile):
+                    ## shouldn't be able to get here, unless a file
+                    ## was written since the scan sequence began....
                     print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
                     yield from null()
                     return
