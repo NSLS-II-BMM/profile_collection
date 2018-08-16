@@ -18,7 +18,9 @@ run_report(__file__)
 
 
 def now():
-    return(datetime.datetime.now().replace(microsecond=0).isoformat())
+    iso = datetime.datetime.now().replace(microsecond=0).isoformat()
+    iso = iso.replace(':', '-')
+    return(iso)
 
 
 XASURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
