@@ -48,7 +48,9 @@ import configparser
 def next_index(folder, stub):
     listing = os.listdir(folder)
     r = re.compile(stub + '\.\d\d\d')
-    results = sorted(list(filter(r.match, l)))
+    results = sorted(list(filter(r.match, listing)))
+    if len(results) == 0:
+        return 1
     return int(results[-1][-3:]) + 1
 
 
