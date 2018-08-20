@@ -34,8 +34,6 @@ CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
                  'snapshots': True,
                  'bothways':  False,
                  'channelcut':True,
-                 'focus':     False,
-                 'hr':        True,
                  'mode':      'transmission',}
 
 
@@ -46,6 +44,13 @@ import configparser
     #nscans=None, start=None, inttime=None,
     #snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
     #mode=None, bounds=None, steps=None, times=None):
+
+def next_index(folder, stub):
+    listing = os.listdir(folder)
+    r = re.compile(stub + '\.\d\d\d')
+    results = sorted(list(filter(r.match, l)))
+    return int(results[-1][-3:]) + 1
+
 
 def scan_metadata(inifile=None, **kwargs):
     """Typical use is to specify an INI file, which contains all the
@@ -77,8 +82,6 @@ def scan_metadata(inifile=None, **kwargs):
       snapshots:  [bool]  True = capture analog and XAS cameras before scan sequence
       bothways:   [bool]  True = measure in both monochromator directions
       channelcut: [bool]  True = measure in pseudo-channel-cut mode
-      focus:      [bool]  True = focusing mirror is in use
-      hr:         [bool]  True = flat harmonic rejection mirror is in use
       mode:       [str]   transmission, fluorescence, or reference -- how to display the data
       bounds:     [list]  scan grid boundaries (not kwarg-able at this time)
       steps:      [list]  scan grid step sizes (not kwarg-able at this time)
@@ -135,8 +138,28 @@ def scan_metadata(inifile=None, **kwargs):
             parameters[a] = str(kwargs[a])
             found[a] = True
 
+    ## ----- start value
+    if 'start' not in kwargs:
+        try:
+            parameters['start'] = str(config.get('scan', 'start'))
+            found['start'] = True
+        except configparser.NoOptionError:
+            parameters['start'] = CS_DEFAULTS['start']
+    else:
+        parameters['start'] = str(kwargs['start'])
+        found['start'] = True
+    try:
+        if parameters['start'] == 'next':
+            parameters['start'] = next_index(parameters['folder'],parameters['filename'])
+        else:
+            parameters['start'] = int(parameters['start'])
+    except ValueError:
+        print(colored('\nstart value must be a positive integer or "next"', color='red'))
+        parameters['start'] = -1
+        found['start'] = False
+
     ## ----- integers
-    for a in ('start', 'nscans'):
+    for a in ('nscans',):
         found[a] = False
         if a not in kwargs:
             try:
@@ -162,7 +185,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'bothways', 'channelcut', 'focus', 'hr'):
+    for a in ('snapshots', 'bothways', 'channelcut'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -323,6 +346,7 @@ def ini_sanity(found):
     return (ok, missing)
 
 
+
 ##########################################################
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
@@ -386,7 +410,7 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
 
-        (ok, text) = BMM_clear_to_start()
+        (ok, text) = (True, '') # BMM_clear_to_start()
         if ok is False:
             BMM_xsp.final_log_entry = False
             print(colored(text, color='red'))
@@ -429,12 +453,13 @@ def xafs(inifile, **kwargs):
         if BMM_xsp.prompt:
             print("How does this look?")
             for (k,v) in p.items():
-                print('\t%-12s : %s' % (k,v))
+                print('\t%-13s : %s' % (k,v))
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
             print('\nfirst data file to be written to "%s"' % outfile)
 
             bail = False
+            count = 0
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 count += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -450,7 +475,7 @@ def xafs(inifile, **kwargs):
             print(estimate)
 
             if not dcm.suppress_channel_cut:
-                print('\npseudo-channel-cut energy = %.1f' % eave) ()
+                print('\npseudo-channel-cut energy = %.1f' % eave)
             action = input("\nBegin scan sequence? [Y/n then enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 BMM_xsp.final_log_entry = False
@@ -523,8 +548,6 @@ def xafs(inifile, **kwargs):
                               edge          = p['edge'],
                               element       = p['element'],
                               edge_energy   = p['e0'],
-                              focus         = p['focus'],
-                              hr            = p['hr'],
                               direction     = 1,
                               scantype      = 'step',
                               channelcut    = p['channelcut'],

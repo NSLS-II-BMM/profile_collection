@@ -190,9 +190,9 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     BMM_cpl.motor = thismotor
 
     ## sanity checks on detector
-    if detector not in ('It', 'If', 'I0', 'Iy'):
+    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
         print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                      (detector, 'it, if, i0, iy'), color='red'))
+                      (detector, 'it, if, i0, iy, ir'), color='red'))
         yield from null()
         return
 

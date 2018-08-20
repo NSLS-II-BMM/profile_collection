@@ -33,13 +33,29 @@ class Ring(Device):
 
 ring = Ring('SR', name='ring')
 
+## some heuristics for determining state of M2 and M3
+def mirror_state():
+    if m2.vertical.readback.value > 0:
+        m2state = 'not in use'
+    else:
+        m2state = 'torroidal mirror, 5 nm Rh on 30 nm Pt, pitch = %.2f mrad, bender = %d counts' % (m2.pitch.readback.value,
+                                                                                                    int(m2_bender.user_readback.value))
+    if m3.lateral.readback.value > 0:
+        stripe =  'Pt stripe'
+    else:
+        stripe =  'Si stripe'
+    if abs(m3.vertical.readback.value + 1.5) < 0.1:
+        m3state = 'not in use'
+    else:
+        m3state = 'flat mirror, %s, pitch = %.2f mrad' % (stripe, m3.pitch.readback.value)
+    return(m2state, m3state)
+
+
 def bmm_metadata(measurement   = 'transmission',
                  experimenters = '',
                  edge          = 'K',
                  element       = 'Fe',
                  edge_energy   = '7112',
-                 focus         = False,
-                 hr            = True,
                  direction     = 1,
                  scantype      = 'step',
                  channelcut    = True,
@@ -61,8 +77,6 @@ def bmm_metadata(measurement   = 'transmission',
       edge          -- 'K', 'L3', 'L2', or 'L1'
       element       -- one or two letter element symbol
       edge_energy   -- edge energy used to constructing scan parameters
-      focus         -- True/False, True for PDS modes A, B, C
-      hr            -- True/False, True for PDS modes D, E, F
       direction     -- 1/-1, 1 for increasing, -1 for decreasing
       scan          -- 'step' or 'slew'
       channelcut    -- True/False, False for fixed exit, True for pseudo-channel-cut
@@ -100,15 +114,19 @@ def bmm_metadata(measurement   = 'transmission',
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
 
-    if focus:
-        md['XDI,Beamline,focusing'] = 'torroidal mirror with bender, 5 nm Rh on 30 nm Pt'
-    else:
-        md['XDI,Beamline,focusing'] = 'none'
+    (m2state, m3state) = mirror_state()
+    md['XDI,Beamline,focusing'] = m2state
+    md['XDI,Beamline,harmonic_rejection'] = m3state
 
-    if hr:
-        md['XDI,Beamline,harmonic_rejection'] = 'flat, Pt stripe; Si stripe below 8 keV'
-    else:
-        md['XDI,Beamline,harmonic_rejection'] = 'none'
+    # if focus:
+    #     md['XDI,Beamline,focusing'] = 'torroidal mirror with bender, 5 nm Rh on 30 nm Pt'
+    # else:
+    #     md['XDI,Beamline,focusing'] = 'none'
+
+    # if hr:
+    #     md['XDI,Beamline,harmonic_rejection'] = 'flat, Pt stripe; Si stripe below 8 keV'
+    # else:
+    #     md['XDI,Beamline,harmonic_rejection'] = 'none'
 
     if direction > 0:
         md['XDI,Mono,direction'] = 'increasing in energy'
