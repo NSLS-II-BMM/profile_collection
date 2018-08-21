@@ -14,17 +14,15 @@ class MyPrompt(Prompts):
         else:
             shbtoken = (Token.Tilde, 'B')
 
-        return [(Token, '%s.%s ' % (BMM_config._mode, dcm.crystal)),
-                (Token.Prompt, '['),
+        return [(Token.PromptNum, 'BMM '),
+                (Token, '%s.%s ' % (BMM_config._mode, dcm.crystal)),
                 shatoken,
-                (Token.Prompt, '|'),
+                (Token.Prompt, u'\u2022'),
                 shbtoken,
-                (Token.Prompt, ']'),
-                (Token.Comment, ' %s ' % ring.current.value),
+                (Token.Comment, ' %.1f ' % ring.current.value),
                 (Token.Prompt, '['),
                 (Token.PromptNum, str(self.shell.execution_count)),
-                (Token.Prompt, ']'),
-                (Token.Prompt, ' > ')]
+                (Token.Prompt, '] ' + u"\u25B6"+' ')]
 
 ip = get_ipython()
 ip.prompts = MyPrompt(ip)

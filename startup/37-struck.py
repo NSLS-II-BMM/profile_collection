@@ -42,6 +42,8 @@ class DTCorr4(DerivedSignal):
                                      self.parent.channels.chan14.value,
                                      _locked_dwell_time.dwell_time.readback.value)
 
+#from subprocess import call
+#call(['caput', 'XF:06BM-ES:1{Sclr:1}.S3.PREC', '2'])
 
 class BMMVortex(EpicsScaler):
     maxiter = 20

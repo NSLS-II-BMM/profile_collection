@@ -29,6 +29,12 @@ class TransXmu(DerivedSignal):
         arg = self.parent.current1.mean_value.value / value
         return log(abs(arg))
 
+from subprocess import call
+call(['caput', 'XF:06BM-BI{EM:1}EM180:Current1:MeanValue_RBV.PREC', '3'])
+call(['caput', 'XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC', '3'])
+call(['caput', 'XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC', '3'])
+call(['caput', 'XF:06BM-BI{EM:1}EM180:Current4:MeanValue_RBV.PREC', '3'])
+
 class BMMQuadEM(QuadEM):
     _default_read_attrs = ['I0',
                            'It',
@@ -41,12 +47,8 @@ class BMMQuadEM(QuadEM):
     It = Cpt(Nanoize, derived_from='current2.mean_value')
     Ir = Cpt(Nanoize, derived_from='current3.mean_value')
     Iy = Cpt(Nanoize, derived_from='current4.mean_value')
-    #current1_mean_value_nano = Cpt(Nanoize, derived_from='current1.mean_value')
-    #current2_mean_value_nano = Cpt(Nanoize, derived_from='current2.mean_value')
-    #current3_mean_value_nano = Cpt(Nanoize, derived_from='current3.mean_value')
-    #current4_mean_value_nano = Cpt(Nanoize, derived_from='current4.mean_value')
-    iti0   = Cpt(Normalized, derived_from='current2.mean_value')
-    lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
+    #iti0   = Cpt(Normalized, derived_from='current2.mean_value')
+    #lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
     state  = Cpt(EpicsSignal, 'Acquire')
 
     def __init__(self, *args, **kwargs):
