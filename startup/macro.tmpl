@@ -1,0 +1,24 @@
+#########################################################
+# %run -i {folder}/macro.py
+# RE(sample_sequence())
+#########################################################
+
+def sample_sequence():
+
+    BMM_xsp.prompt = False
+    BMM_log_info('Beginning sample macro')
+
+    ### sample 1 ############################################################
+    yield from mv(xafs_linx, -114.3, xafs_liny, 40.2)
+    yield from xafs('{folder}/scan.ini')
+
+    ### sample 2 ############################################################
+    yield from mv(xafs_linx, -114.3, xafs_liny, 20.8)
+    yield from xafs('{folder}/scan.ini', filename='blah2', sample='another sample')
+
+    ### sample 3 ############################################################
+    yield from mv(xafs_linx, -114.3, xafs_liny, 1.5)
+    yield from xafs('{folder}/scan.ini', filename='blah3', sample='a different sample', nscans=4)
+
+    BMM_xsp.prompt = True
+    BMM_log_info('Sample macro finished!')

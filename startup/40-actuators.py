@@ -17,6 +17,12 @@ class EPS_Shutter(Device):
         super().__init__(*args, **kwargs)
         #self.color = 'red'
 
+    def status(self):
+        if shb.state.value == 1:
+            return 'closed'
+        else:
+            return 'open'
+
     def open_plan(self):
         RE.msg_hook = None
         count = 0

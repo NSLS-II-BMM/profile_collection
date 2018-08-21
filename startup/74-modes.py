@@ -12,6 +12,14 @@ def read_mode_data():
      return json.load(open(os.path.join(LOCATION, 'Modes.json')))
 MODEDATA = read_mode_data()
 
+##########################################################
+# --- a simple class for managing beamline configuration #
+##########################################################
+class BMM_configuration():
+    def __init__(self):
+        self._mode = None
+BMM_config = BMM_configuration()
+
 def change_mode(mode=None):
     if mode is None:
         print('No mode specified')
@@ -59,6 +67,7 @@ def change_mode(mode=None):
 
     yield from bps.sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+    BMM_config._mode = mode
     RE.msg_hook = BMM_msg_hook
     BMM_log_info(motor_status())
 
@@ -66,7 +75,7 @@ def change_mode(mode=None):
 def mode():
     print("Motor positions:")
     for m in (dm3_bct, xafs_yu, xafs_ydo, xafs_ydi, m2_yu, m2_ydo,
-              m2_ydi, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
+              m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
               dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
         print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
     if xafs_yu.user_readback.value > 126.5:
@@ -82,6 +91,21 @@ def mode():
         print("This appears to be mode C")
     else:
         print("This appears to be mode B")
+
+def get_mode():
+    if xafs_yu.user_readback.value > 126.5:
+        return 'A'
+    elif xafs_yu.user_readback.value > 120:
+        if m3_xu.user_readback.value > 0:
+            return 'D'
+        else:
+            return 'E'
+    elif xafs_yu.user_readback.value > 90:
+        return 'F'
+    elif xafs_yu.user_readback.value > 40:
+        return 'C'
+    else:
+        return 'B'
 
 #    yield from null()
 
