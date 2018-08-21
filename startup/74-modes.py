@@ -100,6 +100,8 @@ def get_mode():
             return 'D'
         else:
             return 'E'
+    elif xafs_yu.user_readback.value > 110:
+        return 'XRD'
     elif xafs_yu.user_readback.value > 90:
         return 'F'
     elif xafs_yu.user_readback.value > 40:
@@ -108,6 +110,9 @@ def get_mode():
         return 'B'
 
 #    yield from null()
+
+if BMM_config._mode is None:
+    BMM_config._mode = get_mode()
 
 
 def change_xtals(xtal=None):

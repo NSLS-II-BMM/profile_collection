@@ -17,11 +17,6 @@ run_report(__file__)
 ##    snap('analog', filename='/path/to/saved/image.jpg')
 
 
-def now():
-    iso = datetime.datetime.now().replace(microsecond=0).isoformat()
-    iso = iso.replace(':', '-')
-    return(iso)
-
 
 XASURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
 XRDURL = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'

@@ -36,3 +36,5 @@ def ktoe(k):
 def e2l(val):
     """Convert absolute photon energy to photon wavelength"""
     return 2*pi*HBARC/val
+def now():
+    return datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")

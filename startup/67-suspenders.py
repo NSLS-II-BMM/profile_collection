@@ -40,18 +40,18 @@ def BMM_clear_to_start():
     ok = True
     text = ''
     # return (ok, text)
-    if shb.state.value == 1:
-        ok = False
-        text += 'Photon shutter (shb) is closed -- search the hutch then do shb.open()\n'
-    if idps.state.value == 0:
-        ok = False
-        text += 'Front end shutter (sha) is closed -- do sha.open()\n'
-    if bmps.state.value == 0:
-        ok = False
-        text += 'BMPS is closed -- call floor coordinator\n'
     if ring.current.value < 10:
         ok = False
         text += 'There is no current in the storage ring -- wait for beam to come back\n'
+    if bmps.state.value == 0:
+        ok = False
+        text += 'BMPS is closed -- call floor coordinator\n'
+    if idps.state.value == 0:
+        ok = False
+        text += 'Front end shutter (sha) is closed -- do sha.open()\n'
+    if shb.state.value == 1:
+        ok = False
+        text += 'Photon shutter (shb) is closed -- search the hutch then do shb.open()\n'
     # if quadem1.I0.value < 0.1:
     #     ok = 0
     #     text += 'There is no signal on I0\n'

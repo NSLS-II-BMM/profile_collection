@@ -412,10 +412,12 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
 
-        (ok, text) = (True, '') # BMM_clear_to_start()
+        (ok, text) = BMM_clear_to_start()
+        if 'force' in kwargs and kwargs['force'] is True:
+            (ok, text) = (True, '')
         if ok is False:
             BMM_xsp.final_log_entry = False
-            print(colored(text, color='red'))
+            print(colored('\n'+text, color='red'))
             print(colored('Quitting scan sequence....\n', color='white'))
             yield from null()
             return
@@ -572,10 +574,10 @@ def xafs(inifile, **kwargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## snap photos
             if p['snapshots']:
-                now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-                image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], now))
+                #now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+                image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
                 snap('XAS', filename=image)
-                image = os.path.join(p['folder'], "%s_analog_%s.jpg" % (p['filename'], now))
+                image = os.path.join(p['folder'], "%s_analog_%s.jpg" % (p['filename'], now()))
                 snap('analog', filename=image)
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
