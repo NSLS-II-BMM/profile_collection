@@ -92,3 +92,16 @@ quadem1.Ir.name = 'Ir'
 quadem1.Iy.name = 'Iy'
 
 #quadem1.current4_mean_value_nano.kind = 'omitted'
+
+def dark_current():
+    print('Closing photon shutter')
+    yield from shb.close_plan()
+    print('Measuring current offsets, this will take several seconds')
+    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 2.0)
+    yield from abs_set(quadem1.current_offset_calcs.ch1, 1) # is this right?
+    yield from abs_set(quadem1.current_offset_calcs.ch2, 1)
+    yield from abs_set(quadem1.current_offset_calcs.ch3, 1)
+    yield from abs_set(quadem1.current_offset_calcs.ch4, 1)
+    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
+    yield from shb.open_plan()
+    print('Photon shutter is open again')
