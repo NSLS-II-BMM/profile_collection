@@ -2,7 +2,7 @@
 
 def motor_status():
     line = '=' * 78 + '\n'
-    text = 'Energy = %.1f   reflection = Si(%s)   mode = %s\n' % (dcm.energy.readback.value, dcm.crystal, dcm.mode)
+    text = 'Energy = %.1f   reflection = Si(%s)   mode = %s\n' % (dcm.energy.readback.value, dcm._crystal, dcm.mode)
     text += '\tBragg = %8.5f   2nd Xtal Perp = %7.4f   2nd Xtal Para = %8.4f\n' % \
             (dcm.bragg.user_readback.value, dcm.perp.user_readback.value, dcm.para.user_readback.value)
 

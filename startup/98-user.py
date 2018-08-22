@@ -14,18 +14,37 @@ class MyPrompt(Prompts):
         else:
             shbtoken = (Token.Tilde, 'B')
 
-        return [(Token.CursorLine, 'BMM '),
-                (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm.crystal)),
+        return [(Token.CursorLine, 'BMM %s.%s' % (BMM_config._mode, dcm._crystal)),
                 shatoken,
                 (Token.Prompt, u'\u2022'),
                 shbtoken,
                 (Token.Comment, ' %.1f ' % ring.current.value),
                 (Token.Prompt, '['),
                 (Token.PromptNum, str(self.shell.execution_count)),
-                (Token.Prompt, '] ' + u"\u25B6"+' ')]
+                (Token.Prompt, '] ' + u"\u25B6" + ' ')]
 
 ip = get_ipython()
 ip.prompts = MyPrompt(ip)
+
+
+# def explore_tokens(i):
+#     tokens = ('Aborted', 'AutoSuggestion', 'ColorColumn', 'Comment',
+#               'CursorColumn', 'CursorLine', 'Digraph', 'Error',
+#               'Escape', 'Generic', 'Keyword', 'LeadingWhiteSpace',
+#               'LineNumber', 'Literal', 'MatchingBracket', 'Menu',
+#               'MultipleCursors', 'Name', 'Number', 'Operator',
+#               'Other', 'OutPrompt', 'OutPromptNum', 'Prompt',
+#               'PromptNum', 'Punctuation', 'Scrollbar', 'SearchMatch',
+#               'SelectedText', 'SetCursorPosition', 'String', 'Tab',
+#               'Text', 'Tilde', 'Token', 'Toolbar',
+#               'TrailingWhiteSpace', 'Transparent', 'WindowTooSmall',
+#               'ZeroWidthEscape')
+#     class MyPrompt(Prompts):
+#         def in_prompt_tokens(self, cli=None):
+#             return [(getattr(Token, tokens[i]), 'BMM >'),]
+#     ip = get_ipython()
+#     ip.prompts = MyPrompt(ip)
+#     return 'Token.%s' % tokens[i]
 
 def new_experiment(folder):
     ## make folder

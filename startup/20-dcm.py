@@ -12,7 +12,7 @@ HBARC = 1973.27053324
 
 class DCM(PseudoPositioner):
     def __init__(self, *args, crystal='111', mode='fixed', offset=30, **kwargs):
-        self.crystal = crystal
+        self._crystal = crystal
         #self.set_crystal()
         self.offset  = offset
         self.mode    = mode
@@ -31,7 +31,7 @@ class DCM(PseudoPositioner):
 
     @property
     def _twod(self):
-        if self.crystal is '311':
+        if self._crystal is '311':
             return 2*1.63763854 # 30 May 2018
         else:
             return 2*3.13563694 # 29 May 2018
@@ -46,7 +46,7 @@ class DCM(PseudoPositioner):
     def where(self):
         print("%s = %.1f   %s = Si(%s)" % \
             ('Energy', self.energy.readback.value,
-             'reflection', self.crystal))
+             'reflection', self._crystal))
         print("%s: %s = %8.5f   %s = %7.4f   %s = %8.4f" %\
             ('current',
              'Bragg', self.bragg.user_readback.value,
@@ -58,9 +58,9 @@ class DCM(PseudoPositioner):
     def restore(self):
         self.mode = 'fixed'
         if dcm_x.user_readback.value < 0:
-            self.crystal = '111'
+            self._crystal = '111'
         elif dcm_x.user_readback.value > 0:
-            self.crystal = '311'
+            self._crystal = '311'
 
     # The pseudo positioner axes:
     energy = Cpt(PseudoSingle, limits=(4000, 25000))
@@ -76,8 +76,8 @@ class DCM(PseudoPositioner):
 
     def set_crystal(self, crystal=None):
         if crystal is not None:
-            self.crystal = crystal
-        if self.crystal is '311':
+            self._crystal = crystal
+        if self._crystal is '311':
             self.bragg.user_offset.put(15.99439325)
         else:
             self.bragg.user_offset.put(16.05442) # 29 May 2018

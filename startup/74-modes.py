@@ -149,13 +149,13 @@ def change_xtals(xtal=None):
         yield from mv(dcm_pitch, 3.8698,
                       dcm_roll, -6.26,
                       dcm_x,    -35.4    )
-        #dcm.crystal = '111'
+        #dcm._crystal = '111'
         dcm.set_crystal('111')  # set d-spacing and bragg offset
     elif xtal is 'Si(311)':
         yield from mv(dcm_pitch, 2.28,
                       dcm_roll, -23.86,
                       dcm_x,     29.0    )
-        #dcm.crystal = '311'
+        #dcm._crystal = '311'
         dcm.set_crystal('311')  # set d-spacing and bragg offset
 
     yield from bps.sleep(2.0)

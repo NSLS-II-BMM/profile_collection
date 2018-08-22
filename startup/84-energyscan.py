@@ -399,16 +399,16 @@ def xafs(inifile, **kwargs):
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
     def main_plan(inifile):
-        if '311' in dcm.crystal and dcm_x.user_readback.value < 0:
+        if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
             BMM_xsp.final_log_entry = False
             print(colored('The DCM is in the 111 position, configured as 311', color='red'))
-            print(colored('\tdcm.x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+            print(colored('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='red'))
             yield from null()
             return
-        if '111' in dcm.crystal and dcm_x.user_readback.value > 0:
+        if '111' in dcm._crystal and dcm_x.user_readback.value > 0:
             BMM_xsp.final_log_entry = False
             print(colored('The DCM is in the 311 position, configured as 111', color='red'))
-            print(colored('\tdcm_x: %.2f mm\t dcm.crystal: %s' % (dcm_x.user_readback.value, dcm.crystal), color='red'))
+            print(colored('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='red'))
             yield from null()
             return
 
@@ -555,7 +555,7 @@ def xafs(inifile, **kwargs):
                               direction     = 1,
                               scantype      = 'step',
                               channelcut    = p['channelcut'],
-                              mono          = 'Si(%s)' % dcm.crystal,
+                              mono          = 'Si(%s)' % dcm._crystal,
                               i0_gas        = 'N2', #\
                               it_gas        = 'N2', # > these three need to go into INI file
                               ir_gas        = 'N2', #/
