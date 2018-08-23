@@ -1,6 +1,8 @@
 import sys
 import os
 
+run_report(__file__)
+
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
@@ -14,6 +16,7 @@ class MyPrompt(Prompts):
         else:
             shbtoken = (Token.Tilde, 'B')
 
+        ## BMM XRD.311 A•B 0.0 [5] ▶
         return [(Token.CursorLine, 'BMM %s.%s' % (BMM_config._mode, dcm._crystal)),
                 shatoken,
                 (Token.Prompt, u'\u2022'),
@@ -85,3 +88,28 @@ def new_experiment(folder):
         print('4. Created macro template: %s' % macropy)
     else:
         print('4. Found macro template: %s' % macropy)
+
+
+def BMM_help():
+    print('')
+    print(colored('Open the shutter:\t\t', 'white')+'shb.open()')
+    print(colored('Close the shutter:\t\t', 'white')+'shb.close()')
+    print('')
+    print(colored('Change energy:\t\t\t', 'white')+'RE(mv(dcm.energy, <energy>))')
+    print(colored('Move a motor, absolute:\t\t', 'white')+'RE(mv(<motor>, <position>))')
+    print(colored('Move a motor, relative:\t\t', 'white')+'RE(mvr(<motor>, <delta>))')
+    print(colored('Where is a motor?\t\t', 'white')+'<motor>.wh()')
+    print('')
+    print(colored('Where is the DCM?\t\t', 'white')+'dcm.wh()')
+    print(colored('Where is M2?\t\t\t', 'white')+'m2.wh()')
+    print(colored('Where is M3?\t\t\t', 'white')+'m3.wh()')
+    print(colored('Where are the slits?\t\t', 'white')+'slits3.wh()')
+    print(colored('Where is the XAFS table?\t', 'white')+'xafs_table.wh()')
+    print('')
+    print(colored('Summarize all motor positions:\t', 'white')+'ms()')
+    print(colored('Summarize utilities:\t\t', 'white')+'su()')
+    print('')
+    print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<motor>, <det>, <start>, <stop>, <nsteps>))')
+    print(colored('How long will a scan seq. be?\t', 'white')+'howlong(<INI file>)')
+    print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(<INI file>))')
+    print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(<text of entry>)')

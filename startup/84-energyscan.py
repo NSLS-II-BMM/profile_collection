@@ -156,7 +156,7 @@ def scan_metadata(inifile=None, **kwargs):
         else:
             parameters['start'] = int(parameters['start'])
     except ValueError:
-        print(colored('\nstart value must be a positive integer or "next"', color='red'))
+        print(colored('\nstart value must be a positive integer or "next"', color='lightred'))
         parameters['start'] = -1
         found['start'] = False
 
@@ -366,7 +366,7 @@ def db2xdi(datafile, key):
     a database key.
     '''
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
+        print(colored('%s already exists!  Bailing out....' % datafile, color='lightred'))
         return
     header = db[key]
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
@@ -401,14 +401,14 @@ def xafs(inifile, **kwargs):
     def main_plan(inifile):
         if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
             BMM_xsp.final_log_entry = False
-            print(colored('The DCM is in the 111 position, configured as 311', color='red'))
-            print(colored('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='red'))
+            print(colored('The DCM is in the 111 position, configured as 311', color='lightred'))
+            print(colored('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='lightred'))
             yield from null()
             return
         if '111' in dcm._crystal and dcm_x.user_readback.value > 0:
             BMM_xsp.final_log_entry = False
-            print(colored('The DCM is in the 311 position, configured as 111', color='red'))
-            print(colored('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='red'))
+            print(colored('The DCM is in the 311 position, configured as 111', color='lightred'))
+            print(colored('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), color='lightred'))
             yield from null()
             return
 
@@ -417,7 +417,7 @@ def xafs(inifile, **kwargs):
             (ok, text) = (True, '')
         if ok is False:
             BMM_xsp.final_log_entry = False
-            print(colored('\n'+text, color='red'))
+            print(colored('\n'+text, color='lightred'))
             print(colored('Quitting scan sequence....\n', color='white'))
             yield from null()
             return
@@ -437,7 +437,7 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
         # if not os.path.isfile(inifile):
-        #     print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='red'))
+        #     print(colored('\n%s does not exist!  Bailing out....\n' % inifile, color='lightred'))
         #     BMM_xsp.final_log_entry = False
         #     yield from null()
         #     return
@@ -445,7 +445,7 @@ def xafs(inifile, **kwargs):
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         # (ok, missing) = ini_sanity(f)
         # if not ok:
-        #     print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
+        #     print(colored('\nThe following keywords are missing from your INI file: ', color='lightred'),
         #           '%s\n' % str.join(', ', missing))
         #     BMM_xsp.final_log_entry = False
         #     yield from null()
@@ -469,10 +469,10 @@ def xafs(inifile, **kwargs):
                 fname = "%s.%3.3d" % (p['filename'], i)
                 datafile = os.path.join(p['folder'], fname)
                 if os.path.isfile(datafile):
-                    print(colored('%s already exists!' % datafile, color='red'))
+                    print(colored('%s already exists!' % datafile, color='lightred'))
                     bail = True
             if bail:
-                print(colored('\nOne or more output files already exist!  Quitting scan sequence....', color='red'))
+                print(colored('\nOne or more output files already exist!  Quitting scan sequence....', color='lightred'))
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
@@ -512,7 +512,7 @@ def xafs(inifile, **kwargs):
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
         else:
-            print(colored('Plotting mode not specified, falling back to a transmission plot', color='red'))
+            print(colored('Plotting mode not specified, falling back to a transmission plot', color='lightred'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
 
 
@@ -538,7 +538,7 @@ def xafs(inifile, **kwargs):
             print(colored('computing energy and dwell time grids', color='white'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
             if energy_grid is None or time_grid is None or approx_time is None:
-                print(colored('Cannot interpret scan grid parameters!  Bailing out....' % outfile, color='red'))
+                print(colored('Cannot interpret scan grid parameters!  Bailing out....' % outfile, color='lightred'))
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
@@ -590,7 +590,7 @@ def xafs(inifile, **kwargs):
                 if os.path.isfile(datafile):
                     ## shouldn't be able to get here, unless a file
                     ## was written since the scan sequence began....
-                    print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
+                    print(colored('%s already exists!  Bailing out....' % datafile, color='lightred'))
                     yield from null()
                     return
                 print(colored('starting scan %d of %d, %d energy points' %
@@ -647,6 +647,8 @@ def xafs(inifile, **kwargs):
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
+        #else:
+        #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
         yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
         yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
@@ -656,6 +658,7 @@ def xafs(inifile, **kwargs):
 
     BMM_xsp.final_log_entry = True
     RE.msg_hook = None
+    ## encapsulation!
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
@@ -670,7 +673,7 @@ def howlong(inifile, interactive=True, **kwargs):
     (p, f) = scan_metadata(inifile=inifile, **kwargs)
     (ok, missing) = ini_sanity(f)
     if not ok:
-        print(colored('\nThe following keywords are missing from your INI file: ', color='red'),
+        print(colored('\nThe following keywords are missing from your INI file: ', color='lightred'),
               '%s\n' % str.join(', ', missing))
         return -1
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])

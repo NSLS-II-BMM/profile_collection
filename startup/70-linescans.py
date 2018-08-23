@@ -15,11 +15,11 @@ def move_after_scan(thismotor):
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
     if BMM_cpl.motor is None:
-        print(colored('\nThere\'s not a current plot on screen.\n', color='red'))
+        print(colored('\nThere\'s not a current plot on screen.\n', color='lightred'))
         return(yield from null())
     if thismotor is not BMM_cpl.motor:
         print(colored('\nThe motor you are asking to move is not the motor in the current plot.\n',
-                      color='red'))
+                      color='lightred'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
     cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
@@ -44,7 +44,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='red'))
+        print(colored(text, color='lightred'))
         yield from null()
         return
 
@@ -87,7 +87,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='red'))
+        print(colored(text, color='lightred'))
         yield from null()
         return
 
@@ -164,7 +164,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='red'))
+        print(colored(text, color='lightred'))
         yield from null()
         return
 
@@ -177,7 +177,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     ## sanity checks on axis
     if axis not in motors.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
         print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                      (axis, str.join(', ', motors.keys())), color='red'))
+                      (axis, str.join(', ', motors.keys())), color='lightred'))
         yield from null()
         return
 
@@ -192,7 +192,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     ## sanity checks on detector
     if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
         print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                      (detector, 'it, if, i0, iy, ir'), color='red'))
+                      (detector, 'it, if, i0, iy, ir'), color='lightred'))
         yield from null()
         return
 
@@ -269,7 +269,7 @@ def ls2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, color='red'))
+        print(colored('%s already exists!  Bailing out....' % datafile, color='lightred'))
         return
     handle = open(datafile, 'w')
     dataframe = db[key]

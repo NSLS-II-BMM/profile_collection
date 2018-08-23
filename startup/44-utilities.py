@@ -9,28 +9,28 @@ def show_shutters():
     if bmps_state is True:
         bmps_text += 'open'
     else:
-        bmps_text += colored('closed', 'red', attrs=['bold'])
+        bmps_text += colored('closed', 'lightred')
 
     idps_state = bool(idps.state.value)
     idps_text = '\t\tIDPS: '
     if idps_state is True:
         idps_text += 'open'
     else:
-        idps_text += colored('closed', 'red', attrs=['bold'])
+        idps_text += colored('closed', 'lightred')
 
     # sha_state = bool(sha.enabled.value) and bool(sha.state.value)
     # sha_text = '\t\tFOE Shutter: '
     # if sha_state is True:
     #     sha_text += 'open'
     # else:
-    #     sha_text += colored('closed', 'red', attrs=['bold'])
+    #     sha_text += colored('closed', 'lightred')
 
     shb_state = bool(shb.state.value)
     shb_text = '\t\tPhoton Shutter: '
     if shb_state is False:
         shb_text += 'open'
     else:
-        shb_text += colored('closed', 'red', attrs=['bold'])
+        shb_text += colored('closed', 'lightred')
 
     print(bmps_text + idps_text + shb_text)
 
@@ -40,9 +40,9 @@ class Vacuum(Device):
 
     def _pressure(self):
         if float(self.pressure.value) > 1e-6:
-            return colored(self.pressure.value, 'red', attrs=['bold'])
+            return colored(self.pressure.value, 'lightred',)
         if float(self.pressure.value) > 1e-8:
-            return colored(self.pressure.value, 'yellow', attrs=['bold'])
+            return colored(self.pressure.value, 'yellow')
         return(self.pressure.value)
 
 class TCG(Device):
@@ -50,9 +50,9 @@ class TCG(Device):
 
     def _pressure(self):
         if float(self.pressure.value) > 1e-1:
-            return colored(self.pressure.value, 'red', attrs=['bold'])
+            return colored(self.pressure.value, 'lightred')
         if float(self.pressure.value) > 6e-3:
-            return colored(self.pressure.value, 'yellow', attrs=['bold'])
+            return colored(self.pressure.value, 'yellow')
         return(self.pressure.value)
 
 vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
@@ -100,7 +100,7 @@ class GateValve(Device):
 
     def _state(self):
         if self.state.value == 0:
-            return colored('closed', 'red', attrs=['bold'])
+            return colored('closed', 'lightred')
         return('open  ')
 
 gv = [GateValve('FE:C06B-VA{GV:1}DB:',     name='FEGV1'),
@@ -128,9 +128,9 @@ class Thermocouple(Device):
     def _state(self, info=False):
         t = "%.1f" % self.temperature.value
         if self.temperature.value > self.alarm.value:
-            return(colored(t, 'red', attrs=['bold']))
+            return(colored(t, 'lightred'))
         if self.temperature.value > self.warning.value:
-            return(colored(t, 'yellow', attrs=['bold']))
+            return(colored(t, 'yellow'))
         if info is True and self.temperature.value > (0.5 * self.warning.value):
             return(colored(t, 'brown'))
         return(t)

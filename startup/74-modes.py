@@ -122,7 +122,7 @@ def change_xtals(xtal=None):
 
     (ok, text) = BMM_clear_to_start()
     if ok == 0:
-        print(colored(text, color='red'))
+        print(colored(text, color='lightred'))
         yield from null()
         return
 
