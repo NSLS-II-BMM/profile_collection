@@ -678,9 +678,7 @@ def howlong(inifile, interactive=True, **kwargs):
         return -1
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
     text = '\nEach scan will take about %.1f minutes\n' % approx_time
-    plural = 's'
-    if int(p['nscans']) == 1: plural = ''
-    text +='The sequence of %d scan%s will take about %.1f hours' % (int(p['nscans']), plural, approx_time * int(p['nscans'])/60)
+    text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
     if interactive:
         print(text)
     else:

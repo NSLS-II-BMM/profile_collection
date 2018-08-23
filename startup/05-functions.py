@@ -18,36 +18,13 @@ with warnings.catch_warnings():
 #     if color is 'white':
 #         return '\x1b[01m\x1b[37m' + text + '\x1b[0m'
 
+# Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
+# Red, White, Yellow,
 
-# Black,
-# Blue,
-# Brown,
-# Cyan,
-# DarkGray,
-# Green,
-# NoColor,
-# Normal,
-# Purple,
-# Red
-# White,
-# Yellow,
+# LightBlue, LightCyan, LightGray, LightGreen, LightPurple, LightRed,
 
-# LightBlue,
-# LightCyan,
-# LightGray
-# LightGreen,
-# LightPurple
-# LightRed,
-
-# BlinkBlack,
-# BlinkBlue,
-# BlinkCyan,
-# BlinkGreen,
-# BlinkLightGray,
-# BlinkPurple,
-# BlinkRed,
-# BlinkYellow,
-
+# BlinkBlack, BlinkBlue, BlinkCyan, BlinkGreen, BlinkLightGray,
+# BlinkPurple, BlinkRed, BlinkYellow,
 
 from IPython.utils.coloransi import TermColors as color
 def colored(text, tint='white', attrs=[]):
@@ -83,3 +60,11 @@ def e2l(val):
 
 def now():
     return datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+
+## CRUDE HACK ALERT! inflection.py is in ~/.ipython (https://pypi.org/project/inflection/)
+import inflection
+def inflect(word, number):
+    if abs(number) == 1:
+        return('%d %s' % (number, inflection.singularize(word)))
+    else:
+        return('%d %s' % (number, inflection.pluralize(word)))
