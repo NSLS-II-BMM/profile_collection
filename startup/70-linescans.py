@@ -15,11 +15,11 @@ def move_after_scan(thismotor):
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
     if BMM_cpl.motor is None:
-        print(colored('\nThere\'s not a current plot on screen.\n', color='lightred'))
+        print(colored('\nThere\'s not a current plot on screen.\n', 'lightred'))
         return(yield from null())
     if thismotor is not BMM_cpl.motor:
         print(colored('\nThe motor you are asking to move is not the motor in the current plot.\n',
-                      color='lightred'))
+                      'lightred'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
     cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
@@ -44,7 +44,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='lightred'))
+        print(colored(text, 'lightred'))
         yield from null()
         return
 
@@ -72,7 +72,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', color='white'))
+    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', 'white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
     yield from move_after_scan(dm3_bct)
@@ -87,7 +87,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='lightred'))
+        print(colored(text, 'lightred'))
         yield from null()
         return
 
@@ -164,7 +164,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored(text, color='lightred'))
+        print(colored(text, 'lightred'))
         yield from null()
         return
 
@@ -177,7 +177,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     ## sanity checks on axis
     if axis not in motors.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
         print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                      (axis, str.join(', ', motors.keys())), color='lightred'))
+                      (axis, str.join(', ', motors.keys())), 'lightred'))
         yield from null()
         return
 
@@ -192,7 +192,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     ## sanity checks on detector
     if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
         print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                      (detector, 'it, if, i0, iy, ir'), color='lightred'))
+                      (detector, 'it, if, i0, iy, ir'), 'lightred'))
         yield from null()
         return
 
@@ -245,7 +245,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', color='white'))
+        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', 'white'))
         if action.lower() == 'n' or action.lower() == 'q':
             return(yield from null())
         yield from move_after_scan(thismotor)
@@ -269,7 +269,7 @@ def ls2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, color='lightred'))
+        print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
         return
     handle = open(datafile, 'w')
     dataframe = db[key]
@@ -296,7 +296,7 @@ def ls2dat(datafile, key):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
     handle.close()
-    print(colored('wrote %s' % datafile, color='white'))
+    print(colored('wrote %s' % datafile, 'white'))
 
 
 def center_sample_y():
@@ -305,14 +305,14 @@ def center_sample_y():
     diff = -1 * table['It'].diff()
     inflection = table['xafs_liny'][diff.idxmax()]
     yield from mv(xafs_liny, inflection)
-    print(colored('Optimal position in y at %.3f' % inflection, color='white'))
+    print(colored('Optimal position in y at %.3f' % inflection, 'white'))
 
 def center_sample_roll():
     yield from linescan(xafs_roll, 'it', -3, 3, 61, pluck=False)
     table = db[-1].table()
     peak = table['xafs_roll'][table['It'].idxmax()]
     yield from mv(xafs_roll, peak)
-    print(colored('Optimal position in roll at %.3f' % peak, color='white'))
+    print(colored('Optimal position in roll at %.3f' % peak, 'white'))
 
 def align_flat_sample(angle=2):
     yield from center_sample_y()

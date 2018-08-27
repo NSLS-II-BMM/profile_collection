@@ -113,3 +113,5 @@ def BMM_help():
     print(colored('How long will a scan seq. be?\t', 'white')+'howlong(<INI file>)')
     print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(<INI file>))')
     print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(<text of entry>)')
+    print('')
+    print(colored('All the details: ', 'white') + colored('https://nsls-ii-bmm.github.io/BeamlineManual/index.html', 'lightblue'))
