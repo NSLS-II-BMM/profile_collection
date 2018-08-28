@@ -15,7 +15,7 @@ run_report(__file__)
 
 def areascan(slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             detector, pluck=True):
+             detector, pluck=True, force=False):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -33,6 +33,7 @@ def areascan(slow, startslow, stopslow, nslow,
        nfa:      number of steps in fast axis
        detector: detector to display -- if, it, ir, or i0
        pluck:    flag for whether to offer to pluck & move motor
+       force:    flag for forcing a scan even if not clear to start
 
     slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -43,6 +44,11 @@ def areascan(slow, startslow, stopslow, nslow,
     database and write it to a file.
     '''
 
+    (ok, text) = BMM_clear_to_start()
+    if force is False and ok is False:
+        print(colored(text, 'lightred'))
+        yield from null()
+        return
 
     RE.msg_hook = None
 

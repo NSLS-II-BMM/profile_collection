@@ -25,7 +25,10 @@ def move_after_scan(thismotor):
     cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
     while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
         yield from sleep(0.5)
-    yield from mv(thismotor, BMM_cpl.x)
+    if BMM_cpl.motor2 is None:
+        yield from mv(thismotor, BMM_cpl.x)
+    else:
+        yield from mv(BMM_cpl.motor, BMM_cpl.x, BMM_cpl.motor2, BMM_cpl.y)
     cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
     BMM_cpl.x = BMM_cpl.y = None
 
@@ -137,7 +140,7 @@ motor_nicknames = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time?
+def linescan(axis, detector, start, stop, nsteps, pluck=True, force=False): # inegration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -151,6 +154,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
        stop:     ending value for a relative scan
        nsteps:   number of steps in scan
        pluck:    flag for whether to offer to pluck & move motor
+       force:    flag for forcing a scan even if not clear to start
 
     The motor is either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -162,7 +166,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     '''
 
     (ok, text) = BMM_clear_to_start()
-    if ok is False:
+    if force is False and ok is False:
         print(colored(text, 'lightred'))
         yield from null()
         return
@@ -174,9 +178,9 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     detector = detector.capitalize()
 
     ## sanity checks on axis
-    if axis not in motor_nickanmes.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
+    if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
         print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                      (axis, str.join(', ', motor_nickanmes.keys())), 'lightred'))
+                      (axis, str.join(', ', motor_nicknames.keys())), 'lightred'))
         yield from null()
         return
 
@@ -185,7 +189,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     elif 'PseudoSingle' in str(type(axis)):
         thismotor = axis
     else:                       # presume it's an xafs_XXXX motor
-        thismotor = motor_nickanmes[axis]
+        thismotor = motor_nicknames[axis]
     BMM_cpl.motor = thismotor
 
     ## sanity checks on detector
