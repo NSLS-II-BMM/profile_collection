@@ -127,6 +127,12 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     yield from scan_dcmpitch()
 
 
+##                     linear stages        tilt stage           rotation stages
+motor_nicknames = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
+                   'y'    : xafs_liny,  'pitch': xafs_pitch, 'rb' : xafs_rotb,
+                   's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
+                   'xs'   : xafs_linxs, 'r'    : xafs_roll,
+               }
 
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
@@ -155,13 +161,6 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     database and write it to a file.
     '''
 
-    ##        linear stages        tilt stage           rotation stages
-    motors = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
-              'y'    : xafs_liny,  'pitch': xafs_pitch, 'rb' : xafs_rotb,
-              's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
-              'xs'   : xafs_linxs, 'r'    : xafs_roll,
-          }
-
     (ok, text) = BMM_clear_to_start()
     if ok is False:
         print(colored(text, 'lightred'))
@@ -175,9 +174,9 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     detector = detector.capitalize()
 
     ## sanity checks on axis
-    if axis not in motors.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
+    if axis not in motor_nickanmes.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
         print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                      (axis, str.join(', ', motors.keys())), 'lightred'))
+                      (axis, str.join(', ', motor_nickanmes.keys())), 'lightred'))
         yield from null()
         return
 
@@ -186,7 +185,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True): # inegration time
     elif 'PseudoSingle' in str(type(axis)):
         thismotor = axis
     else:                       # presume it's an xafs_XXXX motor
-        thismotor = motors[axis]
+        thismotor = motor_nickanmes[axis]
     BMM_cpl.motor = thismotor
 
     ## sanity checks on detector
@@ -291,12 +290,15 @@ def ls2dat(datafile, key):
     table = dataframe.table()
     this = table.loc[:,column_list]
 
+    handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
+    handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+    handle.write('# ==========================================================\n')
     handle.write('# ' + '  '.join(column_list) + '\n')
     for i in range(0,len(this)):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
     handle.close()
-    print(colored('wrote %s' % datafile, 'white'))
+    print(colored('wrote linescan to %s' % datafile, 'white'))
 
 
 def center_sample_y():

@@ -50,6 +50,13 @@ ip.prompts = MyPrompt(ip)
 #     return 'Token.%s' % tokens[i]
 
 def new_experiment(folder):
+    '''
+    Get ready for a new experiment.  Run this first thing when a user
+    sits down to start their beamtime.  This will:
+      1. Create a folder, if needed
+      2. Set up the experimental log, creating an experiment.log file, if needed
+      3. Write templates for scan.ini and macro.py, if needed
+    '''
     ## make folder
     if not os.path.isdir(folder):
         os.mkdir(folder)
@@ -91,6 +98,9 @@ def new_experiment(folder):
 
 
 def BMM_help():
+    '''
+    Print a concise summary of data acquisition commands.
+    '''
     print('')
     print(colored('Open the shutter:\t\t', 'white')+'shb.open()')
     print(colored('Close the shutter:\t\t', 'white')+'shb.close()')
@@ -109,9 +119,27 @@ def BMM_help():
     print(colored('Summarize all motor positions:\t', 'white')+'ms()')
     print(colored('Summarize utilities:\t\t', 'white')+'su()')
     print('')
-    print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<motor>, <det>, <start>, <stop>, <nsteps>))')
     print(colored('How long will a scan seq. be?\t', 'white')+'howlong(<INI file>)')
     print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(<INI file>))')
+    print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<motor>, <det>, <start>, <stop>, <nsteps>))')
+    print(colored('Scan 2 motors, plot a detector:\t', 'white')+'RE(areascan(<slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>, <det>))')
     print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(<text of entry>)')
     print('')
     print(colored('All the details: ', 'white') + colored('https://nsls-ii-bmm.github.io/BeamlineManual/index.html', 'lightblue'))
+
+def BMM_keys():
+    '''
+    Print a concise summary of command line hotkeys.
+    '''
+    print('')
+    print(colored('Abort scan:\t\t', 'white')+'Ctrl-c twice!')
+    print(colored('Search backwards:\t', 'white')+'Ctrl-r')
+    print(colored('Quit search:\t\t', 'white')+'Ctrl-g')
+    print(colored('Beginning of line:\t', 'white')+'Ctrl-a')
+    print(colored('End of line:\t\t', 'white')+'Ctrl-e')
+    print(colored('Delete character\t', 'white')+'Ctrl-d')
+    print(colored('Cut text to eol\t\t', 'white')+'Ctrl-k')
+    print(colored('Cut text from bol\t', 'white')+'Ctrl-u')
+    print(colored('Paste text\t\t', 'white')+'Ctrl-y')
+    print('')
+    print(colored('More details: ', 'white') + colored('http://readline.kablamo.org/emacs.html', 'lightblue'))

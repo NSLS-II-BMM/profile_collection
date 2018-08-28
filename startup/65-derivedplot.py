@@ -22,11 +22,12 @@ run_report(__file__)
 #####################################################################
 class CurrentPlotLogistics():
     def __init__(self):
-        self.motor = None
-        self.fig   = None
-        self.ax    = None
-        self.x     = None
-        self.y     = None
+        self.motor  = None
+        self.motor2 = None
+        self.fig    = None
+        self.ax     = None
+        self.x      = None
+        self.y      = None
 BMM_cpl = CurrentPlotLogistics()
 
 #############################################################################
@@ -44,9 +45,10 @@ def handle_close(ev):
     recent  = str(BMM_cpl.fig.canvas.__repr__).split()[-1]
     closing = str(ev.canvas).split()[-1]
     if recent == closing:
-        BMM_cpl.motor = None
-        BMM_cpl.fig   = None
-        BMM_cpl.ax    = None
+        BMM_cpl.motor  = None
+        BMM_cpl.motor2 = None
+        BMM_cpl.fig    = None
+        BMM_cpl.ax     = None
 
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, **kwargs):
