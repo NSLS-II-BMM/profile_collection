@@ -6,33 +6,34 @@ run_report(__file__)
 def show_shutters():
     bmps_state = bool(bmps.state.value)
     bmps_text = '  BMPS: '
+
     if bmps_state is True:
         bmps_text += 'open'
     else:
         bmps_text += colored('closed', 'lightred')
 
     idps_state = bool(idps.state.value)
-    idps_text = '\t\tIDPS: '
+    idps_text = '            IDPS: '
     if idps_state is True:
         idps_text += 'open'
     else:
         idps_text += colored('closed', 'lightred')
 
     # sha_state = bool(sha.enabled.value) and bool(sha.state.value)
-    # sha_text = '\t\tFOE Shutter: '
+    # sha_text = '            FOE Shutter: '
     # if sha_state is True:
     #     sha_text += 'open'
     # else:
     #     sha_text += colored('closed', 'lightred')
 
     shb_state = bool(shb.state.value)
-    shb_text = '\t\tPhoton Shutter: '
+    shb_text = '            Photon Shutter: '
     if shb_state is False:
         shb_text += 'open'
     else:
         shb_text += colored('closed', 'lightred')
 
-    print(bmps_text + idps_text + shb_text)
+    return(bmps_text + idps_text + shb_text)
 
 class Vacuum(Device):
     current  = Cpt(EpicsSignal, '-IP:1}I-I')
@@ -171,30 +172,28 @@ def show_thermocouples():
 
 import datetime
 def show_utilities():
-    print('  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p'))
-    print('')
-    show_shutters()
-    print('')
+    text = '  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '\n\n'
+    text += show_shutters() + '\n\n'
     ltcs = len(tcs)
     lvac = len(vac)
     lgv  = len(gv)
-    print('  Thermocouple               Temperature         Valve   state          Vacuum section       pressure     current')
-    print('=======================================================================================================================')
+    text += '  Thermocouple               Temperature         Valve   state          Vacuum section       pressure     current\n'
+    text += ' ====================================================================================================================\n'
     for i in range(0,ltcs):
         info = False
         if 'pitch' in tcs[i].name or 'roll' in tcs[i].name: info = True
         if i < lvac and i < lgv:
-            print('  %-28s     %s C        %-5s   %s        %-20s  %s    %5.1f μA' %
-                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value)))
+            text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %5.1f μA\n' % \
+                    (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value))
         elif i == lvac:
-            print('  %-28s     %s C        %-5s   %s        %-20s  %s   ' %
-                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure()))
+            text += '  %-28s     %s C        %-5s   %s        %-20s  %s   \n' % \
+                    (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure())
         elif i < lgv:
-            print('  %-28s     %s C        %-5s   %s' %
-                  (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state()))
+            text += '  %-28s     %s C        %-5s   %s\n' % \
+                    (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state())
         else:
-            print('  %-28s     %s C' %
-                  (tcs[i].name, tcs[i]._state(info=info)))
+            text += '  %-28s     %s C\n' % (tcs[i].name, tcs[i]._state(info=info))
 
+    return text
 def su():
-    show_utilities()
+    boxedtext('BMM utilities', show_utilities(), 'brown', width=124)

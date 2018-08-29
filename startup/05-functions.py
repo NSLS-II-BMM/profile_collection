@@ -71,16 +71,13 @@ def inflect(word, number):
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
-def boxedtext(title, text, color):
+def boxedtext(title, text, tint, width=75):
     '''
     Put text in a lovely unicode block element box.  The top
     of the box will contain a title.  The box elements will
-    be colored.
-
-    This is rather crude.  Each line of text should be 75
-    characters or fewer.
+    be coloreded.
     '''
-    width     = 75
+    #width     = 75
     remainder = width - 5 - len(title)
     ul        = u'\u250C' # u'\u2554'
     ur        = u'\u2510' # u'\u2557'
@@ -91,7 +88,10 @@ def boxedtext(title, text, color):
     template  = '%-' + str(width) + 's'
 
     print('')
-    print(colored(ul + bar*3 + ' ' + title + ' ' + bar*remainder + ur, color))
+    print(colored(ul + bar*3 + ' ' + title + ' ' + bar*remainder + ur, tint))
     for line in text.split('\n'):
-        print(colored(strut, color) + template%line + colored(strut, color))
-    print(colored(ll + bar*width + lr, color))
+        add = ''
+        if line.count(color.Normal) > 0:
+            add = ' '*11*line.count(color.Normal)
+        print(colored(strut, tint) + template%line + add + colored(strut, tint))
+    print(colored(ll + bar*width + lr, tint))
