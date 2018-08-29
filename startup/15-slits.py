@@ -11,17 +11,18 @@ class Slits(PseudoPositioner):
         super().__init__(*args, **kwargs)
 
     def where(self):
-        print("%s:" % self.name.upper())
-        print("\tvertical   size   = %7.3f mm\t\tTop      = %7.3f" %
-              (self.vsize.readback.value,   self.top.user_readback.value))
-        print("\tvertical   center = %7.3f mm\t\tBottom   = %7.3f" %
-              (self.vcenter.readback.value, self.bottom.user_readback.value))
-        print("\thorizontal size   = %7.3f mm\t\tOutboard = %7.3f" %
-              (self.hsize.readback.value,   self.outboard.user_readback.value))
-        print("\thorizontal center = %7.3f mm\t\tInboard  = %7.3f" %
-              (self.hcenter.readback.value, self.inboard.user_readback.value))
+        #print("%s:" % self.name.upper())
+        text = "      vertical   size   = %7.3f mm            Top      = %7.3f mm\n" % \
+               (self.vsize.readback.value,   self.top.user_readback.value)
+        text += "      vertical   center = %7.3f mm            Bottom   = %7.3f mm\n" % \
+                (self.vcenter.readback.value, self.bottom.user_readback.value)
+        text += "      horizontal size   = %7.3f mm            Outboard = %7.3f mm\n" % \
+                (self.hsize.readback.value,   self.outboard.user_readback.value)
+        text += "      horizontal center = %7.3f mm            Inboard  = %7.3f mm" % \
+                (self.hcenter.readback.value, self.inboard.user_readback.value)
+        return text
     def wh(self):
-        self.where()
+        boxedtext(self.name, self.where(), 'cyan')
 
     # The pseudo positioner axes:
     vsize   = Cpt(PseudoSingle, limits=(-15, 20))

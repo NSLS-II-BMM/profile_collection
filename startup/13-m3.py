@@ -37,16 +37,23 @@ class Mirrors(PseudoPositioner):
                 stripe = '(Rh/Pt stripe)'
             else:
                 stripe = '(Si stripe)'
-        print("%s: %s" % (self.name.upper(), stripe))
-        print("\tvertical = %7.3f mm\t\tYU  = %7.3f"   % (self.vertical.readback.value, self.yu.user_readback.value))
-        print("\tlateral  = %7.3f mm\t\tYDO = %7.3f"   % (self.lateral.readback.value,  self.ydo.user_readback.value))
-        print("\tpitch    = %7.3f mrad\t\tYDI = %7.3f" % (self.pitch.readback.value,    self.ydi.user_readback.value))
-        print("\troll     = %7.3f mrad\t\tXU  = %7.3f" % (self.roll.readback.value,     self.xu.user_readback.value))
-        print("\tyaw      = %7.3f mrad\t\tXD  = %7.3f" % (self.yaw.readback.value,      self.xd.user_readback.value))
+        #text += "%s: %s" % (self.name.upper(), stripe))
+        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.value, self.yu.user_readback.value)
+        text += "      lateral  = %7.3f mm            YDO = %7.3f\n" % (self.lateral.readback.value,  self.ydo.user_readback.value)
+        text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.value,    self.ydi.user_readback.value)
+        text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.value,     self.xu.user_readback.value)
+        text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.value,      self.xd.user_readback.value)
         if self.name.lower() == 'm2':
-            print('\tbender   = %9.1f steps' % m2_bender.user_readback.value)
+            text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.value
+        return text
     def wh(self):
-        self.where()
+        stripe = ''
+        if self.name.lower() == 'm3':
+            if self.xu.user_readback.value > 0:
+                stripe = ' (Rh/Pt stripe)'
+            else:
+                stripe = ' (Si stripe)'
+        boxedtext(self.name + stripe, self.where(), 'cyan')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(-8, 8))
@@ -117,12 +124,13 @@ class XAFSTable(PseudoPositioner):
         super().__init__(*args, **kwargs)
 
     def where(self):
-        print("%s:" % self.name.upper())
-        print("\tvertical = %7.3f mm\t\tYU  = %7.3f"   % (self.vertical.readback.value, self.yu.user_readback.value))
-        print("\tpitch    = %7.3f mrad\t\tYDO = %7.3f" % (self.pitch.readback.value,    self.ydo.user_readback.value))
-        print("\troll     = %7.3f mrad\t\tYDI = %7.3f" % (self.roll.readback.value,     self.ydi.user_readback.value))
+        #text += "%s:" % self.name.upper())
+        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.value, self.yu.user_readback.value)
+        text += "      pitch    = %7.3f mrad          YDO = %7.3f\n" % (self.pitch.readback.value,    self.ydo.user_readback.value)
+        text += "      roll     = %7.3f mrad          YDI = %7.3f"   % (self.roll.readback.value,     self.ydi.user_readback.value)
+        return text
     def wh(self):
-        self.where()
+        boxedtext('XAFS table', self.where(), 'cyan')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(5, 145))
@@ -163,12 +171,13 @@ class GonioTable(PseudoPositioner):
         super().__init__(*args, **kwargs)
 
     def where(self):
-        print("%s:" % self.name.upper())
-        print("\tvertical = %7.3f mm\t\tYUO = %7.3f"   % (self.vertical.readback.value, self.yuo.user_readback.value))
-        print("\tpitch    = %7.3f mrad\t\tYUI = %7.3f" % (self.pitch.readback.value,    self.yui.user_readback.value))
-        print("\troll     = %7.3f mrad\t\tYD  = %7.3f" % (self.roll.readback.value,     self.yd.user_readback.value))
+        #text += "%s:" % self.name.upper())
+        text  = "      vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.value, self.yuo.user_readback.value)
+        text += "      pitch    = %7.3f mrad          YUI = %7.3f\n" % (self.pitch.readback.value,    self.yui.user_readback.value)
+        text += "      roll     = %7.3f mrad          YD  = %7.3f"   % (self.roll.readback.value,     self.yd.user_readback.value)
+        return text
     def wh(self):
-        self.where()
+        boxedtext('goniometer table', self.where(), 'cyan')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(291, 412))

@@ -42,7 +42,7 @@ def colored(text, tint='white', attrs=[]):
     return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
 
 def run_report(thisfile):
-    print(colored('Importing %s ...' % thisfile.split('/')[-1], 'cyan'))
+    print(colored('Importing %s ...' % thisfile.split('/')[-1], 'lightcyan'))
 
 run_report(__file__)
 
@@ -77,7 +77,6 @@ def boxedtext(title, text, tint, width=75):
     of the box will contain a title.  The box elements will
     be coloreded.
     '''
-    #width     = 75
     remainder = width - 5 - len(title)
     ul        = u'\u250C' # u'\u2554'
     ur        = u'\u2510' # u'\u2557'
@@ -88,10 +87,10 @@ def boxedtext(title, text, tint, width=75):
     template  = '%-' + str(width) + 's'
 
     print('')
-    print(colored(ul + bar*3 + ' ' + title + ' ' + bar*remainder + ur, tint))
+    print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
         add = ''
         if line.count(color.Normal) > 0:
             add = ' '*11*line.count(color.Normal)
-        print(colored(strut, tint) + template%line + add + colored(strut, tint))
-    print(colored(ll + bar*width + lr, tint))
+        print(''.join([colored(strut, tint), template%line, add, colored(strut, tint)]))
+    print(colored(''.join([ll, bar*width, lr]), tint))

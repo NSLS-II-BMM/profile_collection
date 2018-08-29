@@ -44,16 +44,17 @@ class DCM(PseudoPositioner):
         self.perp.kill_cmd.put(1)
 
     def where(self):
-        print("%s = %.1f   %s = Si(%s)" % \
-            ('Energy', self.energy.readback.value,
-             'reflection', self._crystal))
-        print("%s: %s = %8.5f   %s = %7.4f   %s = %8.4f" %\
-            ('current',
+        text  = "%s = %.1f   %s = Si(%s)\n" % \
+            (' Energy', self.energy.readback.value,
+             'reflection', self._crystal)
+        text += "%s: %s = %8.5f   %s = %7.4f   %s = %8.4f" %\
+            (' current',
              'Bragg', self.bragg.user_readback.value,
              '2nd Xtal Perp',  self.perp.user_readback.value,
-             '2nd Xtal Para',  self.para.user_readback.value))
+             '2nd Xtal Para',  self.para.user_readback.value)
+        return text
     def wh(self):
-        self.where()
+        boxedtext('DCM', self.where(), 'cyan', width=82)
 
     def restore(self):
         self.mode = 'fixed'
