@@ -13,7 +13,7 @@ run_report(__file__)
 TUNE_STEP = 0.004
 def tune_plan(step=0):
     '''
-    Tune 2nd crystal pitch from a plan.  Argument is a value for the step, so a realtive motion.
+    Tune 2nd crystal pitch from a plan.  Argument is a value for the step, so a relative motion.
     '''
     yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from mvr(dcm_pitch, step)
@@ -26,7 +26,7 @@ def tune_down():
 
 def tune(step=0):
     '''
-    Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a realtive motion.
+    Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a relative motion.
     '''
     dcm_pitch.kill_cmd.put(1)
     dcm_pitch.user_setpoint.put(dcm_pitch.user_readback.value + step)

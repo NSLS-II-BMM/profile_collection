@@ -13,27 +13,28 @@ from bluesky.preprocessors import subs_decorator
 run_report(__file__)
 
 
-def areascan(slow, startslow, stopslow, nslow,
+def areascan(detector,
+             slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             detector, pluck=True, force=False):
+             pluck=True, force=False):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
 
     For example:
-       RE(areascan('x', -1, 1, 21, 'y', -0.5, 0.5, 11, 'it'))
+       RE(areascan('it', 'x', -1, 1, 21, 'y', -0.5, 0.5, 11))
 
-       slow:     motor or nickname of the slow axis
+       detector: detector to display -- if, it, ir, or i0
+       slow:     slow axis motor or nickname
        sl1:      starting value for slow axis of a relative scan
        sl2:      ending value for slow axis of a relative scan
        nsl:      number of steps in slow axis
-       fast:     motor or nickname of the fast axis
+       fast:     fast axis motor or nickname
        fa1:      starting value for fast axis of a relative scan
        fa2:      ending value for fast axis of a relative scan
        nfa:      number of steps in fast axis
-       detector: detector to display -- if, it, ir, or i0
-       pluck:    flag for whether to offer to pluck & move motor
-       force:    flag for forcing a scan even if not clear to start
+       pluck:    optional flag for whether to offer to pluck & move motor
+       force:    optional flag for forcing a scan even if not clear to start
 
     slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -55,7 +56,7 @@ def areascan(slow, startslow, stopslow, nslow,
     ## sanity checks on slow axis
     if type(slow) is str: slow = slow.lower()
     if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
-        print(colored('\n*** %s is not a linescan motor (%s)\n' %
+        print(colored('\n*** %s is not an areascan motor (%s)\n' %
                       (slow, str.join(', ', motor_nicknames.keys())), 'lightred'))
         yield from null()
         return
@@ -65,7 +66,7 @@ def areascan(slow, startslow, stopslow, nslow,
     ## sanity checks on fast axis
     if type(fast) is str: fast = fast.lower()
     if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
-        print(colored('\n*** %s is not a linescan motor (%s)\n' %
+        print(colored('\n*** %s is not an areascan motor (%s)\n' %
                       (fast, str.join(', ', motor_nicknames.keys())), 'lightred'))
         yield from null()
         return
@@ -118,7 +119,7 @@ def areascan(slow, startslow, stopslow, nslow,
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', 'white'))
+        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
         if action.lower() == 'n' or action.lower() == 'q':
             return(yield from null())
         print('Single click the left mouse button on the plot to pluck a point...')
@@ -157,7 +158,6 @@ def as2dat(datafile, key):
     devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
 
     if 'vor' in devices:
-        abscissa = list(devices - {'quadem1', 'vor'})
         column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'],
                        'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
@@ -167,10 +167,8 @@ def as2dat(datafile, key):
                        'ROI4', 'ICR4', 'OCR4']
         template = "  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
-        abscissa = list(devices - {'quadem1',})
+        column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'], 'I0', 'It', 'Ir']
         template = "  %.3f  %.3f  %.6f  %.6f  %.6f\n"
-        column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'],
-                       'I0', 'It', 'Ir']
 
     table = dataframe.table()
     this = table.loc[:,column_list]

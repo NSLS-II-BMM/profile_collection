@@ -75,7 +75,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', 'white'))
+    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
     yield from move_after_scan(dm3_bct)
@@ -137,19 +137,32 @@ motor_nicknames = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
                    'xs'   : xafs_linxs, 'r'    : xafs_roll,
                }
 
+## before 29 August 2018, the order of arguments for linescan() was
+##   linescan(axis, detector, ...)
+## now it is
+##   linescan(detector, axis, ...)
+## for consistency with areascan().  This does a simple check to see if the old
+## argument order is being used and swaps them if need be
+def ls_backwards_compatibility(detin, axin):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir'):
+        return(axin, detin)
+    else:
+        return(detin, axin)
+
+
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(axis, detector, start, stop, nsteps, pluck=True, force=False): # inegration time?
+def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False): # inegration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
 
     For example:
-       RE(linescan('x', 'it', -1, 1, 21))
+       RE(linescan('it', 'x', -1, 1, 21))
 
-       axis :    motor or nickname
        detector: detector to display -- if, it, ir, or i0
+       axis :    motor or nickname
        start:    starting value for a relative scan
        stop:     ending value for a relative scan
        nsteps:   number of steps in scan
@@ -171,6 +184,10 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True, force=False): # in
         yield from null()
         return
 
+    detector, axis = ls_backwards_compatibility(detector, axis)
+    print('detector is: ' + str(detector))
+    print('axis is: ' + str(axis))
+    return(yield from null())
 
     RE.msg_hook = None
     ## sanitize input and set thismotor to an actual motor
@@ -248,7 +265,7 @@ def linescan(axis, detector, start, stop, nsteps, pluck=True, force=False): # in
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then enter] ', 'white'))
+        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
         if action.lower() == 'n' or action.lower() == 'q':
             return(yield from null())
         yield from move_after_scan(thismotor)
@@ -306,7 +323,7 @@ def ls2dat(datafile, key):
 
 
 def center_sample_y():
-    yield from linescan(xafs_liny, 'it', -1.5, 1.5, 61, pluck=False)
+    yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
     table = db[-1].table()
     diff = -1 * table['It'].diff()
     inflection = table['xafs_liny'][diff.idxmax()]
@@ -314,7 +331,7 @@ def center_sample_y():
     print(colored('Optimal position in y at %.3f' % inflection, 'white'))
 
 def center_sample_roll():
-    yield from linescan(xafs_roll, 'it', -3, 3, 61, pluck=False)
+    yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
     table = db[-1].table()
     peak = table['xafs_roll'][table['It'].idxmax()]
     yield from mv(xafs_roll, peak)

@@ -15,26 +15,26 @@ CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
 CS_MULTIPLIER = 1.425
-CS_DEFAULTS   = {'bounds':    [-200, -30, 15.3, '14k'],
-                 'steps':     [10, 0.5, '0.05k'],
-                 'times':     [0.5, 0.5, '0.25k'],
+CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
+                 'steps':         [10, 0.5, '0.05k'],
+                 'times':         [0.5, 0.5, '0.25k'],
 
-                 'folder':    os.environ.get('HOME')+'/data/',
-                 'filename':  'data.dat',
+                 'folder':        os.environ.get('HOME')+'/data/',
+                 'filename':      'data.dat',
                  'experimenters': '',
-                 'e0':        7112,
-                 'element':   'Fe',
-                 'edge':      'K',
-                 'sample':    '',
-                 'prep':      '',
-                 'comment':   '',
-                 'nscans':    1,
-                 'start':     0,
-                 'inttime':   1,
-                 'snapshots': True,
-                 'bothways':  False,
-                 'channelcut':True,
-                 'mode':      'transmission',}
+                 'e0':            7112,
+                 'element':       'Fe',
+                 'edge':          'K',
+                 'sample':        '',
+                 'prep':          '',
+                 'comment':       '',
+                 'nscans':        1,
+                 'start':         0,
+                 'inttime':       1,
+                 'snapshots':     True,
+                 'bothways':      False,
+                 'channelcut':    True,
+                 'mode':          'transmission',}
 
 
 #import inspect
@@ -70,24 +70,24 @@ def scan_metadata(inifile=None, **kwargs):
     The kwarg keys are the same as the keys in the dictionary which is
     returned:
 
-      folder:     [str]   folder for saved XDI files
-      filename:   [str]   filename stub for saved XDI files
-      experimenters [str] names of people involved in this measurements
-      e0:         [float] edge energy, reference value for energy grid
-      element:    [str]   one- or two-letter element symbol
-      edge:       [str]   K, L3, L2, or L1
-      sample:     [str]   description of sample, perhaps stoichiometry
-      prep:       [str]   a short statement about sample preparation
-      comment:    [str]   user-supplied comment about the data
-      nscan:      [int]   number of repetitions
-      start:      [int]   starting scan number, XDI file will be filename.###
-      snapshots:  [bool]  True = capture analog and XAS cameras before scan sequence
-      bothways:   [bool]  True = measure in both monochromator directions
-      channelcut: [bool]  True = measure in pseudo-channel-cut mode
-      mode:       [str]   transmission, fluorescence, or reference -- how to display the data
-      bounds:     [list]  scan grid boundaries (not kwarg-able at this time)
-      steps:      [list]  scan grid step sizes (not kwarg-able at this time)
-      times:      [list]  scan grid dwell times (not kwarg-able at this time)
+      folder:       [str]   folder for saved XDI files
+      filename:     [str]   filename stub for saved XDI files
+      experimenters [str]   names of people involved in this measurements
+      e0:           [float] edge energy, reference value for energy grid
+      element:      [str]   one- or two-letter element symbol
+      edge:         [str]   K, L3, L2, or L1
+      sample:       [str]   description of sample, perhaps stoichiometry
+      prep:         [str]   a short statement about sample preparation
+      comment:      [str]   user-supplied comment about the data
+      nscan:        [int]   number of repetitions
+      start:        [int]   starting scan number, XDI file will be filename.###
+      snapshots:    [bool]  True = capture analog and XAS cameras before scan sequence
+      bothways:     [bool]  True = measure in both monochromator directions
+      channelcut:   [bool]  True = measure in pseudo-channel-cut mode
+      mode:         [str]   transmission, fluorescence, or reference -- how to display the data
+      bounds:       [list]  scan grid boundaries (not kwarg-able at this time)
+      steps:        [list]  scan grid step sizes (not kwarg-able at this time)
+      times:        [list]  scan grid dwell times (not kwarg-able at this time)
 
     Any or all of these can be specified.  Values from the INI file
     are read first, then overridden with specified values.  If values
@@ -436,31 +436,19 @@ def xafs(inifile, **kwargs):
             BMM_xsp.final_log_entry = False
             yield from null()
             return
-        # if not os.path.isfile(inifile):
-        #     print(colored('\n%s does not exist!  Bailing out....\n' % inifile, 'lightred'))
-        #     BMM_xsp.final_log_entry = False
-        #     yield from null()
-        #     return
-        # print(colored('reading ini file: %s' % inifile, 'white'))
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
-        # (ok, missing) = ini_sanity(f)
-        # if not ok:
-        #     print(colored('\nThe following keywords are missing from your INI file: ', 'lightred'),
-        #           '%s\n' % str.join(', ', missing))
-        #     BMM_xsp.final_log_entry = False
-        #     yield from null()
-        #     return
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
         eave = channelcut_energy(p['e0'], p['bounds'])
         if BMM_xsp.prompt:
-            print("How does this look?")
+            text = '\n'
             for (k,v) in p.items():
-                print('\t%-13s : %s' % (k,v))
+                text = text + '      %-13s : %-50s\n' % (k,v)
+            boxedtext('How does this look?', text, 'green') # see 05-functions
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
-            print('\nfirst data file to be written to "%s"' % outfile)
+            print('\nFirst data file to be written to "%s"' % outfile)
 
             bail = False
             count = 0
@@ -479,8 +467,8 @@ def xafs(inifile, **kwargs):
             print(estimate)
 
             if not dcm.suppress_channel_cut:
-                print('\npseudo-channel-cut energy = %.1f' % eave)
-            action = input("\nBegin scan sequence? [Y/n then enter] ")
+                print('\nPseudo-channel-cut energy = %.1f' % eave)
+            action = input("\nBegin scan sequence? [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 BMM_xsp.final_log_entry = False
                 yield from null()

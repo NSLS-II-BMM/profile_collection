@@ -30,9 +30,23 @@ def change_mode(mode=None):
         print('%s is not a mode' % mode)
         return(yield from null())
 
-    print('Moving to mode %s' % mode)
-    action = input("Begin moving motors? [Y/n then enter] ")
-    if action.lower == 'q' or action.lower == 'n':
+    if mode == 'A':
+        description = 'focused, >8 keV'
+    elif mode == 'B':
+        description = 'focused, <6 keV'
+    elif mode == 'C':
+        description = 'focused, 6 to 8 keV'
+    elif mode == 'D':
+        description = 'unfocused, >8 keV'
+    elif mode == 'E':
+        description = 'unfocused, 6 to 8 keV'
+    elif mode == 'F':
+        description = 'unfocused, <6 keV'
+    elif mode == 'XRD':
+        description = 'focused at goniometer, >8 keV'
+    print('Moving to mode %s (%s)' % (mode, description))
+    action = input("Begin moving motors? [Y/n then Enter] ")
+    if action.lower() == 'q' or action.lower() == 'n':
         yield from null()
         return
 
@@ -40,24 +54,24 @@ def change_mode(mode=None):
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
                                             # starting a move, it is one of the
-                                            # motors that report MOVN=1 even when
+                                            # motors that reports MOVN=1 even when
                                             # still
     yield from mv(
-        dm3_bct,     float(MODEDATA['dm3_bct'][mode]),
+        dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
 
-        xafs_yu,     float(MODEDATA['xafs_yu'][mode]),
-        xafs_ydo,    float(MODEDATA['xafs_ydo'][mode]),
-        xafs_ydi,    float(MODEDATA['xafs_ydi'][mode]),
+        xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
+        xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
+        xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
 
-        m2.yu,       float(MODEDATA['m2_yu'][mode]),
-        m2.ydo,      float(MODEDATA['m2_ydo'][mode]),
-        m2.ydi,      float(MODEDATA['m2_ydi'][mode]),
+        m2.yu,           float(MODEDATA['m2_yu'][mode]),
+        m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
+        m2.ydi,          float(MODEDATA['m2_ydi'][mode]),
 
-        m3.yu,       float(MODEDATA['m3_yu'][mode]),
-        m3.ydo,      float(MODEDATA['m3_ydo'][mode]),
-        m3.ydi,      float(MODEDATA['m3_ydi'][mode]),
-        m3.xu,       float(MODEDATA['m3_xu'][mode]),
-        m3.xd,       float(MODEDATA['m3_xd'][mode]),
+        m3.yu,           float(MODEDATA['m3_yu'][mode]),
+        m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+        m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+        m3.xu,           float(MODEDATA['m3_xu'][mode]),
+        m3.xd,           float(MODEDATA['m3_xd'][mode]),
 
         slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
         slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
@@ -136,8 +150,8 @@ def change_xtals(xtal=None):
         return(yield from null())
 
     print('Moving to %s crystals' % xtal)
-    action = input("Begin moving motors? [Y/n then enter] ")
-    if action.lower == 'q' or action.lower == 'n':
+    action = input("Begin moving motors? [Y/n then Enter] ")
+    if action.lower() == 'q' or action.lower() == 'n':
         yield from null()
         return
 

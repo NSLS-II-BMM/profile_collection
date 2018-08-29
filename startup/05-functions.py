@@ -33,6 +33,8 @@ def colored(text, tint='white', attrs=[]):
         tint = 'Dark' + tint[4:].capitalize()
     elif 'light' in tint:
         tint = 'Light' + tint[5:].capitalize()
+    elif 'blink' in tint:
+        tint = 'Blink' + tint[5:].capitalize()
     elif 'no' in tint:
         tint = 'Normal'
     else:
@@ -68,3 +70,28 @@ def inflect(word, number):
         return('%d %s' % (number, inflection.singularize(word)))
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
+
+def boxedtext(title, text, color):
+    '''
+    Put text in a lovely unicode block element box.  The top
+    of the box will contain a title.  The box elements will
+    be colored.
+
+    This is rather crude.  Each line of text should be 75
+    characters or fewer.
+    '''
+    width     = 75
+    remainder = width - 5 - len(title)
+    ul        = u'\u250C' # u'\u2554'
+    ur        = u'\u2510' # u'\u2557'
+    ll        = u'\u2514' # u'\u255A'
+    lr        = u'\u2518' # u'\u255D'
+    bar       = u'\u2500' # u'\u2550'
+    strut     = u'\u2502' # u'\u2551'
+    template  = '%-' + str(width) + 's'
+
+    print('')
+    print(colored(ul + bar*3 + ' ' + title + ' ' + bar*remainder + ur, color))
+    for line in text.split('\n'):
+        print(colored(strut, color) + template%line + colored(strut, color))
+    print(colored(ll + bar*width + lr, color))
