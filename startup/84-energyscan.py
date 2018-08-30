@@ -126,7 +126,7 @@ def scan_metadata(inifile=None, **kwargs):
                     found[a] = True
             except:
                 parameters[a] = CS_DEFAULTS[a]
-    parameters['bounds_as_written'] = parameters['bounds']
+    parameters['bounds_given'] = parameters['bounds'].copy()
 
     ## ----- strings
     for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
@@ -445,7 +445,11 @@ def xafs(inifile, **kwargs):
         eave = channelcut_energy(p['e0'], p['bounds'])
         if BMM_xsp.prompt:
             text = '\n'
+            for k in ('bounds', 'bounds_given', 'steps', 'times'):
+                text = text + '      %-13s : %-50s\n' % (k,p[k])
             for (k,v) in p.items():
+                if k in ('bounds', 'bounds_given', 'steps', 'times'):
+                    continue
                 text = text + '      %-13s : %-50s\n' % (k,v)
             boxedtext('How does this look?', text, 'green') # see 05-functions
 
