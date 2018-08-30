@@ -126,6 +126,7 @@ def scan_metadata(inifile=None, **kwargs):
                     found[a] = True
             except:
                 parameters[a] = CS_DEFAULTS[a]
+    parameters['bounds_as_written'] = parameters['bounds']
 
     ## ----- strings
     for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
