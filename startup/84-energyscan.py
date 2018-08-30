@@ -106,6 +106,7 @@ def scan_metadata(inifile=None, **kwargs):
     if not os.path.isfile(inifile):
         print('inifile does not exist')
         return
+
     config = configparser.ConfigParser(interpolation=None)
     config.read_file(open(inifile))
 
@@ -431,7 +432,7 @@ def xafs(inifile, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
-        estimate = howlong(inifile, interactive=False, **kwargs)
+        inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
             BMM_xsp.final_log_entry = False
             yield from null()
@@ -654,20 +655,25 @@ def xafs(inifile, **kwargs):
 def howlong(inifile, interactive=True, **kwargs):
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
+    ## try inifile as given then DATA + inifile
+    ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
+    orig = inifile
     if not os.path.isfile(inifile):
-        print(colored('\n%s does not exist!  Bailing out....\n' % inifile, 'yellow'))
-        return -1
+        inifile = DATA + inifile
+        if not os.path.isfile(inifile):
+            print(colored('\n%s does not exist!  Bailing out....\n' % orig, 'yellow'))
+            return(orig, -1)
     print(colored('reading ini file: %s' % inifile, 'white'))
     (p, f) = scan_metadata(inifile=inifile, **kwargs)
     (ok, missing) = ini_sanity(f)
     if not ok:
         print(colored('\nThe following keywords are missing from your INI file: ', 'lightred'),
               '%s\n' % str.join(', ', missing))
-        return -1
+        return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
     text = '\nEach scan will take about %.1f minutes\n' % approx_time
     text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
     if interactive:
         print(text)
     else:
-        return text
+        return(inifile, text)

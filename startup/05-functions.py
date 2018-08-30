@@ -46,7 +46,7 @@ def run_report(thisfile):
 
 run_report(__file__)
 
-BMM_logfile = '/home/bravel/BMM_master.log'
+##BMM_logfile = '/home/bravel/BMM_master.log'
 
 KTOE = 3.8099819442818976
 def etok(ee):

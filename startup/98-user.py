@@ -49,20 +49,25 @@ ip.prompts = MyPrompt(ip)
 #     ip.prompts = MyPrompt(ip)
 #     return 'Token.%s' % tokens[i]
 
+DATA = os.path.join(os.getenv('HOME'), 'BMM_Data', 'bucket') + '/'
+
 def new_experiment(folder):
     '''
     Get ready for a new experiment.  Run this first thing when a user
     sits down to start their beamtime.  This will:
-      1. Create a folder, if needed
+      1. Create a folder, if needed, and set the DATA variable
       2. Set up the experimental log, creating an experiment.log file, if needed
       3. Write templates for scan.ini and macro.py, if needed
     '''
     ## make folder
     if not os.path.isdir(folder):
         os.mkdir(folder)
-        print('1. Created data folder: %s' % folder)
+        print('1. Created data folder')
     else:
-        print('1. Found data folder: %s' % folder)
+        print('1. Found data folder')
+
+    DATA = folder + '/'
+    print('   DATA = %s' % DATA)
 
     ## setup logger
     BMM_user_log(os.path.join(folder, 'experiment.log'))
@@ -96,6 +101,12 @@ def new_experiment(folder):
     else:
         print('4. Found macro template: %s' % macropy)
 
+def end_experiment():
+    '''
+    Unset the logger and the DATA variable at the end of an experiment.
+    '''
+    BMM_unset_user_log()
+    DATA = os.path.join(os.environ['HOME'], 'BMM_Data') + '/'
 
 def BMM_help():
     '''
@@ -119,11 +130,13 @@ def BMM_help():
     print(colored('Summarize all motor positions:\t', 'white')+'ms()')
     print(colored('Summarize utilities:\t\t', 'white')+'su()')
     print('')
-    print(colored('How long will a scan seq. be?\t', 'white')+'howlong(<INI file>)')
-    print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(<INI file>))')
+    print(colored('How long will a scan seq. be?\t', 'white')+'howlong(DATA + \'scan.ini\')')
+    print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(DATA + \'scan.ini\'))')
     print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
     print(colored('Scan 2 motors, plot a detector:\t', 'white')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
-    print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(<text of entry>)')
+    print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info("blah blah blah")')
+    print('')
+    print(colored('DATA = ', 'white') + DATA)
     print('')
     print(colored('All the details: ', 'white') + colored('https://nsls-ii-bmm.github.io/BeamlineManual/index.html', 'lightblue'))
 
