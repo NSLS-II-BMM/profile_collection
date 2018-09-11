@@ -7,8 +7,9 @@ BMM_logger          = logging.getLogger('BMM_logger')
 BMM_logger.handlers = []
 
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
-BMM_log_master_file = '/home/bravel/BMM_Data/BMM_master.log'
-chmod(BMM_log_master_file, 0o644)
+BMM_log_master_file = '/home/xf06bm/Data/BMM_master.log'
+if os.path.isfile(BMM_log_master_file):
+    chmod(BMM_log_master_file, 0o644)
 BMM_log_master      = logging.FileHandler(BMM_log_master_file)
 BMM_log_master.setFormatter(BMM_formatter)
 BMM_logger.addHandler(BMM_log_master)
@@ -42,14 +43,14 @@ def BMM_log_info(message):
 
 
 
-######################################################################################################
-# here is an example of what a message tuple looks like when moving a motor                          #
-# (each item in the tuple is on it's own line):                                                      #
-#     set:                                                                                           #
-#     (XAFSEpicsMotor(prefix='XF:06BMA-BI{XAFS-Ax:LinX}Mtr', name='xafs_linx', ... )                 #
-#     (-91.5999475,),                                                                                #
-#     {'group': '8c8df020-23aa-451e-b411-c427bc80b375'}                                              #
-######################################################################################################
+######################################################################################
+# here is an example of what a message tuple looks like when moving a motor          #
+# (each item in the tuple is on it's own line):                                      #
+#     set:                                                                           #
+#     (XAFSEpicsMotor(prefix='XF:06BMA-BI{XAFS-Ax:LinX}Mtr', name='xafs_linx', ... ) #
+#     (-91.5999475,),                                                                #
+#     {'group': '8c8df020-23aa-451e-b411-c427bc80b375'}                              #
+######################################################################################
 def BMM_msg_hook(msg):
     if msg[0] == 'set':
         if 'EpicsMotor' in str(type(msg[1])):

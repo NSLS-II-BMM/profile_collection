@@ -6,7 +6,7 @@ run_report(__file__)
 
 import json
 
-LOCATION = '/home/bravel/git/BMM-beamline-configuration/'
+LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 MODEDATA = None
 def read_mode_data():
      return json.load(open(os.path.join(LOCATION, 'Modes.json')))

@@ -49,15 +49,16 @@ ip.prompts = MyPrompt(ip)
 #     ip.prompts = MyPrompt(ip)
 #     return 'Token.%s' % tokens[i]
 
-DATA = os.path.join(os.getenv('HOME'), 'BMM_Data', 'bucket') + '/'
+DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
-def new_experiment(folder):
+def new_experiment(folder, gup=0, saf=0):
     '''
     Get ready for a new experiment.  Run this first thing when a user
     sits down to start their beamtime.  This will:
       1. Create a folder, if needed, and set the DATA variable
       2. Set up the experimental log, creating an experiment.log file, if needed
       3. Write templates for scan.ini and macro.py, if needed
+      4. Set the 
     '''
     ## make folder
     if not os.path.isdir(folder):
@@ -101,12 +102,16 @@ def new_experiment(folder):
     else:
         print('4. Found macro template: %s' % macropy)
 
+    BMM_xsp.gup = gup
+    BMM_xsp.saf = saf
+    print('5. Set GUP and SAF numbers as metadata')
+        
 def end_experiment():
     '''
     Unset the logger and the DATA variable at the end of an experiment.
     '''
     BMM_unset_user_log()
-    DATA = os.path.join(os.environ['HOME'], 'BMM_Data') + '/'
+    DATA = os.path.join(os.environ['HOME'], 'Data') + '/'
 
 def BMM_help():
     '''

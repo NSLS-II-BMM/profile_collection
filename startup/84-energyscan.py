@@ -391,6 +391,8 @@ class xafs_scan_parameters():
     def __init__(self):
         self.prompt = True
         self.final_log_entry = True
+        self.gup = 0
+        self.saf = 0
 BMM_xsp = xafs_scan_parameters()
 
 #########################
