@@ -50,6 +50,7 @@ class BMMQuadEM(QuadEM):
     #iti0   = Cpt(Normalized, derived_from='current2.mean_value')
     #lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
     state  = Cpt(EpicsSignal, 'Acquire')
+    #  = Cpt(EpicsSignal, 'PREC')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

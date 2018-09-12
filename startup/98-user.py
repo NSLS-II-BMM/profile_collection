@@ -66,9 +66,17 @@ def new_experiment(folder, gup=0, saf=0):
         print('1. Created data folder')
     else:
         print('1. Found data folder')
-
+    imagefolder = os.path.join(folder, 'snapshots')
+    if not os.path.isdir(imagefolder):
+        os.mkdir(imagefolder)
+        print('   Created snapshot folder')
+    else:
+        print('   Found snapshot folder')
+    
+    global DATA
     DATA = folder + '/'
     print('   DATA = %s' % DATA)
+    print('   snapshots in %s' % imagefolder)
 
     ## setup logger
     BMM_user_log(os.path.join(folder, 'experiment.log'))
@@ -105,13 +113,20 @@ def new_experiment(folder, gup=0, saf=0):
     BMM_xsp.gup = gup
     BMM_xsp.saf = saf
     print('5. Set GUP and SAF numbers as metadata')
-        
+
+    return None
+    
 def end_experiment():
     '''
     Unset the logger and the DATA variable at the end of an experiment.
     '''
     BMM_unset_user_log()
-    DATA = os.path.join(os.environ['HOME'], 'Data') + '/'
+    global DATA
+    DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
+    BMM_xsp.gup = 0
+    BMM_xsp.saf = 0
+
+    return None
 
 def BMM_help():
     '''
@@ -144,6 +159,7 @@ def BMM_help():
     print(colored('DATA = ', 'white') + DATA)
     print('')
     print(colored('All the details: ', 'white') + colored('https://nsls-ii-bmm.github.io/BeamlineManual/index.html', 'lightblue'))
+    return None
 
 def BMM_keys():
     '''
@@ -161,3 +177,4 @@ def BMM_keys():
     print(colored('Paste text\t\t', 'white')+'Ctrl-y')
     print('')
     print(colored('More details: ', 'white') + colored('http://readline.kablamo.org/emacs.html', 'lightblue'))
+    return None

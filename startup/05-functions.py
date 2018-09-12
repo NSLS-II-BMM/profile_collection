@@ -48,6 +48,19 @@ run_report(__file__)
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
+##################################################
+# --- a simple class for managing scan logistics #
+##################################################
+class xafs_scan_parameters():
+    def __init__(self):
+        self.prompt = True
+        self.final_log_entry = True
+        self.gup = 0
+        self.saf = 0
+BMM_xsp = xafs_scan_parameters()
+
+
+
 KTOE = 3.8099819442818976
 def etok(ee):
     '''convert relative energy to wavenumber'''

@@ -16,7 +16,7 @@ run_report(__file__)
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False):
+             pluck=True, force=False, md={}):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -35,6 +35,7 @@ def areascan(detector,
        nfa:      number of steps in fast axis
        pluck:    optional flag for whether to offer to pluck & move motor
        force:    optional flag for forcing a scan even if not clear to start
+       md:       composable dictionary of metadata
 
     slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -106,12 +107,18 @@ def areascan(detector,
     BMM_cpl.motor2 = slow
     BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
 
+    thismd = dict()
+    thismd['XDI,Facility,GUP'] = BMM_xsp.gup
+    thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+    thismd['slow_motor'] = slow.name
+    thismd['fast_motor'] = fast.name
+
     @subs_decorator(areaplot)
     def make_areascan():
         yield from rel_grid_scan(dets,
                                  slow, startslow, stopslow, nslow,
                                  fast, startfast, stopfast, nfast,
-                                 False, md={'slow_motor': slow.name, 'fast_motor': fast.name})
+                                 False, md={**thismd, **md})
     yield from make_areascan()
     BMM_log_info('areascan observing: %s\n%s%s\tuid = %s, scan_id = %d' %
                  (detector, line1, line2, db[-1].start['uid'], db[-1].start['scan_id']))
@@ -176,6 +183,14 @@ def as2dat(datafile, key):
     handle = open(datafile, 'w')
     handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+    try:
+        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI,Facility,GUP'])
+    except:
+        pass
+    try:
+        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI,Facility,SAF'])
+    except:
+        pass
     handle.write('# ==========================================================\n')
     handle.write('# ' + '  '.join(column_list) + '\n')
     slowval = None

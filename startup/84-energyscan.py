@@ -384,17 +384,6 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 
-##################################################
-# --- a simple class for managing scan logistics #
-##################################################
-class xafs_scan_parameters():
-    def __init__(self):
-        self.prompt = True
-        self.final_log_entry = True
-        self.gup = 0
-        self.saf = 0
-BMM_xsp = xafs_scan_parameters()
-
 #########################
 # -- the main XAFS scan #
 #########################
@@ -402,7 +391,7 @@ def xafs(inifile, **kwargs):
     '''
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
-    def main_plan(inifile):
+    def main_plan(inifile, **kwargs):
         if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
             BMM_xsp.final_log_entry = False
             print(colored('The DCM is in the 111 position, configured as 311', 'lightred'))
@@ -416,6 +405,10 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
 
+        supplied_metadata = dict()
+        if kwargs['md'] == dict:
+            supplied_metadata = kwargs['md']
+        
         (ok, text) = BMM_clear_to_start()
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text) = (True, '')
@@ -571,9 +564,9 @@ def xafs(inifile, **kwargs):
             ## snap photos
             if p['snapshots']:
                 #now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-                image = os.path.join(p['folder'], "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
+                image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
                 snap('XAS', filename=image)
-                image = os.path.join(p['folder'], "%s_analog_%s.jpg" % (p['filename'], now()))
+                image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
                 snap('analog', filename=image)
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -617,9 +610,11 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan plan with the correct detectors
                 if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode']:
-                    yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory, md=md)
+                    yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
+                                       md={**md, **supplied_metadata})
                 else:
-                    yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory, md=md)
+                    yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
+                                       md={**md, **supplied_metadata})
                 header = db[-1]
                 write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
                 print(colored('wrote %s' % datafile, 'white'))
@@ -655,7 +650,7 @@ def xafs(inifile, **kwargs):
     BMM_xsp.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile), cleanup_plan())
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 

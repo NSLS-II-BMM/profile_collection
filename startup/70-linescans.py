@@ -153,7 +153,7 @@ def ls_backwards_compatibility(detin, axin):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False): # inegration time?
+def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -185,9 +185,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False): # in
         return
 
     detector, axis = ls_backwards_compatibility(detector, axis)
-    print('detector is: ' + str(detector))
-    print('axis is: ' + str(axis))
-    return(yield from null())
+    # print('detector is: ' + str(detector))
+    # print('axis is: ' + str(axis))
+    # return(yield from null())
 
     RE.msg_hook = None
     ## sanitize input and set thismotor to an actual motor
@@ -253,9 +253,13 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False): # in
             (thismotor.name, detector, start, stop, nsteps, value)
     ##BMM_suspenders()            # engage suspenders
 
+    thismd = dict()
+    thismd['XDI,Facility,GUP'] = BMM_xsp.gup
+    thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+    
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):
-        yield from rel_scan(dets, motor, start, stop, nsteps)
+        yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
 
     yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
     BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
@@ -313,6 +317,14 @@ def ls2dat(datafile, key):
 
     handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+    try:
+        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI,Facility,GUP'])
+    except:
+        pass
+    try:
+        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI,Facility,SAF'])
+    except:
+        pass
     handle.write('# ==========================================================\n')
     handle.write('# ' + '  '.join(column_list) + '\n')
     for i in range(0,len(this)):
