@@ -1,6 +1,7 @@
 import bluesky as bs
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+from bluesky import __version__ as bluesky_version
 import numpy
 import pandas
 import os
@@ -14,7 +15,7 @@ run_report(__file__)
 ####################################
 # generic timescan vs. It/If/Ir/I0 #
 ####################################
-def timescan(detector, readings, dwell, delay, outfile=False, force=False, md={}):
+def timescan(detector, readings, dwell, delay, force=False, md={}):
     '''
     Generic timescan plan.
 
@@ -40,11 +41,6 @@ def timescan(detector, readings, dwell, delay, outfile=False, force=False, md={}
         yield from null()
         return
 
-    if DATA not in outfile:
-        outfile = DATA + outfile
-    if outfile is not False and os.path.isfile(outfile):
-        print(colored('%s already exists!  Bailing out....' % outfile, 'lightred'))
-        return
     
     RE.msg_hook = None
     ## sanitize and sanity checks on detector
@@ -91,15 +87,14 @@ def timescan(detector, readings, dwell, delay, outfile=False, force=False, md={}
     thismd['XDI,Facility,GUP']    = BMM_xsp.gup
     thismd['XDI,Facility,SAF']    = BMM_xsp.saf
     thismd['XDI,Beamline,energy'] = dcm.energy.readback.value
+    thismd['XDI,Scan,dwell_time'] = dwell
+    thismd['XDI,Scan,delay']      = delay
     
     @subs_decorator(plot)
     def count_scan(dets, readings, delay):
         yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
 
     yield from count_scan(dets, readings, delay)
-    if outfile is not False:
-        ts2dat(outfile, -1)
-        line1 = '%s, N=%s, dwell=%.3f, delay=%.3f, outfile=%s \n' % (detector, readings, dwell, delay, outfile)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
@@ -154,11 +149,14 @@ def ts2dat(datafile, key):
 
         
     handle = open(datafile, 'w')
-    handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI,Beamline,energy'])
+    handle.write('# XDI/1.0 BlueSky/%s'      % bluesky_version)
     handle.write('# Scan.start_time: %s\n'   % start_time)
     handle.write('# Scan.end_time: %s\n'     % end_time)
     handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+    handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI,Beamline,energy'])
+    handle.write('# Scan.dwell_time: %d\n'   % dataframe['start']['XDI,Scan,dwell_time'])
+    handle.write('# Scan.delay: %d\n'        % dataframe['start']['XDI,Scan,delay'])
     try:
         handle.write('# Facility.GUP: %d\n'  % dataframe['start']['XDI,Facility,GUP'])
     except:
@@ -181,3 +179,121 @@ def ts2dat(datafile, key):
     handle.close()
     print(colored('wrote timescan to %s' % datafile, 'white'))
 
+
+
+##########################################################################################################################################
+# See                                                                                                                                    #
+#   Single-energy x-ray absorption detection: a combined electronic and structural local probe for phase transitions in condensed matter #
+#   A Filipponi, M Borowski, P W Loeffen, S De Panfilis, A Di Cicco, F Sperandini, M Minicucci and M Giorgetti                           #
+#   Journal of Physics: Condensed Matter, Volume 10, Number 1                                                                            #
+#   http://iopscience.iop.org/article/10.1088/0953-8984/10/1/026/meta                                                                    #
+##########################################################################################################################################
+def sead(inifile, force=False, **kwargs):
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## read and check INI content
+    orig = inifile
+    if not os.path.isfile(inifile):
+        inifile = DATA + inifile
+        if not os.path.isfile(inifile):
+            print(colored('\n%s does not exist!  Bailing out....\n' % orig, 'yellow'))
+            return(orig, -1)
+    print(colored('reading ini file: %s' % inifile, 'white'))
+    (p, f) = scan_metadata(inifile=inifile, **kwargs)
+    if not os.path.isdir(p['folder']):
+        print(colored('\n%s is not a folder\n' % p['folder'], 'lightred'))
+        return(yield from null())
+              
+    detector = 'It'
+    if mode == 'transmission':
+        detector = 'It'
+    elif mode == 'fluorescence':
+        detector = 'If'
+
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## verify output file name won't be overwritten
+    outfile = '%s.%3.3d' % (os.path.join(p['folder'], p['filename']), p['start'])
+    if os.path.isfile(outfile):
+        print(colored('%s already exists!  Bailing out....' % outfile, 'lightred'))
+        return(yield from null())
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## prompt user and verify that we are clear to start
+    text = '\n'
+    for k in ('folder', 'filename', 'experimenters', 'e0', 'npoints', 'dwell', 'delay',
+              'sample', 'prep', 'comment', 'mode', 'snapshots'):
+        text = text + '      %-13s : %-50s\n' % (k,p[k])
+    if BMM_xsp.prompt:
+        boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
+        action = input("\nBegin time scan? [Y/n then Enter] ")
+        if action.lower() == 'q' or action.lower() == 'n':
+            return(yield from null())
+
+    (ok, ctstext) = BMM_clear_to_start()
+    if force is False and ok is False:
+        print(colored(ctstext, 'lightred'))
+        yield from null()
+        return
+
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    # organize metadata for injection into database and XDI output
+    print(colored('gathering metadata', 'white'))
+    md = bmm_metadata(measurement   = p['mode'],
+                      experimenters = p['experimenters'],
+                      edge          = p['edge'],
+                      element       = p['element'],
+                      edge_energy   = p['e0'],
+                      direction     = 0,
+                      scantype      = 'fixed',
+                      channelcut    = p['channelcut'],
+                      mono          = 'Si(%s)' % dcm._crystal,
+                      i0_gas        = 'N2', #\
+                      it_gas        = 'N2', # > these three need to go into INI file
+                      ir_gas        = 'N2', #/
+                      sample        = p['sample'],
+                      prep          = p['prep'],
+                      stoichiometry = None,
+                      mode          = p['mode'],
+                      comment       = p['comment'],)
+    del(md['XDI,Element,edge'])
+    del(md['XDI,Element,symbol'])
+    md['XDI,Column,01'] = 'time seconds'
+    md['XDI,Column,02'] = md.copy()['XDI,Column,03']
+    md['XDI,Column,03'] = md.copy()['XDI,Column,04']
+    md['XDI,Column,04'] = md['XDI,Column,05']
+    del(md['XDI,Column,05'])
+
+    rightnow = metadata_at_this_moment() # see 62-metadata.py
+    
+    BMM_log_info('Starting single-energy absorption detection time scan using\n%s:\n%s\nCommand line arguments = %s\nMoving to measurement energy: %.1f eV' %
+                 (inifile, text, str(kwargs), p['e0']))
+
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## move to the energy specified in the INI file
+    print(colored('Moving to measurement energy: %.1f eV' % p['e0'], 'white'))
+    dcm.mode = 'fixed'
+    yield from mv(dcm.energy, p['e0'])
+
+        
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## snap photos
+    if p['snapshots']:
+        #now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+        image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
+        snap('XAS', filename=image)
+        image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
+        snap('analog', filename=image)
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## perform the actual time scan
+    yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**md, **rightnow})
+        
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## write the output file
+    header = db[-1]
+    write_XDI(outfile, header, p['mode'], p['comment'], kind='sead') # yield from ?
+    BMM_log_info('wrote time scan to %s' % outfile)
+    print(colored('wrote %s' % outfile, 'white'))

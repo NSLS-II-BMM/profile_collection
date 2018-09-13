@@ -163,7 +163,7 @@ def scan_metadata(inifile=None, **kwargs):
         found['start'] = False
 
     ## ----- integers
-    for a in ('nscans',):
+    for a in ('nscans', 'npoints'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -176,7 +176,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- floats
-    for a in ('e0', 'inttime'):
+    for a in ('e0', 'inttime', 'dwell', 'delay'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -445,6 +445,8 @@ def xafs(inifile, **kwargs):
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
                     continue
+                if k in ('npoints', 'dwell', 'delay', 'inttime'):
+                    continue
                 text = text + '      %-13s : %-50s\n' % (k,v)
             boxedtext('How does this look?', text, 'green') # see 05-functions
 
@@ -598,23 +600,17 @@ def xafs(inifile, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['XDI,Mono,direction'] = 'backward'
-                md['XDI,Mono,first_crystal_temperature'] = float(first_crystal.temperature.value)
-                md['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
-                md['XDI,Facility,current']  = str(ring.current.value) + ' mA'
-                md['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
-                md['XDI,Facility,mode']     = ring.mode.value
-                if md['XDI,Facility,mode'] == 'Operations':
-                    md['XDI,Facility,mode'] = 'top-off'
+                rightnow = metadata_at_this_moment() # see 62-metadata.py
 
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan plan with the correct detectors
                 if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                       md={**md, **supplied_metadata})
+                                       md={**md, **rightnow, **supplied_metadata})
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                       md={**md, **supplied_metadata})
+                                       md={**md, **rightnow, **supplied_metadata})
                 header = db[-1]
                 write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
                 print(colored('wrote %s' % datafile, 'white'))

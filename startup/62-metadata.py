@@ -1,6 +1,7 @@
 
 from ophyd import QuadEM, Component as Cpt, EpicsSignal, EpicsSignalRO, EpicsSignalWithRBV, Signal
 import datetime
+import copy
 
 run_report(__file__)
 
@@ -77,7 +78,7 @@ def bmm_metadata(measurement   = 'transmission',
       edge          -- 'K', 'L3', 'L2', or 'L1'
       element       -- one or two letter element symbol
       edge_energy   -- edge energy used to constructing scan parameters
-      direction     -- 1/-1, 1 for increasing, -1 for decreasing
+      direction     -- 1/0/-1, 1 for increasing, -1 for decreasing, 0 for fixed energy
       scan          -- 'step' or 'slew'
       channelcut    -- True/False, False for fixed exit, True for pseudo-channel-cut
       mono          -- 'Si(111)' or 'Si(311)'
@@ -90,10 +91,12 @@ def bmm_metadata(measurement   = 'transmission',
       comment       -- user-supplied, free-form comment string
     '''
 
-    md                                = bmm_metadata_stub
+    md                                = copy.deepcopy(bmm_metadata_stub)
     md['XDI,_mode']                   = mode,
     md['XDI,_comment']                = comment,
     md['XDI,_scantype']               = 'xafs step scan',
+    if 'fixed' in scantype:
+        md['XDI,_scantype']           = 'single-energy x-ray absorption detection',
     md['XDI,Element,edge']            = edge.capitalize()
     md['XDI,Element,symbol']          = element.capitalize()
     md['XDI,Scan,edge_energy']        = edge_energy
@@ -132,11 +135,15 @@ def bmm_metadata(measurement   = 'transmission',
 
     if direction > 0:
         md['XDI,Mono,direction'] = 'increasing in energy'
+    elif direction == 0:
+        md['XDI,Mono,direction'] = 'fixed in energy'
     else:
         md['XDI,Mono,direction'] = 'decreasing in energy'
 
     if 'step' in scantype:
         md['XDI,Mono,scan_type'] = 'step'
+    elif 'fixed' in scantype:
+        md['XDI,Mono,scan_type'] = 'single energy'
     else:
         md['XDI,Mono,scan_type'] = 'slew'
 
@@ -153,3 +160,18 @@ def bmm_metadata(measurement   = 'transmission',
         md['XDI,Detector,yield'] = 'simple electron yield detector with batteries and He'
 
     return md
+
+def metadata_at_this_moment():
+    '''Gather the sort of scan metadata that could change between scans
+    in a scan sequence.  Return a dictionary.
+
+    '''
+    rightnow = dict()
+    rightnow['XDI,Mono,first_crystal_temperature']  = float(first_crystal.temperature.value)
+    rightnow['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
+    rightnow['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+    rightnow['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
+    rightnow['XDI,Facility,mode']     = ring.mode.value
+    if rightnow['XDI,Facility,mode'] == 'Operations':
+        rightnow['XDI,Facility,mode'] = 'top-off'
+    return rightnow

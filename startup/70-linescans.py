@@ -1,6 +1,7 @@
 import bluesky as bs
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+from bluesky import __version__ as bluesky_version
 import numpy
 import os
 
@@ -315,6 +316,7 @@ def ls2dat(datafile, key):
     table = dataframe.table()
     this = table.loc[:,column_list]
 
+    handle.write('# XDI/1.0 BlueSky/%s' % bluesky_version)
     handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
     try:

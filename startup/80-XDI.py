@@ -35,7 +35,7 @@ transmission = _ionchambers
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 
 
-def write_XDI(datafile, dataframe, mode, comment):
+def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     handle = open(datafile, 'w')
 
     ## set Scan.start_time & Scan.end_time ... this is how it is done
@@ -43,6 +43,7 @@ def write_XDI(datafile, dataframe, mode, comment):
     start_time = datetime.datetime.isoformat(d)
     d=datetime.datetime.fromtimestamp(round(dataframe.stop['time']))
     end_time   = datetime.datetime.isoformat(d)
+    st = pandas.Timestamp(start_time) # this is a UTC problem
 
     if 'trans' in mode:
         detectors = transmission
@@ -67,12 +68,15 @@ def write_XDI(datafile, dataframe, mode, comment):
     if 'yield' in mode:
         xdi.append('# Detector.yield: %s'               % dataframe.start['XDI,Detector,yield'])
 
-    xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
-                '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],
-                '# Facility.name: %s'               % 'NSLS-II',
+    if kind == 'xafs':
+        xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
+                    '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],])
+    xdi.extend(['# Facility.name: %s'               % 'NSLS-II',
                 '# Facility.current: %s'            % dataframe.start['XDI,Facility,current'],
                 '# Facility.energy: %s'             % dataframe.start['XDI,Facility,energy'],
                 '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
+                '# Facility.GUP: %d'                % dataframe.start['XDI,Facility,GUP'],
+                '# Facility.SAF: %d'                % dataframe.start['XDI,Facility,SAF'],
                 '# Mono.name: %s'                   % dataframe.start['XDI,Mono,name'],
                 '# Mono.d_spacing: %s'              % dataframe.start['XDI,Mono,d_spacing'],
                 '# Mono.encoder_resolution: %.7f deg/ct' % dataframe.start['XDI,Mono,encoder_resolution'],
@@ -94,16 +98,25 @@ def write_XDI(datafile, dataframe, mode, comment):
                 '# Scan.transient_id: %s'           % dataframe.start['scan_id'],
                 '# Scan.uid: %s'                    % dataframe.start['uid'],
             ])
+    if kind == 'sead':
+        xdi.extend(['# Beamline.energy: %.3f'   % dataframe['start']['XDI,Beamline,energy'],
+                    '# Scan.dwell_time: %d'     % dataframe['start']['XDI,Scan,dwell_time'],
+                    '# Scan.delay: %d'          % dataframe['start']['XDI,Scan,delay'],])
+        
     plot_hint = 'ln(I0/It)  --  ln($4/$5)'
+    if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($2/$3)'
     if 'fluo' in mode or 'both' in mode:
         plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
+        if kind == 'sead': plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($5+$6+$7+$8) / $2'
     elif 'yield' in mode:
         plot_hint = 'ln(Iy/I0  --  ln($7/$4)'
     elif 'ref' in mode:
         plot_hint = 'ln(It/Ir  --  ln($5/$6)'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
-    for i, col in enumerate(('energy', 'requested_energy', 'measurement_time'), start=1):     # 'encoder'
+    abscissa_columns = ('energy', 'requested_energy', 'measurement_time')
+    if kind == 'sead': abscissa_columns = ('time',)
+    for i, col in enumerate(abscissa_columns, start=1):     # 'encoder'
         xdi.append('# Column.%d: %s %s' % (i, col, units(col)))
         labels.append(col)
 
@@ -114,7 +127,7 @@ def write_XDI(datafile, dataframe, mode, comment):
     #             '6': 'roi4', '10': 'icr4', '14': 'ocr4'}
 
     ## generate a list of column lables & Column.N metadatum lines
-    for i, d in enumerate(detectors, start=4):
+    for i, d in enumerate(detectors, start=len(abscissa_columns)+1):
         if 'quadem1' in d.name:
             this = re.sub('quadem1_', '', d.name)
         # elif 'vor_channels_chan' in d.name:
@@ -150,10 +163,21 @@ def write_XDI(datafile, dataframe, mode, comment):
         if 'yield' in mode:
             column_list.append('Iy')
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f\n"
-
+    if kind == 'sead':
+        column_list.pop(0)
+        column_list.pop(0)
+        column_list.pop(0)
+        column_list.insert(0, 'time')
+        template = template[12:]
     this = table.loc[:,column_list]
 
     for i in range(0,len(this)):
-        handle.write(template % tuple(this.iloc[i]))
+        datapoint = list(this.iloc[i])
+        if kind == 'sead':
+            ti = this.iloc[i, 0]
+            elapsed =  (ti.value - st.value)/10**9
+            datapoint[0] = elapsed
+        handle.write(template % tuple(datapoint))
+        #handle.write(template % tuple(this.iloc[i]))
     handle.flush()
     handle.close()
