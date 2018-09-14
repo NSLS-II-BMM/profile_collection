@@ -269,6 +269,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     ##RE.clear_suspenders()       # disable suspenders
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
+
     if pluck is True:
         action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
         if action.lower() == 'n' or action.lower() == 'q':

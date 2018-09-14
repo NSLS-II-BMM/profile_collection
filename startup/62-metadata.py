@@ -112,9 +112,9 @@ def bmm_metadata(measurement   = 'transmission',
     md['XDI,Facility,SAF']            = BMM_xsp.saf
     md['XDI,Sample,name']             = sample
     md['XDI,Sample,prep']             = prep
-    md['XDI,Sample,x_position']       = xafs_linx.user_readback.value
-    md['XDI,Sample,y_position']       = xafs_liny.user_readback.value
-    md['XDI,Sample,roll_position']    = xafs_roll.user_readback.value
+    #md['XDI,Sample,x_position']       = xafs_linx.user_readback.value
+    #md['XDI,Sample,y_position']       = xafs_liny.user_readback.value
+    #md['XDI,Sample,roll_position']    = xafs_roll.user_readback.value
     ## what about pitch, linxs, rotX ???
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
@@ -167,9 +167,9 @@ def metadata_at_this_moment():
 
     '''
     rightnow = dict()
-    rightnow['XDI,Mono,first_crystal_temperature']  = float(first_crystal.temperature.value)
-    rightnow['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
-    rightnow['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+    #rightnow['XDI,Mono,first_crystal_temperature']  = float(first_crystal.temperature.value)
+    #rightnow['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
+    #rightnow['XDI,Facility,current']  = str(ring.current.value) + ' mA'
     rightnow['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
     rightnow['XDI,Facility,mode']     = ring.mode.value
     if rightnow['XDI,Facility,mode'] == 'Operations':

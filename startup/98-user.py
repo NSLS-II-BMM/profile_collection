@@ -3,6 +3,8 @@ import os
 
 run_report(__file__)
 
+_new_user_defined = False
+
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
@@ -16,8 +18,13 @@ class MyPrompt(Prompts):
         else:
             shbtoken = (Token.Tilde, 'B')
 
+        if _new_user_defined:
+            bmmtoken = (Token.CursorLine, 'BMM ')
+        else:
+            bmmtoken = (Token.AutoSuggestion, 'BMM ')
         ## BMM XRD.311 A•B 0.0 [5] ▶
-        return [(Token.CursorLine, 'BMM %s.%s' % (BMM_config._mode, dcm._crystal)),
+        return [bmmtoken,
+                (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm._crystal)),
                 shatoken,
                 (Token.Prompt, u'\u2022'),
                 shbtoken,
@@ -113,7 +120,9 @@ def new_experiment(folder, gup=0, saf=0):
     BMM_xsp.gup = gup
     BMM_xsp.saf = saf
     print('5. Set GUP and SAF numbers as metadata')
-
+    global _new_user_defined
+    _new_user_defined = True
+    
     return None
     
 def end_experiment():
@@ -125,6 +134,8 @@ def end_experiment():
     DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
     BMM_xsp.gup = 0
     BMM_xsp.saf = 0
+    global _new_user_defined
+    _new_user_defined = False
 
     return None
 

@@ -72,7 +72,7 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
                     '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],])
     xdi.extend(['# Facility.name: %s'               % 'NSLS-II',
-                '# Facility.current: %s'            % dataframe.start['XDI,Facility,current'],
+                '# Facility.current: %.1f mA'       % dataframe.table('baseline')['ring_current'][1],
                 '# Facility.energy: %s'             % dataframe.start['XDI,Facility,energy'],
                 '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
                 '# Facility.GUP: %d'                % dataframe.start['XDI,Facility,GUP'],
@@ -83,14 +83,40 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
                 '# Mono.angle_offset: %.7f deg'     % dataframe.start['XDI,Mono,angle_offset'],
                 '# Mono.scan_mode: %s'              % dataframe.start['XDI,Mono,scan_mode'],
                 '# Mono.scan_type: %s'              % dataframe.start['XDI,Mono,scan_type'],
-                '# Mono.direction: %s in energy'    % dataframe.start['XDI,Mono,direction'],
-                '# Mono.first_crystal_temperature: %.1f C'  % dataframe.start['XDI,Mono,first_crystal_temperature'],
-                '# Mono.compton_shield_temperature: %.1f C' % dataframe.start['XDI,Mono,compton_shield_temperature'],
-                '# Sample.name: %s'                 % dataframe.start['XDI,Sample,name'],
+                '# Mono.direction: %s in energy'    % dataframe.start['XDI,Mono,direction'],])
+    
+    if XDI_record['first_crystal_temperature'] :
+        xdi.append('# Mono.first_crystal_temperature: %.1f C'  % dataframe.table('baseline')['first_crystal_temperature'][1])
+    if XDI_record['compton_shield_temperature'] :
+        xdi.append('# Mono.compton_shield_temperature: %.1f C' % dataframe.table('baseline')['compton_shield_temperature'][1])
+    if XDI_record['xafs_linx'] :
+        xdi.append('# Sample.x_position: %.3f mm'      % dataframe.table('baseline')['xafs_linx'][1])
+    if XDI_record['xafs_liny'] :
+        xdi.append('# Sample.y_position: %.3f mm'      % dataframe.table('baseline')['xafs_liny'][1])
+    if XDI_record['xafs_roll'] :
+        xdi.append('# Sample.roll_position: %.3f deg'  % dataframe.table('baseline')['xafs_roll'][1])
+    if XDI_record['xafs_pitch'] :
+        xdi.append('# Sample.pitch_position: %.3f deg' % dataframe.table('baseline')['xafs_pitch'][1])
+    if XDI_record['xafs_linxs'] :
+        xdi.append('# Sample.xs_position: %.3f mm'     % dataframe.table('baseline')['xafs_linxs'][1])
+    if XDI_record['xafs_lins'] :
+        xdi.append('# Sample.s_position: %.3f mm'      % dataframe.table('baseline')['xafs_lins'][1])
+    if XDI_record['xafs_rotb'] :
+        xdi.append('# Sample.rotb_position: %.3f mm'   % dataframe.table('baseline')['xafs_rotb'][1])
+    if XDI_record['xafs_rots'] :
+        xdi.append('# Sample.rots_position: %.3f mm'   % dataframe.table('baseline')['xafs_rots'][1])
+    if XDI_record['xafs_roth'] :
+        xdi.append('# Sample.roth_position: %.3f mm'   % dataframe.table('baseline')['xafs_roth'][1])
+
+    #    t=db[-1].table('baseline')
+    #    for e in sd.baseline:
+    #        print('%-30s : %.3f  %.3f' % (e.name, t[e.name][1], t[e.name][2]))
+    
+
+
+                
+    xdi.extend(['# Sample.name: %s'                 % dataframe.start['XDI,Sample,name'],
                 '# Sample.prep: %s'                 % dataframe.start['XDI,Sample,prep'],
-                '# Sample.x_position: %.3f'         % dataframe.start['XDI,Sample,x_position'],
-                '# Sample.y_position: %.3f'         % dataframe.start['XDI,Sample,y_position'], # what about linxs, pitch, rotX ???
-                '# Sample.roll_position: %.3f'      % dataframe.start['XDI,Sample,roll_position'],
                 '# Scan.experimenters: %s'          % dataframe.start['XDI,Scan,experimenters'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
                 '# Scan.start_time: %s'             % start_time,
