@@ -51,7 +51,7 @@ def handle_close(ev):
         BMM_cpl.ax     = None
 
 class DerivedPlot(CallbackBase):
-    def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, **kwargs):
+    def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, stream_name='primary', **kwargs):
         """
         func expects an Event document which looks like this:
         {'time': <UNIX epoch>,
@@ -85,10 +85,13 @@ class DerivedPlot(CallbackBase):
         self.lines = []
         self.legend = None
         self.legend_title = " :: ".join([name for name in self.legend_keys])
+        self.stream_name = stream_name
+        self.descriptors = {}
 
     def start(self, doc):
         # The doc is not used; we just use the signal that a new run began.
         self.x_data, self.y_data = [], []
+        self.descriptors.clear()
         label = " :: ".join(
             [str(doc.get(name, name)) for name in self.legend_keys])
         kwargs = ChainMap(self.kwargs, {'label': label})
@@ -97,8 +100,15 @@ class DerivedPlot(CallbackBase):
         self.legend = self.ax.legend(
             loc=0, title=self.legend_title).draggable()
         super().start(doc)
+        
+    def descriptor(self, doc):
+        if doc['name'] == self.stream_name:
+            self.descriptors[doc['uid']] = doc
 
     def event(self, doc):
+        if not doc['descriptor'] in self.descriptors:
+            # This is from some other event stream and we should ignore it.
+            return
         x, y = self.func(doc)
         self.y_data.append(y)
         self.x_data.append(x)
