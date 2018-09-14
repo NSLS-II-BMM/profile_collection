@@ -101,11 +101,11 @@ def scan_metadata(inifile=None, **kwargs):
     parameters = dict()
 
     if inifile is None:
-        print('No inifile specified')
-        return
+        print(colored('\nNo inifile specified\n', 'lightred'))
+        return {}, {}
     if not os.path.isfile(inifile):
-        print('inifile does not exist')
-        return
+        print(colored('\ninifile does not exist\n', 'lightred'))
+        return {}, {}
 
     config = configparser.ConfigParser(interpolation=None)
     config.read_file(open(inifile))
@@ -142,6 +142,11 @@ def scan_metadata(inifile=None, **kwargs):
             parameters[a] = str(kwargs[a])
             found[a] = True
 
+    if not os.path.isdir(parameters['folder']):
+        print(colored('\nfolder %s does not exist\n' % parameters['folder'], 'lightred'))
+        return {}, {}
+
+            
     ## ----- start value
     if 'start' not in kwargs:
         try:
@@ -434,7 +439,9 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
-
+        if not any(p):          # scan_metadata returned having printed an error message
+            return(yield from null())        
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
         eave = channelcut_energy(p['e0'], p['bounds'])

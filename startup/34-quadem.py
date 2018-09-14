@@ -16,24 +16,18 @@ class Nanoize(DerivedSignal):
     def inverse(self, value):
         return value * 1e9 * _locked_dwell_time.dwell_time.readback.value
 
-class Normalized(DerivedSignal):
-    def forward(self, value):
-        return value * self.parent.current1.mean_value.value
-    def inverse(self, value):
-        return value / self.parent.current1.mean_value.value
+# class Normalized(DerivedSignal):
+#     def forward(self, value):
+#         return value * self.parent.current1.mean_value.value
+#     def inverse(self, value):
+#         return value / self.parent.current1.mean_value.value
 
-class TransXmu(DerivedSignal):
-    def forward(self, value):
-        return self.parent.current1.mean_value.value / exp(value)
-    def inverse(self, value):
-        arg = self.parent.current1.mean_value.value / value
-        return log(abs(arg))
-
-from subprocess import call
-call(['caput', 'XF:06BM-BI{EM:1}EM180:Current1:MeanValue_RBV.PREC', '3'])
-call(['caput', 'XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC', '3'])
-call(['caput', 'XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC', '3'])
-call(['caput', 'XF:06BM-BI{EM:1}EM180:Current4:MeanValue_RBV.PREC', '3'])
+# class TransXmu(DerivedSignal):
+#     def forward(self, value):
+#         return self.parent.current1.mean_value.value / exp(value)
+#     def inverse(self, value):
+#         arg = self.parent.current1.mean_value.value / value
+#         return log(abs(arg))
 
 class BMMQuadEM(QuadEM):
     _default_read_attrs = ['I0',
@@ -80,7 +74,22 @@ class BMMQuadEM(QuadEM):
         yield from abs_set(self.acquire, 0)
         yield from abs_set(self.acquire_mode, 2)
 
+
+        
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
+
+def set_precision(pv, val):
+    EpicsSignal(pv.pvname + ".PREC", name='').put(val)
+
+set_precision(quadem1.current1.mean_value, 3)
+toss = quadem1.I0.describe()
+set_precision(quadem1.current2.mean_value, 3)
+toss = quadem1.It.describe()
+set_precision(quadem1.current3.mean_value, 3)
+toss = quadem1.Ir.describe()
+set_precision(quadem1.current4.mean_value, 3)
+toss = quadem1.Iy.describe()
+
 
 quadem1.I0.kind = 'hinted'
 quadem1.It.kind = 'hinted'
@@ -91,6 +100,7 @@ quadem1.I0.name = 'I0'
 quadem1.It.name = 'It'
 quadem1.Ir.name = 'Ir'
 quadem1.Iy.name = 'Iy'
+
 
 #quadem1.current4_mean_value_nano.kind = 'omitted'
 
@@ -106,3 +116,5 @@ def dark_current():
     yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
     yield from shb.open_plan()
     print('Photon shutter is open again')
+
+    
