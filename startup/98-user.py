@@ -23,12 +23,15 @@ class MyPrompt(Prompts):
         else:
             bmmtoken = (Token.AutoSuggestion, 'BMM ')
         ## BMM XRD.311 A•B 0.0 [5] ▶
+        rcv = ring.current.value
+        if rcv is None:
+            rcv = 0
         return [bmmtoken,
                 (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm._crystal)),
                 shatoken,
                 (Token.Prompt, u'\u2022'),
                 shbtoken,
-                (Token.Comment, ' %.1f ' % ring.current.value),
+                (Token.Comment, ' %.1f ' % rcv),
                 (Token.Prompt, '['),
                 (Token.PromptNum, str(self.shell.execution_count)),
                 (Token.Prompt, '] ' + u"\u25B6" + ' ')]
@@ -124,7 +127,12 @@ def new_experiment(folder, gup=0, saf=0):
     _new_user_defined = True
     
     return None
-    
+
+def show_experiment():
+    print('DATA = %s' % DATA)
+    print('GUP  = %d' % BMM_xsp.gup)
+    print('SAF  = %d' % BMM_xsp.saf)
+
 def end_experiment():
     '''
     Unset the logger and the DATA variable at the end of an experiment.

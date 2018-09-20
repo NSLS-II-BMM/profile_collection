@@ -104,17 +104,19 @@ quadem1.Iy.name = 'Iy'
 
 #quadem1.current4_mean_value_nano.kind = 'omitted'
 
+
 def dark_current():
-    print('Closing photon shutter')
+    print('\nClosing photon shutter')
     yield from shb.close_plan()
     print('Measuring current offsets, this will take several seconds')
-    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 2.0)
-    yield from abs_set(quadem1.current_offset_calcs.ch1, 1) # is this right?
-    yield from abs_set(quadem1.current_offset_calcs.ch2, 1)
-    yield from abs_set(quadem1.current_offset_calcs.ch3, 1)
-    yield from abs_set(quadem1.current_offset_calcs.ch4, 1)
-    yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
+    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset3.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
+    yield from sleep(3)
+    BMM_log_info('Measured dark current on quadem1')
+    print('Opening photon shutter')
     yield from shb.open_plan()
-    print('Photon shutter is open again')
+    print('You are ready to measure!\n')
 
     

@@ -107,6 +107,14 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         xdi.append('# Sample.rots_position: %.3f mm'   % dataframe.table('baseline')['xafs_rots'][1])
     if XDI_record['xafs_roth'] :
         xdi.append('# Sample.roth_position: %.3f mm'   % dataframe.table('baseline')['xafs_roth'][1])
+    if XDI_record['bpm_upstream_x'] :
+        xdi.append('# Facility.bpm_upstream_x: %.3f mm' % dataframe.table('baseline')['bpm_upstream_x'][1])
+    if XDI_record['bpm_upstream_y'] :
+        xdi.append('# Facility.bpm_upstream_y: %.3f mm' % dataframe.table('baseline')['bpm_upstream_y'][1])
+    if XDI_record['bpm_downstream_x'] :
+        xdi.append('# Facility.bpm_downstream_x: %.3f mm' % dataframe.table('baseline')['bpm_downstream_x'][1])
+    if XDI_record['bpm_downstream_y'] :
+        xdi.append('# Facility.bpm_downstream_y: %.3f mm' % dataframe.table('baseline')['bpm_downstream_y'][1])
 
     #    t=db[-1].table('baseline')
     #    for e in sd.baseline:

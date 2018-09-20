@@ -134,7 +134,7 @@ class XAFSTable(PseudoPositioner):
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(5, 145))
-    pitch    = Cpt(PseudoSingle, limits=(-8, 1))
+    pitch    = Cpt(PseudoSingle, limits=(-6, 6))
     roll     = Cpt(PseudoSingle, limits=(5, 5))
 
 
@@ -161,7 +161,7 @@ class XAFSTable(PseudoPositioner):
 
 
 
-xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
+xt = xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
 
 
 class GonioTable(PseudoPositioner):

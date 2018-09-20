@@ -92,7 +92,7 @@ def mode():
               m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
               dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
         print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
-    if xafs_yu.user_readback.value > 126.5:
+    if xafs_yu.user_readback.value > 126.5 and m2_yu.user_readback.value < 0:
         print("This appears to be mode A")
     elif xafs_yu.user_readback.value > 120:
         if m3_xu.user_readback.value > 0:
@@ -107,7 +107,7 @@ def mode():
         print("This appears to be mode B")
 
 def get_mode():
-    if xafs_yu.user_readback.value > 126.5:
+    if xafs_yu.user_readback.value > 126.5 and m2_yu.user_readback.value < 0:
         return 'A'
     elif xafs_yu.user_readback.value > 120:
         if m3_xu.user_readback.value > 0:

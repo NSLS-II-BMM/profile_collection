@@ -2,6 +2,7 @@
 import bluesky as bs
 import bluesky.plans as bp
 import bluesky.plan_stubs as bps
+from bluesky.callbacks import LiveGrid
 import numpy
 import os
 import matplotlib.pyplot as plt
@@ -76,11 +77,12 @@ def areascan(detector,
 
     detector = detector.capitalize()
     yield from abs_set(_locked_dwell_time, 0.1)
-    dets = [quadem1]
+    dets = [quadem1,]
     if detector == 'If':
-        dets = dets.append(vor)
+        dets.append(vor)
         detector = 'ROI1'
 
+        
     if 'PseudoSingle' in str(type(slow)):
         valueslow = slow.readback.value
     else:
@@ -95,10 +97,26 @@ def areascan(detector,
     line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
             (fast.name, startfast, stopfast, nfast, valuefast)
 
-    extent = (valuefast + startfast, valuefast + stopfast,
-              valueslow + startslow, valueslow + stopslow)
+    # extent = (
+    #     valuefast + startfast,
+    #     valueslow + startslow,
+    #     valuefast + stopfast,
+    #     valueslow + stopslow,
+    # )
+    # extent = (
+    #     0,
+    #     nfast-1,
+    #     0,
+    #     nslow-1
+    # )
+    #print(extent)
+    #return(yield from null())
 
-    areaplot = LiveGrid((nslow, nfast), detector, aspect='equal', extent=extent,
+
+    #areaplot = LiveScatter(fast.name, slow.name, detector,
+    #                       xlim=(startfast, stopfast), ylim=(startslow, stopslow))
+    
+    areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
                         xlabel='fast motor: %s' % fast.name,
                         ylabel='slow motor: %s' % slow.name)
     BMM_cpl.ax     = areaplot.ax
@@ -113,13 +131,22 @@ def areascan(detector,
     thismd['slow_motor'] = slow.name
     thismd['fast_motor'] = fast.name
 
+
+    
     @subs_decorator(areaplot)
-    def make_areascan():
-        yield from rel_grid_scan(dets,
+    def make_areascan(dets,
+                      slow, startslow, stopslow, nslow,
+                      fast, startfast, stopfast, nfast,
+                      snake=False):
+        yield from grid_scan(dets,
                                  slow, startslow, stopslow, nslow,
                                  fast, startfast, stopfast, nfast,
-                                 False, md={**thismd, **md})
-    yield from make_areascan()
+                                 snake)
+
+    yield from make_areascan(dets,
+                             slow, valueslow+startslow, valueslow+stopslow, nslow,
+                             fast, valuefast+startfast, valuefast+stopfast, nfast,
+                             False)
     BMM_log_info('areascan observing: %s\n%s%s\tuid = %s, scan_id = %d' %
                  (detector, line1, line2, db[-1].start['uid'], db[-1].start['scan_id']))
 
@@ -133,7 +160,20 @@ def areascan(detector,
         cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
         while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
             yield from sleep(0.5)
-        yield from mv(fast, BMM_cpl.x, slow, BMM_cpl.y)
+
+        print('Converting plot coordinates to real coordinates...')
+        begin = valuefast + startfast
+        stepsize = (stopfast - startfast) / (nfast - 1)
+        pointfast = begin + stepsize * BMM_cpl.x
+        #print(BMM_cpl.x, pointfast)
+        
+        begin = valueslow + startslow
+        stepsize = (stopslow - startslow) / (nslow - 1)
+        pointslow = begin + stepsize * BMM_cpl.y
+        #print(BMM_cpl.y, pointslow)
+
+        yield from mv(fast, pointfast, slow, pointslow)
+        
         cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
         BMM_cpl.x = BMM_cpl.y = None
 

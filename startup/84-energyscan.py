@@ -34,7 +34,11 @@ CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'snapshots':     True,
                  'bothways':      False,
                  'channelcut':    True,
-                 'mode':          'transmission',}
+                 'mode':          'transmission',
+
+                 'npoints':       0,
+                 'dwell':         1.0,
+                 'delay':         0.1}
 
 
 #import inspect
@@ -411,7 +415,7 @@ def xafs(inifile, **kwargs):
             return
 
         supplied_metadata = dict()
-        if kwargs['md'] == dict:
+        if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
         
         (ok, text) = BMM_clear_to_start()
@@ -445,17 +449,22 @@ def xafs(inifile, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
         eave = channelcut_energy(p['e0'], p['bounds'])
+        length = 0
         if BMM_xsp.prompt:
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
-                text = text + '      %-13s : %-50s\n' % (k,p[k])
+                addition = '      %-13s : %-50s\n' % (k,p[k])
+                text = text + addition
+                if len(addition) > length: length = len(addition)
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
                     continue
                 if k in ('npoints', 'dwell', 'delay', 'inttime'):
                     continue
-                text = text + '      %-13s : %-50s\n' % (k,v)
-            boxedtext('How does this look?', text, 'green') # see 05-functions
+                addition = '      %-13s : %-50s\n' % (k,v)
+                text = text + addition
+                if len(addition) > length: length = len(addition)
+            boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
             print('\nFirst data file to be written to "%s"' % outfile)

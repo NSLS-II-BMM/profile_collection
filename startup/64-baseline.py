@@ -17,6 +17,10 @@ sd.baseline = [first_crystal.temperature, # relevant DCM temperatures
                xafs_rotb,
                xafs_rots,
                ring.current,              # other things
+               bpm_upstream.x,
+               bpm_upstream.y,
+               bpm_downstream.x,
+               bpm_downstream.y,
 ]
 
 XDI_record = {'xafs_linx'                  : True,
@@ -31,4 +35,8 @@ XDI_record = {'xafs_linx'                  : True,
               'first_crystal_temperature'  : True,
               'compton_shield_temperature' : True,
               'ring_current'               : True,
+              'bpm_upstream_x'             : True,
+              'bpm_upstream_y'             : True,
+              'bpm_downstream_x'           : True,
+              'bpm_downstream_y'           : True,
               }

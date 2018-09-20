@@ -60,7 +60,7 @@ def move_m2(target=3.5):
     beta  = 11542               # distance M2 to xafs_yu
     gamma = 12697               # distance M2 to xafs_ydo/xafs_ydi
 
-    bnot = 51.32                # BCT position in mode A
+    bnot = 50.82                # BCT position in mode A
     unot = 136                  # xafs_yu position in mode A
     dnot = 136                  # xafs_ydo/xafs_ydi position in mode D/E
 
