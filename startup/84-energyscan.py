@@ -459,7 +459,7 @@ def xafs(inifile, **kwargs):
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
                     continue
-                if k in ('npoints', 'dwell', 'delay', 'inttime'):
+                if k in ('npoints', 'dwell', 'delay', 'inttime', 'channelcut', 'bothways'):
                     continue
                 addition = '      %-13s : %-50s\n' % (k,v)
                 text = text + addition

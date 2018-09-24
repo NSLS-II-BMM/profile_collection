@@ -85,32 +85,32 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
                 '# Mono.scan_type: %s'              % dataframe.start['XDI,Mono,scan_type'],
                 '# Mono.direction: %s in energy'    % dataframe.start['XDI,Mono,direction'],])
     
+    if XDI_record['xafs_linx'] :
+        xdi.append('# Sample.x_position: %.3f mm'         % dataframe.table('baseline')['xafs_linx'][1])
+    if XDI_record['xafs_liny'] :
+        xdi.append('# Sample.y_position: %.3f mm'         % dataframe.table('baseline')['xafs_liny'][1])
+    if XDI_record['xafs_roll'] :
+        xdi.append('# Sample.roll_position: %.3f deg'     % dataframe.table('baseline')['xafs_roll'][1])
+    if XDI_record['xafs_pitch'] :
+        xdi.append('# Sample.pitch_position: %.3f deg'    % dataframe.table('baseline')['xafs_pitch'][1])
+    if XDI_record['xafs_linxs'] :
+        xdi.append('# Sample.xs_position: %.3f mm'        % dataframe.table('baseline')['xafs_linxs'][1])
+    if XDI_record['xafs_lins'] :
+        xdi.append('# Sample.s_position: %.3f mm'         % dataframe.table('baseline')['xafs_lins'][1])
+    if XDI_record['xafs_rotb'] :
+        xdi.append('# Sample.rotb_position: %.3f mm'      % dataframe.table('baseline')['xafs_rotb'][1])
+    if XDI_record['xafs_rots'] :
+        xdi.append('# Sample.rots_position: %.3f mm'      % dataframe.table('baseline')['xafs_rots'][1])
+    if XDI_record['xafs_roth'] :
+        xdi.append('# Sample.roth_position: %.3f mm'      % dataframe.table('baseline')['xafs_roth'][1])
     if XDI_record['first_crystal_temperature'] :
         xdi.append('# Mono.first_crystal_temperature: %.1f C'  % dataframe.table('baseline')['first_crystal_temperature'][1])
     if XDI_record['compton_shield_temperature'] :
         xdi.append('# Mono.compton_shield_temperature: %.1f C' % dataframe.table('baseline')['compton_shield_temperature'][1])
-    if XDI_record['xafs_linx'] :
-        xdi.append('# Sample.x_position: %.3f mm'      % dataframe.table('baseline')['xafs_linx'][1])
-    if XDI_record['xafs_liny'] :
-        xdi.append('# Sample.y_position: %.3f mm'      % dataframe.table('baseline')['xafs_liny'][1])
-    if XDI_record['xafs_roll'] :
-        xdi.append('# Sample.roll_position: %.3f deg'  % dataframe.table('baseline')['xafs_roll'][1])
-    if XDI_record['xafs_pitch'] :
-        xdi.append('# Sample.pitch_position: %.3f deg' % dataframe.table('baseline')['xafs_pitch'][1])
-    if XDI_record['xafs_linxs'] :
-        xdi.append('# Sample.xs_position: %.3f mm'     % dataframe.table('baseline')['xafs_linxs'][1])
-    if XDI_record['xafs_lins'] :
-        xdi.append('# Sample.s_position: %.3f mm'      % dataframe.table('baseline')['xafs_lins'][1])
-    if XDI_record['xafs_rotb'] :
-        xdi.append('# Sample.rotb_position: %.3f mm'   % dataframe.table('baseline')['xafs_rotb'][1])
-    if XDI_record['xafs_rots'] :
-        xdi.append('# Sample.rots_position: %.3f mm'   % dataframe.table('baseline')['xafs_rots'][1])
-    if XDI_record['xafs_roth'] :
-        xdi.append('# Sample.roth_position: %.3f mm'   % dataframe.table('baseline')['xafs_roth'][1])
     if XDI_record['bpm_upstream_x'] :
-        xdi.append('# Facility.bpm_upstream_x: %.3f mm' % dataframe.table('baseline')['bpm_upstream_x'][1])
+        xdi.append('# Facility.bpm_upstream_x: %.3f mm'   % dataframe.table('baseline')['bpm_upstream_x'][1])
     if XDI_record['bpm_upstream_y'] :
-        xdi.append('# Facility.bpm_upstream_y: %.3f mm' % dataframe.table('baseline')['bpm_upstream_y'][1])
+        xdi.append('# Facility.bpm_upstream_y: %.3f mm'   % dataframe.table('baseline')['bpm_upstream_y'][1])
     if XDI_record['bpm_downstream_x'] :
         xdi.append('# Facility.bpm_downstream_x: %.3f mm' % dataframe.table('baseline')['bpm_downstream_x'][1])
     if XDI_record['bpm_downstream_y'] :
