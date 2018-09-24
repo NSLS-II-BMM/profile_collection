@@ -7,13 +7,22 @@ import pprint
 pp = pprint.PrettyPrinter(indent=4)
 from numpy import array
 
+import matplotlib.pyplot as plt
+import numpy as np
 
-def calibrate_mono():
+##  Kraft et al, Review of Scientific Instruments 67, 681 (1996)
+##  https://doi.org/10.1063/1.1146657
+
+def calibrate_mono(mono='111'):
     # read content from INI file
-    config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges111.ini'))
-    mono      = config.get('config', 'mono')
+    if mono == '111':
+        config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges111.ini'))
+    else:
+        config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges311.ini'))
+    # mono      = config.get('config', 'mono')
     DSPACING  = float(config.get('config', 'DSPACING'))
-    thistitle = config.get('config', 'thistitle')
+    # thistitle = config.get('config', 'thistitle')
+    thistitle = 'Si(%s) calibration curve' % mono
 
     edges = dict()
     for i in config.items('edges'):
@@ -58,17 +67,38 @@ def calibrate_mono():
     boxedtext('fit results', lmfit.fit_report(fit), 'green')
 
     d_spacing = fit.params.get('d').value
+    derr =  fit.params.get('d').stderr
     offset = fit.params.get('offset').value
+    oerr = fit.params.get('offset').stderr
     energy = (2*pi*HBARC) / (2*d_spacing*sin((theta+offset)*pi/180))
 
     i = 0
-    print('')
+    text = '\n # El. tabulated    found         diff\n'
+    found = list()
     for el in ordered:
         val = (2*pi*HBARC) / (2*d_spacing*sin((tt[i]+offset)*pi/180))
-        print("%-2s  %9.3f  %9.3f  %9.3f" % (el, ee[i], val, val-ee[i]))
+        found.append(val)
+        text = text + "   %-2s  %9.3f  %9.3f  %9.3f\n" % (el, ee[i], found[i], found[i]-ee[i])
         i = i+1
-    print('')
+    boxedtext('comparison with tabulated values', text, 'lightgray')
 
+    y1 = 13.5
+    y2 = 12.9
+    if mono == '311':
+        (y1, y2) = (2*y1, 2*y2)
+    
+    plt.cla()
+    #fig, ax = plt.subplots()
+    plt.plot(ee, tt, label='tabulated')
+    plt.plot(found, tt, 'ro', label='measured')
+    plt.xlabel('energy (eV)')
+    plt.ylabel('angle (degrees)')
+    plt.title(thistitle)
+    plt.text(12000, y1, 'd-spacing = %.8f ± %.8f Å' % (d_spacing, derr), fontsize='small')
+    plt.text(12000, y2, 'offset = %.5f ± %.5f degrees' % (offset, oerr), fontsize='small')
+    legend = plt.legend(loc='upper right', shadow=True)
+    plt.show()
+    
     plottheta = numpy.arange(20.0, 5.0,-0.1)
     if mono == '311':
         plottheta = numpy.arange(36.0,10.0,-0.1)
