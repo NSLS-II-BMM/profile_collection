@@ -94,10 +94,15 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     def count_scan(dets, readings, delay):
         yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
 
+    dofile = os.path.join(DATA, '.time.scan.running')
+    if DATA is not None:
+        with open(dotfile, "w") as f:
+            f.write("")
     yield from count_scan(dets, readings, delay)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+    if os.isfile(dotfile): os.remove(dotfile)
 
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook

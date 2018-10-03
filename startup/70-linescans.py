@@ -60,6 +60,11 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
             (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
+    dofile = os.path.join(DATA, '.line.scan.running')
+    if DATA is not None:
+        with open(dotfile, "w") as f:
+            f.write("")
+
     @subs_decorator(plot)
     def scan_slit():
 
@@ -76,6 +81,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+    if os.isfile(dotfile): os.remove(dotfile)
     action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
@@ -128,7 +134,12 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
         yield from bps.sleep(3.0)
         yield from abs_set(motor.kill_cmd, 1)
 
+    dofile = os.path.join(DATA, '.line.scan.running')
+    if DATA is not None:
+        with open(dotfile, "w") as f:
+            f.write("")
     yield from scan_dcmpitch()
+    if os.isfile(dotfile): os.remove(dotfile)
 
 
 ##                     linear stages        tilt stage           rotation stages
@@ -257,6 +268,12 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     thismd = dict()
     thismd['XDI,Facility,GUP'] = BMM_xsp.gup
     thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+
+    dofile = os.path.join(DATA, '.line.scan.running')
+    if DATA is not None:
+        with open(dotfile, "w") as f:
+            f.write("")
+                
     
     @subs_decorator(plot)
     def scan_xafs_motor(dets, motor, start, stop, nsteps):
@@ -266,6 +283,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
 
+    if os.isfile(dotfile): os.remove(dotfile)
+    
     ##RE.clear_suspenders()       # disable suspenders
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
