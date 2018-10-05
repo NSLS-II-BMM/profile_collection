@@ -28,11 +28,11 @@ class MyPrompt(Prompts):
             rcv = 0
         return [bmmtoken,
                 (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm._crystal)),
-                shatoken,
-                (Token.Prompt, u'\u2022'),
-                shbtoken,
-                (Token.Comment, ' %.1f ' % rcv),
-                (Token.Prompt, '['),
+                #shatoken,
+                #(Token.Prompt, u'\u2022'),
+                #shbtoken,
+                #(Token.Comment, ' %.1f ' % rcv),
+                (Token.Prompt, ' ['),
                 (Token.PromptNum, str(self.shell.execution_count)),
                 (Token.Prompt, '] ' + u"\u25B6" + ' ')]
 

@@ -8,7 +8,7 @@ pp = pprint.PrettyPrinter(indent=4)
 from numpy import array
 
 import matplotlib.pyplot as plt
-import numpy as np
+from scipy.interpolate import interp1d
 
 ##  Kraft et al, Review of Scientific Instruments 67, 681 (1996)
 ##  https://doi.org/10.1063/1.1146657
@@ -73,12 +73,12 @@ def calibrate_mono(mono='111'):
     energy = (2*pi*HBARC) / (2*d_spacing*sin((theta+offset)*pi/180))
 
     i = 0
-    text = '\n # El. tabulated    found         diff\n'
+    text  = '\n #  El.  tabulated    found        diff\n'
     found = list()
     for el in ordered:
         val = (2*pi*HBARC) / (2*d_spacing*sin((tt[i]+offset)*pi/180))
         found.append(val)
-        text = text + "   %-2s  %9.3f  %9.3f  %9.3f\n" % (el, ee[i], found[i], found[i]-ee[i])
+        text = text + "    %-2s  %9.3f  %9.3f  %9.3f\n" % (el.capitalize(), ee[i], found[i], found[i]-ee[i])
         i = i+1
     boxedtext('comparison with tabulated values', text, 'lightgray')
 
@@ -86,10 +86,14 @@ def calibrate_mono(mono='111'):
     y2 = 12.9
     if mono == '311':
         (y1, y2) = (2*y1, 2*y2)
-    
+
+    ## cubic interpolation of tabulated edge energies ... eye candy
+    xnew = np.linspace(min(ee),max(ee),300)
+    f = interp1d(ee, tt, kind='cubic')
+        
     plt.cla()
     #fig, ax = plt.subplots()
-    plt.plot(ee, tt, label='tabulated')
+    plt.plot(xnew, f(xnew), label='tabulated')
     plt.plot(found, tt, 'ro', label='measured')
     plt.xlabel('energy (eV)')
     plt.ylabel('angle (degrees)')

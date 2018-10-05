@@ -76,6 +76,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
                              doc['data']['DTC2'] +
                              doc['data']['DTC3'] +
                              doc['data']['DTC4']   ) / doc['data']['I0'])
+
     ## and this is the appropriate way to plot this linescan
     plot = DerivedPlot(func,
                        xlabel='elapsed time (seconds)',
@@ -212,9 +213,9 @@ def sead(inifile, force=False, **kwargs):
         #    return(yield from null())
               
         detector = 'It'
-        if mode == 'transmission':
+        if 'trans' in p['mode']:
             detector = 'It'
-        elif mode == 'fluorescence':
+        elif 'fluo' in p['mode']:
             detector = 'If'
 
 

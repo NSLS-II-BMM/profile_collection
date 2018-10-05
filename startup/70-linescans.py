@@ -302,6 +302,7 @@ def ls2dat(datafile, key):
     devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
     if 'vor' in devices:
         abscissa = (devices - {'quadem1', 'vor'}).pop()
+        abscissa = 'xafs_liny'
         column_list = [abscissa, 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',
