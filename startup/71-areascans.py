@@ -143,12 +143,17 @@ def areascan(detector,
                                  fast, startfast, stopfast, nfast,
                                  snake)
 
+    dofile = os.path.join(DATA, '.area.scan.running')
+    if DATA is not None:
+        with open(dotfile, "w") as f:
+            f.write("")
     yield from make_areascan(dets,
                              slow, valueslow+startslow, valueslow+stopslow, nslow,
                              fast, valuefast+startfast, valuefast+stopfast, nfast,
                              False)
     BMM_log_info('areascan observing: %s\n%s%s\tuid = %s, scan_id = %d' %
                  (detector, line1, line2, db[-1].start['uid'], db[-1].start['scan_id']))
+    if os.isfile(dotfile): os.remove(dotfile)
 
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook

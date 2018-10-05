@@ -588,6 +588,13 @@ def xafs(inifile, **kwargs):
                 snap('analog', filename=image)
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+            ## write dotfile
+            if DATA is not None:
+                dofile = os.path.join(DATA, '.xafs.scan.running')
+                with open(dotfile, "w") as f:
+                    f.write("")
+                
+            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
             count = 0
             for i in range(p['start'], p['start']+p['nscans'], 1):
@@ -647,6 +654,9 @@ def xafs(inifile, **kwargs):
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
         RE.clear_suspenders()
+        dofile = os.path.join(DATA, '.xafs.scan.running')
+        if os.isfile(dotfile):
+            os.remove(dotfile)
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
