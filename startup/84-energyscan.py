@@ -589,10 +589,9 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile
-            if DATA is not None:
-                dofile = os.path.join(DATA, '.xafs.scan.running')
-                with open(dotfile, "w") as f:
-                    f.write("")
+            dotfile = '/home/xf06bm/Data/.xafs.scan.running'
+            with open(dotfile, "w") as f:
+                f.write("")
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -654,8 +653,8 @@ def xafs(inifile, **kwargs):
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
         RE.clear_suspenders()
-        dofile = os.path.join(DATA, '.xafs.scan.running')
-        if os.isfile(dotfile):
+        dotfile = '/home/xf06bm/Data/.xafs.scan.running'
+        if os.path.isfile(dotfile):
             os.remove(dotfile)
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'

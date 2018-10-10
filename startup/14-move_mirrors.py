@@ -60,11 +60,15 @@ def move_m2(target=3.5):
     beta  = 11542               # distance M2 to xafs_yu
     gamma = 12697               # distance M2 to xafs_ydo/xafs_ydi
 
-    bnot = 50.82                # BCT position in mode A
-    unot = 136                  # xafs_yu position in mode A
-    dnot = 136                  # xafs_ydo/xafs_ydi position in mode D/E
+    bnot = 50.2                # BCT position in mode A
+    unot = 136-0.83                  # xafs_yu position in mode A
+    dnot = 136-0.92                  # xafs_ydo/xafs_ydi position in mode D/E
+    #bnot = 35.14                # BCT position in mode A
+    #unot = 120.04                  # xafs_yu position in mode A
+    #dnot = 117.96                  # xafs_ydo/xafs_ydi position in mode D/E
 
     thetanot = 3.5              # angle in mR of M2 in mode A
+    #thetanot = 4.428              # angle in mR of M2 in mode A
 
     theta = target - thetanot
 

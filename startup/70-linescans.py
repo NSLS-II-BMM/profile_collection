@@ -60,10 +60,9 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
             (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
-    dofile = os.path.join(DATA, '.line.scan.running')
-    if DATA is not None:
-        with open(dotfile, "w") as f:
-            f.write("")
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    with open(dotfile, "w") as f:
+        f.write("")
 
     @subs_decorator(plot)
     def scan_slit():
@@ -81,14 +80,14 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     RE.msg_hook = BMM_msg_hook
     BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    if os.isfile(dotfile): os.remove(dotfile)
+    if os.path.isfile(dotfile): os.remove(dotfile)
     action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
     if action.lower() == 'n' or action.lower() == 'q':
         return(yield from null())
     yield from move_after_scan(dm3_bct)
 
 
-def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     '''
     Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  At the end, move
@@ -104,27 +103,34 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
     RE.msg_hook = None
     motor = dcm_pitch
     BMM_cpl.motor = motor
-
+    
     func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-    plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
+    dets = [quadem1,]
+    name = 'I0'
+    if detector.lower() == 'bicron':
+        func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
+        dets = [bicron,]
+        name = 'Bicron'
+    plot = DerivedPlot(func, xlabel=motor.name, ylabel=name)
+
 
     @subs_decorator(plot)
     def scan_dcmpitch():
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
 
-        yield from abs_set(quadem1.averaging_time, 0.1)
+        yield from abs_set(_locked_dwell_time, 0.1)
         yield from abs_set(motor.kill_cmd, 1)
 
-        yield from rel_scan([quadem1], motor, start, stop, nsteps)
+        yield from rel_scan(dets, motor, start, stop, nsteps)
 
         t  = db[-1].table()
-        maxval = t['I0'].max()
-        top = float(t[t['I0'] == maxval]['dcm_pitch']) # position of max intensity
+        maxval = t[name].max()
+        top = float(t[t[name] == maxval]['dcm_pitch']) # position of max intensity
         ## see https://pandas.pydata.org/pandas-docs/stable/10min.html#boolean-indexing
 
         yield from bps.sleep(3.0)
-        yield from abs_set(quadem1.averaging_time, 0.5)
+        yield from abs_set(_locked_dwell_time, 0.1)
         yield from abs_set(motor.kill_cmd, 1)
 
         RE.msg_hook = BMM_msg_hook
@@ -134,12 +140,11 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101):
         yield from bps.sleep(3.0)
         yield from abs_set(motor.kill_cmd, 1)
 
-    dofile = os.path.join(DATA, '.line.scan.running')
-    if DATA is not None:
-        with open(dotfile, "w") as f:
-            f.write("")
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    with open(dotfile, "w") as f:
+        f.write("")
     yield from scan_dcmpitch()
-    if os.isfile(dotfile): os.remove(dotfile)
+    if os.path.isfile(dotfile): os.remove(dotfile)
 
 
 ##                     linear stages        tilt stage           rotation stages
@@ -269,10 +274,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     thismd['XDI,Facility,GUP'] = BMM_xsp.gup
     thismd['XDI,Facility,SAF'] = BMM_xsp.saf
 
-    dofile = os.path.join(DATA, '.line.scan.running')
-    if DATA is not None:
-        with open(dotfile, "w") as f:
-            f.write("")
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    with open(dotfile, "w") as f:
+        f.write("")
                 
     
     @subs_decorator(plot)
@@ -283,7 +287,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
 
-    if os.isfile(dotfile): os.remove(dotfile)
+    if os.path.isfile(dotfile): os.remove(dotfile)
     
     ##RE.clear_suspenders()       # disable suspenders
     yield from abs_set(_locked_dwell_time, 0.5)

@@ -40,11 +40,11 @@ def td():
 def tweak_bct(step):
     if step is None:
         step = 0
-    dm3_bct.kill_cmd.put(1)
-    print(dm3_bct.user_readback.value, step, dm3_bct.user_readback.value + step)
-    dm3_bct.user_setpoint.put(dm3_bct.user_readback.value + step)
+    yield from abs_set(dm3_bct.kill_cmd,1)
+    print('Moving from %.4f to %.4f' % (dm3_bct.user_readback.value, dm3_bct.user_readback.value + step))
+    yield from mvr(dm3_bct, step)
     time.sleep(3.0)
-    dm3_bct.kill_cmd.put(1)
+    yield from abs_set(dm3_bct.kill_cmd,1)
 
 
 

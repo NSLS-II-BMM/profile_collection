@@ -1,3 +1,4 @@
+import os
 from numpy import pi, sin, cos, arcsin, sqrt
 
 import warnings
@@ -107,3 +108,14 @@ def boxedtext(title, text, tint, width=75):
             add = ' '*11*line.count(color.Normal)
         print(''.join([colored(strut, tint), template%line, add, colored(strut, tint)]))
     print(colored(''.join([ll, bar*width, lr]), tint))
+
+
+def clear_dashboard():
+    if os.path.isfile('/home/xf06bm/Data/.xafs.scan.running'):
+        os.remove('/home/xf06bm/Data/.xafs.scan.running')
+    elif os.path.isfile('/home/xf06bm/Data/.line.scan.running'):
+        os.remove('/home/xf06bm/Data/.line.scan.running')
+    elif os.path.isfile('/home/xf06bm/Data/.area.scan.running'):
+        os.remove('/home/xf06bm/Data/.area.scan.running')
+    elif os.path.isfile('/home/xf06bm/Data/.time.scan.running'):
+        os.remove('/home/xf06bm/Data/.time.scan.running')

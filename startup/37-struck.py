@@ -56,7 +56,6 @@ class BMMVortex(EpicsScaler):
     dtcorr4 = Cpt(DTCorr4, derived_from='channels.chan6')
 
 
-
     def on(self):
         print('Turning {} on'.format(self.name))
         self.state.put(1)
@@ -170,3 +169,31 @@ vor.channels.chan13.name = 'OCR3'
 vor.channels.chan14.name = 'OCR4'
 vor.channels.chan25.name = 'Bicron'
 vor.channels.chan26.name = 'APD'
+
+
+class GonioStruck(EpicsScaler):
+    def on(self):
+        print('Turning {} on'.format(self.name))
+        self.state.put(1)
+
+    def off(self):
+        print('Turning {} off'.format(self.name))
+        self.state.put(0)
+
+    def on_plan(self):
+        yield from abs_set(self.state, 1)
+
+    def off_plan(self):
+        yield from abs_set(self.state, 0)
+
+
+
+    
+bicron = GonioStruck('XF:06BM-ES:1{Sclr:1}', name='bicron')
+for i in list(range(1,33)):
+    text = 'bicron.channels.chan%d.kind = \'omitted\'' % i
+    exec(text)
+bicron.channels.chan25.kind = 'hinted'
+bicron.channels.chan26.kind = 'hinted'
+bicron.channels.chan25.name = 'Bicron'
+bicron.channels.chan26.name = 'APD'
