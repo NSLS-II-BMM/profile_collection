@@ -97,7 +97,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
 
     dotfile = '/home/xf06bm/Data/.time.scan.running'
     with open(dotfile, "w") as f:
-        f.write("")
+        f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
     yield from count_scan(dets, readings, delay)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %

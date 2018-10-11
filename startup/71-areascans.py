@@ -5,7 +5,6 @@ import bluesky.plan_stubs as bps
 from bluesky.callbacks import LiveGrid
 import numpy
 import os
-import matplotlib.pyplot as plt
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
@@ -143,6 +142,8 @@ def areascan(detector,
         thismd['fast_motor'] = fast.name
 
 
+        ## engage suspenders right before starting scan sequence
+        if force is False: BMM_suspenders()
     
         @subs_decorator(areaplot)
         def make_areascan(dets,
