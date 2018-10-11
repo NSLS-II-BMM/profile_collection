@@ -233,7 +233,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
     Output:
        grid:     (list) absolute energy values
        timegrid: (list) integration times
-       approximate_time: (float) a very crude estimnate of how long in minutes the scan will take
+       approximate_time: (float) a very crude estimate of how long in minutes the scan will take
 
     Boundary values are either in eV units or wavenumber units.
     Values in eV units are floats, wavenumber units are strings of the
@@ -591,7 +591,8 @@ def xafs(inifile, **kwargs):
             ## write dotfile
             dotfile = '/home/xf06bm/Data/.xafs.scan.running'
             with open(dotfile, "w") as f:
-                f.write("")
+                f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
+                f.write('%.1f\n' % approx_time * int(p['nscans']) * 60)
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count

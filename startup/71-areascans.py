@@ -17,7 +17,7 @@ run_report(__file__)
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, md={}):
+             pluck=True, force=False, dwell=0.1, md={}):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -36,6 +36,7 @@ def areascan(detector,
        nfa:      number of steps in fast axis
        pluck:    optional flag for whether to offer to pluck & move motor
        force:    optional flag for forcing a scan even if not clear to start
+       dwell:    dwell time at each point (0.1 sec default)
        md:       composable dictionary of metadata
 
     slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
@@ -47,141 +48,170 @@ def areascan(detector,
     database and write it to a file.
     '''
 
-    (ok, text) = BMM_clear_to_start()
-    if force is False and ok is False:
-        print(colored(text, 'lightred'))
-        yield from null()
-        return
+    def main_plan(detector,
+                  slow, startslow, stopslow, nslow,
+                  fast, startfast, stopfast, nfast,
+                  pluck, force, dwell, md):
+        (ok, text) = BMM_clear_to_start()
+        if force is False and ok is False:
+            print(colored(text, 'lightred'))
+            BMM_xsp.final_log_entry = False
+            yield from null()
+            return
 
-    RE.msg_hook = None
+        RE.msg_hook = None
 
-    ## sanity checks on slow axis
-    if type(slow) is str: slow = slow.lower()
-    if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
-        print(colored('\n*** %s is not an areascan motor (%s)\n' %
-                      (slow, str.join(', ', motor_nicknames.keys())), 'lightred'))
-        yield from null()
-        return
-    if slow in motor_nicknames.keys():
-        slow = motor_nicknames[slow]
+        ## sanity checks on slow axis
+        if type(slow) is str: slow = slow.lower()
+        if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
+            print(colored('\n*** %s is not an areascan motor (%s)\n' %
+                          (slow, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            BMM_xsp.final_log_entry = False
+            yield from null()
+            return
+        if slow in motor_nicknames.keys():
+            slow = motor_nicknames[slow]
 
-    ## sanity checks on fast axis
-    if type(fast) is str: fast = fast.lower()
-    if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
-        print(colored('\n*** %s is not an areascan motor (%s)\n' %
-                      (fast, str.join(', ', motor_nicknames.keys())), 'lightred'))
-        yield from null()
-        return
-    if fast in motor_nicknames.keys():
-        fast = motor_nicknames[fast]
+        ## sanity checks on fast axis
+        if type(fast) is str: fast = fast.lower()
+        if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
+            print(colored('\n*** %s is not an areascan motor (%s)\n' %
+                          (fast, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            BMM_xsp.final_log_entry = False
+            yield from null()
+            return
+        if fast in motor_nicknames.keys():
+            fast = motor_nicknames[fast]
 
-    detector = detector.capitalize()
-    yield from abs_set(_locked_dwell_time, 0.1)
-    dets = [quadem1,]
-    if detector == 'If':
-        dets.append(vor)
-        detector = 'ROI1'
+        detector = detector.capitalize()
+        yield from abs_set(_locked_dwell_time, dwell)
+        dets = [quadem1,]
+        if detector == 'If':
+            dets.append(vor)
+            detector = 'ROI1'
 
         
-    if 'PseudoSingle' in str(type(slow)):
-        valueslow = slow.readback.value
-    else:
-        valueslow = slow.user_readback.value
-    line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (slow.name, startslow, stopslow, nslow, valueslow)
+        if 'PseudoSingle' in str(type(slow)):
+            valueslow = slow.readback.value
+        else:
+            valueslow = slow.user_readback.value
+            line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                    (slow.name, startslow, stopslow, nslow, valueslow)
 
-    if 'PseudoSingle' in str(type(fast)):
-        valuefast = fast.readback.value
-    else:
-        valuefast = fast.user_readback.value
-    line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (fast.name, startfast, stopfast, nfast, valuefast)
+        if 'PseudoSingle' in str(type(fast)):
+            valuefast = fast.readback.value
+        else:
+            valuefast = fast.user_readback.value
+        line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (fast.name, startfast, stopfast, nfast, valuefast)
 
-    # extent = (
-    #     valuefast + startfast,
-    #     valueslow + startslow,
-    #     valuefast + stopfast,
-    #     valueslow + stopslow,
-    # )
-    # extent = (
-    #     0,
-    #     nfast-1,
-    #     0,
-    #     nslow-1
-    # )
-    #print(extent)
-    #return(yield from null())
-
-
-    #areaplot = LiveScatter(fast.name, slow.name, detector,
-    #                       xlim=(startfast, stopfast), ylim=(startslow, stopslow))
+        npoints = nfast * nslow
+        estimate = int(npoints*(dwell+0.4))
     
-    areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
-                        xlabel='fast motor: %s' % fast.name,
-                        ylabel='slow motor: %s' % slow.name)
-    BMM_cpl.ax     = areaplot.ax
-    BMM_cpl.fig    = areaplot.ax.figure
-    BMM_cpl.motor  = fast
-    BMM_cpl.motor2 = slow
-    BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
+        # extent = (
+        #     valuefast + startfast,
+        #     valueslow + startslow,
+        #     valuefast + stopfast,
+        #     valueslow + stopslow,
+        # )
+        # extent = (
+        #     0,
+        #     nfast-1,
+        #     0,
+        #     nslow-1
+        # )
+        # print(extent)
+        # return(yield from null())
+    
 
-    thismd = dict()
-    thismd['XDI,Facility,GUP'] = BMM_xsp.gup
-    thismd['XDI,Facility,SAF'] = BMM_xsp.saf
-    thismd['slow_motor'] = slow.name
-    thismd['fast_motor'] = fast.name
+        # areaplot = LiveScatter(fast.name, slow.name, detector,
+        #                        xlim=(startfast, stopfast), ylim=(startslow, stopslow))
+    
+        areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
+                            xlabel='fast motor: %s' % fast.name,
+                            ylabel='slow motor: %s' % slow.name)
+        BMM_cpl.ax     = areaplot.ax
+        BMM_cpl.fig    = areaplot.ax.figure
+        BMM_cpl.motor  = fast
+        BMM_cpl.motor2 = slow
+        BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
+
+        thismd = dict()
+        thismd['XDI,Facility,GUP'] = BMM_xsp.gup
+        thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+        thismd['slow_motor'] = slow.name
+        thismd['fast_motor'] = fast.name
 
 
     
-    @subs_decorator(areaplot)
-    def make_areascan(dets,
-                      slow, startslow, stopslow, nslow,
-                      fast, startfast, stopfast, nfast,
-                      snake=False):
-        yield from grid_scan(dets,
+        @subs_decorator(areaplot)
+        def make_areascan(dets,
+                          slow, startslow, stopslow, nslow,
+                          fast, startfast, stopfast, nfast,
+                          snake=False):
+            BMM_xsp.final_log_entry = False
+            yield from grid_scan(dets,
                                  slow, startslow, stopslow, nslow,
                                  fast, startfast, stopfast, nfast,
                                  snake)
+            BMM_xsp.final_log_entry = True
 
-    dotfile = '/home/xf06bm/Data/.area.scan.running'
-    with open(dotfile, "w") as f:
-        f.write("")
-    yield from make_areascan(dets,
-                             slow, valueslow+startslow, valueslow+stopslow, nslow,
-                             fast, valuefast+startfast, valuefast+stopfast, nfast,
-                             False)
-    BMM_log_info('areascan observing: %s\n%s%s\tuid = %s, scan_id = %d' %
-                 (detector, line1, line2, db[-1].start['uid'], db[-1].start['scan_id']))
-    if os.path.isfile(dotfile): os.remove(dotfile)
+        dotfile = '/home/xf06bm/Data/.area.scan.running'
+        with open(dotfile, "w") as f:
+            f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
+            f.write('%d\n' % estimate)
+        BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
+        yield from make_areascan(dets,
+                                 slow, valueslow+startslow, valueslow+stopslow, nslow,
+                                 fast, valuefast+startfast, valuefast+stopfast, nfast,
+                                 False)
 
-    yield from abs_set(_locked_dwell_time, 0.5)
+        if pluck is True:
+            action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+            if action.lower() == 'n' or action.lower() == 'q':
+                return(yield from null())
+            print('Single click the left mouse button on the plot to pluck a point...')
+            cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+            while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
+                yield from sleep(0.5)
+
+            print('Converting plot coordinates to real coordinates...')
+            begin = valuefast + startfast
+            stepsize = (stopfast - startfast) / (nfast - 1)
+            pointfast = begin + stepsize * BMM_cpl.x
+            #print(BMM_cpl.x, pointfast)
+        
+            begin = valueslow + startslow
+            stepsize = (stopslow - startslow) / (nslow - 1)
+            pointslow = begin + stepsize * BMM_cpl.y
+            #print(BMM_cpl.y, pointslow)
+
+            yield from mv(fast, pointfast, slow, pointslow)
+        
+            cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
+            BMM_cpl.x = BMM_cpl.y = None
+
+    def cleanup_plan():
+        print('Cleaning up after an area scan')
+        RE.clear_suspenders()
+        dotfile = '/home/xf06bm/Data/.area.scan.running'
+        if os.path.isfile(dotfile): os.remove(dotfile)
+        if BMM_xsp.final_log_entry is True:
+            BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
+        yield from abs_set(_locked_dwell_time, 0.5)
+        RE.msg_hook = BMM_msg_hook
+        
+    BMM_xsp.final_log_entry = True
+    RE.msg_hook = None
+    ## encapsulation!
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(detector,
+                                                                slow, startslow, stopslow, nslow,
+                                                                fast, startfast, stopfast, nfast,
+                                                                pluck, force, dwell, md),
+                                                      cleanup_plan())
     RE.msg_hook = BMM_msg_hook
-    if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
-        if action.lower() == 'n' or action.lower() == 'q':
-            return(yield from null())
-        print('Single click the left mouse button on the plot to pluck a point...')
-        cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
-        while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
-            yield from sleep(0.5)
 
-        print('Converting plot coordinates to real coordinates...')
-        begin = valuefast + startfast
-        stepsize = (stopfast - startfast) / (nfast - 1)
-        pointfast = begin + stepsize * BMM_cpl.x
-        #print(BMM_cpl.x, pointfast)
         
-        begin = valueslow + startslow
-        stepsize = (stopslow - startslow) / (nslow - 1)
-        pointslow = begin + stepsize * BMM_cpl.y
-        #print(BMM_cpl.y, pointslow)
-
-        yield from mv(fast, pointfast, slow, pointslow)
-        
-        cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
-        BMM_cpl.x = BMM_cpl.y = None
-
-
 def as2dat(datafile, key):
     '''
     Export an areascan database entry to a simple column data file.

@@ -3,7 +3,16 @@ from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
 run_report(__file__)
 
 
+bl_enabled = EpicsSignalRO('SR:C06-EPS{PLC:1}Sts:BM_BE_Enbl-Sts', name='enabled')
+
 def show_shutters():
+
+    ena_text = '  Beamline: '
+    if bl_enabled.value == 1:
+        ena_text += 'enabled      '
+    else:
+        ena_text += colored('disabled      ', 'lightred')
+    
     bmps_state = bool(bmps.state.value)
     bmps_text = '  BMPS: '
 
@@ -33,7 +42,7 @@ def show_shutters():
     else:
         shb_text += colored('closed', 'lightred')
 
-    return(bmps_text + idps_text + shb_text)
+    return(ena_text + bmps_text + idps_text + shb_text)
 
 class Vacuum(Device):
     current  = Cpt(EpicsSignal, '-IP:1}I-I')
@@ -144,8 +153,8 @@ tcs = [Thermocouple('FE:C06B-OP{Mir:1}T:1',                  name = 'Mirror 1, i
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1}T',         name = '111 first crystal'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2}T',         name = '311 first crystal'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}T',    name = 'Compton shield'),
-       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:P}T',    name = 'Second crystal pitch'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:R}T',    name = 'Second crystal roll'),
+       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:P}T',    name = 'Second crystal pitch'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:Perp}T', name = 'Second crystal perpendicular'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:Para}T', name = 'Second crystal parallel'),
        Thermocouple('XF:06BMA-OP{Mir:2}T:1',                 name = 'Mirror 2 upstream'),
@@ -193,7 +202,7 @@ def show_utilities():
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state())
         else:
             text += '  %-28s     %s C\n' % (tcs[i].name, tcs[i]._state(info=info))
+    return text[:-1]
 
-    return text
 def su():
     boxedtext('BMM utilities', show_utilities(), 'brown', width=124)
