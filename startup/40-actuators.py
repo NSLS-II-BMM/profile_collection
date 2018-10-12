@@ -11,6 +11,8 @@ class EPS_Shutter(Device):
     permit = Cpt(EpicsSignal, 'Permit:Enbl-Sts')
     enabled = Cpt(EpicsSignal, 'Enbl-Sts')
     maxcount = 3
+    openval = 1                 # normal shutter values, FS1 is reversed
+    closeval = 0
 
 
     def __init__(self, *args, **kwargs):
@@ -26,12 +28,12 @@ class EPS_Shutter(Device):
     def open_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value == 1:
+        while self.state.value == self.openval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.opn, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to open shutter :(' % count)
+                print('tried %d times and failed to open %s :(' % (count, self.name))
                 yield from null()
                 return
             time.sleep(1.5)
@@ -42,12 +44,12 @@ class EPS_Shutter(Device):
     def close_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value == 0:
+        while self.state.value == self.closeval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.cls, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to close shutter :(' % count)
+                print('tried %d times and failed to close %s :(' % (count, self.name))
                 yield from null()
                 return
             time.sleep(1.5)
@@ -57,14 +59,14 @@ class EPS_Shutter(Device):
 
     def open(self):
         RE.msg_hook = None
-        if self.state.value == 1:
+        if self.state.value == self.openval:
             count = 0
-            while self.state.value == 1:
+            while self.state.value == self.openval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.opn.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to open shutter :(' % count)
+                    print('tried %d times and failed to open %s :(' % (count, self.name))
                     return
                 time.sleep(1.5)
             print(' Opened {}'.format(self.name))
@@ -75,14 +77,14 @@ class EPS_Shutter(Device):
 
     def close(self):
         RE.msg_hook = None
-        if self.state.value == 0:
+        if self.state.value == self.closeval:
             count = 0
-            while self.state.value == 0:
+            while self.state.value == self.closeval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.cls.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to close shutter :(' % count)
+                    print('tried %d times and failed to close %s :(' % (count, self.name))
                     return
                 time.sleep(1.5)
             print(' Closed {}'.format(self.name))
@@ -105,11 +107,17 @@ idps = IDPS_Shutter('SR:C06-EPS{PLC:1}', name = 'IDPS')
 
 sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
 sha.shutter_type = 'FE'
+sha.openval  = 1
+sha.closeval = 0
 shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
 shb.shutter_type = 'PH'
+shb.openval  = 1
+shb.closeval = 0
 
 fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'Fluorescent Screen')
 fs1.shutter_type = 'FS'
+fs1.openval  = 0
+fs1.closeval = 1
 
 
 class Spinner(Device):
