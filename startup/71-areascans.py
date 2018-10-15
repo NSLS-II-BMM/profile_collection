@@ -157,7 +157,6 @@ def areascan(detector,
                                  snake)
             BMM_xsp.final_log_entry = True
 
-        dotfile = '/home/xf06bm/Data/.area.scan.running'
         with open(dotfile, "w") as f:
             f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
             f.write('%d\n' % estimate)
@@ -195,13 +194,13 @@ def areascan(detector,
     def cleanup_plan():
         print('Cleaning up after an area scan')
         RE.clear_suspenders()
-        dotfile = '/home/xf06bm/Data/.area.scan.running'
         if os.path.isfile(dotfile): os.remove(dotfile)
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from abs_set(_locked_dwell_time, 0.5)
         RE.msg_hook = BMM_msg_hook
         
+    dotfile = '/home/xf06bm/Data/.area.scan.running'
     BMM_xsp.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!

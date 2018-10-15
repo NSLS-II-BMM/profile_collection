@@ -46,45 +46,53 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
     analysis of the scan is done -- YOU must move to the optimal position.
     '''
 
-    (ok, text) = BMM_clear_to_start()
-    if ok is False:
-        print(colored(text, 'lightred'))
-        yield from null()
-        return
+    def main_plan(start, stop, nsteps):
+        (ok, text) = BMM_clear_to_start()
+        if ok is False:
+            print(colored(text, 'lightred'))
+            yield from null()
+            return
 
-    RE.msg_hook = None
-    motor = dm3_bct
-    BMM_cpl.motor = dm3_bct
-    func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-    plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
-    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+        RE.msg_hook = None
+        motor = dm3_bct
+        BMM_cpl.motor = dm3_bct
+        func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
+        line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+        with open(dotfile, "w") as f:
+            f.write("")
 
-    dotfile = '/home/xf06bm/Data/.line.scan.running'
-    with open(dotfile, "w") as f:
-        f.write("")
+        @subs_decorator(plot)
+        def scan_slit():
 
-    @subs_decorator(plot)
-    def scan_slit():
+            yield from abs_set(quadem1.averaging_time, 0.1)
+            yield from abs_set(motor.kill_cmd, 1)
 
-        yield from abs_set(quadem1.averaging_time, 0.1)
-        yield from abs_set(motor.kill_cmd, 1)
+            yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
-        yield from rel_scan([quadem1], motor, start, stop, nsteps)
-
+        yield from scan_slit()
+        RE.msg_hook = BMM_msg_hook
+        BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
+                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+        if action.lower() == 'n' or action.lower() == 'q':
+            return(yield from null())
         yield from bps.sleep(3.0)
         yield from abs_set(quadem1.averaging_time, 0.5)
         yield from abs_set(motor.kill_cmd, 1)
+        yield from move_after_scan(dm3_bct)
 
-    yield from scan_slit()
+    def cleanup_plan():
+        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from bps.sleep(3.0)
+        yield from abs_set(motor.kill_cmd, 1)
+        if os.path.isfile(dotfile): os.remove(dotfile)
+
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    RE.msg_hook = None
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
-    BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
-                 (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-    if os.path.isfile(dotfile): os.remove(dotfile)
-    action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
-    if action.lower() == 'n' or action.lower() == 'q':
-        return(yield from null())
-    yield from move_after_scan(dm3_bct)
 
 
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
@@ -93,58 +101,63 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     position to find the peak of the crystal rocking curve.  At the end, move
     to the position of maximum intensity on I0.
     '''
+    def main_plan(start, stop, nsteps, detector):
+        (ok, text) = BMM_clear_to_start()
+        if ok is False:
+            print(colored(text, 'lightred'))
+            yield from null()
+            return
 
-    (ok, text) = BMM_clear_to_start()
-    if ok is False:
-        print(colored(text, 'lightred'))
-        yield from null()
-        return
-
-    RE.msg_hook = None
-    motor = dcm_pitch
-    BMM_cpl.motor = motor
+        RE.msg_hook = None
+        motor = dcm_pitch
+        BMM_cpl.motor = motor
     
-    func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-    dets = [quadem1,]
-    name = 'I0'
-    if detector.lower() == 'bicron':
-        func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
-        dets = [bicron,]
-        name = 'Bicron'
-    plot = DerivedPlot(func, xlabel=motor.name, ylabel=name)
+        func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
+        dets = [quadem1,]
+        name = 'I0'
+        if detector.lower() == 'bicron':
+            func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
+            dets = [bicron,]
+            name = 'Bicron'
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=name)
+
+        with open(dotfile, "w") as f:
+            f.write("")
+
+        @subs_decorator(plot)
+        def scan_dcmpitch():
+            line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                    (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+
+            yield from abs_set(_locked_dwell_time, 0.1)
+            yield from abs_set(motor.kill_cmd, 1)
+
+            yield from rel_scan(dets, motor, start, stop, nsteps)
+
+            t  = db[-1].table()
+            maxval = t[name].max()
+            top = float(t[t[name] == maxval]['dcm_pitch']) # position of max intensity
+            ## see https://pandas.pydata.org/pandas-docs/stable/10min.html#boolean-indexing
 
 
-    @subs_decorator(plot)
-    def scan_dcmpitch():
-        line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+            yield from bps.sleep(3.0)
+            yield from abs_set(motor.kill_cmd, 1)
+            RE.msg_hook = BMM_msg_hook
+            BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
+                         (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+            yield from mv(motor, top)
+        yield from scan_dcmpitch()
 
-        yield from abs_set(_locked_dwell_time, 0.1)
-        yield from abs_set(motor.kill_cmd, 1)
-
-        yield from rel_scan(dets, motor, start, stop, nsteps)
-
-        t  = db[-1].table()
-        maxval = t[name].max()
-        top = float(t[t[name] == maxval]['dcm_pitch']) # position of max intensity
-        ## see https://pandas.pydata.org/pandas-docs/stable/10min.html#boolean-indexing
-
+    def cleanup_plan():
+        yield from abs_set(_locked_dwell_time, 0.5)
         yield from bps.sleep(3.0)
-        yield from abs_set(_locked_dwell_time, 0.1)
         yield from abs_set(motor.kill_cmd, 1)
-
-        RE.msg_hook = BMM_msg_hook
-        BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
-                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-        yield from mv(motor, top)
-        yield from bps.sleep(3.0)
-        yield from abs_set(motor.kill_cmd, 1)
+        if os.path.isfile(dotfile): os.remove(dotfile)
 
     dotfile = '/home/xf06bm/Data/.line.scan.running'
-    with open(dotfile, "w") as f:
-        f.write("")
-    yield from scan_dcmpitch()
-    if os.path.isfile(dotfile): os.remove(dotfile)
+    RE.msg_hook = None
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
+    RE.msg_hook = BMM_msg_hook
 
 
 ##                     linear stages        tilt stage           rotation stages
@@ -195,110 +208,114 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     database and write it to a file.
     '''
 
-    (ok, text) = BMM_clear_to_start()
-    if force is False and ok is False:
-        print(colored(text, 'lightred'))
-        yield from null()
-        return
+    def main_plan(detector, axis, start, stop, nsteps, pluck, force):
+        (ok, text) = BMM_clear_to_start()
+        if force is False and ok is False:
+            print(colored(text, 'lightred'))
+            yield from null()
+            return
 
-    detector, axis = ls_backwards_compatibility(detector, axis)
-    # print('detector is: ' + str(detector))
-    # print('axis is: ' + str(axis))
-    # return(yield from null())
+        detector, axis = ls_backwards_compatibility(detector, axis)
+        # print('detector is: ' + str(detector))
+        # print('axis is: ' + str(axis))
+        # return(yield from null())
 
-    RE.msg_hook = None
-    ## sanitize input and set thismotor to an actual motor
-    if type(axis) is str: axis = axis.lower()
-    detector = detector.capitalize()
+        RE.msg_hook = None
+        ## sanitize input and set thismotor to an actual motor
+        if type(axis) is str: axis = axis.lower()
+        detector = detector.capitalize()
 
-    ## sanity checks on axis
-    if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
-        print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                      (axis, str.join(', ', motor_nicknames.keys())), 'lightred'))
-        yield from null()
-        return
+        ## sanity checks on axis
+        if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
+            print(colored('\n*** %s is not a linescan motor (%s)\n' %
+                          (axis, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            yield from null()
+            return
 
-    if 'EpicsMotor' in str(type(axis)):
-        thismotor = axis
-    elif 'PseudoSingle' in str(type(axis)):
-        thismotor = axis
-    else:                       # presume it's an xafs_XXXX motor
-        thismotor = motor_nicknames[axis]
-    BMM_cpl.motor = thismotor
+        if 'EpicsMotor' in str(type(axis)):
+            thismotor = axis
+        elif 'PseudoSingle' in str(type(axis)):
+            thismotor = axis
+        else:                       # presume it's an xafs_XXXX motor
+            thismotor = motor_nicknames[axis]
+        BMM_cpl.motor = thismotor
 
-    ## sanity checks on detector
-    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
-        print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                      (detector, 'it, if, i0, iy, ir'), 'lightred'))
-        yield from null()
-        return
+        ## sanity checks on detector
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
+            print(colored('\n*** %s is not a linescan measurement (%s)\n' %
+                          (detector, 'it, if, i0, iy, ir'), 'lightred'))
+            yield from null()
+            return
 
-    yield from abs_set(_locked_dwell_time, 0.1)
-    dets  = [quadem1,]
-    denominator = ''
+        yield from abs_set(_locked_dwell_time, 0.1)
+        dets  = [quadem1,]
+        denominator = ''
 
-    ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
-    if detector == 'It':
-        denominator = ' / I0'
-        func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
-    elif detector == 'Ir':
-        denominator = ' / It'
-        func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
-    elif detector == 'I0':
-        func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
-    elif detector == 'Iy':
-        denominator = ' / I0'
-        func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
-    elif detector == 'If':
-        dets.append(vor)
-        denominator = ' / I0'
-        func = lambda doc: (doc['data'][thismotor.name],
-                            (doc['data']['DTC1'] +
-                             doc['data']['DTC2'] +
-                             doc['data']['DTC3'] +
-                             doc['data']['DTC4']   ) / doc['data']['I0'])
-    ## and this is the appropriate way to plot this linescan
-    plot = DerivedPlot(func,
-                       xlabel=thismotor.name,
-                       ylabel=detector+denominator)
+        ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
+        if detector == 'It':
+            denominator = ' / I0'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
+        elif detector == 'Ir':
+            denominator = ' / It'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
+        elif detector == 'I0':
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
+        elif detector == 'Iy':
+            denominator = ' / I0'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
+        elif detector == 'If':
+            dets.append(vor)
+            denominator = ' / I0'
+            func = lambda doc: (doc['data'][thismotor.name],
+                                (doc['data']['DTC1'] +
+                                 doc['data']['DTC2'] +
+                                 doc['data']['DTC3'] +
+                                 doc['data']['DTC4']   ) / doc['data']['I0'])
+        ## and this is the appropriate way to plot this linescan
+        plot = DerivedPlot(func,
+                           xlabel=thismotor.name,
+                           ylabel=detector+denominator)
 
-    if 'PseudoSingle' in str(type(axis)):
-        value = thismotor.readback.value
-    else:
-        value = thismotor.user_readback.value
-    line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (thismotor.name, detector, start, stop, nsteps, value)
-    ##BMM_suspenders()            # engage suspenders
+        if 'PseudoSingle' in str(type(axis)):
+            value = thismotor.readback.value
+        else:
+            value = thismotor.user_readback.value
+        line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (thismotor.name, detector, start, stop, nsteps, value)
+        ##BMM_suspenders()            # engage suspenders
 
-    thismd = dict()
-    thismd['XDI,Facility,GUP'] = BMM_xsp.gup
-    thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+        thismd = dict()
+        thismd['XDI,Facility,GUP'] = BMM_xsp.gup
+        thismd['XDI,Facility,SAF'] = BMM_xsp.saf
 
-    dotfile = '/home/xf06bm/Data/.line.scan.running'
-    with open(dotfile, "w") as f:
-        f.write("")
+        with open(dotfile, "w") as f:
+            f.write("")
                 
     
-    @subs_decorator(plot)
-    def scan_xafs_motor(dets, motor, start, stop, nsteps):
-        yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+        @subs_decorator(plot)
+        def scan_xafs_motor(dets, motor, start, stop, nsteps):
+            yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
 
-    yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
-    BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
-                 (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+        yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+        BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
+                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+        if pluck is True:
+            action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+            if action.lower() == 'n' or action.lower() == 'q':
+                return(yield from null())
+            yield from move_after_scan(thismotor)
 
-    if os.path.isfile(dotfile): os.remove(dotfile)
     
-    ##RE.clear_suspenders()       # disable suspenders
-    yield from abs_set(_locked_dwell_time, 0.5)
+    def cleanup_plan():
+        if os.path.isfile(dotfile): os.remove(dotfile)
+        ##RE.clear_suspenders()       # disable suspenders
+        yield from abs_set(_locked_dwell_time, 0.5)
+
+
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    RE.msg_hook = None
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
-
-    if pluck is True:
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
-        if action.lower() == 'n' or action.lower() == 'q':
-            return(yield from null())
-        yield from move_after_scan(thismotor)
-
 
 
 

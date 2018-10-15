@@ -33,7 +33,7 @@ class EPS_Shutter(Device):
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.opn, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to open %s :(' % (count, self.name))
+                print('tried %d times and failed to open %s %s' % (count, self.name, ':('))  # u'\u2639'  unicode frown
                 yield from null()
                 return
             time.sleep(1.5)
@@ -49,7 +49,7 @@ class EPS_Shutter(Device):
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.cls, 1)
             if count >= self.maxcount:
-                print('tried %d times and failed to close %s :(' % (count, self.name))
+                print('tried %d times and failed to close %s %s' % (count, self.name, ':('))
                 yield from null()
                 return
             time.sleep(1.5)
@@ -66,7 +66,7 @@ class EPS_Shutter(Device):
                 print(u'\u231b', end=' ', flush=True)
                 self.opn.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to open %s :(' % (count, self.name))
+                    print('tried %d times and failed to open %s %s' % (count, self.name, ':('))
                     return
                 time.sleep(1.5)
             print(' Opened {}'.format(self.name))
@@ -84,7 +84,7 @@ class EPS_Shutter(Device):
                 print(u'\u231b', end=' ', flush=True)
                 self.cls.put(1)
                 if count >= self.maxcount:
-                    print('tried %d times and failed to close %s :(' % (count, self.name))
+                    print('tried %d times and failed to close %s %s' % (count, self.name, ':('))
                     return
                 time.sleep(1.5)
             print(' Closed {}'.format(self.name))

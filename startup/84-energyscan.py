@@ -589,7 +589,6 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile
-            dotfile = '/home/xf06bm/Data/.xafs.scan.running'
             with open(dotfile, "w") as f:
                 f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
                 f.write('%.1f\n' % approx_time * int(p['nscans']) * 60)
@@ -654,7 +653,6 @@ def xafs(inifile, **kwargs):
     def cleanup_plan():
         print('Cleaning up after an XAFS scan sequence')
         RE.clear_suspenders()
-        dotfile = '/home/xf06bm/Data/.xafs.scan.running'
         if os.path.isfile(dotfile):
             os.remove(dotfile)
         if BMM_xsp.final_log_entry is True:
@@ -669,6 +667,7 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_pitch.kill_cmd, 1)
         yield from abs_set(dcm_roll.kill_cmd, 1)
 
+    dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     BMM_xsp.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!

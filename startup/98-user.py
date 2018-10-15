@@ -132,7 +132,8 @@ def show_experiment():
     print('DATA = %s' % DATA)
     print('GUP  = %d' % BMM_xsp.gup)
     print('SAF  = %d' % BMM_xsp.saf)
-
+whoami = show_experiment
+    
 def end_experiment():
     '''
     Unset the logger and the DATA variable at the end of an experiment.
