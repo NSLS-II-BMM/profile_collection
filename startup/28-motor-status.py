@@ -37,9 +37,9 @@ def motor_status():
             (xafs_table.vertical.readback.value, xafs_table.pitch.readback.value, xafs_table.roll.readback.value,
              xafs_table.yu.user_readback.value, xafs_table.ydo.user_readback.value, xafs_table.ydi.user_readback.value)
 
-    text += ' XAFS stages:\n'
-    text += '         linx     liny    roll    pitch    linxs    roth     rotb     rots\n'
-    text += '      %8.3f %8.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f\n' % \
+    text += ' XAFS stages (motor names are xafs_<name>):\n'
+    text += '     name =   linx     liny    roll    pitch    linxs    roth     rotb     rots\n'
+    text += '           %8.3f %8.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f\n' % \
             (xafs_linx.user_readback.value,
              xafs_liny.user_readback.value,
              xafs_roll.user_readback.value,
@@ -54,4 +54,4 @@ def motor_status():
     # return line + text + line
 
 def ms():
-    boxedtext('BMM motor status', motor_status(), 'cyan', width=82)
+    boxedtext('BMM motor status', motor_status(), 'cyan', width=84)
