@@ -591,7 +591,7 @@ def xafs(inifile, **kwargs):
             ## write dotfile
             with open(dotfile, "w") as f:
                 f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
-                f.write('%.1f\n' % approx_time * int(p['nscans']) * 60)
+                f.write('%.1f\n' % (approx_time * int(p['nscans']) * 60))
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count

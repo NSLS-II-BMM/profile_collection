@@ -54,7 +54,6 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
             return
 
         RE.msg_hook = None
-        motor = dm3_bct
         BMM_cpl.motor = dm3_bct
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
@@ -89,6 +88,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
         yield from abs_set(motor.kill_cmd, 1)
         if os.path.isfile(dotfile): os.remove(dotfile)
 
+    motor = dm3_bct
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps), cleanup_plan())
@@ -109,7 +109,6 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             return
 
         RE.msg_hook = None
-        motor = dcm_pitch
         BMM_cpl.motor = motor
     
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
@@ -154,6 +153,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         yield from abs_set(motor.kill_cmd, 1)
         if os.path.isfile(dotfile): os.remove(dotfile)
 
+    motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
