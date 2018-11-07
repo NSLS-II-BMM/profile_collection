@@ -48,7 +48,9 @@ dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
 dcm_bragg.user_setpoint.kind = 'normal'
 
-
+## for some reason, this needs to be set explicitly
+dcm_x.hlm.value = 35.8
+dcm_x.llm.value = -35
 
 ## collimating mirror
 m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
@@ -112,12 +114,25 @@ xafs_rotb  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_rotb')
 xafs_roth  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
 xafs_lins  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
-xafs_linxs = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
-xafs_linx  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
-xafs_liny  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
+xafs_ref   = xafs_linxs = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
+xafs_x     = xafs_linx  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
+xafs_y     = xafs_liny  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
 xafs_pitch = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_pitch')
 xafs_roll  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_roll')
 
-
+xafs_wheel  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
+xafs_wheel.user_offset.put(-31.532)
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
+
+
+##
+##  motor positions with wheel in place for fluorescence
+##
+# XAFS stages (motor names are xafs_<name>):
+#      name =     x        y     roll    pitch    linxs    roth     wheel    rots
+#             -84.834   95.983   0.826   0.000   45.000    0.000  -15.000    0.000 
+
+def setup_wheel():
+    yield from mv(xafs_x, -84.834, xafs_y, 95.983, xafs_wheel, 0)
+    

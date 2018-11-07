@@ -38,7 +38,7 @@ def motor_status():
              xafs_table.yu.user_readback.value, xafs_table.ydo.user_readback.value, xafs_table.ydi.user_readback.value)
 
     text += ' XAFS stages (motor names are xafs_<name>):\n'
-    text += '     name =   linx     liny    roll    pitch    linxs    roth     rotb     rots\n'
+    text += '     name =     x        y     roll    pitch    linxs    roth     wheel    rots\n'
     text += '           %8.3f %8.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f\n' % \
             (xafs_linx.user_readback.value,
              xafs_liny.user_readback.value,

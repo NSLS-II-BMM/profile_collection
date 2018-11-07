@@ -58,4 +58,6 @@ class Slits(PseudoPositioner):
 
 
 sl = slits3 = Slits('XF:06BM-BI{Slt:02-Ax:',  name='slits3')
-slits2 = Slits('XF:06BM-OP{Slt:01-Ax:',  name='slits2')
+slits2 = Slits('XF:06BMA-OP{Slt:01-Ax:',  name='slits2')
+slits2.top.user_offset.put(-0.038)
+slits2.bottom.user_offset.put(0.264)

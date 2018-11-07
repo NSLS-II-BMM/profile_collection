@@ -1,30 +1,42 @@
 ######################################################### -*- python -*-
-# %run -i '{folder}/macro.py'
-# RE(sample_sequence())
-#########################################################
-
+# Cut and paste this line to import your macro after editing:
+#
+#     %run -i '{folder}/macro.py'
+#
+# Verify that your macro was loaded correctly:
+#
+#     sample_sequence??
+#
+# Then run the macro:
+#
+#     RE(sample_sequence())
+#                /
+############### / #######################################
+#              / 
+#             /  Note that you are defining a command
+#            /   that gets run in BlueSky
+#           V
 def sample_sequence():
 
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(colored('\n'+text, 'lightred'))
-        print(colored('Quitting macro....\n', 'white'))
-        yield from null()
-        return
+        print(colored('\n'+text, 'lightred') + colored('Quitting macro....\n', 'white'))
+        return(yield from null())
     
     BMM_xsp.prompt = False
     BMM_log_info('Beginning sample macro')
 
     ### sample 1 ############################################################
-    yield from mv(xafs_linx, -114.3, xafs_liny, 40.2)
+    yield from mv(xafs_linx, 4.3, xafs_liny, 40.2)
     yield from xafs('scan.ini')
-
+    # close_last_plot   ## this commend will close the plot on screen
+    
     ### sample 2 ############################################################
-    yield from mv(xafs_linx, -114.3, xafs_liny, 20.8)
+    yield from mv(xafs_linx, 5.4, xafs_liny, 20.8)
     yield from xafs('scan.ini', filename='blah2', sample='another sample')
 
     ### sample 3 ############################################################
-    yield from mv(xafs_linx, -114.3, xafs_liny, 1.5)
+    yield from mv(xafs_linx, 6.5, xafs_liny, 1.5)
     yield from xafs('scan.ini', filename='blah3', sample='a different sample', nscans=4)
 
     BMM_xsp.prompt = True

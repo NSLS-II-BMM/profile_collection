@@ -20,7 +20,7 @@ class BMM_configuration():
         self._mode = None
 BMM_config = BMM_configuration()
 
-def change_mode(mode=None):
+def change_mode(mode=None, prompt=True):
     if mode is None:
         print('No mode specified')
         return(yield from null())
@@ -45,10 +45,11 @@ def change_mode(mode=None):
     elif mode == 'XRD':
         description = 'focused at goniometer, >8 keV'
     print('Moving to mode %s (%s)' % (mode, description))
-    action = input("Begin moving motors? [Y/n then Enter] ")
-    if action.lower() == 'q' or action.lower() == 'n':
-        yield from null()
-        return
+    if BMM_xsp.prompt:
+         action = input("Begin moving motors? [Y/n then Enter] ")
+         if action.lower() == 'q' or action.lower() == 'n':
+              yield from null()
+              return
 
     RE.msg_hook = None
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
@@ -87,45 +88,48 @@ def change_mode(mode=None):
 
 
 def mode():
-    print("Motor positions:")
-    for m in (dm3_bct, xafs_yu, xafs_ydo, xafs_ydi, m2_yu, m2_ydo,
-              m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
-              dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
-        print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
-    if xafs_yu.user_readback.value > 130 and m2_yu.user_readback.value < 0:
-        print("This appears to be mode XRD")
-    elif xafs_yu.user_readback.value > 126.5 and m2_yu.user_readback.value < 0:
-        print("This appears to be mode A")
-    elif xafs_yu.user_readback.value > 120:
-        if m3_xu.user_readback.value > 0:
-            print("This appears to be mode D")
-        else:
-            print("This appears to be mode E")
-    elif xafs_yu.user_readback.value > 90:
-        print("This appears to be mode F")
-    elif xafs_yu.user_readback.value > 40:
-        print("This appears to be mode C")
-    else:
-        print("This appears to be mode B")
+     print("Motor positions:")
+     for m in (dm3_bct, xafs_yu, xafs_ydo, xafs_ydi, m2_yu, m2_ydo,
+               m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
+               dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
+          print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
+          
+     if m2.vertical.readback.value < 0: # this is a focused mode
+          if m2.pitch.readback.value > 3:
+               print("This appears to be mode XRD")
+          else:
+               if m3.vertical.readback.value > -2:
+                    print("This appears to be mode A")
+               elif m3.vertical.readback.value > -7:
+                    print("This appears to be mode B")
+               else:
+                    print("This appears to be mode C")
+     else:
+          if m3.pitch.readback.value < 3:
+               print("This appears to be mode F")
+          elif m3.lateral.readback.value > 0:
+               print("This appears to be mode D")
+          else:
+               print("This appears to be mode E")
 
 def get_mode():
-    if xafs_yu.user_readback.value > 130 and m2_yu.user_readback.value < 0:
-        return 'XRD'
-    elif xafs_yu.user_readback.value > 126.5 and m2_yu.user_readback.value < 0:
-        return 'A'
-    elif xafs_yu.user_readback.value > 120:
-        if m3_xu.user_readback.value > 0:
-            return 'D'
-        else:
-            return 'E'
-    elif xafs_yu.user_readback.value > 110:
-        return 'XRD'
-    elif xafs_yu.user_readback.value > 90:
-        return 'F'
-    elif xafs_yu.user_readback.value > 40:
-        return 'C'
-    else:
-        return 'B'
+     if m2.vertical.readback.value < 0: # this is a focused mode
+          if m2.pitch.readback.value > 3:
+               return "XRD"
+          else:
+               if m3.vertical.readback.value > -2:
+                    return "A"
+               elif m3.vertical.readback.value > -7:
+                    return " B"
+               else:
+                    return "C"
+     else:
+          if m3.pitch.readback.value < 3:
+               return "F"
+          elif m3.lateral.readback.value > 0:
+               return "D"
+          else:
+               return "E"
 
 #    yield from null()
 

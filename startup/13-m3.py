@@ -111,7 +111,7 @@ m2.yaw._limits      = (-1, 1)
 m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
 m3.vertical._limits = (-9, 1)
 m3.lateral._limits  = (-16, 16)
-m3.pitch._limits    = (-0.5, 6)
+m3.pitch._limits    = (-6, 6)
 m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
 
@@ -134,7 +134,7 @@ class XAFSTable(PseudoPositioner):
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(5, 145))
-    pitch    = Cpt(PseudoSingle, limits=(-6, 6))
+    pitch    = Cpt(PseudoSingle, limits=(-8, 6))
     roll     = Cpt(PseudoSingle, limits=(5, 5))
 
 

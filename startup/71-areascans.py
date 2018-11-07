@@ -186,11 +186,9 @@ def areascan(detector,
             pointslow = begin + stepsize * BMM_cpl.y
             #print(BMM_cpl.y, pointslow)
 
+            print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
             yield from mv(fast, pointfast, slow, pointslow)
         
-            cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
-            BMM_cpl.x = BMM_cpl.y = None
-
     def cleanup_plan():
         print('Cleaning up after an area scan')
         RE.clear_suspenders()
@@ -199,6 +197,16 @@ def areascan(detector,
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from abs_set(_locked_dwell_time, 0.5)
         RE.msg_hook = BMM_msg_hook
+
+        print('Disabling plot for re-plucking.')
+        cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
+        BMM_cpl.x      = None
+        BMM_cpl.y      = None
+        BMM_cpl.motor  = None
+        BMM_cpl.motor2 = None
+        BMM_cpl.fig    = None
+        BMM_cpl.ax     = None
+
         
     dotfile = '/home/xf06bm/Data/.area.scan.running'
     BMM_xsp.final_log_entry = True

@@ -29,7 +29,8 @@ def move_after_scan(thismotor):
     if BMM_cpl.motor2 is None:
         yield from mv(thismotor, BMM_cpl.x)
     else:
-        yield from mv(BMM_cpl.motor, BMM_cpl.x, BMM_cpl.motor2, BMM_cpl.y)
+        print('%.3f  %.3f' % (BMM_cpl.x, BMM_cpl.y))
+        #yield from mv(BMM_cpl.motor, BMM_cpl.x, BMM_cpl.motor2, BMM_cpl.y)
     cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
     BMM_cpl.x = BMM_cpl.y = None
 
@@ -164,7 +165,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
 motor_nicknames = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
                    'y'    : xafs_liny,  'pitch': xafs_pitch, 'rb' : xafs_rotb,
                    's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
-                   'xs'   : xafs_linxs, 'r'    : xafs_roll,
+                   'ref'  : xafs_linxs, 'r'    : xafs_roll,
                }
 
 ## before 29 August 2018, the order of arguments for linescan() was
@@ -241,9 +242,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         BMM_cpl.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):
             print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                          (detector, 'it, if, i0, iy, ir'), 'lightred'))
+                          (detector, 'it, if, i0, iy, ir, both'), 'lightred'))
             yield from null()
             return
 
@@ -271,10 +272,22 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
                                  doc['data']['DTC2'] +
                                  doc['data']['DTC3'] +
                                  doc['data']['DTC4']   ) / doc['data']['I0'])
+        elif detector == 'Both':
+            dets.append(vor)
+            functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
+            funcfl = lambda doc: (doc['data'][thismotor.name],
+                                  (doc['data']['DTC1'] +
+                                   doc['data']['DTC2'] +
+                                   doc['data']['DTC3'] +
+                                   doc['data']['DTC4']   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
-        plot = DerivedPlot(func,
-                           xlabel=thismotor.name,
-                           ylabel=detector+denominator)
+        if detector == 'Both':
+            plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0'),
+                    DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0')]
+        else:
+            plot = DerivedPlot(func,
+                               xlabel=thismotor.name,
+                               ylabel=detector+denominator)
 
         if 'PseudoSingle' in str(type(axis)):
             value = thismotor.readback.value
