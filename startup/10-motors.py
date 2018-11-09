@@ -117,8 +117,8 @@ xafs_lins  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
 xafs_ref   = xafs_linxs = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
 xafs_x     = xafs_linx  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
 xafs_y     = xafs_liny  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
-xafs_pitch = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_pitch')
-xafs_roll  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_roll')
+xafs_roll  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
+xafs_pitch = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
 xafs_wheel  = XAFSEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.user_offset.put(-31.532)
@@ -134,5 +134,5 @@ xafs_wheel.user_offset.put(-31.532)
 #             -84.834   95.983   0.826   0.000   45.000    0.000  -15.000    0.000 
 
 def setup_wheel():
-    yield from mv(xafs_x, -84.834, xafs_y, 95.983, xafs_wheel, 0)
+    yield from mv(xafs_x, -86, xafs_y, 95.3, xafs_wheel, 0)
     

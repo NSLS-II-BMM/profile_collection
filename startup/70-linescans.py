@@ -162,10 +162,10 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
 
 
 ##                     linear stages        tilt stage           rotation stages
-motor_nicknames = {'x'    : xafs_linx,  'roll' : xafs_roll,  'rh' : xafs_roth,
-                   'y'    : xafs_liny,  'pitch': xafs_pitch, 'rb' : xafs_rotb,
+motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
+                   'y'    : xafs_y,     'pitch': xafs_pitch, 'wh' : xafs_wheel,
                    's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
-                   'ref'  : xafs_linxs, 'r'    : xafs_roll,
+                   'ref'  : xafs_ref,   'r'    : xafs_roll,
                }
 
 ## before 29 August 2018, the order of arguments for linescan() was
