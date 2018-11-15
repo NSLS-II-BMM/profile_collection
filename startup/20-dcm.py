@@ -47,11 +47,14 @@ class DCM(PseudoPositioner):
         text  = "%s = %.1f   %s = Si(%s)\n" % \
             (' Energy', self.energy.readback.value,
              'reflection', self._crystal)
-        text += "%s: %s = %8.5f   %s = %7.4f   %s = %8.4f" %\
+        text += "%s: %s = %8.5f   %s  = %7.4f   %s = %8.4f\n" %\
             (' current',
              'Bragg', self.bragg.user_readback.value,
              '2nd Xtal Perp',  self.perp.user_readback.value,
              '2nd Xtal Para',  self.para.user_readback.value)
+        text += "                             %s = %7.4f   %s = %8.4f" %\
+            ('2nd Xtal pitch', self.pitch.user_readback.value,
+             '2nd Xtal roll',  self.roll.user_readback.value)
         return text
     def wh(self):
         boxedtext('DCM', self.where(), 'cyan', width=82)
@@ -71,8 +74,22 @@ class DCM(PseudoPositioner):
     bragg  = Cpt(BraggEpicsMotor, 'Bragg}Mtr')
     para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
     perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
+    pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
+    roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
 
     #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
+
+    def kill(self):
+        dcm_para.kill_cmd.put(1)
+        dcm_perp.kill_cmd.put(1)
+        dcm_pitch.kill_cmd.put(1)
+        dcm_roll.kill_cmd.put(1)
+
+    def kill_plan(self):
+        yield from abs_set(dcm_para.kill_cmd,  1)
+        yield from abs_set(dcm_perp.kill_cmd,  1)
+        yield from abs_set(dcm_pitch.kill_cmd, 1)
+        yield from abs_set(dcm_roll.kill_cmd,  1)
 
 
     def set_crystal(self, crystal=None):

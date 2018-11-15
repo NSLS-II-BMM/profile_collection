@@ -16,11 +16,15 @@ sd.baseline = [first_crystal.temperature, # relevant DCM temperatures
                xafs_roth,
                xafs_rotb,
                xafs_rots,
-               ring.current,              # other things
-               bpm_upstream.x,
+               ring.current,              # ring current
+               bpm_upstream.x,            # BPMs and TCs related to mono stability studies
                bpm_upstream.y,
                bpm_downstream.x,
                bpm_downstream.y,
+               monotc_top,
+               monotc_bottom,
+               monotc_in,
+               monotc_out,
 ]
 
 XDI_record = {'xafs_linx'                  : True,
@@ -39,4 +43,8 @@ XDI_record = {'xafs_linx'                  : True,
               'bpm_upstream_y'             : False,
               'bpm_downstream_x'           : False,
               'bpm_downstream_y'           : False,
+              'monotc_top'                 : False,
+              'monotc_bottom'              : False,
+              'monotc_in'                  : False,
+              'monotc_out'                 : False,
               }

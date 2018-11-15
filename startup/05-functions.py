@@ -104,8 +104,14 @@ def boxedtext(title, text, tint, width=75):
     print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
         add = ''
-        if line.count(color.Normal) > 0:
-            add = ' '*11*line.count(color.Normal)
+        if line.count(color.Normal) == 1:
+            add = ' '*11
+        elif line.count(color.Normal) == 2:
+            add = ' '*20
+        elif line.count(color.Normal) == 3:
+            add = ' '*28
+        elif line.count(color.Normal) == 4:
+            add = ' '*26
         print(''.join([colored(strut, tint), template%line, add, colored(strut, tint)]))
     print(colored(''.join([ll, bar*width, lr]), tint))
 

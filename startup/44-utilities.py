@@ -2,8 +2,16 @@ from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
 
 run_report(__file__)
 
+#############################
+# beamline enabled/disabled #
+#############################
 
 bl_enabled = EpicsSignalRO('SR:C06-EPS{PLC:1}Sts:BM_BE_Enbl-Sts', name='enabled')
+
+
+#####################
+# state of shutters #
+#####################
 
 def show_shutters():
 
@@ -43,6 +51,13 @@ def show_shutters():
         shb_text += colored('closed', 'lightred')
 
     return(ena_text + bmps_text + idps_text + shb_text)
+
+
+##########################################################
+# state of vacuum levels in the various vacuum sections  #
+# the seven PDS vacuum sections report on Pirani and CCG #
+# the XRD flight path is just a Pirani                   #
+##########################################################
 
 class Vacuum(Device):
     current  = Cpt(EpicsSignal, '-IP:1}I-I')
@@ -85,6 +100,11 @@ def show_vacuum():
         print('%-20s  %s    %5.1f μA' % (v.name, v._pressure(), 1e6 * float(v.current.value)))
     print('%-20s  %s' % (flight_path.name, flight_path._pressure()))
 
+
+
+############################
+# state of gate valves     #
+############################
 
 class GateValve(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
@@ -130,6 +150,10 @@ def show_gate_valves():
         print('  %s     %s' % (g.name, g._state()))
 
 
+#############################################################
+# thermocouples on photon delivery system, read through EPS #
+#############################################################
+        
 class Thermocouple(Device):
     temperature = Cpt(EpicsSignal, '-I-I')
     warning     = Cpt(EpicsSignal, '-I_High-RB')
@@ -172,12 +196,41 @@ tcs = [Thermocouple('FE:C06B-OP{Mir:1}T:1',                  name = 'Mirror 1, i
 ]
 
 
+###################################################################
+# One-Wire network of temperature sensors placed around the mono  #
+###################################################################
+
+class OneWireTC(Device):
+    temperature = Cpt(EpicsSignal, '-I')
+    warning     = Cpt(EpicsSignal, ':Hi-SP')
+    alarm       = Cpt(EpicsSignal, '-I.HIHI')
+
+    def _state(self, info=False):
+        t = "%.1f" % self.temperature.value
+        if self.temperature.value > self.alarm.value:
+            return(colored(t, 'lightred'))
+        if self.temperature.value > self.warning.value:
+            return(colored(t, 'yellow'))
+        if info is True and self.temperature.value > (0.5 * self.warning.value):
+            return(colored(t, 'brown'))
+        return(t)
+
+monotc_top    = OneWireTC('XF:6BMA{SENS:001}T', name='monotc_top')
+monotc_bottom = OneWireTC('XF:6BMA{SENS:002}T', name='monotc_bottom')
+monotc_in     = OneWireTC('XF:6BMA{SENS:003}T', name='monotc_in')
+monotc_out    = OneWireTC('XF:6BMA{SENS:004}T', name='monotc_out')
+    
+
 def show_thermocouples():
     print('Thermocouple     Temperature')
     print('===================================')
     for t in tcs:
         print('  %-28s     %s' % (t.name, t._state()))
 
+
+###########################################################################
+# pretty-print a summary of temperatures, valve states, and vacuum levels #
+###########################################################################
 
 import datetime
 def show_utilities():
