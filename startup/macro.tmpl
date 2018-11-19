@@ -17,7 +17,9 @@
 #            /   that gets run in BlueSky
 #           V
 def sample_sequence():
-
+    '''User-defined macro for running a sequence of motor motions and
+    XAFS measurements
+    '''
     (ok, text) = BMM_clear_to_start()
     if ok is False:
         print(colored('\n'+text, 'lightred') + colored('Quitting macro....\n', 'white'))

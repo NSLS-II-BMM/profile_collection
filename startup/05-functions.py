@@ -5,6 +5,11 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", message="CA.Client.Exception")
 
+## users find "less" unfamiliar and mistakes are made / confusion is
+## had when doing <function>??  `cat` seems less likely to befuddle
+## folk.
+os.environ['PAGER'] = 'cat'
+    
 #from termcolor import colored
 # def colored(text, color='white', attrs=[]):
 #     ''' a poor man's termcolor implementation'''
