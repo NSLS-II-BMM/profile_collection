@@ -215,10 +215,10 @@ class OneWireTC(Device):
             return(colored(t, 'brown'))
         return(t)
 
-monotc_top    = OneWireTC('XF:6BMA{SENS:001}T', name='monotc_top')
-monotc_bottom = OneWireTC('XF:6BMA{SENS:002}T', name='monotc_bottom')
-monotc_in     = OneWireTC('XF:6BMA{SENS:003}T', name='monotc_in')
-monotc_out    = OneWireTC('XF:6BMA{SENS:004}T', name='monotc_out')
+monotc_inboard       = OneWireTC('XF:6BMA{SENS:001}T', name='monotc_inboard')
+monotc_upstream_high = OneWireTC('XF:6BMA{SENS:002}T', name='monotc_upstream_high')
+monotc_downstream    = OneWireTC('XF:6BMA{SENS:003}T', name='monotc_downstream')
+monotc_upstream_low  = OneWireTC('XF:6BMA{SENS:004}T', name='monotc_upstream_low')
     
 
 def show_thermocouples():

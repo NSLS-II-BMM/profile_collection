@@ -52,6 +52,8 @@ def run_report(thisfile):
 
 run_report(__file__)
 
+get_ipython().magic(u"%xmode Plain")
+
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
 ##################################################

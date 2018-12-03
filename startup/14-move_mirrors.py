@@ -10,17 +10,22 @@ def move_m3(target=5):
     beta  = 9637                # distance M3 to xafs_yu
     gamma = 10792               # distance M3 to xafs_ydo/xafs_ydi
 
-    bnot = 46.11                # BCT position in mode D/E
-    unot = 132                  # xafs_yu position in mode D/E
-    dnot = 132                  # xafs_ydo/xafs_ydi position in mode D/E
+    #bnot = 46.11                # BCT position in mode D/E
+    #unot = 132                  # xafs_yu position in mode D/E
+    #dnot = 132                  # xafs_ydo/xafs_ydi position in mode D/E
+    bnot = 29.57                # BCT position in mode D/E
+    unot = 111.6                  # xafs_yu position in mode D/E
+    dnot = 109.9                  # xafs_ydo/xafs_ydi position in mode D/E
 
-    thetanot = 3.5              # angle in mR of M3 in mode D/E
+    thetanot = 0                # angle in mR of M3 in mode A
+    #thetanot = 3.5             # angle in mR of M3 in mode D/E
 
     theta = target - thetanot
 
-    correction = 0.8 * tan(theta/1000) / tan(1.5/1000)
+    #correction = 0.8 * tan(theta/1000) / tan(1.5/1000)
+    correction = 0.0 * tan(theta/1000) / tan(1.5/1000)
 
-    bct   = bnot - alpha * tan( (2*theta) / 1000 ) + correction
+    bct   = bnot - alpha * tan( (2*theta) / 1000 ) + correction - 0.6
     upstr = unot - beta  * tan( (2*theta) / 1000 ) + correction
     dnstr = dnot - gamma * tan( (2*theta) / 1000 ) + correction
 

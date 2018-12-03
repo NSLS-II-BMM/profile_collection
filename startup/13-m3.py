@@ -109,7 +109,7 @@ m2.roll._limits     = (-2, 2)
 m2.yaw._limits      = (-1, 1)
 
 m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
-m3.vertical._limits = (-9, 1)
+m3.vertical._limits = (-11, 1)
 m3.lateral._limits  = (-16, 16)
 m3.pitch._limits    = (-6, 6)
 m3.roll._limits     = (-2, 2)

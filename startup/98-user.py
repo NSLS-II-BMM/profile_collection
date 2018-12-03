@@ -61,14 +61,20 @@ ip.prompts = MyPrompt(ip)
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
-def new_experiment(folder, gup=0, saf=0):
+def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     '''
     Get ready for a new experiment.  Run this first thing when a user
     sits down to start their beamtime.  This will:
       1. Create a folder, if needed, and set the DATA variable
       2. Set up the experimental log, creating an experiment.log file, if needed
       3. Write templates for scan.ini and macro.py, if needed
-      4. Set the 
+      4. Set the GUP and SAF numbers as metadata
+
+    Input:
+      folder:   data destination
+      gup:      GUP number
+      saf:      SAF number
+      name:     name of PI (optional)
     '''
     ## make folder
     if not os.path.isdir(folder):
@@ -101,7 +107,7 @@ def new_experiment(folder, gup=0, saf=0):
         with open(initmpl) as f:
             content = f.readlines()
         o = open(scanini, 'w')
-        o.write(''.join(content).format(folder=folder))
+        o.write(''.join(content).format(folder=folder, name=name))
         o.close()
         print('3. Created INI template: %s' % scanini)
     else:
@@ -128,6 +134,36 @@ def new_experiment(folder, gup=0, saf=0):
     
     return None
 
+def start_experiment(name=None, date=None, gup=0, saf=0):
+    '''
+    Get ready for a new experiment.  Run this first thing when a user
+    sits down to start their beamtime.  This will:
+      1. Create a folder, if needed, and set the DATA variable
+      2. Set up the experimental log, creating an experiment.log file, if needed
+      3. Write templates for scan.ini and macro.py, if needed
+      4. Set the GUP and SAF numbers as metadata
+
+    Input:
+      name:     name of PI
+      date:     YYYY-MM-DD start date of experiment (e.g. 2018-11-29)
+      gup:      GUP number
+      saf:      SAF number
+    '''
+    if name is None:
+        print(colored('You did not supply the user\'s name', 'red'))
+        return()
+    if date is None:
+        print(colored('You did not supply the start date', 'red'))
+        return()
+    if gup == 0:
+        print(colored('You did not supply the GUP number', 'red'))
+        return()
+    if saf == 0:
+        print(colored('You did not supply the SAF number', 'red'))
+        return()
+    folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
+    new_experiment(folder, saf=saf, gup=gup, name=name)
+    
 def show_experiment():
     print('DATA = %s' % DATA)
     print('GUP  = %d' % BMM_xsp.gup)

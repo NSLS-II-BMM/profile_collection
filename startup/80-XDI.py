@@ -115,6 +115,14 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         xdi.append('# Facility.bpm_downstream_x: %.3f mm' % dataframe.table('baseline')['bpm_downstream_x'][1])
     if XDI_record['bpm_downstream_y'] :
         xdi.append('# Facility.bpm_downstream_y: %.3f mm' % dataframe.table('baseline')['bpm_downstream_y'][1])
+    if XDI_record['monotc_inboard_temperature'] :
+        xdi.append('# Mono.tc_inboard: %.2f C' % dataframe.table('baseline')['monotc_inboard_temperature'][1])
+    if XDI_record['monotc_downstream_temperature'] :
+        xdi.append('# Mono.tc_downstream: %.2f C' % dataframe.table('baseline')['monotc_downstream_temperature'][1])
+    if XDI_record['monotc_upstream_high_temperature'] :
+        xdi.append('# Mono.tc_upstream_high: %.2f C' % dataframe.table('baseline')['monotc_upstream_high_temperature'][1])
+    if XDI_record['monotc_upstream_low_temperature'] :
+        xdi.append('# Mono.tc_upstream_low: %.2f C' % dataframe.table('baseline')['monotc_upstream_low_temperature'][1])
 
     #    t=db[-1].table('baseline')
     #    for e in sd.baseline:
