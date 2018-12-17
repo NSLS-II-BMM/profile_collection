@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 
 run_report(__file__)
 
@@ -126,9 +127,29 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     else:
         print('4. Found macro template: %s' % macropy)
 
+    ## make html folder, copy static html generation files
+    htmlfolder = os.path.join(folder, 'html')
+    if not os.path.isdir(htmlfolder):
+        os.mkdir(htmlfolder)
+        shutil.copyfile(os.path.join(startup, 'sample.tmpl'),  os.path.join(htmlfolder, 'sample.tmpl'))
+        shutil.copyfile(os.path.join(startup, 'logo.png'),     os.path.join(htmlfolder, 'logo.png'))
+        shutil.copyfile(os.path.join(startup, 'style.css'),    os.path.join(htmlfolder, 'style.css'))
+        shutil.copyfile(os.path.join(startup, 'trac.css'),     os.path.join(htmlfolder, 'trac.css'))
+        print('5. Created static html folder, copied html generation files')
+    else:
+        print('5. Found static html folder')
+     
+    ## make prj folder
+    prjfolder = os.path.join(folder, 'prj')
+    if not os.path.isdir(prjfolder):
+        os.mkdir(prjfolder)
+        print('6. Created Athena prj folder')
+    else:
+        print('6. Found Athena prj folder')
+   
     BMM_xsp.gup = gup
     BMM_xsp.saf = saf
-    print('5. Set GUP and SAF numbers as metadata')
+    print('7. Set GUP and SAF numbers as metadata')
     global _new_user_defined
     _new_user_defined = True
     
@@ -161,7 +182,13 @@ def start_experiment(name=None, date=None, gup=0, saf=0):
     if saf == 0:
         print(colored('You did not supply the SAF number', 'red'))
         return()
-    folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
+    if name in BMM_STAFF:
+        BMM_xsp.staff = True
+        folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
+    else:
+        BMM_xsp.staff = False
+        folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
+    BMM_xsp.date = date
     new_experiment(folder, saf=saf, gup=gup, name=name)
     
 def show_experiment():
@@ -177,8 +204,10 @@ def end_experiment():
     BMM_unset_user_log()
     global DATA
     DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
+    BMM_xsp.date = ''
     BMM_xsp.gup = 0
     BMM_xsp.saf = 0
+    BMM_xsp.staff = False
     global _new_user_defined
     _new_user_defined = False
 

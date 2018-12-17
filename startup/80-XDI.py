@@ -145,18 +145,18 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
                     '# Scan.dwell_time: %d'     % dataframe['start']['XDI,Scan,dwell_time'],
                     '# Scan.delay: %d'          % dataframe['start']['XDI,Scan,delay'],])
         
-    plot_hint = 'ln(I0/It)  --  ln($4/$5)'
-    if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($2/$3)'
+    plot_hint = 'ln(I0/It)  --  ln($5/$6)'
+    if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($3/$4)'
     if 'fluo' in mode or 'both' in mode:
-        plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($7+$8+$9+$10) / $4'
-        if kind == 'sead': plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($5+$6+$7+$8) / $2'
+        plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($8+$9+$10+$11) / $5'
+        if kind == 'sead': plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($6+$7+$8+$9) / $3'
     elif 'yield' in mode:
-        plot_hint = 'ln(Iy/I0  --  ln($7/$4)'
+        plot_hint = 'ln(Iy/I0  --  ln($8/$5)'
     elif 'ref' in mode:
-        plot_hint = 'ln(It/Ir  --  ln($5/$6)'
+        plot_hint = 'ln(It/Ir  --  ln($6/$7)'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
     labels = []
-    abscissa_columns = ('energy', 'requested_energy', 'measurement_time')
+    abscissa_columns = ('energy', 'requested_energy', 'measurement_time', 'xmu')
     if kind == 'sead': abscissa_columns = ('time',)
     for i, col in enumerate(abscissa_columns, start=1):     # 'encoder'
         xdi.append('# Column.%d: %s %s' % (i, col, units(col)))
@@ -192,19 +192,26 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
     if 'fluo' in mode or 'both' in mode:
-        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir',
+        table['xmu'] = (table['DTC1'] + table['DTC2'] + table['DTC3'] + table['DTC4']) / table['I0']
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',
                        'ROI2', 'ICR2', 'OCR2',
                        'ROI3', 'ICR3', 'OCR3',
                        'ROI4', 'ICR4', 'OCR4']
-        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
-        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
-        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f\n"
+        if 'yield' in mode:     # yield is the primary measurement
+            table['xmu'] = table['Iy'] / table['I0']
+        elif 'ref' in mode:     # reference is the primary measurement
+            table['xmu'] = numpy.log(table['It'] / table['Ir'])
+        else:                   # transmission is the primary measurement
+            table['xmu'] = numpy.log(table['I0'] / table['It'])
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f\n"
         if 'yield' in mode:
             column_list.append('Iy')
-            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f\n"
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
         column_list.pop(0)
         column_list.pop(0)

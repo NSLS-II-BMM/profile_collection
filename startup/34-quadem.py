@@ -105,6 +105,9 @@ quadem1.Iy.name = 'Iy'
 #quadem1.current4_mean_value_nano.kind = 'omitted'
 
 
+quadem2 = QuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
+
+
 def dark_current():
     print('\nClosing photon shutter')
     yield from shb.close_plan()

@@ -384,6 +384,79 @@ def db2xdi(datafile, key):
     write_XDI(datafile, header, header.start['XDI,_mode'][0], header.start['XDI,_comment'][0])
     print(colored('wrote %s' % datafile, 'white'))
 
+from pygments import highlight
+from pygments.lexers import IniLexer
+from pygments.formatters import HtmlFormatter
+
+def scan_sequence_static_html(inifile = None,
+                              filename = None,
+                              experimenters = None,
+                              seqstart = None,
+                              seqend = None,
+                              e0 = None,
+                              edge = None,
+                              element = None,
+                              scanlist = None,
+                              motors = None,
+                              sample = None,
+                              prep = None,
+                              comment = None,
+                              mode = None,
+                              pccenergy = None,
+                              bounds = None,
+                              steps = None,
+                              times = None,
+                              clargs = '',
+                              websnap = '',
+                              anasnap = '',
+                              ):
+    '''
+    Gather information from various places, including html_dict, a temporary dictionary,
+    then write a static html file for a scan sequence using a bespoke html template file
+    '''
+    with open(os.path.join(DATA, 'html', 'sample.tmpl')) as f:
+        content = f.readlines()
+    htmlfilename = os.path.join(DATA, 'html/', filename+'.html')
+    if os.path.isfile(htmlfilename):
+        i = 2
+        while os.path.isfile(os.path.join(DATA, 'html/', "%s-%d.html" % (filename,i))):
+            i += 1
+        htmlfilename = os.path.join(DATA, 'html/', "%s-%d.html" % (filename,i))
+
+    with open(os.path.join(DATA, inifile)) as f:
+        initext = ''.join(f.readlines())
+        
+    o = open(htmlfilename, 'w')
+    pdstext = '%s (%s)' % (get_mode(), describe_mode())
+    o.write(''.join(content).format(filename      = filename,
+                                    experimenters = experimenters,
+                                    gup           = BMM_xsp.gup,
+                                    saf           = BMM_xsp.saf,
+                                    seqstart      = seqstart,
+                                    seqend        = seqend,
+                                    mono          = 'Si(%s)' % dcm._crystal,
+                                    pdsmode       = pdstext,
+                                    e0            = '%.1f' % e0,
+                                    edge          = edge,
+                                    element       = element,
+                                    date          = BMM_xsp.date,
+                                    scanlist      = scanlist,
+                                    motors        = motors,
+                                    sample        = sample,
+                                    prep          = prep,
+                                    comment       = comment,
+                                    mode          = mode,
+                                    pccenergy     = '%.1f' % pccenergy,
+                                    bounds        = bounds,
+                                    steps         = steps,
+                                    times         = times,
+                                    clargs        = clargs,
+                                    websnap       = '../snapshots/'+websnap,
+                                    anasnap       = '../snapshots/'+anasnap,
+                                    initext       = highlight(initext, IniLexer(), HtmlFormatter()),
+                                ))
+    o.close()
+    return(htmlfilename)
 
 
 import bluesky.preprocessors
@@ -495,6 +568,7 @@ def xafs(inifile, **kwargs):
 
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
+        clargs = str(kwargs)
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
         BMM_log_info(motor_status())
 
@@ -525,12 +599,15 @@ def xafs(inifile, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
-        BMM_suspenders()
-
+        if 'force' in kwargs and kwargs['force'] is True:
+            pass
+        else:
+            BMM_suspenders()
+            
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
         @subs_decorator(plot)
-        def scan_sequence():
+        def scan_sequence(clargs):
             ## perhaps enter pseudo-channel-cut mode
             if not dcm.suppress_channel_cut:
                 BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
@@ -579,13 +656,38 @@ def xafs(inifile, **kwargs):
                 print('\t%-28s : %s' % (k[4:].replace(',','.'),v))
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+            ## this dictionary is used to populate the static html page for this scan sequence
+            html_scan_list = ''
+            html_dict['filename']      = p['filename']
+            html_dict['experimenters'] = p['experimenters']
+            html_dict['seqstart']      = now('%A, %B %d, %Y %I:%M %p')
+            html_dict['e0']            = p['e0']
+            html_dict['element']       = p['element']
+            html_dict['edge']          = p['edge']
+            html_dict['motors']        = motor_sidebar()
+            html_dict['sample']        = p['sample']
+            html_dict['prep']          = p['prep']
+            html_dict['comment']       = p['comment']
+            html_dict['mode']          = p['mode']
+            html_dict['pccenergy']     = eave
+            html_dict['bounds']        = ' '.join(map(str, p['bounds_given'])) # see https://stackoverflow.com/a/5445983
+            html_dict['steps']         = ' '.join(map(str, p['steps']))
+            html_dict['times']         = ' '.join(map(str, p['times']))
+            html_dict['clargs']        = clargs
+
+            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## snap photos
             if p['snapshots']:
-                #now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-                image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
-                snap('XAS', filename=image)
-                image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
-                snap('analog', filename=image)
+                ahora = now()
+
+                html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
+                image = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
+                annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+                snap('XAS', filename=image, annotation=annotation)
+
+                html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
+                image = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
+                snap('analog', filename=image, sample=p['filename'])
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile
@@ -626,7 +728,7 @@ def xafs(inifile, **kwargs):
 
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-                ## call the stock scan plan with the correct detectors
+                ## call the stock scan_nd plan with the correct detectors
                 if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                        md={**md, **rightnow, **supplied_metadata})
@@ -637,7 +739,18 @@ def xafs(inifile, **kwargs):
                 write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
                 print(colored('wrote %s' % datafile, 'white'))
                 BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
-                             % (db[-1].start['uid'], db[-1].start['scan_id'], datafile))
+                             % (header.start['uid'], header.start['scan_id'], datafile))
+
+                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+                ## generate left sidebar text for the static html page for this scan sequence
+                js_text = '<a href="javascript:void(0)" onclick="toggle_visibility(\'%s\');" title="This is the scan number for %s, click to show/hide its UID">#%d</a><div id="%s" style="display:none;"><small>%s</small></div>' \
+                          % (fname, fname, header.start['scan_id'], fname, header.start['uid'])
+                printedname = fname
+                if len(p['filename']) > 11:
+                    printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
+                html_scan_list += '<li><a href="../%s" title="Click to see the text of %s">%s</a>&nbsp;&nbsp;&nbsp;&nbsp;%s</li>\n' \
+                                  % (fname, fname, printedname, js_text)
+                html_dict['scanlist'] = html_scan_list
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -645,12 +758,13 @@ def xafs(inifile, **kwargs):
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from mv(dcm.energy, eave)
+            html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan
-        yield from scan_sequence()
+        yield from scan_sequence(clargs)
 
-    def cleanup_plan():
+    def cleanup_plan(inifile):
         print('Cleaning up after an XAFS scan sequence')
         RE.clear_suspenders()
         if os.path.isfile(dotfile):
@@ -658,6 +772,9 @@ def xafs(inifile, **kwargs):
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
+            htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
+            print(colored('wrote %s' % htmlout, 'white'))
+            BMM_log_info('wrote %s' % htmlout)
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
@@ -668,10 +785,12 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_roll.kill_cmd, 1)
 
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
+    html_scan_list = ''
+    html_dict = {}
     BMM_xsp.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan())
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 
 

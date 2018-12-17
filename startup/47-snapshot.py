@@ -16,6 +16,20 @@ run_report(__file__)
 ## grab a snapshot from the analog camera
 ##    snap('analog', filename='/path/to/saved/image.jpg')
 
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw 
+
+def annotate_image(imagefile, text):
+    font_path = '/opt/conda_envs/collection-2018-3.0/lib/python3.6/site-packages/matplotlib/mpl-data/fonts/ttf/'
+    img = Image.open(imagefile)
+    width, height = img.size
+    draw = ImageDraw.Draw(img, 'RGBA')
+    draw.rectangle(((0, int(9.5*height/10)), (width, height)), fill=(255,255,255,125))
+    font = ImageFont.truetype(font_path + 'DejaVuSans.ttf', 24)
+    draw.text((int(0.2*width/10), int(9.6*height/10)), text, (0,0,0), font=font)
+    img.save(imagefile)
+
 
 
 XASURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
@@ -32,19 +46,23 @@ def snap(which, filename=None, **kwargs):
 
 CAM_PROXIES = {"http": None, "https": None,}
 
-def xas_webcam(filename=None):
+def xas_webcam(filename=None, **kwargs):
     if filename is None:
         filename = os.environ['HOME'] + '/XAS_camera_' + now() + '.jpg'
     r=requests.get(XASURL, proxies=CAM_PROXIES)
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
+    if 'annotation' in kwargs:
+        annotate_image(filename, kwargs['annotation'])
     BMM_log_info('XAS webcam image written to %s' % filename)
     print('Wrote ' + filename)
 
-def xrd_webcam(filename=None):
+def xrd_webcam(filename=None, **kwargs):
     if filename is None:
         filename = os.environ['HOME'] + '/XRD_camera_' + now() + '.jpg'
     r=requests.get(XRDURL, proxies=CAM_PROXIES)
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
+    if 'annotation' in kwargs:
+        annotate_image(filename, kwargs['annotation'])
     BMM_log_info('XRD webcam image written to %s' % filename)
     print('Wrote ' + filename)
 
@@ -54,6 +72,7 @@ from subprocess import Popen, PIPE, call
 import fcntl
 
 def anacam(filename    = None,
+           sample      = None,
            folder      = os.environ['HOME'],
            device      = '/dev/video0',
            camera      = 0,
@@ -83,7 +102,7 @@ def anacam(filename    = None,
         x:           X-location of cross hair           [320] (middle of image)
         y:           Y-location of cross hair           [240] (middle of image)
         linecolor:   color of cross hair lines          [white]
-        nocrosshair: flag to suppress cross hair        [False]
+        nocrosshair: flag to suppress cross hair        [True]
         quiet:       flag to suppress screen messages   [False]
         usbid:       vendor and product ID of camera    [534d:0021] (AV to USB device at 06BM)
         title:       title string for fswebcam banner   [NIST BMM (NSLS-II 06BM)]
@@ -114,6 +133,8 @@ def anacam(filename    = None,
     if filename is None:
         filename = folder + '/analog_camera_' + now() + '.jpg'
 
+    if sample is not None:
+        title = title + ' - ' + sample
     command = "fswebcam %s-i %s -d %s -r 640x480 --title \"%s\" --timestamp \"%s\" -S %d -F %d --set brightness=%s%% \"%s\"" %\
               (quiet, camera, device, title, timestamp, skip, frames, brightness, filename)
     system(command)

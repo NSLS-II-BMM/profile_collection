@@ -55,3 +55,60 @@ def motor_status():
 
 def ms():
     boxedtext('BMM motor status', motor_status(), 'cyan', width=84)
+
+
+def motor_sidebar():
+    '''
+    Generate a list of motor positions to be used in the static html page for a scan sequence.
+    Return value is a long string with html tags and entities embedded in the string.
+    '''
+    motors = ''
+        
+    mlist = []
+    mlist.append('XAFS stages (motor names are xafs_*):')
+    mlist.append('x = %.3f ; y = %.3f'         % (xafs_linx.user_readback.value,  xafs_liny.user_readback.value))
+    mlist.append('pitch = %.3f ; roll = %.3f'  % (xafs_pitch.user_readback.value, xafs_roll.user_readback.value))
+    mlist.append('linxs = %.3f ; wheel = %.3f' % (xafs_linxs.user_readback.value, xafs_wheel.user_readback.value))
+    mlist.append('roth = %.3f ; rots = %.3f'   % (xafs_roth.user_readback.value,  xafs_rots.user_readback.value))
+    motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+    motors += '\n<br><br>DM3_BCT: %.3f mm' % dm3_bct.user_readback.value
+
+    mlist = []
+    mlist.append('Slits3:')
+    mlist.append('vsize = %.3f ; vcenter =%.3f'      % (slits3.vsize.readback.value,         slits3.vcenter.readback.value))
+    mlist.append('hsize = %.3f ; hcenter =%.3f'      % (slits3.hsize.readback.value,         slits3.hcenter.readback.value))
+    mlist.append('top  = %.3f ; bottom = %.3f'       % (slits3.top.user_readback.value,      slits3.bottom.user_readback.value))
+    mlist.append('outboard  = %.3f ; inboard = %.3f' % (slits3.outboard.user_readback.value, slits3.inboard.user_readback.value))
+    motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+    mlist = []
+    mlist.append('M2')
+    mlist.append('vertical = %.3f mm ; YU  = %.3f mm'   % (m2.vertical.readback.value, m2.yu.user_readback.value))
+    mlist.append('lateral  = %.3f mm ; YDO = %.3f mm'   % (m2.lateral.readback.value,  m2.ydo.user_readback.value))
+    mlist.append('pitch    = %.3f mrad ; YDI = %.3f mm' % (m2.pitch.readback.value,    m2.ydi.user_readback.value))
+    mlist.append('roll     = %.3f mrad ; XU  = %.3f mm' % (m2.roll.readback.value,     m2.xu.user_readback.value))
+    mlist.append('yaw      = %.3f mrad ; XD  = %.3f mm' % (m2.yaw.readback.value,      m2.xd.user_readback.value))
+    motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+
+    mlist = []
+    stripe = '(Rh/Pt stripe)'
+    if m3.xu.user_readback.value < 0:
+        stripe = '(Si stripe)'
+    mlist.append('M3  %s' % stripe)
+    mlist.append('vertical = %.3f  mm ; YU  = %.3f mm'   % (m3.vertical.readback.value, m3.yu.user_readback.value))
+    mlist.append('lateral  = %.3f  mm ; YDO = %.3f mm'   % (m3.lateral.readback.value,  m3.ydo.user_readback.value))
+    mlist.append('pitch    = %.3f  mrad ; YDI = %.3f mm' % (m3.pitch.readback.value,    m3.ydi.user_readback.value))
+    mlist.append('roll     = %.3f  mrad ; XU  = %.3f mm' % (m3.roll.readback.value,     m3.xu.user_readback.value))
+    mlist.append('yaw      = %.3f  mrad ; XD  = %.3f mm' % (m3.yaw.readback.value,      m3.xd.user_readback.value))
+    motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+    mlist = []
+    mlist.append('XAFS table:')
+    mlist.append('vertical = %.3f ; YU = %.3f' % (xafs_table.vertical.readback.value, xafs_table.yu.user_readback.value))
+    mlist.append('pitch = %.3f ; YDO = %.3f'   % (xafs_table.pitch.readback.value,    xafs_table.ydo.user_readback.value))
+    mlist.append('roll = %.3f ; YDI = %.3f'    % (xafs_table.roll.readback.value,     xafs_table.ydi.user_readback.value))
+    motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+    return motors

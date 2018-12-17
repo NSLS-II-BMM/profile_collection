@@ -9,7 +9,9 @@ with warnings.catch_warnings():
 ## had when doing <function>??  `cat` seems less likely to befuddle
 ## folk.
 os.environ['PAGER'] = 'cat'
-    
+
+BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
+
 #from termcolor import colored
 # def colored(text, color='white', attrs=[]):
 #     ''' a poor man's termcolor implementation'''
@@ -34,6 +36,9 @@ os.environ['PAGER'] = 'cat'
 
 from IPython.utils.coloransi import TermColors as color
 def colored(text, tint='white', attrs=[]):
+    '''
+    A simple wrapper around IPython's interface to TermColors
+    '''
     tint = tint.lower()
     if 'dark' in tint:
         tint = 'Dark' + tint[4:].capitalize()
@@ -48,6 +53,9 @@ def colored(text, tint='white', attrs=[]):
     return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
 
 def run_report(thisfile):
+    '''
+    Noisily proclaim to be importing a file of python code.
+    '''
     print(colored('Importing %s ...' % thisfile.split('/')[-1], 'lightcyan'))
 
 run_report(__file__)
@@ -60,11 +68,17 @@ get_ipython().magic(u"%xmode Plain")
 # --- a simple class for managing scan logistics #
 ##################################################
 class xafs_scan_parameters():
+    '''
+    A simple class for gathering metadata about the current user experiment, including
+    GUP & SAF numbers, start date, and some operational flags.
+    '''
     def __init__(self):
         self.prompt = True
         self.final_log_entry = True
+        self.date = ''
         self.gup = 0
         self.saf = 0
+        self.staff = False
 BMM_xsp = xafs_scan_parameters()
 
 
@@ -81,8 +95,8 @@ def e2l(val):
     """Convert absolute photon energy to photon wavelength"""
     return 2*pi*HBARC/val
 
-def now():
-    return datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+def now(fmt="%Y-%m-%dT%H-%M-%S"):
+    return datetime.datetime.now().strftime(fmt)
 
 ## CRUDE HACK ALERT! inflection.py is in ~/.ipython (https://pypi.org/project/inflection/)
 import inflection
@@ -124,6 +138,7 @@ def boxedtext(title, text, tint, width=75):
 
 
 def clear_dashboard():
+    '''Clean up in a way that helps the cadashboard utility'''
     if os.path.isfile('/home/xf06bm/Data/.xafs.scan.running'):
         os.remove('/home/xf06bm/Data/.xafs.scan.running')
     elif os.path.isfile('/home/xf06bm/Data/.line.scan.running'):
