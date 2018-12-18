@@ -32,6 +32,7 @@ CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'start':         0,
                  'inttime':       1,
                  'snapshots':     True,
+                 'htmlpage':      True,
                  'bothways':      False,
                  'channelcut':    True,
                  'mode':          'transmission',
@@ -86,6 +87,7 @@ def scan_metadata(inifile=None, **kwargs):
       nscan:        [int]   number of repetitions
       start:        [int]   starting scan number, XDI file will be filename.###
       snapshots:    [bool]  True = capture analog and XAS cameras before scan sequence
+      htmlpage:     [bool]  True = capture dossier of a scan sequence as a static html page
       bothways:     [bool]  True = measure in both monochromator directions
       channelcut:   [bool]  True = measure in pseudo-channel-cut mode
       mode:         [str]   transmission, fluorescence, or reference -- how to display the data
@@ -198,7 +200,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'bothways', 'channelcut'):
+    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -385,44 +387,46 @@ def db2xdi(datafile, key):
     print(colored('wrote %s' % datafile, 'white'))
 
 from pygments import highlight
-from pygments.lexers import IniLexer
+from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 
-def scan_sequence_static_html(inifile = None,
-                              filename = None,
+def scan_sequence_static_html(inifile       = None,
+                              filename      = None,
                               experimenters = None,
-                              seqstart = None,
-                              seqend = None,
-                              e0 = None,
-                              edge = None,
-                              element = None,
-                              scanlist = None,
-                              motors = None,
-                              sample = None,
-                              prep = None,
-                              comment = None,
-                              mode = None,
-                              pccenergy = None,
-                              bounds = None,
-                              steps = None,
-                              times = None,
-                              clargs = '',
-                              websnap = '',
-                              anasnap = '',
+                              seqstart      = None,
+                              seqend        = None,
+                              e0            = None,
+                              edge          = None,
+                              element       = None,
+                              scanlist      = None,
+                              motors        = None,
+                              sample        = None,
+                              prep          = None,
+                              comment       = None,
+                              mode          = None,
+                              pccenergy     = None,
+                              bounds        = None,
+                              steps         = None,
+                              times         = None,
+                              clargs        = '',
+                              websnap       = '',
+                              anasnap       = '',
                               ):
     '''
-    Gather information from various places, including html_dict, a temporary dictionary,
-    then write a static html file for a scan sequence using a bespoke html template file
+    Gather information from various places, including html_dict, a temporary dictionary 
+    filled up during an XAFS scan, then write a static html file as a dossier for a scan
+    sequence using a bespoke html template file
     '''
     with open(os.path.join(DATA, 'html', 'sample.tmpl')) as f:
-        content = f.readlines()
-    htmlfilename = os.path.join(DATA, 'html/', filename+'.html')
+        content                             = f.readlines()
+    htmlfilename                            = os.path.join(DATA, 'html/', filename+'.html')
+    seqnumber                               = 1
     if os.path.isfile(htmlfilename):
-        i = 2
-        while os.path.isfile(os.path.join(DATA, 'html/', "%s-%d.html" % (filename,i))):
-            i += 1
-        htmlfilename = os.path.join(DATA, 'html/', "%s-%d.html" % (filename,i))
-
+        seqnumber                           = 2
+        while os.path.isfile(os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))):
+            seqnumber +                     = 1
+        htmlfilename                        = os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))
+        
     with open(os.path.join(DATA, inifile)) as f:
         initext = ''.join(f.readlines())
         
@@ -432,6 +436,7 @@ def scan_sequence_static_html(inifile = None,
                                     experimenters = experimenters,
                                     gup           = BMM_xsp.gup,
                                     saf           = BMM_xsp.saf,
+                                    seqnumber     = seqnumber,
                                     seqstart      = seqstart,
                                     seqend        = seqend,
                                     mono          = 'Si(%s)' % dcm._crystal,
@@ -450,7 +455,7 @@ def scan_sequence_static_html(inifile = None,
                                     bounds        = bounds,
                                     steps         = steps,
                                     times         = times,
-                                    clargs        = clargs,
+                                    clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
                                     websnap       = '../snapshots/'+websnap,
                                     anasnap       = '../snapshots/'+anasnap,
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
@@ -774,7 +779,7 @@ def xafs(inifile, **kwargs):
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
             htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
             print(colored('wrote %s' % htmlout, 'white'))
-            BMM_log_info('wrote %s' % htmlout)
+            BMM_log_info('wrote html dossier to\n%s' % htmlout)
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'

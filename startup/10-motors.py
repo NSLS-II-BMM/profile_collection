@@ -26,6 +26,11 @@ class VacuumEpicsMotor(EpicsMotor):
     def wh(self):
         return(round(self.user_readback.value, 3))
 
+    # def _setup_move(self, *args):
+    #     self.kill_cmd.put(1)
+    #     super()._setup_move(*args)
+        
+    
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
         ## tack on instructions for killing the motor after movement

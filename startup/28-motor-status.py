@@ -10,7 +10,8 @@ def motor_status():
     text += '      lateral  = %7.3f mm            YDO = %7.3f mm\n'      % (m2.lateral.readback.value,  m2.ydo.user_readback.value)
     text += '      pitch    = %7.3f mrad          YDI = %7.3f mm\n'      % (m2.pitch.readback.value,    m2.ydi.user_readback.value)
     text += '      roll     = %7.3f mrad          XU  = %7.3f mm\n'      % (m2.roll.readback.value,     m2.xu.user_readback.value)
-    text += '      yaw      = %7.3f mrad          XD  = %7.3f mm\n\n'    % (m2.yaw.readback.value,      m2.xd.user_readback.value)
+    text += '      yaw      = %7.3f mrad          XD  = %7.3f mm\n'      % (m2.yaw.readback.value,      m2.xd.user_readback.value)
+    text += '      bender   = %9.1f steps\n\n'                           %  m2_bender.user_readback.value
 
     stripe = '(Rh/Pt stripe)'
     if m3.xu.user_readback.value < 0:
@@ -89,6 +90,7 @@ def motor_sidebar():
     mlist.append('pitch    = %.3f mrad ; YDI = %.3f mm' % (m2.pitch.readback.value,    m2.ydi.user_readback.value))
     mlist.append('roll     = %.3f mrad ; XU  = %.3f mm' % (m2.roll.readback.value,     m2.xu.user_readback.value))
     mlist.append('yaw      = %.3f mrad ; XD  = %.3f mm' % (m2.yaw.readback.value,      m2.xd.user_readback.value))
+    mlist.append('bender   = %9.1f steps'               %  m2_bender.user_readback.value)
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
 
