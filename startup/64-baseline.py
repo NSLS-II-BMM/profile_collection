@@ -17,11 +17,11 @@ sd.baseline = [first_crystal.temperature, # relevant DCM temperatures
                xafs_rotb,
                xafs_rots,
                dm3_bct,
-               ring.current,              # ring current
-               bpm_upstream.x,            # BPMs and TCs related to mono stability studies
-               bpm_upstream.y,
-               bpm_downstream.x,
-               bpm_downstream.y,
+               #ring.current,              # ring current
+               #bpm_upstream.x,            # BPMs and TCs related to mono stability studies
+               #bpm_upstream.y,
+               #bpm_downstream.x,
+               #bpm_downstream.y,
                monotc_inboard,
                monotc_upstream_high,
                monotc_downstream,

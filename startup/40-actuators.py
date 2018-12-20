@@ -97,12 +97,18 @@ class EPS_Shutter(Device):
 class BMPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Sts:BM_BMPS_Opn-Sts')
 
-bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
+try:
+    bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
+except:
+    pass
 
 class IDPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Sts:BM_PS_OpnA3-Sts')
 
-idps = IDPS_Shutter('SR:C06-EPS{PLC:1}', name = 'IDPS')
+try:
+    idps = IDPS_Shutter('SR:C06-EPS{PLC:1}', name = 'IDPS')
+except:
+    pass
 
 
 sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')

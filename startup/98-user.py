@@ -9,22 +9,25 @@ _new_user_defined = False
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
-        if idps.state.value == 0:
-            shatoken = (Token.OutPromptNum, ' A')
-        else:
-            shatoken = (Token.Tilde, ' A')
+        # if idps.state.value == 0:
+        #     shatoken = (Token.OutPromptNum, ' A')
+        # else:
+        #     shatoken = (Token.Tilde, ' A')
 
-        if shb.state.value == 1:
-            shbtoken = (Token.OutPromptNum, 'B')
-        else:
-            shbtoken = (Token.Tilde, 'B')
+        # if shb.state.value == 1:
+        #     shbtoken = (Token.OutPromptNum, 'B')
+        # else:
+        #     shbtoken = (Token.Tilde, 'B')
 
         if _new_user_defined:
             bmmtoken = (Token.CursorLine, 'BMM ')
         else:
             bmmtoken = (Token.AutoSuggestion, 'BMM ')
         ## BMM XRD.311 A•B 0.0 [5] ▶
-        rcv = ring.current.value
+        try:
+            rcv = ring.current.value
+        except:
+            rcv = None
         if rcv is None:
             rcv = 0
         return [bmmtoken,

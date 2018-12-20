@@ -6,8 +6,10 @@ run_report(__file__)
 # beamline enabled/disabled #
 #############################
 
-bl_enabled = EpicsSignalRO('SR:C06-EPS{PLC:1}Sts:BM_BE_Enbl-Sts', name='enabled')
-
+try:
+    bl_enabled = EpicsSignalRO('SR:C06-EPS{PLC:1}Sts:BM_BE_Enbl-Sts', name='enabled')
+except:
+    bl_enabled = 0
 
 #####################
 # state of shutters #

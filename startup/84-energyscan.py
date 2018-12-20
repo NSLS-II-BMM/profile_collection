@@ -424,7 +424,7 @@ def scan_sequence_static_html(inifile       = None,
     if os.path.isfile(htmlfilename):
         seqnumber                           = 2
         while os.path.isfile(os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))):
-            seqnumber +                     = 1
+            seqnumber                       = 1
         htmlfilename                        = os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))
         
     with open(os.path.join(DATA, inifile)) as f:
