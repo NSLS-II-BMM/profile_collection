@@ -24,12 +24,13 @@ class MyPrompt(Prompts):
         else:
             bmmtoken = (Token.AutoSuggestion, 'BMM ')
         ## BMM XRD.311 A•B 0.0 [5] ▶
-        try:
-            rcv = ring.current.value
-        except:
-            rcv = None
-        if rcv is None:
-            rcv = 0
+        # rcv = None
+        # try:
+        #     rcv = ring.current.value
+        # except:
+        #     rcv = None
+        # if rcv is None:
+        #     rcv = 0
         return [bmmtoken,
                 (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm._crystal)),
                 #shatoken,
@@ -131,16 +132,14 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
         print('4. Found macro template: %s' % macropy)
 
     ## make html folder, copy static html generation files
-    htmlfolder = os.path.join(folder, 'html')
+    htmlfolder = os.path.join(folder, 'dossier')
     if not os.path.isdir(htmlfolder):
         os.mkdir(htmlfolder)
-        shutil.copyfile(os.path.join(startup, 'sample.tmpl'),  os.path.join(htmlfolder, 'sample.tmpl'))
-        shutil.copyfile(os.path.join(startup, 'logo.png'),     os.path.join(htmlfolder, 'logo.png'))
-        shutil.copyfile(os.path.join(startup, 'style.css'),    os.path.join(htmlfolder, 'style.css'))
-        shutil.copyfile(os.path.join(startup, 'trac.css'),     os.path.join(htmlfolder, 'trac.css'))
-        print('5. Created static html folder, copied html generation files')
+        for f in ('sample.tmpl', 'logo.png', 'style.css', 'trac.css'):
+            shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
+        print('5. Created dossier folder, copied html generation files')
     else:
-        print('5. Found static html folder')
+        print('5. Found dossier folder')
      
     ## make prj folder
     prjfolder = os.path.join(folder, 'prj')

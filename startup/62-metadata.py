@@ -170,8 +170,12 @@ def metadata_at_this_moment():
     #rightnow['XDI,Mono,first_crystal_temperature']  = float(first_crystal.temperature.value)
     #rightnow['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
     #rightnow['XDI,Facility,current']  = str(ring.current.value) + ' mA'
-    rightnow['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
-    rightnow['XDI,Facility,mode']     = ring.mode.value
+    try:
+        rightnow['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
+        rightnow['XDI,Facility,mode']     = ring.mode.value
+    except:
+        rightnow['XDI,Facility,energy']   = '0 GeV'
+        rightnow['XDI,Facility,mode']     = 'Maintenance'
     if rightnow['XDI,Facility,mode'] == 'Operations':
         rightnow['XDI,Facility,mode'] = 'top-off'
     return rightnow

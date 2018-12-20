@@ -71,8 +71,13 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     if kind == 'xafs':
         xdi.extend(['# Element.symbol: %s'              % dataframe.start['XDI,Element,symbol'],
                     '# Element.edge: %s'                % dataframe.start['XDI,Element,edge'],])
+
+    try:
+        ring_current = dataframe.table('baseline')['ring_current'][1]
+    except:
+        ring_current = 0
     xdi.extend(['# Facility.name: %s'               % 'NSLS-II',
-                '# Facility.current: %.1f mA'       % dataframe.table('baseline')['ring_current'][1],
+                '# Facility.current: %.1f mA'       % ring_current,
                 '# Facility.energy: %s'             % dataframe.start['XDI,Facility,energy'],
                 '# Facility.mode: %s'               % dataframe.start['XDI,Facility,mode'],
                 '# Facility.GUP: %d'                % dataframe.start['XDI,Facility,GUP'],

@@ -417,15 +417,15 @@ def scan_sequence_static_html(inifile       = None,
     filled up during an XAFS scan, then write a static html file as a dossier for a scan
     sequence using a bespoke html template file
     '''
-    with open(os.path.join(DATA, 'html', 'sample.tmpl')) as f:
-        content                             = f.readlines()
-    htmlfilename                            = os.path.join(DATA, 'html/', filename+'.html')
-    seqnumber                               = 1
+    with open(os.path.join(DATA, 'dossier', 'sample.tmpl')) as f:
+        content = f.readlines()
+    htmlfilename = os.path.join(DATA, 'dossier/', filename+'.html')
+    seqnumber = 1
     if os.path.isfile(htmlfilename):
-        seqnumber                           = 2
-        while os.path.isfile(os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))):
-            seqnumber                       = 1
-        htmlfilename                        = os.path.join(DATA, 'html/', "%s-%d.html" % (filename,seqnumber))
+        seqnumber = 2
+        while os.path.isfile(os.path.join(DATA, 'dossier', "%s-%d.html" % (filename,seqnumber))):
+            seqnumber += 1
+        htmlfilename = os.path.join(DATA, 'dossier', "%s-%d.html" % (filename,seqnumber))
         
     with open(os.path.join(DATA, inifile)) as f:
         initext = ''.join(f.readlines())
@@ -492,19 +492,26 @@ def xafs(inifile, **kwargs):
             yield from null()
             return
 
+        
+        verbose = False
+        if 'verbose' in kwargs and kwargs['verbose'] is True:
+            verbose = True
+            
         supplied_metadata = dict()
         if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
-        
-        (ok, text) = BMM_clear_to_start()
+
+        if verbose: print(colored('checking clear to start (unless force=True)', 'lightcyan')) 
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text) = (True, '')
-        if ok is False:
-            BMM_xsp.final_log_entry = False
-            print(colored('\n'+text, 'lightred'))
-            print(colored('Quitting scan sequence....\n', 'white'))
-            yield from null()
-            return
+        else:
+            (ok, text) = BMM_clear_to_start()
+            if ok is False:
+                BMM_xsp.final_log_entry = False
+                print(colored('\n'+text, 'lightred'))
+                print(colored('Quitting scan sequence....\n', 'white'))
+                yield from null()
+                return
 
         ## make sure we are ready to scan
         #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
@@ -515,6 +522,7 @@ def xafs(inifile, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
+        if verbose: print(colored('time estimate', 'lightcyan')) 
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
             BMM_xsp.final_log_entry = False
@@ -526,6 +534,7 @@ def xafs(inifile, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
+        if verbose: print(colored('computing pseudo-channelcut energy', 'lightcyan')) 
         eave = channelcut_energy(p['e0'], p['bounds'])
         length = 0
         if BMM_xsp.prompt:
@@ -779,7 +788,7 @@ def xafs(inifile, **kwargs):
                          % (db[-1].start['uid'], db[-1].start['scan_id']))
             htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
             print(colored('wrote %s' % htmlout, 'white'))
-            BMM_log_info('wrote html dossier to\n%s' % htmlout)
+            BMM_log_info('wrote dossier to\n%s' % htmlout)
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
