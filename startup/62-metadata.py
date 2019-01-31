@@ -152,7 +152,7 @@ def bmm_metadata(measurement   = 'transmission',
     else:
         md['XDI,Mono,scan_mode'] = 'fixed exit'
 
-    if 'fluo' in measurement or 'both' in measurement:
+    if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement:
         md['XDI,Detector,fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
         md['XDI,Detector,deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
 

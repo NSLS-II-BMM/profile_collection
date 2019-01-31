@@ -135,9 +135,11 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     htmlfolder = os.path.join(folder, 'dossier')
     if not os.path.isdir(htmlfolder):
         os.mkdir(htmlfolder)
-        for f in ('sample.tmpl', 'logo.png', 'style.css', 'trac.css'):
+        for f in ('sample.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
             shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
-        print('5. Created dossier folder, copied html generation files')
+        manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
+        manifest.close()
+        print('5. Created dossier folder, copied html generation files, touched MANIFEST')
     else:
         print('5. Found dossier folder')
      

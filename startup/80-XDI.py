@@ -62,7 +62,7 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
                 '# Detector.I0: %s'                 % dataframe.start['XDI,Detector,I0'],
                 '# Detector.I1: %s'                 % dataframe.start['XDI,Detector,It'],
                 '# Detector.I2: %s'                 % dataframe.start['XDI,Detector,Ir'],])
-    if 'fluo' in mode or 'both' in mode:
+    if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         xdi.append('# Detector.fluorescence: %s'        % dataframe.start['XDI,Detector,fluorescence'])
         xdi.append('# Detector.deadtime_correction: %s' % dataframe.start['XDI,Detector,deadtime_correction'])
     if 'yield' in mode:
@@ -152,7 +152,7 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         
     plot_hint = 'ln(I0/It)  --  ln($5/$6)'
     if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($3/$4)'
-    if 'fluo' in mode or 'both' in mode:
+    if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($8+$9+$10+$11) / $5'
         if kind == 'sead': plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($6+$7+$8+$9) / $3'
     elif 'yield' in mode:
@@ -196,7 +196,7 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     handle.write('# -----------' + eol)
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
-    if 'fluo' in mode or 'both' in mode:
+    if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         table['xmu'] = (table['DTC1'] + table['DTC2'] + table['DTC3'] + table['DTC4']) / table['I0']
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',

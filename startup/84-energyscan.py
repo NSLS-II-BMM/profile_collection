@@ -4,6 +4,7 @@ import bluesky.plan_stubs as bps
 import numpy
 import os
 import re
+import subprocess
 
 run_report(__file__)
 
@@ -392,6 +393,8 @@ from pygments.formatters import HtmlFormatter
 
 def scan_sequence_static_html(inifile       = None,
                               filename      = None,
+                              start         = None,
+                              end           = None,
                               experimenters = None,
                               seqstart      = None,
                               seqend        = None,
@@ -417,22 +420,57 @@ def scan_sequence_static_html(inifile       = None,
     filled up during an XAFS scan, then write a static html file as a dossier for a scan
     sequence using a bespoke html template file
     '''
+    if filename is None or start is None:
+        return None
+    firstfile = "%s.%3.3d" % (filename, start)
+    if not os.path.isfile(os.path.join(DATA, firstfile)):
+        return None
+    
     with open(os.path.join(DATA, 'dossier', 'sample.tmpl')) as f:
         content = f.readlines()
-    htmlfilename = os.path.join(DATA, 'dossier/', filename+'.html')
+    basename     = filename
+    htmlfilename = os.path.join(DATA, 'dossier/',   filename+'-01.html')
     seqnumber = 1
     if os.path.isfile(htmlfilename):
         seqnumber = 2
-        while os.path.isfile(os.path.join(DATA, 'dossier', "%s-%d.html" % (filename,seqnumber))):
+        while os.path.isfile(os.path.join(DATA, 'dossier', "%s-%2.2d.html" % (filename,seqnumber))):
             seqnumber += 1
-        htmlfilename = os.path.join(DATA, 'dossier', "%s-%d.html" % (filename,seqnumber))
-        
+        basename     = "%s-%2.2d" % (filename,seqnumber)
+        htmlfilename = os.path.join(DATA, 'dossier', "%s-%2.2d.html" % (filename,seqnumber))
+
+
+    ## write out the project file & crude processing image for this batch of scans
+    save = os.environ['DEMETER_FORCE_IFEFFIT']
+    if save is None: save = ''
+    os.environ['DEMETER_FORCE_IFEFFIT'] = '1'
+    try:
+        ##########################################################################################
+        # Hi Tom!  Yes, I am making a system call right here.  Again.  And to run a perl script, #
+        # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #
+        # going to want to see that!  XOXO, Bruce                                                #
+        ##########################################################################################
+        result = subprocess.run(['toprj.pl',
+                                 "--folder=%s" % DATA,
+                                 "--name=%s"   % filename,
+                                 "--base=%s"   % basename,
+                                 "--start=%d"  % int(start),
+                                 "--end=%d"    % int(end),
+                                 "--bounds=%s" % bounds,
+                                 "--mode=%s"   % mode        ], stdout=subprocess.PIPE)
+        png = open(os.path.join(DATA, 'snapshots', basename+'.png'), 'wb')
+        png.write(result.stdout)
+        png.close()
+    except:
+        pass
+    os.environ['DEMETER_FORCE_IFEFFIT'] = save
+    
     with open(os.path.join(DATA, inifile)) as f:
         initext = ''.join(f.readlines())
         
     o = open(htmlfilename, 'w')
     pdstext = '%s (%s)' % (get_mode(), describe_mode())
     o.write(''.join(content).format(filename      = filename,
+                                    basename      = basename,
                                     experimenters = experimenters,
                                     gup           = BMM_xsp.gup,
                                     saf           = BMM_xsp.saf,
@@ -461,6 +499,12 @@ def scan_sequence_static_html(inifile       = None,
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
     o.close()
+
+    manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
+    manifest.write(htmlfilename + '\n')
+    manifest.close()
+
+    write_manifest()
     return(htmlfilename)
 
 
@@ -469,6 +513,26 @@ from bluesky.preprocessors import subs_decorator
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
+
+def write_manifest():
+    with open(os.path.join(DATA, 'dossier', 'MANIFEST')) as f:
+        lines = [line.rstrip('\n') for line in f]
+
+    experimentlist = ''
+    for l in lines:
+        if not os.path.isfile(l):
+            continue
+        experimentlist += '<li><a href="%s">%s</a></li>\n' % (l, os.path.basename(l))
+        
+    with open(os.path.join(DATA, 'dossier', 'manifest.tmpl')) as f:
+        content = f.readlines()
+    indexfile = os.path.join(DATA, 'dossier', '00INDEX.html')
+    o = open(indexfile, 'w')
+    o.write(''.join(content).format(date           = BMM_xsp.date,
+                                    experimentlist = experimentlist,
+                                ))
+    o.close()
+    
 
 
 #########################
@@ -530,7 +594,7 @@ def xafs(inifile, **kwargs):
             return
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if not any(p):          # scan_metadata returned having printed an error message
-            return(yield from null())        
+            return(yield from null())
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
@@ -595,7 +659,7 @@ def xafs(inifile, **kwargs):
                                                          doc['data']['DTC2'] +
                                                          doc['data']['DTC3'] +
                                                          doc['data']['DTC4']) / doc['data']['I0'])
-        if 'fluo'    in p['mode']:
+        if 'fluo'    in p['mode'] or 'flou' in p['mode']:
             plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')
         elif 'trans' in p['mode']:
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
@@ -673,7 +737,8 @@ def xafs(inifile, **kwargs):
             ## this dictionary is used to populate the static html page for this scan sequence
             html_scan_list = ''
             html_dict['filename']      = p['filename']
-            html_dict['experimenters'] = p['experimenters']
+            html_dict['start']         = p['start']
+            html_dict['end']           = p['start']+p['nscans']-1
             html_dict['seqstart']      = now('%A, %B %d, %Y %I:%M %p')
             html_dict['e0']            = p['e0']
             html_dict['element']       = p['element']
@@ -783,12 +848,18 @@ def xafs(inifile, **kwargs):
         RE.clear_suspenders()
         if os.path.isfile(dotfile):
             os.remove(dotfile)
+
+        ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
+        how = 'finished'
+        if db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+            how = 'stopped'
         if BMM_xsp.final_log_entry is True:
-            BMM_log_info('XAFS scan sequence finished\nmost recent uid = %s, scan_id = %d'
-                         % (db[-1].start['uid'], db[-1].start['scan_id']))
+            BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'
+                         % (how, db[-1].start['uid'], db[-1].start['scan_id']))
             htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
-            print(colored('wrote %s' % htmlout, 'white'))
-            BMM_log_info('wrote dossier to\n%s' % htmlout)
+            if htmlout is not None:
+                print(colored('wrote dossier %s' % htmlout, 'white'))
+                BMM_log_info('wrote dossier to\n%s' % htmlout)
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
@@ -827,7 +898,7 @@ def howlong(inifile, interactive=True, **kwargs):
               '%s\n' % str.join(', ', missing))
         return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
-    text = '\nEach scan will take about %.1f minutes\n' % approx_time
+    text = '\nEach scan (%d points) will take about %.1f minutes\n' % (len(energy_grid), approx_time)
     text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
     if interactive:
         print(text)

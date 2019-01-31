@@ -82,23 +82,23 @@ class DCM(PseudoPositioner):
     def kill(self):
         dcm_para.kill_cmd.put(1)
         dcm_perp.kill_cmd.put(1)
-        #dcm_pitch.kill_cmd.put(1)
-        #dcm_roll.kill_cmd.put(1)
+        dcm_pitch.kill_cmd.put(1)
+        dcm_roll.kill_cmd.put(1)
 
     def kill_plan(self):
         yield from abs_set(dcm_para.kill_cmd,  1)
         yield from abs_set(dcm_perp.kill_cmd,  1)
-        #yield from abs_set(dcm_pitch.kill_cmd, 1)
-        #yield from abs_set(dcm_roll.kill_cmd,  1)
+        yield from abs_set(dcm_pitch.kill_cmd, 1)
+        yield from abs_set(dcm_roll.kill_cmd,  1)
 
 
     def set_crystal(self, crystal=None):
         if crystal is not None:
             self._crystal = crystal
         if self._crystal is '311':
-            self.bragg.user_offset.put(15.99439325)
+            self.bragg.user_offset.put(15.99235495) # 31 January 2019
         else:
-            self.bragg.user_offset.put(16.05442) # 29 May 2018
+            self.bragg.user_offset.put(16.05684) # 30 January 2019
 
     def e2a(self,energy):
         """convert absolute energy to monochromator angle"""

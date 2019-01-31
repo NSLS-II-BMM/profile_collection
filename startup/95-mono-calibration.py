@@ -88,7 +88,7 @@ def calibrate_mono(mono='111'):
         (y1, y2) = (2*y1, 2*y2)
 
     ## cubic interpolation of tabulated edge energies ... eye candy
-    xnew = np.linspace(min(ee),max(ee),300)
+    xnew = np.linspace(min(ee),max(ee),100)
     f = interp1d(ee, tt, kind='cubic')
         
     plt.cla()

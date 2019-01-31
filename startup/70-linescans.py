@@ -99,8 +99,9 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     '''
     Perform a relative scan of the DCM 2nd crystal pitch around the current
-    position to find the peak of the crystal rocking curve.  At the end, move
-    to the position of maximum intensity on I0.
+    position to find the peak of the crystal rocking curve.  Begin by opening
+    the hutch slits to 3 mm. At the end, move to the position of maximum 
+    intensity on I0, then return to the hutch slits to their original height..
     '''
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
@@ -132,6 +133,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             yield from abs_set(_locked_dwell_time, 0.1)
             yield from abs_set(motor.kill_cmd, 1)
 
+            yield from mv(slits3.vsize, 3)
             yield from rel_scan(dets, motor, start, stop, nsteps)
 
             t  = db[-1].table()
@@ -149,13 +151,16 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         yield from scan_dcmpitch()
 
     def cleanup_plan():
+        yield from mv(slits3.vsize, slit_height)
         yield from abs_set(_locked_dwell_time, 0.5)
-        yield from bps.sleep(3.0)
+        yield from bps.sleep(1.0)
         yield from abs_set(motor.kill_cmd, 1)
+        yield from bps.sleep(1.0)
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
+    slit_height = slits3.vsize.readback.value
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     RE.msg_hook = BMM_msg_hook

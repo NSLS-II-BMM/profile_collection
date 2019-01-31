@@ -37,7 +37,7 @@
 		</a>
 	      </li>
 	      <li class="first active">
-		<a href="{date}.html">Experiment: {date}</a>
+		<a href="00INDEX.html">Experiment: {date}</a>
 	      </li>
 	    </ul>
 	    <br class="clear" />
@@ -48,7 +48,7 @@
 	    <h2>Sequence #{seqnumber}</h2>
 	    <h3>Athena project</h3>
 	    <p>
-	      {filename}.prj
+	      <a href="../prj/{basename}.prj">{basename}.prj</a>
 	    </p>
 
 	    <script type="text/javascript">
@@ -93,6 +93,11 @@
 		  <a href="{anasnap}">
 		    <img class="left" src="{anasnap}" width="80" height="80" alt="" /></a>
 		  <span>Image from analog pinhole camera</span>
+		</li>
+		<li>
+		  <a href="../snapshots/{basename}.png">
+		    <img class="left" src="../snapshots/{basename}.png" width="80" height="80" alt="" /></a>
+		  <span>Rough, automated data reduction</span>
 		</li>
 	      </ul>
 	    </div>
