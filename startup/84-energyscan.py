@@ -440,7 +440,11 @@ def scan_sequence_static_html(inifile       = None,
 
 
     ## write out the project file & crude processing image for this batch of scans
-    save = os.environ['DEMETER_FORCE_IFEFFIT']
+    save = ''
+    try:
+        save = os.environ['DEMETER_FORCE_IFEFFIT']
+    except:
+        save = ''
     if save is None: save = ''
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1'
     try:

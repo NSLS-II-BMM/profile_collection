@@ -20,9 +20,9 @@ class MyPrompt(Prompts):
         #     shbtoken = (Token.Tilde, 'B')
 
         if _new_user_defined:
-            bmmtoken = (Token.CursorLine, 'BMM ')
+            bmmtoken = (Token.Prompt, 'BMM ')
         else:
-            bmmtoken = (Token.AutoSuggestion, 'BMM ')
+            bmmtoken = (Token.OutPrompt, 'BMM ')
         ## BMM XRD.311 A•B 0.0 [5] ▶
         # rcv = None
         # try:
