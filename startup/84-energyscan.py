@@ -603,7 +603,7 @@ def xafs(inifile, **kwargs):
         bad_characters = re.search('[*:"<>|/+\\\]', p['filename'])
         if bad_characters is not None:
             BMM_xsp.final_log_entry = False
-            print(colored('\nA filename should contain any of these characters:', 'lightred'))
+            print(colored('\nA filename should not contain any of these characters:', 'lightred'))
             print(colored('\n\t* : " < > | / + \\', 'lightred'))
             print(colored('\nFilenames with those characters cannot be copied onto most memory sticks', 'lightred'))
             yield from null()
