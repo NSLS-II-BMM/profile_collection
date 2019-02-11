@@ -599,6 +599,22 @@ def xafs(inifile, **kwargs):
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
+
+        bad_characters = re.search('[*:"<>|/+\\\]', p['filename'])
+        if bad_characters is not None:
+            BMM_xsp.final_log_entry = False
+            print(colored('\nA filename should not contain any of these characters:', 'lightred'))
+            print(colored('\n\t* : " < > | / + \\', 'lightred'))
+            print(colored('\nFilenames with those characters cannot be copied onto most memory sticks', 'lightred'))
+            yield from null()
+            return
+
+        if len(p['filename']) > 250:
+            BMM_xsp.final_log_entry = False
+            print(colored('\nYour filename is too long,', 'lightred'))
+            print(colored('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,', 'lightred'))
+            yield from null()
+            return
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
