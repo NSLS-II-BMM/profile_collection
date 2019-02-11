@@ -741,6 +741,7 @@ def xafs(inifile, **kwargs):
             ## this dictionary is used to populate the static html page for this scan sequence
             html_scan_list = ''
             html_dict['filename']      = p['filename']
+            html_dict['experimenters'] = p['experimenters']
             html_dict['start']         = p['start']
             html_dict['end']           = p['start']+p['nscans']-1
             html_dict['seqstart']      = now('%A, %B %d, %Y %I:%M %p')

@@ -54,7 +54,7 @@ def close_last_plot():
     if BMM_cpl.fig is None:
         print('Oops... No last plot.')
         return
-    matplotlib.pyplot.close(BMM_cpl.fig)
+    plt.close(BMM_cpl.fig)
         
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, stream_name='primary', **kwargs):
