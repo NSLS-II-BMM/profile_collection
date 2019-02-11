@@ -600,6 +600,28 @@ def xafs(inifile, **kwargs):
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
 
+
+
+sub_dict = {'*' : '_STAR_',
+            '/' : '_SLASH_',
+            '\\': '_BACKSLASH_',
+            '?' : '_QM_',
+            '%' : '_PERCENT_',
+            ':' : '_COLON_',
+            '|' : '_VERBAR_',
+            '"' : '_QUOTE_',
+            '<' : '_LT_',
+            '>' : '_GT_',
+            '+' : '_PLUS_',
+            }
+
+vfatify = lambda m: sub_dict[m.group()]
+
+filename = 'abc|def<hki%def\hki'
+
+new_filename = re.sub(r'[*:?%"<>|/+\\]', vfatify, filename)
+
+
         bad_characters = re.search('[*:"<>|/+\\\]', p['filename'])
         if bad_characters is not None:
             BMM_xsp.final_log_entry = False
