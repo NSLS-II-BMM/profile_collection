@@ -53,7 +53,7 @@ import configparser
 
 def next_index(folder, stub):
     listing = os.listdir(folder)
-    r = re.compile(stub + '\.\d\d\d')
+    r = re.compile(re.escape(stub) + '\.\d\d\d')
     results = sorted(list(filter(r.match, listing)))
     if len(results) == 0:
         return 1
@@ -88,6 +88,7 @@ def scan_metadata(inifile=None, **kwargs):
       nscan:        [int]   number of repetitions
       start:        [int]   starting scan number, XDI file will be filename.###
       snapshots:    [bool]  True = capture analog and XAS cameras before scan sequence
+      usbstick:     [bool]  True = munge filenames so they can be written to a VFAT USB stick
       htmlpage:     [bool]  True = capture dossier of a scan sequence as a static html page
       bothways:     [bool]  True = measure in both monochromator directions
       channelcut:   [bool]  True = measure in pseudo-channel-cut mode
@@ -201,7 +202,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut'):
+    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -601,42 +602,36 @@ def xafs(inifile, **kwargs):
             return(yield from null())
 
 
+        if p['usbstick']:
+            sub_dict = {'*' : '_STAR_',
+                        '/' : '_SLASH_',
+                        '\\': '_BACKSLASH_',
+                        '?' : '_QM_',
+                        '%' : '_PERCENT_',
+                        ':' : '_COLON_',
+                        '|' : '_VERBAR_',
+                        '"' : '_QUOTE_',
+                        '<' : '_LT_',
+                        '>' : '_GT_',
+                    }
 
-sub_dict = {'*' : '_STAR_',
-            '/' : '_SLASH_',
-            '\\': '_BACKSLASH_',
-            '?' : '_QM_',
-            '%' : '_PERCENT_',
-            ':' : '_COLON_',
-            '|' : '_VERBAR_',
-            '"' : '_QUOTE_',
-            '<' : '_LT_',
-            '>' : '_GT_',
-            '+' : '_PLUS_',
-            }
+            vfatify = lambda m: sub_dict[m.group()]
+            new_filename = re.sub(r'[*:?"<>|/+\\]', vfatify, p['filename'])
+            if new_filename != p['filename']: 
+                BMM_log_info('Changing filename from "%s" to %s"' % (p['filename'], new_filename))
+                print(colored('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred'))
+                print(colored('\nThese characters cannot be in file names copied onto most memory sticks:', 'lightred'))
+                print(colored('\n\t* : ? " < > | / \\', 'lightred'))
+                print(colored('\nSee https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words', 'lightred'))
+                p['filename'] = new_filename
 
-vfatify = lambda m: sub_dict[m.group()]
-
-filename = 'abc|def<hki%def\hki'
-
-new_filename = re.sub(r'[*:?%"<>|/+\\]', vfatify, filename)
-
-
-        bad_characters = re.search('[*:"<>|/+\\\]', p['filename'])
-        if bad_characters is not None:
-            BMM_xsp.final_log_entry = False
-            print(colored('\nA filename should not contain any of these characters:', 'lightred'))
-            print(colored('\n\t* : " < > | / + \\', 'lightred'))
-            print(colored('\nFilenames with those characters cannot be copied onto most memory sticks', 'lightred'))
-            yield from null()
-            return
-
-        if len(p['filename']) > 250:
-            BMM_xsp.final_log_entry = False
-            print(colored('\nYour filename is too long,', 'lightred'))
-            print(colored('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,', 'lightred'))
-            yield from null()
-            return
+            ## 255 character limit for filenames on VFAT
+            # if len(p['filename']) > 250:
+            #     BMM_xsp.final_log_entry = False
+            #     print(colored('\nYour filename is too long,', 'lightred'))
+            #     print(colored('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,', 'lightred'))
+            #     yield from null()
+            #     return
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
@@ -694,6 +689,7 @@ new_filename = re.sub(r'[*:?%"<>|/+\\]', vfatify, filename)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
+        test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], -1*doc['data']['Iy'] / doc['data']['I0'])
@@ -709,6 +705,8 @@ new_filename = re.sub(r'[*:?%"<>|/+\\]', vfatify, filename)
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)')
         elif 'yield' in p['mode']:
             plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)')
+        elif 'test' in p['mode']:
+            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)')
         elif 'both'  in p['mode']:
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
@@ -851,7 +849,7 @@ new_filename = re.sub(r'[*:?%"<>|/+\\]', vfatify, filename)
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
-                if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode']:
+                if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                        md={**md, **rightnow, **supplied_metadata})
                 else:

@@ -47,6 +47,8 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
 
     if 'trans' in mode:
         detectors = transmission
+    elif 'test' in mode:
+        detectors = transmission
     elif 'ref' in mode:
         detectors = transmission
     else:
@@ -157,6 +159,8 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         if kind == 'sead': plot_hint = '(DTC1 + DTC2 + DTC3 + DTC4) / I0  --  ($6+$7+$8+$9) / $3'
     elif 'yield' in mode:
         plot_hint = 'ln(Iy/I0  --  ln($8/$5)'
+    elif 'test' in mode:
+        plot_hint = 'I0  --  $5'
     elif 'ref' in mode:
         plot_hint = 'ln(It/Ir  --  ln($6/$7)'
     xdi.append('# Scan.plot_hint: %s' % plot_hint)
@@ -210,6 +214,8 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
             table['xmu'] = table['Iy'] / table['I0']
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
+        elif 'test' in mode:    # test scan, no log!
+            table['xmu'] = table['I0']
         else:                   # transmission is the primary measurement
             table['xmu'] = numpy.log(table['I0'] / table['It'])
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']

@@ -59,49 +59,31 @@ def change_mode(mode=None, prompt=True):
                                             # starting a move, it is one of the
                                             # motors that reports MOVN=1 even when
                                             # still
-     
+
+     base = (dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+
+             xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
+             xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
+             xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
+
+             m3.yu,           float(MODEDATA['m3_yu'][mode]),
+             m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+             m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+             m3.xu,           float(MODEDATA['m3_xu'][mode]),
+             m3.xd,           float(MODEDATA['m3_xd'][mode]),
+          
+             slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+             slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+             slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+             slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
+        )
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
-          yield from mv(
-               dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-
-               xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
-               xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
-               xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
-
-               m3.yu,           float(MODEDATA['m3_yu'][mode]),
-               m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-               m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-               m3.xu,           float(MODEDATA['m3_xu'][mode]),
-               m3.xd,           float(MODEDATA['m3_xd'][mode]),
-          
-               slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-               slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-               slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-               slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
-          )
+          yield from mv(base)
      else:
-          yield from mv(
-               dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-
-               xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
-               xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
-               xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
-
-               m2.yu,           float(MODEDATA['m2_yu'][mode]),
-               m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
-               m2.ydi,          float(MODEDATA['m2_ydi'][mode]),
-
-               m3.yu,           float(MODEDATA['m3_yu'][mode]),
-               m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-               m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-               m3.xu,           float(MODEDATA['m3_xu'][mode]),
-               m3.xd,           float(MODEDATA['m3_xd'][mode]),
-          
-               slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-               slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-               slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-               slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
-          )
+          yield from mv(base + (m2.yu,           float(MODEDATA['m2_yu'][mode]),
+                                m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
+                                m2.ydi,          float(MODEDATA['m2_ydi'][mode]),
+                           ))
 
      yield from bps.sleep(2.0)
      yield from abs_set(dm3_bct.kill_cmd, 1) # and after

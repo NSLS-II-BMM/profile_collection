@@ -29,18 +29,18 @@ def sample_sequence():
     BMM_log_info('Beginning sample macro')
 
     ### sample 1 ############################################################
-    yield from mv(xafs_linx, 4.3, xafs_liny, 40.2)
-    yield from xafs('scan.ini')
+    yield from mv(xafs_x, 4.3, xafs_y, 40.2, xafs_wheel=15)
+    yield from xafs('scan.ini', filename='blah1', sample='first sample')
     close_last_plot()                 # this command closes the plot on screen
     # yield from mvr(xafs_wheel, -15) # example of rotating to next sample wheel position
     
     ### sample 2 ############################################################
-    yield from mv(xafs_linx, 5.4, xafs_liny, 20.8)
-    yield from xafs('scan.ini', filename='blah2', sample='another sample')
+    yield from mv(xafs_x, 5.4, xafs_y, 20.8, xafs_wheel=15)
+    yield from xafs('scan.ini', filename='blah2', sample='another sample', comment='my comment')
     close_last_plot()
 
     ### sample 3 ############################################################
-    yield from mv(xafs_linx, 6.5, xafs_liny, 1.5)
+    yield from mv(xafs_x, 6.5, xafs_y, 1.5, xafs_wheel=15)
     yield from xafs('scan.ini', filename='blah3', sample='a different sample', nscans=4)
     close_last_plot()
 
