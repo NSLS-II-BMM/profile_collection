@@ -33,6 +33,8 @@ CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'start':         0,
                  'inttime':       1,
                  'snapshots':     True,
+                 'usbstick':      True,
+                 'rockingcurve':  False,
                  'htmlpage':      True,
                  'bothways':      False,
                  'channelcut':    True,
@@ -89,6 +91,7 @@ def scan_metadata(inifile=None, **kwargs):
       start:        [int]   starting scan number, XDI file will be filename.###
       snapshots:    [bool]  True = capture analog and XAS cameras before scan sequence
       usbstick:     [bool]  True = munge filenames so they can be written to a VFAT USB stick
+      rockingcurve  [bool]  True = measure rocking curve at pseudo channel cut energy
       htmlpage:     [bool]  True = capture dossier of a scan sequence as a static html page
       bothways:     [bool]  True = measure in both monochromator directions
       channelcut:   [bool]  True = measure in pseudo-channel-cut mode
@@ -202,7 +205,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick'):
+    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick', 'rockingcurve'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -732,6 +735,10 @@ def xafs(inifile, **kwargs):
                 print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white'))
                 dcm.mode = 'fixed'
                 yield from mv(dcm.energy, eave)
+                if p['rockingcurve']:
+                    BMM_log_info('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave)
+                    print(colored('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white'))
+                    yield from rocking_curve()
                 dcm.mode = 'channelcut'
 
 
