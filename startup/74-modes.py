@@ -180,13 +180,13 @@ def change_xtals(xtal=None):
           print('%s is not a crytsal set' % xtal)
           return(yield from null())
 
-   
-
      print('Moving to %s crystals' % xtal)
      action = input('Begin moving motors? [Y/n then Enter] ')
      if action.lower() == 'q' or action.lower() == 'n':
           yield from null()
           return
+
+     current_energy = dcm.energy.readback.value
 
      RE.msg_hook = None
      BMM_log_info('Moving to the %s crystals' % xtal)
@@ -208,6 +208,10 @@ def change_xtals(xtal=None):
      yield from bps.sleep(2.0)
      yield from abs_set(dcm_roll.kill_cmd, 1)
 
+     print('Returning to %.1f eV' % current_energy)
+     yield from mv(dcm.energy, current_energy)
+
+     print('Performing a rocking curve scan')
      yield from rocking_curve()
      yield from bps.sleep(2.0)
      yield from abs_set(dcm_pitch.kill_cmd, 1)
