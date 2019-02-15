@@ -705,7 +705,7 @@ def xafs(inifile, **kwargs):
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)')
         elif 'yield' in p['mode']:
             plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)')
-        elif 'test' in p['mode']:
+        elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)')
         elif 'both'  in p['mode']:
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
