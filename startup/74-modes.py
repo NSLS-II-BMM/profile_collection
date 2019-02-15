@@ -161,53 +161,59 @@ if BMM_config._mode is None:
 
 
 def change_xtals(xtal=None):
-    if xtal is None:
-        print('No crystal set specified')
-        return(yield from null())
+     if xtal is None:
+          print('No crystal set specified')
+          return(yield from null())
 
-    (ok, text) = BMM_clear_to_start()
-    if ok == 0:
-        print(colored(text, 'lightred'))
-        yield from null()
-        return
+     (ok, text) = BMM_clear_to_start()
+     if ok == 0:
+          print(colored(text, 'lightred'))
+          yield from null()
+          return
 
-    if '111' in xtal:
-        xtal = 'Si(111)'
-    if '311' in xtal:
-        xtal = 'Si(311)'
+     if '111' in xtal:
+          xtal = 'Si(111)'
+     if '311' in xtal:
+          xtal = 'Si(311)'
 
-    if xtal not in ('Si(111)', 'Si(311)'):
-        print('%s is not a crytsal set' % xtal)
-        return(yield from null())
+     if xtal not in ('Si(111)', 'Si(311)'):
+          print('%s is not a crytsal set' % xtal)
+          return(yield from null())
 
-    print('Moving to %s crystals' % xtal)
-    action = input('Begin moving motors? [Y/n then Enter] ')
-    if action.lower() == 'q' or action.lower() == 'n':
-        yield from null()
-        return
+     print('Moving to %s crystals' % xtal)
+     action = input('Begin moving motors? [Y/n then Enter] ')
+     if action.lower() == 'q' or action.lower() == 'n':
+          yield from null()
+          return
 
-    RE.msg_hook = None
-    BMM_log_info('Moving to the %s crystals' % xtal)
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
-    yield from abs_set(dcm_roll.kill_cmd, 1)
-    if xtal is 'Si(111)':
-        yield from mv(dcm_pitch, 3.8698,
-                      dcm_roll, -6.26,
-                      dcm_x,    -35.4    )
-        #dcm._crystal = '111'
-        dcm.set_crystal('111')  # set d-spacing and bragg offset
-    elif xtal is 'Si(311)':
-        yield from mv(dcm_pitch, 2.28,
-                      dcm_roll, -23.86,
-                      dcm_x,     29.0    )
-        #dcm._crystal = '311'
-        dcm.set_crystal('311')  # set d-spacing and bragg offset
+     current_energy = dcm.energy.readback.value
 
-    yield from bps.sleep(2.0)
-    yield from abs_set(dcm_roll.kill_cmd, 1)
+     RE.msg_hook = None
+     BMM_log_info('Moving to the %s crystals' % xtal)
+     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     yield from abs_set(dcm_roll.kill_cmd, 1)
+     if xtal is 'Si(111)':
+          yield from mv(dcm_pitch, 3.8698,
+                        dcm_roll, -6.26,
+                        dcm_x,    -35.4    )
+          #dcm._crystal = '111'
+          dcm.set_crystal('111')  # set d-spacing and bragg offset
+     elif xtal is 'Si(311)':
+          yield from mv(dcm_pitch, 2.28,
+                        dcm_roll, -23.86,
+                        dcm_x,     29.0    )
+          #dcm._crystal = '311'
+          dcm.set_crystal('311')  # set d-spacing and bragg offset
+          
+     yield from bps.sleep(2.0)
+     yield from abs_set(dcm_roll.kill_cmd, 1)
 
-    yield from rocking_curve()
-    yield from bps.sleep(2.0)
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
-    RE.msg_hook = BMM_msg_hook
-    BMM_log_info(motor_status())
+     print('Returning to %.1f eV' % current_energy)
+     yield from mv(dcm.energy, current_energy)
+
+     print('Performing a rocking curve scan')
+     yield from rocking_curve()
+     yield from bps.sleep(2.0)
+     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     RE.msg_hook = BMM_msg_hook
+     BMM_log_info(motor_status())
