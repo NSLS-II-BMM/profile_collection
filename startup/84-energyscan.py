@@ -690,6 +690,21 @@ def xafs(inifile, **kwargs):
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
         BMM_log_info(motor_status())
 
+        ## perhaps enter pseudo-channel-cut mode
+        ## need to do this define defining the plotting lambda otherwise
+        ## BlueSky gets confused about the plotting window
+        if not dcm.suppress_channel_cut:
+            BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
+            print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white'))
+            dcm.mode = 'fixed'
+            yield from mv(dcm.energy, eave)
+            if p['rockingcurve']:
+                BMM_log_info('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave)
+                print(colored('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white'))
+                yield from rocking_curve()
+            dcm.mode = 'channelcut'
+
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
@@ -729,19 +744,6 @@ def xafs(inifile, **kwargs):
         ## begin the scan sequence with the plotting subscription
         @subs_decorator(plot)
         def scan_sequence(clargs):
-            ## perhaps enter pseudo-channel-cut mode
-            if not dcm.suppress_channel_cut:
-                BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
-                print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white'))
-                dcm.mode = 'fixed'
-                yield from mv(dcm.energy, eave)
-                if p['rockingcurve']:
-                    BMM_log_info('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave)
-                    print(colored('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white'))
-                    yield from rocking_curve()
-                dcm.mode = 'channelcut'
-
-
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
             print(colored('computing energy and dwell time grids', 'white'))
