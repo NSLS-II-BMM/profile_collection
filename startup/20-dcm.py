@@ -32,9 +32,9 @@ class DCM(PseudoPositioner):
     @property
     def _twod(self):
         if self._crystal is '311':
-            return 2*1.63763854 # 30 May 2018
+            return 2*BMM_dcm.dspacing_311
         else:
-            return 2*3.13563694 # 29 May 2018
+            return 2*BMM_dcm.dspacing_111
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined for Positioner, a base class of EpicsMotor
@@ -96,9 +96,9 @@ class DCM(PseudoPositioner):
         if crystal is not None:
             self._crystal = crystal
         if self._crystal is '311':
-            self.bragg.user_offset.put(15.99235495) # 31 January 2019
+            self.bragg.user_offset.put(BMM_dcm.offset_311)
         else:
-            self.bragg.user_offset.put(16.05684) # 30 January 2019
+            self.bragg.user_offset.put(BMM_dcm.offset_111)
 
     def e2a(self,energy):
         """convert absolute energy to monochromator angle"""
