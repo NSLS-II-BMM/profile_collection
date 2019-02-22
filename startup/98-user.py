@@ -205,7 +205,8 @@ whoami = show_experiment
 
 def end_experiment():
     '''
-    Unset the logger and the DATA variable at the end of an experiment.
+    Copy data from the experiment that just finished to the NAS, then
+    unset the logger and the DATA variable at the end of an experiment.
     '''
     global DATA
 
@@ -218,10 +219,13 @@ def end_experiment():
     for d in ('dossier', 'prj', 'snapshots'):
         if not os.path.isdir(os.path.join(destination, d)):
             os.mkdir(os.path.join(destination, d))
-    copy_tree(DATA, destination)
-    print(colored('Backed up data to storage server: %s' % destination, 'white'))
-    BMM_log_info('Backed up data to storage server: %s' % destination)
-    
+    try:
+        copy_tree(DATA, destination)
+        print(colored('Backed up data to storage server: "%s"' % destination, 'white'))
+        BMM_log_info('Backed up data to storage server: "%s"' % destination)
+    except:
+        print(colored('Unable to back up data to storage server', 'red'))
+        
     #######################################################
     # unset BMM_xsp, DATA, and experiment specific logger #
     #######################################################
