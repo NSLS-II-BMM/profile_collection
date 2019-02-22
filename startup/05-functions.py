@@ -78,6 +78,7 @@ class xafs_scan_parameters():
         self.date = ''
         self.gup = 0
         self.saf = 0
+        self.name = None
         self.staff = False
 BMM_xsp = xafs_scan_parameters()
 

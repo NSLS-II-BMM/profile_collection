@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+from distutils.dir_util import copy_tree
 
 run_report(__file__)
 
@@ -192,6 +193,7 @@ def start_experiment(name=None, date=None, gup=0, saf=0):
     else:
         BMM_xsp.staff = False
         folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
+    BMM_xsp.name = name
     BMM_xsp.date = date
     new_experiment(folder, saf=saf, gup=gup, name=name)
     
@@ -200,17 +202,35 @@ def show_experiment():
     print('GUP  = %d' % BMM_xsp.gup)
     print('SAF  = %d' % BMM_xsp.saf)
 whoami = show_experiment
-    
+
 def end_experiment():
     '''
     Unset the logger and the DATA variable at the end of an experiment.
     '''
-    BMM_unset_user_log()
     global DATA
+
+    #######################################################################################
+    # create folder and sub-folders on NAS server for this user & experimental start date #
+    #######################################################################################
+    destination = os.path.join('/nist', 'xf06bm', 'user', BMM_xsp.name, BMM_xsp.date)
+    if not os.path.isdir(destination):
+        os.mkdir(destination)
+    for d in ('dossier', 'prj', 'snapshots'):
+        if not os.path.isdir(os.path.join(destination, d)):
+            os.mkdir(os.path.join(destination, d))
+    copy_tree(DATA, destination)
+    print(colored('Backed up data to storage server: %s' % destination, 'white'))
+    BMM_log_info('Backed up data to storage server: %s' % destination)
+    
+    #######################################################
+    # unset BMM_xsp, DATA, and experiment specific logger #
+    #######################################################
+    BMM_unset_user_log()
     DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
     BMM_xsp.date = ''
     BMM_xsp.gup = 0
     BMM_xsp.saf = 0
+    BMM_xsp.name = None
     BMM_xsp.staff = False
     global _new_user_defined
     _new_user_defined = False

@@ -7,12 +7,21 @@ BMM_logger          = logging.getLogger('BMM_logger')
 BMM_logger.handlers = []
 
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
+
 BMM_log_master_file = '/home/xf06bm/Data/BMM_master.log'
 if os.path.isfile(BMM_log_master_file):
     chmod(BMM_log_master_file, 0o644)
 BMM_log_master      = logging.FileHandler(BMM_log_master_file)
 BMM_log_master.setFormatter(BMM_formatter)
 BMM_logger.addHandler(BMM_log_master)
+
+BMM_nas_log_file    = '/nist/xf06bm/data/BMM_master.log'
+if os.path.isfile(BMM_nas_log_file):
+    chmod(BMM_nas_log_file, 0o644)
+BMM_log_nas = logging.FileHandler(BMM_nas_log_file)
+BMM_log_nas.setFormatter(BMM_formatter)
+BMM_logger.addHandler(BMM_log_nas)
+
 BMM_logger.setLevel(logging.INFO)
 chmod(BMM_log_master_file, 0o444)
 
@@ -30,15 +39,18 @@ def BMM_user_log(filename):
 def BMM_unset_user_log():
     BMM_logger.handlers = []
     BMM_logger.addHandler(BMM_log_master)
+    BMM_logger.addHandler(BMM_log_nas)
 
 ## use this command to properly format the log message, manage file permissions, etc
 def BMM_log_info(message):
     chmod(BMM_log_master_file, 0o644)
+    chmod(BMM_nas_log_file, 0o644)
     entry = ''
     for line in message.split('\n'):
         entry += '    ' + line + '\n'
     BMM_logger.info(entry)
     chmod(BMM_log_master_file, 0o444)
+    chmod(BMM_nas_log_file, 0o444)
 
 
 
