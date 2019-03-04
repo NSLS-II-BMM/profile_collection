@@ -5,6 +5,7 @@ import numpy
 import os
 import re
 import subprocess
+import textwrap
 
 run_report(__file__)
 
@@ -446,11 +447,11 @@ def scan_sequence_static_html(inifile       = None,
     ## write out the project file & crude processing image for this batch of scans
     save = ''
     try:
-        save = os.environ['DEMETER_FORCE_IFEFFIT']
+        save = os.environ['DEMETER_FORCE_IFEFFIT'] # FIX ME!!!
     except:
         save = ''
     if save is None: save = ''
-    os.environ['DEMETER_FORCE_IFEFFIT'] = '1'
+    os.environ['DEMETER_FORCE_IFEFFIT'] = '1' # FIX ME!!!
     try:
         ##########################################################################################
         # Hi Tom!  Yes, I am making a system call right here.  Again.  And to run a perl script, #
@@ -458,19 +459,20 @@ def scan_sequence_static_html(inifile       = None,
         # going to want to see that!  XOXO, Bruce                                                #
         ##########################################################################################
         result = subprocess.run(['toprj.pl',
-                                 "--folder=%s" % DATA,
-                                 "--name=%s"   % filename,
-                                 "--base=%s"   % basename,
-                                 "--start=%d"  % int(start),
-                                 "--end=%d"    % int(end),
-                                 "--bounds=%s" % bounds,
-                                 "--mode=%s"   % mode        ], stdout=subprocess.PIPE)
+                                 "--folder=%s" % DATA,         # data folder						 
+                                 "--name=%s"   % filename,     # file stub						 
+                                 "--base=%s"   % basename,     # basename (without scan sequence numbering)		 
+                                 "--start=%d"  % int(start),   # first suffix number					 
+                                 "--end=%d"    % int(end),     # last suffix number					 
+                                 "--bounds=%s" % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)
+                                 "--mode=%s"   % mode],        # measurement mode
+                                stdout=subprocess.PIPE)
         png = open(os.path.join(DATA, 'snapshots', basename+'.png'), 'wb')
         png.write(result.stdout)
         png.close()
     except:
         pass
-    os.environ['DEMETER_FORCE_IFEFFIT'] = save
+    os.environ['DEMETER_FORCE_IFEFFIT'] = save # FIX ME!!!
     
     with open(os.path.join(DATA, inifile)) as f:
         initext = ''.join(f.readlines())
@@ -489,7 +491,7 @@ def scan_sequence_static_html(inifile       = None,
                                     pdsmode       = pdstext,
                                     e0            = '%.1f' % e0,
                                     edge          = edge,
-                                    element       = element,
+                                    element       = '%s (%s, %d)' % (element, element_name(element), Z_number(element)),
                                     date          = BMM_xsp.date,
                                     scanlist      = scanlist,
                                     motors        = motors,
@@ -686,7 +688,7 @@ def xafs(inifile, **kwargs):
 
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
-        clargs = str(kwargs)
+        clargs = textwrap.fill(str(kwargs), width=50).replace('\n', '<br>')
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
         BMM_log_info(motor_status())
 

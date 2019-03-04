@@ -72,6 +72,18 @@ class Vacuum(Device):
             return colored(self.pressure.value, 'yellow')
         return(self.pressure.value)
 
+    def _current(self):
+        curr = float(self.current.value)
+        if curr > 2e-3:
+            out = '%.1f' % (1e3*curr)
+            return(colored(out, 'lightred'))
+        if curr > 5e-4:
+            out = '%.1f' % (1e3*curr)
+            return(colored(out, 'yellow'))
+        out = '%.1f' % (1e6*curr)
+        return(out)
+        #return('%.1f' % 1000000.0*curr)
+
 class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
 
@@ -99,7 +111,10 @@ def show_vacuum():
     print(' Vacuum section       pressure    current')
     print('==================================================')
     for v in vac:
-        print('%-20s  %s    %5.1f μA' % (v.name, v._pressure(), 1e6 * float(v.current.value)))
+        if float(v.current.value) > 5e-4:
+            print('%-20s  %s    %4s  mA' % (v.name, v._pressure(), v._current()))
+        else:
+            print('%-20s  %s    %4s μA' % (v.name, v._pressure(), v._current()))
     print('%-20s  %s' % (flight_path.name, flight_path._pressure()))
 
 
@@ -247,8 +262,10 @@ def show_utilities():
         info = False
         if 'pitch' in tcs[i].name or 'roll' in tcs[i].name: info = True
         if i < lvac and i < lgv:
-            text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %5.1f μA\n' % \
-                    (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), 1e6 * float(vac[i].current.value))
+            units = 'μA'
+            if float(vac[i].current.value) > 5e-4: units = 'mA'
+            text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %s %s\n' % \
+                    (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), vac[i]._current(), units)
         elif i == lvac:
             text += '  %-28s     %s C        %-5s   %s        %-20s  %s   \n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure())

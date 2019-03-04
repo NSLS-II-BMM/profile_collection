@@ -129,9 +129,9 @@ def boxedtext(title, text, tint, width=75):
         if line.count(color.Normal) == 1:
             add = ' '*11
         elif line.count(color.Normal) == 2:
-            add = ' '*20
+            add = ' '*13
         elif line.count(color.Normal) == 3:
-            add = ' '*28
+            add = ' '*27
         elif line.count(color.Normal) == 4:
             add = ' '*26
         print(''.join([colored(strut, tint), template%line, add, colored(strut, tint)]))

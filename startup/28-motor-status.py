@@ -69,7 +69,7 @@ def motor_sidebar():
     mlist.append('XAFS stages (motor names are xafs_*):')
     mlist.append('x = %.3f ; y = %.3f'         % (xafs_linx.user_readback.value,  xafs_liny.user_readback.value))
     mlist.append('pitch = %.3f ; roll = %.3f'  % (xafs_pitch.user_readback.value, xafs_roll.user_readback.value))
-    mlist.append('linxs = %.3f ; wheel = %.3f' % (xafs_linxs.user_readback.value, xafs_wheel.user_readback.value))
+    mlist.append('ref = %.3f ; wheel = %.3f'   % (xafs_linxs.user_readback.value, xafs_wheel.user_readback.value))
     mlist.append('roth = %.3f ; rots = %.3f'   % (xafs_roth.user_readback.value,  xafs_rots.user_readback.value))
     motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
