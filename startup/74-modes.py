@@ -139,11 +139,11 @@ def get_mode():
                return 'XRD'
           else:
                if m3.vertical.readback.value > -2:
-                    return 'focused, >8 keV'
+                    return 'A'
                elif m3.vertical.readback.value > -7:
-                    return 'focused, <6 keV'
+                    return 'B'
                else:
-                    return 'focused, 6 to 8 keV'
+                    return 'C'
      else:
           if m3.pitch.readback.value < 3:
                return 'F'
@@ -158,18 +158,18 @@ def describe_mode():
                return 'focused at goniometer, >8 keV'
           else:
                if m3.vertical.readback.value > -2:
-                    return 'A'
+                    return 'focused, >8 keV'
                elif m3.vertical.readback.value > -7:
-                    return 'B'
+                    return 'focused, <6 keV'
                else:
-                    return 'C'
+                    return 'focused, 6 to 8 keV'
      else:
           if m3.pitch.readback.value < 3:
                return 'unfocused, <6 keV'
           elif m3.lateral.readback.value > 0:
-               return 'unfocused, 6 to 8 keV'
-          else:
                return 'unfocused, >8 keV'
+          else:
+               return 'unfocused, 6 to 8 keV'
 #    yield from null()
 
 if BMM_config._mode is None:

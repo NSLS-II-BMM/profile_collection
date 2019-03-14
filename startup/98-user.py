@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 from distutils.dir_util import copy_tree
+import json
 
 run_report(__file__)
 
@@ -143,6 +144,7 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
         print('5. Created dossier folder, copied html generation files, touched MANIFEST')
     else:
         print('5. Found dossier folder')
+    print('   dossiers in %s' % htmlfolder)
      
     ## make prj folder
     prjfolder = os.path.join(folder, 'prj')
@@ -151,6 +153,7 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
         print('6. Created Athena prj folder')
     else:
         print('6. Found Athena prj folder')
+    print('   projects in %s' % prjfolder)
    
     BMM_xsp.gup = gup
     BMM_xsp.saf = saf
@@ -196,7 +199,36 @@ def start_experiment(name=None, date=None, gup=0, saf=0):
     BMM_xsp.name = name
     BMM_xsp.date = date
     new_experiment(folder, saf=saf, gup=gup, name=name)
-    
+
+    jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+    with open(jsonfile, 'w') as outfile:
+        json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
+    os.chmod(jsonfile, 0o444)
+
+
+def start_experiment_from_serialization():
+    '''In the situation where bsui needs to be stopped (or crashes)
+    before an experiment is properly ended using the end_experiment()
+    command, this function will read a json serialization of the
+    arguments to the start_experiment() command.  
+
+    The intent is that, if that serialization file is found at bsui
+    start-up, this function is run so that the session is immediately
+    ready for the current user.
+
+    In the situation where this start-up script is "%run -i"-ed, the fact
+    that _new_user_defined is True will be recognized.
+    '''
+    global _new_user_defined
+    if _new_user_defined:
+        return()
+    jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+    if os.path.isfile(jsonfile):
+        user = json.load(open(jsonfile))
+        start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
+
+start_experiment_from_serialization()
+
 def show_experiment():
     print('DATA = %s' % DATA)
     print('GUP  = %d' % BMM_xsp.gup)
@@ -209,7 +241,12 @@ def end_experiment():
     unset the logger and the DATA variable at the end of an experiment.
     '''
     global DATA
+    global _new_user_defined
 
+    if not _new_user_defined:
+        print(colored('There is not a current experiment!', 'lightred'))
+        return(None)
+        
     #######################################################################################
     # create folder and sub-folders on NAS server for this user & experimental start date #
     #######################################################################################
@@ -221,11 +258,19 @@ def end_experiment():
             os.mkdir(os.path.join(destination, d))
     try:
         copy_tree(DATA, destination)
-        print(colored('Backed up data to storage server: "%s"' % destination, 'white'))
-        BMM_log_info('Backed up data to storage server: "%s"' % destination)
+        print(colored('NAS data store: "%s"' % destination, 'white'))
+        BMM_log_info('NAS data store: "%s"' % destination)
     except:
-        print(colored('Unable to back up data to storage server', 'red'))
+        print(colored('Unable to write data to NAS server', 'red'))
         
+    #####################################################################
+    # remove the json serialization of the start_experiment() arguments #
+    #####################################################################
+    jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+    if os.path.isfile(jsonfile):    
+        os.chmod(jsonfile, 0o644)
+        os.remove(jsonfile)
+
     #######################################################
     # unset BMM_xsp, DATA, and experiment specific logger #
     #######################################################
@@ -236,7 +281,6 @@ def end_experiment():
     BMM_xsp.saf = 0
     BMM_xsp.name = None
     BMM_xsp.staff = False
-    global _new_user_defined
     _new_user_defined = False
 
     return None
@@ -287,7 +331,7 @@ def BMM_keys():
     print(colored('End of line:\t\t', 'white')+'Ctrl-e')
     print(colored('Delete character\t', 'white')+'Ctrl-d')
     print(colored('Cut text to eol\t\t', 'white')+'Ctrl-k')
-    print(colored('Cut text on line\t', 'white')+'Ctrl-u')
+    print(colored('Cut text to bol\t\t', 'white')+'Ctrl-u')
     print(colored('Paste text\t\t', 'white')+'Ctrl-y')
     print(colored('Clear screen\t\t', 'white')+'Ctrl-l')
     print('')

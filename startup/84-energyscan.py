@@ -41,7 +41,7 @@ CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'channelcut':    True,
                  'mode':          'transmission',
 
-                 'npoints':       0,
+                 'npoints':       0, # see 71-timescans.py
                  'dwell':         1.0,
                  'delay':         0.1}
 
@@ -396,6 +396,8 @@ from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 
+from urllib.parse import quote
+
 def scan_sequence_static_html(inifile       = None,
                               filename      = None,
                               start         = None,
@@ -460,8 +462,8 @@ def scan_sequence_static_html(inifile       = None,
         ##########################################################################################
         result = subprocess.run(['toprj.pl',
                                  "--folder=%s" % DATA,         # data folder						 
-                                 "--name=%s"   % filename,     # file stub						 
-                                 "--base=%s"   % basename,     # basename (without scan sequence numbering)		 
+                                 "--name='%s'" % filename,     # file stub						 
+                                 "--base='%s'" % basename,     # basename (without scan sequence numbering)		 
                                  "--start=%d"  % int(start),   # first suffix number					 
                                  "--end=%d"    % int(end),     # last suffix number					 
                                  "--bounds=%s" % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)
@@ -481,6 +483,7 @@ def scan_sequence_static_html(inifile       = None,
     pdstext = '%s (%s)' % (get_mode(), describe_mode())
     o.write(''.join(content).format(filename      = filename,
                                     basename      = basename,
+                                    encoded_basename = quote(basename),
                                     experimenters = experimenters,
                                     gup           = BMM_xsp.gup,
                                     saf           = BMM_xsp.saf,
@@ -491,7 +494,7 @@ def scan_sequence_static_html(inifile       = None,
                                     pdsmode       = pdstext,
                                     e0            = '%.1f' % e0,
                                     edge          = edge,
-                                    element       = '%s (%s, %d)' % (element, element_name(element), Z_number(element)),
+                                    element       = '%s (<a href="https://en.wikipedia.org/wiki/%s">%s</a>, %d)' % (element, element_name(element), element_name(element), Z_number(element)),
                                     date          = BMM_xsp.date,
                                     scanlist      = scanlist,
                                     motors        = motors,
@@ -504,8 +507,8 @@ def scan_sequence_static_html(inifile       = None,
                                     steps         = steps,
                                     times         = times,
                                     clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
-                                    websnap       = '../snapshots/'+websnap,
-                                    anasnap       = '../snapshots/'+anasnap,
+                                    websnap       = quote('../snapshots/'+websnap),
+                                    anasnap       = quote('../snapshots/'+anasnap),
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
     o.close()
@@ -880,7 +883,7 @@ def xafs(inifile, **kwargs):
                 if len(p['filename']) > 11:
                     printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
                 html_scan_list += '<li><a href="../%s" title="Click to see the text of %s">%s</a>&nbsp;&nbsp;&nbsp;&nbsp;%s</li>\n' \
-                                  % (fname, fname, printedname, js_text)
+                                  % (quote(fname), fname, printedname, js_text)
                 html_dict['scanlist'] = html_scan_list
 
 
@@ -903,6 +906,7 @@ def xafs(inifile, **kwargs):
 
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished'
+        ## check to see if ['primary'] exists...
         if db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
             how = 'stopped'
         if BMM_xsp.final_log_entry is True:
