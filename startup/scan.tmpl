@@ -1,27 +1,33 @@
 ########################################### -*- conf -*-
 [scan]
 folder        = {folder}
-filename      = blah
 experimenters = {name}
+usbstick      = True
+
+filename      = best_sample_ever
+
+sample        = Fe
+prep          = iron
+comment       = Welcome to BMM
 
 e0            = 7112
 element       = Fe
 edge          = K
-sample        = iron
-prep          = iron
-comment       = Welcome to BMM
 
 nscans        = 1
 start         = 1
 # start is a positive integer or "next"
 
-usbstick      = True
-
 ## mode is one of transmission, fluorescence, both, or reference
 mode       = fluorescence
 
-##  regions relative
-##  to e0:         1      2      3      4
+#### EXAFS scan parameters ####
+##                 1      2      3      4              regions relative to e0
 bounds     = -200    -30     -10   15.5    15k
 steps      =      10     2.0    0.5    0.05k
 times      =      0.5    0.5    0.5    0.25k
+
+#### quick-n-dirty XANES scan parameters ####
+#bounds     = -40     30     -10   15.5    15k
+#steps      =      1
+#times      =      0.5

@@ -460,9 +460,11 @@ def scan_sequence_static_html(inifile       = None,
         # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #
         # going to want to see that!  XOXO, Bruce                                                #
         ##########################################################################################
-        result = subprocess.run(['toprj.pl',
-                                 "--folder=%s" % DATA,         # data folder						 
-                                 "--name='%s'" % filename,     # file stub						 
+        print("/home/xf06bm/bin/toprj.pl --folder=%s --name='%s --base='%s' --start=%d --end=%d --bounds=%s --mode=%s" %
+              (DATA, filename, basename, int(start), int(end), bounds, mode))
+        result = subprocess.run(['/home/xf06bm/bin/toprj.pl',
+                                 "--folder=%s" % DATA,         # data folder
+                                 "--name='%s'" % filename,     # file stub
                                  "--base='%s'" % basename,     # basename (without scan sequence numbering)		 
                                  "--start=%d"  % int(start),   # first suffix number					 
                                  "--end=%d"    % int(end),     # last suffix number					 
@@ -472,8 +474,8 @@ def scan_sequence_static_html(inifile       = None,
         png = open(os.path.join(DATA, 'snapshots', basename+'.png'), 'wb')
         png.write(result.stdout)
         png.close()
-    except:
-        pass
+    except Exception as e:
+        print(e)
     os.environ['DEMETER_FORCE_IFEFFIT'] = save # FIX ME!!!
     
     with open(os.path.join(DATA, inifile)) as f:
@@ -709,9 +711,12 @@ def xafs(inifile, **kwargs):
                 yield from rocking_curve()
             dcm.mode = 'channelcut'
 
-        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
+        legends = []
+        for i in range(p['start'], p['start']+p['nscans'], 1):
+            legends.append("%s.%3.3d" % (p['filename'], i))
+        
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
@@ -721,21 +726,21 @@ def xafs(inifile, **kwargs):
                                                          doc['data']['DTC3'] +
                                                          doc['data']['DTC4']) / doc['data']['I0'])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
-            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')
+            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',   legend_keys=legends)
         elif 'trans' in p['mode']:
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   legend_keys=legends)
         elif 'ref'   in p['mode']:
-            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)')
+            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',      legend_keys=legends)
         elif 'yield' in p['mode']:
-            plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)')
+            plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', legend_keys=legends)
         elif 'test'  in p['mode']:
-            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)')
+            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                   legend_keys=legends)
         elif 'both'  in p['mode']:
-            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)'),
-                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)')]
+            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   legend_keys=legends),
+                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',   legend_keys=legends)]
         else:
             print(colored('Plotting mode not specified, falling back to a transmission plot', 'lightred'))
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)')
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   legend_keys=legends)
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -906,8 +911,9 @@ def xafs(inifile, **kwargs):
 
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished'
-        ## check to see if ['primary'] exists...
-        if db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+        if 'primary' not in db[-1].stop['num_events']:
+            how = 'stopped'
+        elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
             how = 'stopped'
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'
