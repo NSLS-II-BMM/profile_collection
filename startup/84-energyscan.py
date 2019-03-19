@@ -140,6 +140,17 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = CS_DEFAULTS[a]
     parameters['bounds_given'] = parameters['bounds'].copy()
 
+    if (len(parameters['bounds']) - len(parameters['steps'])) != 1:
+        print(colored('\nThere must be one more item in bounds than in steps\n', 'lightred'))
+        print(colored('\n\tbounds = %s\n', % config.get('scan', 'bounds') 'lightred'))
+        print(colored('\n\tsteps = %s\n', % config.get('scan', 'steps') 'lightred'))
+        return {}, {}
+    if (len(parameters['bounds']) - len(parameters['times'])) != 1:
+        print(colored('\nThere must be one more item in bounds than in times\n', 'lightred'))
+        print(colored('\n\tbounds = %s\n', % config.get('scan', 'bounds') 'lightred'))
+        print(colored('\n\ttimes = %s\n', % config.get('scan', 'times') 'lightred'))
+        return {}, {}
+
     ## ----- strings
     for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
               'mode', 'sample', 'prep'):

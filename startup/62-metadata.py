@@ -48,7 +48,10 @@ def mirror_state():
     if abs(m3.vertical.readback.value + 1.5) < 0.1:
         m3state = 'not in use'
     else:
-        m3state = 'flat mirror, %s, pitch = %.2f mrad' % (stripe, m3.pitch.readback.value)
+        if m3.pitch.readback.value < 3:
+            m3state = 'flat mirror, %s, pitch = 5 mrad relative to beam' % stripe
+        else:
+            m3state = 'flat mirror, %s, pitch = 3.5 mrad relative to beam' % stripe
     return(m2state, m3state)
 
 
