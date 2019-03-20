@@ -96,6 +96,13 @@ def e2l(val):
     """Convert absolute photon energy to photon wavelength"""
     return 2*pi*HBARC/val
 
+def isfloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
 def now(fmt="%Y-%m-%dT%H-%M-%S"):
     return datetime.datetime.now().strftime(fmt)
 

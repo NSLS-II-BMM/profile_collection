@@ -62,6 +62,112 @@ def next_index(folder, stub):
         return 1
     return int(results[-1][-3:]) + 1
 
+## need more error checking:
+##   ✓ sanitize the '#.#k' strings
+##   ✓ check that bounds are float or float+'k'
+##   ✓ negative boundaries must be floats
+##   ✓ steps cannot be negative
+##   ✓ times cannot be negative
+##   ✓ steps smaller than, say, '0.01k'
+##   ✓ steps smaller than 0.01
+##   * k^2 times
+##   * switch back to energy units after a k-valued boundary?
+##   ✓ out of order boundaries -- sort?
+##   * pre-edge k-values steps & times
+
+def error_msg(text):
+    return colored(text, 'lightred')
+def warning_msg(text):
+    return colored(text, 'yellow')
+def url_msg(text):
+    return colored(text, 'white')
+
+def sanitize_step_scan_parameters(bounds, steps, times):
+    problem = False
+    text = ''
+
+    ############################################################################
+    # bounds is one longer than steps/times, length of steps = length of times #
+    ############################################################################
+    if (len(parameters['bounds']) - len(parameters['steps'])) != 1:
+        text += error_msg('\nbounds must have one more item than steps\n')
+        text += error_msg('\tbounds = %s\n' % ' '.join(map(str, bounds)))
+        text += error_msg('\tsteps = %s\n'  % ' '.join(map(str, steps)))
+        problem = True
+    if (len(parameters['bounds']) - len(parameters['times'])) != 1:
+        text += error_msg('\nbounds must have one more item than times\n')
+        text += error_msg('\tbounds = %s\n' % ' '.join(map(str, bounds)))
+        text += error_msg('\ttimes = %s\n'  % ' '.join(map(str, times)))
+        problem = True
+
+    ############################
+    # tests of boundary values #
+    ############################
+    for b in bounds:
+        if b[-1:].lower() == 'k':
+            if not isfloat(b[-1:]):
+                text += error_msg('\n%s is not a valid scan boundary value\n' % b)
+                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+                problem = True
+        elif not isfloat(b):
+            text += error_msg('\n%s is not a valid scan boundary value\n' % b)
+            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+            problem = True
+
+        if b[:1] == '-' and b[-1:].lower() == 'k':
+            text += error_msg('\nNegative bounds must be energy-valued, not k-valued (%s)\n' % b, 'lightred') 
+            problem = True
+               
+    #############################
+    # tests of step size values #
+    #############################
+    for s in steps:
+        if s[-1:].lower() == 'k':
+            if not isfloat(s[-1:]):
+                text += error_msg('\n%s is not a valid scan step size value\n' % s)
+                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+                problem = True
+        elif not isfloat(s):
+            text += error_msg('\n%s is not a valid scan step size value\n' % s)
+            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+            problem = True
+
+        if s[:1] == '-':
+            text += error_msg('\nStep sizes cannot be negative (%s)\n' % s)
+            problem = True
+
+        if isfloat(s) and float(s) <= 0.1:
+            text += warning_msg('\n%s is a very small step size!\n' % s)
+        if s[-1:].lower() == 'k' and isfloat(s[-1:]) and float(s[:-1]) < 0.01:
+            text += warning_msg('\n%s is a very small step size!\n' % s)
+            
+                
+    ####################################
+    # tests of integration time values #
+    ####################################
+    for t in times:
+        if t[-1:].lower() == 'k':
+            if not isfloat(t[-1:]):
+                text += error_msg('\n%s is not a valid integration time value\n' % t)
+                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+                problem = True
+        elif not isfloat(t):
+            text += error_msg('\n%s is not a valid integration time value\n' % t)
+            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+            problem = True
+
+        if t[:1] == '-':
+            text += error_msg('\nIntegration times cannot be negative (%s)\n' % t)
+            problem = True
+
+        if isfloat(t) and float(s) <= 0.1:
+            text += warning_msg('\n%s is a very integration time!\n' % s)
+        if s[-1:].lower() == 'k' and isfloat(s[-1:]) and float(s[:-1]) < 0.05:
+            text += warning_msg('\n%s is a very small integration time!\n' % s)
+                
+    return problem, text
+    
+
 
 def scan_metadata(inifile=None, **kwargs):
     """Typical use is to specify an INI file, which contains all the
@@ -124,7 +230,7 @@ def scan_metadata(inifile=None, **kwargs):
 
     found = dict()
 
-    ## ----- scan regions
+    ## ----- scan regions (what about kwargs???)
     for a in ('bounds', 'steps', 'times'):
         found[a] = False
         if a not in kwargs:
@@ -140,16 +246,10 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = CS_DEFAULTS[a]
     parameters['bounds_given'] = parameters['bounds'].copy()
 
-    if (len(parameters['bounds']) - len(parameters['steps'])) != 1:
-        print(colored('\nThere must be one more item in bounds than in steps\n', 'lightred'))
-        print(colored('\n\tbounds = %s\n', % config.get('scan', 'bounds') 'lightred'))
-        print(colored('\n\tsteps = %s\n', % config.get('scan', 'steps') 'lightred'))
-        return {}, {}
-    if (len(parameters['bounds']) - len(parameters['times'])) != 1:
-        print(colored('\nThere must be one more item in bounds than in times\n', 'lightred'))
-        print(colored('\n\tbounds = %s\n', % config.get('scan', 'bounds') 'lightred'))
-        print(colored('\n\ttimes = %s\n', % config.get('scan', 'times') 'lightred'))
-        return {}, {}
+    #(problem, text) = sanitize_step_scan_parameters(bounds, steps, times)
+    #print(text)
+    #if problem:
+    #    return {}, {}
 
     ## ----- strings
     for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
@@ -232,17 +332,6 @@ def scan_metadata(inifile=None, **kwargs):
     return parameters, found
 
 
-## need more error checking:
-##   * sanitize the '#.#k' strings
-##   * check that bounds are float or float+'k'
-##   * negative boundaries must be floats
-##   * steps cannot be negative
-##   * times cannot be negative
-##   * steps smaller than, say, '0.01k'
-##   * steps smaller than 0.01
-##   * k^2 times
-##   * switch back to energy units afetr a k-valued boundary?
-##   * out of order boundaries -- sort?
 def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112):
     '''Input:
        bounds:   (list) N relative energy values denoting the region boundaries of the step scan
@@ -302,7 +391,8 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
         if type(s) is str:
             this = float(s[:-1])
             bounds[i] = ktoe(this)
-
+    bounds.sort()
+            
     grid = list()
     timegrid = list()
     for i,s in enumerate(steps):
@@ -321,18 +411,6 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
         timegrid = list(numpy.round(timegrid, decimals=2))
     approximate_time = (sum(timegrid) + float(len(timegrid))*CS_MULTIPLIER) / 60.0
     return (grid, timegrid, round(approximate_time, 1))
-
-## vor.count_mode.put(0)               put the Struck in OneCount mode (1 is AutoCount)
-## vor.preset_time.put(0.5)            set the OneCount accumulation time
-## vor.auto_count_time.put(0.5)        set the AutoCount accumulation time
-## vor.count.put(1)                    trigger a OneCount
-## ... then can get the channel values
-
-## quadem1.acquire_mode.put(0)                Continuous acquire mode
-## quadem1.acquire_mode.put(1)                Multiple acquire mode
-## quadem1.acquire_mode.put(2)                Single acquire mode
-## quadem1.acquire.put(1)                     trigger acquisition in any of the modes
-## ... then can get the channel values
 
 ## -----------------------
 ##  energy step scan plan concept

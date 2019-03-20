@@ -10,7 +10,8 @@ LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 MODEDATA = None
 def read_mode_data():
      return json.load(open(os.path.join(LOCATION, 'Modes.json')))
-MODEDATA = read_mode_data()
+if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
+     MODEDATA = read_mode_data()
 
 ##########################################################
 # --- a simple class for managing beamline configuration #
