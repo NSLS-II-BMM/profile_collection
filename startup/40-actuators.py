@@ -34,11 +34,11 @@ class EPS_Shutter(Device):
             yield from mv(self.opn, 1)
             if count >= self.maxcount:
                 print('tried %d times and failed to open %s %s' % (count, self.name, ':('))  # u'\u2639'  unicode frown
-                yield from null()
-                return
+                return(yield from null())
             time.sleep(1.5)
-        BMM_log_info('Opened {}'.format(self.name))
-        print(' Opened {}'.format(self.name))
+        report('Opened {}'.format(self.name))
+        #BMM_log_info('Opened {}'.format(self.name))
+        #print(' Opened {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
     def close_plan(self):
@@ -50,11 +50,11 @@ class EPS_Shutter(Device):
             yield from mv(self.cls, 1)
             if count >= self.maxcount:
                 print('tried %d times and failed to close %s %s' % (count, self.name, ':('))
-                yield from null()
-                return
+                return(yield from null())
             time.sleep(1.5)
-        BMM_log_info('Closed {}'.format(self.name))
-        print(' Closed {}'.format(self.name))
+        report('Closed {}'.format(self.name))
+        #BMM_log_info('Closed {}'.format(self.name))
+        #print(' Closed {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
     def open(self):
@@ -69,8 +69,9 @@ class EPS_Shutter(Device):
                     print('tried %d times and failed to open %s %s' % (count, self.name, ':('))
                     return
                 time.sleep(1.5)
-            print(' Opened {}'.format(self.name))
-            BMM_log_info('Opened {}'.format(self.name))
+            report(' Opened {}'.format(self.name))
+            #print(' Opened {}'.format(self.name))
+            #BMM_log_info('Opened {}'.format(self.name))
         else:
             print('{} is open'.format(self.name))
         RE.msg_hook = BMM_msg_hook
@@ -87,8 +88,9 @@ class EPS_Shutter(Device):
                     print('tried %d times and failed to close %s %s' % (count, self.name, ':('))
                     return
                 time.sleep(1.5)
-            print(' Closed {}'.format(self.name))
-            BMM_log_info('Closed {}'.format(self.name))
+            report(' Closed {}'.format(self.name))
+            #print(' Closed {}'.format(self.name))
+            #BMM_log_info('Closed {}'.format(self.name))
         else:
             print('{} is closed'.format(self.name))
         RE.msg_hook = BMM_msg_hook
@@ -133,25 +135,21 @@ class Spinner(Device):
         super().__init__(*args, **kwargs)
 
     def on(self):
-        print('Turning {} on'.format(self.name))
+        report('Turning {} on'.format(self.name))
         self.state.put(1)
-
-    def start(self):
-        print('Turning {} on'.format(self.name))
-        self.state.put(1)
+    start = on
 
     def off(self):
-        print('Turning {} off'.format(self.name))
+        report('Turning {} off'.format(self.name))
         self.state.put(0)
-
-    def stop(self):
-        print('Turning {} off'.format(self.name))
-        self.state.put(0)
+    stop = off
 
     def on_plan(self):
+        report('Turning {} off'.format(self.name))
         yield from abs_set(self.state, 1)
 
     def off_plan(self):
+        report('Turning {} off'.format(self.name))
         yield from abs_set(self.state, 0)
 
 

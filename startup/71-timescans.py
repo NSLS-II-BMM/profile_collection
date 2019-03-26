@@ -310,8 +310,9 @@ def sead(inifile, force=False, **kwargs):
         ## write the output file
         header = db[-1]
         write_XDI(outfile, header, p['mode'], p['comment'], kind='sead') # yield from ?
-        BMM_log_info('wrote time scan to %s' % outfile)
-        print(colored('wrote %s' % outfile, 'white'))
+        report('wrote time scan to %s' % outfile)
+        #BMM_log_info('wrote time scan to %s' % outfile)
+        #print(colored('wrote %s' % outfile, 'white'))
 
     def cleanup_plan():
         print('Cleaning up after single energy absorption detector measurement')

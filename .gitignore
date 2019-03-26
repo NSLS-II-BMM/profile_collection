@@ -6,3 +6,4 @@ security/
 db/
 log/
 pid/
+*.directory

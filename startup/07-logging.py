@@ -53,6 +53,16 @@ def BMM_log_info(message):
     chmod(BMM_nas_log_file, 0o444)
 
 
+def report(text, color=False):
+    '''Print a string to the screen AND to the log file.
+    With a color argument, use the colored() function on the screen text.
+    '''
+    BMM_log_info(text)
+    if color:                   # test that color is sensible...
+        print(colored(text, color))
+    else:
+        print(text)
+
 
 
 ######################################################################################
@@ -67,13 +77,17 @@ def BMM_msg_hook(msg):
     #print(msg)
     if msg[0] == 'set':
         if 'EpicsMotor' in str(type(msg[1])):
-            print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            report('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            #print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            #BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
         elif 'EpicsSignal' in str(type(msg[1])):
-            print('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
-            BMM_log_info('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            #print('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            #BMM_log_info('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
         elif 'PseudoSingle' in str(type(msg[1])):
-            print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            report('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            #print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
+            #BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
 
 RE.msg_hook = BMM_msg_hook
+

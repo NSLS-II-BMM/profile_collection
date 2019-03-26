@@ -34,6 +34,7 @@ def annotate_image(imagefile, text):
 
 XASURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
 XRDURL = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'
+CAM_PROXIES = {"http": None, "https": None,}
 
 def snap(which, filename=None, **kwargs):
     if which is None: which = 'XAS'
@@ -44,8 +45,6 @@ def snap(which, filename=None, **kwargs):
     else:
         xas_webcam(filename=filename, **kwargs)
 
-CAM_PROXIES = {"http": None, "https": None,}
-
 def xas_webcam(filename=None, **kwargs):
     if filename is None:
         filename = os.environ['HOME'] + '/XAS_camera_' + now() + '.jpg'
@@ -53,8 +52,9 @@ def xas_webcam(filename=None, **kwargs):
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
     if 'annotation' in kwargs:
         annotate_image(filename, kwargs['annotation'])
-    BMM_log_info('XAS webcam image written to %s' % filename)
-    print('Wrote ' + filename)
+    report('XAS webcam image written to %s' % filename)
+    #BMM_log_info('XAS webcam image written to %s' % filename)
+    #print('Wrote ' + filename)
 
 def xrd_webcam(filename=None, **kwargs):
     if filename is None:
@@ -63,8 +63,9 @@ def xrd_webcam(filename=None, **kwargs):
     Image.open(BytesIO(r.content)).save(filename, 'JPEG')
     if 'annotation' in kwargs:
         annotate_image(filename, kwargs['annotation'])
-    BMM_log_info('XRD webcam image written to %s' % filename)
-    print('Wrote ' + filename)
+    report('XRD webcam image written to %s' % filename)
+    #BMM_log_info('XRD webcam image written to %s' % filename)
+    #print('Wrote ' + filename)
 
 
 from os import system
@@ -139,8 +140,9 @@ def anacam(filename    = None,
               (quiet, camera, device, title, timestamp, skip, frames, brightness, filename)
     system(command)
 
-    BMM_log_info('Analog camera image written to %s' % filename)
-    print('Wrote ' + filename)
+    report('Analog camera image written to %s' % filename)
+    #BMM_log_info('Analog camera image written to %s' % filename)
+    #print('Wrote ' + filename)
 
     ## crosshairs
     #if not camera.nocrosshair:

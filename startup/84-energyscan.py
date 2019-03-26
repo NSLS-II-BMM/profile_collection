@@ -17,6 +17,7 @@ CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
 CS_MULTIPLIER = 1.425
+## replacing this with BMM_config, see 74-modes.py
 CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'steps':         [10, 0.5, '0.05k'],
                  'times':         [0.5, 0.5, '0.25k'],
@@ -46,7 +47,6 @@ CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],
                  'delay':         0.1}
 
 
-#import inspect
 import configparser
     #folder=None, filename=None,
     #e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
@@ -70,17 +70,11 @@ def next_index(folder, stub):
 ##   ✓ times cannot be negative
 ##   ✓ steps smaller than, say, '0.01k'
 ##   ✓ steps smaller than 0.01
+##   ✓ out of order boundaries -- sort?
 ##   * k^2 times
 ##   * switch back to energy units after a k-valued boundary?
-##   ✓ out of order boundaries -- sort?
 ##   * pre-edge k-values steps & times
 
-def error_msg(text):
-    return colored(text, 'lightred')
-def warning_msg(text):
-    return colored(text, 'yellow')
-def url_msg(text):
-    return colored(text, 'white')
 
 def sanitize_step_scan_parameters(bounds, steps, times):
     problem = False
@@ -107,11 +101,9 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         if b[-1:].lower() == 'k':
             if not isfloat(b[-1:]):
                 text += error_msg('\n%s is not a valid scan boundary value\n' % b)
-                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
                 problem = True
         elif not isfloat(b):
             text += error_msg('\n%s is not a valid scan boundary value\n' % b)
-            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
             problem = True
 
         if b[:1] == '-' and b[-1:].lower() == 'k':
@@ -125,11 +117,9 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         if s[-1:].lower() == 'k':
             if not isfloat(s[-1:]):
                 text += error_msg('\n%s is not a valid scan step size value\n' % s)
-                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
                 problem = True
         elif not isfloat(s):
             text += error_msg('\n%s is not a valid scan step size value\n' % s)
-            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
             problem = True
 
         if s[:1] == '-':
@@ -149,11 +139,9 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         if t[-1:].lower() == 'k':
             if not isfloat(t[-1:]):
                 text += error_msg('\n%s is not a valid integration time value\n' % t)
-                text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
                 problem = True
         elif not isfloat(t):
             text += error_msg('\n%s is not a valid integration time value\n' % t)
-            text += error_msg('\tsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
             problem = True
 
         if t[:1] == '-':
@@ -161,10 +149,14 @@ def sanitize_step_scan_parameters(bounds, steps, times):
             problem = True
 
         if isfloat(t) and float(s) <= 0.1:
-            text += warning_msg('\n%s is a very integration time!\n' % s)
+            text += warning_msg('\n%s is a very short integration time!\n' % s)
         if s[-1:].lower() == 'k' and isfloat(s[-1:]) and float(s[:-1]) < 0.05:
-            text += warning_msg('\n%s is a very small integration time!\n' % s)
-                
+            text += warning_msg('\n%s is a very short integration time!\n' % s)
+
+    if text:
+        text += error_msg('\nsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
+
+            
     return problem, text
     
 
@@ -243,7 +235,8 @@ def scan_metadata(inifile=None, **kwargs):
                         parameters[a].append(f)
                     found[a] = True
             except:
-                parameters[a] = CS_DEFAULTS[a]
+                #parameters[a] = CS_DEFAULTS[a]
+                parameters[a] = getattr(BMM_config, a)
     parameters['bounds_given'] = parameters['bounds'].copy()
 
     #(problem, text) = sanitize_step_scan_parameters(bounds, steps, times)
@@ -260,7 +253,8 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = config.get('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = CS_DEFAULTS[a]
+                #parameters[a] = CS_DEFAULTS[a]
+                parameters[a] = getattr(BMM_config, a)
         else:
             parameters[a] = str(kwargs[a])
             found[a] = True
@@ -276,7 +270,8 @@ def scan_metadata(inifile=None, **kwargs):
             parameters['start'] = str(config.get('scan', 'start'))
             found['start'] = True
         except configparser.NoOptionError:
-            parameters['start'] = CS_DEFAULTS['start']
+            #parameters['start'] = CS_DEFAULTS['start']
+            parameters[a] = getattr(BMM_config, a)
     else:
         parameters['start'] = str(kwargs['start'])
         found['start'] = True
@@ -298,7 +293,8 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = int(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = CS_DEFAULTS[a]
+                parameters[a] = getattr(BMM_config, a)
+                #parameters[a] = CS_DEFAULTS[a]
         else:
             parameters[a] = int(kwargs[a])
             found[a] = True
@@ -311,7 +307,8 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = float(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = CS_DEFAULTS[a]
+                #parameters[a] = CS_DEFAULTS[a]
+                parameters[a] = getattr(BMM_config, a)
         else:
             parameters[a] = float(kwargs[a])
             found[a] = True
@@ -324,7 +321,8 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = config.getboolean('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = CS_DEFAULTS[a]
+                #parameters[a] = CS_DEFAULTS[a]
+                parameters[a] = getattr(BMM_config, a)
         else:
             parameters[a] = bool(kwargs[a])
             found[a] = True
@@ -549,16 +547,16 @@ def scan_sequence_static_html(inifile       = None,
         # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #
         # going to want to see that!  XOXO, Bruce                                                #
         ##########################################################################################
-        print("/home/xf06bm/bin/toprj.pl --folder=%s --name='%s --base='%s' --start=%d --end=%d --bounds=%s --mode=%s" %
+        print("/home/xf06bm/bin/toprj.pl --folder='%s' --name='%s' --base='%s' --start=%d --end=%d --bounds='%s' --mode=%s" %
               (DATA, filename, basename, int(start), int(end), bounds, mode))
         result = subprocess.run(['/home/xf06bm/bin/toprj.pl',
-                                 "--folder=%s" % DATA,         # data folder
-                                 "--name='%s'" % filename,     # file stub
-                                 "--base='%s'" % basename,     # basename (without scan sequence numbering)		 
-                                 "--start=%d"  % int(start),   # first suffix number					 
-                                 "--end=%d"    % int(end),     # last suffix number					 
-                                 "--bounds=%s" % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)
-                                 "--mode=%s"   % mode],        # measurement mode
+                                 "--folder='%s'" % DATA,         # data folder
+                                 "--name='%s'"   % filename,     # file stub
+                                 "--base='%s'"   % basename,     # basename (without scan sequence numbering)		 
+                                 "--start=%d"    % int(start),   # first suffix number					 
+                                 "--end=%d"      % int(end),     # last suffix number					 
+                                 "--bounds='%s'" % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)
+                                 "--mode=%s"     % mode],        # measurement mode
                                 stdout=subprocess.PIPE)
         png = open(os.path.join(DATA, 'snapshots', basename+'.png'), 'wb')
         png.write(result.stdout)
@@ -700,7 +698,6 @@ def xafs(inifile, **kwargs):
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
 
-
         if p['usbstick']:
             sub_dict = {'*' : '_STAR_',
                         '/' : '_SLASH_',
@@ -717,8 +714,9 @@ def xafs(inifile, **kwargs):
             vfatify = lambda m: sub_dict[m.group()]
             new_filename = re.sub(r'[*:?"<>|/+\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
-                BMM_log_info('Changing filename from "%s" to %s"' % (p['filename'], new_filename))
-                print(colored('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred'))
+                report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred')
+                #BMM_log_info('Changing filename from "%s" to %s"' % (p['filename'], new_filename))
+                #print(colored('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred'))
                 print(colored('\nThese characters cannot be in file names copied onto most memory sticks:', 'lightred'))
                 print(colored('\n\t* : ? " < > | / \\', 'lightred'))
                 print(colored('\nSee https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words', 'lightred'))
@@ -790,13 +788,15 @@ def xafs(inifile, **kwargs):
         ## need to do this define defining the plotting lambda otherwise
         ## BlueSky gets confused about the plotting window
         if not dcm.suppress_channel_cut:
-            BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
-            print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white'))
+            #BMM_log_info('entering pseudo-channel-cut mode at %.1f eV' % eave)
+            #print(colored('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white'))
+            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white')
             dcm.mode = 'fixed'
             yield from mv(dcm.energy, eave)
             if p['rockingcurve']:
-                BMM_log_info('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave)
-                print(colored('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white'))
+                #BMM_log_info('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave)
+                #print(colored('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white'))
+                report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white')
                 yield from rocking_curve()
             dcm.mode = 'channelcut'
 
@@ -1009,8 +1009,9 @@ def xafs(inifile, **kwargs):
                          % (how, db[-1].start['uid'], db[-1].start['scan_id']))
             htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
             if htmlout is not None:
-                print(colored('wrote dossier %s' % htmlout, 'white'))
-                BMM_log_info('wrote dossier to\n%s' % htmlout)
+                report('wrote dossier %s' % htmlout, 'white')
+                #print(colored('wrote dossier %s' % htmlout, 'white'))
+                #BMM_log_info('wrote dossier to\n%s' % htmlout)
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
@@ -1039,9 +1040,9 @@ def howlong(inifile, interactive=True, **kwargs):
     if not os.path.isfile(inifile):
         inifile = DATA + inifile
         if not os.path.isfile(inifile):
-            print(colored('\n%s does not exist!  Bailing out....\n' % orig, 'yellow'))
+            print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
             return(orig, -1)
-    print(colored('reading ini file: %s' % inifile, 'white'))
+    print(bold_msg('reading ini file: %s' % inifile))
     (p, f) = scan_metadata(inifile=inifile, **kwargs)
     (ok, missing) = ini_sanity(f)
     if not ok:

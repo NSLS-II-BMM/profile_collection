@@ -62,6 +62,16 @@ run_report(__file__)
 
 get_ipython().magic(u"%xmode Plain")
 
+
+def error_msg(text):
+    return colored(text, 'lightred')
+def warning_msg(text):
+    return colored(text, 'yellow')
+def url_msg(text):
+    return colored(text, 'white')
+def bold_msg(text):
+    return colored(text, 'white')
+
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
 ##################################################

@@ -34,7 +34,7 @@ class MyPrompt(Prompts):
         # if rcv is None:
         #     rcv = 0
         return [bmmtoken,
-                (Token.CursorLine, '%s.%s' % (BMM_config._mode, dcm._crystal)),
+                (Token.CursorLine, '%s.%s' % (BMM_config.pds_mode, dcm._crystal)),
                 #shatoken,
                 #(Token.Prompt, u'\u2022'),
                 #shbtoken,
@@ -83,12 +83,14 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
       saf:      SAF number
       name:     name of PI (optional)
     '''
+
+    step = 1
     ## make folder
     if not os.path.isdir(folder):
         os.mkdir(folder)
-        print('1. Created data folder')
+        print('%d. Created data folder' % step)
     else:
-        print('1. Found data folder')
+        print('%d. Found data folder' % step)
     imagefolder = os.path.join(folder, 'snapshots')
     if not os.path.isdir(imagefolder):
         os.mkdir(imagefolder)
@@ -100,10 +102,14 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     DATA = folder + '/'
     print('   DATA = %s' % DATA)
     print('   snapshots in %s' % imagefolder)
+    step += 1
 
+    if os.path.isdir('NIST/'):
+    
     ## setup logger
     BMM_user_log(os.path.join(folder, 'experiment.log'))
-    print('2. Set up experimental log file: %s' % os.path.join(folder, 'experiment.log'))
+    print('%d. Set up experimental log file: %s' % (step, os.path.join(folder, 'experiment.log')))
+    step += 1
 
     startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
 
@@ -116,9 +122,10 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
         o = open(scanini, 'w')
         o.write(''.join(content).format(folder=folder, name=name))
         o.close()
-        print('3. Created INI template: %s' % scanini)
+        print('%d. Created INI template: %s' % (step, scanini))
     else:
-        print('3. Found INI template: %s' % scanini)
+        print('%d. Found INI template: %s' % (step, scanini))
+    step += 1
 
     ## write macro template
     macrotmpl = os.path.join(startup, 'macro.tmpl')
@@ -129,10 +136,21 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
         o = open(macropy, 'w')
         o.write(''.join(content).format(folder=folder))
         o.close()
-        print('4. Created macro template: %s' % macropy)
+        print('%d. Created macro template: %s' % (step, macropy))
     else:
-        print('4. Found macro template: %s' % macropy)
+        print('%d. Found macro template: %s' % (step, macropy))
+    step += 1
 
+    ## copy energy change instructions
+    # eci = os.path.join(startup, 'Energy Change')
+    # ecitarget = os.path.join(folder, 'Energy Change')
+    # if not os.path.isfile(ecitarget):
+    #     shutil.copyfile(eci, ecitarget)
+    #     print('%d. Copied energy change instructions', step)
+    # else:
+    #     print('%d. Found energy change instructions', step)
+    # step += 1
+    
     ## make html folder, copy static html generation files
     htmlfolder = os.path.join(folder, 'dossier')
     if not os.path.isdir(htmlfolder):
@@ -141,23 +159,27 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
             shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
         manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
         manifest.close()
-        print('5. Created dossier folder, copied html generation files, touched MANIFEST')
+        print('%d. Created dossier folder, copied html generation files, touched MANIFEST' % step)
     else:
-        print('5. Found dossier folder')
+        print('%d. Found dossier folder' % step)
     print('   dossiers in %s' % htmlfolder)
+    step += 1
      
     ## make prj folder
     prjfolder = os.path.join(folder, 'prj')
     if not os.path.isdir(prjfolder):
         os.mkdir(prjfolder)
-        print('6. Created Athena prj folder')
+        print('%d. Created Athena prj folder', step)
     else:
-        print('6. Found Athena prj folder')
+        print('%d. Found Athena prj folder', step)
     print('   projects in %s' % prjfolder)
+    step += 1
    
     BMM_xsp.gup = gup
     BMM_xsp.saf = saf
-    print('7. Set GUP and SAF numbers as metadata')
+    print('%d. Set GUP and SAF numbers as metadata' % step)
+    step += 1
+
     global _new_user_defined
     _new_user_defined = True
     
@@ -167,10 +189,12 @@ def start_experiment(name=None, date=None, gup=0, saf=0):
     '''
     Get ready for a new experiment.  Run this first thing when a user
     sits down to start their beamtime.  This will:
-      1. Create a folder, if needed, and set the DATA variable
-      2. Set up the experimental log, creating an experiment.log file, if needed
-      3. Write templates for scan.ini and macro.py, if needed
-      4. Set the GUP and SAF numbers as metadata
+      * Create a folder, if needed, and set the DATA variable
+      * Set up the experimental log, creating an experiment.log file, if needed
+      * Write templates for scan.ini and macro.py, if needed
+      * Copy some other useful files
+      * Make snapshots, dossier, and prj folders
+      * Set the GUP and SAF numbers as metadata
 
     Input:
       name:     name of PI
@@ -252,14 +276,15 @@ def end_experiment():
     #######################################################################################
     destination = os.path.join('/nist', 'xf06bm', 'user', BMM_xsp.name, BMM_xsp.date)
     if not os.path.isdir(destination):
-        os.mkdir(destination)
+        os.mkdirs(destination)
     for d in ('dossier', 'prj', 'snapshots'):
         if not os.path.isdir(os.path.join(destination, d)):
-            os.mkdir(os.path.join(destination, d))
+            os.mkdirs(os.path.join(destination, d))
     try:
         copy_tree(DATA, destination)
-        print(colored('NAS data store: "%s"' % destination, 'white'))
-        BMM_log_info('NAS data store: "%s"' % destination)
+        report('NAS data store: "%s"' % destination, 'white')
+        #print(colored('NAS data store: "%s"' % destination, 'white'))
+        #BMM_log_info('NAS data store: "%s"' % destination)
     except:
         print(colored('Unable to write data to NAS server', 'red'))
         
