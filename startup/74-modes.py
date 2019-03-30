@@ -79,7 +79,7 @@ def change_mode(mode=None, prompt=True):
      elif mode == 'XRD':
           description = 'focused at goniometer, >8 keV'
      print('Moving to mode %s (%s)' % (mode, description))
-     if BMM_xsp.prompt:
+     if prompt:
           action = input("Begin moving motors? [Y/n then Enter] ")
           if action.lower() == 'q' or action.lower() == 'n':
                yield from null()

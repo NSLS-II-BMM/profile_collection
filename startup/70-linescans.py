@@ -40,14 +40,28 @@ def pluck():
     '''
     yield from move_after_scan(BMM_cpl.motor)
 
-def slit_height(start=-3.0, stop=3.0, nsteps=61):
-    '''
-    Perform a relative scan of the DM3 BCT motor around the current
-    position to find the optimal position for slits3.  No further
-    analysis of the scan is done -- YOU must move to the optimal position.
+from scipy.ndimage import center_of_mass
+def com(signal):
+    '''Return the center of mass of a 1D array. This is used to find the
+    center of rocking curve and slit height scans.'''
+    return int(center_of_mass(signal)[0])
+
+def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
+    '''Perform a relative scan of the DM3 BCT motor around the current
+    position to find the optimal position for slits3. Optionally, the
+    motor will moved to the center of mass of the peak at the end of
+    the scan.
+
+    Input:
+      start:   (float) starting position relative to current                         [-3.0]
+      end:     (float) ending position relative to current                           [3.0]
+      nsteps:  (int) number of steps                                                 [61]
+      move:    (Boolean) True=move to position of max signal, False=pluck and move   [False]
+      sleep:   (float) length of sleep before trying to move dm3_bct                 [3.0]
+
     '''
 
-    def main_plan(start, stop, nsteps):
+    def main_plan(start, stop, nsteps, move):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(colored(text, 'lightred'))
@@ -57,7 +71,7 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
         RE.msg_hook = None
         BMM_cpl.motor = dm3_bct
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0')
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
         with open(dotfile, "w") as f:
@@ -67,32 +81,44 @@ def slit_height(start=-3.0, stop=3.0, nsteps=61):
         def scan_slit():
 
             yield from abs_set(quadem1.averaging_time, 0.1)
+            yield from abs_set(motor.velocity, 0.6)
             yield from abs_set(motor.kill_cmd, 1)
 
             yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
+            RE.msg_hook = BMM_msg_hook
+            BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
+                         (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+            if move:
+                t  = db[-1].table()
+                signal = t['I0']
+                position = com(signal)
+                top = t[motor.name][position]
+                
+                yield from bps.sleep(sleep)
+                yield from abs_set(motor.kill_cmd, 1)
+                yield from mv(motor, top)
+
+            else:
+                action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+                if action.lower() == 'n' or action.lower() == 'q':
+                    return(yield from null())
+                yield from bps.sleep(sleep)
+                yield from abs_set(motor.kill_cmd, 1)
+                yield from move_after_scan(dm3_bct)
+            yield from abs_set(quadem1.averaging_time, 0.5)
         yield from scan_slit()
-        RE.msg_hook = BMM_msg_hook
-        BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
-                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
-        action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
-        if action.lower() == 'n' or action.lower() == 'q':
-            return(yield from null())
-        yield from bps.sleep(3.0)
-        yield from abs_set(quadem1.averaging_time, 0.5)
-        yield from abs_set(motor.kill_cmd, 1)
-        yield from move_after_scan(dm3_bct)
 
     def cleanup_plan():
         yield from abs_set(_locked_dwell_time, 0.5)
-        yield from bps.sleep(3.0)
+        yield from bps.sleep(sleep)
         yield from abs_set(motor.kill_cmd, 1)
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     motor = dm3_bct
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps), cleanup_plan())
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 
@@ -101,7 +127,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
     the hutch slits to 3 mm. At the end, move to the position of maximum 
-    intensity on I0, then return to the hutch slits to their original height..
+    intensity on I0, then return to the hutch slits to their original height.
+
+    Input:
+      start:    (float) starting position relative to current  [-0.1]
+      end:      (float) ending position relative to current    [0.1]
+      nsteps:   (int) number of steps                          [101]
+      detector: (string) 'I0' or 'Bicron'                      ['I0']
     '''
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
@@ -120,7 +152,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
             dets = [bicron,]
             name = 'Bicron'
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel=name)
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=name, title='I0 signal vs. DCM 2nd crystal pitch')
 
         with open(dotfile, "w") as f:
             f.write("")
@@ -137,10 +169,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             yield from rel_scan(dets, motor, start, stop, nsteps)
 
             t  = db[-1].table()
-            maxval = t[name].max()
-            top = float(t[t[name] == maxval]['dcm_pitch']) # position of max intensity
-            ## see https://pandas.pydata.org/pandas-docs/stable/10min.html#boolean-indexing
-
+            signal = t['I0']
+            position = com(signal)
+            top = t[motor.name][position]
 
             yield from bps.sleep(3.0)
             yield from abs_set(motor.kill_cmd, 1)
@@ -256,22 +287,28 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         yield from abs_set(_locked_dwell_time, 0.1)
         dets  = [quadem1,]
         denominator = ''
-
+        detname = ''
+        
         ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
         if detector == 'It':
             denominator = ' / I0'
+            detname = 'transmission'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
         elif detector == 'Ir':
             denominator = ' / It'
+            detname = 'reference'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
         elif detector == 'I0':
+            detname = 'I0'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
         elif detector == 'Iy':
             denominator = ' / I0'
+            detname = 'electron yield'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
         elif detector == 'If':
             dets.append(vor)
             denominator = ' / I0'
+            detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
                                 (doc['data']['DTC1'] +
                                  doc['data']['DTC2'] +
@@ -287,12 +324,13 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
                                    doc['data']['DTC4']   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
         if detector == 'Both':
-            plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0'),
-                    DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0')]
+            plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
+                    DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
         else:
             plot = DerivedPlot(func,
                                xlabel=thismotor.name,
-                               ylabel=detector+denominator)
+                               ylabel=detector+denominator,
+                               title='%s vs. %s' % (detname, thismotor.name))
 
         if 'PseudoSingle' in str(type(axis)):
             value = thismotor.readback.value

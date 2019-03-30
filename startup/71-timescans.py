@@ -80,7 +80,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     ## and this is the appropriate way to plot this linescan
     plot = DerivedPlot(func,
                        xlabel='elapsed time (seconds)',
-                       ylabel=detector+denominator)
+                       ylabel=detector+denominator,
+                       title='time scan')
 
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     

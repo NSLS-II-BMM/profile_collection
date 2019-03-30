@@ -87,7 +87,7 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     step = 1
     ## make folder
     if not os.path.isdir(folder):
-        os.mkdir(folder)
+        os.makedirs(folder)
         print('%d. Created data folder' % step)
     else:
         print('%d. Found data folder' % step)
@@ -104,7 +104,7 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     print('   snapshots in %s' % imagefolder)
     step += 1
 
-    if os.path.isdir('NIST/'):
+    #if os.path.isdir('NIST/'):
     
     ## setup logger
     BMM_user_log(os.path.join(folder, 'experiment.log'))
@@ -169,9 +169,9 @@ def new_experiment(folder, gup=0, saf=0, name='Betty Cooper, Veronica Lodge'):
     prjfolder = os.path.join(folder, 'prj')
     if not os.path.isdir(prjfolder):
         os.mkdir(prjfolder)
-        print('%d. Created Athena prj folder', step)
+        print('%d. Created Athena prj folder' % step)
     else:
-        print('%d. Found Athena prj folder', step)
+        print('%d. Found Athena prj folder' % step)
     print('   projects in %s' % prjfolder)
     step += 1
    
@@ -225,6 +225,8 @@ def start_experiment(name=None, date=None, gup=0, saf=0):
     new_experiment(folder, saf=saf, gup=gup, name=name)
 
     jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+    if os.path.isfile(jsonfile):
+        os.chmod(jsonfile, 0o644)
     with open(jsonfile, 'w') as outfile:
         json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
     os.chmod(jsonfile, 0o444)
@@ -249,17 +251,21 @@ def start_experiment_from_serialization():
     jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
     if os.path.isfile(jsonfile):
         user = json.load(open(jsonfile))
-        start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
+        if 'name' in user:
+            start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
+        if 'foils' in user:
+            foils.set(user['foils'])
 
 start_experiment_from_serialization()
 
 def show_experiment():
-    print('DATA = %s' % DATA)
-    print('GUP  = %d' % BMM_xsp.gup)
-    print('SAF  = %d' % BMM_xsp.saf)
+    print('DATA  = %s' % DATA)
+    print('GUP   = %d' % BMM_xsp.gup)
+    print('SAF   = %d' % BMM_xsp.saf)
+    print('foils = %s' % ' '.join(map(str, foils.slots)))
 whoami = show_experiment
 
-def end_experiment():
+def end_experiment(force=False):
     '''
     Copy data from the experiment that just finished to the NAS, then
     unset the logger and the DATA variable at the end of an experiment.
@@ -267,34 +273,35 @@ def end_experiment():
     global DATA
     global _new_user_defined
 
-    if not _new_user_defined:
-        print(colored('There is not a current experiment!', 'lightred'))
-        return(None)
+    if not force:
+        if not _new_user_defined:
+            print(colored('There is not a current experiment!', 'lightred'))
+            return(None)
+
+        #######################################################################################
+        # create folder and sub-folders on NAS server for this user & experimental start date #
+        #######################################################################################
+        destination = os.path.join('/nist', 'xf06bm', 'user', BMM_xsp.name, BMM_xsp.date)
+        if not os.path.isdir(destination):
+            os.makedirs(destination)
+        for d in ('dossier', 'prj', 'snapshots'):
+            if not os.path.isdir(os.path.join(destination, d)):
+                os.makedirs(os.path.join(destination, d))
+        try:
+            copy_tree(DATA, destination)
+            report('NAS data store: "%s"' % destination, 'white')
+            #print(colored('NAS data store: "%s"' % destination, 'white'))
+            #BMM_log_info('NAS data store: "%s"' % destination)
+        except:
+            print(colored('Unable to write data to NAS server', 'red'))
         
-    #######################################################################################
-    # create folder and sub-folders on NAS server for this user & experimental start date #
-    #######################################################################################
-    destination = os.path.join('/nist', 'xf06bm', 'user', BMM_xsp.name, BMM_xsp.date)
-    if not os.path.isdir(destination):
-        os.mkdirs(destination)
-    for d in ('dossier', 'prj', 'snapshots'):
-        if not os.path.isdir(os.path.join(destination, d)):
-            os.mkdirs(os.path.join(destination, d))
-    try:
-        copy_tree(DATA, destination)
-        report('NAS data store: "%s"' % destination, 'white')
-        #print(colored('NAS data store: "%s"' % destination, 'white'))
-        #BMM_log_info('NAS data store: "%s"' % destination)
-    except:
-        print(colored('Unable to write data to NAS server', 'red'))
-        
-    #####################################################################
-    # remove the json serialization of the start_experiment() arguments #
-    #####################################################################
-    jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-    if os.path.isfile(jsonfile):    
-        os.chmod(jsonfile, 0o644)
-        os.remove(jsonfile)
+        #####################################################################
+        # remove the json serialization of the start_experiment() arguments #
+        #####################################################################
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        if os.path.isfile(jsonfile):    
+            os.chmod(jsonfile, 0o644)
+            os.remove(jsonfile)
 
     #######################################################
     # unset BMM_xsp, DATA, and experiment specific logger #
@@ -336,7 +343,7 @@ def BMM_help():
     print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(\'scan.ini\'))')
     print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
     print(colored('Scan 2 motors, plot a detector:\t', 'white')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
-    print(colored('Single energy XAS detection:\t', 'white')+'RE(sead(\'timescan.ini\'))')
+    #print(colored('Single energy XAS detection:\t', 'white')+'RE(sead(\'timescan.ini\'))')
     print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(\'blah blah blah\')')
     print('')
     print(colored('DATA = ', 'white') + DATA)

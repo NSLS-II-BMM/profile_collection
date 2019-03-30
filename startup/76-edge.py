@@ -1,4 +1,5 @@
 import time
+import json
 
 run_report(__file__)
 
@@ -15,7 +16,8 @@ class ReferenceFoils():
        pos = foils.position(2)
 
     Move to a slot by element symbol:
-       foils.move('Fe')
+       RE(foils.move('Fe'))
+       yield from foils.move('Fe')
 
     Print foils configuration to the screen:
        foils.show()
@@ -23,12 +25,13 @@ class ReferenceFoils():
     def __init__(self):
         self.slots = [None, None, None, None, None]
 
-    def set_slot(i, el):
+
+    def set_slot(self, i, el):
         '''Configure a slot i ∈ (0 .. 4) for element el'''
         if Z_number(el) is None:        
             self.slots[i-1] = None
         else:
-            self.slots[i-1] = element_symbol[el]
+            self.slots[i-1] = element_symbol(el)
         BMM_log_info('Set reference slot %d to %s' % (i, str(self.slots[i-1])))
 
     def set(self, elements):
@@ -40,36 +43,52 @@ class ReferenceFoils():
                     if the list is a space separated string, it will be split into a list
         '''
         if type(elements) is str:
-            elements = element.split()
+            elements = elements.split()
         if len(elements) != 5:
             print(error_msg('\nThe list of foils must have five elements\n'))
             return()
         for i in range(5):
             foils.set_slot(i+1, elements[i])
         foils.show()
-        ## perhaps write this to the user serialization file....
-        return()
-        
+        #########################################################
+        # save the foil configuration to the user serialization #
+        #########################################################
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        user = dict()
+        if os.path.isfile(jsonfile):
+            user = json.load(open(jsonfile))
+            user['foils'] = ' '.join(map(str, elements))
+            os.chmod(jsonfile, 0o644)
+        with open(jsonfile, 'w') as outfile:
+            json.dump(user, outfile)
+        os.chmod(jsonfile, 0o444)
+            
         
     def position(self, i):
         '''Return the xafs_ref position corresponding to slot i where i ∈ (0 .. 4)'''
-        if i is not int: return xafs_ref.user_readback.value # so it doesn't move...
+        if type(i) is not int: return xafs_ref.user_readback.value # so it doesn't move...
         if i > 4:        return 90
         if i < 0:        return -90
-        return -90 + i*45
+        return(-90 + i*45)
 
     def move(self, el):
         '''Move to the slot configured for element el'''
+        if type(el) is int:
+            if el < 1 or el > 5:
+                print(error_msg('\n%d is not a valid foil slot\n' % el))
+                return(yield from null())
+            el = self.slots[el-1]
+        if el is None:
+            print(error_msg('\nThat slot is empty\n'))
+            return(yield from null())
         if Z_number(el) is None:
-            print(error_msg('\n%s is not a valid element (foils.move())\n' % el.capitalize()))
+            print(error_msg('\n%s is not an element\n' % el))
             return(yield from null())
         moved = False
         for i in range(5):
             if element_symbol(el) == self.slots[i]:
                 yield from mv(xafs_ref, self.position(i))
                 report('Moved xafs_ref to %s at slot %d' % (el.capitalize(), i+1))
-                #print('Moved xafs_ref to %s at slot %d' % (el.capitalize(), i+1))
-                #BMM_log_info('Moved xafs_ref to %s at slot %d' % (el, i+1))
                 moved = True
         if not moved:
             print(warning_msg('%s is not in the reference holder, not moving xafs_ref' % el.capitalize()))
@@ -77,35 +96,55 @@ class ReferenceFoils():
             
     def show(self):
         '''Show configuration of foil holder'''
-        print('Reference foils:')
+        print('Reference foils (xafs_ref):')
         for i in range(5):
             print('\tslot %d : %s at %d mm'% (i+1, str(self.slots[i]), self.position(i)))
             
 foils = ReferenceFoils()
+## if this startup file is "%run -i"-ed, then need to reset
+## foils to the serialized configuration
+jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+if os.path.isfile(jsonfile):
+    user = json.load(open(jsonfile))
+    if 'foils' in user:
+        foils.set(user['foils'])
 
+def approximate_pitch(energy):
+    if dcm._crystal is '111':
+        m = -4.42156e-6
+        b = 3.94956
+        return(m*energy + b)
+    else:
+        m = -4.42156e-6
+        b = 3.94956
+        return(dcm_pitch.user_readback.value)
+        
 
-def change_edge(el, focus=False, edge='K', energy=None, slit=False):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=False, target=300.):
     '''Change edge energy by:
-       1. Moving the DCM to 50 eV above the edge energy
+       1. Moving the DCM above the edge energy
        2. Moving the photon delivery system to the correct mode
        3. Running a rocking curve scan
-       4. --(Running a slit_height scan)--
+       4. --(Running a slits_height scan)--
        5. Moving the reference holder to the correct slot
 
     Input:
        el:     (string) one- or two-letter symbol
-       focus:  (Boolean) T=focused or F=unfocused beam  [False, unfocused]
-       edge:   (string) edge symbol                     ['K']
-       energy: (float) e0 value                         [None, determined from el/edge]
-       slit:   (Boolean) perform slit_height() scan     [False]
+       focus:  (Boolean) T=focused or F=unfocused beam         [False, unfocused]
+       edge:   (string) edge symbol                            ['K']
+       energy: (float) e0 value                                [None, determined from el/edge]
+       slits:  (Boolean) perform slit_height() scan            [False]
+       calibrating: (Boolean) skip change_mode() plan          [False]
+       target: (float) energy where rocking curve is measured  [300]
     '''
     if energy is None:
         energy = edge_energy(el,edge)
         
-    if energy = None:
+    if energy is None:
         print(error_msg('\n%s is not a valid element\n' % e))
         return(yield from null())
     if energy > 23500:
+        edge = 'L3'
         energy = edge_energy(el,'L3')
 
     if energy < 4950:
@@ -123,7 +162,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slit=False):
 
     if energy > 8000:
         mode = 'A' if focus else 'D'
-    elif: energy < 6000:
+    elif energy < 6000:
         mode = 'B' if focus else 'F'
     else:
         mode = 'C' if focus else 'E'
@@ -132,46 +171,48 @@ def change_edge(el, focus=False, edge='K', energy=None, slit=False):
     #########################
     # confirm energy change #
     #########################
-    print('\nEnergy change:')
-    print('\tedge: %s %s' % (el.capitalize(), edge.capitalize()))
-    print('\tenergy: %.1f' % energy)
-    print('\tfocus: %s' % str(focus))
-    print('\tphoton delivery mode: %s' % mode)
-    print('\toptimizing slit height: %s' % str(slit))
+    print(bold_msg('\nEnergy change:'))
+    print('   %s: %s %s' % (list_msg('edge'), el.capitalize(), edge.capitalize()))
+    print('   %s: %.1f' % (list_msg('edge energy'), energy))
+    print('   %s: %.1f' % (list_msg('target energy'), energy+target))
+    print('   %s: %s' % (list_msg('focus'), str(focus)))
+    print('   %s: %s' % (list_msg('photon delivery mode'), mode))
+    print('   %s: %s' % (list_msg('optimizing slits height'), str(slits)))
     action = input("\nBegin energy change? [Y/n then Enter] ")
     if action.lower() == 'q' or action.lower() == 'n':
         return(yield from null())
 
-    if True:
-        return(yield from null())
     
     start = time.time()
     BMM_log_info('Configuring beamline for %s edge' % el)
     ###############################
     # move the DCM to 50 eV above #
     ###############################
-    print('Moving mono to energy %.1f eV...' % energy+50)
-    yield from mv(dcm.energy, energy+50)
+    print('Moving mono to energy %.1f eV...' % (energy+target))
+    yield from mv(dcm.energy, energy+target)
 
     ##############################################
     # change to the correct photon delivery mode #
     ##############################################
-    if mode != current_mode:
+    if not calibrating and mode != current_mode:
         print('Moving to photon delivery mode %s...' % mode)
-        yield from change_mode(mode)
+        yield from change_mode(mode=mode, prompt=False)
 
     ############################
     # run a rocking curve scan #
     ############################
     print('Optimizing rocking curve...')
+    yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from rocking_curve()
-
+    close_last_plot()
+    
     ##########################
-    # run a slit height scan #
+    # run a slits height scan #
     ##########################
-    if slit:
-        print('Optimizing slit height...')
-        yield from slit_height()
+    if slits:
+        print('Optimizing slits height...')
+        yield from slit_height(move=True)
+        close_last_plot()
         ## redo rocking curve?
 
     ######################################
@@ -180,11 +221,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slit=False):
     print('Moving reference foil...')
     yield from foils.move(el)
     
-    print('You are now ready to measure at the %s edge' % el)
-    print('Two things that are not done automagically:')
-    print('  1. You may need to verify the slit position:  RE(slit_height())')
-    print('  2. If measuring fluorescence, remember to adjust the cables')
+    print('\nYou are now ready to measure at the %s edge' % el)
+    print('\nSome things are not done automagically:')
+    if slits is False:
+        print('  * You may need to verify the slit position:  RE(slit_height())')
+    print('  * If measuring fluorescence, remember to adjust the cables')
     BMM_log_info('Finished configuring for %s edge' % el)
     end = time.time()
-    print(end-start + ' elapsed')
+    print('\n\nTime elapsed: %.1f min' % ((end-start)/60))
     return()

@@ -12,19 +12,6 @@ os.environ['PAGER'] = 'cat'
 
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
 
-#from termcolor import colored
-# def colored(text, color='white', attrs=[]):
-#     ''' a poor man's termcolor implementation'''
-#     if color is 'red':
-#         return '\x1b[01m\x1b[31m' + text + '\x1b[0m'
-#     if color is 'yellow':
-#         return '\x1b[01m\x1b[33m' + text + '\x1b[0m'
-#     if color is 'brown':
-#         return '\x1b[33m'         + text + '\x1b[0m'
-#     if color is 'cyan':
-#         return '\x1b[01m\x1b[36m' + text + '\x1b[0m'
-#     if color is 'white':
-#         return '\x1b[01m\x1b[37m' + text + '\x1b[0m'
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
 # Red, White, Yellow,
@@ -68,9 +55,11 @@ def error_msg(text):
 def warning_msg(text):
     return colored(text, 'yellow')
 def url_msg(text):
-    return colored(text, 'white')
+    return text
 def bold_msg(text):
     return colored(text, 'white')
+def list_msg(text):
+    return colored(text, 'cyan')
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
@@ -146,7 +135,7 @@ def boxedtext(title, text, tint, width=75):
         if line.count(color.Normal) == 1:
             add = ' '*11
         elif line.count(color.Normal) == 2:
-            add = ' '*13
+            add = ' '*22
         elif line.count(color.Normal) == 3:
             add = ' '*27
         elif line.count(color.Normal) == 4:

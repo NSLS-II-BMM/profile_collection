@@ -37,8 +37,6 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Opened {}'.format(self.name))
-        #BMM_log_info('Opened {}'.format(self.name))
-        #print(' Opened {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
     def close_plan(self):
@@ -53,8 +51,6 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Closed {}'.format(self.name))
-        #BMM_log_info('Closed {}'.format(self.name))
-        #print(' Closed {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
     def open(self):
@@ -70,8 +66,6 @@ class EPS_Shutter(Device):
                     return
                 time.sleep(1.5)
             report(' Opened {}'.format(self.name))
-            #print(' Opened {}'.format(self.name))
-            #BMM_log_info('Opened {}'.format(self.name))
         else:
             print('{} is open'.format(self.name))
         RE.msg_hook = BMM_msg_hook
@@ -89,8 +83,6 @@ class EPS_Shutter(Device):
                     return
                 time.sleep(1.5)
             report(' Closed {}'.format(self.name))
-            #print(' Closed {}'.format(self.name))
-            #BMM_log_info('Closed {}'.format(self.name))
         else:
             print('{} is closed'.format(self.name))
         RE.msg_hook = BMM_msg_hook

@@ -78,16 +78,10 @@ def BMM_msg_hook(msg):
     if msg[0] == 'set':
         if 'EpicsMotor' in str(type(msg[1])):
             report('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            #print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            #BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
         elif 'EpicsSignal' in str(type(msg[1])):
             report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
-            #print('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
-            #BMM_log_info('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
         elif 'PseudoSingle' in str(type(msg[1])):
             report('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            #print('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
-            #BMM_log_info('Moving %s to %.3f' % (msg[1].name, msg[2][0]))
 
 RE.msg_hook = BMM_msg_hook
 

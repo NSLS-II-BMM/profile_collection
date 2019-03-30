@@ -57,7 +57,7 @@ def close_last_plot():
     plt.close(BMM_cpl.fig)
         
 class DerivedPlot(CallbackBase):
-    def __init__(self, func, ax=None, xlabel=None, ylabel=None, legend_keys=None, stream_name='primary', **kwargs):
+    def __init__(self, func, ax=None, xlabel=None, ylabel=None, title=None, legend_keys=None, stream_name='primary', **kwargs):
         """
         func expects an Event document which looks like this:
         {'time': <UNIX epoch>,
@@ -82,7 +82,9 @@ class DerivedPlot(CallbackBase):
             ylabel = ''
         self.ax.set_xlabel(xlabel)
         self.ax.set_ylabel(ylabel)
-
+        if title is not None:
+            plt.title(title)
+        
         if legend_keys is None:
             legend_keys = []
         self.legend_keys = ['scan_id'] + legend_keys

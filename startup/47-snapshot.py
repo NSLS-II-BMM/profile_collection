@@ -21,12 +21,13 @@ from PIL import ImageFont
 from PIL import ImageDraw 
 
 def annotate_image(imagefile, text):
-    font_path = '/opt/conda_envs/collection-2018-3.0/lib/python3.6/site-packages/matplotlib/mpl-data/fonts/ttf/'
+    bluesky_path_as_list = bluesky.__path__[0].split('/') # crude, but finds current collection folder
+    font_path = os.path.join('/', *bluesky_path_as_list[:4], 'lib', 'python3.6', 'site-packages', 'matplotlib', 'mpl-data', 'fonts', 'ttf')
     img = Image.open(imagefile)
     width, height = img.size
     draw = ImageDraw.Draw(img, 'RGBA')
     draw.rectangle(((0, int(9.5*height/10)), (width, height)), fill=(255,255,255,125))
-    font = ImageFont.truetype(font_path + 'DejaVuSans.ttf', 24)
+    font = ImageFont.truetype(font_path + '/DejaVuSans.ttf', 24)
     draw.text((int(0.2*width/10), int(9.6*height/10)), text, (0,0,0), font=font)
     img.save(imagefile)
 
@@ -53,8 +54,6 @@ def xas_webcam(filename=None, **kwargs):
     if 'annotation' in kwargs:
         annotate_image(filename, kwargs['annotation'])
     report('XAS webcam image written to %s' % filename)
-    #BMM_log_info('XAS webcam image written to %s' % filename)
-    #print('Wrote ' + filename)
 
 def xrd_webcam(filename=None, **kwargs):
     if filename is None:
@@ -64,8 +63,6 @@ def xrd_webcam(filename=None, **kwargs):
     if 'annotation' in kwargs:
         annotate_image(filename, kwargs['annotation'])
     report('XRD webcam image written to %s' % filename)
-    #BMM_log_info('XRD webcam image written to %s' % filename)
-    #print('Wrote ' + filename)
 
 
 from os import system
@@ -141,8 +138,6 @@ def anacam(filename    = None,
     system(command)
 
     report('Analog camera image written to %s' % filename)
-    #BMM_log_info('Analog camera image written to %s' % filename)
-    #print('Wrote ' + filename)
 
     ## crosshairs
     #if not camera.nocrosshair:
