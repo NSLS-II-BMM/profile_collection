@@ -20,7 +20,7 @@ class EPS_Shutter(Device):
         #self.color = 'red'
 
     def status(self):
-        if shb.state.value == 1:
+        if self.state.value == 1:
             return 'closed'
         else:
             return 'open'
@@ -28,7 +28,7 @@ class EPS_Shutter(Device):
     def open_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value == self.openval:
+        while self.state.value != self.openval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.opn, 1)
@@ -42,7 +42,7 @@ class EPS_Shutter(Device):
     def close_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value == self.closeval:
+        while self.state.value != self.closeval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.cls, 1)
@@ -55,9 +55,9 @@ class EPS_Shutter(Device):
 
     def open(self):
         RE.msg_hook = None
-        if self.state.value == self.openval:
+        if self.state.value != self.openval:
             count = 0
-            while self.state.value == self.openval:
+            while self.state.value != self.openval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.opn.put(1)
@@ -72,9 +72,9 @@ class EPS_Shutter(Device):
 
     def close(self):
         RE.msg_hook = None
-        if self.state.value == self.closeval:
+        if self.state.value != self.closeval:
             count = 0
-            while self.state.value == self.closeval:
+            while self.state.value != self.closeval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.cls.put(1)
@@ -107,17 +107,17 @@ except:
 
 sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
 sha.shutter_type = 'FE'
-sha.openval  = 1
-sha.closeval = 0
+sha.openval  = 0
+sha.closeval = 1
 shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
 shb.shutter_type = 'PH'
-shb.openval  = 1
-shb.closeval = 0
+shb.openval  = 0
+shb.closeval = 1
 
 fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'Fluorescent Screen')
 fs1.shutter_type = 'FS'
-fs1.openval  = 0
-fs1.closeval = 1
+fs1.openval  = 1
+fs1.closeval = 0
 
 
 class Spinner(Device):

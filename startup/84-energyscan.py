@@ -845,7 +845,22 @@ def xafs(inifile, **kwargs):
             print(colored('computing energy and dwell time grids', 'white'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
             if energy_grid is None or time_grid is None or approx_time is None:
-                print(colored('Cannot interpret scan grid parameters!  Bailing out....' % outfile, 'lightred'))
+                print(colored('Cannot interpret scan grid parameters!  Bailing out....', 'lightred'))
+                BMM_xsp.final_log_entry = False
+                yield from null()
+                return
+            if any(y > 23500 for y in energy_grid):
+                print(colored('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....', 'lightred'))
+                BMM_xsp.final_log_entry = False
+                yield from null()
+                return
+            if dcm._crystal == '111' and any(y > 21200 for y in energy_grid):
+                print(colored('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
+                BMM_xsp.final_log_entry = False
+                yield from null()
+                return
+            if dcm._crystal == '311' and any(y < 5500 for y in energy_grid):
+                print(colored('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....', 'lightred'))
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
@@ -1051,7 +1066,7 @@ def howlong(inifile, interactive=True, **kwargs):
         return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
-    text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
+    text +='The sequence of %s will take about %.1f %s' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60, inflect('scan', int(approx_time * int(p['nscans'])/60)))
     if interactive:
         print(text)
     else:

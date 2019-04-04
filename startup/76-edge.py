@@ -172,15 +172,16 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     # confirm energy change #
     #########################
     print(bold_msg('\nEnergy change:'))
-    print('   %s: %s %s' % (list_msg('edge'), el.capitalize(), edge.capitalize()))
-    print('   %s: %.1f' % (list_msg('edge energy'), energy))
-    print('   %s: %.1f' % (list_msg('target energy'), energy+target))
-    print('   %s: %s' % (list_msg('focus'), str(focus)))
-    print('   %s: %s' % (list_msg('photon delivery mode'), mode))
-    print('   %s: %s' % (list_msg('optimizing slits height'), str(slits)))
-    action = input("\nBegin energy change? [Y/n then Enter] ")
-    if action.lower() == 'q' or action.lower() == 'n':
-        return(yield from null())
+    print('   %s: %s %s' % (list_msg('edge'),                    el.capitalize(), edge.capitalize()))
+    print('   %s: %.1f'  % (list_msg('edge energy'),             energy))
+    print('   %s: %.1f'  % (list_msg('target energy'),           energy+target))
+    print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
+    print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
+    print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
+    if BMM_xsp.prompt:
+        action = input("\nBegin energy change? [Y/n then Enter] ")
+        if action.lower() == 'q' or action.lower() == 'n':
+            return(yield from null())
 
     
     start = time.time()
@@ -202,7 +203,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     # run a rocking curve scan #
     ############################
     print('Optimizing rocking curve...')
+    yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from mv(dcm_pitch, approximate_pitch(energy+target))
+    yield from sleep(1)
+    yield from abs_set(dcm_pitch.kill_cmd, 1)
     yield from rocking_curve()
     close_last_plot()
     

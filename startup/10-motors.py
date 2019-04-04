@@ -21,6 +21,8 @@ class XAFSEpicsMotor(EpicsMotor):
 
 
 class VacuumEpicsMotor(EpicsMotor):
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
 
     def wh(self):
@@ -48,6 +50,10 @@ dcm_perp  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_per
 dcm_para  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
 dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
 dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
+
+
+dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
+#                               # hard limit is at 162.48
 
 dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
@@ -134,5 +140,5 @@ xafs_wheel.user_offset.put(-31.532)
 
 
 def setup_wheel():
-    yield from mv(xafs_x, -100.8, xafs_y, 97.125, xafs_wheel, 0)
+    yield from mv(xafs_x, -59.477, xafs_y, 92.287, xafs_wheel, 0)
     

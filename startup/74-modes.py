@@ -92,8 +92,8 @@ def change_mode(mode=None, prompt=True):
                                             # motors that reports MOVN=1 even when
                                             # still
 
-     base = [
-        ]
+     #base = [
+     #   ]
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
           yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
 
