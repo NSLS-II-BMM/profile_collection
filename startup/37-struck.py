@@ -150,6 +150,20 @@ for i in list(range(1,3)) + list(range(15,33)):
 
 vor.state.kind = 'omitted'
 
+## normal means record in the document, but do not display in LiveTable
+vor.channels.chan3.kind = 'normal'
+vor.channels.chan4.kind = 'normal'
+vor.channels.chan5.kind = 'normal'
+vor.channels.chan6.kind = 'normal'
+vor.channels.chan7.kind = 'normal'
+vor.channels.chan8.kind = 'normal'
+vor.channels.chan9.kind = 'normal'
+vor.channels.chan10.kind = 'normal'
+vor.channels.chan11.kind = 'normal'
+vor.channels.chan12.kind = 'normal'
+vor.channels.chan13.kind = 'normal'
+vor.channels.chan14.kind = 'normal'
+
 vor.dtcorr1.name = 'DTC1'
 vor.dtcorr2.name = 'DTC2'
 vor.dtcorr3.name = 'DTC3'
