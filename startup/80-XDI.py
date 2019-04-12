@@ -141,8 +141,10 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     xdi.extend(['# Sample.name: %s'                 % dataframe.start['XDI,Sample,name'],
                 '# Sample.prep: %s'                 % dataframe.start['XDI,Sample,prep'],
                 '# Scan.experimenters: %s'          % dataframe.start['XDI,Scan,experimenters'],
-                '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy']),
-                '# Scan.start_time: %s'             % start_time,
+                '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy'])])
+    if kind == '333':
+        xdi.extend(['# Scan.edge_energy_333: %.1f'  % 3* float(dataframe.start['XDI,Scan,edge_energy']) ])
+    xdi.extend(['# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
                 '# Scan.transient_id: %s'           % dataframe.start['scan_id'],
                 '# Scan.uid: %s'                    % dataframe.start['uid'],
@@ -202,12 +204,17 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     table = dataframe.table()
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         table['xmu'] = (table['DTC1'] + table['DTC2'] + table['DTC3'] + table['DTC4']) / table['I0']
+        if kind == '333':
+            table['333_energy'] = table['dcm_energy']*3
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',
                        'ROI2', 'ICR2', 'OCR2',
                        'ROI3', 'ICR3', 'OCR3',
                        'ROI4', 'ICR4', 'OCR4']
+        if kind == '333':
+            table['333_energy'] = table['dcm_energy']*3
+            column_list[0] = '333_energy'
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
         if 'yield' in mode:     # yield is the primary measurement
@@ -219,6 +226,9 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
         else:                   # transmission is the primary measurement
             table['xmu'] = numpy.log(table['I0'] / table['It'])
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
+        if kind == '333':
+            table['333_energy'] = table['dcm_energy']*3
+            column_list[0] = '333_energy'
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f\n"
         if 'yield' in mode:
             column_list.append('Iy')

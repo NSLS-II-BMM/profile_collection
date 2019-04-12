@@ -67,7 +67,7 @@ class DCM(PseudoPositioner):
             self._crystal = '311'
 
     # The pseudo positioner axes:
-    energy = Cpt(PseudoSingle, limits=(3600, 25000))
+    energy = Cpt(PseudoSingle, limits=(2900, 25000))
 
 
     # The real (or physical) positioners:

@@ -5,6 +5,7 @@ import bluesky.plan_stubs as bps
 run_report(__file__)
 
 import json
+import time
 
 LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 MODEDATA = None
@@ -20,6 +21,7 @@ class BMM_configuration():
     def __init__(self):
         self.pds_mode = self._mode = None
 
+        ## scan grid parameters
         self.bounds = [-200, -30, 15.3, '14k']
         self.steps = [10, 0.5, '0.05k']
         self.times = [0.5, 0.5, '0.25k']
@@ -42,9 +44,11 @@ class BMM_configuration():
         self.htmlpage = True
         self.bothways = False
         self.channelcut = True
+        self.ththth = False
         self.mode = 'transmission'
 
-        self.npoints = 0 # see 71-timescans.py
+        ## parameters for single energy absorption detection, see 71-timescans.py
+        self.npoints = 0 
         self.dwell = 1.0
         self.delay = 0.1
 
@@ -63,6 +67,14 @@ def change_mode(mode=None, prompt=True):
           return(yield from null())
      current_mode = get_mode()
           
+
+
+     if mode == 'B':
+          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? [y/N then Enter] ")
+          if action.lower() != 'y':
+               return(yield from null())
+
+
      
      if mode == 'A':
           description = 'focused, >8 keV'
@@ -84,7 +96,8 @@ def change_mode(mode=None, prompt=True):
           if action.lower() == 'q' or action.lower() == 'n':
                yield from null()
                return
-
+          
+          
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
      yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
@@ -235,6 +248,7 @@ def change_xtals(xtal=None):
           return
 
      current_energy = dcm.energy.readback.value
+     start = time.time()
 
      RE.msg_hook = None
      BMM_log_info('Moving to the %s crystals' % xtal)
@@ -260,8 +274,14 @@ def change_xtals(xtal=None):
      yield from mv(dcm.energy, current_energy)
 
      print('Performing a rocking curve scan')
+     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     yield from mv(dcm_pitch, approximate_pitch(energy+target))
+     yield from bps.sleep(1)
+     yield from abs_set(dcm_pitch.kill_cmd, 1)
      yield from rocking_curve()
      yield from bps.sleep(2.0)
      yield from abs_set(dcm_pitch.kill_cmd, 1)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
+     end = time.time()
+     print('\n\nTime elapsed: %.1f min' % ((end-start)/60))

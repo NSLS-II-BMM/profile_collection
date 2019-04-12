@@ -70,7 +70,8 @@ def bmm_metadata(measurement   = 'transmission',
                  prep          = '',
                  stoichiometry = None,
                  mode          = 'transmission',
-                 comment       = ''
+                 comment       = '',
+                 ththth        = False,
                 ):
     '''
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
@@ -91,6 +92,7 @@ def bmm_metadata(measurement   = 'transmission',
       stoichiometry -- None or IUCr stoichiometry string
       mode          -- transmission, fluorescence, reference
       comment       -- user-supplied, free-form comment string
+      ththth        -- True is measuring with the Si(333) relfection
     '''
 
     md                                = copy.deepcopy(bmm_metadata_stub)
@@ -121,6 +123,11 @@ def bmm_metadata(measurement   = 'transmission',
     if stoichiometry is not None:
         md['XDI,Sample,stoichiometry'] = stoichiometry
 
+    if ththth:
+        md['XDI,Mono,name']            = 'Si(333)'
+        md['XDI,Mono,d_spacing']       = '%.7f Å' % (dcm._twod/6)
+            
+        
     (m2state, m3state) = mirror_state()
     md['XDI,Beamline,focusing'] = m2state
     md['XDI,Beamline,harmonic_rejection'] = m3state

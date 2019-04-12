@@ -200,6 +200,7 @@ def scan_metadata(inifile=None, **kwargs):
       htmlpage:     [bool]  True = capture dossier of a scan sequence as a static html page
       bothways:     [bool]  True = measure in both monochromator directions
       channelcut:   [bool]  True = measure in pseudo-channel-cut mode
+      ththth:       [bool]  True = measure using the Si(333) reflection
       mode:         [str]   transmission, fluorescence, or reference -- how to display the data
       bounds:       [list]  scan grid boundaries (not kwarg-able at this time)
       steps:        [list]  scan grid step sizes (not kwarg-able at this time)
@@ -315,7 +316,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick', 'rockingcurve'):
+    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick', 'rockingcurve', 'ththth'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -327,15 +328,29 @@ def scan_metadata(inifile=None, **kwargs):
             parameters[a] = bool(kwargs[a])
             found[a] = True
 
+    if dcm._crystal != '111' and parameters['ththth']:
+        print(colored('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n', 'lightred'))
+        return {}, {}
+
+    if not found['e0'] and found['element'] and found['edge']:
+        parameters['e0'] = edge_energy(parameters['element'], parameters['edge'])
+        if parameters['e0'] is None:
+            print(colored('\nCannot figure out edge energy from element = %s and edge = %s\n' % (parameters['element'], parameters['edge']), 'lightred'))
+            return {}, {}
+        else:
+            found['e0'] = True
+            print('\nUsing tabulated value of %.1f for the %s %s edge\n' % (parameters['e0'], parameters['element'], parameters['edge']))
+        
     return parameters, found
 
 
-def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112):
+def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112, ththth=False):
     '''Input:
        bounds:   (list) N relative energy values denoting the region boundaries of the step scan
        steps:    (list) N-1 energy step sizes
        times:    (list) N-1 integration time values
        e0:       (float) edge energy, reference for boundary values
+       ththth:   (Boolean) using the Si(333) reflection
     Output:
        grid:     (list) absolute energy values
        timegrid: (list) integration times
@@ -390,19 +405,26 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
             this = float(s[:-1])
             bounds[i] = ktoe(this)
     bounds.sort()
-            
+
+    enot = e0
+    if ththth:
+        enot = e0/3.0
+        bounds = list(array(bounds)/3)
     grid = list()
     timegrid = list()
     for i,s in enumerate(steps):
         if type(s) is str:
             step = float(s[:-1])
-            ar = e0 + ktoe(numpy.arange(etok(bounds[i]), etok(bounds[i+1]), step))
+            if ththth: step = step/3.
+            ar = enot + ktoe(numpy.arange(etok(bounds[i]), etok(bounds[i+1]), step))
         else:
-            ar = numpy.arange(e0+bounds[i], e0+bounds[i+1], steps[i])
+            step = steps[i]
+            if ththth: step = step/3.
+            ar = numpy.arange(enot+bounds[i], enot+bounds[i+1], step)
         grid = grid + list(ar)
         grid = list(numpy.round(grid, decimals=2))
         if type(times[i]) is str:
-            tar = etok(ar-e0)*float(times[i][:-1])
+            tar = etok(ar-enot)*float(times[i][:-1])
         else:
             tar = times[i]*numpy.ones(len(ar))
         timegrid = timegrid + list(tar)
@@ -431,13 +453,16 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112)
 ##  9. return detectors to AutoCount and Continuous modes
 
 
-def channelcut_energy(e0, bounds):
+def channelcut_energy(e0, bounds, ththth):
     for i,s in enumerate(bounds):
         if type(s) is str:
             this = float(s[:-1])
             bounds[i] = ktoe(this)
     amin = dcm.e2a(e0+bounds[0])
     amax = dcm.e2a(e0+bounds[-1])
+    if ththth:
+        amin = dcm.e2a((e0+bounds[0])/3.0)
+        amax = dcm.e2a((e0+bounds[-1])/3.0)
     aave = amin + 1.0*(amax - amin) / 2.0
     wavelength = dcm.wavelength(aave)
     eave = e2l(wavelength)
@@ -509,6 +534,7 @@ def scan_sequence_static_html(inifile       = None,
                               websnap       = '',
                               anasnap       = '',
                               htmlpage      = None,
+                              ththth        = None,
                               ):
     '''
     Gather information from various places, including html_dict, a temporary dictionary 
@@ -713,7 +739,7 @@ def xafs(inifile, **kwargs):
                     }
 
             vfatify = lambda m: sub_dict[m.group()]
-            new_filename = re.sub(r'[*:?"<>|/+\\]', vfatify, p['filename'])
+            new_filename = re.sub(r'[*:?"<>|/\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred')
                 print(colored('\nThese characters cannot be in file names copied onto most memory sticks:', 'lightred'))
@@ -732,7 +758,7 @@ def xafs(inifile, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMM_xsp.prompt)
         if verbose: print(colored('computing pseudo-channelcut energy', 'lightcyan')) 
-        eave = channelcut_energy(p['e0'], p['bounds'])
+        eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMM_xsp.prompt:
             text = '\n'
@@ -770,13 +796,19 @@ def xafs(inifile, **kwargs):
             print(estimate)
 
             if not dcm.suppress_channel_cut:
-                print('\nPseudo-channel-cut energy = %.1f' % eave)
+                if p['ththth']:
+                    print('\nSi(111) pseudo-channel-cut energy = %.1f ; %.1f on the Si(333)' % (eave,eave*3))
+                else:
+                    print('\nPseudo-channel-cut energy = %.1f%s' % (eave,thmess))
             action = input("\nBegin scan sequence? [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
 
+        
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## gather up input data into a fomat suitable for the dossier
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         clargs = textwrap.fill(str(kwargs), width=50).replace('\n', '<br>')
@@ -843,7 +875,7 @@ def xafs(inifile, **kwargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
             print(colored('computing energy and dwell time grids', 'white'))
-            (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
+            (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(colored('Cannot interpret scan grid parameters!  Bailing out....', 'lightred'))
                 BMM_xsp.final_log_entry = False
@@ -856,6 +888,11 @@ def xafs(inifile, **kwargs):
                 return
             if dcm._crystal == '111' and any(y > 21200 for y in energy_grid):
                 print(colored('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
+                BMM_xsp.final_log_entry = False
+                yield from null()
+                return
+            if dcm._crystal == '111' and any(y < 2900 for y in energy_grid): # IS THIS CORRECT???
+                print(colored('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
                 BMM_xsp.final_log_entry = False
                 yield from null()
                 return
@@ -886,6 +923,7 @@ def xafs(inifile, **kwargs):
                               stoichiometry = None,
                               mode          = p['mode'],
                               comment       = p['comment'],
+                              ththth        = p['ththth'],
                           )
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -915,6 +953,7 @@ def xafs(inifile, **kwargs):
             html_dict['times']         = ' '.join(map(str, p['times']))
             html_dict['clargs']        = clargs
             html_dict['htmlpage']      = p['htmlpage']
+            html_dict['ththth']        = p['ththth']
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## snap photos
@@ -931,7 +970,7 @@ def xafs(inifile, **kwargs):
                 snap('analog', filename=image, sample=p['filename'])
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## write dotfile
+            ## write dotfile, used by cadashboard
             with open(dotfile, "w") as f:
                 f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
                 f.write('%.1f\n' % (approx_time * int(p['nscans']) * 60))
@@ -977,7 +1016,9 @@ def xafs(inifile, **kwargs):
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
                                        md={**md, **rightnow, **supplied_metadata})
                 header = db[-1]
-                write_XDI(datafile, header, p['mode'], p['comment']) # yield from ?
+                kind = 'xafs'
+                if p['ththth']: kind = '333'
+                write_XDI(datafile, header, p['mode'], p['comment'], kind=kind) # yield from ?
                 print(colored('wrote %s' % datafile, 'white'))
                 BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
                              % (header.start['uid'], header.start['scan_id'], datafile))
@@ -1020,7 +1061,7 @@ def xafs(inifile, **kwargs):
         if BMM_xsp.final_log_entry is True:
             BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'
                          % (how, db[-1].start['uid'], db[-1].start['scan_id']))
-            if html_dict['htmlpage']:
+            if 'htmlpage' in html_dict and html_dict['htmlpage']:
                 htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'white')
@@ -1064,7 +1105,7 @@ def howlong(inifile, interactive=True, **kwargs):
         print(colored('\nThe following keywords are missing from your INI file: ', 'lightred'),
               '%s\n' % str.join(', ', missing))
         return(orig, -1)
-    (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'])
+    (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
     text +='The sequence of %s will take about %.1f %s' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60, inflect('scan', int(approx_time * int(p['nscans'])/60)))
     if interactive:
