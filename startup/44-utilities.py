@@ -210,7 +210,7 @@ tcs = [Thermocouple('FE:C06B-OP{Mir:1}T:1',                  name = 'Mirror 1, i
        Thermocouple('XF:06BMA-OP{Fltr:1}T:4',                name = 'Filter assembly 2, slot 2'),
        Thermocouple('XF:06BMA-OP{Fltr:1}T:6',                name = 'Filter assembly 2, slot 3'),
        Thermocouple('XF:06BMA-OP{Fltr:1}T:8',                name = 'Filter assembly 2, slot 4'),
-]
+   ]
 
 
 ###################################################################
@@ -244,6 +244,54 @@ def show_thermocouples():
     for t in tcs:
         print('  %-28s     %s' % (t.name, t._state()))
 
+
+################
+# flow sensors #
+################
+class BMM_DIWater(Device):
+    dcm_flow = Cpt(EpicsSignal, 'F:2-I')
+    dm1_flow = Cpt(EpicsSignal, 'F:1-I')
+    return_pressure = Cpt(EpicsSignal, 'P:Return-I')
+    return_temperature = Cpt(EpicsSignal, 'T:Return-I')
+    supply_pressure = Cpt(EpicsSignal, 'P:Supply-I')
+    supply_temperature = Cpt(EpicsSignal, 'T:Supply-I')
+
+bmm_di = BMM_DIWater('XF:06BMA-UT{DI}', name='DI Water')
+bmm_di.dcm_flow.name = 'DCM DI flow'
+bmm_di.dm1_flow.name = 'DM1 DI flow'
+bmm_di.supply_pressure.name = 'DI supply pressure'
+bmm_di.supply_temperature.name = 'DI supply temperature'
+bmm_di.return_pressure.name = 'DI supply pressure'
+bmm_di.return_temperature.name = 'DI supply temperature'
+pbs_di_a = EpicsSignalRO('XF:06BM-PPS{DI}F:A1-I', name='PBS water flow A')
+pbs_di_b = EpicsSignalRO('XF:06BM-PPS{DI}F:B1-I', name='PBS water flow B')
+
+pcw_supply_temperature = EpicsSignalRO('XF:06BMA-PU{PCW}T:Supply-I', name='PCW supply temperature')
+pcw_return_temperature = EpicsSignalRO('XF:06BMA-PU{PCW}T:Return-I', name='PCW return temperature')
+
+foe_leak_detector = EpicsSignalRO('XF:06BMA-UT{LD:1}Alrm-Sts', name='FOE water leak detector')
+
+def show_water():
+    text  = '  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '\n\n'
+    text += '  Sensor                            Value\n'
+    text += ' ==============================================\n'
+    for pv in (bmm_di.dm1_flow, bmm_di.dcm_flow,
+               bmm_di.supply_pressure, bmm_di.supply_temperature, bmm_di.return_pressure, bmm_di.return_temperature, 
+               pbs_di_a, pbs_di_b, pcw_return_temperature, pcw_supply_temperature):
+        if pv.alarm_status.value:
+            text += error_msg('  %-28s     %.1f %s\n' % (pv.name, float(pv.value), pv.describe()[pv.name]['units']))
+        else:
+            text += '  %-28s     %.1f %s\n' % (pv.name, float(pv.value), pv.describe()[pv.name]['units'])
+    if foe_leak_detector.value > 0:
+        text += '  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.value].replace('  ', ' '))
+    else:
+        text += error_msg('  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.value].replace('  ', ' ')))
+    return text[:-1]
+
+
+def sw():
+    boxedtext('BMM water', show_water(), 'lightblue', width=55)
+        
 
 ###########################################################################
 # pretty-print a summary of temperatures, valve states, and vacuum levels #

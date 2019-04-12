@@ -22,6 +22,12 @@ def ut(line):
     return None
 
 @register_line_magic
+def h2o(line):
+    "show BMM DI and PCW water status"
+    sw()
+    return None
+
+@register_line_magic
 def m(line):
     "show BMM motor status"
     ms()
