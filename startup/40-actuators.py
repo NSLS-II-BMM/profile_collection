@@ -14,7 +14,6 @@ class EPS_Shutter(Device):
     openval = 1                 # normal shutter values, FS1 is reversed
     closeval = 0
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #self.color = 'red'
@@ -87,7 +86,16 @@ class EPS_Shutter(Device):
             print('{} is closed'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
+    def _state(self):
+        if self.state.value:
+            state = 'closed'
+            if self.name == 'FS1': state = 'in place'
+            return colored(state, 'lightred')
+        state = 'open'
+        if self.name == 'FS1': state = 'retracted'
+        return(state + '  ')
 
+    
 class BMPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Sts:BM_BMPS_Opn-Sts')
 
@@ -114,7 +122,7 @@ shb.shutter_type = 'PH'
 shb.openval  = 0
 shb.closeval = 1
 
-fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'Fluorescent Screen')
+fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'FS1')
 fs1.shutter_type = 'FS'
 fs1.openval  = 1
 fs1.closeval = 0

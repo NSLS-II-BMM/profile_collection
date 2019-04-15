@@ -150,21 +150,22 @@ class GateValve(Device):
             return colored('closed', 'lightred')
         return('open  ')
 
-gv = [GateValve('FE:C06B-VA{GV:1}DB:',     name='FEGV1'),
-      GateValve('FE:C06B-VA{GV:3}DB:',     name='FEGV3'),
-      GateValve('FE:C06B-VA{GV:2}DB:',     name='FEGV2'),
+gv = [GateValve('FE:C06B-VA{GV:1}',     name='FEGV1'),
+      GateValve('FE:C06B-VA{GV:3}',     name='FEGV3'),
+      GateValve('FE:C06B-VA{GV:2}',     name='FEGV2'),
       GateValve('XF:06BMA-VA{FS:1-GV:1}',  name='GV1'),
       GateValve('XF:06BMA-VA{BS:PB-GV:1}', name='GV2'),
       GateValve('XF:06BMA-VA{FS:2-GV:1}',  name='GV3'),
       GateValve('XF:06BMA-VA{Mir:2-GV:1}', name='GV4'),
       GateValve('XF:06BMA-VA{Mir:3-GV:1}', name='GV5'),
-      GateValve('XF:06BMB-VA{BT:1-GV:1}',  name='GV6')]
+      GateValve('XF:06BMB-VA{BT:1-GV:1}',  name='GV6'),
+      fs1]
 
 def show_gate_valves():
-    print('Valve     state')
-    print('==================')
+    print('  Valve      state')
+    print('=======================')
     for g in gv:
-        print('  %s     %s' % (g.name, g._state()))
+        print('  %-6s     %s' % (g.name, g._state()))
 
 
 #############################################################

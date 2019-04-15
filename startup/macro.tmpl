@@ -28,21 +28,50 @@ def sample_sequence():
     BMM_xsp.prompt = False
     BMM_log_info('Beginning sample macro')
 
-    ### sample 1 ############################################################
-    yield from mv(xafs_x, 4.3, xafs_y, 40.2, xafs_wheel, 15)
-    yield from xafs('scan.ini', filename='blah1', sample='first sample')
-    close_last_plot()                 # this command closes the plot on screen
-    # yield from mvr(xafs_wheel, -15) # example of rotating to next sample wheel position
+
+    ### ---------------------------------------------------------------------------------------
+    ### boilerplate above this line -----------------------------------------------------------
+    ##  edit below this line
     
-    ### sample 2 ############################################################
-    yield from mv(xafs_x, 5.4, xafs_y, 20.8, xafs_wheel, 15)
-    yield from xafs('scan.ini', filename='blah2', sample='another sample', comment='my comment')
+    
+    ## sample 1
+    yield from xafs('scan.ini', filename='samp1', sample='first sample')
+    close_last_plot()                 # this command closes the plot on screen
+    
+    ## sample 2
+    yield from mvr(xafs_wheel, -15)
+    yield from xafs('scan.ini', filename='samp2', sample='another sample', comment='my comment')
     close_last_plot()
 
-    ### sample 3 ############################################################
-    yield from mv(xafs_x, 6.5, xafs_y, 1.5, xafs_wheel, 15)
-    yield from xafs('scan.ini', filename='blah3', sample='a different sample', nscans=4)
+    ## sample 3
+    yield from mvr(xafs_wheel, -15)
+    yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
     close_last_plot()
 
+
+    ### some other useful commands:
+    ###
+    ###   ▶ move to a specific position in X and Y
+    ###          yield from mv(xafs_x, 57, xafs_y, 123)
+    ###
+    ###   ▶ move X or Y by some amount
+    ###          yield from mvr(xafs_x, 2)
+    ###          yield from mvr(xafs_y, -1)
+    ###
+    ###   ▶ change to a different edge
+    ###          yield from change_edge('Cu')
+    ###
+    ###   ▶ open/close the shutter
+    ###          yield from shb.open_plan()
+    ###          yield from shb.close_plan()
+    ###
+    ###   ▶ turn sample spinner on/off
+    ###          yield from fan.on_plan
+    ###          yield from fan.off_plan
+
+    ##  edit above this line
+    ### boilerplate below this line -----------------------------------------------------------
+    ### ---------------------------------------------------------------------------------------
+    
     BMM_xsp.prompt = True
     BMM_log_info('Sample macro finished!')
