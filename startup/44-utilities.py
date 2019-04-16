@@ -66,6 +66,11 @@ class Vacuum(Device):
     pressure = Cpt(EpicsSignal, '-CCG:1}P:Raw-I')
 
     def _pressure(self):
+        print(self.pressure.value)
+        print(type(self.pressure.value))
+        if self.pressure.value == 'OFF':
+            return(colored(-1.1E-15, 'purple'))
+
         if float(self.pressure.value) > 1e-6:
             return colored(self.pressure.value, 'lightred',)
         if float(self.pressure.value) > 1e-8:
@@ -88,6 +93,8 @@ class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
 
     def _pressure(self):
+        if self.pressure.value == 'OFF':
+            return(colored(-1.1e-15, 'purple'))
         if float(self.pressure.value) > 1e-1:
             return colored(self.pressure.value, 'lightred')
         if float(self.pressure.value) > 6e-3:

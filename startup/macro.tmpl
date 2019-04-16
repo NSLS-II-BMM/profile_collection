@@ -25,7 +25,7 @@ def sample_sequence():
         print(colored('\n'+text, 'lightred') + colored('Quitting macro....\n', 'white'))
         return(yield from null())
     
-    BMM_xsp.prompt = False
+    BMMuser.prompt = False
     BMM_log_info('Beginning sample macro')
 
 
@@ -73,5 +73,5 @@ def sample_sequence():
     ### boilerplate below this line -----------------------------------------------------------
     ### ---------------------------------------------------------------------------------------
     
-    BMM_xsp.prompt = True
+    BMMuser.prompt = True
     BMM_log_info('Sample macro finished!')

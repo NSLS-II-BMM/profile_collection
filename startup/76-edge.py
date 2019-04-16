@@ -25,6 +25,8 @@ class ReferenceFoils():
     def __init__(self):
         self.slots = [None, None, None, None, None]
 
+    def unset(self)
+        self.slots = [None, None, None, None, None]
 
     def set_slot(self, i, el):
         '''Configure a slot i ∈ (0 .. 4) for element el'''
@@ -108,7 +110,11 @@ if os.path.isfile(jsonfile):
     user = json.load(open(jsonfile))
     if 'foils' in user:
         foils.set(user['foils'])
-
+## else if starting BSUI fresh, perform the delayed foil configuration
+if BMMuser.read_foils is not None:
+    foils.set(BMMuser.read_foils)
+    BMMuser.read_foils = None
+        
 def approximate_pitch(energy):
     if dcm._crystal is '111':
         m = -4.42156e-6
@@ -178,7 +184,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
     print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
     print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
-    if BMM_xsp.prompt:
+    if BMMuser.prompt:
         action = input("\nBegin energy change? [Y/n then Enter] ")
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())

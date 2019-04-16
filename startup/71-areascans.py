@@ -54,7 +54,7 @@ def areascan(detector,
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
             print(colored(text, 'lightred'))
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             yield from null()
             return
 
@@ -65,7 +65,7 @@ def areascan(detector,
         if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
             print(colored('\n*** %s is not an areascan motor (%s)\n' %
                           (slow, str.join(', ', motor_nicknames.keys())), 'lightred'))
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             yield from null()
             return
         if slow in motor_nicknames.keys():
@@ -76,7 +76,7 @@ def areascan(detector,
         if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
             print(colored('\n*** %s is not an areascan motor (%s)\n' %
                           (fast, str.join(', ', motor_nicknames.keys())), 'lightred'))
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             yield from null()
             return
         if fast in motor_nicknames.keys():
@@ -136,8 +136,8 @@ def areascan(detector,
         BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
 
         thismd = dict()
-        thismd['XDI,Facility,GUP'] = BMM_xsp.gup
-        thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+        thismd['XDI,Facility,GUP'] = BMMuser.gup
+        thismd['XDI,Facility,SAF'] = BMMuser.saf
         thismd['slow_motor'] = slow.name
         thismd['fast_motor'] = fast.name
 
@@ -150,12 +150,12 @@ def areascan(detector,
                           slow, startslow, stopslow, nslow,
                           fast, startfast, stopfast, nfast,
                           snake=False):
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             yield from grid_scan(dets,
                                  slow, startslow, stopslow, nslow,
                                  fast, startfast, stopfast, nfast,
                                  snake)
-            BMM_xsp.final_log_entry = True
+            BMMuser.final_log_entry = True
 
         with open(dotfile, "w") as f:
             f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
@@ -193,7 +193,7 @@ def areascan(detector,
         print('Cleaning up after an area scan')
         RE.clear_suspenders()
         if os.path.isfile(dotfile): os.remove(dotfile)
-        if BMM_xsp.final_log_entry is True:
+        if BMMuser.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from abs_set(_locked_dwell_time, 0.5)
         RE.msg_hook = BMM_msg_hook
@@ -209,7 +209,7 @@ def areascan(detector,
 
         
     dotfile = '/home/xf06bm/Data/.area.scan.running'
-    BMM_xsp.final_log_entry = True
+    BMMuser.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(detector,

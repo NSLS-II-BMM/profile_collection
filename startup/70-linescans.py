@@ -341,8 +341,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         ##BMM_suspenders()            # engage suspenders
 
         thismd = dict()
-        thismd['XDI,Facility,GUP'] = BMM_xsp.gup
-        thismd['XDI,Facility,SAF'] = BMM_xsp.saf
+        thismd['XDI,Facility,GUP'] = BMMuser.gup
+        thismd['XDI,Facility,SAF'] = BMMuser.saf
 
         with open(dotfile, "w") as f:
             f.write("")

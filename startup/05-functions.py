@@ -10,7 +10,11 @@ with warnings.catch_warnings():
 ## folk.
 os.environ['PAGER'] = 'cat'
 
+
+## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
+_user_is_defined = False
+DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
@@ -66,20 +70,20 @@ def list_msg(text):
 ##################################################
 # --- a simple class for managing scan logistics #
 ##################################################
-class xafs_scan_parameters():
-    '''
-    A simple class for gathering metadata about the current user experiment, including
-    GUP & SAF numbers, start date, and some operational flags.
-    '''
-    def __init__(self):
-        self.prompt = True
-        self.final_log_entry = True
-        self.date = ''
-        self.gup = 0
-        self.saf = 0
-        self.name = None
-        self.staff = False
-BMM_xsp = xafs_scan_parameters()
+# class xafs_scan_parameters():
+#     '''
+#     A simple class for gathering metadata about the current user experiment, including
+#     GUP & SAF numbers, start date, and some operational flags.
+#     '''
+#     def __init__(self):
+#         self.prompt = True
+#         self.final_log_entry = True
+#         self.date = ''
+#         self.gup = 0
+#         self.saf = 0
+#         self.name = None
+#         self.staff = False
+# BMM_xsp = xafs_scan_parameters()
 
 
 

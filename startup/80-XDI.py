@@ -101,11 +101,11 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     if XDI_record['xafs_pitch'] :
         xdi.append('# Sample.pitch_position: %.3f deg'    % dataframe.table('baseline')['xafs_pitch'][1])
     if XDI_record['xafs_linxs'] :
-        xdi.append('# Sample.xs_position: %.3f mm'        % dataframe.table('baseline')['xafs_linxs'][1])
+        xdi.append('# Sample.ref_position: %.3f mm'       % dataframe.table('baseline')['xafs_linxs'][1])
     if XDI_record['xafs_lins'] :
         xdi.append('# Sample.s_position: %.3f mm'         % dataframe.table('baseline')['xafs_lins'][1])
     if XDI_record['xafs_rotb'] :
-        xdi.append('# Sample.rotb_position: %.3f mm'      % dataframe.table('baseline')['xafs_rotb'][1])
+        xdi.append('# Sample.wheel_position: %.3f mm'     % dataframe.table('baseline')['xafs_rotb'][1])
     if XDI_record['xafs_rots'] :
         xdi.append('# Sample.rots_position: %.3f mm'      % dataframe.table('baseline')['xafs_rots'][1])
     if XDI_record['xafs_roth'] :
@@ -143,7 +143,7 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
                 '# Scan.experimenters: %s'          % dataframe.start['XDI,Scan,experimenters'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy'])])
     if kind == '333':
-        xdi.extend(['# Scan.edge_energy_333: %.1f'  % 3* float(dataframe.start['XDI,Scan,edge_energy']) ])
+        xdi.extend(['# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI,Scan,edge_energy']) ])
     xdi.extend(['# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
                 '# Scan.transient_id: %s'           % dataframe.start['scan_id'],

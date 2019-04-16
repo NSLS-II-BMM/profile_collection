@@ -601,8 +601,8 @@ def scan_sequence_static_html(inifile       = None,
                                     basename      = basename,
                                     encoded_basename = quote(basename),
                                     experimenters = experimenters,
-                                    gup           = BMM_xsp.gup,
-                                    saf           = BMM_xsp.saf,
+                                    gup           = BMMuser.gup,
+                                    saf           = BMMuser.saf,
                                     seqnumber     = seqnumber,
                                     seqstart      = seqstart,
                                     seqend        = seqend,
@@ -611,7 +611,7 @@ def scan_sequence_static_html(inifile       = None,
                                     e0            = '%.1f' % e0,
                                     edge          = edge,
                                     element       = '%s (<a href="https://en.wikipedia.org/wiki/%s">%s</a>, %d)' % (element, element_name(element), element_name(element), Z_number(element)),
-                                    date          = BMM_xsp.date,
+                                    date          = BMMuser.date,
                                     scanlist      = scanlist,
                                     motors        = motors,
                                     sample        = sample,
@@ -657,7 +657,7 @@ def write_manifest():
         content = f.readlines()
     indexfile = os.path.join(DATA, 'dossier', '00INDEX.html')
     o = open(indexfile, 'w')
-    o.write(''.join(content).format(date           = BMM_xsp.date,
+    o.write(''.join(content).format(date           = BMMuser.date,
                                     experimentlist = experimentlist,
                                 ))
     o.close()
@@ -673,13 +673,13 @@ def xafs(inifile, **kwargs):
     '''
     def main_plan(inifile, **kwargs):
         if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             print(colored('The DCM is in the 111 position, configured as 311', 'lightred'))
             print(colored('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), 'lightred'))
             yield from null()
             return
         if '111' in dcm._crystal and dcm_x.user_readback.value > 0:
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             print(colored('The DCM is in the 311 position, configured as 111', 'lightred'))
             print(colored('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), 'lightred'))
             yield from null()
@@ -700,7 +700,7 @@ def xafs(inifile, **kwargs):
         else:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 print(colored('\n'+text, 'lightred'))
                 print(colored('Quitting scan sequence....\n', 'white'))
                 yield from null()
@@ -718,7 +718,7 @@ def xafs(inifile, **kwargs):
         if verbose: print(colored('time estimate', 'lightcyan')) 
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
-            BMM_xsp.final_log_entry = False
+            BMMuser.final_log_entry = False
             yield from null()
             return
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
@@ -749,18 +749,18 @@ def xafs(inifile, **kwargs):
 
             ## 255 character limit for filenames on VFAT
             # if len(p['filename']) > 250:
-            #     BMM_xsp.final_log_entry = False
+            #     BMMuser.final_log_entry = False
             #     print(colored('\nYour filename is too long,', 'lightred'))
             #     print(colored('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,', 'lightred'))
             #     yield from null()
             #     return
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## user verification (disabled by BMM_xsp.prompt)
+        ## user verification (disabled by BMMuser.prompt)
         if verbose: print(colored('computing pseudo-channelcut energy', 'lightcyan')) 
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
-        if BMM_xsp.prompt:
+        if BMMuser.prompt:
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])
@@ -790,7 +790,7 @@ def xafs(inifile, **kwargs):
                     bail = True
             if bail:
                 print(colored('\nOne or more output files already exist!  Quitting scan sequence....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
             print(estimate)
@@ -799,10 +799,10 @@ def xafs(inifile, **kwargs):
                 if p['ththth']:
                     print('\nSi(111) pseudo-channel-cut energy = %.1f ; %.1f on the Si(333)' % (eave,eave*3))
                 else:
-                    print('\nPseudo-channel-cut energy = %.1f%s' % (eave,thmess))
+                    print('\nPseudo-channel-cut energy = %.1f' % eave)
             action = input("\nBegin scan sequence? [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
 
@@ -878,27 +878,27 @@ def xafs(inifile, **kwargs):
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(colored('Cannot interpret scan grid parameters!  Bailing out....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
             if any(y > 23500 for y in energy_grid):
                 print(colored('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y > 21200 for y in energy_grid):
                 print(colored('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y < 2900 for y in energy_grid): # IS THIS CORRECT???
                 print(colored('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '311' and any(y < 5500 for y in energy_grid):
                 print(colored('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....', 'lightred'))
-                BMM_xsp.final_log_entry = False
+                BMMuser.final_log_entry = False
                 yield from null()
                 return
 
@@ -1058,7 +1058,7 @@ def xafs(inifile, **kwargs):
             how = 'stopped'
         elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
             how = 'stopped'
-        if BMM_xsp.final_log_entry is True:
+        if BMMuser.final_log_entry is True:
             BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'
                          % (how, db[-1].start['uid'], db[-1].start['scan_id']))
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
@@ -1077,7 +1077,7 @@ def xafs(inifile, **kwargs):
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
     html_dict = {}
-    BMM_xsp.final_log_entry = True
+    BMMuser.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))

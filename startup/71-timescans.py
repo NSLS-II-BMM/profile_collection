@@ -86,8 +86,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     
     thismd = dict()
-    thismd['XDI,Facility,GUP']    = BMM_xsp.gup
-    thismd['XDI,Facility,SAF']    = BMM_xsp.saf
+    thismd['XDI,Facility,GUP']    = BMMuser.gup
+    thismd['XDI,Facility,SAF']    = BMMuser.saf
     thismd['XDI,Beamline,energy'] = dcm.energy.readback.value
     thismd['XDI,Scan,dwell_time'] = dwell
     thismd['XDI,Scan,delay']      = delay
@@ -237,7 +237,7 @@ def sead(inifile, force=False, **kwargs):
         for k in ('folder', 'filename', 'experimenters', 'e0', 'npoints', 'dwell', 'delay',
                   'sample', 'prep', 'comment', 'mode', 'snapshots'):
             text = text + '      %-13s : %-50s\n' % (k,p[k])
-        if BMM_xsp.prompt:
+        if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
             action = input("\nBegin time scan? [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
