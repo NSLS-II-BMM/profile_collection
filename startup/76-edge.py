@@ -25,8 +25,17 @@ class ReferenceFoils():
     def __init__(self):
         self.slots = [None, None, None, None, None]
 
-    def unset(self)
+    def unset(self):
         self.slots = [None, None, None, None, None]
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        if os.path.isfile(jsonfile):
+            user = json.load(open(jsonfile))
+            if 'foils' in user:
+                del user['foils']
+                os.chmod(jsonfile, 0o644)
+                with open(jsonfile, 'w') as outfile:
+                    json.dump(user, outfile)
+                os.chmod(jsonfile, 0o444)
 
     def set_slot(self, i, el):
         '''Configure a slot i ∈ (0 .. 4) for element el'''
@@ -110,7 +119,7 @@ if os.path.isfile(jsonfile):
     user = json.load(open(jsonfile))
     if 'foils' in user:
         foils.set(user['foils'])
-## else if starting BSUI fresh, perform the delayed foil configuration
+## else if starting bsui fresh, perform the delayed foil configuration
 if BMMuser.read_foils is not None:
     foils.set(BMMuser.read_foils)
     BMMuser.read_foils = None
