@@ -67,26 +67,6 @@ def list_msg(text):
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
-##################################################
-# --- a simple class for managing scan logistics #
-##################################################
-# class xafs_scan_parameters():
-#     '''
-#     A simple class for gathering metadata about the current user experiment, including
-#     GUP & SAF numbers, start date, and some operational flags.
-#     '''
-#     def __init__(self):
-#         self.prompt = True
-#         self.final_log_entry = True
-#         self.date = ''
-#         self.gup = 0
-#         self.saf = 0
-#         self.name = None
-#         self.staff = False
-# BMM_xsp = xafs_scan_parameters()
-
-
-
 KTOE = 3.8099819442818976
 def etok(ee):
     '''convert relative energy to wavenumber'''

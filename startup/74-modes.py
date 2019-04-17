@@ -14,47 +14,6 @@ def read_mode_data():
 if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 
-##########################################################
-# --- a simple class for managing beamline configuration #
-##########################################################
-class BMM_configuration():
-    def __init__(self):
-        self.pds_mode = self._mode = None
-
-        ## scan grid parameters
-        self.bounds = [-200, -30, 15.3, '14k']
-        self.steps = [10, 0.5, '0.05k']
-        self.times = [0.5, 0.5, '0.25k']
-        
-        self.folder = os.environ.get('HOME')+'/data/'
-        self.filename = 'data.dat'
-        self.experimenters = ''
-        self.e0 = None
-        self.element = None
-        self.edge = 'K'
-        self.sample = ''
-        self.prep = ''
-        self.comment = ''
-        self.nscans = 1
-        self.start = 0
-        self.inttime = 1
-        self.snapshots = True
-        self.usbstick = True
-        self.rockingcurve = False
-        self.htmlpage = True
-        self.bothways = False
-        self.channelcut = True
-        self.ththth = False
-        self.mode = 'transmission'
-
-        ## parameters for single energy absorption detection, see 71-timescans.py
-        self.npoints = 0 
-        self.dwell = 1.0
-        self.delay = 0.1
-
-
-BMM_config = BMM_configuration()
-
 
 def change_mode(mode=None, prompt=True):
      if mode is None:
@@ -148,7 +107,7 @@ def change_mode(mode=None, prompt=True):
 
      yield from bps.sleep(2.0)
      yield from abs_set(dm3_bct.kill_cmd, 1) # and after
-     BMM_config.pds_mode = mode
+     BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
 
@@ -217,8 +176,8 @@ def describe_mode():
                return 'unfocused, 6 to 8 keV'
 #    yield from null()
 
-if BMM_config.pds_mode is None:
-    BMM_config.pds_mode = get_mode()
+if BMMuser.pds_mode is None:
+    BMMuser.pds_mode = get_mode()
 
 
 def change_xtals(xtal=None):

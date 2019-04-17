@@ -15,30 +15,30 @@ def move_after_scan(thismotor):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
-    if BMM_cpl.motor is None:
+    if BMMuser.motor is None:
         print(colored('\nThere\'s not a current plot on screen.\n', 'lightred'))
         return(yield from null())
-    if thismotor is not BMM_cpl.motor:
+    if thismotor is not BMMuser.motor:
         print(colored('\nThe motor you are asking to move is not the motor in the current plot.\n',
                       'lightred'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
-    cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
-    while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
+    cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+    while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
         yield from sleep(0.5)
-    if BMM_cpl.motor2 is None:
-        yield from mv(thismotor, BMM_cpl.x)
+    if BMMuser.motor2 is None:
+        yield from mv(thismotor, BMMuser.x)
     else:
-        print('%.3f  %.3f' % (BMM_cpl.x, BMM_cpl.y))
-        #yield from mv(BMM_cpl.motor, BMM_cpl.x, BMM_cpl.motor2, BMM_cpl.y)
-    cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
-    BMM_cpl.x = BMM_cpl.y = None
+        print('%.3f  %.3f' % (BMMuser.x, BMMuser.y))
+        #yield from mv(BMMuser.motor, BMMuser.x, BMMuser.motor2, BMMuser.y)
+    cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+    BMMuser.x = BMMuser.y = None
 
 def pluck():
     '''
     Call this to pluck a point from the most recent plot and move the motor to that point.
     '''
-    yield from move_after_scan(BMM_cpl.motor)
+    yield from move_after_scan(BMMuser.motor)
 
 from scipy.ndimage import center_of_mass
 def com(signal):
@@ -69,7 +69,7 @@ def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
             return
 
         RE.msg_hook = None
-        BMM_cpl.motor = dm3_bct
+        BMMuser.motor = dm3_bct
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
@@ -143,7 +143,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             return
 
         RE.msg_hook = None
-        BMM_cpl.motor = motor
+        BMMuser.motor = motor
     
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
         dets = [quadem1,]
@@ -275,7 +275,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
             thismotor = axis
         else:                       # presume it's an xafs_XXXX motor
             thismotor = motor_nicknames[axis]
-        BMM_cpl.motor = thismotor
+        BMMuser.motor = thismotor
 
         ## sanity checks on detector
         if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):

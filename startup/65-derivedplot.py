@@ -16,45 +16,31 @@ run_report(__file__)
 # caput XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC 5
 # caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 5
 
-#####################################################################
-# this is used to keep track of mouse events on the plotting window #
-# see 70-linescans.py                                               #
-#####################################################################
-class CurrentPlotLogistics():
-    def __init__(self):
-        self.motor  = None
-        self.motor2 = None
-        self.fig    = None
-        self.ax     = None
-        self.x      = None
-        self.y      = None
-BMM_cpl = CurrentPlotLogistics()
-
 #############################################################################
 # this is the callback that gets assigned to mouse clicks on theplot window #
 #############################################################################
 def interpret_click(ev):
     print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
-    BMM_cpl.x = ev.xdata
-    BMM_cpl.y = ev.ydata
+    BMMuser.x = ev.xdata
+    BMMuser.y = ev.ydata
 
 def handle_close(ev):
-    ## if closing a stale plot, take care to preserve current plot in BMM_cpl object
-    if BMM_cpl.fig is None:
+    ## if closing a stale plot, take care to preserve current plot in BMMuser object
+    if BMMuser.fig is None:
         return
-    recent  = str(BMM_cpl.fig.canvas.__repr__).split()[-1]
+    recent  = str(BMMuser.fig.canvas.__repr__).split()[-1]
     closing = str(ev.canvas).split()[-1]
     if recent == closing:
-        BMM_cpl.motor  = None
-        BMM_cpl.motor2 = None
-        BMM_cpl.fig    = None
-        BMM_cpl.ax     = None
+        BMMuser.motor  = None
+        BMMuser.motor2 = None
+        BMMuser.fig    = None
+        BMMuser.ax     = None
 
 def close_last_plot():
-    if BMM_cpl.fig is None:
+    if BMMuser.fig is None:
         print('Oops... No last plot.')
         return
-    plt.close(BMM_cpl.fig)
+    plt.close(BMMuser.fig)
         
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, title=None, legend_keys=None, stream_name='primary', **kwargs):
@@ -73,9 +59,9 @@ class DerivedPlot(CallbackBase):
         if ax is None:
             fig, ax = plt.subplots()
         self.ax = ax
-        BMM_cpl.ax = ax
-        BMM_cpl.fig = fig
-        BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
+        BMMuser.ax = ax
+        BMMuser.fig = fig
+        BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
         if xlabel is None:
             xlabel = ''
         if ylabel is None:

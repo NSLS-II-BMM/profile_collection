@@ -171,9 +171,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
         return(yield from null())
 
-    BMM_config.edge        = edge
-    BMM_config.element     = el
-    BMM_config.edge_energy = energy
+    BMMuser.edge        = edge
+    BMMuser.element     = el
+    BMMuser.edge_energy = energy
 
     if energy > 8000:
         mode = 'A' if focus else 'D'

@@ -8,7 +8,64 @@ run_report(__file__)
 
 
 class BMM_User():
+    '''A class for managing the user interaction at BMM.
+
+    Experiment attributes:
+      * DATA:             path to folder containing data
+      * prompt:           flag, True prompt at beginning of plans
+      * fianl_log_entry:  flag, True write log entries during plan cleanup
+      * date:             start date of experiment as YYYY-MM-DD
+      * gup:              GUP number
+      * saf:              SAF number
+      * name:             full name of PI
+      * staff:            flag, True if a staff experiment
+
+    Current plot attributes
+      * motor:            fast motor in current plot
+      * motor2:           slow motor in current plot
+      * fig:              matplotlib.figure.Figure object of current plot
+      * ax:               matplotlib.axes._subplots.AxisSubplot object of current plot
+      * x:                plucked-upon X coordinate
+      * y:                plucked-upon Y coordinate
+
+
+    Energy scan control attributes, default values
+      * pds_mode:         photon delivery system mode (A, B, C, D, E, F, XRD)
+      * bounds:           list of energy or k scan boundaries
+      * steps:            list of energy ot k steps
+      * times:            list of integration times
+      * folder:           data folder
+      * filename:         output data file stub
+      * experimenters:    names of experimenters
+      * e0:               edge energy, reference for bounds
+      * element:          absorbing element
+      * edge:             absorption edge
+      * sample:           sample composition or stoichiometry
+      * prep:             how sample was prepared for measurement
+      * comment:          anything else of interest about the sample
+      * nscans:           number of scan repititions
+      * start:            starting scan number
+      * snapshots:        flag for taking snapshots
+      * usbstick:         flag for rewriting USB-stick-safe filenames
+      * rockingcurve:     flag for doing a rocking curve scan at the pseudo-channel-cut energy
+      * htmlpage:         flag for writing dossier
+      * bothways:         flag for measuring in both directions on mono
+      * channelcut:       flag for measuring in pseudo-channel-cut mode
+      * ththth:           flag for measuring with the Si(333) reflection
+      * mode:             in-scan plotting mode
+
+    Single energy time scan attributes, default values
+      * npoints:          number of time points
+      * dwell:            dwell time at each time step
+      * delay:            delay between time steps
+
+    Methods for public use:
+      * start_experiment(self, name=None, date=None, gup=0, saf=0)
+      * end_experiment(self, force=False)
+      * show_experiment(self)
+    '''
     def __init__(self):
+        ## experiment attributes
         self.DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
         self.prompt = True
         self.final_log_entry = True
@@ -19,6 +76,45 @@ class BMM_User():
         self.staff = False
         self.read_foils = None
 
+        ## current plot attributes    #######################################################################
+        self.motor  = None            # these are used to keep track of mouse events on the plotting window #
+        self.motor2 = None            # see 70-linescans.py, and 71-areascan.py                             #
+        self.fig    = None            #######################################################################
+        self.ax     = None
+        self.x      = None
+        self.y      = None
+
+        ## scan control attributes
+        self.pds_mode = self._mode = None
+        self.bounds = [-200, -30, 15.3, '14k']  ## scan grid parameters
+        self.steps = [10, 0.5, '0.05k']
+        self.times = [0.5, 0.5, '0.25k']
+        self.folder = os.environ.get('HOME')+'/data/'
+        self.filename = 'data.dat'
+        self.experimenters = ''
+        self.e0 = None
+        self.element = None
+        self.edge = 'K'
+        self.sample = ''
+        self.prep = ''
+        self.comment = ''
+        self.nscans = 1
+        self.start = 0
+        self.inttime = 1
+        self.snapshots = True
+        self.usbstick = True
+        self.rockingcurve = False
+        self.htmlpage = True
+        self.bothways = False
+        self.channelcut = True
+        self.ththth = False
+        self.mode = 'transmission'
+        self.npoints = 0   ###########################################################################
+        self.dwell = 1.0   ## parameters for single energy absorption detection, see 71-timescans.py #
+        self.delay = 0.1   ###########################################################################
+
+
+        
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
         Get ready for a new experiment.  Run this first thing when a user
@@ -56,8 +152,6 @@ class BMM_User():
         print('   snapshots in %s' % imagefolder)
         step += 1
 
-        #if os.path.isdir('NIST/'):
-    
         ## setup logger
         BMM_user_log(os.path.join(folder, 'experiment.log'))
         print('%d. Set up experimental log file: %s' % (step, os.path.join(folder, 'experiment.log')))

@@ -129,11 +129,11 @@ def areascan(detector,
         areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
                             xlabel='fast motor: %s' % fast.name,
                             ylabel='slow motor: %s' % slow.name)
-        BMM_cpl.ax     = areaplot.ax
-        BMM_cpl.fig    = areaplot.ax.figure
-        BMM_cpl.motor  = fast
-        BMM_cpl.motor2 = slow
-        BMM_cpl.fig.canvas.mpl_connect('close_event', handle_close)
+        BMMuser.ax     = areaplot.ax
+        BMMuser.fig    = areaplot.ax.figure
+        BMMuser.motor  = fast
+        BMMuser.motor2 = slow
+        BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
 
         thismd = dict()
         thismd['XDI,Facility,GUP'] = BMMuser.gup
@@ -171,20 +171,20 @@ def areascan(detector,
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             print('Single click the left mouse button on the plot to pluck a point...')
-            cid = BMM_cpl.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
-            while BMM_cpl.x is None:                            #  https://matplotlib.org/users/event_handling.html
+            cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+            while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
                 yield from sleep(0.5)
 
             print('Converting plot coordinates to real coordinates...')
             begin = valuefast + startfast
             stepsize = (stopfast - startfast) / (nfast - 1)
-            pointfast = begin + stepsize * BMM_cpl.x
-            #print(BMM_cpl.x, pointfast)
+            pointfast = begin + stepsize * BMMuser.x
+            #print(BMMuser.x, pointfast)
         
             begin = valueslow + startslow
             stepsize = (stopslow - startslow) / (nslow - 1)
-            pointslow = begin + stepsize * BMM_cpl.y
-            #print(BMM_cpl.y, pointslow)
+            pointslow = begin + stepsize * BMMuser.y
+            #print(BMMuser.y, pointslow)
 
             print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
             yield from mv(fast, pointfast, slow, pointslow)
@@ -199,13 +199,13 @@ def areascan(detector,
         RE.msg_hook = BMM_msg_hook
 
         print('Disabling plot for re-plucking.')
-        cid = BMM_cpl.fig.canvas.mpl_disconnect(cid)
-        BMM_cpl.x      = None
-        BMM_cpl.y      = None
-        BMM_cpl.motor  = None
-        BMM_cpl.motor2 = None
-        BMM_cpl.fig    = None
-        BMM_cpl.ax     = None
+        cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+        BMMuser.x      = None
+        BMMuser.y      = None
+        BMMuser.motor  = None
+        BMMuser.motor2 = None
+        BMMuser.fig    = None
+        BMMuser.ax     = None
 
         
     dotfile = '/home/xf06bm/Data/.area.scan.running'

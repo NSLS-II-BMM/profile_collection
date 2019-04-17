@@ -18,7 +18,7 @@ CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
 CS_MULTIPLIER = 1.425
 ######################################################################
-## replacing this with BMM_config, see 74-modes.py
+## replacing this with BMMuser, see 74-modes.py
 # CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #
 #                  'steps':         [10, 0.5, '0.05k'],              #
 #                  'times':         [0.5, 0.5, '0.25k'],             #
@@ -242,7 +242,7 @@ def scan_metadata(inifile=None, **kwargs):
                         parameters[a].append(f)
                     found[a] = True
             except:
-                parameters[a] = getattr(BMM_config, a)
+                parameters[a] = getattr(BMMuser, a)
     parameters['bounds_given'] = parameters['bounds'].copy()
 
     (problem, text) = sanitize_step_scan_parameters(parameters['bounds'], parameters['steps'], parameters['times'])
@@ -259,7 +259,7 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = config.get('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = getattr(BMM_config, a)
+                parameters[a] = getattr(BMMuser, a)
         else:
             parameters[a] = str(kwargs[a])
             found[a] = True
@@ -275,7 +275,7 @@ def scan_metadata(inifile=None, **kwargs):
             parameters['start'] = str(config.get('scan', 'start'))
             found['start'] = True
         except configparser.NoOptionError:
-            parameters[a] = getattr(BMM_config, a)
+            parameters[a] = getattr(BMMuser, a)
     else:
         parameters['start'] = str(kwargs['start'])
         found['start'] = True
@@ -297,7 +297,7 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = int(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = getattr(BMM_config, a)
+                parameters[a] = getattr(BMMuser, a)
         else:
             parameters[a] = int(kwargs[a])
             found[a] = True
@@ -310,7 +310,7 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = float(config.get('scan', a))
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = getattr(BMM_config, a)
+                parameters[a] = getattr(BMMuser, a)
         else:
             parameters[a] = float(kwargs[a])
             found[a] = True
@@ -323,7 +323,7 @@ def scan_metadata(inifile=None, **kwargs):
                 parameters[a] = config.getboolean('scan', a)
                 found[a] = True
             except configparser.NoOptionError:
-                parameters[a] = getattr(BMM_config, a)
+                parameters[a] = getattr(BMMuser, a)
         else:
             parameters[a] = bool(kwargs[a])
             found[a] = True

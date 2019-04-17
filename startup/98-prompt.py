@@ -28,7 +28,7 @@ class MyPrompt(Prompts):
         # if rcv is None:
         #     rcv = 0
         return [bmmtoken,
-                (Token.CursorLine, '%s.%s' % (BMM_config.pds_mode, dcm._crystal)),
+                (Token.CursorLine, '%s.%s' % (BMMuser.pds_mode, dcm._crystal)),
                 #shatoken,
                 #(Token.Prompt, u'\u2022'),
                 #shbtoken,
