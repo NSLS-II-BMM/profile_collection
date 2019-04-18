@@ -75,6 +75,7 @@ class BMM_User():
         self.name = None
         self.staff = False
         self.read_foils = None
+        self.user_is_defined = False
 
         ## current plot attributes    #######################################################################
         self.motor  = None            # these are used to keep track of mouse events on the plotting window #
@@ -117,12 +118,12 @@ class BMM_User():
         
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
-        Get ready for a new experiment.  Run this first thing when a user
-        sits down to start their beamtime.  This will:
-        1. Create a folder, if needed, and set the DATA variable
-        2. Set up the experimental log, creating an experiment.log file, if needed
-        3. Write templates for scan.ini and macro.py, if needed
-        4. Set the GUP and SAF numbers as metadata
+        Do the work of prepping a new experiment.  This will:
+          * Create a folder, if needed, and set the DATA variable
+          * Set up the experimental log, creating an experiment.log file, if needed
+          * Write templates for scan.ini and macro.py, if needed
+          * Make the snapshots, dossier, and prj folders
+          * Set the GUP and SAF numbers as metadata
 
         Input:
           folder:   data destination
@@ -226,8 +227,7 @@ class BMM_User():
         print('%d. Set GUP and SAF numbers as metadata' % step)
         step += 1
 
-        global _user_is_defined
-        _user_is_defined = True
+        self.user_is_defined = True
     
         return None
 
@@ -249,16 +249,16 @@ class BMM_User():
           saf:      SAF number
         '''
         if name is None:
-            print(colored('You did not supply the user\'s name', 'red'))
+            print(error_msg('You did not supply the user\'s name'))
             return()
         if date is None:
-            print(colored('You did not supply the start date', 'red'))
+            print(error_msg('You did not supply the start date'))
             return()
         if gup == 0:
-            print(colored('You did not supply the GUP number', 'red'))
+            print(error_msg('You did not supply the GUP number'))
             return()
         if saf == 0:
-            print(colored('You did not supply the SAF number', 'red'))
+            print(error_msg('You did not supply the SAF number'))
             return()
         if name in BMM_STAFF:
             self.staff = True
@@ -289,10 +289,9 @@ class BMM_User():
         immediately ready for the current user.
 
         In the situation where this start-up script is "%run -i"-ed,
-        the fact that _user_is_defined is True will be recognized.
+        the fact that self.user_is_defined is True will be recognized.
         '''
-        global _user_is_defined
-        if _user_is_defined:
+        if self.user_is_defined:
             return()
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
@@ -314,11 +313,10 @@ class BMM_User():
         unset the logger and the DATA variable at the end of an experiment.
         '''
         global DATA
-        global _user_is_defined
 
         if not force:
-            if not _user_is_defined:
-                print(colored('There is not a current experiment!', 'lightred'))
+            if not self.user_is_defined:
+                print(error_msg('There is not a current experiment!'))
                 return(None)
 
             #######################################################################################
@@ -332,11 +330,9 @@ class BMM_User():
                     os.makedirs(os.path.join(destination, d))
             try:
                 copy_tree(DATA, destination)
-                report('NAS data store: "%s"' % destination, 'white')
-                #print(colored('NAS data store: "%s"' % destination, 'white'))
-                #BMM_log_info('NAS data store: "%s"' % destination)
+                report('NAS data store: "%s"' % destination, 'bold')
             except:
-                print(colored('Unable to write data to NAS server', 'red'))
+                print(error_msg('Unable to write data to NAS server'))
         
             #####################################################################
             # remove the json serialization of the start_experiment() arguments #
@@ -357,7 +353,7 @@ class BMM_User():
         self.saf = 0
         self.name = None
         self.staff = False
-        _user_is_defined = False
+        self.user_is_defined = False
 
         return None
 

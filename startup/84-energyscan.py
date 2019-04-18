@@ -57,8 +57,9 @@ import configparser
     #mode=None, bounds=None, steps=None, times=None):
 
 def next_index(folder, stub):
+    '''Find the next numeric filename extension for a filename stub in folder.'''
     listing = os.listdir(folder)
-    r = re.compile(re.escape(stub) + '\.\d\d\d')
+    r = re.compile(re.escape(stub) + '\.\d+')
     results = sorted(list(filter(r.match, listing)))
     if len(results) == 0:
         return 1
@@ -79,6 +80,7 @@ def next_index(folder, stub):
 
 
 def sanitize_step_scan_parameters(bounds, steps, times):
+    '''Attempt to identify and flag/correct some common scan parameter mistakes.'''
     problem = False
     text = ''
 
@@ -218,10 +220,10 @@ def scan_metadata(inifile=None, **kwargs):
     parameters = dict()
 
     if inifile is None:
-        print(colored('\nNo inifile specified\n', 'lightred'))
+        print(error_msg('\nNo inifile specified\n'))
         return {}, {}
     if not os.path.isfile(inifile):
-        print(colored('\ninifile does not exist\n', 'lightred'))
+        print(error_msg('\ninifile does not exist\n'))
         return {}, {}
 
     config = configparser.ConfigParser(interpolation=None)
@@ -265,7 +267,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     if not os.path.isdir(parameters['folder']):
-        print(colored('\nfolder %s does not exist\n' % parameters['folder'], 'lightred'))
+        print(error_msg('\nfolder %s does not exist\n' % parameters['folder']))
         return {}, {}
 
             
@@ -285,7 +287,7 @@ def scan_metadata(inifile=None, **kwargs):
         else:
             parameters['start'] = int(parameters['start'])
     except ValueError:
-        print(colored('\nstart value must be a positive integer or "next"', 'lightred'))
+        print(error_msg('\nstart value must be a positive integer or "next"'))
         parameters['start'] = -1
         found['start'] = False
 
@@ -329,13 +331,13 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     if dcm._crystal != '111' and parameters['ththth']:
-        print(colored('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n', 'lightred'))
+        print(error_msg('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n'))
         return {}, {}
 
     if not found['e0'] and found['element'] and found['edge']:
         parameters['e0'] = edge_energy(parameters['element'], parameters['edge'])
         if parameters['e0'] is None:
-            print(colored('\nCannot figure out edge energy from element = %s and edge = %s\n' % (parameters['element'], parameters['edge']), 'lightred'))
+            print(error_msg('\nCannot figure out edge energy from element = %s and edge = %s\n' % (parameters['element'], parameters['edge'])))
             return {}, {}
         else:
             found['e0'] = True
@@ -454,6 +456,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
 
 
 def channelcut_energy(e0, bounds, ththth):
+    '''From the scan parameters, find the energy at the center of the angular range of the scan.'''
     for i,s in enumerate(bounds):
         if type(s) is str:
             this = float(s[:-1])
@@ -470,6 +473,7 @@ def channelcut_energy(e0, bounds, ththth):
 
 
 def ini_sanity(found):
+    '''Very simple sanity checking of the scan control file.'''
     ok = True
     missing = []
     for a in ('bounds', 'steps', 'times', 'e0', 'element', 'edge', 'folder', 'filename', 'nscans', 'start'):
@@ -493,16 +497,16 @@ def db2xdi(datafile, key):
 
        db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
-    The arguments are th resolved path to the output XDI file and
+    The arguments are the resolved path to the output XDI file and
     a database key.
     '''
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
+        print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
     header = db[key]
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
     write_XDI(datafile, header, header.start['XDI,_mode'][0], header.start['XDI,_comment'][0])
-    print(colored('wrote %s' % datafile, 'white'))
+    print(bold_msg('wrote %s' % datafile))
 
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
@@ -644,6 +648,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 def write_manifest():
+    '''Update the scan manifest and the corresponding static html file.'''
     with open(os.path.join(DATA, 'dossier', 'MANIFEST')) as f:
         lines = [line.rstrip('\n') for line in f]
 
@@ -674,14 +679,14 @@ def xafs(inifile, **kwargs):
     def main_plan(inifile, **kwargs):
         if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
             BMMuser.final_log_entry = False
-            print(colored('The DCM is in the 111 position, configured as 311', 'lightred'))
-            print(colored('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), 'lightred'))
+            print(error_msg('The DCM is in the 111 position, configured as 311'))
+            print(error_msg('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
             yield from null()
             return
         if '111' in dcm._crystal and dcm_x.user_readback.value > 0:
             BMMuser.final_log_entry = False
-            print(colored('The DCM is in the 311 position, configured as 111', 'lightred'))
-            print(colored('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal), 'lightred'))
+            print(error_msg('The DCM is in the 311 position, configured as 111'))
+            print(error_msg('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
             yield from null()
             return
 
@@ -694,15 +699,15 @@ def xafs(inifile, **kwargs):
         if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
 
-        if verbose: print(colored('checking clear to start (unless force=True)', 'lightcyan')) 
+        if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text) = (True, '')
         else:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
                 BMMuser.final_log_entry = False
-                print(colored('\n'+text, 'lightred'))
-                print(colored('Quitting scan sequence....\n', 'white'))
+                print(error_msg('\n'+text))
+                print(bold_msg('Quitting scan sequence....\n'))
                 yield from null()
                 return
 
@@ -715,7 +720,7 @@ def xafs(inifile, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
-        if verbose: print(colored('time estimate', 'lightcyan')) 
+        if verbose: print(verbosebold_msg('time estimate')) 
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
             BMMuser.final_log_entry = False
@@ -741,23 +746,40 @@ def xafs(inifile, **kwargs):
             vfatify = lambda m: sub_dict[m.group()]
             new_filename = re.sub(r'[*:?"<>|/\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
-                report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'lightred')
-                print(colored('\nThese characters cannot be in file names copied onto most memory sticks:', 'lightred'))
-                print(colored('\n\t* : ? " < > | / \\', 'lightred'))
-                print(colored('\nSee https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words', 'lightred'))
+                report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
+                print(error_msg('\nThese characters cannot be in file names copied onto most memory sticks:'))
+                print(error_msg('\n\t* : ? " < > | / \\'))
+                print(error_msg('\nSee ')+url_msg('https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words'))
                 p['filename'] = new_filename
 
             ## 255 character limit for filenames on VFAT
             # if len(p['filename']) > 250:
             #     BMMuser.final_log_entry = False
-            #     print(colored('\nYour filename is too long,', 'lightred'))
-            #     print(colored('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,', 'lightred'))
+            #     print(error_msg('\nYour filename is too long,'))
+            #     print(error_msg('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,'))
             #     yield from null()
             #     return
-        
+
+
+        bail = False
+        count = 0
+        for i in range(p['start'], p['start']+p['nscans'], 1):
+            count += 1
+            fname = "%s.%3.3d" % (p['filename'], i)
+            datafile = os.path.join(p['folder'], fname)
+            if os.path.isfile(datafile):
+                report('%s already exists!' % (datafile), 'error')
+                bail = True
+        if bail:
+            report('\nOne or more output files already exist!  Quitting scan sequence....\n', 'error')
+            BMMuser.final_log_entry = False
+            yield from null()
+            return
+
+            
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMMuser.prompt)
-        if verbose: print(colored('computing pseudo-channelcut energy', 'lightcyan')) 
+        if verbose: print(verbosebold_msg('computing pseudo-channelcut energy')) 
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMMuser.prompt:
@@ -779,20 +801,6 @@ def xafs(inifile, **kwargs):
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
             print('\nFirst data file to be written to "%s"' % outfile)
 
-            bail = False
-            count = 0
-            for i in range(p['start'], p['start']+p['nscans'], 1):
-                count += 1
-                fname = "%s.%3.3d" % (p['filename'], i)
-                datafile = os.path.join(p['folder'], fname)
-                if os.path.isfile(datafile):
-                    print(colored('%s already exists!' % datafile, 'lightred'))
-                    bail = True
-            if bail:
-                print(colored('\nOne or more output files already exist!  Quitting scan sequence....', 'lightred'))
-                BMMuser.final_log_entry = False
-                yield from null()
-                return
             print(estimate)
 
             if not dcm.suppress_channel_cut:
@@ -819,11 +827,11 @@ def xafs(inifile, **kwargs):
         ## need to do this define defining the plotting lambda otherwise
         ## BlueSky gets confused about the plotting window
         if not dcm.suppress_channel_cut:
-            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'white')
+            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
             dcm.mode = 'fixed'
             yield from mv(dcm.energy, eave)
             if p['rockingcurve']:
-                report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'white')
+                report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
                 yield from rocking_curve()
                 RE.msg_hook = None
                 close_last_plot()
@@ -857,7 +865,7 @@ def xafs(inifile, **kwargs):
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename']),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',   title=p['filename'])]
         else:
-            print(colored('Plotting mode not specified, falling back to a transmission plot', 'lightred'))
+            print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])
 
 
@@ -874,30 +882,30 @@ def xafs(inifile, **kwargs):
         def scan_sequence(clargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
-            print(colored('computing energy and dwell time grids', 'white'))
+            print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
             if energy_grid is None or time_grid is None or approx_time is None:
-                print(colored('Cannot interpret scan grid parameters!  Bailing out....', 'lightred'))
+                print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if any(y > 23500 for y in energy_grid):
-                print(colored('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....', 'lightred'))
+                print(error_msg('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y > 21200 for y in energy_grid):
-                print(colored('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
+                print(error_msg('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y < 2900 for y in energy_grid): # IS THIS CORRECT???
-                print(colored('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....', 'lightred'))
+                print(error_msg('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '311' and any(y < 5500 for y in energy_grid):
-                print(colored('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....', 'lightred'))
+                print(error_msg('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
@@ -905,7 +913,7 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## organize metadata for injection into database and XDI output
-            print(colored('gathering metadata', 'white'))
+            print(bold_msg('gathering metadata'))
             md = bmm_metadata(measurement   = p['mode'],
                               experimenters = p['experimenters'],
                               edge          = p['edge'],
@@ -985,11 +993,10 @@ def xafs(inifile, **kwargs):
                 if os.path.isfile(datafile):
                     ## shouldn't be able to get here, unless a file
                     ## was written since the scan sequence began....
-                    print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
+                    report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')
                     yield from null()
                     return
-                print(colored('starting scan %d of %d, %d energy points' %
-                              (count, p['nscans'], len(energy_grid)), 'white'))
+                print(bold_msg('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid))))
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -1019,7 +1026,7 @@ def xafs(inifile, **kwargs):
                 kind = 'xafs'
                 if p['ththth']: kind = '333'
                 write_XDI(datafile, header, p['mode'], p['comment'], kind=kind) # yield from ?
-                print(colored('wrote %s' % datafile, 'white'))
+                print(bold_msg('wrote %s' % datafile))
                 BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
                              % (header.start['uid'], header.start['scan_id'], datafile))
 
@@ -1064,7 +1071,7 @@ def xafs(inifile, **kwargs):
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
                 htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
                 if htmlout is not None:
-                    report('wrote dossier %s' % htmlout, 'white')
+                    report('wrote dossier %s' % htmlout, 'bold')
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
@@ -1102,8 +1109,7 @@ def howlong(inifile, interactive=True, **kwargs):
         return(orig, -1)
     (ok, missing) = ini_sanity(f)
     if not ok:
-        print(colored('\nThe following keywords are missing from your INI file: ', 'lightred'),
-              '%s\n' % str.join(', ', missing))
+        print(error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing))
         return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)

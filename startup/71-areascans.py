@@ -53,7 +53,7 @@ def areascan(detector,
                   pluck, force, dwell, md):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(colored(text, 'lightred'))
+            print(error_msg(text))
             BMMuser.final_log_entry = False
             yield from null()
             return
@@ -63,8 +63,8 @@ def areascan(detector,
         ## sanity checks on slow axis
         if type(slow) is str: slow = slow.lower()
         if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
-            print(colored('\n*** %s is not an areascan motor (%s)\n' %
-                          (slow, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            print(error_msg('\n*** %s is not an areascan motor (%s)\n' %
+                            (slow, str.join(', ', motor_nicknames.keys()))))
             BMMuser.final_log_entry = False
             yield from null()
             return
@@ -74,8 +74,8 @@ def areascan(detector,
         ## sanity checks on fast axis
         if type(fast) is str: fast = fast.lower()
         if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
-            print(colored('\n*** %s is not an areascan motor (%s)\n' %
-                          (fast, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            print(error_msg('\n*** %s is not an areascan motor (%s)\n' %
+                            (fast, str.join(', ', motor_nicknames.keys()))))
             BMMuser.final_log_entry = False
             yield from null()
             return
@@ -167,7 +167,7 @@ def areascan(detector,
                                  False)
 
         if pluck is True:
-            action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             print('Single click the left mouse button on the plot to pluck a point...')
@@ -234,14 +234,14 @@ def as2dat(datafile, key):
     '''
 
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
+        print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
     dataframe = db[key]
     if 'slow_motor' not in dataframe['start']:
-        print(colored('That database entry does not seem to be a an areascan (missing slow_motor)', 'lightred'))
+        print(error_msg('That database entry does not seem to be a an areascan (missing slow_motor)'))
         return
     if 'fast_motor' not in dataframe['start']:
-        print(colored('That database entry does not seem to be a an areascan (missing fast_motor)', 'lightred'))
+        print(error_msg('That database entry does not seem to be a an areascan (missing fast_motor)'))
         return
 
     devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
@@ -283,4 +283,4 @@ def as2dat(datafile, key):
         slowval = this.iloc[i,0]
     handle.flush()
     handle.close()
-    print(colored('wrote areascan to %s' % datafile, 'white'))
+    print(bold_msg('wrote areascan to %s' % datafile))

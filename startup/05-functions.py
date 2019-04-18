@@ -1,19 +1,18 @@
 import os
 from numpy import pi, sin, cos, arcsin, sqrt
 
-import warnings
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", message="CA.Client.Exception")
+#import warnings
+#with warnings.catch_warnings():
+#    warnings.filterwarnings("ignore", message="CA.Client.Exception")
 
 ## users find "less" unfamiliar and mistakes are made / confusion is
 ## had when doing <function>??  `cat` seems less likely to befuddle
-## folk.
+## the hoi palloi.
 os.environ['PAGER'] = 'cat'
 
 
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
-_user_is_defined = False
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
 
@@ -62,8 +61,14 @@ def url_msg(text):
     return text
 def bold_msg(text):
     return colored(text, 'white')
+def verbosebold_msg(text):
+    return colored(text, 'lightcyan')
 def list_msg(text):
     return colored(text, 'cyan')
+def disconnected_msg(text):
+    return colored(text, 'purple')
+def info_msg(text):
+    return colored(text, 'brown')
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 

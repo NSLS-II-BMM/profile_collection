@@ -21,7 +21,7 @@ def show_shutters():
     if bl_enabled.value == 1:
         ena_text += 'enabled      '
     else:
-        ena_text += colored('disabled      ', 'lightred')
+        ena_text += error_msg('disabled      ')
     
     bmps_state = bool(bmps.state.value)
     bmps_text = '  BMPS: '
@@ -29,28 +29,28 @@ def show_shutters():
     if bmps_state is True:
         bmps_text += 'open'
     else:
-        bmps_text += colored('closed', 'lightred')
+        bmps_text += error_msg('closed')
 
     idps_state = bool(idps.state.value)
     idps_text = '            IDPS: '
     if idps_state is True:
         idps_text += 'open'
     else:
-        idps_text += colored('closed', 'lightred')
+        idps_text += error_msg('closed')
 
     # sha_state = bool(sha.enabled.value) and bool(sha.state.value)
     # sha_text = '            FOE Shutter: '
     # if sha_state is True:
     #     sha_text += 'open'
     # else:
-    #     sha_text += colored('closed', 'lightred')
+    #     sha_text += error_msg('closed')
 
     shb_state = bool(shb.state.value)
     shb_text = '            Photon Shutter: '
     if shb_state is False:
         shb_text += 'open'
     else:
-        shb_text += colored('closed', 'lightred')
+        shb_text += error_msg('closed')
 
     return(ena_text + bmps_text + idps_text + shb_text)
 
@@ -69,22 +69,22 @@ class Vacuum(Device):
         print(self.pressure.value)
         print(type(self.pressure.value))
         if self.pressure.value == 'OFF':
-            return(colored(-1.1E-15, 'purple'))
+            return(disconnected_msg(-1.1E-15))
 
         if float(self.pressure.value) > 1e-6:
-            return colored(self.pressure.value, 'lightred',)
+            return error_msg(self.pressure.value)
         if float(self.pressure.value) > 1e-8:
-            return colored(self.pressure.value, 'yellow')
+            return warning_msg(self.pressure.value)
         return(self.pressure.value)
 
     def _current(self):
         curr = float(self.current.value)
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
-            return(colored(out, 'lightred'))
+            return(error_msg(out))
         if curr > 5e-4:
             out = '%.1f' % (1e3*curr)
-            return(colored(out, 'yellow'))
+            return(warning_msg(out))
         out = '%.1f' % (1e6*curr)
         return(out)
         #return('%.1f' % 1000000.0*curr)
@@ -94,11 +94,11 @@ class TCG(Device):
 
     def _pressure(self):
         if self.pressure.value == 'OFF':
-            return(colored(-1.1e-15, 'purple'))
+            return(disconnected_msg(-1.1e-15))
         if float(self.pressure.value) > 1e-1:
-            return colored(self.pressure.value, 'lightred')
+            return warning_msg(self.pressure.value)
         if float(self.pressure.value) > 6e-3:
-            return colored(self.pressure.value, 'yellow')
+            return error_msg(self.pressure.value)
         return(self.pressure.value)
 
 vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
@@ -154,7 +154,7 @@ class GateValve(Device):
 
     def _state(self):
         if self.state.value == 0:
-            return colored('closed', 'lightred')
+            return error_msg('closed')
         return('open  ')
 
 gv = [GateValve('FE:C06B-VA{GV:1}',     name='FEGV1'),
@@ -187,11 +187,11 @@ class Thermocouple(Device):
     def _state(self, info=False):
         t = "%.1f" % self.temperature.value
         if self.temperature.value > self.alarm.value:
-            return(colored(t, 'lightred'))
+            return(error_msg(t))
         if self.temperature.value > self.warning.value:
-            return(colored(t, 'yellow'))
+            return(warning_msg(t))
         if info is True and self.temperature.value > (0.5 * self.warning.value):
-            return(colored(t, 'brown'))
+            return(info_msg(t))
         return(t)
 
 
@@ -233,11 +233,11 @@ class OneWireTC(Device):
     def _state(self, info=False):
         t = "%.1f" % self.temperature.value
         if self.temperature.value > self.alarm.value:
-            return(colored(t, 'lightred'))
+            return(error_msg(t))
         if self.temperature.value > self.warning.value:
-            return(colored(t, 'yellow'))
+            return(warning_msg(t))
         if info is True and self.temperature.value > (0.5 * self.warning.value):
-            return(colored(t, 'brown'))
+            return(info_msg(t))
         return(t)
 
 monotc_inboard       = OneWireTC('XF:6BMA{SENS:001}T', name='monotc_inboard')

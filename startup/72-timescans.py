@@ -37,7 +37,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
 
     (ok, text) = BMM_clear_to_start()
     if force is False and ok is False:
-        print(colored(text, 'lightred'))
+        print(error_msg(text))
         yield from null()
         return
 
@@ -46,8 +46,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
     if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
-        print(colored('\n*** %s is not a timescan measurement (%s)\n' %
-                      (detector, 'it, if, i0, iy, ir'), 'lightred'))
+        print(error_msg('\n*** %s is not a timescan measurement (%s)\n' %
+                        (detector, 'it, if, i0, iy, ir')))
         yield from null()
         return
 
@@ -124,7 +124,7 @@ def ts2dat(datafile, key):
     '''
 
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
+        print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
     dataframe = db[key]
 
@@ -183,7 +183,7 @@ def ts2dat(datafile, key):
 
     handle.flush()
     handle.close()
-    print(colored('wrote timescan to %s' % datafile, 'white'))
+    print(bold_msg('wrote timescan to %s' % datafile))
 
 
 
@@ -207,14 +207,14 @@ def sead(inifile, force=False, **kwargs):
         if not os.path.isfile(inifile):
             inifile = DATA + inifile
             if not os.path.isfile(inifile):
-                print(colored('\n%s does not exist!  Bailing out....\n' % orig, 'yellow'))
+                print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
                 return(orig, -1)
-        print(colored('reading ini file: %s' % inifile, 'white'))
+        print(bold_msg('reading ini file: %s' % inifile))
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
         #if not os.path.isdir(p['folder']):
-        #    print(colored('\n%s is not a folder\n' % p['folder'], 'lightred'))
+        #    print(error_msg('\n%s is not a folder\n' % p['folder']))
         #    return(yield from null())
               
         detector = 'It'
@@ -228,7 +228,7 @@ def sead(inifile, force=False, **kwargs):
         ## verify output file name won't be overwritten
         outfile = '%s.%3.3d' % (os.path.join(p['folder'], p['filename']), p['start'])
         if os.path.isfile(outfile):
-            print(colored('%s already exists!  Bailing out....' % outfile, 'lightred'))
+            print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -245,14 +245,14 @@ def sead(inifile, force=False, **kwargs):
 
         (ok, ctstext) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(colored(ctstext, 'lightred'))
+            print(error_msg(ctstext))
             yield from null()
             return
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         # organize metadata for injection into database and XDI output
-        print(colored('gathering metadata', 'white'))
+        print(bold_msg('gathering metadata'))
         md = bmm_metadata(measurement   = p['mode'],
                           experimenters = p['experimenters'],
                           edge          = p['edge'],
@@ -286,7 +286,7 @@ def sead(inifile, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## move to the energy specified in the INI file
-        print(colored('Moving to measurement energy: %.1f eV' % p['e0'], 'white'))
+        print(bold_msg('Moving to measurement energy: %.1f eV' % p['e0']))
         dcm.mode = 'fixed'
         yield from mv(dcm.energy, p['e0'])
 
@@ -313,7 +313,7 @@ def sead(inifile, force=False, **kwargs):
         write_XDI(outfile, header, p['mode'], p['comment'], kind='sead') # yield from ?
         report('wrote time scan to %s' % outfile)
         #BMM_log_info('wrote time scan to %s' % outfile)
-        #print(colored('wrote %s' % outfile, 'white'))
+        #print(bold_msg('wrote %s' % outfile))
 
     def cleanup_plan():
         print('Cleaning up after single energy absorption detector measurement')

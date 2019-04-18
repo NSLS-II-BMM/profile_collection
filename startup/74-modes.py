@@ -187,7 +187,7 @@ def change_xtals(xtal=None):
 
      (ok, text) = BMM_clear_to_start()
      if ok == 0:
-          print(colored(text, 'lightred'))
+          print(error_msg(text))
           yield from null()
           return
 

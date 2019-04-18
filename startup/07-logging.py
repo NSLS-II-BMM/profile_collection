@@ -8,6 +8,8 @@ BMM_logger.handlers = []
 
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
 
+## how to get hostname: os.uname()[1]
+
 BMM_log_master_file = '/home/xf06bm/Data/BMM_master.log'
 if os.path.isfile(BMM_log_master_file):
     chmod(BMM_log_master_file, 0o644)
@@ -53,13 +55,42 @@ def BMM_log_info(message):
     chmod(BMM_nas_log_file, 0o444)
 
 
-def report(text, color=False):
+def report(text, level=None):
     '''Print a string to the screen AND to the log file.
-    With a color argument, use the colored() function on the screen text.
+
+    Report level decorations on screen:
+
+      * error (red)
+      * warning (yellow)
+      * info (brown)
+      * url (undecorated)
+      * bold (bright white)
+      * verbosebold (bright cyan)
+      * list (cyan)
+      * disconnected (purple)
+
+    not matching a report level will be undecorated
     '''
     BMM_log_info(text)
     if color:                   # test that color is sensible...
-        print(colored(text, color))
+        if level == 'error':
+            print(error_msg(text))
+        elif level == 'warning':
+            print(warning_msg(text))
+        elif level == 'info':
+            print(info_msg(text))
+        elif level == 'url':
+            print(url_msg(text))
+        elif level == 'bold':
+            print(bold_msg(text))
+        elif level == 'verbosebold':
+            print(verbosebold_msg(text))
+        elif level == 'disconnected':
+            print(disconnected_msg(text))
+        elif level == 'list':
+            print(list_msg(text))
+        else:
+            print(text)
     else:
         print(text)
 

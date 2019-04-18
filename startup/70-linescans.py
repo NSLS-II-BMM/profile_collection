@@ -16,11 +16,10 @@ def move_after_scan(thismotor):
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
     if BMMuser.motor is None:
-        print(colored('\nThere\'s not a current plot on screen.\n', 'lightred'))
+        print(error_msg('\nThere\'s not a current plot on screen.\n'))
         return(yield from null())
     if thismotor is not BMMuser.motor:
-        print(colored('\nThe motor you are asking to move is not the motor in the current plot.\n',
-                      'lightred'))
+        print(error_msg('\nThe motor you are asking to move is not the motor in the current plot.\n'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
     cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
@@ -64,7 +63,7 @@ def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
     def main_plan(start, stop, nsteps, move):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(colored(text, 'lightred'))
+            print(error_msg(text))
             yield from null()
             return
 
@@ -100,7 +99,7 @@ def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
                 yield from mv(motor, top)
 
             else:
-                action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+                action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from bps.sleep(sleep)
@@ -138,7 +137,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(colored(text, 'lightred'))
+            print(error_msg(text))
             yield from null()
             return
 
@@ -248,7 +247,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     def main_plan(detector, axis, start, stop, nsteps, pluck, force):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(colored(text, 'lightred'))
+            print(error_msg(text))
             yield from null()
             return
 
@@ -264,8 +263,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
 
         ## sanity checks on axis
         if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
-            print(colored('\n*** %s is not a linescan motor (%s)\n' %
-                          (axis, str.join(', ', motor_nicknames.keys())), 'lightred'))
+            print(error_msg('\n*** %s is not a linescan motor (%s)\n' %
+                          (axis, str.join(', ', motor_nicknames.keys()))))
             yield from null()
             return
 
@@ -279,8 +278,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
 
         ## sanity checks on detector
         if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):
-            print(colored('\n*** %s is not a linescan measurement (%s)\n' %
-                          (detector, 'it, if, i0, iy, ir, both'), 'lightred'))
+            print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
+                            (detector, 'it, if, i0, iy, ir, both')))
             yield from null()
             return
 
@@ -356,7 +355,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, db[-1].start['uid'], db[-1].start['scan_id']))
         if pluck is True:
-            action = input('\n' + colored('Pluck motor position from the plot? [Y/n then Enter] ', 'white'))
+            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             yield from move_after_scan(thismotor)
@@ -391,7 +390,7 @@ def ls2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
     if os.path.isfile(datafile):
-        print(colored('%s already exists!  Bailing out....' % datafile, 'lightred'))
+        print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
     handle = open(datafile, 'w')
     dataframe = db[key]
@@ -431,7 +430,7 @@ def ls2dat(datafile, key):
         handle.write(template % tuple(this.iloc[i]))
     handle.flush()
     handle.close()
-    print(colored('wrote linescan to %s' % datafile, 'white'))
+    print(bold_msg('wrote linescan to %s' % datafile))
 
 
 def center_sample_y():
@@ -440,14 +439,14 @@ def center_sample_y():
     diff = -1 * table['It'].diff()
     inflection = table['xafs_liny'][diff.idxmax()]
     yield from mv(xafs_liny, inflection)
-    print(colored('Optimal position in y at %.3f' % inflection, 'white'))
+    print(bold_msg('Optimal position in y at %.3f' % inflection))
 
 def center_sample_roll():
     yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
     table = db[-1].table()
     peak = table['xafs_roll'][table['It'].idxmax()]
     yield from mv(xafs_roll, peak)
-    print(colored('Optimal position in roll at %.3f' % peak, 'white'))
+    print(bold_msg('Optimal position in roll at %.3f' % peak))
 
 def align_flat_sample(angle=2):
     yield from center_sample_y()

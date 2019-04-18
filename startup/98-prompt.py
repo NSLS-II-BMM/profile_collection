@@ -15,7 +15,7 @@ class MyPrompt(Prompts):
         # else:
         #     shbtoken = (Token.Tilde, 'B')
 
-        if _user_is_defined:
+        if BMMuser.user_is_defined:
             bmmtoken = (Token.Prompt, 'BMM ')
         else:
             bmmtoken = (Token.OutPrompt, 'BMM ')
@@ -66,33 +66,33 @@ def BMM_help():
     Print a concise summary of data acquisition commands.
     '''
     print('')
-    print(colored('Open the shutter:\t\t', 'white')+'shb.open()')
-    print(colored('Close the shutter:\t\t', 'white')+'shb.close()')
+    print(bold_msg('Open the shutter:\t\t')+'shb.open()')
+    print(bold_msg('Close the shutter:\t\t')+'shb.close()')
     print('')
-    print(colored('Change energy:\t\t\t', 'white')+'RE(mv(dcm.energy, <energy>))')
-    print(colored('Move a motor, absolute:\t\t', 'white')+'RE(mv(<motor>, <position>))')
-    print(colored('Move a motor, relative:\t\t', 'white')+'RE(mvr(<motor>, <delta>))')
-    print(colored('Where is a motor?\t\t', 'white')+'%w <motor>')
+    print(bold_msg('Change energy:\t\t\t')+'RE(mv(dcm.energy, <energy>))')
+    print(bold_msg('Move a motor, absolute:\t\t')+'RE(mv(<motor>, <position>))')
+    print(bold_msg('Move a motor, relative:\t\t')+'RE(mvr(<motor>, <delta>))')
+    print(bold_msg('Where is a motor?\t\t')+'%w <motor>')
     print('')
-    print(colored('Where is the DCM?\t\t', 'white')+'%w dcm')
-    print(colored('Where is M2?\t\t\t', 'white')+'%w m2')
-    print(colored('Where is M3?\t\t\t', 'white')+'%w m3')
-    print(colored('Where are the slits?\t\t', 'white')+'%w slits3')
-    print(colored('Where is the XAFS table?\t', 'white')+'%w xafs_table')
+    print(bold_msg('Where is the DCM?\t\t')+'%w dcm')
+    print(bold_msg('Where is M2?\t\t\t')+'%w m2')
+    print(bold_msg('Where is M3?\t\t\t')+'%w m3')
+    print(bold_msg('Where are the slits?\t\t')+'%w slits3')
+    print(bold_msg('Where is the XAFS table?\t')+'%w xafs_table')
     print('')
-    print(colored('Summarize all motor positions:\t', 'white')+'%m')
-    print(colored('Summarize utilities:\t\t', 'white')+'%ut')
+    print(bold_msg('Summarize all motor positions:\t')+'%m')
+    print(bold_msg('Summarize utilities:\t\t')+'%ut')
     print('')
-    print(colored('How long will a scan seq. be?\t', 'white')+'howlong(\'scan.ini\')')
-    print(colored('Run a scan sequence:\t\t', 'white')+'RE(xafs(\'scan.ini\'))')
-    print(colored('Scan a motor, plot a detector:\t', 'white')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
-    print(colored('Scan 2 motors, plot a detector:\t', 'white')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
-    #print(colored('Single energy XAS detection:\t', 'white')+'RE(sead(\'timescan.ini\'))')
-    print(colored('Make a log entry:\t\t', 'white')+'BMM_log_info(\'blah blah blah\')')
+    print(bold_msg('How long will a scan seq. be?\t')+'howlong(\'scan.ini\')')
+    print(bold_msg('Run a scan sequence:\t\t')+'RE(xafs(\'scan.ini\'))')
+    print(bold_msg('Scan a motor, plot a detector:\t')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
+    print(bold_msg('Scan 2 motors, plot a detector:\t')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
+    #print(bold_msg('Single energy XAS detection:\t')+'RE(sead(\'timescan.ini\'))')
+    print(bold_msg('Make a log entry:\t\t')+'BMM_log_info(\'blah blah blah\')')
     print('')
-    print(colored('DATA = ', 'white') + DATA)
+    print(bold_msg('DATA = ') + DATA)
     print('')
-    print(colored('All the details: ', 'white') + colored('https://nsls-ii-bmm.github.io/BeamlineManual/index.html', 'lightblue'))
+    print(bold_msg('All the details: ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/index.html'))
     return None
 
 def BMM_keys():
@@ -100,18 +100,18 @@ def BMM_keys():
     Print a concise summary of command line hotkeys.
     '''
     print('')
-    print(colored('Abort scan:\t\t', 'white')+colored('Ctrl-c twice!', 'lightred'))
-    print(colored('Search backwards:\t', 'white')+'Ctrl-r')
-    print(colored('Quit search:\t\t', 'white')+'Ctrl-g')
-    print(colored('Beginning of line:\t', 'white')+'Ctrl-a')
-    print(colored('End of line:\t\t', 'white')+'Ctrl-e')
-    print(colored('Delete character\t', 'white')+'Ctrl-d')
-    print(colored('Cut text to eol\t\t', 'white')+'Ctrl-k')
-    print(colored('Cut text to bol\t\t', 'white')+'Ctrl-u')
-    print(colored('Paste text\t\t', 'white')+'Ctrl-y')
-    print(colored('Clear screen\t\t', 'white')+'Ctrl-l')
+    print(bold_msg('Abort scan:\t\t')+error_msg('Ctrl-c twice!'))
+    print(bold_msg('Search backwards:\t')+'Ctrl-r')
+    print(bold_msg('Quit search:\t\t')+'Ctrl-g')
+    print(bold_msg('Beginning of line:\t')+'Ctrl-a')
+    print(bold_msg('End of line:\t\t')+'Ctrl-e')
+    print(bold_msg('Delete character\t')+'Ctrl-d')
+    print(bold_msg('Cut text to eol\t\t')+'Ctrl-k')
+    print(bold_msg('Cut text to bol\t\t')+'Ctrl-u')
+    print(bold_msg('Paste text\t\t')+'Ctrl-y')
+    print(bold_msg('Clear screen\t\t')+'Ctrl-l')
     print('')
-    print(colored('More details: ', 'white') + colored('https://jakevdp.github.io/PythonDataScienceHandbook/01.02-shell-keyboard-shortcuts.html', 'lightblue'))
+    print(bold_msg('More details: ') + url_msg('https://jakevdp.github.io/PythonDataScienceHandbook/01.02-shell-keyboard-shortcuts.html'))
     return None
 
 

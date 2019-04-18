@@ -90,7 +90,7 @@ class EPS_Shutter(Device):
         if self.state.value:
             state = 'closed'
             if self.name == 'FS1': state = 'in place'
-            return colored(state, 'lightred')
+            return error(state)
         state = 'open'
         if self.name == 'FS1': state = 'retracted'
         return(state + '  ')
