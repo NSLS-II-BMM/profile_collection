@@ -10,6 +10,7 @@ from numpy import pi, sin, cos, arcsin, sqrt
 ## the hoi palloi.
 os.environ['PAGER'] = 'cat'
 
+get_ipython().magic(u"%xmode Plain")
 
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
@@ -50,8 +51,6 @@ def run_report(thisfile):
 
 run_report(__file__)
 
-get_ipython().magic(u"%xmode Plain")
-
 
 def error_msg(text):
     return colored(text, 'lightred')
@@ -83,6 +82,7 @@ def ktoe(k):
 def e2l(val):
     """Convert absolute photon energy to photon wavelength"""
     return 2*pi*HBARC/val
+l2e = e2l
 
 def isfloat(value):
     try:
@@ -135,11 +135,7 @@ def boxedtext(title, text, tint, width=75):
 
 def clear_dashboard():
     '''Clean up in a way that helps the cadashboard utility'''
-    if os.path.isfile('/home/xf06bm/Data/.xafs.scan.running'):
-        os.remove('/home/xf06bm/Data/.xafs.scan.running')
-    elif os.path.isfile('/home/xf06bm/Data/.line.scan.running'):
-        os.remove('/home/xf06bm/Data/.line.scan.running')
-    elif os.path.isfile('/home/xf06bm/Data/.area.scan.running'):
-        os.remove('/home/xf06bm/Data/.area.scan.running')
-    elif os.path.isfile('/home/xf06bm/Data/.time.scan.running'):
-        os.remove('/home/xf06bm/Data/.time.scan.running')
+    for scan in ('xafs', 'line', 'area', 'time'):
+        fl = '/home/xf06bm/Data/.'+scan+'.scan.running'
+        if os.path.isfile(fl):
+            os.remove(fl)

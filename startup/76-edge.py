@@ -156,7 +156,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         energy = edge_energy(el,edge)
         
     if energy is None:
-        print(error_msg('\n%s is not a valid element\n' % e))
+        print(error_msg('\nEither %s or %s is not a valid symbol\n' % (el, edge)))
         return(yield from null())
     if energy > 23500:
         edge = 'L3'
@@ -201,9 +201,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     
     start = time.time()
     BMM_log_info('Configuring beamline for %s edge' % el)
-    ###############################
-    # move the DCM to 50 eV above #
-    ###############################
+    ###################################
+    # move the DCM to target eV above #
+    ###################################
     print('Moving mono to energy %.1f eV...' % (energy+target))
     yield from mv(dcm.energy, energy+target)
 

@@ -127,7 +127,8 @@ def write_XDI(datafile, dataframe, mode, comment, kind='xafs'):
     xdi.extend(['# Scan.experimenters: %s'          % dataframe.start['XDI,Scan,experimenters'],
                 '# Scan.edge_energy: %.1f'          % float(dataframe.start['XDI,Scan,edge_energy'])])
     if kind == '333':
-        xdi.extend(['# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI,Scan,edge_energy']) ])    xdi.extend(['# Scan.start_time: %s'             % start_time,
+        xdi.extend(['# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI,Scan,edge_energy']) ])
+    xdi.extend(['# Scan.start_time: %s'             % start_time,
                 '# Scan.end_time: %s'               % end_time,
                 '# Scan.transient_id: %s'           % dataframe.start['scan_id'],
                 '# Scan.uid: %s'                    % dataframe.start['uid'],

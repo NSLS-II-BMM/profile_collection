@@ -66,15 +66,15 @@ class BMM_User():
     '''
     def __init__(self):
         ## experiment attributes
-        self.DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
-        self.prompt = True
+        self.DATA            = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
+        self.prompt          = True
         self.final_log_entry = True
-        self.date = ''
-        self.gup = 0
-        self.saf = 0
-        self.name = None
-        self.staff = False
-        self.read_foils = None
+        self.date            = ''
+        self.gup             = 0
+        self.saf             = 0
+        self.name            = None
+        self.staff           = False
+        self.read_foils      = None
         self.user_is_defined = False
 
         ## current plot attributes    #######################################################################
@@ -86,33 +86,33 @@ class BMM_User():
         self.y      = None
 
         ## scan control attributes
-        self.pds_mode = self._mode = None
-        self.bounds = [-200, -30, 15.3, '14k']  ## scan grid parameters
-        self.steps = [10, 0.5, '0.05k']
-        self.times = [0.5, 0.5, '0.25k']
-        self.folder = os.environ.get('HOME')+'/data/'
-        self.filename = 'data.dat'
+        self.pds_mode      = None
+        self.bounds        = [-200, -30, 15.3, '14k']  ## scan grid parameters
+        self.steps         = [10, 0.5, '0.05k']
+        self.times         = [0.5, 0.5, '0.25k']
+        self.folder        = os.environ.get('HOME')+'/data/'
+        self.filename      = 'data.dat'
         self.experimenters = ''
-        self.e0 = None
-        self.element = None
-        self.edge = 'K'
-        self.sample = ''
-        self.prep = ''
-        self.comment = ''
-        self.nscans = 1
-        self.start = 0
-        self.inttime = 1
-        self.snapshots = True
-        self.usbstick = True
-        self.rockingcurve = False
-        self.htmlpage = True
-        self.bothways = False
-        self.channelcut = True
-        self.ththth = False
-        self.mode = 'transmission'
-        self.npoints = 0   ###########################################################################
-        self.dwell = 1.0   ## parameters for single energy absorption detection, see 71-timescans.py #
-        self.delay = 0.1   ###########################################################################
+        self.e0            = None
+        self.element       = None
+        self.edge          = 'K'
+        self.sample        = ''
+        self.prep          = ''
+        self.comment       = ''
+        self.nscans        = 1
+        self.start         = 0
+        self.inttime       = 1
+        self.snapshots     = True
+        self.usbstick      = True
+        self.rockingcurve  = False
+        self.htmlpage      = True
+        self.bothways      = False
+        self.channelcut    = True
+        self.ththth        = False
+        self.mode          = 'transmission'
+        self.npoints       = 0     ###########################################################################
+        self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
+        self.delay         = 0.1   ###########################################################################
 
 
         
@@ -136,26 +136,24 @@ class BMM_User():
         ## make folder
         if not os.path.isdir(folder):
             os.makedirs(folder)
-            print('%d. Created data folder' % step)
+            print('%d. Created data folder:            %-75s' % (step, folder))
         else:
-            print('%d. Found data folder' % step)
+            print('%d. Found data folder:              %-75s' % (step, folder))
         imagefolder = os.path.join(folder, 'snapshots')
         if not os.path.isdir(imagefolder):
             os.mkdir(imagefolder)
-            print('   Created snapshot folder')
+            print('   Created snapshot folder:        %-75s' % imagefolder)
         else:
-            print('   Found snapshot folder')
+            print('   Found snapshot folder:          %-75s' % imagefolder)
     
         global DATA
         DATA = folder + '/'
         self.DATA = folder + '/'
-        print('   DATA = %s' % DATA)
-        print('   snapshots in %s' % imagefolder)
         step += 1
 
         ## setup logger
         BMM_user_log(os.path.join(folder, 'experiment.log'))
-        print('%d. Set up experimental log file: %s' % (step, os.path.join(folder, 'experiment.log')))
+        print('%d. Set up experimental log file:   %-75s' % (step, os.path.join(folder, 'experiment.log')))
         step += 1
 
         startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
@@ -169,9 +167,9 @@ class BMM_User():
             o = open(scanini, 'w')
             o.write(''.join(content).format(folder=folder, name=name))
             o.close()
-            print('%d. Created INI template: %s' % (step, scanini))
+            print('%d. Created INI template:           %-75s' % (step, scanini))
         else:
-            print('%d. Found INI template: %s' % (step, scanini))
+            print('%d. Found INI template:             %-75s' % (step, scanini))
         step += 1
 
         ## write macro template
@@ -183,9 +181,9 @@ class BMM_User():
             o = open(macropy, 'w')
             o.write(''.join(content).format(folder=folder))
             o.close()
-            print('%d. Created macro template: %s' % (step, macropy))
+            print('%d. Created macro template:         %-75s' % (step, macropy))
         else:
-            print('%d. Found macro template: %s' % (step, macropy))
+            print('%d. Found macro template:           %-75s' % (step, macropy))
         step += 1
 
         ## copy energy change instructions
@@ -206,20 +204,19 @@ class BMM_User():
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
-            print('%d. Created dossier folder, copied html generation files, touched MANIFEST' % step)
+            print('%d. Created dossier folder:         %-75s' % (step,htmlfolder))
+            print('   copied html generation files, touched MANIFEST')
         else:
-            print('%d. Found dossier folder' % step)
-        print('   dossiers in %s' % htmlfolder)
+            print('%d. Found dossier folder:           %-75s' % (step,htmlfolder))
         step += 1
      
         ## make prj folder
         prjfolder = os.path.join(folder, 'prj')
         if not os.path.isdir(prjfolder):
             os.mkdir(prjfolder)
-            print('%d. Created Athena prj folder' % step)
+            print('%d. Created Athena prj folder:      %-75s' % (step,prjfolder))
         else:
-            print('%d. Found Athena prj folder' % step)
-        print('   projects in %s' % prjfolder)
+            print('%d. Found Athena prj folder         %-75s' % (step,prjfolder))
         step += 1
    
         self.gup = gup
@@ -248,6 +245,9 @@ class BMM_User():
           gup:      GUP number
           saf:      SAF number
         '''
+        if self.user_is_defined:
+            print(error_msg('An experiment is already started.'))
+            return()
         if name is None:
             print(error_msg('You did not supply the user\'s name'))
             return()
@@ -302,6 +302,7 @@ class BMM_User():
                 self.read_foils = user['foils'] # see 76-edge.py, line 111, need to delay configuring foils until 76-edge is read
 
     def show_experiment(self):
+        '''Show serialized configuration parameters'''
         print('DATA  = %s' % DATA)
         print('GUP   = %d' % self.gup)
         print('SAF   = %d' % self.saf)
@@ -359,6 +360,13 @@ class BMM_User():
 
 BMMuser = BMM_User()
 BMMuser.start_experiment_from_serialization()
+
+if BMMuser.pds_mode is None:
+    try:                        # do the right then when "%run -i"-ed
+        BMMuser.pds_mode = get_mode()
+    except:                     # else wait until later to set this correctly, get_mode() defined in 74-mode.py
+        pass
+
 
 ## some backwards compatibility....
 whoami           = BMMuser.show_experiment

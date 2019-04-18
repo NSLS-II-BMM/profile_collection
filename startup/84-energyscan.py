@@ -663,8 +663,7 @@ def write_manifest():
     indexfile = os.path.join(DATA, 'dossier', '00INDEX.html')
     o = open(indexfile, 'w')
     o.write(''.join(content).format(date           = BMMuser.date,
-                                    experimentlist = experimentlist,
-                                ))
+                                    experimentlist = experimentlist,))
     o.close()
     
 

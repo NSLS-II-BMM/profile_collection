@@ -2,6 +2,9 @@
 run_report(__file__)
 
 
+if BMMuser.pds_mode is None:
+    BMMuser.pds_mode = get_mode()
+
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
