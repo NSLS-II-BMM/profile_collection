@@ -64,10 +64,34 @@ class metadata_for_XDI_file():
         self.xdilist = []
         self.dataframe = None
 
-    def simple_line(self, line):
+    def insert_line(self, line):
+        '''Insert a line directly into the list of header lines. Presumably,
+        this is already formatted suitably for XDI.'''
         self.xdilist.append(line)
         
-    def start_md_line(self, template, datum):
+    def start_doc(self, template, datum):
+        '''Insert a header line using metadata from the start document.
+
+        template is a string with formatting elements, for instance
+
+            '# Beamline.name: %s'
+
+        the first part of the template string contains the
+        XDI-formatted metadatum name. After the colon is a formatting code 
+        used to capture the datum from the start document.
+
+        datum is a string which will be broken apart to find the
+        metadataum.  To continue the example above, this string would be:
+
+            'XDI.Beamline.name'
+
+        indicating that db[key].start['XDI']['Beamline']['name'] is
+        the correct value from the start document to use.  The string
+        is split along the dots and the substrings are used as dictionary
+        keys in the start document.
+
+        The formatted string is then inserted into the list of header lines.
+        '''
         text = ''
         (group,family,key) = datum.split('.') # e.g. XDI.Beamline.name
         try:
@@ -129,64 +153,64 @@ def write_XDI(datafile, dataframe):
     metadata.dataframe = dataframe
 
     ## snarf XDI metadata from the dataframe and elsewhere
-    metadata.simple_line('# XDI/1.0 BlueSky/%s' % bluesky_version)
-    metadata.start_md_line('# Beamline.name: %s',               'XDI.Beamline.name')
-    metadata.start_md_line('# Beamline.xray_source: %s',        'XDI.Beamline.xray_source')
-    metadata.start_md_line('# Beamline.collimation: %s',        'XDI.Beamline.collimation')
-    metadata.start_md_line('# Beamline.focusing: %s',           'XDI.Beamline.focusing')
-    metadata.start_md_line('# Beamline.harmonic_rejection: %s', 'XDI.Beamline.harmonic_rejection')
-    metadata.start_md_line('# Detector.I0: %s',                 'XDI.Detector.I0')
-    metadata.start_md_line('# Detector.I1: %s',                 'XDI.Detector.It')
-    metadata.start_md_line('# Detector.I2: %s',                 'XDI.Detector.Ir')
+    metadata.insert_line('# XDI/1.0 BlueSky/%s' % bluesky_version)
+    metadata.start_doc('# Beamline.name: %s',               'XDI.Beamline.name')
+    metadata.start_doc('# Beamline.xray_source: %s',        'XDI.Beamline.xray_source')
+    metadata.start_doc('# Beamline.collimation: %s',        'XDI.Beamline.collimation')
+    metadata.start_doc('# Beamline.focusing: %s',           'XDI.Beamline.focusing')
+    metadata.start_doc('# Beamline.harmonic_rejection: %s', 'XDI.Beamline.harmonic_rejection')
+    metadata.start_doc('# Detector.I0: %s',                 'XDI.Detector.I0')
+    metadata.start_doc('# Detector.I1: %s',                 'XDI.Detector.It')
+    metadata.start_doc('# Detector.I2: %s',                 'XDI.Detector.Ir')
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
-        metadata.start_md_line('# Detector.fluorescence: %s',        'XDI.Detector.fluorescence')
-        metadata.start_md_line('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
+        metadata.start_doc('# Detector.fluorescence: %s',        'XDI.Detector.fluorescence')
+        metadata.start_doc('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
     if 'yield' in mode:
-        metadata.start_md_line('# Detector.yield: %s', 'XDI.Detector.yield')
+        metadata.start_doc('# Detector.yield: %s', 'XDI.Detector.yield')
     if kind != 'sead':
-        metadata.start_md_line('# Element.symbol: %s', 'XDI.Element.symbol')
-        metadata.start_md_line('# Element.edge: %s',   'XDI.Element.edge')
+        metadata.start_doc('# Element.symbol: %s', 'XDI.Element.symbol')
+        metadata.start_doc('# Element.edge: %s',   'XDI.Element.edge')
 
     #try:
     #    ring_current = dataframe.table('baseline')['ring_current'][1]
     #except:
     #    ring_current = 0
-    metadata.simple_line('# Facility.name: %s' % 'NSLS-II')
-    metadata.simple_line('# Facility.current: %.1f mA' % ring.current.value)
-    metadata.start_md_line('# Facility.energy: %s',                  'XDI.Facility.energy')
-    metadata.start_md_line('# Facility.mode: %s',                    'XDI.Facility.mode')
-    metadata.start_md_line('# Facility.GUP: %d',                     'XDI.Facility.GUP')
-    metadata.start_md_line('# Facility.SAF: %d',                     'XDI.Facility.SAF')
-    metadata.start_md_line('# Mono.name: %s',                        'XDI.Mono.name')
-    metadata.start_md_line('# Mono.d_spacing: %s',                   'XDI.Mono.d_spacing')
-    metadata.start_md_line('# Mono.encoder_resolution: %.7f deg/ct', 'XDI.Mono.encoder_resolution')
-    metadata.start_md_line('# Mono.angle_offset: %.7f deg',          'XDI.Mono.angle_offset')
-    metadata.start_md_line('# Mono.scan_mode: %s',                   'XDI.Mono.scan_mode')
-    metadata.start_md_line('# Mono.scan_type: %s',                   'XDI.Mono.scan_type')
-    metadata.start_md_line('# Mono.direction: %s in energy',         'XDI.Mono.direction')
-    metadata.start_md_line('# Sample.name: %s',                      'XDI.Sample.name')
-    metadata.start_md_line('# Sample.prep: %s',                      'XDI.Sample.prep')
+    metadata.insert_line('# Facility.name: %s' % 'NSLS-II')
+    metadata.insert_line('# Facility.current: %.1f mA' % ring.current.value)
+    metadata.start_doc('# Facility.energy: %s',                  'XDI.Facility.energy')
+    metadata.start_doc('# Facility.mode: %s',                    'XDI.Facility.mode')
+    metadata.start_doc('# Facility.GUP: %d',                     'XDI.Facility.GUP')
+    metadata.start_doc('# Facility.SAF: %d',                     'XDI.Facility.SAF')
+    metadata.start_doc('# Mono.name: %s',                        'XDI.Mono.name')
+    metadata.start_doc('# Mono.d_spacing: %s',                   'XDI.Mono.d_spacing')
+    metadata.start_doc('# Mono.encoder_resolution: %.7f deg/ct', 'XDI.Mono.encoder_resolution')
+    metadata.start_doc('# Mono.angle_offset: %.7f deg',          'XDI.Mono.angle_offset')
+    metadata.start_doc('# Mono.scan_mode: %s',                   'XDI.Mono.scan_mode')
+    metadata.start_doc('# Mono.scan_type: %s',                   'XDI.Mono.scan_type')
+    metadata.start_doc('# Mono.direction: %s in energy',         'XDI.Mono.direction')
+    metadata.start_doc('# Sample.name: %s',                      'XDI.Sample.name')
+    metadata.start_doc('# Sample.prep: %s',                      'XDI.Sample.prep')
 
     ## record selected baseline measurements as XDI metadata
     for r in XDI_record.keys():
         if XDI_record[r][0] is True:
-            metadata.simple_line('# %s: %.3f mm' % (XDI_record[r][1], dataframe.table('baseline')[r][1]))
+            metadata.insert_line('# %s: %.3f mm' % (XDI_record[r][1], dataframe.table('baseline')[r][1]))
     
-    metadata.start_md_line('# Scan.experimenters: %s', 'XDI.Scan.experimenters')
-    metadata.start_md_line('# Scan.edge_energy: %s',   'XDI.Scan.edge_energy')
+    metadata.start_doc('# Scan.experimenters: %s', 'XDI.Scan.experimenters')
+    metadata.start_doc('# Scan.edge_energy: %s',   'XDI.Scan.edge_energy')
 
     if kind == '333':
-        metadata.simple_line('# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI']['Scan']['edge_energy']))
+        metadata.insert_line('# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI']['Scan']['edge_energy']))
 
-    metadata.simple_line('# Scan.start_time: %s'   % start_time)
-    metadata.simple_line('# Scan.end_time: %s'     % end_time)
-    metadata.simple_line('# Scan.transient_id: %s' % dataframe.start['scan_id'])
-    metadata.simple_line('# Scan.uid: %s'          % dataframe.start['uid'])
+    metadata.insert_line('# Scan.start_time: %s'   % start_time)
+    metadata.insert_line('# Scan.end_time: %s'     % end_time)
+    metadata.insert_line('# Scan.transient_id: %s' % dataframe.start['scan_id'])
+    metadata.insert_line('# Scan.uid: %s'          % dataframe.start['uid'])
 
     if kind == 'sead':
-        metadata.start_md_line('# Beamline.energy: %.3f', 'XDI.Beamline.energy')
-        metadata.start_md_line('# Scan.dwell_time: %d',   'XDI.Scan.dwell_time')
-        metadata.start_md_line('# Scan.delay: %d',        'XDI.Scan.delay')
+        metadata.start_doc('# Beamline.energy: %.3f', 'XDI.Beamline.energy')
+        metadata.start_doc('# Scan.dwell_time: %d',   'XDI.Scan.dwell_time')
+        metadata.start_doc('# Scan.delay: %d',        'XDI.Scan.delay')
 
 
     ###############################
@@ -203,12 +227,12 @@ def write_XDI(datafile, dataframe):
         plot_hint = 'I0  --  $5'
     elif 'ref' in mode:
         plot_hint = 'ln(It/Ir)  --  ln($6/$7)'
-    metadata.simple_line('# Scan.plot_hint: %s' % plot_hint)
+    metadata.insert_line('# Scan.plot_hint: %s' % plot_hint)
     labels = []
     abscissa_columns = ('energy', 'requested_energy', 'measurement_time', 'xmu')
     if kind == 'sead': abscissa_columns = ('time',)
     for i, col in enumerate(abscissa_columns, start=1):     # 'encoder'
-        metadata.simple_line('# Column.%d: %s %s' % (i, col, units(col)))
+        metadata.insert_line('# Column.%d: %s %s' % (i, col, units(col)))
         labels.append(col)
 
     ###############################################################
@@ -225,7 +249,7 @@ def write_XDI(datafile, dataframe):
         else:
             this = d.name
         labels.append(this)
-        metadata.simple_line('# Column.%d: %s %s' % (i, this, units(this)))
+        metadata.insert_line('# Column.%d: %s %s' % (i, this, units(this)))
 
     ####################
     # write it all out #
