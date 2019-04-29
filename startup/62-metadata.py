@@ -5,19 +5,6 @@ import copy
 
 run_report(__file__)
 
-bmm_metadata_stub = {'XDI,Beamline,name':        'BMM (06BM) -- Beamline for Materials Measurement',
-                     'XDI,Beamline,collimation': 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
-                     'XDI,Facility,name':        'NSLS-II',
-                     'XDI,Facility,energy':      '3 GeV',
-                     'XDI,Beamline,xray_source': 'NSLS-II three-pole wiggler',
-                     'XDI,Column,01':            'energy eV',
-                     'XDI,Column,02':            'requested energy eV',
-                     'XDI,Column,03':            'measurement time sec',
-                     'XDI,Column,04':            'mu(E)',
-                     'XDI,Column,05':            'i0 nA',
-                     'XDI,Column,06':            'it nA',
-                     'XDI,Column,07':            'ir nA'
-                     }
 
 
 class TC(Device):
@@ -54,6 +41,24 @@ def mirror_state():
     return(m2state, m3state)
 
 
+
+bmm_metadata_stub = {'Beamline': {'name'        : 'BMM (06BM) -- Beamline for Materials Measurement',
+                                  'collimation' : 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
+                                  'xray_source' : 'NSLS-II three-pole wiggler',
+                              },
+                     'Facility': {'name'        : 'NSLS-II',
+                                  'energy'      : '3 GeV',},
+                     
+                     'Column':   {'01'          : 'energy eV',
+                                  '02'          : 'requested energy eV',
+                                  '03'          : 'measurement time sec',
+                                  '04'          : 'mu(E)',
+                                  '05'          : 'i0 nA',
+                                  '06'          : 'it nA',
+                                  '07'          : 'ir nA'},
+                 }
+
+
 def bmm_metadata(measurement   = 'transmission',
                  experimenters = '',
                  edge          = 'K',
@@ -71,8 +76,7 @@ def bmm_metadata(measurement   = 'transmission',
                  stoichiometry = None,
                  mode          = 'transmission',
                  comment       = '',
-                 ththth        = False,
-                ):
+                 ththth        = False,):
     '''
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 
@@ -95,78 +99,70 @@ def bmm_metadata(measurement   = 'transmission',
       ththth        -- True is measuring with the Si(333) relfection
     '''
 
-    md                                = copy.deepcopy(bmm_metadata_stub)
-    md['XDI,_mode']                   = mode,
-    md['XDI,_comment']                = comment,
-    md['XDI,_scantype']               = 'xafs step scan',
+    md                         = copy.deepcopy(bmm_metadata_stub)
+    md['_mode']                = mode,
+    #md['_kind']                = kind,
+    md['_comment']             = comment,
+    #md['_scantype']            = 'xafs step scan'
     if 'fixed' in scantype:
-        md['XDI,_scantype']           = 'single-energy x-ray absorption detection',
-    md['XDI,Element,edge']            = edge.capitalize()
-    md['XDI,Element,symbol']          = element.capitalize()
-    md['XDI,Scan,edge_energy']        = edge_energy
-    md['XDI,Scan,experimenters']      = experimenters
-    md['XDI,Mono,name']               = 'Si(%s)' % dcm._crystal
-    md['XDI,Mono,d_spacing']          = '%.7f Å' % (dcm._twod/2)
-    md['XDI,Mono,encoder_resolution'] = dcm.bragg.resolution.value
-    md['XDI,Mono,angle_offset']       = dcm.bragg.user_offset.value
-    md['XDI,Detector,I0']             = '10 cm ' + i0_gas
-    md['XDI,Detector,It']             = '25 cm ' + it_gas
-    md['XDI,Detector,Ir']             = '25 cm ' + ir_gas
-    md['XDI,Facility,GUP']            = BMMuser.gup
-    md['XDI,Facility,SAF']            = BMMuser.saf
-    md['XDI,Sample,name']             = sample
-    md['XDI,Sample,prep']             = prep
-    #md['XDI,Sample,x_position']       = xafs_linx.user_readback.value
-    #md['XDI,Sample,y_position']       = xafs_liny.user_readback.value
-    #md['XDI,Sample,roll_position']    = xafs_roll.user_readback.value
+        md['_scantype']        = 'single-energy x-ray absorption detection'
+    for k in ('Beamline', 'Element', 'Scan', 'Mono', 'Detector', 'Facility', 'Sample', 'Column'):
+        if k not in md:
+            md[k] = dict()
+    md['Element']['edge']            = edge.capitalize()
+    md['Element']['symbol']          = element.capitalize()
+    md['Scan']['edge_energy']        = edge_energy
+    md['Scan']['experimenters']      = experimenters
+    md['Mono']['name']               = 'Si(%s)' % dcm._crystal
+    md['Mono']['d_spacing']          = '%.7f Å' % (dcm._twod/2)
+    md['Mono']['encoder_resolution'] = dcm.bragg.resolution.value
+    md['Mono']['angle_offset']       = dcm.bragg.user_offset.value
+    md['Detector']['I0']             = '10 cm ' + i0_gas
+    md['Detector']['It']             = '25 cm ' + it_gas
+    md['Detector']['Ir']             = '25 cm ' + ir_gas
+    md['Facility']['GUP']            = BMMuser.gup
+    md['Facility']['SAF']            = BMMuser.saf
+    md['Sample']['name']             = sample
+    md['Sample']['prep']             = prep
+    #md['XDI']['Sample']['x_position']       = xafs_linx.user_readback.value
+    #md['XDI']['Sample']['y_position']       = xafs_liny.user_readback.value
+    #md['XDI']['Sample']['roll_position']    = xafs_roll.user_readback.value
     ## what about pitch, linxs, rotX ???
     if stoichiometry is not None:
-        md['XDI,Sample,stoichiometry'] = stoichiometry
+        md['Sample']['stoichiometry'] = stoichiometry
 
     if ththth:
-        md['XDI,Mono,name']            = 'Si(333)'
-        md['XDI,Mono,d_spacing']       = '%.7f Å' % (dcm._twod/6)
+        md['Mono']['name']            = 'Si(333)'
+        md['Mono']['d_spacing']       = '%.7f Å' % (dcm._twod/6)
             
         
-    (m2state, m3state) = mirror_state()
-    md['XDI,Beamline,focusing'] = m2state
-    md['XDI,Beamline,harmonic_rejection'] = m3state
-
-    # if focus:
-    #     md['XDI,Beamline,focusing'] = 'torroidal mirror with bender, 5 nm Rh on 30 nm Pt'
-    # else:
-    #     md['XDI,Beamline,focusing'] = 'none'
-
-    # if hr:
-    #     md['XDI,Beamline,harmonic_rejection'] = 'flat, Pt stripe; Si stripe below 8 keV'
-    # else:
-    #     md['XDI,Beamline,harmonic_rejection'] = 'none'
+    (md['Beamline']['focusing'], md['Beamline']['harmonic_rejection']) = mirror_state()
 
     if direction > 0:
-        md['XDI,Mono,direction'] = 'increasing in energy'
+        md['Mono']['direction'] = 'increasing in energy'
     elif direction == 0:
-        md['XDI,Mono,direction'] = 'fixed in energy'
+        md['Mono']['direction'] = 'fixed in energy'
     else:
-        md['XDI,Mono,direction'] = 'decreasing in energy'
+        md['Mono']['direction'] = 'decreasing in energy'
 
     if 'step' in scantype:
-        md['XDI,Mono,scan_type'] = 'step'
+        md['Mono']['scan_type'] = 'step'
     elif 'fixed' in scantype:
-        md['XDI,Mono,scan_type'] = 'single energy'
+        md['Mono']['scan_type'] = 'single energy'
     else:
-        md['XDI,Mono,scan_type'] = 'slew'
+        md['Mono']['scan_type'] = 'slew'
 
     if channelcut is True:
-        md['XDI,Mono,scan_mode'] = 'pseudo channel cut'
+        md['Mono']['scan_mode'] = 'pseudo channel cut'
     else:
-        md['XDI,Mono,scan_mode'] = 'fixed exit'
+        md['Mono']['scan_mode'] = 'fixed exit'
 
     if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement:
-        md['XDI,Detector,fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
-        md['XDI,Detector,deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
+        md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
+        md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
 
     if 'yield' in measurement:
-        md['XDI,Detector,yield'] = 'simple electron yield detector with batteries and He'
+        md['Detector']['yield'] = 'simple electron yield detector with batteries and He'
 
     return md
 
@@ -176,15 +172,24 @@ def metadata_at_this_moment():
 
     '''
     rightnow = dict()
-    #rightnow['XDI,Mono,first_crystal_temperature']  = float(first_crystal.temperature.value)
-    #rightnow['XDI,Mono,compton_shield_temperature'] = float(compton_shield.temperature.value)
-    #rightnow['XDI,Facility,current']  = str(ring.current.value) + ' mA'
+    rightnow['Facility'] = dict()
+    #rightnow['Mono']['first_crystal_temperature']  = float(first_crystal.temperature.value)
+    #rightnow['Mono']['compton_shield_temperature'] = float(compton_shield.temperature.value)
+    #rightnow['Facility']['current']  = str(ring.current.value) + ' mA'
     try:
-        rightnow['XDI,Facility,energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
-        rightnow['XDI,Facility,mode']     = ring.mode.value
+        rightnow['Facility']['energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
+        rightnow['Facility']['mode']     = ring.mode.value
     except:
-        rightnow['XDI,Facility,energy']   = '0 GeV'
-        rightnow['XDI,Facility,mode']     = 'Maintenance'
-    if rightnow['XDI,Facility,mode'] == 'Operations':
-        rightnow['XDI,Facility,mode'] = 'top-off'
+        rightnow['Facility']['energy']   = '0 GeV'
+        rightnow['Facility']['mode']     = 'Maintenance'
+    if rightnow['Facility']['mode'] == 'Operations':
+        rightnow['Facility']['mode'] = 'top-off'
     return rightnow
+
+
+
+def display_XDI_metadata(dct):
+    for family, ddd in dct.items():
+        if type(ddd) is dict:
+            for item, value in ddd.items():
+                print("\t{:30} {}".format(family+'.'+item+':', value))

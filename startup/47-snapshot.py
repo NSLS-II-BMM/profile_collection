@@ -33,8 +33,8 @@ def annotate_image(imagefile, text):
 
 
 
-XASURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
-XRDURL = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'
+XASURL = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'
+XRDURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
 CAM_PROXIES = {"http": None, "https": None,}
 
 def snap(which, filename=None, **kwargs):

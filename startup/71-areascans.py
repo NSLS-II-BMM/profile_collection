@@ -136,8 +136,10 @@ def areascan(detector,
         BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
 
         thismd = dict()
-        thismd['XDI,Facility,GUP'] = BMMuser.gup
-        thismd['XDI,Facility,SAF'] = BMMuser.saf
+        thismd['XDI'] = dict()
+        thismd['XDI']['Facility'] = dict()
+        thismd['XDI']['Facility']['GUP'] = BMMuser.gup
+        thismd['XDI']['Facility']['SAF'] = BMMuser.saf
         thismd['slow_motor'] = slow.name
         thismd['fast_motor'] = fast.name
 
@@ -266,11 +268,11 @@ def as2dat(datafile, key):
     handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
     try:
-        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI,Facility,GUP'])
+        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI']['Facility']['GUP'])
     except:
         pass
     try:
-        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI,Facility,SAF'])
+        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI']['Facility']['SAF'])
     except:
         pass
     handle.write('# ==========================================================\n')

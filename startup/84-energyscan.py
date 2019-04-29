@@ -505,7 +505,7 @@ def db2xdi(datafile, key):
         return
     header = db[key]
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
-    write_XDI(datafile, header, header.start['XDI,_mode'][0], header.start['XDI,_comment'][0])
+    write_XDI(datafile, header)
     print(bold_msg('wrote %s' % datafile))
 
 from pygments import highlight
@@ -931,13 +931,12 @@ def xafs(inifile, **kwargs):
                               mode          = p['mode'],
                               comment       = p['comment'],
                               ththth        = p['ththth'],
-                          )
+            )
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## show the metadata to the user
-            for (k, v) in md.items():
-                print('\t%-28s : %s' % (k[4:].replace(',','.'),v))
-
+            display_XDI_metadata(md)
+                
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## this dictionary is used to populate the static html page for this scan sequence
             html_scan_list = ''
@@ -996,7 +995,8 @@ def xafs(inifile, **kwargs):
                     yield from null()
                     return
                 print(bold_msg('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid))))
-
+                md['_filename'] = fname
+                
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
                 energy_trajectory    = cycler(dcm.energy, energy_grid)
@@ -1005,26 +1005,34 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
                 ## mono direction, ... things that can change during or between scan sequences
-                md['XDI,Mono,direction'] = 'forward'
+                md['Mono']['direction'] = 'forward'
                 if p['bothways'] and count%2 == 0:
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
-                    md['XDI,Mono,direction'] = 'backward'
+                    md['Mono']['direction'] = 'backward'
                 rightnow = metadata_at_this_moment() # see 62-metadata.py
+                for family in rightnow.keys():       # transfer rightnow to md
+                    if type(rightnow[family]) is dict:
+                        if family not in md:
+                            md[family] = dict()
+                        for k in rightnow[family].keys():
+                            md[family][k] = rightnow[family][k]
+                
+                md['_kind'] = 'xafs'
+                if p['ththth']: md['_kind'] = '333'
 
-
+                xdi = {'XDI': md}
+                
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
                 if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                       md={**md, **rightnow, **supplied_metadata})
+                                       md={**xdi, **supplied_metadata})
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                       md={**md, **rightnow, **supplied_metadata})
+                                       md={**xdi, **supplied_metadata})
                 header = db[-1]
-                kind = 'xafs'
-                if p['ththth']: kind = '333'
-                write_XDI(datafile, header, p['mode'], p['comment'], kind=kind) # yield from ?
+                write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))
                 BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
                              % (header.start['uid'], header.start['scan_id'], datafile))
@@ -1112,8 +1120,12 @@ def howlong(inifile, interactive=True, **kwargs):
         return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
-    text +='The sequence of %s will take about %.1f %s' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60, inflect('scan', int(approx_time * int(p['nscans'])/60)))
+    text +='The sequence of %s will take about %s' % (inflect('scan', p['nscans']),
+                                                      inflect('hour', int(approx_time * int(p['nscans'])/60)))
     if interactive:
         print(text)
     else:
         return(inifile, text)
+
+
+    

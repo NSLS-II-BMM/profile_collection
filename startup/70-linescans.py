@@ -144,41 +144,50 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         RE.msg_hook = None
         BMMuser.motor = motor
     
-        func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-        dets = [quadem1,]
-        name = 'I0'
         if detector.lower() == 'bicron':
             func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
             dets = [bicron,]
-            name = 'Bicron'
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel=name, title='I0 signal vs. DCM 2nd crystal pitch')
+            sgnl = 'Bicron'
+            titl = 'Bicron signal vs. DCM 2nd crystal pitch'
+        else:
+            func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
+            dets = [quadem1,]
+            sgnl = 'I0'
+            titl = 'I0 signal vs. DCM 2nd crystal pitch'
+
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         with open(dotfile, "w") as f:
             f.write("")
 
         @subs_decorator(plot)
-        def scan_dcmpitch():
+        def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                    (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.value)
 
             yield from abs_set(_locked_dwell_time, 0.1)
             yield from abs_set(motor.kill_cmd, 1)
 
             yield from mv(slits3.vsize, 3)
+            if sgnl == 'Bicron':
+                yield from mv(slitsg.vsize, 5)
+                
             yield from rel_scan(dets, motor, start, stop, nsteps)
-
             t  = db[-1].table()
-            signal = t['I0']
+            signal = t[sgnl]
             position = com(signal)
             top = t[motor.name][position]
 
             yield from bps.sleep(3.0)
             yield from abs_set(motor.kill_cmd, 1)
             RE.msg_hook = BMM_msg_hook
+
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
                          (line1, db[-1].start['uid'], db[-1].start['scan_id']))
             yield from mv(motor, top)
-        yield from scan_dcmpitch()
+            if sgnl == 'Bicron':
+                yield from mv(slitsg.vsize, gonio_slit_height)
+        yield from scan_dcmpitch(sgnl)
 
     def cleanup_plan():
         yield from mv(slits3.vsize, slit_height)
@@ -191,6 +200,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     slit_height = slits3.vsize.readback.value
+    gonio_slit_height = slitsg.vsize.readback.value
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
@@ -210,7 +220,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -277,9 +287,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron')))
             yield from null()
             return
 
@@ -300,6 +310,10 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         elif detector == 'I0':
             detname = 'I0'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
+        elif detector == 'Bicron':
+            dets.append(vor)
+            detname = 'Bicron'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Bicron'])
         elif detector == 'Iy':
             denominator = ' / I0'
             detname = 'electron yield'
@@ -340,8 +354,10 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
         ##BMM_suspenders()            # engage suspenders
 
         thismd = dict()
-        thismd['XDI,Facility,GUP'] = BMMuser.gup
-        thismd['XDI,Facility,SAF'] = BMMuser.saf
+        thismd['XDI'] = dict()
+        thismd['XDI']['Facility'] = dict()
+        thismd['XDI']['Facility']['GUP'] = BMMuser.gup
+        thismd['XDI']['Facility']['SAF'] = BMMuser.saf
 
         with open(dotfile, "w") as f:
             f.write("")
@@ -396,8 +412,7 @@ def ls2dat(datafile, key):
     dataframe = db[key]
     devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
     if 'vor' in devices:
-        abscissa = (devices - {'quadem1', 'vor'}).pop()
-        abscissa = 'xafs_liny'
+        abscissa = dataframe['start']['motors'][0]
         column_list = [abscissa, 'I0', 'It', 'Ir',
                        'DTC1', 'DTC2', 'DTC3', 'DTC4',
                        'ROI1', 'ICR1', 'OCR1',
@@ -406,22 +421,23 @@ def ls2dat(datafile, key):
                        'ROI4', 'ICR4', 'OCR4']
         template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
-        abscissa = (devices - {'quadem1',}).pop()
+        abscissa = dataframe['start']['motors'][0]
         template = "  %.3f  %.6f  %.6f  %.6f\n"
         column_list = [abscissa, 'I0', 'It', 'Ir']
 
+    print(column_list)
     table = dataframe.table()
     this = table.loc[:,column_list]
 
-    handle.write('# XDI/1.0 BlueSky/%s' % bluesky_version)
+    handle.write('# XDI/1.0 BlueSky/%s\n' % bluesky_version)
     handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
     try:
-        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI,Facility,GUP'])
+        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI']['Facility']['GUP'])
     except:
         pass
     try:
-        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI,Facility,SAF'])
+        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI']['Facility']['SAF'])
     except:
         pass
     handle.write('# ==========================================================\n')

@@ -86,11 +86,13 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     
     thismd = dict()
-    thismd['XDI,Facility,GUP']    = BMMuser.gup
-    thismd['XDI,Facility,SAF']    = BMMuser.saf
-    thismd['XDI,Beamline,energy'] = dcm.energy.readback.value
-    thismd['XDI,Scan,dwell_time'] = dwell
-    thismd['XDI,Scan,delay']      = delay
+    thismd['XDI'] = dict()
+    thismd['XDI']['Facility'] = dict()
+    thismd['XDI']['Facility']['GUP']    = BMMuser.gup
+    thismd['XDI']['Facility']['SAF']    = BMMuser.saf
+    thismd['XDI']['Beamline']['energy'] = dcm.energy.readback.value
+    thismd['XDI']['Scan']['dwell_time'] = dwell
+    thismd['XDI']['Scan']['delay']      = delay
     
     @subs_decorator(plot)
     def count_scan(dets, readings, delay):
@@ -160,15 +162,15 @@ def ts2dat(datafile, key):
     handle.write('# Scan.end_time: %s\n'     % end_time)
     handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-    handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI,Beamline,energy'])
-    handle.write('# Scan.dwell_time: %d\n'   % dataframe['start']['XDI,Scan,dwell_time'])
-    handle.write('# Scan.delay: %d\n'        % dataframe['start']['XDI,Scan,delay'])
+    handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI']['Beamline']['energy'])
+    handle.write('# Scan.dwell_time: %d\n'   % dataframe['start']['XDI']['Scan']['dwell_time'])
+    handle.write('# Scan.delay: %d\n'        % dataframe['start']['XDI']['Scan']['delay'])
     try:
-        handle.write('# Facility.GUP: %d\n'  % dataframe['start']['XDI,Facility,GUP'])
+        handle.write('# Facility.GUP: %d\n'  % dataframe['start']['XDI']['Facility']['GUP'])
     except:
         pass
     try:
-        handle.write('# Facility.SAF: %d\n'  % dataframe['start']['XDI,Facility,SAF'])
+        handle.write('# Facility.SAF: %d\n'  % dataframe['start']['XDI']['Facility']['SAF'])
     except:
         pass
     handle.write('# ==========================================================\n')
@@ -270,16 +272,24 @@ def sead(inifile, force=False, **kwargs):
                           stoichiometry = None,
                           mode          = p['mode'],
                           comment       = p['comment'],)
-        del(md['XDI,Element,edge'])
-        del(md['XDI,Element,symbol'])
-        md['XDI,Column,01'] = 'time seconds'
-        md['XDI,Column,02'] = md.copy()['XDI,Column,03']
-        md['XDI,Column,03'] = md.copy()['XDI,Column,04']
-        md['XDI,Column,04'] = md['XDI,Column,05']
-        del(md['XDI,Column,05'])
+        del(md['XDI']['Element']['edge'])
+        del(md['XDI']['Element']['symbol'])
+        md['XDI']['Column']['01'] = 'time seconds'
+        md['XDI']['Column']['02'] = md.copy()['XDI']['Column']['03']
+        md['XDI']['Column']['03'] = md.copy()['XDI']['Column']['04']
+        md['XDI']['Column']['04'] = md['XDI']['Column']['05']
+        del(md['XDI']['Column']['05'])
+        md['_kind'] = 'sead'
 
         rightnow = metadata_at_this_moment() # see 62-metadata.py
-    
+        for family in rightnow.keys():       # transfer rightnow to md
+            if type(rightnow[family]) is dict:
+                if family not in md:
+                    md[family] = dict()
+                for k in rightnow[family].keys():
+                    md[family][k] = rightnow[family][k]
+        xdi = {'XDI': md}
+
         BMM_log_info('Starting single-energy absorption detection time scan using\n%s:\n%s\nCommand line arguments = %s\nMoving to measurement energy: %.1f eV' %
                      (inifile, text, str(kwargs), p['e0']))
 
@@ -305,12 +315,12 @@ def sead(inifile, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
-        yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**md, **rightnow})
+        yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## write the output file
         header = db[-1]
-        write_XDI(outfile, header, p['mode'], p['comment'], kind='sead') # yield from ?
+        write_XDI(outfile, header) # yield from ?
         report('wrote time scan to %s' % outfile)
         #BMM_log_info('wrote time scan to %s' % outfile)
         #print(bold_msg('wrote %s' % outfile))
