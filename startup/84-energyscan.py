@@ -234,8 +234,8 @@ def scan_metadata(inifile=None, **kwargs):
     ## ----- scan regions (what about kwargs???)
     for a in ('bounds', 'steps', 'times'):
         found[a] = False
+        parameters[a] = []
         if a not in kwargs:
-            parameters[a] = []
             try:
                 for f in config.get('scan', a).split():
                     try:
@@ -245,7 +245,15 @@ def scan_metadata(inifile=None, **kwargs):
                     found[a] = True
             except:
                 parameters[a] = getattr(BMMuser, a)
-    parameters['bounds_given'] = parameters['bounds'].copy()
+        else:
+            this = str(kwargs[a])
+            for f in this.split():
+                try:
+                    parameters[a].append(float(f))
+                except:
+                    parameters[a].append(f)
+            found[a] = True
+        parameters['bounds_given'] = parameters['bounds'].copy()
 
     (problem, text) = sanitize_step_scan_parameters(parameters['bounds'], parameters['steps'], parameters['times'])
     print(text)
@@ -1082,8 +1090,7 @@ def xafs(inifile, **kwargs):
         #else:
         #    BMM_log_info('XAFS scan sequence finished early')
         dcm.mode = 'fixed'
-        yield from abs_set(_locked_dwell_time.struck_dwell_time.setpoint, 0.5)
-        yield from abs_set(_locked_dwell_time.quadem_dwell_time.setpoint, 0.5)
+        yield from resting_state_plan()
         yield from bps.sleep(2.0)
         yield from abs_set(dcm_pitch.kill_cmd, 1)
         yield from abs_set(dcm_roll.kill_cmd, 1)
@@ -1121,7 +1128,7 @@ def howlong(inifile, interactive=True, **kwargs):
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
     text +='The sequence of %s will take about %s' % (inflect('scan', p['nscans']),
-                                                      inflect('hour', int(approx_time * int(p['nscans'])/60)))
+                                                    inflect('hour', int(approx_time * int(p['nscans'])/60)))
     if interactive:
         print(text)
     else:

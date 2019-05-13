@@ -72,7 +72,7 @@ import fcntl
 def anacam(filename    = None,
            sample      = None,
            folder      = os.environ['HOME'],
-           device      = '/dev/video0',
+           device      = '/dev/video1',
            camera      = 0,
            skip        = 30,
            frames      = 5,
@@ -118,12 +118,13 @@ def anacam(filename    = None,
                               bufsize=64,
                               stdin=PIPE,
                               stdout=PIPE, close_fds=True).stdout.read().strip().split()
-            bus = lsusb_out[1]
-            device = lsusb_out[3][:-1]
+            bus = lsusb_out[1].decode('UTF-8')
+            device = lsusb_out[3][:-1].decode('UTF-8')
+            print("/dev/bus/usb/%s/%s"%(bus, device))
             f = open("/dev/bus/usb/%s/%s"%(bus, device), 'w', os.O_WRONLY)
             fcntl.ioctl(f, USBDEVFS_RESET, 0)
             sleep(1)
-        except(Exception, msg):
+        except Exception as msg:
             print("failed to reset device:", msg)
 
     quiet = ''

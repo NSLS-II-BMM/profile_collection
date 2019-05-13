@@ -27,51 +27,33 @@ def sample_sequence():
     
     BMMuser.prompt = False
     BMM_log_info('Beginning sample macro')
+    def main_plan():
 
-
-    ### ---------------------------------------------------------------------------------------
-    ### boilerplate above this line -----------------------------------------------------------
-    ##  edit below this line
+        ### ---------------------------------------------------------------------------------------
+        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
+        ##  EDIT BELOW THIS LINE
     
+        ## sample 1
+        yield from xafs('scan.ini', filename='samp1', sample='first sample')
+        close_last_plot()                 # this command closes the plot on screen
     
-    ## sample 1
-    yield from xafs('scan.ini', filename='samp1', sample='first sample')
-    close_last_plot()                 # this command closes the plot on screen
-    
-    ## sample 2
-    yield from mvr(xafs_wheel, -15)
-    yield from xafs('scan.ini', filename='samp2', sample='another sample', comment='my comment')
-    close_last_plot()
+        ## sample 2
+        yield from mvr(xafs_wheel, -15)
+        yield from xafs('scan.ini', filename='samp2', sample='another sample', comment='my comment')
+        close_last_plot()
 
-    ## sample 3
-    yield from mvr(xafs_wheel, -15)
-    yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
-    close_last_plot()
+        ## sample 3
+        yield from mvr(xafs_wheel, -15)
+        yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
+        close_last_plot()
 
+        
+        ##  EDIT ABOVE THIS LINE
+        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
+        ### ---------------------------------------------------------------------------------------
 
-    ### some other useful commands:
-    ###
-    ###   ▶ move to a specific position in X and Y
-    ###          yield from mv(xafs_x, 57, xafs_y, 123)
-    ###
-    ###   ▶ move X or Y by some amount
-    ###          yield from mvr(xafs_x, 2)
-    ###          yield from mvr(xafs_y, -1)
-    ###
-    ###   ▶ change to a different edge
-    ###          yield from change_edge('Cu')
-    ###
-    ###   ▶ open/close the shutter
-    ###          yield from shb.open_plan()
-    ###          yield from shb.close_plan()
-    ###
-    ###   ▶ turn sample spinner on/off
-    ###          yield from fan.on_plan
-    ###          yield from fan.off_plan
-
-    ##  edit above this line
-    ### boilerplate below this line -----------------------------------------------------------
-    ### ---------------------------------------------------------------------------------------
-    
-    BMMuser.prompt = True
+    def cleanup_plan():
+        yield from resting_state_plan()
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from resting_state_plan()
     BMM_log_info('Sample macro finished!')
