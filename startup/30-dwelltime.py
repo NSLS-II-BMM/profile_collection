@@ -66,4 +66,4 @@ class LockedDwellTimes(PseudoPositioner):
 _locked_dwell_time = LockedDwellTimes('', name='dwti')
 dwell_time = _locked_dwell_time.dwell_time
 dwell_time.name = 'inttime'
-
+    

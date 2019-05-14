@@ -49,13 +49,13 @@ bmm_metadata_stub = {'Beamline': {'name'        : 'BMM (06BM) -- Beamline for Ma
                      'Facility': {'name'        : 'NSLS-II',
                                   'energy'      : '3 GeV',},
                      
-                     'Column':   {'01'          : 'energy eV',
-                                  '02'          : 'requested energy eV',
-                                  '03'          : 'measurement time sec',
-                                  '04'          : 'mu(E)',
-                                  '05'          : 'i0 nA',
-                                  '06'          : 'it nA',
-                                  '07'          : 'ir nA'},
+                     # 'Column':   {'01'          : 'energy eV',
+                     #              '02'          : 'requested energy eV',
+                     #              '03'          : 'measurement time sec',
+                     #              '04'          : 'mu(E)',
+                     #              '05'          : 'i0 nA',
+                     #              '06'          : 'it nA',
+                     #              '07'          : 'ir nA'},
                  }
 
 
@@ -114,7 +114,7 @@ def bmm_metadata(measurement   = 'transmission',
     md['Scan']['edge_energy']        = edge_energy
     md['Scan']['experimenters']      = experimenters
     md['Mono']['name']               = 'Si(%s)' % dcm._crystal
-    md['Mono']['d_spacing']          = '%.7f Å' % (dcm._twod/2)
+    md['Mono']['d_spacing']          = '%.7f' % (dcm._twod/2)
     md['Mono']['encoder_resolution'] = dcm.bragg.resolution.value
     md['Mono']['angle_offset']       = dcm.bragg.user_offset.value
     md['Detector']['I0']             = '10 cm ' + i0_gas
@@ -133,7 +133,7 @@ def bmm_metadata(measurement   = 'transmission',
 
     if ththth:
         md['Mono']['name']            = 'Si(333)'
-        md['Mono']['d_spacing']       = '%.7f Å' % (dcm._twod/6)
+        md['Mono']['d_spacing']       = '%.7f' % (dcm._twod/6)
             
         
     (md['Beamline']['focusing'], md['Beamline']['harmonic_rejection']) = mirror_state()
@@ -177,10 +177,12 @@ def metadata_at_this_moment():
     #rightnow['Mono']['compton_shield_temperature'] = float(compton_shield.temperature.value)
     #rightnow['Facility']['current']  = str(ring.current.value) + ' mA'
     try:
-        rightnow['Facility']['energy']   = str(round(ring.energy.value/1000., 1)) + ' GeV'
+        rightnow['Facility']['current']  = str(round(ring.current.value, 1))
+        rightnow['Facility']['energy']   = str(round(ring.energy.value/1000., 1))
         rightnow['Facility']['mode']     = ring.mode.value
     except:
-        rightnow['Facility']['energy']   = '0 GeV'
+        rightnow['Facility']['current']  = '0'
+        rightnow['Facility']['energy']   = '0'
         rightnow['Facility']['mode']     = 'Maintenance'
     if rightnow['Facility']['mode'] == 'Operations':
         rightnow['Facility']['mode'] = 'top-off'

@@ -11,6 +11,19 @@ from bluesky.preprocessors import subs_decorator
 
 run_report(__file__)
 
+def resting_state():
+    BMMuser.prompt = True
+    quadem1.on()
+    vor.on()
+    _locked_dwell_time.set(0.5)
+    RE.msg_hook = BMM_msg_hook
+def resting_state_plan():
+    BMMuser.prompt = True
+    yield from quadem1.on_plan()
+    yield from vor.on_plan()
+    yield from abs_set(_locked_dwell_time, 0.5)
+    RE.msg_hook = BMM_msg_hook
+
 def move_after_scan(thismotor):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
@@ -112,6 +125,7 @@ def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
         yield from abs_set(_locked_dwell_time, 0.5)
         yield from bps.sleep(sleep)
         yield from abs_set(motor.kill_cmd, 1)
+        yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     motor = dm3_bct
@@ -195,6 +209,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         yield from bps.sleep(1.0)
         yield from abs_set(motor.kill_cmd, 1)
         yield from bps.sleep(1.0)
+        yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     motor = dcm_pitch
@@ -380,7 +395,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
     def cleanup_plan():
         if os.path.isfile(dotfile): os.remove(dotfile)
         ##RE.clear_suspenders()       # disable suspenders
-        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from resting_state_plan()
 
 
     dotfile = '/home/xf06bm/Data/.line.scan.running'

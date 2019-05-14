@@ -79,10 +79,11 @@ def change_mode(mode=None, prompt=True):
                         m3.xu,           float(MODEDATA['m3_xu'][mode]),
                         m3.xd,           float(MODEDATA['m3_xd'][mode]),
           
-                        slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-                        slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-                        slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-                        slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]))
+                        #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+                        #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+                        #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+                        #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
+          )
      else:
           yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
 
@@ -96,10 +97,10 @@ def change_mode(mode=None, prompt=True):
                         m3.xu,           float(MODEDATA['m3_xu'][mode]),
                         m3.xd,           float(MODEDATA['m3_xd'][mode]),
           
-                        slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-                        slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-                        slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-                        slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]),
+                        #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+                        #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+                        #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+                        #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]),
           
                         m2.yu,           float(MODEDATA['m2_yu'][mode]),
                         m2.ydo,          float(MODEDATA['m2_ydo'][mode]),

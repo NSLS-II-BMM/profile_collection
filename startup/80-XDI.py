@@ -176,8 +176,8 @@ def write_XDI(datafile, dataframe):
     #except:
     #    ring_current = 0
     metadata.insert_line('# Facility.name: %s' % 'NSLS-II')
-    metadata.insert_line('# Facility.current: %.1f mA' % ring.current.value)
     metadata.start_doc('# Facility.energy: %s',                  'XDI.Facility.energy')
+    metadata.start_doc('# Facility.current: %s',                 'XDI.Facility.current')
     metadata.start_doc('# Facility.mode: %s',                    'XDI.Facility.mode')
     metadata.start_doc('# Facility.GUP: %d',                     'XDI.Facility.GUP')
     metadata.start_doc('# Facility.SAF: %d',                     'XDI.Facility.SAF')

@@ -328,7 +328,7 @@ def sead(inifile, force=False, **kwargs):
     def cleanup_plan():
         print('Cleaning up after single energy absorption detector measurement')
         RE.clear_suspenders()
-        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from resting_state_plan()
         dotfile = '/home/xf06bm/Data/.time.scan.running'
         if os.path.isfile(dotfile): os.remove(dotfile)
         dcm.mode = 'fixed'

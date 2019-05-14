@@ -111,6 +111,8 @@ def BMM_msg_hook(msg):
             report('Moving %s to %.3f'  % (msg[1].name, msg[2][0]))
         elif 'EpicsSignal' in str(type(msg[1])):
             report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+        elif 'LockedDwell' in str(type(msg[1])):
+            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
         elif 'PseudoSingle' in str(type(msg[1])):
             report('Moving %s to %.3f'  % (msg[1].name, msg[2][0]))
 

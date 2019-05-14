@@ -197,7 +197,7 @@ def areascan(detector,
         if os.path.isfile(dotfile): os.remove(dotfile)
         if BMMuser.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
-        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from resting_state_plan()
         RE.msg_hook = BMM_msg_hook
 
         print('Disabling plot for re-plucking.')
