@@ -57,7 +57,7 @@ class BMM_User():
     Single energy time scan attributes, default values
       * npoints:          number of time points
       * dwell:            dwell time at each time step
-      * delay:            delay between time steps
+     * delay:            delay between time steps
 
     Methods for public use:
       * start_experiment(self, name=None, date=None, gup=0, saf=0)
@@ -75,8 +75,11 @@ class BMM_User():
         self.name            = None
         self.staff           = False
         self.read_foils      = None
+        self.read_rois       = None
         self.user_is_defined = False
 
+        self.roi_channel     = None
+        
         ## current plot attributes    #######################################################################
         self.motor  = None            # these are used to keep track of mouse events on the plotting window #
         self.motor2 = None            # see 70-linescans.py, and 71-areascan.py                             #
@@ -299,7 +302,9 @@ class BMM_User():
             if 'name' in user:
                 self.start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
             if 'foils' in user:
-                self.read_foils = user['foils'] # see 76-edge.py, line 111, need to delay configuring foils until 76-edge is read
+                self.read_foils = user['foils'] # see 76-edge.py, line 114, need to delay configuring foils until 76-edge is read
+            if 'rois' in user:
+                self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''

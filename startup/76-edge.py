@@ -59,8 +59,8 @@ class ReferenceFoils():
             print(error_msg('\nThe list of foils must have five elements\n'))
             return()
         for i in range(5):
-            foils.set_slot(i+1, elements[i])
-        foils.show()
+            self.set_slot(i+1, elements[i])
+        self.show()
         #########################################################
         # save the foil configuration to the user serialization #
         #########################################################
@@ -123,7 +123,112 @@ if os.path.isfile(jsonfile):
 if BMMuser.read_foils is not None:
     foils.set(BMMuser.read_foils)
     BMMuser.read_foils = None
+
+
+
+class ROI():
+    '''A simple class for managing the Struck ROI channels.
+    '''
+    def __init__(self):
+        self.slots = [None, None, None]
+
+    def unset(self):
+        self.slots = [None, None, None]
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        if os.path.isfile(jsonfile):
+            user = json.load(open(jsonfile))
+            if 'rois' in user:
+                del user['rois']
+                os.chmod(jsonfile, 0o644)
+                with open(jsonfile, 'w') as outfile:
+                    json.dump(user, outfile)
+                os.chmod(jsonfile, 0o444)
+    
+    def set_roi(self, i, el):
+        '''Configure an ROI channel i ∈ (1 .. 3) for element el'''
+        if Z_number(el) is None:
+            self.slots[i-1] = None
+        else:
+            self.slots[i-1] = element_symbol(el)
+        BMM_log_info('Set ROI channel %d to %s' % (i, str(self.slots[i-1])))
+
+    def set(self, elements):
+        '''Configure the ROI channels so that an energy change knows which channel to use.
+
+        Input:
+          elements: a list of 3 elements, top to bottom in the SCAs
+                    if the list is a space separated string, it will be split into a list
+        '''
+        if type(elements) is str:
+            elements = elements.split()
+        if len(elements) != 3:
+            print(error_msg('\nThe list of foils must have three elements\n'))
+            return()
+        for i in range(3):
+            self.set_roi(i+1, elements[i])
+        self.show()
+        ########################################################
+        # save the ROI configuration to the user serialization #
+        ########################################################
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        user = dict()
+        if os.path.isfile(jsonfile):
+            user = json.load(open(jsonfile))
+            user['rois'] = ' '.join(map(str, elements))
+            os.chmod(jsonfile, 0o644)
+        with open(jsonfile, 'w') as outfile:
+            json.dump(user, outfile)
+        os.chmod(jsonfile, 0o444)
+
+    def select(self, el):
+        '''Choose the ROI configured for element el'''
+        if type(el) is int:
+            if el < 1 or el > 3:
+                print(error_msg('\n%d is not a valid ROI channel\n' % el))
+                return(yield from null())
+            el = self.slots[el-1]
+        if el is None:
+            print(error_msg('\nThat ROI is not configured\n'))
+            return(yield from null())
+        if Z_number(el) is None:
+            print(error_msg('\n%s is not an element\n' % el))
+            return(yield from null())
+        selected = False
+        for i in range(5):
+            if element_symbol(el) == self.slots[i]:
+                BMMuser.roi_channel = i
+                report('Set ROI channel to %s at position %d' % (el.capitalize(), i+1))
+                selected = True
+        if not selected:
+            print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
+            yield from null()
+
+
         
+    def show(self):
+        '''Show configuration of ROI channels'''
+        print('ROI channels:')
+        for i in range(5):
+            print('\tROI %d : %s'% (i+1, str(self.slots[i])))
+
+rois = ROI()
+## if this startup file is "%run -i"-ed, then need to reset
+## foils to the serialized configuration
+jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+if os.path.isfile(jsonfile):
+    user = json.load(open(jsonfile))
+    if 'rois' in user:
+        rois.set(user['rois'])
+## else if starting bsui fresh, perform the delayed foil configuration
+if BMMuser.read_rois is not None:
+    rois.set(BMMuser.read_rois)
+    BMMuser.read_foils = None
+
+
+
+        
+
+    
 def approximate_pitch(energy):
     if dcm._crystal is '111':
         m = -4.42156e-6
