@@ -251,11 +251,11 @@ def as2dat(datafile, key):
     if 'vor' in devices:
         column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'],
                        'I0', 'It', 'Ir',
-                       'DTC1', 'DTC2', 'DTC3', 'DTC4',
-                       'ROI1', 'ICR1', 'OCR1',
-                       'ROI2', 'ICR2', 'OCR2',
-                       'ROI3', 'ICR3', 'OCR3',
-                       'ROI4', 'ICR4', 'OCR4']
+                       BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4,
+                       BMMuser.roi1, 'ICR1', 'OCR1',
+                       BMMuser.roi2, 'ICR2', 'OCR2',
+                       BMMuser.roi3, 'ICR3', 'OCR3',
+                       BMMuser.roi4, 'ICR4', 'OCR4']
         template = "  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
         column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'], 'I0', 'It', 'Ir']

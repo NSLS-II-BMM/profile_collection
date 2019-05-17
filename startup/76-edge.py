@@ -174,8 +174,8 @@ class ROI():
         user = dict()
         if os.path.isfile(jsonfile):
             user = json.load(open(jsonfile))
-            user['rois'] = ' '.join(map(str, elements))
-            os.chmod(jsonfile, 0o644)
+        user['rois'] = ' '.join(map(str, elements))
+        os.chmod(jsonfile, 0o644)
         with open(jsonfile, 'w') as outfile:
             json.dump(user, outfile)
         os.chmod(jsonfile, 0o444)
@@ -194,21 +194,31 @@ class ROI():
             print(error_msg('\n%s is not an element\n' % el))
             return(yield from null())
         selected = False
-        for i in range(5):
+        for i in range(3):
             if element_symbol(el) == self.slots[i]:
-                BMMuser.roi_channel = i
-                report('Set ROI channel to %s at position %d' % (el.capitalize(), i+1))
+                BMMuser.roi_channel = i+1
+                if i == 0:      # help out the best effort callback
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI1', 'ROI2', 'ROI3', 'ROI4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC1', 'DTC2', 'DTC3', 'DTC4')
+                    vor.set_hints(1)
+                elif i == 1:
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI2.1', 'ROI2.2', 'ROI2.3', 'ROI2.4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC2.1', 'DTC2.2', 'DTC2.3', 'DTC2.4')
+                    vor.set_hints(2)
+                elif i == 2:
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI3.1', 'ROI3.2', 'ROI3.3', 'ROI3.4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC3.1', 'DTC3.2', 'DTC3.3', 'DTC3.4')
+                    vor.set_hints(3)
+                report('Set ROI channel to %s at channel %d' % (el.capitalize(), i+1))
                 selected = True
         if not selected:
             print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
             yield from null()
-
-
         
     def show(self):
         '''Show configuration of ROI channels'''
         print('ROI channels:')
-        for i in range(5):
+        for i in range(3):
             print('\tROI %d : %s'% (i+1, str(self.slots[i])))
 
 rois = ROI()
@@ -219,6 +229,7 @@ if os.path.isfile(jsonfile):
     user = json.load(open(jsonfile))
     if 'rois' in user:
         rois.set(user['rois'])
+        BMMuser.read_rois = None
 ## else if starting bsui fresh, perform the delayed foil configuration
 if BMMuser.read_rois is not None:
     rois.set(BMMuser.read_rois)
@@ -339,17 +350,19 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         close_last_plot()
         ## redo rocking curve?
 
-    ######################################
-    # move to the correct reference slot #
-    ######################################
+    ##############################################################
+    # move to the correct reference slot & set reference channel #
+    ##############################################################
     print('Moving reference foil...')
     yield from foils.move(el)
+    rois.select(el)
+    
     
     print('\nYou are now ready to measure at the %s edge' % el)
     print('\nSome things are not done automagically:')
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
-    print('  * If measuring fluorescence, remember to adjust the cables')
+    print('  * If measuring fluorescence, be sure that there is a channel for %s' % el)
     BMM_log_info('Finished configuring for %s edge' % el)
     end = time.time()
     print('\n\nTime elapsed: %.1f min' % ((end-start)/60))

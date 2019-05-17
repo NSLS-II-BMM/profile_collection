@@ -6,11 +6,49 @@ run_report(__file__)
 
 ####################################################################################
 ####                  ROI           ICR              OCR             time       ####
+class DTCorr(DerivedSignal):
+    def forward(self, value):
+        return self.derived_from.value
+    def inverse(self, value):
+        df = self.derived_from.pvname
+        if   any(scal in df for scal in ('S3', 'S15', 'S19')):
+            return self.parent.dtcorrect(self.derived_from.value,
+                                         self.parent.channels.chan7.value,
+                                         self.parent.channels.chan11.value,
+                                         _locked_dwell_time.dwell_time.readback.value)
+
+        elif any(scal in df for scal in ('S4', 'S16', 'S20')):
+            return self.parent.dtcorrect(self.derived_from.value,
+                                         self.parent.channels.chan8.value,
+                                         self.parent.channels.chan12.value,
+                                         _locked_dwell_time.dwell_time.readback.value)
+
+        elif any(scal in df for scal in ('S5', 'S17', 'S21')):
+            return self.parent.dtcorrect(self.derived_from.value,
+                                         self.parent.channels.chan9.value,
+                                         self.parent.channels.chan13.value,
+                                         _locked_dwell_time.dwell_time.readback.value)
+
+        elif any(scal in df for scal in ('S6', 'S18', 'S22')):
+            return self.parent.dtcorrect(self.derived_from.value,
+                                         self.parent.channels.chan10.value,
+                                         self.parent.channels.chan14.value,
+                                         _locked_dwell_time.dwell_time.readback.value)
+
+        else:
+            return self.parent.dtcorrect(self.derived_from.value,
+                                         self.parent.channels.chan7.value,
+                                         self.parent.channels.chan11.value,
+                                         _locked_dwell_time.dwell_time.readback.value)
+
+
+
+
 class DTCorr1(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan3.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan3.value,
+        return self.parent.dtcorrect(self.parent.channels.chan3.value, # 21: chan15   31: chan19
                                      self.parent.channels.chan7.value,
                                      self.parent.channels.chan11.value,
                                      _locked_dwell_time.dwell_time.readback.value)
@@ -19,7 +57,7 @@ class DTCorr2(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan4.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan4.value,
+        return self.parent.dtcorrect(self.parent.channels.chan4.value, # 22: chan16   32: chan20
                                      self.parent.channels.chan8.value,
                                      self.parent.channels.chan12.value,
                                      _locked_dwell_time.dwell_time.readback.value)
@@ -28,7 +66,7 @@ class DTCorr3(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan5.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan5.value,
+        return self.parent.dtcorrect(self.parent.channels.chan5.value, # 23: chan17   33: chan21
                                      self.parent.channels.chan9.value,
                                      self.parent.channels.chan13.value,
                                      _locked_dwell_time.dwell_time.readback.value)
@@ -37,7 +75,7 @@ class DTCorr4(DerivedSignal):
     def forward(self, value):
         return self.parent.channels.chan6.value
     def inverse(self, value):
-        return self.parent.dtcorrect(self.parent.channels.chan6.value,
+        return self.parent.dtcorrect(self.parent.channels.chan6.value, # 24: chan18   34: chan22
                                      self.parent.channels.chan10.value,
                                      self.parent.channels.chan14.value,
                                      _locked_dwell_time.dwell_time.readback.value)
@@ -55,6 +93,16 @@ class BMMVortex(EpicsScaler):
     dtcorr3 = Cpt(DTCorr3, derived_from='channels.chan5')
     dtcorr4 = Cpt(DTCorr4, derived_from='channels.chan6')
 
+    dtcorr21 = Cpt(DTCorr, derived_from='channels.chan15')
+    dtcorr22 = Cpt(DTCorr, derived_from='channels.chan16')
+    dtcorr23 = Cpt(DTCorr, derived_from='channels.chan17')
+    dtcorr24 = Cpt(DTCorr, derived_from='channels.chan18')
+    
+    dtcorr31 = Cpt(DTCorr, derived_from='channels.chan19')
+    dtcorr32 = Cpt(DTCorr, derived_from='channels.chan20')
+    dtcorr33 = Cpt(DTCorr, derived_from='channels.chan21')
+    dtcorr34 = Cpt(DTCorr, derived_from='channels.chan22')
+    
 
     def on(self):
         print('Turning {} on'.format(self.name))
@@ -83,14 +131,14 @@ class BMMVortex(EpicsScaler):
         self.names.name12.put('OCR2')
         self.names.name13.put('OCR3')
         self.names.name14.put('OCR4')
-        self.names.name15.put('ROI21')
-        self.names.name16.put('ROI22')
-        self.names.name17.put('ROI23')
-        self.names.name18.put('ROI24')
-        self.names.name19.put('ROI31')
-        self.names.name20.put('ROI32')
-        self.names.name21.put('ROI33')
-        self.names.name22.put('ROI34')
+        self.names.name15.put('ROI2.1')
+        self.names.name16.put('ROI2.2')
+        self.names.name17.put('ROI2.3')
+        self.names.name18.put('ROI2.4')
+        self.names.name19.put('ROI3.1')
+        self.names.name20.put('ROI3.2')
+        self.names.name21.put('ROI3.3')
+        self.names.name22.put('ROI3.4')
         self.names.name25.put('Bicron')
         self.names.name26.put('APD')
 
@@ -107,14 +155,14 @@ class BMMVortex(EpicsScaler):
         yield from abs_set(self.names.name12, 'OCR2')
         yield from abs_set(self.names.name13, 'OCR3')
         yield from abs_set(self.names.name14, 'OCR4')
-        yield from abs_set(self.names.name15, 'ROI21')
-        yield from abs_set(self.names.name16, 'ROI22')
-        yield from abs_set(self.names.name17, 'ROI23')
-        yield from abs_set(self.names.name18, 'ROI24')
-        yield from abs_set(self.names.name19, 'ROI31')
-        yield from abs_set(self.names.name20, 'ROI32')
-        yield from abs_set(self.names.name21, 'ROI33')
-        yield from abs_set(self.names.name22, 'ROI34')
+        yield from abs_set(self.names.name15, 'ROI2.1')
+        yield from abs_set(self.names.name16, 'ROI2.2')
+        yield from abs_set(self.names.name17, 'ROI2.3')
+        yield from abs_set(self.names.name18, 'ROI2.4')
+        yield from abs_set(self.names.name19, 'ROI3.1')
+        yield from abs_set(self.names.name20, 'ROI3.2')
+        yield from abs_set(self.names.name21, 'ROI3.3')
+        yield from abs_set(self.names.name22, 'ROI3.4')
         yield from abs_set(self.names.name25, 'Bicron')
         yield from abs_set(self.names.name26, 'APD')
 
@@ -154,44 +202,52 @@ class BMMVortex(EpicsScaler):
         self.niter = count
         return float(rr * (totn*tt/oo))
 
+    def set_hints(self, chan):
+        '''Set the dead time correction attributes to hinted for the selected, configured channel'''
+        for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4,
+                   self.dtcorr21, self.dtcorr22, self.dtcorr23, self.dtcorr24,
+                   self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
+            pv.kind = 'normal'
+        if chan == 1:
+            for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4):
+                pv.kind = 'hinted'
+        elif chan == 2:
+            for pv in (self.dtcorr21, self.dtcorr22, self.dtcorr23, self.dtcorr24):
+                pv.kind = 'hinted'
+        elif chan == 3:
+            for pv in (self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
+                pv.kind = 'hinted'
+            
 
+    
 vor = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vor')
-vor.dtcorr1.kind = 'hinted'
-vor.dtcorr2.kind = 'hinted'
-vor.dtcorr3.kind = 'hinted'
-vor.dtcorr4.kind = 'hinted'
-for i in list(range(1,3)) + list(range(15,33)):
+vor.set_hints(1)
+
+for i in list(range(3,23)):
+    text = 'vor.channels.chan%d.kind = \'normal\'' % i
+    exec(text)
+for i in list(range(1,3)) + list(range(23,33)):
     text = 'vor.channels.chan%d.kind = \'omitted\'' % i
     exec(text)
 
 vor.state.kind = 'omitted'
 
-## normal means record in the document, but do not display in LiveTable
-vor.channels.chan3.kind = 'normal'
-vor.channels.chan4.kind = 'normal'
-vor.channels.chan5.kind = 'normal'
-vor.channels.chan6.kind = 'normal'
-vor.channels.chan7.kind = 'normal'
-vor.channels.chan8.kind = 'normal'
-vor.channels.chan9.kind = 'normal'
-vor.channels.chan10.kind = 'normal'
-vor.channels.chan11.kind = 'normal'
-vor.channels.chan12.kind = 'normal'
-vor.channels.chan13.kind = 'normal'
-vor.channels.chan14.kind = 'normal'
-vor.channels.chan15.kind = 'normal'
-vor.channels.chan16.kind = 'normal'
-vor.channels.chan17.kind = 'normal'
-vor.channels.chan18.kind = 'normal'
-vor.channels.chan19.kind = 'normal'
-vor.channels.chan20.kind = 'normal'
-vor.channels.chan21.kind = 'normal'
-vor.channels.chan22.kind = 'normal'
 
 vor.dtcorr1.name = 'DTC1'
 vor.dtcorr2.name = 'DTC2'
 vor.dtcorr3.name = 'DTC3'
 vor.dtcorr4.name = 'DTC4'
+
+vor.dtcorr21.name = 'DTC2.1'
+vor.dtcorr22.name = 'DTC2.2'
+vor.dtcorr23.name = 'DTC2.3'
+vor.dtcorr24.name = 'DTC2.4'
+
+vor.dtcorr31.name = 'DTC3.1'
+vor.dtcorr32.name = 'DTC3.2'
+vor.dtcorr33.name = 'DTC3.3'
+vor.dtcorr34.name = 'DTC3.4'
+
 
 vor.channels.chan3.name = 'ROI1'
 vor.channels.chan4.name = 'ROI2'
@@ -205,14 +261,14 @@ vor.channels.chan11.name = 'OCR1'
 vor.channels.chan12.name = 'OCR2'
 vor.channels.chan13.name = 'OCR3'
 vor.channels.chan14.name = 'OCR4'
-vor.channels.chan15.name = 'ROI21'
-vor.channels.chan16.name = 'ROI22'
-vor.channels.chan17.name = 'ROI23'
-vor.channels.chan18.name = 'ROI24'
-vor.channels.chan19.name = 'ROI31'
-vor.channels.chan20.name = 'ROI32'
-vor.channels.chan21.name = 'ROI33'
-vor.channels.chan22.name = 'ROI34'
+vor.channels.chan15.name = 'ROI2.1'
+vor.channels.chan16.name = 'ROI2.2'
+vor.channels.chan17.name = 'ROI2.3'
+vor.channels.chan18.name = 'ROI2.4'
+vor.channels.chan19.name = 'ROI3.1'
+vor.channels.chan20.name = 'ROI3.2'
+vor.channels.chan21.name = 'ROI3.3'
+vor.channels.chan22.name = 'ROI3.4'
 vor.channels.chan25.name = 'Bicron'
 vor.channels.chan26.name = 'APD'
 

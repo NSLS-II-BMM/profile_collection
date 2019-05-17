@@ -78,8 +78,16 @@ class BMM_User():
         self.read_rois       = None
         self.user_is_defined = False
 
-        self.roi_channel     = None
-        
+        self.roi_channel     = None   ##################################################################
+        self.roi1            = 'ROI1' # in 76-edge.py, the ROI class is defined for managing changes   #
+        self.roi2            = 'ROI2' # of configured detector channels. the names of the channels are #
+        self.roi3            = 'ROI3' # are stored here for use in the various calls to DerivedPlot    #
+        self.roi4            = 'ROI4' # and for writing column labels to output files                  #
+        self.dtc1            = 'DTC1' ##################################################################
+        self.dtc2            = 'DTC2'
+        self.dtc3            = 'DTC3'
+        self.dtc4            = 'DTC4'
+                
         ## current plot attributes    #######################################################################
         self.motor  = None            # these are used to keep track of mouse events on the plotting window #
         self.motor2 = None            # see 70-linescans.py, and 71-areascan.py                             #
@@ -117,7 +125,25 @@ class BMM_User():
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
         self.delay         = 0.1   ###########################################################################
 
+    def show(self):
+        print('Experiment attributes:')
+        for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils', 'read_rois', 'user_is_defined', 'pds_mode'):
+            print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
+        print('\nROI control attributes:')
+        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4'):
+            print('\t%-15s = %s' % (att, str(getattr(self, att))))
+
+        print('\nCurrent plot attributes:')
+        for att in ('motor', 'motor2', 'fig', 'ax', 'x', 'y'):
+            print('\t%-15s = %s' % (att, str(getattr(self, att))))
+
+        # print('\nScan control attributes:')
+        # for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'filename',
+        #             'experimenters', 'e0', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
+        #             'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
+        #             'dwell', 'delay'):
+        #     print('\t%-15s = %s' % (att, str(getattr(self, att))))
         
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''

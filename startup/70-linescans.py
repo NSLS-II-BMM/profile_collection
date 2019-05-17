@@ -338,18 +338,18 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
-                                (doc['data']['DTC1'] +
-                                 doc['data']['DTC2'] +
-                                 doc['data']['DTC3'] +
-                                 doc['data']['DTC4']   ) / doc['data']['I0'])
+                                (doc['data'][BMMuser.dtc1] +
+                                 doc['data'][BMMuser.dtc2] +
+                                 doc['data'][BMMuser.dtc3] +
+                                 doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         elif detector == 'Both':
             dets.append(vor)
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
             funcfl = lambda doc: (doc['data'][thismotor.name],
-                                  (doc['data']['DTC1'] +
-                                   doc['data']['DTC2'] +
-                                   doc['data']['DTC3'] +
-                                   doc['data']['DTC4']   ) / doc['data']['I0'])
+                                  (doc['data'][BMMuser.dtc1] +
+                                   doc['data'][BMMuser.dtc2] +
+                                   doc['data'][BMMuser.dtc3] +
+                                   doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
@@ -429,11 +429,11 @@ def ls2dat(datafile, key):
     if 'vor' in devices:
         abscissa = dataframe['start']['motors'][0]
         column_list = [abscissa, 'I0', 'It', 'Ir',
-                       'DTC1', 'DTC2', 'DTC3', 'DTC4',
-                       'ROI1', 'ICR1', 'OCR1',
-                       'ROI2', 'ICR2', 'OCR2',
-                       'ROI3', 'ICR3', 'OCR3',
-                       'ROI4', 'ICR4', 'OCR4']
+                       BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4,
+                       BMMuser.roi1, 'ICR1', 'OCR1',
+                       BMMuser.roi2, 'ICR2', 'OCR2',
+                       BMMuser.roi3, 'ICR3', 'OCR3',
+                       BMMuser.roi4, 'ICR4', 'OCR4']
         template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
     else:
         abscissa = dataframe['start']['motors'][0]
