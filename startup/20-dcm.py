@@ -61,9 +61,9 @@ class DCM(PseudoPositioner):
 
     def restore(self):
         self.mode = 'fixed'
-        if dcm_x.user_readback.value < 0:
+        if dcm_x.user_readback.value < 10:
             self._crystal = '111'
-        elif dcm_x.user_readback.value > 0:
+        elif dcm_x.user_readback.value > 10:
             self._crystal = '311'
 
     # The pseudo positioner axes:
@@ -76,8 +76,6 @@ class DCM(PseudoPositioner):
     perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
     #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
     #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
-
-    #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
 
     def kill(self):
         dcm_para.kill_cmd.put(1)
@@ -133,5 +131,5 @@ class DCM(PseudoPositioner):
 
 
 dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
-if dcm_x.user_readback.value > 0: dcm.set_crystal('311')
+if dcm_x.user_readback.value > 10: dcm.set_crystal('311')
 ## dcm_x is 29 for Si(311), -35 for Si(111)

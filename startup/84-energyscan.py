@@ -16,7 +16,7 @@ run_report(__file__)
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 1.425
+CS_MULTIPLIER = 0.475 # 1.425
 ######################################################################
 ## replacing this with BMMuser, see 74-modes.py
 # CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #
@@ -684,13 +684,13 @@ def xafs(inifile, **kwargs):
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
     def main_plan(inifile, **kwargs):
-        if '311' in dcm._crystal and dcm_x.user_readback.value < 0:
+        if '311' in dcm._crystal and dcm_x.user_readback.value < 10:
             BMMuser.final_log_entry = False
             print(error_msg('The DCM is in the 111 position, configured as 311'))
             print(error_msg('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
             yield from null()
             return
-        if '111' in dcm._crystal and dcm_x.user_readback.value > 0:
+        if '111' in dcm._crystal and dcm_x.user_readback.value > 10:
             BMMuser.final_log_entry = False
             print(error_msg('The DCM is in the 311 position, configured as 111'))
             print(error_msg('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
@@ -815,6 +815,7 @@ def xafs(inifile, **kwargs):
                     print('\nSi(111) pseudo-channel-cut energy = %.1f ; %.1f on the Si(333)' % (eave,eave*3))
                 else:
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
+
             action = input("\nBegin scan sequence? [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 BMMuser.final_log_entry = False

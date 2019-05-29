@@ -20,7 +20,7 @@ class ReferenceFoils():
        yield from foils.move('Fe')
 
     Print foils configuration to the screen:
-       foils.show()
+       print(foils.show())
     '''
     def __init__(self):
         self.slots = [None, None, None, None, None]
@@ -60,7 +60,7 @@ class ReferenceFoils():
             return()
         for i in range(5):
             self.set_slot(i+1, elements[i])
-        self.show()
+        print(self.show())
         #########################################################
         # save the foil configuration to the user serialization #
         #########################################################
@@ -107,9 +107,13 @@ class ReferenceFoils():
             
     def show(self):
         '''Show configuration of foil holder'''
-        print('Reference foils (xafs_ref):')
+        text = ' Reference foils (xafs_ref):\n'
         for i in range(5):
-            print('\tslot %d : %s at %d mm'% (i+1, str(self.slots[i]), self.position(i)))
+            ast = ' '
+            if abs(self.position(i) - xafs_ref.user_readback.value) < 1:
+                ast = '*'
+            text += '      %s slot %d : %s at %d mm\n'% (ast, i+1, str(self.slots[i]), self.position(i))
+        return(text)
             
 foils = ReferenceFoils()
 ## if this startup file is "%run -i"-ed, then need to reset
@@ -166,7 +170,7 @@ class ROI():
             return()
         for i in range(3):
             self.set_roi(i+1, elements[i])
-        self.show()
+        print(self.show())
         ########################################################
         # save the ROI configuration to the user serialization #
         ########################################################
@@ -202,12 +206,12 @@ class ROI():
                     (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC1', 'DTC2', 'DTC3', 'DTC4')
                     vor.set_hints(1)
                 elif i == 1:
-                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI2.1', 'ROI2.2', 'ROI2.3', 'ROI2.4')
-                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC2.1', 'DTC2.2', 'DTC2.3', 'DTC2.4')
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI2_1', 'ROI2_2', 'ROI2_3', 'ROI2_4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC2_1', 'DTC2_2', 'DTC2_3', 'DTC2_4')
                     vor.set_hints(2)
                 elif i == 2:
-                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI3.1', 'ROI3.2', 'ROI3.3', 'ROI3.4')
-                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC3.1', 'DTC3.2', 'DTC3.3', 'DTC3.4')
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI3_1', 'ROI3_2', 'ROI3_3', 'ROI3_4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC3_1', 'DTC3_2', 'DTC3_3', 'DTC3_4')
                     vor.set_hints(3)
                 report('Set ROI channel to %s at channel %d' % (el.capitalize(), i+1))
                 selected = True
@@ -217,9 +221,13 @@ class ROI():
         
     def show(self):
         '''Show configuration of ROI channels'''
-        print('ROI channels:')
+        text = ' ROI channels:\n'
         for i in range(3):
-            print('\tROI %d : %s'% (i+1, str(self.slots[i])))
+            ast = ' '
+            if i+1 == BMMuser.roi_channel:
+                ast = '*'
+            text +='      %s ROI %d : %s\n'% (ast, i+1, str(self.slots[i]))
+        return text
 
 rois = ROI()
 ## if this startup file is "%run -i"-ed, then need to reset
@@ -244,14 +252,18 @@ def approximate_pitch(energy):
     if dcm._crystal is '111':
         m = -4.42156e-6
         b = 3.94956
-        return(m*energy + b)
+        return(m*energy + b + 0.058)
     else:
-        m = -4.42156e-6
-        b = 3.94956
-        return(dcm_pitch.user_readback.value)
+        m = -2.79316e-06
+        b = 2.32616
+        return(m*energy + b + 0.034)
         
 
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=False, target=300.):
+def show_edges():
+    text = foils.show() + '\n' + rois.show()
+    boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=55)
+    
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=False, target=300., xrd=False):
     '''Change edge energy by:
        1. Moving the DCM above the edge energy
        2. Moving the photon delivery system to the correct mode
@@ -267,7 +279,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
        slits:  (Boolean) perform slit_height() scan            [False]
        calibrating: (Boolean) skip change_mode() plan          [False]
        target: (float) energy where rocking curve is measured  [300]
+       xrd:    (Boolean) force photon delivery system to XRD   [False]
     '''
+    #BMMuser.prompt = True
     if energy is None:
         energy = edge_energy(el,edge)
         
@@ -297,6 +311,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         mode = 'B' if focus else 'F'
     else:
         mode = 'C' if focus else 'E'
+    if xrd:
+        mode   = 'XRD'
+        focus  = True
+        target = 0.0
     current_mode = get_mode()
 
     #########################
@@ -350,13 +368,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         close_last_plot()
         ## redo rocking curve?
 
-    ##############################################################
-    # move to the correct reference slot & set reference channel #
-    ##############################################################
+    ########################################################
+    # move to the correct reference slot & set roi channel #
+    ########################################################
     print('Moving reference foil...')
     yield from foils.move(el)
-    rois.select(el)
-    
+    yield from rois.select(el)
+    show_edges()
     
     print('\nYou are now ready to measure at the %s edge' % el)
     print('\nSome things are not done automagically:')

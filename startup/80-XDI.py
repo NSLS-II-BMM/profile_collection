@@ -129,7 +129,7 @@ def write_XDI(datafile, dataframe):
         comment = ''
 
     try:
-        kind = dataframe.start['XDI']['_kind'][0]
+        kind = dataframe.start['XDI']['_kind']
     except:
         kind = 'xafs'
 
@@ -200,7 +200,11 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Scan.edge_energy: %s',   'XDI.Scan.edge_energy')
 
     if kind == '333':
-        metadata.insert_line('# Scan.edge_energy_333: %.1f'  % 3.0 * float(dataframe.start['XDI']['Scan']['edge_energy']))
+        try:
+            ththth_energy = dataframe.start['XDI']['Scan']['edge_energy'] / 3.0
+            metadata.insert_line('# Scan.edge_energy_333: %.1f'  % ththth_energy)
+        except:
+            pass
 
     metadata.insert_line('# Scan.start_time: %s'   % start_time)
     metadata.insert_line('# Scan.end_time: %s'     % end_time)

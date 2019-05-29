@@ -18,9 +18,9 @@ def resting_state():
     _locked_dwell_time.set(0.5)
     RE.msg_hook = BMM_msg_hook
 def resting_state_plan():
-    BMMuser.prompt = True
-    yield from quadem1.on_plan()
-    yield from vor.on_plan()
+    #BMMuser.prompt = True
+    #yield from quadem1.on_plan()
+    #yield from vor.on_plan()
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
 
@@ -58,7 +58,7 @@ def com(signal):
     center of rocking curve and slit height scans.'''
     return int(center_of_mass(signal)[0])
 
-def slit_height(start=-2.5, stop=2.5, nsteps=51, move=False, sleep=1.0):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -187,6 +187,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
                 yield from mv(slitsg.vsize, 5)
                 
             yield from rel_scan(dets, motor, start, stop, nsteps)
+            #yield from rel_adaptive_scan(dets, 'I0', motor,
+            #                             start=start,
+            #                             stop=stop,
+            #                             min_step=0.002,
+            #                             max_step=0.03,
+            #                             target_delta=.15,
+            #                             backstep=True)
             t  = db[-1].table()
             signal = t[sgnl]
             position = com(signal)

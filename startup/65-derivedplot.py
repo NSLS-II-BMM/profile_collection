@@ -40,6 +40,8 @@ def close_last_plot():
     if BMMuser.fig is None:
         print('Oops... No last plot.')
         return
+    if BMMuser.prev_fig is not None:
+        plt.close(BMMuser.prev_fig)
     plt.close(BMMuser.fig)
         
 class DerivedPlot(CallbackBase):
@@ -59,6 +61,10 @@ class DerivedPlot(CallbackBase):
         if ax is None:
             fig, ax = plt.subplots()
         self.ax = ax
+        if BMMuser.fig is not None:
+            BMMuser.prev_fig = BMMuser.fig
+        if BMMuser.ax is not None:
+            BMMuser.prev_ax  = BMMuser.ax
         BMMuser.ax = ax
         BMMuser.fig = fig
         BMMuser.fig.canvas.mpl_connect('close_event', handle_close)

@@ -13,6 +13,158 @@ from scipy.interpolate import interp1d
 ##  Kraft et al, Review of Scientific Instruments 67, 681 (1996)
 ##  https://doi.org/10.1063/1.1146657
 
+def calibrate_low_end(mono='111'):
+    '''Step through the lower 5 elements of the mono calibration procedure.'''
+    (ok, text) = BMM_clear_to_start()
+    if ok is False:
+        print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
+        return(yield from null())
+    
+    BMM_log_info('Beginning low end calibration macro')
+    def main_plan():
+        BMMuser.prompt = False
+
+        ### ---------------------------------------------------------------------------------------
+        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
+        ##  EDIT BELOW THIS LINE
+
+        foils.set('Fe Co Ni Cu Zn') 
+        
+        datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
+        handle = open(datafile, 'w')
+        handle.write('[config]\n')
+        handle.write("mono      = '%s'\n" % mono)
+        if mono == '111':
+            handle.write('DSPACING  = 3.13597211\n')
+        else:
+            handle.write('DSPACING  = 1.63762644\n')
+        handle.write("thistitle = 'Si(%s) calibration curve'\n\n" % mono)
+        handle.write('##       found, tabulated, found_angle, dcm_pitch\n')
+        handle.write('[edges]\n')
+        handle.flush()
+
+    
+        yield from change_edge('Fe', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='fecal', edge='Fe', e0=7112, sample='Fe foil')
+        close_last_plot()
+        handle.write('fe = 12345.12,    7110.75,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Co', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cocal', edge='Co', e0=7709, sample='Co foil')
+        close_last_plot()
+        handle.write('co = 12345.12,    7708.78,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Ni', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nical', edge='Ni', e0=8333, sample='Ni foil')
+        close_last_plot()
+        handle.write('ni = 12345.12,    8331.49,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Cu', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cucal', edge='Cu', e0=8979, sample='Cu foil')
+        close_last_plot()
+        handle.write('cu = 12345.12,    8980.48,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Zn', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='zncal', edge='Zn', e0=9659, sample='Zn foil')
+        close_last_plot()
+        handle.write('zn = 12345.12,    9660.76,    12.123456,   %.5f\n' % pitch)
+
+        handle.flush()
+        handle.close()
+
+        yield from shb.close_plan()
+        
+        ##  EDIT ABOVE THIS LINE
+        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
+        ### ---------------------------------------------------------------------------------------
+
+    def cleanup_plan():
+        yield from resting_state_plan()
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from resting_state_plan()
+    BMM_log_info('Low end calibration macro finished!')
+
+
+def calibrate_high_end(mono='111'):
+    '''Step through the upper 5 elements of the mono calibration procedure.'''
+    (ok, text) = BMM_clear_to_start()
+    if ok is False:
+        print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
+        return(yield from null())
+    
+    BMM_log_info('Beginning high end calibration macro')
+    def main_plan():
+        BMMuser.prompt = False
+
+        ### ---------------------------------------------------------------------------------------
+        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
+        ##  EDIT BELOW THIS LINE
+
+        foils.set('Pt Au Pb Nb Mo') 
+        
+        datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
+        handle = open(datafile, 'a')
+    
+        yield from change_edge('Pt', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', edge='Pt', e0=11563, sample='Pt foil')
+        close_last_plot()
+        handle.write('pt = 12345.12,    11562.76,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Au', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='aucal', edge='Au', e0=11919, sample='Au foil')
+        close_last_plot()
+        handle.write('au = 12345.12,    11919.70,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Pb', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='pbcal', edge='Pb', e0=13035, sample='Pb foil')
+        close_last_plot()
+        handle.write('pb = 12345.12,    13035.07,    12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Nb', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nbcal', edge='Nb', e0=18986, sample='Nb foil')
+        close_last_plot()
+        handle.write('nb = 12345.12,     18982.97,   12.123456,   %.5f\n' % pitch)
+        handle.flush()
+
+        yield from change_edge('Mo', target=0)
+        pitch = dcm_pitch.user_readback.value
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='mocal', edge='Mo', e0=20000, sample='Mo foil')
+        close_last_plot()
+        handle.write('mo = 12345.12,    20000.36,    12.123456,   %.5f\n' % pitch)
+
+        handle.flush()
+        handle.close()
+
+        yield from shb.close_plan()
+        
+        ##  EDIT ABOVE THIS LINE
+        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
+        ### ---------------------------------------------------------------------------------------
+
+    def cleanup_plan():
+        yield from resting_state_plan()
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from resting_state_plan()
+    BMM_log_info('High end calibration macro finished!')
+
+    
+
 def calibrate_mono(mono='111'):
     # read content from INI file
     if mono == '111':

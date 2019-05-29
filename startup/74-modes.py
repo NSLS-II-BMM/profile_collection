@@ -217,13 +217,13 @@ def change_xtals(xtal=None):
      if xtal is 'Si(111)':
           yield from mv(dcm_pitch, 3.8698,
                         dcm_roll, -6.26,
-                        dcm_x,    -35.4    )
+                        dcm_x,     0.3    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset
      elif xtal is 'Si(311)':
           yield from mv(dcm_pitch, 2.28,
                         dcm_roll, -23.86,
-                        dcm_x,     29.0    )
+                        dcm_x,     67.3    )
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
@@ -235,7 +235,7 @@ def change_xtals(xtal=None):
 
      print('Performing a rocking curve scan')
      yield from abs_set(dcm_pitch.kill_cmd, 1)
-     yield from mv(dcm_pitch, approximate_pitch(energy+target))
+     yield from mv(dcm_pitch, approximate_pitch(current_energy))
      yield from bps.sleep(1)
      yield from abs_set(dcm_pitch.kill_cmd, 1)
      yield from rocking_curve()

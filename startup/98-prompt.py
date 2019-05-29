@@ -63,6 +63,10 @@ ip.prompts = MyPrompt(ip)
 #     return 'Token.%s' % tokens[i]
 
 
+## from Tom on Gitter: https://gitter.im/NSLS-II/DAMA?at=5cdf02ab7c363c75a7f983e1
+import types
+get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose that command in RE()'))
+
 
 def BMM_help():
     '''

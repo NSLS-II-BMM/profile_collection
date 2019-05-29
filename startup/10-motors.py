@@ -60,8 +60,8 @@ dcm_bragg.user_readback.kind = 'hinted'
 dcm_bragg.user_setpoint.kind = 'normal'
 
 ## for some reason, this needs to be set explicitly
-dcm_x.hlm.value = 35.8
-dcm_x.llm.value = -36
+dcm_x.hlm.value = 68
+dcm_x.llm.value = 0
 
 ## collimating mirror
 m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
