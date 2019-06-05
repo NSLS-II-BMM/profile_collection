@@ -16,7 +16,7 @@ run_report(__file__)
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 0.475 # 1.425
+CS_MULTIPLIER = 0.7
 ######################################################################
 ## replacing this with BMMuser, see 74-modes.py
 # CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #

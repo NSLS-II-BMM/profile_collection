@@ -79,7 +79,7 @@ def move_m2(target=3.5):
 
     correction = 0 # 0.8 * tan(theta/1000) / tan(1.5/1000)
 
-    bct   = bnot - alpha * tan( (2*theta) / 1000 ) + correction
+    bct   = bnot - alpha * tan( (2*theta) / 1000 ) + correction + 1.218
     upstr = unot - beta  * tan( (2*theta) / 1000 ) + correction
     dnstr = dnot - gamma * tan( (2*theta) / 1000 ) + correction
 

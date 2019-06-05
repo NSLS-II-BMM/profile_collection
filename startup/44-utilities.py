@@ -66,8 +66,8 @@ class Vacuum(Device):
     pressure = Cpt(EpicsSignal, '-CCG:1}P:Raw-I')
 
     def _pressure(self):
-        print(self.pressure.value)
-        print(type(self.pressure.value))
+        #print(self.pressure.value)
+        #print(type(self.pressure.value))
         if self.pressure.value == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
@@ -317,17 +317,21 @@ def show_utilities():
     for i in range(0,ltcs):
         info = False
         if 'pitch' in tcs[i].name or 'roll' in tcs[i].name: info = True
+
         if i < lvac and i < lgv:
             units = 'μA'
             if float(vac[i].current.value) > 5e-4: units = 'mA'
             text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %s %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), vac[i]._current(), units)
-        elif i == lvac:
-            text += '  %-28s     %s C        %-5s   %s        %-20s  %s   \n' % \
+
+        elif i == lvac:         # flight path ... TCG class
+            text += '  %-28s     %s C        %-5s   %s        %-20s  %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure())
+
         elif i < lgv:
             text += '  %-28s     %s C        %-5s   %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state())
+
         else:
             text += '  %-28s     %s C\n' % (tcs[i].name, tcs[i]._state(info=info))
     return text[:-1]

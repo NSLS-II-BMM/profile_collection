@@ -280,6 +280,26 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
        calibrating: (Boolean) skip change_mode() plan          [False]
        target: (float) energy where rocking curve is measured  [300]
        xrd:    (Boolean) force photon delivery system to XRD   [False]
+
+    Examples:
+
+    Normal use, unfocused beam:
+       RE(change_edge('Fe'))
+
+    Normal use, focused beam:
+       RE(change_edge('Fe', focus=True))
+
+    L2 or L1 edge:
+       RE(change_edge('Re', edge='L2'))
+
+    Measure rocking curve at edge energy:
+       RE(change_edge('Fe', target=0))
+
+    XRD, new energy:
+       RE(change_edge('Fe', xrd=True, energy=8600))
+           note that you must specify an element, but it doesn't matter which one
+           the energy will be moved to the specified energy
+           xrd=True implies focus=True and target=0
     '''
     #BMMuser.prompt = True
     if energy is None:
@@ -347,7 +367,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     if not calibrating and mode != current_mode:
         print('Moving to photon delivery mode %s...' % mode)
         yield from change_mode(mode=mode, prompt=False)
+    yield from abs_set(m2_yu.kill_cmd, 1)
+    yield from abs_set(m2_ydo.kill_cmd, 1)
+    yield from abs_set(m2_ydi.kill_cmd, 1)
 
+    yield from abs_set(m3_yu.kill_cmd, 1)
+    yield from abs_set(m3_ydo.kill_cmd, 1)
+    yield from abs_set(m3_ydi.kill_cmd, 1)
+
+        
     ############################
     # run a rocking curve scan #
     ############################
@@ -371,10 +399,11 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     ########################################################
     # move to the correct reference slot & set roi channel #
     ########################################################
-    print('Moving reference foil...')
-    yield from foils.move(el)
-    yield from rois.select(el)
-    show_edges()
+    if not xrd:
+        print('Moving reference foil...')
+        yield from foils.move(el)
+        yield from rois.select(el)
+        show_edges()
     
     print('\nYou are now ready to measure at the %s edge' % el)
     print('\nSome things are not done automagically:')

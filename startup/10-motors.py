@@ -15,6 +15,7 @@ class BraggEpicsMotor(EpicsMotor):
 class XAFSEpicsMotor(EpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
 
     def wh(self):
         return(round(self.user_readback.value, 3))

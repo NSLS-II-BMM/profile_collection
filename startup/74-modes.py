@@ -68,10 +68,10 @@ def change_mode(mode=None, prompt=True):
      #   ]
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
           yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-
-                        xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
-                        xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
-                        xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
+                        
+                        xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
 
                         m3.yu,           float(MODEDATA['m3_yu'][mode]),
                         m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
@@ -87,9 +87,9 @@ def change_mode(mode=None, prompt=True):
      else:
           yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
 
-                        xafs_yu,         float(MODEDATA['xafs_yu'][mode]),
-                        xafs_ydo,        float(MODEDATA['xafs_ydo'][mode]),
-                        xafs_ydi,        float(MODEDATA['xafs_ydi'][mode]),
+                        xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
 
                         m3.yu,           float(MODEDATA['m3_yu'][mode]),
                         m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
@@ -106,8 +106,28 @@ def change_mode(mode=None, prompt=True):
                         m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
                         m2.ydi,          float(MODEDATA['m2_ydi'][mode]))
 
+     if mode == 'XRD':
+          BMM_log_info('Moving M2 bender to approximate XRD curvature (112239)')
+          yield from abs_set(m2_bender.kill_cmd, 1)
+          yield from bps.sleep(1.0)
+          yield from mv(m2_bender, 112239)
+     elif mode in ('A', 'B', 'C'):
+          BMM_log_info('Moving M2 bender to approximate XAS curvature (212225)')
+          yield from abs_set(m2_bender.kill_cmd, 1)
+          yield from bps.sleep(1.0)
+          yield from mv(m2_bender, 212225)
+
      yield from bps.sleep(2.0)
      yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+
+     yield from abs_set(m2_yu.kill_cmd, 1)
+     yield from abs_set(m2_ydo.kill_cmd, 1)
+     yield from abs_set(m2_ydi.kill_cmd, 1)
+
+     yield from abs_set(m3_yu.kill_cmd, 1)
+     yield from abs_set(m3_ydo.kill_cmd, 1)
+     yield from abs_set(m3_ydi.kill_cmd, 1)
+     
      BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
@@ -243,5 +263,6 @@ def change_xtals(xtal=None):
      yield from abs_set(dcm_pitch.kill_cmd, 1)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
+     close_last_plot()
      end = time.time()
      print('\n\nTime elapsed: %.1f min' % ((end-start)/60))

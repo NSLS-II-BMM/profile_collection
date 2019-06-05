@@ -23,7 +23,15 @@ def resting_state_plan():
     #yield from vor.on_plan()
     yield from abs_set(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
+def end_of_macro():
+    BMMuser.prompt = True
+    yield from quadem1.on_plan()
+    yield from vor.on_plan()
+    yield from abs_set(_locked_dwell_time, 0.5)
+    RE.msg_hook = BMM_msg_hook
 
+
+    
 def move_after_scan(thismotor):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.

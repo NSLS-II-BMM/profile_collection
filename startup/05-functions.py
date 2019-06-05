@@ -102,6 +102,8 @@ def inflect(word, number):
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
+import textwrap3
+import ansiwrap
 def boxedtext(title, text, tint, width=75):
     '''
     Put text in a lovely unicode block element box.  The top
@@ -120,16 +122,18 @@ def boxedtext(title, text, tint, width=75):
     print('')
     print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
-        add = ''
-        if line.count(color.Normal) == 1:
-            add = ' '*11
-        elif line.count(color.Normal) == 2:
-            add = ' '*22
-        elif line.count(color.Normal) == 3:
-            add = ' '*27
-        elif line.count(color.Normal) == 4:
-            add = ' '*26
-        print(''.join([colored(strut, tint), template%line, add, colored(strut, tint)]))
+        # add = ''
+        # if line.count(color.Normal) == 1:
+        #     add = ' '*11
+        # elif line.count(color.Normal) == 2:
+        #     add = ' '*22
+        # elif line.count(color.Normal) == 3:
+        #     add = ' '*27
+        # elif line.count(color.Normal) == 4:
+        #     add = ' '*26
+        thislength = width - ansiwrap.ansilen(line)
+        filltoend = ' '*thislength
+        print(''.join([colored(strut, tint), ansiwrap.fill(template%line, width), filltoend, colored(strut, tint)]))
     print(colored(''.join([ll, bar*width, lr]), tint))
 
 
