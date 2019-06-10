@@ -116,6 +116,21 @@ m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
 
 
+def kill_mirror_jacks():
+    yield from abs_set(m2_yu.kill_cmd, 1)
+    yield from sleep(1)
+    yield from abs_set(m2_ydo.kill_cmd, 1)
+    yield from sleep(1)
+    yield from abs_set(m2_ydi.kill_cmd, 1)
+    yield from sleep(1)
+
+    yield from abs_set(m3_yu.kill_cmd, 1)
+    yield from sleep(1)
+    yield from abs_set(m3_ydo.kill_cmd, 1)
+    yield from sleep(1)
+    yield from abs_set(m3_ydi.kill_cmd, 1)
+
+
 
 class XAFSTable(PseudoPositioner):
     def __init__(self, *args, mirror_length, mirror_width, **kwargs):

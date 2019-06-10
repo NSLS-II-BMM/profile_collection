@@ -793,7 +793,7 @@ def xafs(inifile, **kwargs):
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])
-                text = text + addition
+                text = text + addition.strip() + '\n'
                 if len(addition) > length: length = len(addition)
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
@@ -801,8 +801,9 @@ def xafs(inifile, **kwargs):
                 if k in ('npoints', 'dwell', 'delay', 'inttime', 'channelcut', 'bothways'):
                     continue
                 addition = '      %-13s : %-50s\n' % (k,v)
-                text = text + addition
+                text = text + addition + addition.strip() + '\n'
                 if len(addition) > length: length = len(addition)
+                if length < 75: length = 75
             boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))

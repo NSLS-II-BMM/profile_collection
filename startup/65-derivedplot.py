@@ -37,13 +37,26 @@ def handle_close(ev):
         BMMuser.ax     = None
 
 def close_last_plot():
+    '''Close the most recent plot on screen'''
     if BMMuser.fig is None:
         print('Oops... No last plot.')
         return
     if BMMuser.prev_fig is not None:
         plt.close(BMMuser.prev_fig)
+        BMMuser.all_figs.remove(BMMuser.prev_fig)
     plt.close(BMMuser.fig)
-        
+    BMMuser.all_figs.remove(BMMuser.fig)
+
+def close_all_plots():
+    '''Close all plots on screen'''
+    for fig in BMMuser.all_figs:
+        plt.close(fig)
+    BMMuser.all_figs = []
+    BMMuser.motor    = None
+    BMMuser.motor2   = None
+    BMMuser.fig      = None
+    BMMuser.ax       = None
+    
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, title=None, legend_keys=None, stream_name='primary', **kwargs):
         """
@@ -67,6 +80,7 @@ class DerivedPlot(CallbackBase):
             BMMuser.prev_ax  = BMMuser.ax
         BMMuser.ax = ax
         BMMuser.fig = fig
+        BMMuser.all_figs.append(fig)
         BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
         if xlabel is None:
             xlabel = ''

@@ -97,6 +97,7 @@ class BMM_User():
         self.y      = None
         self.prev_fig = None
         self.prev_ax  = None
+        self.all_figs = []
 
         ## scan control attributes
         self.pds_mode      = None

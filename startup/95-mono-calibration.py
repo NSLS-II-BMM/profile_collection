@@ -233,7 +233,14 @@ def calibrate_mono(mono='111'):
         text = text + "    %-2s  %9.3f  %9.3f  %9.3f\n" % (el.capitalize(), ee[i], found[i], found[i]-ee[i])
         i = i+1
     boxedtext('comparison with tabulated values', text, 'lightgray')
-
+    text = ' self.dspacing_%s = %.7f\n' % (dcm._crystal, d_spacing)
+    if dcm._crystal == '111':
+        text += ' self.offset_111 = %.7f' % (BMM_dcm.offset_111 + offset)
+        boxedtext('new values for 19-dcm-parameters.py', text, 'lightgray')
+    else:
+        text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 + offset)
+        boxedtext('new values for 19-dcm-parameters.py', text, 'lightgray')
+    
     y1 = 13.5
     y2 = 12.9
     if mono == '311':

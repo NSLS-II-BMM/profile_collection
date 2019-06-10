@@ -22,10 +22,10 @@ sd.baseline = [first_crystal.temperature, # relevant DCM temperatures
                #bpm_upstream.y,
                #bpm_downstream.x,
                #bpm_downstream.y,
-               monotc_inboard,
-               monotc_upstream_high,
-               monotc_downstream,
-               monotc_upstream_low,
+               monotc_inboard.temperature,
+               monotc_upstream_high.temperature,
+               monotc_downstream.temperature,
+               monotc_upstream_low.temperature,
 ]
 
 #################################

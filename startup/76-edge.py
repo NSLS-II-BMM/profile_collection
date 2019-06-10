@@ -252,7 +252,7 @@ def approximate_pitch(energy):
     if dcm._crystal is '111':
         m = -4.42156e-6
         b = 3.94956
-        return(m*energy + b + 0.058)
+        return(m*energy + b + 0.079)
     else:
         m = -2.79316e-06
         b = 2.32616
@@ -328,7 +328,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     if energy > 8000:
         mode = 'A' if focus else 'D'
     elif energy < 6000:
-        mode = 'B' if focus else 'F'
+        #mode = 'B' if focus else 'F'   ## mode B currently is inaccessible :(
+        mode = 'C' if focus else 'F'
     else:
         mode = 'C' if focus else 'E'
     if xrd:
@@ -351,8 +352,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         action = input("\nBegin energy change? [Y/n then Enter] ")
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
-
-    
+        if mode == 'C' and energy < 6000:
+            print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
+            action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
+            if action.lower() == 'q' or action.lower() == 'n':
+                return(yield from null())
+        
     start = time.time()
     BMM_log_info('Configuring beamline for %s edge' % el)
     ###################################
@@ -367,13 +372,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     if not calibrating and mode != current_mode:
         print('Moving to photon delivery mode %s...' % mode)
         yield from change_mode(mode=mode, prompt=False)
-    yield from abs_set(m2_yu.kill_cmd, 1)
-    yield from abs_set(m2_ydo.kill_cmd, 1)
-    yield from abs_set(m2_ydi.kill_cmd, 1)
-
-    yield from abs_set(m3_yu.kill_cmd, 1)
-    yield from abs_set(m3_ydo.kill_cmd, 1)
-    yield from abs_set(m3_ydi.kill_cmd, 1)
+    yield from kill_mirror_jacks()
+    yield from sleep(1)
 
         
     ############################
