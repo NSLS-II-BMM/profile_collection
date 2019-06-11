@@ -68,6 +68,7 @@ def report(text, level=None):
       * verbosebold (bright cyan)
       * list (cyan)
       * disconnected (purple)
+      * whisper (gray)
 
     not matching a report level will be undecorated
     '''
@@ -89,6 +90,8 @@ def report(text, level=None):
             print(disconnected_msg(text))
         elif level == 'list':
             print(list_msg(text))
+        elif level == 'whisper':
+            print(whisper(text))
         else:
             print(text)
     else:
@@ -110,9 +113,9 @@ def BMM_msg_hook(msg):
         if 'EpicsMotor' in str(type(msg[1])):
             report('Moving %s to %.3f'  % (msg[1].name, msg[2][0]))
         elif 'EpicsSignal' in str(type(msg[1])):
-            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]), 'whisper')
         elif 'LockedDwell' in str(type(msg[1])):
-            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]))
+            report('Setting %s to %.3f' % (msg[1].name, msg[2][0]), 'whisper')
         elif 'PseudoSingle' in str(type(msg[1])):
             report('Moving %s to %.3f'  % (msg[1].name, msg[2][0]))
 

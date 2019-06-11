@@ -71,7 +71,7 @@ class DCM(PseudoPositioner):
 
 
     # The real (or physical) positioners:
-    bragg  = Cpt(BraggEpicsMotor, 'Bragg}Mtr')
+    bragg  = Cpt(FMBOEpicsMotor, 'Bragg}Mtr')
     para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
     perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
     #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')

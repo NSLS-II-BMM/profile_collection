@@ -793,7 +793,7 @@ def xafs(inifile, **kwargs):
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])
-                text = text + addition.strip() + '\n'
+                text = text + addition.rstrip() + '\n'
                 if len(addition) > length: length = len(addition)
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
@@ -801,7 +801,7 @@ def xafs(inifile, **kwargs):
                 if k in ('npoints', 'dwell', 'delay', 'inttime', 'channelcut', 'bothways'):
                     continue
                 addition = '      %-13s : %-50s\n' % (k,v)
-                text = text + addition + addition.strip() + '\n'
+                text = text + addition.rstrip() + '\n'
                 if len(addition) > length: length = len(addition)
                 if length < 75: length = 75
             boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
@@ -1015,11 +1015,21 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## need to set certain metadata items on a per-scan basis... temperatures, ring stats
                 ## mono direction, ... things that can change during or between scan sequences
+                
                 md['Mono']['direction'] = 'forward'
                 if p['bothways'] and count%2 == 0:
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
+                else:
+                    ## if not measuring in both direction, lower acceleration of the mono
+                    ## for the rewind, explicitly rewind, then reset for measurement
+                    yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
+                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0], dcm_bragg.acceleration.value)))
+                    yield from mv(dcm.energy, energy_grid[0])
+                    yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
+                    print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.value))
+                    
                 rightnow = metadata_at_this_moment() # see 62-metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
                     if type(rightnow[family]) is dict:
@@ -1035,7 +1045,8 @@ def xafs(inifile, **kwargs):
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
-                if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
+                #if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
+                if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                        md={**xdi, **supplied_metadata})
                 else:
@@ -1061,10 +1072,12 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## finish up, close out
+            html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
+            yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
             yield from mv(dcm.energy, eave)
-            html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
+            yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan

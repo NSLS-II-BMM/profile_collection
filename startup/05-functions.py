@@ -68,6 +68,8 @@ def disconnected_msg(text):
     return colored(text, 'purple')
 def info_msg(text):
     return colored(text, 'brown')
+def whisper(text):
+    return colored(text, 'darkgray')
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
@@ -108,32 +110,23 @@ def boxedtext(title, text, tint, width=75):
     '''
     Put text in a lovely unicode block element box.  The top
     of the box will contain a title.  The box elements will
-    be coloreded.
+    be colored.
     '''
     remainder = width - 5 - len(title)
-    ul        = u'\u250C' # u'\u2554'
-    ur        = u'\u2510' # u'\u2557'
-    ll        = u'\u2514' # u'\u255A'
-    lr        = u'\u2518' # u'\u255D'
-    bar       = u'\u2500' # u'\u2550'
-    strut     = u'\u2502' # u'\u2551'
+    ul        = u'\u2554' # u'\u250C'
+    ur        = u'\u2557' # u'\u2510'
+    ll        = u'\u255A' # u'\u2514'
+    lr        = u'\u255D' # u'\u2518'
+    bar       = u'\u2550' # u'\u2500'
+    strut     = u'\u2551' # u'\u2502'
     template  = '%-' + str(width) + 's'
 
     print('')
     print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
-        # add = ''
-        # if line.count(color.Normal) == 1:
-        #     add = ' '*11
-        # elif line.count(color.Normal) == 2:
-        #     add = ' '*22
-        # elif line.count(color.Normal) == 3:
-        #     add = ' '*27
-        # elif line.count(color.Normal) == 4:
-        #     add = ' '*26
-        thislength = width - ansiwrap.ansilen(line)
-        filltoend = ' '*thislength
-        print(''.join([colored(strut, tint), ansiwrap.fill(template%line, width), filltoend, colored(strut, tint)]))
+        lne = line.rstrip()
+        add = ' '*(width-ansiwrap.ansilen(lne))
+        print(''.join([colored(strut, tint), lne, add, colored(strut, tint)]))
     print(colored(''.join([ll, bar*width, lr]), tint))
 
 

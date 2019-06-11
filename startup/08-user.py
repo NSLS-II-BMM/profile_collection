@@ -127,8 +127,14 @@ class BMM_User():
         self.npoints       = 0     ###########################################################################
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
         self.delay         = 0.1   ###########################################################################
-
-    def show(self):
+        
+        ## mono acceleration control
+        self.acc_fast      = 0.25  ###########################################################################
+        self.acc_slow      = 0.5   # after decreasing Bragg acceleration time, Bragg axis would occasionally #
+                                   # freeze. these are used to try to mitigate this problem                  #
+                                   ###########################################################################
+                                   
+    def show(self):                
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils', 'read_rois', 'user_is_defined', 'pds_mode'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))

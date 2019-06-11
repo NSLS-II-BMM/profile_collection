@@ -5,20 +5,103 @@ import time
 
 run_report(__file__)
 
-class BraggEpicsMotor(EpicsMotor):
+class FMBOEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')
     encoder = Cpt(EpicsSignal, '.REP')
 
+    status_list = ('MTACT', 'MLIM', 'PLIM', 'AMPEN', 'LOOPM', 'TIACT', 'INTMO',
+                   'DWPRO', 'DAERR', 'DVZER', 'ABDEC', 'UWPEN', 'UWSEN', 'ERRTAG',
+                   'SWPOC', 'ASSCS', 'FRPOS', 'HSRCH', 'SODPL', 'SOPL', 'HOCPL',
+                   'PHSRA', 'PREFE', 'TRMOV', 'IFFE', 'AMFAE', 'AMFE', 'FAFOE',
+                   'WFOER', 'INPOS')
+
+    ###################################################################
+    # this is the complete list of status signals defined in the FMBO #
+    # IOC for thier MCS8 motor controllers                            #
+    ###################################################################
+    mtact      = Cpt(EpicsSignal, '_MTACT_STS')
+    mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC')
+    mlim       = Cpt(EpicsSignal, '_MLIM_STS')
+    mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC')
+    plim       = Cpt(EpicsSignal, '_PLIM_STS')
+    plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC')
+    ampen      = Cpt(EpicsSignal, '_AMPEN_STS')
+    ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC')
+    loopm      = Cpt(EpicsSignal, '_LOOPM_STS')
+    loopm_desc = Cpt(EpicsSignal, '_LOOPM_STS.DESC')
+    tiact      = Cpt(EpicsSignal, '_TIACT_STS')
+    tiact_desc = Cpt(EpicsSignal, '_TIACT_STS.DESC')
+    intmo      = Cpt(EpicsSignal, '_INTMO_STS')
+    intmo_desc = Cpt(EpicsSignal, '_INTMO_STS.DESC')
+    dwpro      = Cpt(EpicsSignal, '_DWPRO_STS')
+    dwpro_desc = Cpt(EpicsSignal, '_DWPRO_STS.DESC')
+    daerr      = Cpt(EpicsSignal, '_DAERR_STS')
+    daerr_desc = Cpt(EpicsSignal, '_DAERR_STS.DESC')
+    dvzer      = Cpt(EpicsSignal, '_DVZER_STS')
+    dvzer_desc = Cpt(EpicsSignal, '_DVZER_STS.DESC')
+    abdec      = Cpt(EpicsSignal, '_ABDEC_STS')
+    abdec_desc = Cpt(EpicsSignal, '_ABDEC_STS.DESC')
+    uwpen      = Cpt(EpicsSignal, '_UWPEN_STS')
+    uwpen_desc = Cpt(EpicsSignal, '_UWPEN_STS.DESC')
+    uwsen      = Cpt(EpicsSignal, '_UWSEN_STS')
+    uwsen_desc = Cpt(EpicsSignal, '_UWSEN_STS.DESC')
+    errtg      = Cpt(EpicsSignal, '_ERRTG_STS')
+    errtg_desc = Cpt(EpicsSignal, '_ERRTG_STS.DESC')
+    swpoc      = Cpt(EpicsSignal, '_SWPOC_STS')
+    swpoc_desc = Cpt(EpicsSignal, '_SWPOC_STS.DESC')
+    asscs      = Cpt(EpicsSignal, '_ASSCS_STS')
+    asscs_desc = Cpt(EpicsSignal, '_ASSCS_STS.DESC')
+    frpos      = Cpt(EpicsSignal, '_FRPOS_STS')
+    frpos_desc = Cpt(EpicsSignal, '_FRPOS_STS.DESC')
+    hsrch      = Cpt(EpicsSignal, '_HSRCH_STS')
+    hsrch_desc = Cpt(EpicsSignal, '_HSRCH_STS.DESC')
+    sodpl      = Cpt(EpicsSignal, '_SODPL_STS')
+    sodpl_desc = Cpt(EpicsSignal, '_SODPL_STS.DESC')
+    sopl       = Cpt(EpicsSignal, '_SOPL_STS')
+    sopl_desc  = Cpt(EpicsSignal, '_SOPL_STS.DESC')
+    hocpl      = Cpt(EpicsSignal, '_HOCPL_STS')
+    hocpl_desc = Cpt(EpicsSignal, '_HOCPL_STS.DESC')
+    phsra      = Cpt(EpicsSignal, '_PHSRA_STS')
+    phsra_desc = Cpt(EpicsSignal, '_PHSRA_STS.DESC')
+    prefe      = Cpt(EpicsSignal, '_PREFE_STS')
+    prefe_desc = Cpt(EpicsSignal, '_PREFE_STS.DESC')
+    trmov      = Cpt(EpicsSignal, '_TRMOV_STS')
+    trmov_desc = Cpt(EpicsSignal, '_TRMOV_STS.DESC')
+    iffe       = Cpt(EpicsSignal, '_IFFE_STS')
+    iffe_desc  = Cpt(EpicsSignal, '_IFFE_STS.DESC')
+    amfae      = Cpt(EpicsSignal, '_AMFAE_STS')
+    amfae_desc = Cpt(EpicsSignal, '_AMFAE_STS.DESC')
+    amfe       = Cpt(EpicsSignal, '_AMFE_STS')
+    amfe_desc  = Cpt(EpicsSignal, '_AMFE_STS.DESC')
+    fafoe      = Cpt(EpicsSignal, '_FAFOE_STS')
+    fafoe_desc = Cpt(EpicsSignal, '_FAFOE_STS.DESC')
+    wfoer      = Cpt(EpicsSignal, '_WFOER_STS')
+    wfoer_desc = Cpt(EpicsSignal, '_WFOER_STS.DESC')
+    inpos      = Cpt(EpicsSignal, '_INPOS_STS')
+    inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC')
+
+    def status(self):
+        text = '\n  %s is %s\n\n' % (self.name, self.prefix)
+        for signal in self.read_attrs:
+            if signal.upper() not in self.status_list:
+                continue
+            suffix = getattr(self, signal).pvname.replace(self.prefix, '')
+            text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').value,
+                                                     getattr(self, signal).enum_strs[getattr(self, signal).value],
+                                                     bold_msg(getattr(self, signal).value),
+                                                     whisper(suffix))
+        boxedtext('%s status signals' % self.name, text, 'green')
+    
     def wh(self):
         return(round(self.user_readback.value, 3))
 
-class XAFSEpicsMotor(EpicsMotor):
+class XAFSEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
 
-    def wh(self):
-        return(round(self.user_readback.value, 3))
+    #def wh(self):
+    #    return(round(self.user_readback.value, 3))
 
     
 class EndStationEpicsMotor(EpicsMotor):
@@ -30,13 +113,13 @@ class EndStationEpicsMotor(EpicsMotor):
         return(round(self.user_readback.value, 3))
 
 
-class VacuumEpicsMotor(EpicsMotor):
+class VacuumEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
 
-    def wh(self):
-        return(round(self.user_readback.value, 3))
+    #def wh(self):
+    #    return(round(self.user_readback.value, 3))
 
     # def _setup_move(self, *args):
     #     self.kill_cmd.put(1)
@@ -53,13 +136,13 @@ class VacuumEpicsMotor(EpicsMotor):
 ## caput XF:06BMA-OP{Mir:M3-Ax:XU}Mtr_KILL_CMD.PROC 1
 
 ## monochromator
-dcm_bragg = BraggEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
-dcm_pitch = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
-dcm_roll  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
-dcm_perp  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
-dcm_para  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
-dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
-dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
+dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr',  name='dcm_bragg')
+dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',   name='dcm_pitch')
+dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',   name='dcm_roll')
+dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr', name='dcm_perp')
+dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr', name='dcm_para')
+dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',      name='dcm_x')
+dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',      name='dcm_y')
 
 
 dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
@@ -68,6 +151,7 @@ dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
 dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
 dcm_bragg.user_setpoint.kind = 'normal'
+dcm_bragg.acceleration.put(BMMuser.acc_fast)
 
 ## for some reason, this needs to be set explicitly
 dcm_x.hlm.value = 68
