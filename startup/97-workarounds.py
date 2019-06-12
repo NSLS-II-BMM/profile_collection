@@ -8,7 +8,7 @@ def mvbct(target=None):
     '''
     if target is None:
         target = dm3_bct.user_readback.value
-    yield from abs_set(dm3_bct.kill_cmd, 1)
+    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
     yield from mv(dm3_bct, target)
 
 def mvrbct(target=None):
@@ -17,7 +17,7 @@ def mvrbct(target=None):
     '''
     if target is None:
         target = 0
-    yield from abs_set(dm3_bct.kill_cmd, 1)
+    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
     yield from mvr(dm3_bct, target)
 
 
@@ -27,7 +27,7 @@ def mvbender(target=None):
     '''
     if target is None:
         target = dm3_bct.user_readback.value
-    yield from abs_set(m2_bender.kill_cmd, 1)
+    yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
     yield from mv(m2_bender, target)
 
 def mvrbender(target=None):
@@ -36,6 +36,6 @@ def mvrbender(target=None):
     '''
     if target is None:
         target = 0
-    yield from abs_set(m2_bender.kill_cmd, 1)
+    yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
     yield from mvr(m2_bender, target)
     

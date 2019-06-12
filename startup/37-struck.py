@@ -259,10 +259,10 @@ class BMMVortex(EpicsScaler):
         self.state.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.state, 1)
+        yield from abs_set(self.state, 1, wait=True)
 
     def off_plan(self):
-        yield from abs_set(self.state, 0)
+        yield from abs_set(self.state, 0, wait=True)
 
     def channel_names(self):
         self.names.name3.put('ROI1')
@@ -464,10 +464,10 @@ class GonioStruck(EpicsScaler):
         self.state.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.state, 1)
+        yield from abs_set(self.state, 1, wait=True)
 
     def off_plan(self):
-        yield from abs_set(self.state, 0)
+        yield from abs_set(self.state, 0, wait=True)
 
 
 

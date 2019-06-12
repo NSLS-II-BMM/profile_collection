@@ -67,12 +67,12 @@ class BMMQuadEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.acquire, 1)
-        yield from abs_set(self.acquire_mode, 0)
+        yield from abs_set(self.acquire, 1, wait=True)
+        yield from abs_set(self.acquire_mode, 0, wait=True)
 
     def off_plan(self):
-        yield from abs_set(self.acquire, 0)
-        yield from abs_set(self.acquire_mode, 2)
+        yield from abs_set(self.acquire, 0, wait=True)
+        yield from abs_set(self.acquire_mode, 2, wait=True)
 
 
         

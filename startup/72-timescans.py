@@ -51,7 +51,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         yield from null()
         return
 
-    yield from abs_set(_locked_dwell_time, dwell)
+    yield from abs_set(_locked_dwell_time, dwell, wait=True)
     dets  = [quadem1,]
     denominator = ''
 
@@ -107,7 +107,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
                  (line1, db[-1].start['uid'], db[-1].start['scan_id']))
     if os.path.isfile(dotfile): os.remove(dotfile)
 
-    yield from abs_set(_locked_dwell_time, 0.5)
+    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     RE.msg_hook = BMM_msg_hook
 
 

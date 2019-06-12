@@ -59,10 +59,10 @@ def change_mode(mode=None, prompt=True):
           
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
-     yield from abs_set(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
-                                            # starting a move, it is one of the
-                                            # motors that reports MOVN=1 even when
-                                            # still
+     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True) # need to explicitly kill this before
+                                                        # starting a move, it is one of the
+                                                        # motors that reports MOVN=1 even when
+                                                        # still
 
      #base = [
      #   ]
@@ -108,25 +108,25 @@ def change_mode(mode=None, prompt=True):
 
      if mode == 'XRD':
           BMM_log_info('Moving M2 bender to approximate XRD curvature (112239)')
-          yield from abs_set(m2_bender.kill_cmd, 1)
+          yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
           yield from bps.sleep(1.0)
           yield from mv(m2_bender, 112239)
      elif mode in ('A', 'B', 'C'):
           BMM_log_info('Moving M2 bender to approximate XAS curvature (212225)')
-          yield from abs_set(m2_bender.kill_cmd, 1)
+          yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
           yield from bps.sleep(1.0)
           yield from mv(m2_bender, 212225)
 
      yield from bps.sleep(2.0)
-     yield from abs_set(dm3_bct.kill_cmd, 1) # and after
+     yield from abs_set(dm3_bct.kill_cmd, 1) # and afte, wait=Truer
 
-     yield from abs_set(m2_yu.kill_cmd, 1)
-     yield from abs_set(m2_ydo.kill_cmd, 1)
-     yield from abs_set(m2_ydi.kill_cmd, 1)
+     yield from abs_set(m2_yu.kill_cmd,  1, wait=True)
+     yield from abs_set(m2_ydo.kill_cmd, 1, wait=True)
+     yield from abs_set(m2_ydi.kill_cmd, 1, wait=True)
 
-     yield from abs_set(m3_yu.kill_cmd, 1)
-     yield from abs_set(m3_ydo.kill_cmd, 1)
-     yield from abs_set(m3_ydi.kill_cmd, 1)
+     yield from abs_set(m3_yu.kill_cmd,  1, wait=True)
+     yield from abs_set(m3_ydo.kill_cmd, 1, wait=True)
+     yield from abs_set(m3_ydi.kill_cmd, 1, wait=True)
      
      BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook
@@ -232,8 +232,8 @@ def change_xtals(xtal=None):
 
      RE.msg_hook = None
      BMM_log_info('Moving to the %s crystals' % xtal)
-     yield from abs_set(dcm_pitch.kill_cmd, 1)
-     yield from abs_set(dcm_roll.kill_cmd, 1)
+     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+     yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
      if xtal is 'Si(111)':
           yield from mv(dcm_pitch, 3.8698,
                         dcm_roll, -6.26,
@@ -248,19 +248,19 @@ def change_xtals(xtal=None):
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
      yield from bps.sleep(2.0)
-     yield from abs_set(dcm_roll.kill_cmd, 1)
+     yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
      print('Returning to %.1f eV' % current_energy)
      yield from mv(dcm.energy, current_energy)
 
      print('Performing a rocking curve scan')
-     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      yield from mv(dcm_pitch, approximate_pitch(current_energy))
      yield from bps.sleep(1)
-     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      yield from rocking_curve()
      yield from bps.sleep(2.0)
-     yield from abs_set(dcm_pitch.kill_cmd, 1)
+     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      close_last_plot()

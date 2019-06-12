@@ -146,11 +146,11 @@ class Spinner(Device):
 
     def on_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 1)
+        yield from abs_set(self.state, 1, wait=True)
 
     def off_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 0)
+        yield from abs_set(self.state, 0, wait=True)
 
 
 fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')

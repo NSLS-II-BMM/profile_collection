@@ -21,13 +21,13 @@ def resting_state_plan():
     #BMMuser.prompt = True
     #yield from quadem1.on_plan()
     #yield from vor.on_plan()
-    yield from abs_set(_locked_dwell_time, 0.5)
+    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     RE.msg_hook = BMM_msg_hook
 def end_of_macro():
     BMMuser.prompt = True
     yield from quadem1.on_plan()
     yield from vor.on_plan()
-    yield from abs_set(_locked_dwell_time, 0.5)
+    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     RE.msg_hook = BMM_msg_hook
 
 
@@ -100,9 +100,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
         @subs_decorator(plot)
         def scan_slit():
 
-            yield from abs_set(quadem1.averaging_time, 0.1)
-            yield from abs_set(motor.velocity, 0.6)
-            yield from abs_set(motor.kill_cmd, 1)
+            yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
+            yield from abs_set(motor.velocity, 0.6, wait=True)
+            yield from abs_set(motor.kill_cmd, 1, wait=True)
 
             yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
@@ -116,7 +116,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
                 top = t[motor.name][position]
                 
                 yield from bps.sleep(sleep)
-                yield from abs_set(motor.kill_cmd, 1)
+                yield from abs_set(motor.kill_cmd, 1, wait=True)
                 yield from mv(motor, top)
 
             else:
@@ -124,15 +124,15 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from bps.sleep(sleep)
-                yield from abs_set(motor.kill_cmd, 1)
+                yield from abs_set(motor.kill_cmd, 1, wait=True)
                 yield from move_after_scan(dm3_bct)
-            yield from abs_set(quadem1.averaging_time, 0.5)
+            yield from abs_set(quadem1.averaging_time, 0.5, wait=True)
         yield from scan_slit()
 
     def cleanup_plan():
-        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from abs_set(_locked_dwell_time, 0.5, wait=True)
         yield from bps.sleep(sleep)
-        yield from abs_set(motor.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1, wait=True)
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
@@ -187,8 +187,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.value)
 
-            yield from abs_set(_locked_dwell_time, 0.1)
-            yield from abs_set(motor.kill_cmd, 1)
+            yield from abs_set(_locked_dwell_time, 0.1, wait=True)
+            yield from abs_set(motor.kill_cmd, 1, wait=True)
 
             yield from mv(slits3.vsize, 3)
             if sgnl == 'Bicron':
@@ -208,7 +208,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             top = t[motor.name][position]
 
             yield from bps.sleep(3.0)
-            yield from abs_set(motor.kill_cmd, 1)
+            yield from abs_set(motor.kill_cmd, 1, wait=True)
             RE.msg_hook = BMM_msg_hook
 
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
@@ -220,9 +220,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
 
     def cleanup_plan():
         yield from mv(slits3.vsize, slit_height)
-        yield from abs_set(_locked_dwell_time, 0.5)
+        yield from abs_set(_locked_dwell_time, 0.5, wait=True)
         yield from bps.sleep(1.0)
-        yield from abs_set(motor.kill_cmd, 1)
+        yield from abs_set(motor.kill_cmd, 1, wait=True)
         yield from bps.sleep(1.0)
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
@@ -323,7 +323,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
             yield from null()
             return
 
-        yield from abs_set(_locked_dwell_time, 0.1)
+        yield from abs_set(_locked_dwell_time, 0.1, wait=True)
         dets  = [quadem1,]
         denominator = ''
         detname = ''

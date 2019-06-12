@@ -380,10 +380,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     # run a rocking curve scan #
     ############################
     print('Optimizing rocking curve...')
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
+    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from sleep(1)
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
+    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from rocking_curve()
     close_last_plot()
     

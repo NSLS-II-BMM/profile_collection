@@ -117,18 +117,14 @@ m3.yaw._limits      = (-1, 1)
 
 
 def kill_mirror_jacks():
-    yield from abs_set(m2_yu.kill_cmd, 1)
-    yield from sleep(1)
-    yield from abs_set(m2_ydo.kill_cmd, 1)
-    yield from sleep(1)
-    yield from abs_set(m2_ydi.kill_cmd, 1)
-    yield from sleep(1)
+    yield from abs_set(m2_yu.kill_cmd,  1, wait=True)
+    #yield from sleep(1)
+    yield from abs_set(m2_ydo.kill_cmd, 1, wait=True)
+    yield from abs_set(m2_ydi.kill_cmd, 1, wait=True)
 
-    yield from abs_set(m3_yu.kill_cmd, 1)
-    yield from sleep(1)
-    yield from abs_set(m3_ydo.kill_cmd, 1)
-    yield from sleep(1)
-    yield from abs_set(m3_ydi.kill_cmd, 1)
+    yield from abs_set(m3_yu.kill_cmd,  1, wait=True)
+    yield from abs_set(m3_ydo.kill_cmd, 1, wait=True)
+    yield from abs_set(m3_ydi.kill_cmd, 1, wait=True)
 
 
 

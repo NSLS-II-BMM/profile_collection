@@ -15,10 +15,10 @@ def tune_plan(step=0):
     '''
     Tune 2nd crystal pitch from a plan.  Argument is a value for the step, so a relative motion.
     '''
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
+    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from mvr(dcm_pitch, step)
     yield from bps.sleep(1.0)
-    yield from abs_set(dcm_pitch.kill_cmd, 1)
+    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
 def tune_up():
     yield from tune_plan(step=TUNE_STEP)
 def tune_down():
@@ -40,24 +40,24 @@ def td():
 def tweak_bct(step):
     if step is None:
         step = 0
-    yield from abs_set(dm3_bct.kill_cmd,1)
+    yield from abs_set(dm3_bct.kill_cmd,1, wait=True)
     print('Moving from %.4f to %.4f' % (dm3_bct.user_readback.value, dm3_bct.user_readback.value + step))
     yield from mvr(dm3_bct, step)
     time.sleep(3.0)
-    yield from abs_set(dm3_bct.kill_cmd,1)
+    yield from abs_set(dm3_bct.kill_cmd,1, wait=True)
 
 
 
 def kmv(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
-            yield from abs_set(m.kill_cmd, 1)
+            yield from abs_set(m.kill_cmd, 1, wait=True)
     yield from mv(*args)
 
 def kmvr(*args):
     for m in args[0::2]:
         if 'Vacuum' in str(type(m)):
-            yield from abs_set(m.kill_cmd, 1)
+            yield from abs_set(m.kill_cmd, 1, wait=True)
     yield from mvr(*args)
 
 
@@ -72,5 +72,5 @@ def set_integration_plan(time=0.5):
     '''
     set integration times for electrometer and Struck from a plan
     '''
-    yield from abs_set(vor.auto_count_time, time)
-    yield from abs_set(quadem1.averaging_time, time)
+    yield from abs_set(vor.auto_count_time, time, wait=True)
+    yield from abs_set(quadem1.averaging_time, time, wait=True)

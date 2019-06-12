@@ -83,7 +83,7 @@ def areascan(detector,
             fast = motor_nicknames[fast]
 
         detector = detector.capitalize()
-        yield from abs_set(_locked_dwell_time, dwell)
+        yield from abs_set(_locked_dwell_time, dwell, wait=True)
         dets = [quadem1,]
         if detector == 'If':
             dets.append(vor)

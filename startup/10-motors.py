@@ -104,15 +104,6 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
     #    return(round(self.user_readback.value, 3))
 
     
-class EndStationEpicsMotor(EpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, ':KILL')
-
-    def wh(self):
-        return(round(self.user_readback.value, 3))
-
-
 class VacuumEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
@@ -125,7 +116,6 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
     #     self.kill_cmd.put(1)
     #     super()._setup_move(*args)
         
-    
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
         ## tack on instructions for killing the motor after movement
@@ -133,7 +123,14 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
         time.sleep(0.05)
         self.kill_cmd.put(1)
 
-## caput XF:06BMA-OP{Mir:M3-Ax:XU}Mtr_KILL_CMD.PROC 1
+class EndStationEpicsMotor(EpicsMotor):
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, ':KILL')
+
+    def wh(self):
+        return(round(self.user_readback.value, 3))
+
 
 ## monochromator
 dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr',  name='dcm_bragg')
@@ -173,16 +170,16 @@ m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
 m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
 
 ## front end slits
-fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr', name='fe_slits_horizontal1')
-fe_slits_incline1    = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Inc}Mtr', name='fe_slits_incline1')
-fe_slits_o           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:O}Mtr',   name='fe_slits_o')
-fe_slits_t           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:T}Mtr',   name='fe_slits_t')
-fe_slits_horizontal2 = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Hrz}Mtr', name='fe_slits_horizontal2')
-fe_slits_incline2    = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Inc}Mtr', name='fe_slits_incline2')
-fe_slits_i           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:I}Mtr',   name='fe_slits_i')
-fe_slits_b           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:B}Mtr',   name='fe_slits_b')
-fe_slits_hsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}size', name='fe_slits_hsize')
-fe_slits_vsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}size', name='fe_slits_vsize')
+fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr',      name='fe_slits_horizontal1')
+fe_slits_incline1    = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Inc}Mtr',      name='fe_slits_incline1')
+fe_slits_o           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:O}Mtr',        name='fe_slits_o')
+fe_slits_t           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:T}Mtr',        name='fe_slits_t')
+fe_slits_horizontal2 = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Hrz}Mtr',      name='fe_slits_horizontal2')
+fe_slits_incline2    = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Inc}Mtr',      name='fe_slits_incline2')
+fe_slits_i           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:I}Mtr',        name='fe_slits_i')
+fe_slits_b           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:B}Mtr',        name='fe_slits_b')
+fe_slits_hsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}size',   name='fe_slits_hsize')
+fe_slits_vsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}size',   name='fe_slits_vsize')
 fe_slits_hcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}center', name='fe_slits_hcenter')
 fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_slits_vcenter')
 
@@ -191,10 +188,10 @@ dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters
 dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
 
 ## DM2
-dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr', name='dm2_slits_o')
-dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr', name='dm2_slits_i')
-dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr', name='dm2_slits_o')
-dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr', name='dm2_slits_b')
+dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
+dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr',  name='dm2_slits_i')
+dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
+dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
 dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 
 ## DM3
@@ -219,7 +216,7 @@ xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd
 
 
 ## XAFS stages
-xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_rotb')
+xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
 xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
@@ -229,7 +226,6 @@ xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_wheel  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.user_offset.put(-31.532)
 
 xafs_ref.llm.value = -95

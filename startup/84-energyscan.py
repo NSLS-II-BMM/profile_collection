@@ -1107,8 +1107,8 @@ def xafs(inifile, **kwargs):
         dcm.mode = 'fixed'
         yield from resting_state_plan()
         yield from bps.sleep(2.0)
-        yield from abs_set(dcm_pitch.kill_cmd, 1)
-        yield from abs_set(dcm_roll.kill_cmd, 1)
+        yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+        yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
