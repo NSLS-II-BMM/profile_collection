@@ -15,7 +15,7 @@ if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 
 
-def change_mode(mode=None, prompt=True):
+def change_mode(mode=None, prompt=True, edge=None, reference=None):
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -64,47 +64,71 @@ def change_mode(mode=None, prompt=True):
                                                         # motors that reports MOVN=1 even when
                                                         # still
 
-     #base = [
-     #   ]
-     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
-          yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
                         
-                        xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
+             xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+             xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+             xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
 
-                        m3.yu,           float(MODEDATA['m3_yu'][mode]),
-                        m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-                        m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-                        m3.xu,           float(MODEDATA['m3_xu'][mode]),
-                        m3.xd,           float(MODEDATA['m3_xd'][mode]),
-          
-                        #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-                        #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-                        #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-                        #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
-          )
+             m3.yu,           float(MODEDATA['m3_yu'][mode]),
+             m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+             m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+             m3.xu,           float(MODEDATA['m3_xu'][mode]),
+             m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
+     if reference is not None:
+          base.extend([xafs_ref, foils.position(reference)])
+     if edge is not None:
+          base.extend([dcm.energy, edge])
+
+     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
+          yield from mv(*base)
      else:
-          yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+          yield from mv(*base,
+                        m2.yu,  float(MODEDATA['m2_yu'][mode]),
+                        m2.ydo, float(MODEDATA['m2_ydo'][mode]),
+                        m2.ydi, float(MODEDATA['m2_ydi'][mode]))
 
-                        xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
 
-                        m3.yu,           float(MODEDATA['m3_yu'][mode]),
-                        m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-                        m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-                        m3.xu,           float(MODEDATA['m3_xu'][mode]),
-                        m3.xd,           float(MODEDATA['m3_xd'][mode]),
+
+
           
-                        #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-                        #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-                        #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-                        #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]),
+          # yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+                        
+          #               xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+          #               xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+          #               xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
+
+          #               m3.yu,           float(MODEDATA['m3_yu'][mode]),
+          #               m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+          #               m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+          #               m3.xu,           float(MODEDATA['m3_xu'][mode]),
+          #               m3.xd,           float(MODEDATA['m3_xd'][mode]),
           
-                        m2.yu,           float(MODEDATA['m2_yu'][mode]),
-                        m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
-                        m2.ydi,          float(MODEDATA['m2_ydi'][mode]))
+          #               #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+          #               #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+          #               #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+          #               #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
+          # )
+               # dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+
+               #          xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+               #          xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+               #          xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
+
+               #          m3.yu,           float(MODEDATA['m3_yu'][mode]),
+               #          m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+               #          m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+               #          m3.xu,           float(MODEDATA['m3_xu'][mode]),
+               #          m3.xd,           float(MODEDATA['m3_xd'][mode]),
+          
+               #          #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
+               #          #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
+               #          #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
+               #          #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]),
+          
+               #          m2.yu,           float(MODEDATA['m2_yu'][mode]),
+               #          m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
+               #          m2.ydi,          float(MODEDATA['m2_ydi'][mode]))
 
      if mode == 'XRD':
           BMM_log_info('Moving M2 bender to approximate XRD curvature (112239)')

@@ -77,6 +77,8 @@ class ReferenceFoils():
         
     def position(self, i):
         '''Return the xafs_ref position corresponding to slot i where i ∈ (0 .. 4)'''
+        if type(i) is str and i in foils.slots:
+            i=foils.slots.index(i.capitalize())
         if type(i) is not int: return xafs_ref.user_readback.value # so it doesn't move...
         if i > 4:        return 90
         if i < 0:        return -90
@@ -250,20 +252,20 @@ if BMMuser.read_rois is not None:
     
 def approximate_pitch(energy):
     if dcm._crystal is '111':
-        m = -4.42156e-6
-        b = 3.94956
-        return(m*energy + b + 0.079)
+        m = -4.33811e-06
+        b = 4.02904
+        return(m*energy + b)
     else:
-        m = -2.79316e-06
-        b = 2.32616
-        return(m*energy + b + 0.034)
+        m = -2.87423e-06
+        b = 2.40242
+        return(m*energy + b)
         
 
 def show_edges():
     text = foils.show() + '\n' + rois.show()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=55)
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=False, target=300., xrd=False):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False):
     '''Change edge energy by:
        1. Moving the DCM above the edge energy
        2. Moving the photon delivery system to the correct mode
@@ -277,7 +279,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
        edge:   (string) edge symbol                            ['K']
        energy: (float) e0 value                                [None, determined from el/edge]
        slits:  (Boolean) perform slit_height() scan            [False]
-       calibrating: (Boolean) skip change_mode() plan          [False]
        target: (float) energy where rocking curve is measured  [300]
        xrd:    (Boolean) force photon delivery system to XRD   [False]
 
@@ -338,9 +339,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         target = 0.0
     current_mode = get_mode()
 
-    #########################
-    # confirm energy change #
-    #########################
+    ################################
+    # confirm configuration change #
+    ################################
     print(bold_msg('\nEnergy change:'))
     print('   %s: %s %s' % (list_msg('edge'),                    el.capitalize(), edge.capitalize()))
     print('   %s: %.1f'  % (list_msg('edge energy'),             energy))
@@ -363,15 +364,17 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
     ###################################
     # move the DCM to target eV above #
     ###################################
-    print('Moving mono to energy %.1f eV...' % (energy+target))
-    yield from mv(dcm.energy, energy+target)
+    # print('Moving mono to energy %.1f eV...' % (energy+target))
+    # yield from mv(dcm.energy, energy+target)
 
-    ##############################################
-    # change to the correct photon delivery mode #
-    ##############################################
-    if not calibrating and mode != current_mode:
-        print('Moving to photon delivery mode %s...' % mode)
-        yield from change_mode(mode=mode, prompt=False)
+    ################################################
+    # change to the correct photon delivery mode   #
+    #      + move mono to correct energy           #
+    #      + move reference holder to correct slot #
+    ################################################
+    # if not calibrating and mode != current_mode:
+    #     print('Moving to photon delivery mode %s...' % mode)
+    yield from change_mode(mode=mode, prompt=False, edge=energy, reference=el)
     yield from kill_mirror_jacks()
     yield from sleep(1)
 
@@ -396,12 +399,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, calibrating=
         close_last_plot()
         ## redo rocking curve?
 
-    ########################################################
-    # move to the correct reference slot & set roi channel #
-    ########################################################
+    ###################
+    # set roi channel #
+    ###################
     if not xrd:
         print('Moving reference foil...')
-        yield from foils.move(el)
+        #yield from foils.move(el)
         yield from rois.select(el)
         show_edges()
     

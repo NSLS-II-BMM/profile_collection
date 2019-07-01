@@ -16,7 +16,7 @@ run_report(__file__)
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 0.7
+CS_MULTIPLIER = 0.82
 ######################################################################
 ## replacing this with BMMuser, see 74-modes.py
 # CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #
@@ -484,7 +484,7 @@ def ini_sanity(found):
     '''Very simple sanity checking of the scan control file.'''
     ok = True
     missing = []
-    for a in ('bounds', 'steps', 'times', 'e0', 'element', 'edge', 'folder', 'filename', 'nscans', 'start'):
+    for a in ('bounds', 'steps', 'times', 'e0', 'element', 'edge', 'filename', 'nscans', 'start'):
         if found[a] is False:
             ok = False
             missing.append(a)
@@ -1142,9 +1142,25 @@ def howlong(inifile, interactive=True, **kwargs):
         return(orig, -1)
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
-    text +='The sequence of %s will take about %s' % (inflect('scan', p['nscans']),
-                                                    inflect('hour', int(approx_time * int(p['nscans'])/60)))
+    text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
+                                                      #inflect('hour', int(approx_time * int(p['nscans'])/60)))
     if interactive:
+        length = 0
+        bt = '\n'
+        for k in ('bounds', 'bounds_given', 'steps', 'times'):
+            addition = '      %-13s : %-50s\n' % (k,p[k])
+            bt = bt + addition.rstrip() + '\n'
+            if len(addition) > length: length = len(addition)
+        for (k,v) in p.items():
+            if k in ('bounds', 'bounds_given', 'steps', 'times'):
+                continue
+            if k in ('npoints', 'dwell', 'delay', 'inttime', 'channelcut', 'bothways'):
+                continue
+            addition = '      %-13s : %-50s\n' % (k,v)
+            bt = bt + addition.rstrip() + '\n'
+            if len(addition) > length: length = len(addition)
+            if length < 75: length = 75
+        boxedtext('Control file contents', bt, 'cyan', width=length+4) # see 05-functions
         print(text)
     else:
         return(inifile, text)

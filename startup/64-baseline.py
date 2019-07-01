@@ -14,7 +14,7 @@ sd.baseline = [first_crystal.temperature, # relevant DCM temperatures
                xafs_pitch,
                xafs_roll,
                xafs_roth,
-               xafs_rotb,
+               xafs_wheel,
                xafs_rots,
                dm3_bct,
                #ring.current,              # ring current

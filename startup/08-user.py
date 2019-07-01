@@ -97,7 +97,7 @@ class BMM_User():
         self.y      = None
         self.prev_fig = None
         self.prev_ax  = None
-        self.all_figs = []
+        #self.all_figs = []
 
         ## scan control attributes
         self.pds_mode      = None
@@ -187,6 +187,7 @@ class BMM_User():
         global DATA
         DATA = folder + '/'
         self.DATA = folder + '/'
+        self.folder = folder + '/'
         step += 1
 
         ## setup logger
