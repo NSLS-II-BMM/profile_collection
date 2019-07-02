@@ -80,6 +80,9 @@ class FMBOEpicsMotor(EpicsMotor):
     inpos      = Cpt(EpicsSignal, '_INPOS_STS')
     inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC')
 
+    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC')
+    hvel_mon    = Cpt(EpicsSignal, '_HVEL_MON')
+
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
         for signal in self.read_attrs:
@@ -91,7 +94,13 @@ class FMBOEpicsMotor(EpicsMotor):
                                                      bold_msg(getattr(self, signal).value),
                                                      whisper(suffix))
         boxedtext('%s status signals' % self.name, text, 'green')
-    
+
+    def home(self):
+        action = input("\nBegin homing %s? [Y/n then Enter] " % self.name)
+        if action.lower() == 'q' or action.lower() == 'n':
+            return
+        self.home_signal.put(1)
+        
     def wh(self):
         return(round(self.user_readback.value, 3))
 
@@ -153,8 +162,11 @@ dcm_bragg.acceleration.put(BMMuser.acc_fast)
 ## for some reason, this needs to be set explicitly
 dcm_x.hlm.value = 68
 dcm_x.llm.value = 0
+dcm_x.velocity.put(0.6)
 
+## this is about as fast as this motor can go, 1.25 results in a following error
 dcm_para.velocity.put(1.0)
+dcm_para.hvel_mon.value = 1.0
 
 ## collimating mirror
 m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
