@@ -154,6 +154,8 @@ dcm_bragg.acceleration.put(BMMuser.acc_fast)
 dcm_x.hlm.value = 68
 dcm_x.llm.value = 0
 
+dcm_para.velocity.put(1.0)
+
 ## collimating mirror
 m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
 m1_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
