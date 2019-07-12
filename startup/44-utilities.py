@@ -157,9 +157,9 @@ class GateValve(Device):
             return error_msg('closed')
         return('open  ')
 
-gv = [GateValve('FE:C06B-VA{GV:1}',     name='FEGV1'),
-      GateValve('FE:C06B-VA{GV:3}',     name='FEGV3'),
-      GateValve('FE:C06B-VA{GV:2}',     name='FEGV2'),
+gv = [GateValve('FE:C06B-VA{GV:1}',        name='FEGV1'),
+      GateValve('FE:C06B-VA{GV:3}',        name='FEGV3'),
+      GateValve('FE:C06B-VA{GV:2}',        name='FEGV2'),
       GateValve('XF:06BMA-VA{FS:1-GV:1}',  name='GV1'),
       GateValve('XF:06BMA-VA{BS:PB-GV:1}', name='GV2'),
       GateValve('XF:06BMA-VA{FS:2-GV:1}',  name='GV3'),
@@ -174,7 +174,14 @@ def show_gate_valves():
     for g in gv:
         print('  %-6s     %s' % (g.name, g._state()))
 
+def open_valve(num):
+    which = num + 2
+    gv[which].open()
 
+def close_valve(num):
+    which = num + 2
+    gv[which].close()
+    
 #############################################################
 # thermocouples on photon delivery system, read through EPS #
 #############################################################

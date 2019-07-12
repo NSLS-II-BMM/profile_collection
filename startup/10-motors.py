@@ -142,13 +142,13 @@ class EndStationEpicsMotor(EpicsMotor):
 
 
 ## monochromator
-dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr',  name='dcm_bragg')
-dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',   name='dcm_pitch')
-dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',   name='dcm_roll')
-dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr', name='dcm_perp')
-dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr', name='dcm_para')
-dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',      name='dcm_x')
-dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',      name='dcm_y')
+dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
+dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
+dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
+dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
+dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
+dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
+dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
 
 
 dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
@@ -219,6 +219,8 @@ dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',    name='dm3_slits_t'
 dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',    name='dm3_slits_b')
 
 dm3_fs.llm.value = -65
+dm3_bct.acceleration.put(0.25)
+
 
 ## XAFS table
 xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')

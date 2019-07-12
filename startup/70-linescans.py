@@ -66,7 +66,7 @@ def com(signal):
     center of rocking curve and slit height scans.'''
     return int(center_of_mass(signal)[0])
 
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=1.0):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -81,9 +81,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
 
     '''
 
-    def main_plan(start, stop, nsteps, move):
+    def main_plan(start, stop, nsteps, move, force):
         (ok, text) = BMM_clear_to_start()
-        if ok is False:
+        if force is False and ok is False:
             print(error_msg(text))
             yield from null()
             return
@@ -139,7 +139,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, sleep=1.0):
     motor = dm3_bct
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move), cleanup_plan())
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move, force), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 
