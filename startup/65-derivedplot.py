@@ -115,7 +115,7 @@ class DerivedPlot(CallbackBase):
         self.current_line, = self.ax.plot([], [], **kwargs)
         self.lines.append(self.current_line)
         self.legend = self.ax.legend(
-            loc=0, title=self.legend_title).draggable()
+            loc=0, title=self.legend_title).set_draggable(True)
         super().start(doc)
         
     def descriptor(self, doc):
