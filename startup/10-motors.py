@@ -219,6 +219,7 @@ dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',    name='dm3_slits_t'
 dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',    name='dm3_slits_b')
 
 dm3_fs.llm.value = -65
+dm3_bct.velocity.put(0.4)
 dm3_bct.acceleration.put(0.25)
 
 

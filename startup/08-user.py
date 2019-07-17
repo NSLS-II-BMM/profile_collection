@@ -57,7 +57,7 @@ class BMM_User():
     Single energy time scan attributes, default values
       * npoints:          number of time points
       * dwell:            dwell time at each time step
-     * delay:            delay between time steps
+      * delay:            delay between time steps
 
     Methods for public use:
       * start_experiment(self, name=None, date=None, gup=0, saf=0)
@@ -133,7 +133,12 @@ class BMM_User():
         self.acc_slow      = 0.5   # after decreasing Bragg acceleration time, Bragg axis would occasionally #
                                    # freeze. these are used to try to mitigate this problem                  #
                                    ###########################################################################
-                                   
+        
+        self.bender_xas    = 212225  #####################################################################
+        self.bender_xrd    = 112239  # approximate values for M2 bender for focusing at XAS & XRD tables #
+        self.bender_mergin = 30000   #####################################################################
+
+                                     
     def show(self):                
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils', 'read_rois', 'user_is_defined', 'pds_mode'):

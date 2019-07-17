@@ -15,7 +15,7 @@ if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 
 
-def change_mode(mode=None, prompt=True, edge=None, reference=None):
+def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -80,9 +80,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None):
      if edge is not None:
           base.extend([dcm.energy, edge])
 
+
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
           yield from mv(*base)
      else:
+          if bender is True:
+               yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
+               if mode == 'XRD':
+                    if abs(m2_bender.user_readback.value - BMMuser.bender_xrd) > BMMuser.bender_mergin: # give some wiggle room for having
+                         base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
+               elif mode in ('A', 'B', 'C'):
+                    if abs(m2_bender.user_readback.value - BMMuser.bender_xas) > BMMuser.bender_mergin:
+                         base.extend([m2_bender, BMMuser.bender_xas])
           yield from mv(*base,
                         m2.yu,  float(MODEDATA['m2_yu'][mode]),
                         m2.ydo, float(MODEDATA['m2_ydo'][mode]),
@@ -130,27 +139,17 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None):
                #          m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
                #          m2.ydi,          float(MODEDATA['m2_ydi'][mode]))
 
-     if mode == 'XRD':
-          BMM_log_info('Moving M2 bender to approximate XRD curvature (112239)')
-          yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
-          yield from bps.sleep(1.0)
-          yield from mv(m2_bender, 112239)
-     elif mode in ('A', 'B', 'C'):
-          BMM_log_info('Moving M2 bender to approximate XAS curvature (212225)')
-          yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
-          yield from bps.sleep(1.0)
-          yield from mv(m2_bender, 212225)
-
      yield from bps.sleep(2.0)
-     yield from abs_set(dm3_bct.kill_cmd, 1) # and afte, wait=Truer
+     yield from abs_set(dm3_bct.kill_cmd,   1) # and afte, wait=Truer
 
-     yield from abs_set(m2_yu.kill_cmd,  1, wait=True)
-     yield from abs_set(m2_ydo.kill_cmd, 1, wait=True)
-     yield from abs_set(m2_ydi.kill_cmd, 1, wait=True)
+     yield from abs_set(m2_yu.kill_cmd,     1, wait=True)
+     yield from abs_set(m2_ydo.kill_cmd,    1, wait=True)
+     yield from abs_set(m2_ydi.kill_cmd,    1, wait=True)
+     yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
 
-     yield from abs_set(m3_yu.kill_cmd,  1, wait=True)
-     yield from abs_set(m3_ydo.kill_cmd, 1, wait=True)
-     yield from abs_set(m3_ydi.kill_cmd, 1, wait=True)
+     yield from abs_set(m3_yu.kill_cmd,     1, wait=True)
+     yield from abs_set(m3_ydo.kill_cmd,    1, wait=True)
+     yield from abs_set(m3_ydi.kill_cmd,    1, wait=True)
      
      BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook
