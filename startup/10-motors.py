@@ -141,6 +141,36 @@ class EndStationEpicsMotor(EpicsMotor):
         return(round(self.user_readback.value, 3))
 
 
+mcs8_motors = list()
+
+## front end slits
+fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr',      name='fe_slits_horizontal1')
+fe_slits_incline1    = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Inc}Mtr',      name='fe_slits_incline1')
+fe_slits_o           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:O}Mtr',        name='fe_slits_o')
+fe_slits_t           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:T}Mtr',        name='fe_slits_t')
+fe_slits_horizontal2 = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Hrz}Mtr',      name='fe_slits_horizontal2')
+fe_slits_incline2    = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Inc}Mtr',      name='fe_slits_incline2')
+fe_slits_i           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:I}Mtr',        name='fe_slits_i')
+fe_slits_b           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:B}Mtr',        name='fe_slits_b')
+fe_slits_hsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}size',   name='fe_slits_hsize')
+fe_slits_vsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}size',   name='fe_slits_vsize')
+fe_slits_hcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}center', name='fe_slits_hcenter')
+fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_slits_vcenter')
+
+    
+## collimating mirror
+m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
+m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
+m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
+m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
+m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
+mcs8_motors.extend([m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd])
+
+## DM1
+dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
+dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
+mcs8_motors.extend([dm1_filters1, dm1_filters2])
+
 ## monochromator
 dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
 dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
@@ -149,7 +179,8 @@ dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp'
 dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
 dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
 dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
-
+mcs8_motors.extend([dcm_bragg, dcm_pitch, dcm_roll, dcm_perp,
+                   dcm_para, dcm_x, dcm_y])
 
 dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
 #                               # hard limit is at 162.48
@@ -168,13 +199,6 @@ dcm_x.velocity.put(0.6)
 dcm_para.velocity.put(1.0)
 dcm_para.hvel_mon.value = 1.0
 
-## collimating mirror
-m1_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
-m1_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
-m1_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
-m1_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
-m1_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M1-Ax:XD}Mtr',   name='m1_yxd')
-
 ## focusing mirror
 m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
 m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
@@ -182,24 +206,7 @@ m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
 m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
 m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
 m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
-
-## front end slits
-fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr',      name='fe_slits_horizontal1')
-fe_slits_incline1    = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Inc}Mtr',      name='fe_slits_incline1')
-fe_slits_o           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:O}Mtr',        name='fe_slits_o')
-fe_slits_t           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:T}Mtr',        name='fe_slits_t')
-fe_slits_horizontal2 = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Hrz}Mtr',      name='fe_slits_horizontal2')
-fe_slits_incline2    = EpicsMotor('FE:C06B-OP{Slt:2-Ax:Inc}Mtr',      name='fe_slits_incline2')
-fe_slits_i           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:I}Mtr',        name='fe_slits_i')
-fe_slits_b           = EpicsMotor('FE:C06B-OP{Slt:2-Ax:B}Mtr',        name='fe_slits_b')
-fe_slits_hsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}size',   name='fe_slits_hsize')
-fe_slits_vsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}size',   name='fe_slits_vsize')
-fe_slits_hcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}center', name='fe_slits_hcenter')
-fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_slits_vcenter')
-
-## DM1
-dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
-dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
+mcs8_motors.extend([m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender])
 
 ## DM2
 dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
@@ -207,6 +214,7 @@ dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr',  name='dm2_slits_i')
 dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
 dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
 dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
+mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
 
 ## DM3
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',     name='dm3_fs')
@@ -217,6 +225,8 @@ dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',    name='dm3_slits_o'
 dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',    name='dm3_slits_i')
 dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',    name='dm3_slits_t')
 dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',    name='dm3_slits_b')
+mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
+                    dm3_fs, dm3_foils, dm3_bct, dm3_bpm])
 
 dm3_fs.llm.value = -65
 dm3_bct.velocity.put(0.4)
@@ -255,3 +265,19 @@ xafs_ref.user_offset.put(102)
 def setup_wheel():
     yield from mv(xafs_x, -115.032, xafs_y, 117.94, xafs_wheel, 0)
     
+
+
+def homed():
+    for m in mcs8_motors:
+        if m.hocpl.value:
+            print("%-12s : %s" % (m.name, m.hocpl.enum_strs[m.hocpl.value]))
+        else:
+            print("%-12s : %s" % (m.name, error_msg(m.hocpl.enum_strs[m.hocpl.value])))
+
+def ampen():
+    for m in mcs8_motors:
+        if m.ampen.value:
+            print("%-12s : %s" % (m.name, warning_msg(m.ampen.enum_strs[m.ampen.value])))
+        else:
+            print("%-12s : %s" % (m.name, m.ampen.enum_strs[m.ampen.value]))
+            

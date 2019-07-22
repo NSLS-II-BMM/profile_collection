@@ -16,6 +16,15 @@ if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
 
 
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
+     '''Move the photon delivery system to a new mode. 
+     A: focused at XAS end station, energy > 8000
+     B: focused at XAS end station, energy < 6000
+     C: focused at XAS end station, 6000 < energy < 8000
+     D: unfocused, energy > 8000
+     E: unfocused, 6000 < energy < 8000
+     F: unfocused, energy < 8000
+     XRD: focused at XRD end station, energy > 8000
+     '''
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -25,8 +34,6 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           print('%s is not a mode' % mode)
           return(yield from null())
      current_mode = get_mode()
-          
-
 
      if mode == 'B':
           action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? [y/N then Enter] ")
@@ -97,59 +104,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
                         m2.ydo, float(MODEDATA['m2_ydo'][mode]),
                         m2.ydi, float(MODEDATA['m2_ydi'][mode]))
 
-
-
-
-          
-          # yield from mv(dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-                        
-          #               xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-          #               xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-          #               xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
-
-          #               m3.yu,           float(MODEDATA['m3_yu'][mode]),
-          #               m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-          #               m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-          #               m3.xu,           float(MODEDATA['m3_xu'][mode]),
-          #               m3.xd,           float(MODEDATA['m3_xd'][mode]),
-          
-          #               #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-          #               #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-          #               #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-          #               #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode])
-          # )
-               # dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-
-               #          xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-               #          xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-               #          xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
-
-               #          m3.yu,           float(MODEDATA['m3_yu'][mode]),
-               #          m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-               #          m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-               #          m3.xu,           float(MODEDATA['m3_xu'][mode]),
-               #          m3.xd,           float(MODEDATA['m3_xd'][mode]),
-          
-               #          #slits3.top,      float(MODEDATA['dm3_slits_t'][mode]),
-               #          #slits3.bottom,   float(MODEDATA['dm3_slits_b'][mode]),
-               #          #slits3.inboard,  float(MODEDATA['dm3_slits_i'][mode]),
-               #          #slits3.outboard, float(MODEDATA['dm3_slits_o'][mode]),
-          
-               #          m2.yu,           float(MODEDATA['m2_yu'][mode]),
-               #          m2.ydo,          float(MODEDATA['m2_ydo'][mode]),
-               #          m2.ydi,          float(MODEDATA['m2_ydi'][mode]))
-
      yield from bps.sleep(2.0)
-     yield from abs_set(dm3_bct.kill_cmd,   1) # and afte, wait=Truer
-
-     yield from abs_set(m2_yu.kill_cmd,     1, wait=True)
-     yield from abs_set(m2_ydo.kill_cmd,    1, wait=True)
-     yield from abs_set(m2_ydi.kill_cmd,    1, wait=True)
-     yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
-
-     yield from abs_set(m3_yu.kill_cmd,     1, wait=True)
-     yield from abs_set(m3_ydo.kill_cmd,    1, wait=True)
-     yield from abs_set(m3_ydi.kill_cmd,    1, wait=True)
+     for motor in (dm3_bct, m2_yu, m2_ydo, m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi):
+          yield from abs_set(motor.kill_cmd, 1, wait=True)
+          
+     # yield from abs_set(dm3_bct.kill_cmd,   1) # and afte, wait=Truer
+     # yield from abs_set(m2_yu.kill_cmd,     1, wait=True)
+     # yield from abs_set(m2_ydo.kill_cmd,    1, wait=True)
+     # yield from abs_set(m2_ydi.kill_cmd,    1, wait=True)
+     # yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
+     # yield from abs_set(m3_yu.kill_cmd,     1, wait=True)
+     # yield from abs_set(m3_ydo.kill_cmd,    1, wait=True)
+     # yield from abs_set(m3_ydi.kill_cmd,    1, wait=True)
      
      BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook
@@ -225,6 +191,10 @@ if BMMuser.pds_mode is None:
 
 
 def change_xtals(xtal=None):
+     '''Move between the Si(111) and Si(311) monochromators, also moving
+     2nd crystal pitch and roll to approximate positions.  Then do a
+     rocking curve scan.
+     '''
      if xtal is None:
           print('No crystal set specified')
           return(yield from null())
