@@ -108,6 +108,9 @@ def report(text, level=None):
 #     {'group': '8c8df020-23aa-451e-b411-c427bc80b375'}                              #
 ######################################################################################
 def BMM_msg_hook(msg):
+    '''
+    BMM-specific function for RE.msg_hook
+    '''
     #print(msg)
     if msg[0] == 'set':
         if 'EpicsMotor' in str(type(msg[1])):

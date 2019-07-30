@@ -855,7 +855,7 @@ def xafs(inifile, **kwargs):
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
-        Yield = lambda doc: (doc['data']['dcm_energy'], -1*doc['data']['Iy'] / doc['data']['I0'])
+        Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data']['I0'])
         fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
                                                          doc['data'][BMMuser.dtc2] +
                                                          doc['data'][BMMuser.dtc3] +
@@ -867,6 +867,7 @@ def xafs(inifile, **kwargs):
         elif 'ref'   in p['mode']:
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',      title=p['filename'])
         elif 'yield' in p['mode']:
+            quadem1.Iy.kind = 'hinted'
             plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', title=p['filename'])
         elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                   title=p['filename'])

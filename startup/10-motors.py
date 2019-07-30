@@ -5,16 +5,20 @@ import time
 
 run_report(__file__)
 
+
+status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
+               'LOOPM' : 1, 'TIACT' : 0, 'INTMO' : 1, 'DWPRO' : 0,
+               'DAERR' : 0, 'DVZER' : 0, 'ABDEC' : 0, 'UWPEN' : 0,
+               'UWSEN' : 0, 'ERRTAG': 0, 'SWPOC' : 0, 'ASSCS' : 1,
+               'FRPOS' : 0, 'HSRCH' : 0, 'SODPL' : 0, 'SOPL'  : 0,
+               'HOCPL' : 1, 'PHSRA' : 0, 'PREFE' : 0, 'TRMOV' : 0,
+               'IFFE'  : 0, 'AMFAE' : 0, 'AMFE'  : 0, 'FAFOE' : 0,
+               'WFOER' : 0, 'INPOS' : 1}
+
 class FMBOEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')
     encoder = Cpt(EpicsSignal, '.REP')
-
-    status_list = ('MTACT', 'MLIM', 'PLIM', 'AMPEN', 'LOOPM', 'TIACT', 'INTMO',
-                   'DWPRO', 'DAERR', 'DVZER', 'ABDEC', 'UWPEN', 'UWSEN', 'ERRTAG',
-                   'SWPOC', 'ASSCS', 'FRPOS', 'HSRCH', 'SODPL', 'SOPL', 'HOCPL',
-                   'PHSRA', 'PREFE', 'TRMOV', 'IFFE', 'AMFAE', 'AMFE', 'FAFOE',
-                   'WFOER', 'INPOS')
-
+    
     ###################################################################
     # this is the complete list of status signals defined in the FMBO #
     # IOC for thier MCS8 motor controllers                            #
@@ -86,11 +90,15 @@ class FMBOEpicsMotor(EpicsMotor):
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
         for signal in self.read_attrs:
-            if signal.upper() not in self.status_list:
+            if signal.upper() not in status_list.keys():
                 continue
             suffix = getattr(self, signal).pvname.replace(self.prefix, '')
+            string = getattr(self, signal).enum_strs[getattr(self, signal).value]
+            if signal != 'asscs':
+                if getattr(self, signal).value != status_list[signal.upper()]:
+                    string = error_msg('%-19s' % string)
             text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').value,
-                                                     getattr(self, signal).enum_strs[getattr(self, signal).value],
+                                                     string,
                                                      bold_msg(getattr(self, signal).value),
                                                      whisper(suffix))
         boxedtext('%s status signals' % self.name, text, 'green')
@@ -100,7 +108,7 @@ class FMBOEpicsMotor(EpicsMotor):
         if action.lower() == 'q' or action.lower() == 'n':
             return
         self.home_signal.put(1)
-        
+
     def wh(self):
         return(round(self.user_readback.value, 3))
 
@@ -108,7 +116,14 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC')
 
+    def kill(self):
+        self.kill_cmd.put(1)
+    def enable(self):
+        self.enable_cmd.put(1)
+        
+    
     #def wh(self):
     #    return(round(self.user_readback.value, 3))
 
@@ -218,8 +233,8 @@ mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
 
 ## DM3
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',     name='dm3_fs')
-dm3_foils   = VacuumEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
-dm3_bct     = VacuumEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
+dm3_foils   = XAFSEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
+dm3_bct     = XAFSEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
 dm3_bpm     = XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',     name='dm3_bpm')
 dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',    name='dm3_slits_o')
 dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',    name='dm3_slits_i')

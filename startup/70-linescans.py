@@ -11,25 +11,6 @@ from bluesky.preprocessors import subs_decorator
 
 run_report(__file__)
 
-def resting_state():
-    BMMuser.prompt = True
-    quadem1.on()
-    vor.on()
-    _locked_dwell_time.set(0.5)
-    RE.msg_hook = BMM_msg_hook
-def resting_state_plan():
-    #BMMuser.prompt = True
-    #yield from quadem1.on_plan()
-    #yield from vor.on_plan()
-    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
-    RE.msg_hook = BMM_msg_hook
-def end_of_macro():
-    BMMuser.prompt = True
-    yield from quadem1.on_plan()
-    yield from vor.on_plan()
-    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
-    RE.msg_hook = BMM_msg_hook
-
 
     
 def move_after_scan(thismotor):
@@ -259,7 +240,7 @@ def ls_backwards_compatibility(detin, axin):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}): # integration time?
+def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -274,6 +255,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
        nsteps:   number of steps in scan
        pluck:    flag for whether to offer to pluck & move motor
        force:    flag for forcing a scan even if not clear to start
+       inttime:  integration time in seconds (default: 0.1)
 
     The motor is either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
@@ -323,7 +305,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, md={}
             yield from null()
             return
 
-        yield from abs_set(_locked_dwell_time, 0.1, wait=True)
+        yield from abs_set(_locked_dwell_time, inttime, wait=True)
         dets  = [quadem1,]
         denominator = ''
         detname = ''

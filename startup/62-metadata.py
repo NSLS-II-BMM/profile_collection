@@ -162,7 +162,7 @@ def bmm_metadata(measurement   = 'transmission',
         md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
 
     if 'yield' in measurement:
-        md['Detector']['yield'] = 'simple electron yield detector with batteries and He'
+        md['Detector']['yield'] = 'in-vacuum electron yield detector'
 
     return md
 
