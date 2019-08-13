@@ -82,7 +82,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         def scan_slit():
 
             yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
-            yield from abs_set(motor.velocity, 0.6, wait=True)
+            yield from abs_set(motor.velocity, 0.4, wait=True)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
 
             yield from rel_scan([quadem1], motor, start, stop, nsteps)

@@ -16,7 +16,7 @@ run_report(__file__)
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 0.82
+CS_MULTIPLIER = 1.2
 ######################################################################
 ## replacing this with BMMuser, see 74-modes.py
 # CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #
@@ -651,8 +651,6 @@ def scan_sequence_static_html(inifile       = None,
 
 import bluesky.preprocessors
 from bluesky.preprocessors import subs_decorator
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
 
 
 def write_manifest():
@@ -978,14 +976,16 @@ def xafs(inifile, **kwargs):
                 ahora = now()
 
                 html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
-                image = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
+                image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
-                snap('XAS', filename=image, annotation=annotation)
+                snap('XAS', filename=image_web, annotation=annotation)
 
                 html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
-                image = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
-                snap('analog', filename=image, sample=p['filename'])
+                image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
+                snap('analog', filename=image_ana, sample=p['filename'])
 
+                md['_snapshots'] = {'webcam': image_web, 'analog' : image_ana}
+                
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile, used by cadashboard
             with open(dotfile, "w") as f:
@@ -1022,12 +1022,13 @@ def xafs(inifile, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
+                    yield from mv(dcm.energy, energy_grid[-1]+5)
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
-                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0], dcm_bragg.acceleration.value)))
-                    yield from mv(dcm.energy, energy_grid[0])
+                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.value)))
+                    yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.value))
                     

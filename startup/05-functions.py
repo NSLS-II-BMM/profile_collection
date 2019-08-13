@@ -136,3 +136,12 @@ def clear_dashboard():
         fl = '/home/xf06bm/Data/.'+scan+'.scan.running'
         if os.path.isfile(fl):
             os.remove(fl)
+
+
+def countdown(t):
+    while t:
+        mins, secs = divmod(t, 60)
+        timeformat = '{:02d}:{:02d}'.format(mins, secs)
+        print(timeformat, end='\r')
+        time.sleep(1)
+        t -= 1

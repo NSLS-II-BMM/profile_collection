@@ -3,6 +3,7 @@ import os
 import shutil
 from distutils.dir_util import copy_tree
 import json
+import pprint
 
 run_report(__file__)
 
@@ -136,12 +137,17 @@ class BMM_User():
         
         self.bender_xas    = 212225  #####################################################################
         self.bender_xrd    = 112239  # approximate values for M2 bender for focusing at XAS & XRD tables #
-        self.bender_mergin = 30000   #####################################################################
+        self.bender_margin = 30000   #####################################################################
 
+        self.filter_state  = 0
                                      
-    def show(self):                
+    def show(self, scan=False):
+        '''
+        Show the current contents of the BMMuser object
+        '''
         print('Experiment attributes:')
-        for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils', 'read_rois', 'user_is_defined', 'pds_mode'):
+        for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils',
+                    'read_rois', 'user_is_defined', 'pds_mode'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
@@ -152,12 +158,17 @@ class BMM_User():
         for att in ('motor', 'motor2', 'fig', 'ax', 'x', 'y'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
-        # print('\nScan control attributes:')
-        # for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'filename',
-        #             'experimenters', 'e0', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
-        #             'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
-        #             'dwell', 'delay'):
-        #     print('\t%-15s = %s' % (att, str(getattr(self, att))))
+        print('\nMono acceleration and bender attributes:')
+        for att in ('acc_fast', 'acc_slow', 'bender_xas', 'bender_xrd', 'bender_margin'):
+            print('\t%-15s = %s' % (att, str(getattr(self, att))))
+
+        if scan:
+            print('\nScan control attributes:')
+            for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'filename',
+                        'experimenters', 'e0', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
+                        'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
+                        'dwell', 'delay'):
+                print('\t%-15s = %s' % (att, str(getattr(self, att))))
         
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
@@ -230,16 +241,6 @@ class BMM_User():
             print('%d. Found macro template:           %-75s' % (step, macropy))
         step += 1
 
-        ## copy energy change instructions
-        # eci = os.path.join(startup, 'Energy Change')
-        # ecitarget = os.path.join(folder, 'Energy Change')
-        # if not os.path.isfile(ecitarget):
-        #     shutil.copyfile(eci, ecitarget)
-        #     print('%d. Copied energy change instructions', step)
-        # else:
-        #     print('%d. Found energy change instructions', step)
-        # step += 1
-    
         ## make html folder, copy static html generation files
         htmlfolder = os.path.join(folder, 'dossier')
         if not os.path.isdir(htmlfolder):
@@ -353,6 +354,7 @@ class BMM_User():
         print('GUP   = %d' % self.gup)
         print('SAF   = %d' % self.saf)
         print('foils = %s' % ' '.join(map(str, foils.slots)))
+        print('ROIs  = %s' % ' '.join(map(str, rois.slots)))
 
     def end_experiment(self, force=False):
         '''
@@ -414,6 +416,8 @@ if BMMuser.pds_mode is None:
         pass
 
 
+pp = pprint.pprint
+    
 ## some backwards compatibility....
 whoami           = BMMuser.show_experiment
 start_experiment = BMMuser.start_experiment

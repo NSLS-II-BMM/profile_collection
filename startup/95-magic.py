@@ -40,6 +40,12 @@ def m(line):
     return None
 
 @register_line_magic
+def xm(line):
+    '''show XRD motor status'''
+    xrdm()
+    return None
+
+@register_line_magic
 def w(arg):
     '''show a motor position'''
     motor = eval(arg)

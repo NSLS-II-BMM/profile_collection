@@ -252,12 +252,12 @@ if BMMuser.read_rois is not None:
     
 def approximate_pitch(energy):
     if dcm._crystal is '111':
-        m = -4.33811e-06
-        b = 4.02904
+        m = -4.57145e-06
+        b = 4.04782
         return(m*energy + b)
     else:
-        m = -2.87423e-06
-        b = 2.40242
+        m = -2.7015e-06
+        b = 2.38638
         return(m*energy + b)
         
 
@@ -414,6 +414,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print('  * You may need to verify the slit position:  RE(slit_height())')
     print('  * If measuring fluorescence, be sure that there is a channel for %s' % el)
     BMM_log_info('Finished configuring for %s edge' % el)
+    yield from dcm.kill_plan()
     end = time.time()
-    print('\n\nTime elapsed: %.1f min' % ((end-start)/60))
+    print('\n\nThat took %.1f min' % ((end-start)/60))
     return()

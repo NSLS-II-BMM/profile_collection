@@ -105,7 +105,7 @@ def areascan(detector,
                 (fast.name, startfast, stopfast, nfast, valuefast)
 
         npoints = nfast * nslow
-        estimate = int(npoints*(dwell+0.4))
+        estimate = int(npoints*(dwell+0.7))
     
         # extent = (
         #     valuefast + startfast,
@@ -201,7 +201,10 @@ def areascan(detector,
         RE.msg_hook = BMM_msg_hook
 
         print('Disabling plot for re-plucking.')
-        cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+        try:
+            cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+        except:
+            pass
         BMMuser.x      = None
         BMMuser.y      = None
         BMMuser.motor  = None

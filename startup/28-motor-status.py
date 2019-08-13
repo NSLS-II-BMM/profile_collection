@@ -3,8 +3,10 @@
 def motor_status():
     line = ' ' + '=' * 78 + '\n'
     text = '\n Energy = %.1f eV   reflection = Si(%s)   mode = %s\n' % (dcm.energy.readback.value, dcm._crystal, dcm.mode)
-    text += '      Bragg = %8.5f   2nd Xtal Perp = %7.4f   2nd Xtal Para = %8.4f\n\n' % \
+    text += '      Bragg = %8.5f   2nd Xtal Perp  = %7.4f   Para = %8.4f\n' % \
             (dcm.bragg.user_readback.value, dcm.perp.user_readback.value, dcm.para.user_readback.value)
+    text += '                                  Pitch = %7.4f   Roll = %8.4f\n\n' % \
+            (dcm_pitch.user_readback.value, dcm_roll.user_readback.value)
 
     text += ' M2\n      vertical = %7.3f mm            YU  = %7.3f mm\n' % (m2.vertical.readback.value, m2.yu.user_readback.value)
     text += '      lateral  = %7.3f mm            YDO = %7.3f mm\n'      % (m2.lateral.readback.value,  m2.ydo.user_readback.value)
@@ -17,7 +19,7 @@ def motor_status():
     if m3.xu.user_readback.value < 0:
         stripe = '(Si stripe)'
 
-    text += ' M3  %s\n'                                   % stripe
+    text += ' M3  %s\n'                                                 % stripe
     text += '      vertical = %7.3f mm            YU  = %7.3f mm\n'     % (m3.vertical.readback.value, m3.yu.user_readback.value)
     text += '      lateral  = %7.3f mm            YDO = %7.3f mm\n'     % (m3.lateral.readback.value,  m3.ydo.user_readback.value)
     text += '      pitch    = %7.3f mrad          YDI = %7.3f mm\n'     % (m3.pitch.readback.value,    m3.ydi.user_readback.value)
@@ -114,3 +116,17 @@ def motor_sidebar():
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     return motors
+
+
+def xrd_motors():
+    text = '\n'
+    for m in (xrd_delta,  xrd_eta,    xrd_chi,    xrd_phi,    xrd_mu,     xrd_nu,
+              xrd_anal,   xrd_det,    xrd_dethor, xrd_wheel1, xrd_wheel2,
+              xrd_samx,   xrd_samy,   xrd_samz,   xrd_tabyd,  xrd_tabyui,
+              xrd_tabyuo, xrd_tabxu,  xrd_tabxd,  xrd_tabz,   xrd_slit1t,
+              xrd_slit1b, xrd_slit1i, xrd_slit1o):
+        text += '  %-26s: %8.3f %s\n' % (m.name, m.user_readback.value, m.describe()[m.name]['units'])
+    return text
+
+def xrdm():
+    boxedtext('XRD motor status', xrd_motors(), 'cyan', width=60)

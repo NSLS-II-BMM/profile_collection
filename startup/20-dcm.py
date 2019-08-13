@@ -51,13 +51,16 @@ class DCM(PseudoPositioner):
             (' current',
              'Bragg', self.bragg.user_readback.value,
              '2nd Xtal Perp',  self.perp.user_readback.value,
-             '2nd Xtal Para',  self.para.user_readback.value)
+             'Para',  self.para.user_readback.value)
+        text += "                                      %s = %7.4f   %s = %8.4f" %\
+            ('Pitch', dcm_pitch.user_readback.value,
+             'Roll',  dcm_roll.user_readback.value)
         #text += "                             %s = %7.4f   %s = %8.4f" %\
         #    ('2nd Xtal pitch', self.pitch.user_readback.value,
         #     '2nd Xtal roll',  self.roll.user_readback.value)
         return text
     def wh(self):
-        boxedtext('DCM', self.where(), 'cyan', width=82)
+        boxedtext('DCM', self.where(), 'cyan', width=74)
 
     def restore(self):
         self.mode = 'fixed'

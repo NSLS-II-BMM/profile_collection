@@ -12,10 +12,10 @@ class dcm_parameters():
 
     '''
     def __init__(self):
-        self.dspacing_111 = 3.1353241  # 13 June 2019
-        self.dspacing_311 = 1.6376015  # 13 June 2019
+        self.dspacing_111 = 3.1353241  # 8 August 2019
+        self.dspacing_311 = 1.6376015  # 12 August 2019
         ## *add* the fit result from these numbers!
-        self.offset_111 = 16.0576931 
-        self.offset_311 = 15.9913698
+        self.offset_111 = 16.0571090
+        self.offset_311 = 15.9893880  # 15.9913698
 BMM_dcm = dcm_parameters()
 

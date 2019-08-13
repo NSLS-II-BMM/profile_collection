@@ -72,7 +72,7 @@ import fcntl
 def anacam(filename    = None,
            sample      = None,
            folder      = os.environ['HOME'],
-           device      = '/dev/video1',
+           device      = '/dev/video0',
            camera      = 0,
            skip        = 30,
            frames      = 5,
