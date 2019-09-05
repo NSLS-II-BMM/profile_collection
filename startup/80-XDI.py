@@ -32,6 +32,7 @@ _vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
 _deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
 
 transmission = _ionchambers
+eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 
 
@@ -57,7 +58,6 @@ XDI_record = {'xafs_linx'                        : (True,  'Sample.x_position'),
               'monotc_downstream_temperature'    : (False, 'Mono.tc_downstream'),
               'monotc_upstream_low_temperature'  : (False, 'Mono.tc_upstream_low'),
               }
-
 
 class metadata_for_XDI_file():
     def __init__(self):
@@ -142,6 +142,8 @@ def write_XDI(datafile, dataframe):
         detectors = transmission
     elif 'ref' in mode:
         detectors = transmission
+    elif 'yield' in mode:
+        detectors = eyield
     else:
         detectors = fluorescence
 
@@ -226,7 +228,7 @@ def write_XDI(datafile, dataframe):
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
         if kind == 'sead': plot_hint = '(%s + %s + %s + %s) / I0  --  ($6+$7+$8+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
     elif 'yield' in mode:
-        plot_hint = 'ln(Iy/I0)  --  ln($8/$5)'
+        plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:
         plot_hint = 'I0  --  $5'
     elif 'ref' in mode:

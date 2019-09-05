@@ -66,12 +66,13 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
+     yield from dcm.kill_plan()
      yield from abs_set(dm3_bct.kill_cmd, 1, wait=True) # need to explicitly kill this before
                                                         # starting a move, it is one of the
                                                         # motors that reports MOVN=1 even when
                                                         # still
 
-     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]) - 0.86,
+     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
                         
              xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
              xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),

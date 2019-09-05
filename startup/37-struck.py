@@ -38,6 +38,7 @@ ocrs = {'XF:06BM-ES:1{Sclr:1}.S3' : ts,
         'XF:06BM-ES:1{Sclr:1}.S21' : ts,
         'XF:06BM-ES:1{Sclr:1}.S22' : ts}
 
+
 ####################################################################################
 ####                  ROI           ICR              OCR             time       ####
 class DTCorr(DerivedSignal):
@@ -264,11 +265,11 @@ class BMMVortex(EpicsScaler):
     def off_plan(self):
         yield from abs_set(self.state, 0, wait=True)
 
-    def channel_names(self):
-        self.names.name3.put('ROI1')
-        self.names.name4.put('ROI2')
-        self.names.name5.put('ROI3')
-        self.names.name6.put('ROI4')
+    def channel_names(self, one, two, three):
+        self.names.name3.put('ROI1' + ' - %s'%one )
+        self.names.name4.put('ROI2' + ' - %s'%one)
+        self.names.name5.put('ROI3' + ' - %s'%one)
+        self.names.name6.put('ROI4' + ' - %s'%one)
         self.names.name7.put('ICR1')
         self.names.name8.put('ICR2')
         self.names.name9.put('ICR3')
@@ -277,22 +278,23 @@ class BMMVortex(EpicsScaler):
         self.names.name12.put('OCR2')
         self.names.name13.put('OCR3')
         self.names.name14.put('OCR4')
-        self.names.name15.put('ROI2_1')
-        self.names.name16.put('ROI2_2')
-        self.names.name17.put('ROI2_3')
-        self.names.name18.put('ROI2_4')
-        self.names.name19.put('ROI3_1')
-        self.names.name20.put('ROI3_2')
-        self.names.name21.put('ROI3_3')
-        self.names.name22.put('ROI3_4')
+        self.names.name15.put('ROI2_1' + ' - %s'%two)
+        self.names.name16.put('ROI2_2' + ' - %s'%two)
+        self.names.name17.put('ROI2_3' + ' - %s'%two)
+        self.names.name18.put('ROI2_4' + ' - %s'%two)
+        self.names.name19.put('ROI3_1' + ' - %s'%three)
+        self.names.name20.put('ROI3_2' + ' - %s'%three)
+        self.names.name21.put('ROI3_3' + ' - %s'%three)
+        self.names.name22.put('ROI3_4' + ' - %s'%three)
         self.names.name25.put('Bicron')
         self.names.name26.put('APD')
+        self.names.name31.put('eyield')
 
     def channel_names_plan(self):
-        yield from abs_set(self.names.name3,  'ROI1')
-        yield from abs_set(self.names.name4,  'ROI2')
-        yield from abs_set(self.names.name5,  'ROI3')
-        yield from abs_set(self.names.name6,  'ROI4')
+        yield from abs_set(self.names.name3,  'ROI1' + ' - %s'%one)
+        yield from abs_set(self.names.name4,  'ROI2' + ' - %s'%one)
+        yield from abs_set(self.names.name5,  'ROI3' + ' - %s'%one)
+        yield from abs_set(self.names.name6,  'ROI4' + ' - %s'%one)
         yield from abs_set(self.names.name7,  'ICR1')
         yield from abs_set(self.names.name8,  'ICR2')
         yield from abs_set(self.names.name9,  'ICR3')
@@ -301,16 +303,17 @@ class BMMVortex(EpicsScaler):
         yield from abs_set(self.names.name12, 'OCR2')
         yield from abs_set(self.names.name13, 'OCR3')
         yield from abs_set(self.names.name14, 'OCR4')
-        yield from abs_set(self.names.name15, 'ROI2_1')
-        yield from abs_set(self.names.name16, 'ROI2_2')
-        yield from abs_set(self.names.name17, 'ROI2_3')
-        yield from abs_set(self.names.name18, 'ROI2_4')
-        yield from abs_set(self.names.name19, 'ROI3_1')
-        yield from abs_set(self.names.name20, 'ROI3_2')
-        yield from abs_set(self.names.name21, 'ROI3_3')
-        yield from abs_set(self.names.name22, 'ROI3_4')
+        yield from abs_set(self.names.name15, 'ROI2_1' + ' - %s'%two)
+        yield from abs_set(self.names.name16, 'ROI2_2' + ' - %s'%two)
+        yield from abs_set(self.names.name17, 'ROI2_3' + ' - %s'%two)
+        yield from abs_set(self.names.name18, 'ROI2_4' + ' - %s'%two)
+        yield from abs_set(self.names.name19, 'ROI3_1' + ' - %s'%three)
+        yield from abs_set(self.names.name20, 'ROI3_2' + ' - %s'%three)
+        yield from abs_set(self.names.name21, 'ROI3_3' + ' - %s'%three)
+        yield from abs_set(self.names.name22, 'ROI3_4' + ' - %s'%three)
         yield from abs_set(self.names.name25, 'Bicron')
         yield from abs_set(self.names.name26, 'APD')
+        yield from abs_set(self.names.name31, 'eyield')
 
     ## see Woicik et al, https://doi.org/10.1107/S0909049510009064
     def dtcorrect(self, roi, icr, ocr, inttime, dt=280.0, off=False):
@@ -453,6 +456,9 @@ vor.channels.chan22.name = 'ROI3_4'
 vor.channels.chan25.name = 'Bicron'
 vor.channels.chan26.name = 'APD'
 
+## electron yield detector, via Keithley and v2f converter
+vor.channels.chan31.name = 'eyield'
+vor.channels.chan31.kind = 'omitted'
 
 class GonioStruck(EpicsScaler):
     def on(self):

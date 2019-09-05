@@ -169,7 +169,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.value)
 
             yield from abs_set(_locked_dwell_time, 0.1, wait=True)
-            yield from abs_set(motor.kill_cmd, 1, wait=True)
+            yield from dcm.kill_plan()
 
             yield from mv(slits3.vsize, 3)
             if sgnl == 'Bicron':
@@ -205,6 +205,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         yield from bps.sleep(1.0)
         yield from abs_set(motor.kill_cmd, 1, wait=True)
         yield from bps.sleep(1.0)
+        yield from dcm.kill_plan()
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 

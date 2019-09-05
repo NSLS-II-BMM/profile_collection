@@ -134,6 +134,18 @@ if BMMuser.read_foils is not None:
 
 class ROI():
     '''A simple class for managing the Struck ROI channels.
+
+    Configure the ROIs:
+       rois.set('Mn Fe Cu')
+
+    Configure one ROI channel:
+       rois.set_roi(1, 'Mn')
+
+    Choose an ROI channel:
+       rois.select('Mn')
+
+    Print ROI configuration to the screen:
+       rois.show()
     '''
     def __init__(self):
         self.slots = [None, None, None]
@@ -172,6 +184,7 @@ class ROI():
             return()
         for i in range(3):
             self.set_roi(i+1, elements[i])
+        vor.channel_names(*elements)
         print(self.show())
         ########################################################
         # save the ROI configuration to the user serialization #
@@ -303,6 +316,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
            xrd=True implies focus=True and target=0
     '''
     #BMMuser.prompt = True
+
+    (ok, text) = BMM_clear_to_start()
+    if ok is False:
+        print(error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n'))
+        return(yield from null())
+    
     if energy is None:
         energy = edge_energy(el,edge)
         
@@ -361,6 +380,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         
     start = time.time()
     BMM_log_info('Configuring beamline for %s edge' % el)
+    yield from dcm.kill_plan()
     ###################################
     # move the DCM to target eV above #
     ###################################
@@ -374,7 +394,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ################################################
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
-    yield from change_mode(mode=mode, prompt=False, edge=energy, reference=el)
+    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el)
     yield from kill_mirror_jacks()
     yield from sleep(1)
 
@@ -409,10 +429,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         show_edges()
     
     print('\nYou are now ready to measure at the %s edge' % el)
-    print('\nSome things are not done automagically:')
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
-    print('  * If measuring fluorescence, be sure that there is a channel for %s' % el)
     BMM_log_info('Finished configuring for %s edge' % el)
     yield from dcm.kill_plan()
     end = time.time()
