@@ -20,6 +20,8 @@ class BMM_User():
       * saf:              SAF number
       * name:             full name of PI
       * staff:            flag, True if a staff experiment
+      * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
+      * macro_sleep:      float, the length of that sleep
 
     Current plot attributes
       * motor:            fast motor in current plot
@@ -78,6 +80,8 @@ class BMM_User():
         self.read_foils      = None
         self.read_rois       = None
         self.user_is_defined = False
+        self.macro_dryrun    = False
+        self.macro_sleep     = 2
 
         self.roi_channel     = None   ##################################################################
         self.roi1            = 'ROI1' # in 76-edge.py, the ROI class is defined for managing changes   #

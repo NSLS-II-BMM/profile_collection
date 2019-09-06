@@ -1113,6 +1113,10 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
         yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
+    if BMMuser.macro_dryrun:
+        print('BMMuser.macro_dryrun is True, so sleeping for %.1f seconds rather than running an XAFS scan' % BMMuser.macro_sleep)
+        yield from bps.sleep(BMMuser.macro_sleep)
+        return
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
     html_dict = {}
