@@ -35,6 +35,17 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     database and write it to a file.
     '''
 
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a time scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
+    
     (ok, text) = BMM_clear_to_start()
     if force is False and ok is False:
         print(error_msg(text))

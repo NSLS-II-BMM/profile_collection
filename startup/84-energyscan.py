@@ -1113,10 +1113,16 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
         yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
     if BMMuser.macro_dryrun:
-        print('BMMuser.macro_dryrun is True, so sleeping for %.1f seconds rather than running an XAFS scan' % BMMuser.macro_sleep)
-        yield from bps.sleep(BMMuser.macro_sleep)
-        return
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an XAFS scan.\n' % BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
+
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
     html_dict = {}

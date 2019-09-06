@@ -213,6 +213,16 @@ def areascan(detector,
         BMMuser.ax     = None
 
         
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an area scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
     dotfile = '/home/xf06bm/Data/.area.scan.running'
     BMMuser.final_log_entry = True
     RE.msg_hook = None

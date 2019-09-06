@@ -33,6 +33,7 @@ def sample_sequence():
         ### ---------------------------------------------------------------------------------------
         ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
         ##  EDIT BELOW THIS LINE
+        #<--indentation matters!
     
         ## sample 1
         yield from xafs('scan.ini', filename='samp1', sample='first sample')
@@ -55,6 +56,7 @@ def sample_sequence():
 
     def cleanup_plan():
         yield from end_of_macro()
+        
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(), cleanup_plan())    
     yield from end_of_macro()
     BMM_log_info('Sample macro finished!')

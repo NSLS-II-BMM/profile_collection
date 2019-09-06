@@ -117,6 +117,17 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
+    
     motor = dm3_bct
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
@@ -209,6 +220,17 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a rocking curve scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
+        
     motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     slit_height = slits3.vsize.readback.value
@@ -396,6 +418,16 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         yield from resting_state_plan()
 
 
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a line scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())

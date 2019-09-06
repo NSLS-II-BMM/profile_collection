@@ -151,7 +151,7 @@ class BMM_User():
         '''
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils',
-                    'read_rois', 'user_is_defined', 'pds_mode'):
+                    'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')

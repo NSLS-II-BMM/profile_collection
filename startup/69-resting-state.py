@@ -11,10 +11,12 @@ def resting_state():
     - user prompt set to True and RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
+    BMMuser.dryrun = False
     quadem1.on()
     vor.on()
     _locked_dwell_time.set(0.5)
     quadem1.Iy.kind = 'omitted'
+    dcm.kill()
     RE.msg_hook = BMM_msg_hook
 
 def resting_state_plan():
@@ -26,10 +28,12 @@ def resting_state_plan():
     - RE.msg_hook set to BMM_msg_hook
     '''
     #BMMuser.prompt = True
+    BMMuser.dryrun = False
     #yield from quadem1.on_plan()
     #yield from vor.on_plan()
     quadem1.Iy.kind = 'omitted'
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+    dcm.kill()
     RE.msg_hook = BMM_msg_hook
 
 def end_of_macro():
@@ -42,9 +46,11 @@ def end_of_macro():
     - user prompt set to True and RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
+    BMMuser.dryrun = False
     quadem1.Iy.kind = 'omitted'
     yield from quadem1.on_plan()
     yield from vor.on_plan()
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+    yield from dcm.kill_plan()
     RE.msg_hook = BMM_msg_hook
 
