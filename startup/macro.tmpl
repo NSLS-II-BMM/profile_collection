@@ -25,7 +25,7 @@ def sample_sequence():
         print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
         return(yield from null())
     
-    BMMuser.dryrun = False
+    BMMuser.macro_dryrun = False
     BMMuser.prompt = False
     BMM_log_info('Beginning sample macro')
     def main_plan():

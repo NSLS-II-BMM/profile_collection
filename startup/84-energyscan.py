@@ -16,45 +16,9 @@ run_report(__file__)
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
 CS_TIMES      = [0.5, 0.5, '0.25k']
-CS_MULTIPLIER = 1.2
-######################################################################
-## replacing this with BMMuser, see 74-modes.py
-# CS_DEFAULTS   = {'bounds':        [-200, -30, 15.3, '14k'],        #
-#                  'steps':         [10, 0.5, '0.05k'],              #
-#                  'times':         [0.5, 0.5, '0.25k'],             #
-#                                                                    #
-#                  'folder':        os.environ.get('HOME')+'/data/', #
-#                  'filename':      'data.dat',                      #
-#                  'experimenters': '',                              #
-#                  'e0':            7112,                            #
-#                  'element':       'Fe',                            #
-#                  'edge':          'K',                             #
-#                  'sample':        '',                              #
-#                  'prep':          '',                              #
-#                  'comment':       '',                              #
-#                  'nscans':        1,                               #
-#                  'start':         0,                               #
-#                  'inttime':       1,                               #
-#                  'snapshots':     True,                            #
-#                  'usbstick':      True,                            #
-#                  'rockingcurve':  False,                           #
-#                  'htmlpage':      True,                            #
-#                  'bothways':      False,                           #
-#                  'channelcut':    True,                            #
-#                  'mode':          'transmission',                  #
-#                                                                    #
-#                  'npoints':       0, # see 71-timescans.py         #
-#                  'dwell':         1.0,                             #
-#                  'delay':         0.1}                             #
-######################################################################
-
+CS_MULTIPLIER = 0.72
 
 import configparser
-    #folder=None, filename=None,
-    #e0=None, element=None, edge=None, sample=None, prep=None, comment=None,
-    #nscans=None, start=None, inttime=None,
-    #snapshots=None, bothways=None, channelcut=None, focus=None, hr=None,
-    #mode=None, bounds=None, steps=None, times=None):
 
 def next_index(folder, stub):
     '''Find the next numeric filename extension for a filename stub in folder.'''
@@ -855,27 +819,26 @@ def xafs(inifile, **kwargs):
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
         fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
-                                                         doc['data'][BMMuser.dtc2] +
-                                                         doc['data'][BMMuser.dtc3] +
+                                                         doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
                                                          doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
-            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',   title=p['filename'])
+            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
         elif 'trans' in p['mode']:
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
         elif 'ref'   in p['mode']:
-            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',      title=p['filename'])
+            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',       title=p['filename'])
         elif 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
             plot =  [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', title=p['filename']),
                      DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])]
         elif 'test'  in p['mode']:
-            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                   title=p['filename'])
+            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
         elif 'both'  in p['mode']:
-            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename']),
-                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',   title=p['filename'])]
+            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
+                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1122,7 +1085,6 @@ def xafs(inifile, **kwargs):
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-
     dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
     html_dict = {}
@@ -1156,7 +1118,7 @@ def howlong(inifile, interactive=True, **kwargs):
     (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
     text = 'One scan of %d points will take about %.1f minutes\n' % (len(energy_grid), approx_time)
     text +='The sequence of %s will take about %.1f hours' % (inflect('scan', p['nscans']), approx_time * int(p['nscans'])/60)
-                                                      #inflect('hour', int(approx_time * int(p['nscans'])/60)))
+
     if interactive:
         length = 0
         bt = '\n'

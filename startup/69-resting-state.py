@@ -11,7 +11,7 @@ def resting_state():
     - user prompt set to True and RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
-    BMMuser.dryrun = False
+    BMMuser.macro_dryrun = False
     quadem1.on()
     vor.on()
     _locked_dwell_time.set(0.5)
@@ -28,7 +28,7 @@ def resting_state_plan():
     - RE.msg_hook set to BMM_msg_hook
     '''
     #BMMuser.prompt = True
-    BMMuser.dryrun = False
+    BMMuser.macro_dryrun = False
     #yield from quadem1.on_plan()
     #yield from vor.on_plan()
     quadem1.Iy.kind = 'omitted'
@@ -46,7 +46,7 @@ def end_of_macro():
     - user prompt set to True and RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
-    BMMuser.dryrun = False
+    BMMuser.macro_dryrun = False
     quadem1.Iy.kind = 'omitted'
     yield from quadem1.on_plan()
     yield from vor.on_plan()

@@ -7,8 +7,13 @@ import pprint
 
 run_report(__file__)
 
+## sort of a singleton, see http://code.activestate.com/recipes/66531/
+class Borg:
+    __shared_state = {}
+    def __init__(self):
+        self.__dict__ = self.__shared_state      
 
-class BMM_User():
+class BMM_User(Borg):
     '''A class for managing the user interaction at BMM.
 
     Experiment attributes:
@@ -80,9 +85,13 @@ class BMM_User():
         self.read_foils      = None
         self.read_rois       = None
         self.user_is_defined = False
-        self.macro_dryrun    = False
-        self.macro_sleep     = 2
-
+        
+        self.macro_dryrun    = False  ############################################################################
+        self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
+                                      # When true, this will turn xafs scans, line scans, change_edge, etc into  #
+                                      # a sleep.  This allows visual inspection of motor movement between scans. #
+                                      ############################################################################
+        
         self.roi_channel     = None   ##################################################################
         self.roi1            = 'ROI1' # in 76-edge.py, the ROI class is defined for managing changes   #
         self.roi2            = 'ROI2' # of configured detector channels. the names of the channels are #
@@ -176,7 +185,7 @@ class BMM_User():
         
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
-        Do the work of prepping a new experiment.  This will:
+        Do the work of prepping for a new experiment.  This will:
           * Create a folder, if needed, and set the DATA variable
           * Set up the experimental log, creating an experiment.log file, if needed
           * Write templates for scan.ini and macro.py, if needed
