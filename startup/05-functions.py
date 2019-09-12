@@ -56,6 +56,8 @@ def error_msg(text):
     return colored(text, 'lightred')
 def warning_msg(text):
     return colored(text, 'yellow')
+def go_msg(text):
+    return colored(text, 'lightgreen')
 def url_msg(text):
     return text
 def bold_msg(text):
@@ -139,9 +141,14 @@ def clear_dashboard():
 
 
 def countdown(t):
+    transition = max(int(t/10), 2)
     while t:
         mins, secs = divmod(t, 60)
-        timeformat = '{:02d}:{:02d}'.format(mins, secs)
+        if t > transition:
+            timeformat = bold_msg('{:02d}:{:02d}'.format(mins, secs))
+        else:
+            timeformat = warning_msg('{:02d}:{:02d}'.format(mins, secs))
         print(timeformat, end='\r')
         time.sleep(1)
         t -= 1
+    print('Blast off!', end='\r')

@@ -85,7 +85,7 @@ class FMBOEpicsMotor(EpicsMotor):
     inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC')
 
     home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC')
-    hvel_mon    = Cpt(EpicsSignal, '_HVEL_MON')
+    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A') # how homing velocity gets set for an FMBO SAI
 
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
@@ -103,10 +103,11 @@ class FMBOEpicsMotor(EpicsMotor):
                                                      whisper(suffix))
         boxedtext('%s status signals' % self.name, text, 'green')
 
-    def home(self):
-        action = input("\nBegin homing %s? [Y/n then Enter] " % self.name)
-        if action.lower() == 'q' or action.lower() == 'n':
-            return
+    def home(self, force=False):
+        if force is False:
+            action = input("\nBegin homing %s? [Y/n then Enter] " % self.name)
+            if action.lower() == 'q' or action.lower() == 'n':
+                return
         self.home_signal.put(1)
 
     def wh(self):
@@ -214,7 +215,7 @@ dcm_x.velocity.put(0.6)
 
 ## this is about as fast as this motor can go, 1.25 results in a following error
 dcm_para.velocity.put(1.0)
-dcm_para.hvel_mon.value = 1.0
+dcm_para.hvel_sp.put(1.0)
 
 ## focusing mirror
 m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
@@ -224,6 +225,8 @@ m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
 m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
 m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
 mcs8_motors.extend([m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender])
+m2_xu.velocity.put(0.05)
+m2_xd.velocity.put(0.05)
 
 ## DM2
 dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
@@ -232,6 +235,7 @@ dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
 dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
 dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
+dm2_fs.hvel_sp.put(0.0005)
 
 ## DM3
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',     name='dm3_fs')
@@ -248,7 +252,10 @@ mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
 dm3_fs.llm.value = -65
 dm3_bct.velocity.put(0.4)
 dm3_bct.acceleration.put(0.25)
+dm3_bct.hvel_sp.put(0.05)
 
+
+bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
 
 ## XAFS table
 xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
@@ -260,20 +267,18 @@ xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd
 
 
 ## XAFS stages
-xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
-xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
-xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
-xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
-xafs_ref   = xafs_linxs = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
-xafs_x     = xafs_linx  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
-xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
-xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
-xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
+xafs_wheel = xafs_rotb  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
+xafs_roth  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
+xafs_rots  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
+xafs_lins  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
+xafs_ref   = xafs_linxs = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
+xafs_x     = xafs_linx  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
+xafs_y     = xafs_liny  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
+xafs_roll  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
+xafs_pitch = EpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_wheel.user_offset.put(-31.532)
-
-xafs_ref.llm.value = -95
-xafs_ref.hlm.value = 95
+xafs_wheel.user_offset.put(-4.506)
+xafs_ref._limits = (-95, 95)
 xafs_ref.user_offset.put(102)
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
