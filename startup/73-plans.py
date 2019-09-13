@@ -74,3 +74,54 @@ def set_integration_plan(time=0.5):
     '''
     yield from abs_set(vor.auto_count_time, time, wait=True)
     yield from abs_set(quadem1.averaging_time, time, wait=True)
+
+
+
+def recover_screens():
+    yield from abs_set(dm2_fs.home_signal,  1)
+    yield from abs_set(dm3_fs.home_signal,  1)
+    yield from abs_set(dm3_bct.home_signal, 1)
+    yield from sleep(1.0)
+    print('Begin homing dm2_fs, dm3_fs, and dm3_bct:\n')
+    hvalues = (dm2_fs.hocpl.value, dm3_fs.hocpl.value, dm3_bct.hocpl.value)
+    while any(v == 0 for v in hvalues):
+        hvalues = (dm2_fs.hocpl.value, dm3_fs.hocpl.value, dm3_bct.hocpl.value)
+        strings = ['dm2_fs', 'dm3_fs', 'dm3_bct']
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565) # MODEDATA['dm3_bct']['E'])
+
+    
+def recover_mirrors():
+    yield from abs_set(m2_yu.home_signal,  1)
+    yield from abs_set(m2_xu.home_signal,  1)
+    yield from abs_set(m3_yu.home_signal,  1)
+    yield from abs_set(m3_xu.home_signal,  1)
+    yield from sleep(1.0)
+    print('Begin homing lateral and vertical motors in M2 and M3:\n')
+    hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value,
+               m3_yu.hocpl.value, m3_ydo.hocpl.value, m3_ydi.hocpl.value, m3_xu.hocpl.value, m3_xd.hocpl.value)
+    while any(v == 0 for v in hvalues):
+        hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value,
+                   m3_yu.hocpl.value, m3_ydo.hocpl.value, m3_ydi.hocpl.value, m3_xu.hocpl.value, m3_xd.hocpl.value)
+        strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(m2_yu,  MODEDATA['m2_yu']['E'],
+                  m2_ydo, MODEDATA['m2_ydo']['E'],
+                  m2_ydi, MODEDATA['m2_ydi']['E'],
+                  m2_xu,  MODEDATA['m2_xu']['E'],
+                  m2_xd,  MODEDATA['m2_xd']['E'],
+                  m3_yu,  MODEDATA['m3_yu']['E'],
+                  m3_ydo, MODEDATA['m3_ydo']['E'],
+                  m3_ydi, MODEDATA['m3_ydi']['E'],
+                  m3_xu,  MODEDATA['m3_xu']['E'],
+                  m3_xd,  MODEDATA['m3_xd']['E'])
+    

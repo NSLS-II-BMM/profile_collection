@@ -90,17 +90,33 @@ class DCM(PseudoPositioner):
         yield from abs_set(dcm_para.home_signal,  1)
         yield from abs_set(dcm_perp.home_signal,  1)
         yield from abs_set(dcm_x.home_signal,     1)
+        yield from sleep(1.0)
         ## wait for them to be homed
-        while dcm_bragg.hocpl.value == 0 or dcm_pitch.hocpl.value == 0 or dcm_roll.hocpl.value == 0 or \
-              dcm_para.hocpl.value  == 0 or dcm_perp.hocpl.value  == 0 or dcm_x.hocpl.value == 0:
-            yield from sleep(1)
+        print('Begin homing DCM motors:\n')
+        hvalues = (dcm_bragg.hocpl.value, dcm_pitch.hocpl.value, dcm_roll.hocpl.value, dcm_para.hocpl.value,
+                   dcm_perp.hocpl.value, dcm_x.hocpl.value)
+        while any(v == 0 for v in hvalues):
+            hvalues = (dcm_bragg.hocpl.value, dcm_pitch.hocpl.value, dcm_roll.hocpl.value, dcm_para.hocpl.value,
+                       dcm_perp.hocpl.value, dcm_x.hocpl.value)
+            strings = ['Bragg', 'pitch', 'roll', 'para', 'perp', 'x']
+            for i,v in enumerate(hvalues):
+                strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+            print('  '.join(strings), end='\r')
+            yield from sleep(1.0)
+                
+
         ## move x into the correct position for Si(111)
+        print('\n')
         yield from mv(dcm_x, 1)
         yield from mv(dcm_x, 0.3)
         ## move pitch and roll to the Si(111) positions
-        yield from mv(dcm_pitch, approximate_pitch(dcm.energy.readback.value), dcm_roll, -6.26)
+        this_energy = dcm.energy.readback.value
         yield from dcm.kill_plan()
+        yield from mv(dcm_pitch, approximate_pitch(this_energy), dcm_roll, -6.26)
+        yield from mv(dcm.energy, this_energy)
         print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.value)
+        yield from sleep(2.0)
+        yield from dcm.kill_plan()
         
     def kill(self):
         dcm_para.kill_cmd.put(1)
