@@ -93,7 +93,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
              m3.xu,           float(MODEDATA['m3_xu'][mode]),
              m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
      if reference is not None:
-          base.extend([xafs_ref, foils.position(reference)])
+          base.extend([xafs_ref, foils.position(reference.capitalize())])
      if edge is not None:
           base.extend([dcm.energy, edge])
 

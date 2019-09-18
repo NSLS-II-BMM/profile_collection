@@ -316,14 +316,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
            xrd=True implies focus=True and target=0
     '''
     #BMMuser.prompt = True
-
+    el = el.capitalize()
+    
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
         print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' %
-                       (BMMuser.macro_sleep, el.capitalize())))
+                       (BMMuser.macro_sleep, el)))
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################

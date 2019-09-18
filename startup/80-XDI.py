@@ -226,7 +226,7 @@ def write_XDI(datafile, dataframe):
     if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($3/$4)'
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
-        if kind == 'sead': plot_hint = '(%s + %s + %s + %s) / I0  --  ($6+$7+$8+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
+        if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:
@@ -269,7 +269,7 @@ def write_XDI(datafile, dataframe):
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
-        table['xmu'] = (table[BMMuser.dtc1] + table[BMMuser.dtc2] + table[BMMuser.dtc3] + table[BMMuser.dtc4]) / table['I0']
+        table['xmu'] = (table[BMMuser.dtc1] + table[BMMuser.dtc2] + table[BMMuser.dtc4]) / table['I0']
         if kind == '333':
             table['333_energy'] = table['dcm_energy']*3
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',

@@ -287,7 +287,7 @@ xafs_ref.user_offset.put(102)
 
 
 def setup_wheel():
-    yield from mv(xafs_x, -115.032, xafs_y, 117.94, xafs_wheel, 0)
+    yield from mv(xafs_x, -121.7, xafs_y, 118.6, xafs_wheel, 0)
     
 
 
