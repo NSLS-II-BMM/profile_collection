@@ -1081,7 +1081,13 @@ def xafs(inifile, **kwargs):
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an XAFS scan.\n' % BMMuser.macro_sleep))
+        (p, f) = scan_metadata(inifile=inifile, **kwargs)
+        if 'filename' in p: 
+            print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at sample "%s".\n' %
+                           (BMMuser.macro_sleep, p['filename'])))
+        else:
+            print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds.\nAlso there seems to be a problem with "%s".\n' %
+                           (BMMuser.macro_sleep, inifile)))
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
