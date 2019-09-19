@@ -328,8 +328,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-
-
     
     (ok, text) = BMM_clear_to_start()
     if ok is False:
@@ -411,7 +409,14 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el)
     yield from kill_mirror_jacks()
     yield from sleep(1)
-
+    if BMMuser.motor_fault is not None:
+        print(error_msg('\nSome motors are reporting amplifier faults: %s' % BMMuser.mode_change))
+        print('Clear the faults and try running the same change_edge() command again.')
+        print('See ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
+        BMMuser.motor_fault = None
+        return(yield from null())
+    BMMuser.motor_fault = None
+    
         
     ############################
     # run a rocking curve scan #

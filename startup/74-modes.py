@@ -69,8 +69,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      if prompt:
           action = input("Begin moving motors? [Y/n then Enter] ")
           if action.lower() == 'q' or action.lower() == 'n':
-               yield from null()
-               return
+               return(yield from null())
           
           
      RE.msg_hook = None
@@ -97,7 +96,26 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      if edge is not None:
           base.extend([dcm.energy, edge])
 
+     ###################################################################
+     # check for amplifier faults on the motors, return without moving #
+     # anything if any are found                                       #
+     ###################################################################
+     motors_ready = True
+     problem_motors = list()
+     for m in base[::2]:
+          try:        # skip non-FMBO motors, which do not have the amfe or amfae attributes
+               if m.amfe.value == 1 or m.amfae.value == 1:
+                    motors_ready = False
+                    problem_motors.append(m.name)
+          except:
+               continue
+     if motors_ready is False:
+          BMMuser.motor_fault = ', '.join(problem_motors)
+          return (yield from null())
 
+     ##########################
+     # do the motor movements #
+     ##########################
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
           yield from mv(*base)
      else:

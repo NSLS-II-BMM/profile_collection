@@ -85,6 +85,7 @@ class BMM_User(Borg):
         self.read_foils      = None
         self.read_rois       = None
         self.user_is_defined = False
+        self.motor_fault     = None
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -160,7 +161,7 @@ class BMM_User(Borg):
         '''
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils',
-                    'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep'):
+                    'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')

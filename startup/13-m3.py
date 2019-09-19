@@ -65,9 +65,9 @@ class Mirrors(PseudoPositioner):
 
 
     # The real (or physical) positioners:
-    yu  = Cpt(EpicsMotor, 'YU}Mtr')
-    ydo = Cpt(EpicsMotor, 'YDO}Mtr')
-    ydi = Cpt(EpicsMotor, 'YDI}Mtr')
+    yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
+    ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
+    ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
     xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
     xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
 
