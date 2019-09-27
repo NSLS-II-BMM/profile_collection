@@ -472,13 +472,17 @@ def db2xdi(datafile, key):
     The arguments are the resolved path to the output XDI file and
     a database key.
     '''
-    if os.path.isfile(datafile):
-        print(error_msg('%s already exists!  Bailing out....' % datafile))
+    dfile = datafile
+    if BMMuser.DATA not in dfile:
+        if 'bucket' not in BMMuser.DATA:
+            dfile = os.path.join(BMMuser.DATA, datafile)
+    if os.path.isfile(dfile):
+        print(error_msg('%s already exists!  Bailing out....' % dfile))
         return
     header = db[key]
     ## sanity check, make sure that db returned a header AND that the header was an xafs scan
-    write_XDI(datafile, header)
-    print(bold_msg('wrote %s' % datafile))
+    write_XDI(dfile, header)
+    print(bold_msg('wrote %s' % dfile))
 
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
@@ -1081,8 +1085,9 @@ def xafs(inifile, **kwargs):
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
+        inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
-        if 'filename' in p: 
+        if 'filename' in p:
             print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at sample "%s".\n' %
                            (BMMuser.macro_sleep, p['filename'])))
         else:

@@ -96,6 +96,27 @@ def recover_screens():
     yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565) # MODEDATA['dm3_bct']['E'])
 
     
+def recover_mirror2():
+    yield from abs_set(m2_yu.home_signal,  1)
+    yield from abs_set(m2_xu.home_signal,  1)
+    yield from sleep(1.0)
+    print('Begin homing lateral and vertical motors in M2:\n')
+    hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value)
+    while any(v == 0 for v in hvalues):
+        hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value)
+        strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd',]
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(m2_yu,  MODEDATA['m2_yu']['E'],
+                  m2_ydo, MODEDATA['m2_ydo']['E'],
+                  m2_ydi, MODEDATA['m2_ydi']['E'],
+                  m2_xu,  MODEDATA['m2_xu']['E'],
+                  m2_xd,  MODEDATA['m2_xd']['E'])
+
+
 def recover_mirrors():
     yield from abs_set(m2_yu.home_signal,  1)
     yield from abs_set(m2_xu.home_signal,  1)
@@ -124,4 +145,4 @@ def recover_mirrors():
                   m3_ydi, MODEDATA['m3_ydi']['E'],
                   m3_xu,  MODEDATA['m3_xu']['E'],
                   m3_xd,  MODEDATA['m3_xd']['E'])
-    
+
