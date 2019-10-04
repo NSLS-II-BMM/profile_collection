@@ -19,7 +19,7 @@ class BMM_User(Borg):
     Experiment attributes:
       * DATA:             path to folder containing data
       * prompt:           flag, True prompt at beginning of plans
-      * fianl_log_entry:  flag, True write log entries during plan cleanup
+      * final_log_entry:  flag, True write log entries during plan cleanup
       * date:             start date of experiment as YYYY-MM-DD
       * gup:              GUP number
       * saf:              SAF number
@@ -27,6 +27,7 @@ class BMM_User(Borg):
       * staff:            flag, True if a staff experiment
       * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
       * macro_sleep:      float, the length of that sleep
+      * motor_fault:      normally None, set to a string when motors are found in a fault state
 
     Current plot attributes
       * motor:            fast motor in current plot

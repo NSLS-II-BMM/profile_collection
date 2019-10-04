@@ -1102,6 +1102,17 @@ def xafs(inifile, **kwargs):
 
 
 def howlong(inifile, interactive=True, **kwargs):
+    '''
+    Estimate how long the scan sequence in an XAFS control file will take.
+
+    Interactive (command line) use:
+        howlong('scan.ini')
+
+    Non-interactive use (for instance, to display the control file contents and a time estimate):
+        howlong('scan.ini', interactive=False)
+
+    Parameters from control file are composable via kwargs.
+    '''
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
