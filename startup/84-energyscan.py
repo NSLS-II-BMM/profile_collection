@@ -201,7 +201,8 @@ def scan_metadata(inifile=None, **kwargs):
         parameters[a] = []
         if a not in kwargs:
             try:
-                for f in config.get('scan', a).split():
+                #for f in config.get('scan', a).split():
+                for f in re.split('[ \t,]+', config.get('scan', a).strip()):
                     try:
                         parameters[a].append(float(f))
                     except:
