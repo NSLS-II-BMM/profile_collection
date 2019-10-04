@@ -81,6 +81,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         @subs_decorator(plot)
         def scan_slit():
 
+            if slit_height < 0.5:
+                yield from mv(slits3.vsize, 0.5)
+            
             yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
             yield from abs_set(motor.velocity, 0.4, wait=True)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
@@ -111,6 +114,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         yield from scan_slit()
 
     def cleanup_plan():
+        yield from mv(slits3.vsize, slit_height)
         yield from abs_set(_locked_dwell_time, 0.5, wait=True)
         yield from bps.sleep(sleep)
         yield from abs_set(motor.kill_cmd, 1, wait=True)
@@ -129,6 +133,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
     ######################################################################
     
     motor = dm3_bct
+    slit_height = slits3.vsize.readback.value
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move, force), cleanup_plan())
