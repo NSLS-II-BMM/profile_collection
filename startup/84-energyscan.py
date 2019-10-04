@@ -722,7 +722,7 @@ def xafs(inifile, **kwargs):
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
                 print(error_msg('\nThese characters cannot be in file names copied onto most memory sticks:'))
-                print(error_msg('\n\t* : ? " < > | / \\'))
+                print(error_msg('\n\t* : ? % " < > | / \\'))
                 print(error_msg('\nSee ')+url_msg('https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words'))
                 p['filename'] = new_filename
 
@@ -792,7 +792,7 @@ def xafs(inifile, **kwargs):
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## gather up input data into a fomat suitable for the dossier
+        ## gather up input data into a format suitable for the dossier
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         clargs = textwrap.fill(str(kwargs), width=50).replace('\n', '<br>')
@@ -834,8 +834,8 @@ def xafs(inifile, **kwargs):
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',       title=p['filename'])
         elif 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-            plot =  [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', title=p['filename']),
-                     DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])]
+            plot =  DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', title=p['filename'])
+                    # DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])]
         elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
         elif 'both'  in p['mode']:
