@@ -201,7 +201,8 @@ def scan_metadata(inifile=None, **kwargs):
         parameters[a] = []
         if a not in kwargs:
             try:
-                for f in config.get('scan', a).split():
+                #for f in config.get('scan', a).split():
+                for f in re.split('[ \t,]+', config.get('scan', a).strip()):
                     try:
                         parameters[a].append(float(f))
                     except:
@@ -721,7 +722,7 @@ def xafs(inifile, **kwargs):
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
                 print(error_msg('\nThese characters cannot be in file names copied onto most memory sticks:'))
-                print(error_msg('\n\t* : ? " < > | / \\'))
+                print(error_msg('\n\t* : ? % " < > | / \\'))
                 print(error_msg('\nSee ')+url_msg('https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words'))
                 p['filename'] = new_filename
 
@@ -791,7 +792,7 @@ def xafs(inifile, **kwargs):
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## gather up input data into a fomat suitable for the dossier
+        ## gather up input data into a format suitable for the dossier
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         clargs = textwrap.fill(str(kwargs), width=50).replace('\n', '<br>')
@@ -1107,6 +1108,17 @@ def xafs(inifile, **kwargs):
 
 
 def howlong(inifile, interactive=True, **kwargs):
+    '''
+    Estimate how long the scan sequence in an XAFS control file will take.
+
+    Interactive (command line) use:
+        howlong('scan.ini')
+
+    Non-interactive use (for instance, to display the control file contents and a time estimate):
+        howlong('scan.ini', interactive=False)
+
+    Parameters from control file are composable via kwargs.
+    '''
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
