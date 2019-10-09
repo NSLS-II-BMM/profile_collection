@@ -148,10 +148,10 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
     intensity on I0, then return to the hutch slits to their original height.
 
     Input:
-      start:    (float) starting position relative to current  [-0.1]
-      end:      (float) ending position relative to current    [0.1]
-      nsteps:   (int) number of steps                          [101]
-      detector: (string) 'I0' or 'Bicron'                      ['I0']
+      start:    (float)  starting position relative to current  [-0.1]
+      end:      (float)  ending position relative to current    [0.1]
+      nsteps:   (int)    number of steps                        [101]
+      detector: (string) 'I0' or 'Bicron'                       ['I0']
     '''
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()

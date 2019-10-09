@@ -269,7 +269,7 @@ xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd
 
 
 ## XAFS stages
-xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
+#xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
 xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
@@ -279,16 +279,12 @@ xafs_y     = xafs_liny  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_wheel.user_offset.put(-2.079)
 xafs_ref._limits = (-95, 95)
 xafs_ref.user_offset.put(102)
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
 
 
-def setup_wheel():
-    yield from mv(xafs_x, -119.7, xafs_y, 112.1, xafs_wheel, 0)
-    
 
 
 def homed():

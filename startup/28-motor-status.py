@@ -73,6 +73,7 @@ def motor_sidebar():
     mlist.append('pitch = %.3f ; roll = %.3f'  % (xafs_pitch.user_readback.value, xafs_roll.user_readback.value))
     mlist.append('ref = %.3f ; wheel = %.3f'   % (xafs_linxs.user_readback.value, xafs_wheel.user_readback.value))
     mlist.append('roth = %.3f ; rots = %.3f'   % (xafs_roth.user_readback.value,  xafs_rots.user_readback.value))
+    mlist.append('wheel slot = %2d'            % xafs_wheel.current_slot())
     motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     motors += '\n<br><br>DM3_BCT: %.3f mm' % dm3_bct.user_readback.value

@@ -219,6 +219,10 @@ class BMM_User(Borg):
         DATA = folder + '/'
         self.DATA = folder + '/'
         self.folder = folder + '/'
+        try:
+            wmb.folder = self.folder
+        except:
+            pass
         step += 1
 
         ## setup logger
@@ -243,19 +247,44 @@ class BMM_User(Borg):
         step += 1
 
         ## write macro template
-        macrotmpl = os.path.join(startup, 'macro.tmpl')
-        macropy = os.path.join(folder, 'macro.py')
+        macrotmpl = os.path.join(startup, 'wheelmacro.tmpl')
+        macropy = os.path.join(folder, 'sample_macro.py')
+        commands = '''
+        ## sample 1
+        yield from slot(1)
+        yield from xafs('scan.ini', filename='samp1', sample='first sample')
+        close_last_plot()
+    
+        ## sample 2
+        yield from slot(2)
+        ## yield from mvr(xafs_x, 0.5)
+        yield from xafs('scan.ini', filename='samp2', sample='another sample', comment='my comment')
+        close_last_plot()
+
+        ## sample 3
+        yield from slot(3)
+        yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
+        close_last_plot()'''
         if not os.path.isfile(macropy):
             with open(macrotmpl) as f:
                 content = f.readlines()
             o = open(macropy, 'w')
-            o.write(''.join(content).format(folder=folder))
+            o.write(''.join(content).format(folder=folder, base='sample', content=commands))
             o.close()
             print('%d. Created macro template:         %-75s' % (step, macropy))
         else:
             print('%d. Found macro template:           %-75s' % (step, macropy))
         step += 1
 
+        xlsxtmpl = os.path.join(startup, 'wheel_template.xlsx')
+        xlsxfile = os.path.join(folder, 'wheel_template.xlsx')
+        if not os.path.isfile(xlsxfile):
+            shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
+            print('%d. Copied macro building template: %-75s' % (step, xlsxfile))
+        else:
+            print('%d. Found macro building template:  %-75s' % (step, xlsxfile))
+        step += 1            
+        
         ## make html folder, copy static html generation files
         htmlfolder = os.path.join(folder, 'dossier')
         if not os.path.isdir(htmlfolder):
@@ -276,7 +305,7 @@ class BMM_User(Borg):
             os.mkdir(prjfolder)
             print('%d. Created Athena prj folder:      %-75s' % (step,prjfolder))
         else:
-            print('%d. Found Athena prj folder         %-75s' % (step,prjfolder))
+            print('%d. Found Athena prj folder:        %-75s' % (step,prjfolder))
         step += 1
    
         self.gup = gup
@@ -314,6 +343,10 @@ class BMM_User(Borg):
         if date is None:
             print(error_msg('You did not supply the start date'))
             return()
+        pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
+        if not pattern.search(date):
+            print(error_msg('The start date must be in the form YYYY-MM-DD'))
+            return()
         if gup == 0:
             print(error_msg('You did not supply the GUP number'))
             return()
@@ -344,9 +377,8 @@ class BMM_User(Borg):
         command, this function will read a json serialization of the
         arguments to the start_experiment() command.
 
-        The intent is that, if that serialization file is found at
-        bsui start-up, this function is run so that the session is
-        immediately ready for the current user.
+        If that serialization file is found at bsui start-up, this function
+        is run. Thus, the session is immediately ready for the current user.
 
         In the situation where this start-up script is "%run -i"-ed,
         the fact that self.user_is_defined is True will be recognized.
@@ -412,6 +444,8 @@ class BMM_User(Borg):
         BMM_unset_user_log()
         DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         self.DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
+        self.folder = self.DATA
+        wmb.folder = self.folder
         self.date = ''
         self.gup = 0
         self.saf = 0
