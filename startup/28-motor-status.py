@@ -26,6 +26,13 @@ def motor_status():
     text += '      roll     = %7.3f mrad          XU  = %7.3f mm\n'     % (m3.roll.readback.value,     m3.xu.user_readback.value)
     text += '      yaw      = %7.3f mrad          XD  = %7.3f mm\n\n'   % (m3.yaw.readback.value,      m3.xd.user_readback.value)
 
+    text += ' Slits2:  vsize  vcenter  hsize   hcenter     top    bottom    outboard  inboard\n'
+    text += '        %7.3f %7.3f %7.3f %7.3f    %7.3f  %7.3f  %7.3f  %7.3f\n\n' % \
+            (slits2.vsize.readback.value, slits2.vcenter.readback.value,
+             slits2.hsize.readback.value, slits2.hcenter.readback.value,
+             slits2.top.user_readback.value, slits2.bottom.user_readback.value,
+             slits2.outboard.user_readback.value, slits2.inboard.user_readback.value)
+
     text += ' Slits3:  vsize  vcenter  hsize   hcenter     top    bottom    outboard  inboard\n'
     text += '        %7.3f %7.3f %7.3f %7.3f    %7.3f  %7.3f  %7.3f  %7.3f\n\n' % \
             (slits3.vsize.readback.value, slits3.vcenter.readback.value,
@@ -33,14 +40,16 @@ def motor_status():
              slits3.top.user_readback.value, slits3.bottom.user_readback.value,
              slits3.outboard.user_readback.value, slits3.inboard.user_readback.value)
 
-    text += ' DM3_BCT: %7.3f mm\n\n' % dm3_bct.user_readback.value
+    text += ' DM3_BCT: %7.3f mm\t' % dm3_bct.user_readback.value
+    text += ' DM3_foils: %7.3f mm\t' % dm3_foils.user_readback.value
+    text += ' DM2_fs: %7.3f mm\n\n' % dm2_fs.user_readback.value
 
     text += ' XAFS table:\n      vertical  pitch    roll   YU     YDO     YDI\n'
     text += '       %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f\n\n' % \
             (xafs_table.vertical.readback.value, xafs_table.pitch.readback.value, xafs_table.roll.readback.value,
              xafs_table.yu.user_readback.value, xafs_table.ydo.user_readback.value, xafs_table.ydi.user_readback.value)
 
-    text += ' XAFS stages (motor names are xafs_<name>):\n'
+    text += ' XAFS stages (motor names are xafs_<name>, units mm or deg):\n'
     text += '     name =     x        y     roll    pitch    linxs    roth     wheel    rots\n'
     text += '           %8.3f %8.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f\n' % \
             (xafs_linx.user_readback.value,
@@ -116,6 +125,18 @@ def motor_sidebar():
     mlist.append('roll = %.3f ; YDI = %.3f'    % (xafs_table.roll.readback.value,     xafs_table.ydi.user_readback.value))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
+    mlist = []
+    mlist.append('Slits2:')
+    mlist.append('vsize = %.3f ; vcenter =%.3f'      % (slits2.vsize.readback.value,         slits2.vcenter.readback.value))
+    mlist.append('hsize = %.3f ; hcenter =%.3f'      % (slits2.hsize.readback.value,         slits2.hcenter.readback.value))
+    mlist.append('top  = %.3f ; bottom = %.3f'       % (slits2.top.user_readback.value,      slits2.bottom.user_readback.value))
+    mlist.append('outboard  = %.3f ; inboard = %.3f' % (slits2.outboard.user_readback.value, slits2.inboard.user_readback.value))
+    motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
+
+    motors += '\n<br><br>DM3_foils: %.3f mm' % dm3_foils.user_readback.value
+    motors += '\n<br>DM2_foils: %.3f mm' % dm2_fs.user_readback.value
+
+    
     return motors
 
 

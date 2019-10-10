@@ -1,5 +1,4 @@
-import sys
-import os
+import sys, os, re
 import shutil
 from distutils.dir_util import copy_tree
 import json
