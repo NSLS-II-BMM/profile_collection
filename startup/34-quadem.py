@@ -109,8 +109,10 @@ quadem2 = QuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 
 def dark_current():
-    print('\nClosing photon shutter')
-    yield from shb.close_plan()
+    reopen = shb.state.value == shb.openval 
+    if reopen:
+        print('\nClosing photon shutter')
+        yield from shb.close_plan()
     print('Measuring current offsets, this will take several seconds')
     EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
     EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
@@ -118,8 +120,9 @@ def dark_current():
     EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
     yield from sleep(3)
     BMM_log_info('Measured dark current on quadem1')
-    print('Opening photon shutter')
-    yield from shb.open_plan()
-    print('You are ready to measure!\n')
+    if reopen:
+        print('Opening photon shutter')
+        yield from shb.open_plan()
+        print('You are ready to measure!\n')
 
     

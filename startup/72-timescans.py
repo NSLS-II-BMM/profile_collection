@@ -56,7 +56,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     RE.msg_hook = None
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
-    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir'):
+    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir') and 'Dtc' not in detector:
         print(error_msg('\n*** %s is not a timescan measurement (%s)\n' %
                         (detector, 'it, if, i0, iy, ir')))
         yield from null()
@@ -79,6 +79,11 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     elif detector == 'Iy':
         denominator = ' / I0'
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['Iy']/doc['data']['I0'])
+    elif detector == 'Dtc':
+        dets.append(vor)
+        denominator = ' / I0'
+        func  = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc2]/doc['data']['I0'])
+        func3 = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc3]/doc['data']['I0'])
     elif detector == 'If':
         dets.append(vor)
         denominator = ' / I0'
@@ -89,10 +94,14 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
                              doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
 
     ## and this is the appropriate way to plot this linescan
-    plot = DerivedPlot(func,
-                       xlabel='elapsed time (seconds)',
-                       ylabel=detector+denominator,
-                       title='time scan')
+    if detector == 'Dtc':
+        plot = [DerivedPlot(func,  xlabel='elapsed time (seconds)', ylabel='dtc2', title='time scan'),
+                DerivedPlot(func3, xlabel='elapsed time (seconds)', ylabel='dtc3', title='time scan')]
+    else:
+        plot = DerivedPlot(func,
+                           xlabel='elapsed time (seconds)',
+                           ylabel=detector+denominator,
+                           title='time scan')
 
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     
@@ -101,7 +110,9 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     thismd['XDI']['Facility'] = dict()
     thismd['XDI']['Facility']['GUP']    = BMMuser.gup
     thismd['XDI']['Facility']['SAF']    = BMMuser.saf
+    thismd['XDI']['Beamline'] = dict()
     thismd['XDI']['Beamline']['energy'] = dcm.energy.readback.value
+    thismd['XDI']['Scan'] = dict()
     thismd['XDI']['Scan']['dwell_time'] = dwell
     thismd['XDI']['Scan']['delay']      = delay
     

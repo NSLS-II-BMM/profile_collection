@@ -312,7 +312,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         detector = detector.capitalize()
 
         ## sanity checks on axis
-        if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) and 'PseudoSingle' not in str(type(axis)):
+        if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) \
+           and 'PseudoSingle' not in str(type(axis)) and 'WheelMotor' not in str(type(axis)):
             print(error_msg('\n*** %s is not a linescan motor (%s)\n' %
                           (axis, str.join(', ', motor_nicknames.keys()))))
             yield from null()
@@ -321,6 +322,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         if 'EpicsMotor' in str(type(axis)):
             thismotor = axis
         elif 'PseudoSingle' in str(type(axis)):
+            thismotor = axis
+        elif 'WheelMotor' in str(type(axis)):
             thismotor = axis
         else:                       # presume it's an xafs_XXXX motor
             thismotor = motor_nicknames[axis]

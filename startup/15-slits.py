@@ -25,6 +25,11 @@ class Slits(PseudoPositioner):
     def wh(self):
         boxedtext(self.name, self.where(), 'cyan')
 
+    def enable(self):
+        dm3_slits_t.enable()
+        dm3_slits_b.enable()
+        dm3_slits_i.enable()
+        dm3_slits_o.enable()
 
     # The pseudo positioner axes:
     vsize   = Cpt(PseudoSingle, limits=(-15, 20))

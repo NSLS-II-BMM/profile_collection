@@ -117,6 +117,7 @@ class WheelMacroBuilder():
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
         self.tmpl     = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
+        self.measurements = list()
         self.read_spreadsheet()
         
     def truefalse(self, value):
@@ -179,10 +180,10 @@ class WheelMacroBuilder():
             if type(m['slot']) is not int:
                 continue
             if  self.truefalse(m['measure']) is False:
-                self.content += self.tab + '## not measuring slot %d\n\n' % m['slot']
+                #self.content += self.tab + '## not measuring slot %d\n\n' % m['slot']
                 continue
             if m['nscans'] is not None and m['nscans'] < 1:
-                self.content += self.tab + '## zero repetitions of slot %d\n\n' % m['slot']
+                #self.content += self.tab + '## zero repetitions of slot %d\n\n' % m['slot']
                 continue
         
             for k in ('element', 'edge'):

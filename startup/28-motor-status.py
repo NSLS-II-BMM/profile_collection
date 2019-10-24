@@ -40,9 +40,9 @@ def motor_status():
              slits3.top.user_readback.value, slits3.bottom.user_readback.value,
              slits3.outboard.user_readback.value, slits3.inboard.user_readback.value)
 
-    text += ' DM3_BCT: %7.3f mm\t' % dm3_bct.user_readback.value
-    text += ' DM3_foils: %7.3f mm\t' % dm3_foils.user_readback.value
-    text += ' DM2_fs: %7.3f mm\n\n' % dm2_fs.user_readback.value
+    text += ' DM3_BCT: %7.3f mm      '   % dm3_bct.user_readback.value
+    text += ' DM3_foils: %7.3f mm      ' % dm3_foils.user_readback.value
+    text += ' DM2_fs: %7.3f mm\n\n'      % dm2_fs.user_readback.value
 
     text += ' XAFS table:\n      vertical  pitch    roll   YU     YDO     YDI\n'
     text += '       %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f\n\n' % \

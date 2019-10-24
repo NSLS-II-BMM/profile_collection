@@ -83,6 +83,10 @@ class DCM(PseudoPositioner):
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
         '''
+        dcm_bragg.acceleration.put(BMMuser.acc_fast)
+        dcm_para.velocity.put(0.75)
+        dcm_para.hvel_sp.put(0.5)
+        dcm_x.velocity.put(0.6)
         ## initiate homing for Bragg, pitch, roll, para, perp, and x
         yield from abs_set(dcm_bragg.home_signal, 1)
         yield from abs_set(dcm_pitch.home_signal, 1)
