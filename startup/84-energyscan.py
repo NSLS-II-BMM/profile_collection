@@ -1013,16 +1013,17 @@ def xafs(inifile, **kwargs):
                 if p['ththth']: md['_kind'] = '333'
 
                 xdi = {'XDI': md}
+                mtr = {'BMM_motors' : motor_metadata()}
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
                 #if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                       md={**xdi, **supplied_metadata})
+                                       md={**xdi, **mtr, **supplied_metadata})
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                       md={**xdi, **supplied_metadata})
+                                       md={**xdi, **mtr, **supplied_metadata})
                 header = db[-1]
                 write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))

@@ -214,7 +214,7 @@ dcm_x.llm.value = 0
 dcm_x.velocity.put(0.6)
 
 ## this is about as fast as this motor can go, 1.25 results in a following error
-dcm_para.velocity.put(1.0)
+dcm_para.velocity.put(0.75)
 dcm_para.hvel_sp.put(0.5)
 
 ## focusing mirror

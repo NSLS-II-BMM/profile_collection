@@ -90,7 +90,7 @@ class WheelMacroBuilder():
 
     Example:
        mb = MacroBuilder()
-       mb.spreadsheets('wheel1.xlsx')
+       mb.spreadsheet('wheel1.xlsx')
        mb.write_macro()
     '''
     def __init__(self):
@@ -197,8 +197,8 @@ class WheelMacroBuilder():
                 if m['focus'] == 'focused':
                     focus = True
                 if first_change:
-                    pass
                     first_change = False
+                    pass
                 else:
                     self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
             else:

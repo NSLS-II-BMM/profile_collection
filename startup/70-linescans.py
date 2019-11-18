@@ -81,8 +81,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         @subs_decorator(plot)
         def scan_slit():
 
-            if slit_height < 0.5:
-                yield from mv(slits3.vsize, 0.5)
+            #if slit_height < 0.5:
+            #    yield from mv(slits3.vsize, 0.5)
             
             yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
             yield from abs_set(motor.velocity, 0.4, wait=True)
