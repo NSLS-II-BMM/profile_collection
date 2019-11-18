@@ -158,12 +158,15 @@ class WheelMacroBuilder():
                                       'bounds':     row[14].value,     # scan parameters
                                       'steps':      row[15].value,
                                       'times':      row[16].value,
-                                      'snapshots':  self.truefalse(row[17].value), # flags
-                                      'htmlpage':   self.truefalse(row[18].value),
-                                      'usbstick':   self.truefalse(row[19].value),
-                                      'bothways':   self.truefalse(row[20].value),
-                                      'channelcut': self.truefalse(row[21].value),
-                                      'ththth':     self.truefalse(row[22].value),
+                                      'samplex':    row[17].value,
+                                      'sampley':    row[18].value,
+                                      'slitwidth':  row[19].value,
+                                      'snapshots':  self.truefalse(row[20].value), # flags
+                                      'htmlpage':   self.truefalse(row[21].value),
+                                      'usbstick':   self.truefalse(row[22].value),
+                                      'bothways':   self.truefalse(row[23].value),
+                                      'channelcut': self.truefalse(row[24].value),
+                                      'ththth':     self.truefalse(row[25].value),
             })
         #pp.pprint(self.measurements)
 
@@ -179,17 +182,25 @@ class WheelMacroBuilder():
         for m in self.measurements:
             if type(m['slot']) is not int:
                 continue
+            if type(m['filename']) is None:
+                continue
             if  self.truefalse(m['measure']) is False:
                 #self.content += self.tab + '## not measuring slot %d\n\n' % m['slot']
                 continue
             if m['nscans'] is not None and m['nscans'] < 1:
                 #self.content += self.tab + '## zero repetitions of slot %d\n\n' % m['slot']
                 continue
-        
             for k in ('element', 'edge'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
             self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
+            if m['samplex'] is not None:
+                self.content += self.tab + 'yield from mv(xafs_x, %d)\n' % m['samplex']
+            if m['sampley'] is not None:
+                self.content += self.tab + 'yield from mv(xafs_y, %d)\n' % m['sampley']
+            if m['slitwidth'] is not None:
+                self.content += self.tab + 'yield from mv(slits3.hsize, %d)\n' % m['slitwidth']
+            
             if m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
@@ -240,6 +251,8 @@ class WheelMacroBuilder():
         for k in ('slot', 'measure', 'focus'): # things in the spreadsheet but not in the INI file
             default.pop(k, None)
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
+        if default['experimenters'] is None or str(default['experimenters']).strip() == '':
+            default['experimenters'] = BMMuser.name
         config.read_dict({'scan': default})
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
