@@ -242,8 +242,8 @@ def scan_metadata(inifile=None, **kwargs):
     if not os.path.isdir(parameters['folder']):
         print(error_msg('\nfolder %s does not exist\n' % parameters['folder']))
         return {}, {}
-
-            
+    parameters['mode'] = parameters['mode'].lower()
+    
     ## ----- start value
     if 'start' not in kwargs:
         try:
@@ -805,6 +805,7 @@ def xafs(inifile, **kwargs):
         if not dcm.suppress_channel_cut:
             report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
             dcm.mode = 'fixed'
+            dcm_bragg.clear_encoder_loss()
             yield from mv(dcm.energy, eave)
             if p['rockingcurve']:
                 report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
@@ -991,12 +992,14 @@ def xafs(inifile, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
+                    dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[-1]+5)
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
                     print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.value)))
+                    dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.value))
@@ -1048,6 +1051,7 @@ def xafs(inifile, **kwargs):
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
+            dcm_bragg.clear_encoder_loss()
             yield from mv(dcm.energy, eave)
             yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
 

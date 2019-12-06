@@ -7,6 +7,7 @@ import warnings
 from numpy import log
 
 from bluesky.callbacks import CallbackBase
+#from bluesky.callbacks.mpl_plotting import QtAwareCallback
 
 run_report(__file__)
 
@@ -60,6 +61,7 @@ def close_all_plots():
     BMMuser.fig      = None
     BMMuser.ax       = None
     
+#class DerivedPlot(QtAwareCallback):
 class DerivedPlot(CallbackBase):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, title=None, legend_keys=None, stream_name='primary', **kwargs):
         """

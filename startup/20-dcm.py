@@ -10,6 +10,9 @@ run_report(__file__)
 
 HBARC = 1973.27053324
 
+# PV for clearing encoder signal loss
+# XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr_ENC_LSS_CLR_CMD.PROC
+
 class DCM(PseudoPositioner):
     def __init__(self, *args, crystal='111', mode='fixed', offset=30, **kwargs):
         self._crystal = crystal

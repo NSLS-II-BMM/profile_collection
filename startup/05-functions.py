@@ -53,24 +53,34 @@ run_report(__file__)
 
 
 def error_msg(text):
+    '''Red text'''
     return colored(text, 'lightred')
 def warning_msg(text):
+    '''Yellow text'''
     return colored(text, 'yellow')
 def go_msg(text):
+    '''Green text'''
     return colored(text, 'lightgreen')
 def url_msg(text):
+    '''Undecorated text, intended for URLs'''
     return text
 def bold_msg(text):
+    '''Bright white text'''
     return colored(text, 'white')
 def verbosebold_msg(text):
+    '''Bright cyan text'''
     return colored(text, 'lightcyan')
 def list_msg(text):
+    '''Cyan text'''
     return colored(text, 'cyan')
 def disconnected_msg(text):
+    '''Purple text'''
     return colored(text, 'purple')
 def info_msg(text):
+    '''Brown text'''
     return colored(text, 'brown')
 def whisper(text):
+    '''Light gray text'''
     return colored(text, 'darkgray')
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'

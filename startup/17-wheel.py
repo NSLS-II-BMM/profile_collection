@@ -20,28 +20,28 @@ class WheelMotor(EndStationEpicsMotor):
        move to the given slot number, taking care to go the shorter way
     '''
     def current_slot(self, value=None):
-        '''Return the current sample wheel slot number.'''
+        '''Return the current slot number for a sample wheel.'''
         if value is not None:
             angle = round(value)
         else:
-            angle = round(xafs_wheel.user_readback.value)
+            angle = round(self.user_readback.value)
         this = round((-1*self.slotone-15+angle) / (-15)) % 24
         if this == 0: this = 24
         return this
 
     def reset(self):
-        '''Return the wheel to slot 1'''
+        '''Return a sample wheel to slot 1'''
         yield from mv(self, self.slotone)
         report('Returned to sample wheel slot 1 at %d degrees' % self.slotone, 'bold')
-    
-    def set_slot(self, n):
-        '''Move to a numbered slot on the sample wheel.'''
+
+    def angle_from_current(self, n):
+        '''Return the angle from the current position to the target'''
         if type(n) is not int:
             print(error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n)))
-            return(yield from null())
+            return(0)
         if n<1 or n>24:
             print(error_msg('Slots are numbered from 1 to 24'))
-            return(yield from null())
+            return(0)
 
         current = self.current_slot()
         distance = n - current
@@ -50,14 +50,92 @@ class WheelMotor(EndStationEpicsMotor):
         elif distance < -12:
             distance = 24 + distance
         angle = -15*distance
-        yield from mvr(xafs_wheel, angle)
+        return angle
+        
+    def set_slot(self, n):
+        '''Move to a numbered slot on a sample wheel.'''
+        if type(n) is not int:
+            print(error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n)))
+            return(yield from null())
+        if n<1 or n>24:
+            print(error_msg('Slots are numbered from 1 to 24'))
+            return(yield from null())
+        angle = self.angle_from_current(n)
+        yield from mvr(self, angle)
         report('Arrived at sample wheel slot %d' % n, 'bold')
+
+    def slot_number(self, target):
+        try:
+            target = target.capitalize()
+            slot = xafs_ref.content.index(target) + 1
+            return slot
+        except:
+            return self.current_slot()
+        
+        
+    def position_of_slot(self, target):
+        if type(target) is int:
+            angle = self.angle_from_current(target)
+        elif type(target) is str:
+            target = self.slot_number(target.capitalize())
+            angle = self.angle_from_current(target)
+        return(xafs_ref.user_readback.value+angle)
+        
 
 xafs_wheel = xafs_rotb  = WheelMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.slotone = -30        # the angular position of slot #1
 xafs_wheel.user_offset.put(-2.079)
 slot = xafs_wheel.set_slot
 
+xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
+xafs_ref.slotone = 0        # the angular position of slot #1
+
+#                    1     2     3     4     5     6     7     8     9     10    11    12
+xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', None, None, None]
+
+def reference(target=None):
+    if target is None:
+        print('Not moving reference wheel.')
+        return(yield from null())
+    if type(target) is int:
+        if target < 1 or target > 24:
+            print('An integer reference target must be between 1 and 24 (%d)' % target)
+            return(yield from null())
+        else:
+            yield from xafs_ref.set_slot(target)
+            return
+    try:
+        target = target.capitalize()
+        slot = xafs_ref.content.index(target) + 1
+        yield from xafs_ref.set_slot(slot)
+    except:
+        print('Element %s is not on the reference wheel.' % target)
+        
+
+def show_reference_wheel():
+    wheel = xafs_ref.content.copy()
+    this  = xafs_ref.current_slot() - 1
+    #wheel[this] = go_msg(wheel[this])
+    text = 'Foil wheel:\n'
+    text += bold_msg('    1      2      3      4      5      6      7      8      9     10     11     12\n')
+    text += ' '
+    for i in range(12):
+        if i==this:
+            text += go_msg('%4.4s' % str(wheel[i])) + '   '
+        else:
+            text += '%4.4s' % str(wheel[i]) + '   '
+    text += '\n'
+    text += bold_msg('   13     14     15     16     17     18     19     20     21     22     23     24\n')
+    text += ' '
+    for i in range(12, 24):
+        if i==this:
+            text += go_msg('%4.4s' % str(wheel[i])) + '   '
+        else:
+            text += '%4.4s' % str(wheel[i]) + '   '
+    text += '\n'
+    return(text)
+        
 ## reference foil wheel will be something like this:
 # xafs_wheel.content = ['Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As',
 #                       'Se', 'Br', 'Sr', 'Y',  'Nb', 'Mo', 'Hf', 'W',  'Re'  'Pt', 'Au', 'Pb']
@@ -199,7 +277,7 @@ class WheelMacroBuilder():
             if m['sampley'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_y, %d)\n' % m['sampley']
             if m['slitwidth'] is not None:
-                self.content += self.tab + 'yield from mv(slits3.hsize, %d)\n' % m['slitwidth']
+                self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
             
             if m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
@@ -223,6 +301,8 @@ class WheelMacroBuilder():
                     continue
                 ## skip the flags for now
                 elif k in ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth'):
+                    continue
+                elif k in ('samplex', 'sampley', 'slitwidth'):
                     continue
                 ## skip element & edge if they are same as default
                 elif k in ('element', 'edge'):
@@ -248,7 +328,7 @@ class WheelMacroBuilder():
         #################################
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
-        for k in ('slot', 'measure', 'focus'): # things in the spreadsheet but not in the INI file
+        for k in ('slot', 'measure', 'focus', 'samplex', 'sampley', 'slitwidth'): # things in the spreadsheet but not in the INI file
             default.pop(k, None)
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':

@@ -249,7 +249,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
 motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
                    'y'    : xafs_y,     'pitch': xafs_pitch, 'wh' : xafs_wheel,
                    's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
-                   'ref'  : xafs_ref,   'r'    : xafs_roll,
+                   'xs'   : xafs_linxs, 'r'    : xafs_roll,
                }
 
 ## before 29 August 2018, the order of arguments for linescan() was
@@ -379,6 +379,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                    doc['data'][BMMuser.dtc3] +
                                    doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
+        
+        #abs_set(_locked_dwell_time, 0.5)
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
@@ -387,7 +389,6 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                xlabel=thismotor.name,
                                ylabel=detector+denominator,
                                title='%s vs. %s' % (detname, thismotor.name))
-
         if 'PseudoSingle' in str(type(axis)):
             value = thismotor.readback.value
         else:

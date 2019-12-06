@@ -13,7 +13,7 @@ status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'FRPOS' : 0, 'HSRCH' : 0, 'SODPL' : 0, 'SOPL'  : 0,
                'HOCPL' : 1, 'PHSRA' : 0, 'PREFE' : 0, 'TRMOV' : 0,
                'IFFE'  : 0, 'AMFAE' : 0, 'AMFE'  : 0, 'FAFOE' : 0,
-               'WFOER' : 0, 'INPOS' : 1}
+               'WFOER' : 0, 'INPOS' : 1, 'ENC_LSS' : 0}
 
 class FMBOEpicsMotor(EpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES')
@@ -84,6 +84,10 @@ class FMBOEpicsMotor(EpicsMotor):
     inpos      = Cpt(EpicsSignal, '_INPOS_STS')
     inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC')
 
+    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS')
+    enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC')
+    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC')
+    
     home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC')
     hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A') # how homing velocity gets set for an FMBO SAI
 
@@ -109,6 +113,11 @@ class FMBOEpicsMotor(EpicsMotor):
             if action.lower() == 'q' or action.lower() == 'n':
                 return
         self.home_signal.put(1)
+
+    def clear_encoder_loss(self):
+        self.clear_enc_lss.put(1)
+        self.enable()
+        BMM_log_info('clearing encoder loss for %s' % self.name)
 
     def wh(self):
         return(round(self.user_readback.value, 3))
@@ -190,7 +199,7 @@ dm1_filters2.llm.value = -52
 
 
 ## monochromator
-dcm_bragg = FMBOEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
+dcm_bragg = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
 dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
 dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
 dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
@@ -274,14 +283,14 @@ xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd
 xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
 xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_lins')
-xafs_ref   = xafs_linxs = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
+xafs_linxs = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
 xafs_x     = xafs_linx  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_linx')
 xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_liny')
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_ref._limits = (-95, 95)
-xafs_ref.user_offset.put(102)
+xafs_linxs._limits = (-95, 95)
+xafs_linxs.user_offset.put(102)
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
 

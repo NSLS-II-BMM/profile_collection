@@ -12,7 +12,7 @@ class ReferenceFoils():
     Configure one slot of the reference holder:
        foils.set_slot(2, 'Fe')
 
-    Return the xafs_ref value for a slot:
+    Return the xafs_linxs value for a slot:
        pos = foils.position(2)
 
     Move to a slot by element symbol:
@@ -76,10 +76,10 @@ class ReferenceFoils():
             
         
     def position(self, i):
-        '''Return the xafs_ref position corresponding to slot i where i ∈ (0 .. 4)'''
+        '''Return the xafs_linxs position corresponding to slot i where i ∈ (0 .. 4)'''
         if type(i) is str and i in foils.slots:
             i=foils.slots.index(i.capitalize())
-        if type(i) is not int: return xafs_ref.user_readback.value # so it doesn't move...
+        if type(i) is not int: return xafs_linxs.user_readback.value # so it doesn't move...
         if i > 4:        return 90
         if i < 0:        return -90
         return(-90 + i*45)
@@ -101,19 +101,19 @@ class ReferenceFoils():
         moved = False
         for i in range(5):
             if element_symbol(el) == self.slots[i]:
-                yield from mv(xafs_ref, self.position(i))
-                report('Moved xafs_ref to %s at slot %d' % (el.capitalize(), i+1))
+                yield from mv(xafs_linxs, self.position(i))
+                report('Moved xafs_linxs to %s at slot %d' % (el.capitalize(), i+1))
                 moved = True
         if not moved:
-            print(warning_msg('%s is not in the reference holder, not moving xafs_ref' % el.capitalize()))
+            print(warning_msg('%s is not in the reference holder, not moving xafs_linxs' % el.capitalize()))
             yield from null()
             
     def show(self):
         '''Show configuration of foil holder'''
-        text = ' Reference foils (xafs_ref):\n'
+        text = ' Reference foils (xafs_linxs):\n'
         for i in range(5):
             ast = ' '
-            if abs(self.position(i) - xafs_ref.user_readback.value) < 1:
+            if abs(self.position(i) - xafs_linxs.user_readback.value) < 1:
                 ast = '*'
             text += '      %s slot %d : %s at %d mm\n'% (ast, i+1, str(self.slots[i]), self.position(i))
         return(text)
@@ -276,8 +276,9 @@ def approximate_pitch(energy):
         
 
 def show_edges():
-    text = foils.show() + '\n' + rois.show()
-    boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=55)
+    #text = foils.show() + '\n' + rois.show()
+    text = show_reference_wheel() + '\n' + rois.show()
+    boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False):
     '''Change edge energy by:

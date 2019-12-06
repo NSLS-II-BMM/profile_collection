@@ -10,20 +10,30 @@ BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\
 
 ## how to get hostname: os.uname()[1]
 
-BMM_log_master_file = '/home/xf06bm/Data/BMM_master.log'
+BMM_log_master_file = os.path.join(os.environ['HOME'], 'Data', 'BMM_master.log')
+if not os.path.isdir(os.path.join(os.environ['HOME'], 'Data')):
+    os.makedirs(os.path.join(os.environ['HOME'], 'Data'))
+if not os.path.isfile(BMM_log_master_file):
+    os.mknod(BMM_log_master_file)
 if os.path.isfile(BMM_log_master_file):
     chmod(BMM_log_master_file, 0o644)
-    BMM_log_master      = logging.FileHandler(BMM_log_master_file)
+    BMM_log_master = logging.FileHandler(BMM_log_master_file)
     BMM_log_master.setFormatter(BMM_formatter)
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-BMM_nas_log_file    = '/nist/xf06bm/data/BMM_master.log'
-if os.path.isfile(BMM_nas_log_file):
-    chmod(BMM_nas_log_file, 0o644)
-    BMM_log_nas = logging.FileHandler(BMM_nas_log_file)
-    BMM_log_nas.setFormatter(BMM_formatter)
-    BMM_logger.addHandler(BMM_log_nas)
+BMM_nas_log_file = '/nist/xf06bm/data/BMM_master.log'
+if os.path.isdir('/nist'):
+    if not os.path.isfile(BMM_nas_log_file):
+        basedir = os.path.dirname(BMM_nas_log_file)
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+        os.mknod(BMM_nas_log_file)
+    if os.path.isfile(BMM_nas_log_file):
+        chmod(BMM_nas_log_file, 0o644)
+        BMM_log_nas = logging.FileHandler(BMM_nas_log_file)
+        BMM_log_nas.setFormatter(BMM_formatter)
+        BMM_logger.addHandler(BMM_log_nas)
 
 BMM_logger.setLevel(logging.INFO)
 
