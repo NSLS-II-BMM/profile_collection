@@ -22,6 +22,7 @@ class BMM_User(Borg):
       * date:             start date of experiment as YYYY-MM-DD
       * gup:              GUP number
       * saf:              SAF number
+      * cycle:            NSLS-II ops cycle (e.g. '2020-1')
       * name:             full name of PI
       * staff:            flag, True if a staff experiment
       * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
@@ -80,6 +81,7 @@ class BMM_User(Borg):
         self.date            = ''
         self.gup             = 0
         self.saf             = 0
+        self.cycle           = '2020-1'
         self.name            = None
         self.staff           = False
         self.read_foils      = None

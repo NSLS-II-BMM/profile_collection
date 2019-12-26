@@ -122,6 +122,7 @@ def bmm_metadata(measurement   = 'transmission',
     md['Detector']['Ir']             = '25 cm ' + ir_gas
     md['Facility']['GUP']            = BMMuser.gup
     md['Facility']['SAF']            = BMMuser.saf
+    md['Facility']['cycle']          = BMMuser.cycle
     md['Sample']['name']             = sample
     md['Sample']['prep']             = prep
     #md['XDI']['Sample']['x_position']       = xafs_linx.user_readback.value

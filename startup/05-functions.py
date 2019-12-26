@@ -1,6 +1,24 @@
 import os, time
 from numpy import pi, sin, cos, arcsin, sqrt
 
+# read this
+#
+#   https://github.com/yaml/pyyaml/wiki/PyYAML-yaml.load(input)-Deprecation
+#
+# to understand this:
+#
+#   Loading metadata history from /home/xf06bm/.config/bluesky/bluesky_history.db
+# /opt/conda_envs/collection-2019-3.0-bmm/lib/python3.7/site-packages/dask/config.py:168:
+# YAMLLoadWarning: calling yaml.load() without Loader=... is
+# deprecated, as the default Loader is unsafe. Please read
+# https://msg.pyyaml.org/load for full details.
+#  data = yaml.load(f.read()) or {}
+#
+# In short, edit
+#   .../dask/config.py at line 168 to use the "full_load" method
+
+
+
 #import warnings
 #with warnings.catch_warnings():
 #    warnings.filterwarnings("ignore", message="CA.Client.Exception")

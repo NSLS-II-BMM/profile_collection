@@ -30,14 +30,6 @@ def next_index(folder, stub):
     return int(results[-1][-3:]) + 1
 
 ## need more error checking:
-##   ✓ sanitize the '#.#k' strings
-##   ✓ check that bounds are float or float+'k'
-##   ✓ negative boundaries must be floats
-##   ✓ steps cannot be negative
-##   ✓ times cannot be negative
-##   ✓ steps smaller than, say, '0.01k'
-##   ✓ steps smaller than 0.01
-##   ✓ out of order boundaries -- sort?
 ##   * k^2 times
 ##   * switch back to energy units after a k-valued boundary?
 ##   * pre-edge k-values steps & times

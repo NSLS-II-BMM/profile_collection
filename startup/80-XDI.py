@@ -183,6 +183,7 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Facility.mode: %s',                    'XDI.Facility.mode')
     metadata.start_doc('# Facility.GUP: %d',                     'XDI.Facility.GUP')
     metadata.start_doc('# Facility.SAF: %d',                     'XDI.Facility.SAF')
+    metadata.start_doc('# Facility.cycle: %s',                   'XDI.Facility.cycle')
     metadata.start_doc('# Mono.name: %s',                        'XDI.Mono.name')
     metadata.start_doc('# Mono.d_spacing: %s',                   'XDI.Mono.d_spacing')
     metadata.start_doc('# Mono.encoder_resolution: %.7f deg/ct', 'XDI.Mono.encoder_resolution')
