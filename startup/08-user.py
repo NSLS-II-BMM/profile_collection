@@ -23,6 +23,7 @@ class BMM_User(Borg):
       * gup:              GUP number
       * saf:              SAF number
       * cycle:            NSLS-II ops cycle (e.g. '2020-1')
+      * use_pilatus:      flas, True make a folder for Pilatus images
       * name:             full name of PI
       * staff:            flag, True if a staff experiment
       * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
@@ -82,6 +83,7 @@ class BMM_User(Borg):
         self.gup             = 0
         self.saf             = 0
         self.cycle           = '2020-1'
+        self.use_pilatus     = False
         self.name            = None
         self.staff           = False
         self.read_foils      = None
@@ -186,7 +188,7 @@ class BMM_User(Borg):
                         'dwell', 'delay'):
                 print('\t%-15s = %s' % (att, str(getattr(self, att))))
         
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a folder, if needed, and set the DATA variable
@@ -308,7 +310,17 @@ class BMM_User(Borg):
         else:
             print('%d. Found Athena prj folder:        %-75s' % (step,prjfolder))
         step += 1
-   
+
+        if use_pilatus:
+            ## make prj folder
+            pilfolder = os.path.join(folder, 'Pilatus')
+            if not os.path.isdir(pilfolder):
+                os.mkdir(pilfolder)
+                print('%d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
+            else:
+                print('%d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
+            step += 1
+
         self.gup = gup
         self.saf = saf
         print('%d. Set GUP and SAF numbers as metadata' % step)
@@ -318,7 +330,7 @@ class BMM_User(Borg):
     
         return None
 
-    def start_experiment(self, name=None, date=None, gup=0, saf=0):
+    def start_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
@@ -362,7 +374,7 @@ class BMM_User(Borg):
             folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
         self.name = name
         self.date = date
-        self.new_experiment(folder, saf=saf, gup=gup, name=name)
+        self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus)
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
