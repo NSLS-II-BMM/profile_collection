@@ -105,6 +105,48 @@ quadem1.Iy.name = 'Iy'
 #quadem1.current4_mean_value_nano.kind = 'omitted'
 
 
+class BMMDualEM(QuadEM):
+    _default_read_attrs = ['Ia',
+                           'Ib']
+    port_name = Cpt(Signal, value='EM180')
+    conf = Cpt(QuadEMPort, port_name='EM180')
+    em_range  = Cpt(EpicsSignalWithRBV, 'Range', string=True)
+    Ia = Cpt(Nanoize, derived_from='current1.mean_value')
+    Ib = Cpt(Nanoize, derived_from='current2.mean_value')
+    state  = Cpt(EpicsSignal, 'Acquire')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        #for c in ['current{}'.format(j) for j in range(1, 5)]:
+        #     getattr(self, c).read_attrs = ['mean_value']
+
+        # self.read_attrs = ['current{}'.format(j) for j in range(1, 5)]
+        self._acquisition_signal = self.acquire
+        self.configuration_attrs = ['integration_time', 'averaging_time','em_range','num_averaged','values_per_read']
+
+    def on(self):
+        print('Turning {} on'.format(self.name))
+        self.acquire_mode.put(0)
+        self.acquire.put(1)
+
+    def off(self):
+        print('Turning {} off'.format(self.name))
+        self.acquire_mode.put(2)
+        self.acquire.put(0)
+
+    def on_plan(self):
+        yield from abs_set(self.acquire, 1, wait=True)
+        yield from abs_set(self.acquire_mode, 0, wait=True)
+
+    def off_plan(self):
+        yield from abs_set(self.acquire, 0, wait=True)
+        yield from abs_set(self.acquire_mode, 2, wait=True)
+
+dualio = QuadEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+
+
+
 quadem2 = QuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 

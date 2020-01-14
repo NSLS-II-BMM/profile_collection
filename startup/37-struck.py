@@ -353,12 +353,27 @@ class BMMVortex(EpicsScaler):
         return float(rr * (totn*tt/oo))
 
     def set_hints(self, chan):
-        '''Set the dead time correction attributes to hinted for the selected, configured channel'''
+        '''Set the dead time correction attributes to hinted for the selected, configured channel
+        
+        Channels
+
+          1) top row of quad SCAs
+          2) middle row of quad SCAs
+          3) bottom row of quad SCAs
+         10) setup for SDC experiment with single channel going into 2 quad SCAs
+        '''
         for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4,
                    self.dtcorr21, self.dtcorr22, self.dtcorr23, self.dtcorr24,
                    self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
             pv.kind = 'normal'
             pv.off = True
+            icrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan8
+            icrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan9
+            icrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan10
+            ocrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan12
+            ocrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan13
+            ocrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan14
+            
         if chan == 1:
             for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4):
                 pv.kind = 'hinted'
@@ -371,6 +386,16 @@ class BMMVortex(EpicsScaler):
             for pv in (self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
                 pv.kind = 'hinted'
                 pv.off = False
+        elif chan == 10:
+            for pv in (self.dtcorr1, self.dtcorr21, self.dtcorr31, self.dtcorr2, self.dtcorr22, self.dtcorr32):
+                pv.kind = 'hinted'
+                pv.off = False
+            icrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan7
+            icrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan7
+            icrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan7
+            ocrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan11
+            ocrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan11
+            ocrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan11
             
 
     

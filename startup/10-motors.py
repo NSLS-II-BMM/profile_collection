@@ -312,6 +312,21 @@ def ampen():
             print("%-12s : %s" % (m.name, m.ampen.enum_strs[m.ampen.value]))
             
 
+def amfe():
+    print(bold_msg("%-12s : %s / %s" % ('motor', 'AMFE', 'AMFAE')))
+    for m in mcs8_motors:
+        if m.amfe.value:
+            fe  = warning_msg(m.amfe.enum_strs[m.amfe.value])
+        else:
+            fe  = m.amfe.enum_strs[m.amfe.value]
+        if m.amfae.value:
+            fae = warning_msg(m.amfae.enum_strs[m.amfae.value])
+        else:
+            fae = m.amfae.enum_strs[m.amfae.value]
+        print("%-12s : %s / %s" % (m.name, fe, fae))
+faults = amfe
+            
+
 
 xrd_delta  = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:VTTH}Mtr',    name='delta')
 xrd_eta    = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:VTH}Mtr',     name='eta')
