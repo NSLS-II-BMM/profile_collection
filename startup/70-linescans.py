@@ -332,7 +332,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         ## sanity checks on detector
         if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
             yield from null()
             return
 

@@ -367,12 +367,6 @@ class BMMVortex(EpicsScaler):
                    self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
             pv.kind = 'normal'
             pv.off = True
-            icrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan8
-            icrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan9
-            icrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan10
-            ocrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan12
-            ocrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan13
-            ocrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan14
             
         if chan == 1:
             for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4):
@@ -390,12 +384,6 @@ class BMMVortex(EpicsScaler):
             for pv in (self.dtcorr1, self.dtcorr21, self.dtcorr31, self.dtcorr2, self.dtcorr22, self.dtcorr32):
                 pv.kind = 'hinted'
                 pv.off = False
-            icrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan7
-            icrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan7
-            icrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan7
-            ocrs['XF:06BM-ES:1{Sclr:1}.S4']   = vor.channels.chan11
-            ocrs['XF:06BM-ES:1{Sclr:1}.S16']  = vor.channels.chan11
-            ocrs['XF:06BM-ES:1{Sclr:1}.S20']  = vor.channels.chan11
             
 
     

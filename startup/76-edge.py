@@ -234,7 +234,9 @@ class ROI():
         if not selected:
             print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
             yield from null()
-        
+
+# 22.265
+            
     def show(self):
         '''Show configuration of ROI channels'''
         text = ' ROI channels:\n'
