@@ -14,7 +14,8 @@ def resting_state():
     BMMuser.macro_dryrun = False
     quadem1.on()
     vor.on()
-    _locked_dwell_time.set(0.5)
+    _locked_dwell_time.move(0.3)
+    _locked_dwell_time.move(0.5)
     quadem1.Iy.kind = 'omitted'
     dcm.kill()
     RE.msg_hook = BMM_msg_hook
