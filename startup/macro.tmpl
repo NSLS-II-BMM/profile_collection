@@ -16,7 +16,7 @@
 #             /  Note that you are defining a command
 #            /   that gets run in BlueSky
 #           V
-def sample_sequence():
+def sample_sequence(dryrun=False):
     '''User-defined macro for running a sequence of motor motions and
     XAFS measurements
     '''
@@ -25,7 +25,7 @@ def sample_sequence():
         print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
         return(yield from null())
     
-    BMMuser.macro_dryrun = False
+    BMMuser.macro_dryrun = dryrun
     BMMuser.prompt = False
     BMM_log_info('Beginning sample macro')
     def main_plan():

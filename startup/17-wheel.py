@@ -186,8 +186,20 @@ class WheelMacroBuilder():
         self.content      = ''
         self.do_first_change = False
 
-    def spreadsheet(self, spreadsheet):
-        '''Read the spreadsheet and set several filenames based on the name of the spreadsheet.'''
+    def spreadsheet(self, spreadsheet, energy=False):
+        '''Convert a wheel macro spreadsheet to a BlueSky plan.
+
+        To create a macro from a spreadsheet called "MySamples.xlsx"
+
+            xlsx('MySamples')
+
+        To include a change_edge command at the beginning of the macro:
+
+            xlsx('MySamples', energy=True)
+
+        '''
+        if spreadsheet[-5:] != '.xlsx':
+            spreadsheet = spreadsheet+'.xlsx'
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
         self.wb       = load_workbook(self.source, read_only=True);
@@ -196,6 +208,9 @@ class WheelMacroBuilder():
         self.tmpl     = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
         self.measurements = list()
+        self.do_first_change = False
+        if energy is True:
+            self.do_first_change = True
         self.read_spreadsheet()
         
     def truefalse(self, value):
@@ -211,66 +226,47 @@ class WheelMacroBuilder():
         else:
             return False
 
-    def read_spreadsheet(self):
-        '''Slurp up the content of the spreadsheet and write the default control file
-        '''
-        print('Reading spreadsheet: %s' % self.source)
-        count = 0
-        for row in self.ws.rows:
-            count += 1
-            if count < 6:
-                continue
-            self.measurements.append({'slot':       row[1].value,      # sample location
-                                      'measure':    self.truefalse(row[2].value),  # filename and visualization
-                                      'filename':   row[3].value,
-                                      'nscans':     row[4].value,
-                                      'start':      row[5].value,
-                                      'mode':       row[6].value,
-                                      'e0':         row[7].value,      # energy range
-                                      'element':    row[8].value,
-                                      'edge':       row[9].value,
-                                      'focus':      row[10].value,
-                                      'sample':     row[11].value,     # scan metadata
-                                      'prep':       row[12].value,
-                                      'comment':    row[13].value,
-                                      'bounds':     row[14].value,     # scan parameters
-                                      'steps':      row[15].value,
-                                      'times':      row[16].value,
-                                      'samplex':    row[17].value,
-                                      'sampley':    row[18].value,
-                                      'slitwidth':  row[19].value,
-                                      'snapshots':  self.truefalse(row[20].value), # flags
-                                      'htmlpage':   self.truefalse(row[21].value),
-                                      'usbstick':   self.truefalse(row[22].value),
-                                      'bothways':   self.truefalse(row[23].value),
-                                      'channelcut': self.truefalse(row[24].value),
-                                      'ththth':     self.truefalse(row[25].value),
-            })
-        #pp.pprint(self.measurements)
 
     def write_macro(self):
-        '''Write a macro paragraph for each sample described in the spreadsheet.
-        A paragraph consists of line to move to the correct wheel slot, a line
-        to change the edge energy (if needed), and a line to measure the XAFS using
-        the correct set of control parameters.  Then write out the macro.py file.
+        '''Write a macro paragraph for each sample described in the
+        spreadsheet.  A paragraph consists of line to move to the
+        correct wheel slot, a line to change the edge energy (if
+        needed), a line to measure the XAFS using the correct set of
+        control parameters, and a line to close plot windows after the
+        scan.  
+
+        Finally, write out the master INI and macro python files.
         '''
-        first_change = not self.do_first_change
         element, edge, focus = (None, None, None)
         self.content = ''
         for m in self.measurements:
+
+            #####################################################
+            # all the reasons to skip a line in the spreadsheet #
+            #####################################################
+            if m['default'] is True:
+                element = m['element']
+                edge    = m['edge']
+                continue
             if type(m['slot']) is not int:
                 continue
             if type(m['filename']) is None:
                 continue
             if  self.truefalse(m['measure']) is False:
-                #self.content += self.tab + '## not measuring slot %d\n\n' % m['slot']
                 continue
             if m['nscans'] is not None and m['nscans'] < 1:
-                #self.content += self.tab + '## zero repetitions of slot %d\n\n' % m['slot']
                 continue
+
+            #######################################
+            # default element/edge(/focus) values #
+            #######################################
             for k in ('element', 'edge'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
+
+            ############################
+            # sample and slit movement #
+            ############################
             self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
             if m['samplex'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_x, %d)\n' % m['samplex']
@@ -278,22 +274,29 @@ class WheelMacroBuilder():
                 self.content += self.tab + 'yield from mv(xafs_y, %d)\n' % m['sampley']
             if m['slitwidth'] is not None:
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
+
             
-            if m['element'] != element or m['edge'] != edge: # focus...
+            ##########################
+            # change edge, if needed #
+            ##########################
+            focus = False
+            if m['focus'] == 'focused':
+                focus = True
+            if self.do_first_change is True:
+                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
+                self.do_first_change = False
+                
+            elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
-                focus   = False
-                if m['focus'] == 'focused':
-                    focus = True
-                if first_change:
-                    first_change = False
-                    pass
-                else:
-                    self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
+                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
             else:
                 #self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
                 pass
 
+            ######################################
+            # measure XAFS, then close all plots #
+            ######################################
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -323,12 +326,18 @@ class WheelMacroBuilder():
             self.content += command
             self.content += self.tab + 'close_last_plot()\n\n'
 
+        ################################
+        # end macro by closing shutter #
+        ################################
+        self.content += self.tab + 'yield from shb.close_plan()\n\n'
+
+        
         #################################
         # write out the master INI file #
         #################################
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
-        for k in ('slot', 'measure', 'focus', 'samplex', 'sampley', 'slitwidth'): # things in the spreadsheet but not in the INI file
+        for k in ('default', 'slot', 'measure', 'focus', 'samplex', 'sampley', 'slitwidth'): # things in the spreadsheet but not in the INI file
             default.pop(k, None)
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':
@@ -336,20 +345,74 @@ class WheelMacroBuilder():
         config.read_dict({'scan': default})
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
-        print('Default INI file: %s' % self.ini)
+        print(whisper('Wrote default INI file: %s' % self.ini))
 
-        ########################
-        # write the full macro #
-        ########################
+        ########################################################
+        # write the full macro to a file and %run -i that file #
+        ########################################################
         with open(self.tmpl) as f:
             text = f.readlines()
+        fullmacro = ''.join(text).format(folder=self.folder, base=self.basename, content=self.content)
         o = open(self.macro, 'w')
-        o.write(''.join(text).format(folder=self.folder, base=self.basename, content=self.content))
+        o.write(fullmacro)
         o.close()
-        print('Macro file: %s' % self.macro)
+        from IPython import get_ipython
+        ipython = get_ipython()
+        ipython.magic('run -i \'%s\'' % self.macro)
+        print(whisper('Wrote macro file: %s' % self.macro))
+            
+        #######################################
+        # explain to the user what to do next #
+        #######################################
+        print('\nYour new plan is called: ' + bold_msg('%s_macro' % self.basename))
+        print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
+        print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
+        print('Run:    '   + bold_msg('RE(%s_macro())' % self.basename))
 
+            
+    def read_spreadsheet(self):
+        '''Slurp up the content of the spreadsheet and write the default control file
+        '''
+        print('Reading spreadsheet: %s' % self.source)
+        count = 0
+        for row in self.ws.rows:
+            count += 1
+            if count < 6:
+                continue
+            defaultline = False
+            if count == 6:
+                defaultline = True
+            self.measurements.append({'default' :   defaultline,
+                                      'slot':       row[1].value,      # sample location
+                                      'measure':    self.truefalse(row[2].value),  # filename and visualization
+                                      'filename':   row[3].value,
+                                      'nscans':     row[4].value,
+                                      'start':      row[5].value,
+                                      'mode':       row[6].value,
+                                      'e0':         row[7].value,      # energy range
+                                      'element':    row[8].value,
+                                      'edge':       row[9].value,
+                                      'focus':      row[10].value,
+                                      'sample':     row[11].value,     # scan metadata
+                                      'prep':       row[12].value,
+                                      'comment':    row[13].value,
+                                      'bounds':     row[14].value,     # scan parameters
+                                      'steps':      row[15].value,
+                                      'times':      row[16].value,
+                                      'samplex':    row[17].value,
+                                      'sampley':    row[18].value,
+                                      'slitwidth':  row[19].value,
+                                      'snapshots':  self.truefalse(row[20].value), # flags
+                                      'htmlpage':   self.truefalse(row[21].value),
+                                      'usbstick':   self.truefalse(row[22].value),
+                                      'bothways':   self.truefalse(row[23].value),
+                                      'channelcut': self.truefalse(row[24].value),
+                                      'ththth':     self.truefalse(row[25].value),
+            })
+        #pp.pprint(self.measurements)
+        self.write_macro()
+        
 wmb = WheelMacroBuilder()
-#wmb.folder = 'foo'
 #wmb.do_first_change = True
-#wmb.spreadsheet(sys.argv[1])
-#wmb.write_macro()
+
+xlsx = wmb.spreadsheet

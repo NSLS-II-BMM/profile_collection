@@ -202,9 +202,9 @@ class Thermocouple(Device):
         return(t)
 
 
-tcs = [Thermocouple('FE:C06B-OP{Mir:1}T:1',                  name = 'Mirror 1, inboard fin'),
-       Thermocouple('FE:C06B-OP{Mir:1}T:2',                  name = 'Mirror 1, disaster mask'),
-       Thermocouple('FE:C06B-OP{Mir:1}T:3',                  name = 'Mirror 1, outboard fin'),
+tcs = [#Thermocouple('FE:C06B-OP{Mir:1}T:1',                  name = 'Mirror 1, inboard fin'),
+       #Thermocouple('FE:C06B-OP{Mir:1}T:2',                  name = 'Mirror 1, disaster mask'),
+       #Thermocouple('FE:C06B-OP{Mir:1}T:3',                  name = 'Mirror 1, outboard fin'),
        Thermocouple('XF:06BMA-OP{FS:1}T:1',                  name = 'First fluorescent screen'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1}T',         name = '111 first crystal'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2}T',         name = '311 first crystal'),

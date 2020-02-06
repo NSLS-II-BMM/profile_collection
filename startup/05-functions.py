@@ -26,7 +26,10 @@ from numpy import pi, sin, cos, arcsin, sqrt
 ## users find "less" unfamiliar and mistakes are made / confusion is
 ## had when doing <function>??  `cat` seems less likely to befuddle
 ## the hoi palloi.
-os.environ['PAGER'] = 'cat'
+##
+## trying "most".  It's a pager, like less, but has helpful hints in
+## the bottom gutter.  Let's see how it goes....
+os.environ['PAGER'] = 'most'
 
 get_ipython().magic(u"%xmode Plain")
 

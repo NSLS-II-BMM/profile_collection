@@ -88,7 +88,7 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         if isfloat(s) and float(s) < 0:
             text += error_msg('\nStep sizes cannot be negative (%s)\n' % s)
             problem = True
-        elif isfloat(s) and float(s) <= 0.1:
+        elif isfloat(s) and float(s) <= 0.09:
             text += warning_msg('\n%s is a very small step size!\n' % s)
         elif not isfloat(s) and s[-1:].lower() == 'k' and isfloat(s[-1:]) and float(s[:-1]) < 0.01:
             text += warning_msg('\n%s is a very small step size!\n' % s)
@@ -1100,6 +1100,8 @@ def xafs(inifile, **kwargs):
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
+    if inifile[-4:] != '.ini':
+        inifile = inifile+'.ini'    
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 
@@ -1120,6 +1122,8 @@ def howlong(inifile, interactive=True, **kwargs):
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
+    if inifile[-4:] != '.ini':
+        inifile = inifile+'.ini'
     orig = inifile
     if not os.path.isfile(inifile):
         inifile = os.path.join(DATA, inifile)

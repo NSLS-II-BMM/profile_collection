@@ -282,7 +282,7 @@ def show_edges():
     text = show_reference_wheel() + '\n' + rois.show()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
     '''Change edge energy by:
        1. Moving the DCM above the edge energy
        2. Moving the photon delivery system to the correct mode
@@ -410,7 +410,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ################################################
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
-    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el)
+    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
     yield from kill_mirror_jacks()
     yield from sleep(1)
     if BMMuser.motor_fault is not None:

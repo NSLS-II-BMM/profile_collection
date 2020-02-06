@@ -209,6 +209,116 @@ def auscan(axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={
 
 
 
+
+def auslitscan(start=-0.2, stop=0.2, nsteps=21, pluck=False, force=False, inttime=0.3, md={}): # integration time?
+    '''
+    Generic linescan plan.  This is a RELATIVE scan, relative to the
+    current position of the selected motor.
+
+    For example:
+       RE(auslitscan())
+
+       start:    starting value for a relative scan
+       stop:     ending value for a relative scan
+       nsteps:   number of steps in scan
+       pluck:    flag for whether to offer to pluck & move motor
+       force:    flag for forcing a scan even if not clear to start
+       inttime:  integration time in seconds (default: 0.1)
+
+    The motor is either the BlueSky name for a motor (e.g. xafs_linx)
+    or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
+
+    This does not write an ASCII data file, but it does make a log entry.
+
+    Use the ls2dat() function to extract the linescan from the
+    database and write it to a file.
+    '''
+
+    def main_plan(start, stop, nsteps, pluck, force, inttime):
+        (ok, text) = BMM_clear_to_start()
+        if force is False and ok is False:
+            print(error_msg(text))
+            yield from null()
+            return
+
+        RE.msg_hook = None
+
+        thismotor = dm3_bct
+        yield from abs_set(_locked_dwell_time, inttime, wait=True)
+        yield from abs_set(thismotor.velocity, 0.4, wait=True)
+        dets  = [quadem1, vor]
+        denominator = ''
+        detname = ''
+       
+        funni = lambda doc: (doc['data'][thismotor.name], doc['data']['DTC1']   / doc['data']['I0'])
+        funzn = lambda doc: (doc['data'][thismotor.name], doc['data']['DTC2_1'] / doc['data']['I0'])
+        funau = lambda doc: (doc['data'][thismotor.name], doc['data']['DTC3_1'] / doc['data']['I0'])
+        
+        plot = [DerivedPlot(funni, xlabel=thismotor.name, ylabel='dtc1/I0',   title='Ni signal vs. %s' % thismotor.name),
+                DerivedPlot(funzn, xlabel=thismotor.name, ylabel='dtc2_1/I0', title='Zn signal vs. %s' % thismotor.name),
+                DerivedPlot(funau, xlabel=thismotor.name, ylabel='dtc3_1/I0', title='Au signal vs. %s' % thismotor.name)]
+
+        value = thismotor.user_readback.value
+        line1 = '%s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (thismotor.name, start, stop, nsteps, value)
+        ##BMM_suspenders()            # engage suspenders
+
+        thismd = dict()
+        thismd['XDI'] = dict()
+        thismd['XDI']['Facility'] = dict()
+        thismd['XDI']['Facility']['GUP'] = BMMuser.gup
+        thismd['XDI']['Facility']['SAF'] = BMMuser.saf
+        thismd['XDI']['Scan'] = dict()
+        thismd['XDI']['Scan']['dwell_time'] = inttime
+
+        with open(dotfile, "w") as f:
+            f.write("")
+                
+    
+        @subs_decorator(plot)
+        def scan_xafs_motor(dets, motor, start, stop, nsteps):
+            yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+            yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+
+        yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+        yield from sleep(3)
+        yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+        yield from sleep(3)
+        yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+        BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
+                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+        if pluck is True:
+            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+            if action.lower() == 'n' or action.lower() == 'q':
+                return(yield from null())
+            yield from move_after_scan(thismotor)
+
+    
+    def cleanup_plan():
+        if os.path.isfile(dotfile): os.remove(dotfile)
+        ##RE.clear_suspenders()       # disable suspenders
+        yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+        yield from resting_state_plan()
+
+
+    ######################################################################
+    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # with a sleep, allowing the user to easily map out motor motions in #
+    # a macro                                                            #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a line scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    ######################################################################
+    dotfile = '/home/xf06bm/Data/.line.scan.running'
+    RE.msg_hook = None
+    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, pluck, force, inttime), cleanup_plan())
+    RE.msg_hook = BMM_msg_hook
+    
+    
+
+
 def auscan2dat(datafile, key):
     '''
     Export an SDC linescan database entry to an XDI file.
@@ -328,31 +438,26 @@ def sdc(slp=1):
             #yield from abs_set(_locked_dwell_time, fluotime)
             #yield from exposure(fname=stub, ncounts=ncounts, nreps=nreps)
 
-            yield from mvr(cradle.y, -0.1)
-            yield from auscan(xafs_x, -3, 3, 61, inttime=1, pluck=False)
-            auscan2dat(os.path.join(BMMuser.DATA, '%s_linescan_down.dat' % stub), db[-1].start['uid'])
-            close_all_plots()
+            yield from mv(slits3.hsize, 0.15)
 
-            yield from mvr(cradle.y, 0.1)
-            yield from auscan(xafs_x, -3, 3, 61, inttime=1, pluck=False)
-            auscan2dat(os.path.join(BMMuser.DATA, '%s_linescan_middle.dat' % stub), db[-1].start['uid'])
-            close_all_plots()
+            # yield from mvr(cradle.y, -0.2)
+            # yield from auscan(xafs_x, -3.75, 3.75, 61, inttime=1, pluck=False)
+            # auscan2dat(os.path.join(BMMuser.DATA, '%s_linescan_down.dat' % stub), db[-1].start['uid'])
+            # close_all_plots()
 
-            yield from mvr(cradle.y, 0.1)
-            yield from auscan(xafs_x, -3, 3, 61, inttime=1, pluck=False)
-            auscan2dat(os.path.join(BMMuser.DATA, '%s_linescan_up.dat' % stub), db[-1].start['uid'])
-            close_all_plots()
-        
-            yield from mvr(cradle.y, -0.1)
-
+            yield from auslitscan()
+            auscan2dat(os.path.join(BMMuser.DATA, '%s_slitscan.dat' % stub), db[-1].start['uid'])
+            
             yield from abs_set(_locked_dwell_time, 0.5)
             close_all_plots()
 
+            yield from mv(slits3.vsize, 0.1)
             yield from mv(slits3.hsize, 0.3)
             pil.fname = stub
             #pil.time = piltime
             yield from image_sequence(stub=stub)
-            yield from mv(slits3.hsize, 0.1)
+            yield from mv(slits3.vsize, 0.05)
+            yield from mv(slits3.hsize, 0.15)
             
             image_web = os.path.join(BMMuser.DATA, 'snapshots', '%s.jpg'%stub)
             annotation = 'NIST BMM (NSLS-II 06BM)      ' + stub + '      ' + now()

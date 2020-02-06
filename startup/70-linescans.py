@@ -259,7 +259,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -330,7 +330,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
             yield from null()
@@ -346,6 +346,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             denominator = ' / I0'
             detname = 'transmission'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
+        elif detector == 'Ia':
+            dets.append(dualio)
+            detname = 'Ia'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ia'])
+        elif detector == 'Ib':
+            dets.append(dualio)
+            detname = 'Ib'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
         elif detector == 'Ir':
             denominator = ' / It'
             detname = 'reference'

@@ -59,7 +59,7 @@ class LockedDwellTimes(PseudoPositioner):
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
-        pseudo_pos = self.PseudoPosition(*pseudo_pos)
+        #pseudo_pos = self.PseudoPosition(*pseudo_pos)
         # logger.debug('forward %s', pseudo_pos)
         return self.RealPosition(
             quadem_dwell_time=pseudo_pos.dwell_time,
@@ -69,7 +69,7 @@ class LockedDwellTimes(PseudoPositioner):
 
     @real_position_argument
     def inverse(self, real_pos):
-        real_pos = self.RealPosition(*real_pos)
+        #real_pos = self.RealPosition(*real_pos)
         return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
 
 _locked_dwell_time = LockedDwellTimes('', name='dwti')

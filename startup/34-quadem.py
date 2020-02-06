@@ -143,7 +143,11 @@ class BMMDualEM(QuadEM):
         yield from abs_set(self.acquire, 0, wait=True)
         yield from abs_set(self.acquire_mode, 2, wait=True)
 
-#dualio = QuadEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+dualio.Ia.kind = 'hinted'
+dualio.Ib.kind = 'hinted'
+dualio.Ia.name = 'Ia'
+dualio.Ib.name = 'Ib'
 
 
 
