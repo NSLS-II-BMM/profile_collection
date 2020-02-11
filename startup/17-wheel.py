@@ -300,7 +300,7 @@ class WheelMacroBuilder():
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
-                if k in ('slot', 'focus', 'measure'):
+                if k in ('default', 'slot', 'focus', 'measure'):
                     continue
                 ## skip the flags for now
                 elif k in ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth'):
@@ -329,7 +329,7 @@ class WheelMacroBuilder():
         ################################
         # end macro by closing shutter #
         ################################
-        self.content += self.tab + 'yield from shb.close_plan()\n\n'
+        #self.content += self.tab + 'yield from shb.close_plan()\n\n'
 
         
         #################################

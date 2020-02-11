@@ -115,6 +115,14 @@ class BMMDualEM(QuadEM):
     Ib = Cpt(Nanoize, derived_from='current2.mean_value')
     state  = Cpt(EpicsSignal, 'Acquire')
 
+    calibration_mode = Cpt(EpicsSignal, 'CalibrationMode')
+    copy_adc_offsets = Cpt(EpicsSignal, 'CopyADCOffsets.PROC')
+    compute_current_offset1  = Cpt(EpicsSignal, 'ComputeCurrentOffset1.PROC')
+    compute_current_offset2  = Cpt(EpicsSignal, 'ComputeCurrentOffset2.PROC')
+
+    sigma1 = Cpt(EpicsSignal, 'Current1:Sigma_RBV')
+    sigma2 = Cpt(EpicsSignal, 'Current1:Sigma_RBV')
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -143,11 +151,43 @@ class BMMDualEM(QuadEM):
         yield from abs_set(self.acquire, 0, wait=True)
         yield from abs_set(self.acquire_mode, 2, wait=True)
 
-dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
-dualio.Ia.kind = 'hinted'
-dualio.Ib.kind = 'hinted'
-dualio.Ia.name = 'Ia'
-dualio.Ib.name = 'Ib'
+    def dark_current(self):
+        reopen = shb.state.value == shb.openval 
+        if reopen:
+            print('\nClosing photon shutter')
+            yield from shb.close_plan()
+        print('Measuring current offsets, this will take several seconds')
+
+        ## this almost works....
+
+        self.current_offsets.ch1.put(0.0)
+        self.current_offsets.ch2.put(0.0)
+        self.calibration_mode.put(1)
+        yield from sleep(0.5)
+        self.copy_adc_offsets.put(1)
+        yield from sleep(0.5)
+        self.calibration_mode.put(0)
+        yield from sleep(0.5)
+        self.compute_current_offset1.put(1)
+        self.compute_current_offset1.put(2)
+        # EpicsSignal("XF:06BM-BI{EM:3}EM180:CopyADCOffsets.PROC", name='').put(1)
+        # EpicsSignal("XF:06BM-BI{EM:3}EM180:CalibrationMode", name='').put(0)
+        # EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
+        # EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
+        yield from sleep(0.5)
+        print(self.sigma1.value, self.sigma2.value)
+        BMM_log_info('Measured dark current on dualio ion chamber')
+        if reopen:
+            print('Opening photon shutter')
+            yield from shb.open_plan()
+            print('You are ready to measure!\n')
+
+        
+# dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+# dualio.Ia.kind = 'hinted'
+# dualio.Ib.kind = 'hinted'
+# dualio.Ia.name = 'Ia'
+# dualio.Ib.name = 'Ib'
 
 
 
