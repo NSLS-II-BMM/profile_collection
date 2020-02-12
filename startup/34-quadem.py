@@ -108,21 +108,21 @@ quadem1.Iy.name = 'Iy'
 class BMMDualEM(QuadEM):
     _default_read_attrs = ['Ia',
                            'Ib']
-    port_name = Cpt(Signal, value='EM180')
-    conf = Cpt(QuadEMPort, port_name='EM180')
-    em_range  = Cpt(EpicsSignalWithRBV, 'Range', string=True)
+    port_name = Cpt(Signal, value='NSLS2_IC')
+    conf = Cpt(QuadEMPort, port_name='NSLS2_IC')
+    em_range = Cpt(EpicsSignalWithRBV, 'Range', string=True)
     Ia = Cpt(Nanoize, derived_from='current1.mean_value')
     Ib = Cpt(Nanoize, derived_from='current2.mean_value')
-    state  = Cpt(EpicsSignal, 'Acquire')
+    state = Cpt(EpicsSignal, 'Acquire')
 
     calibration_mode = Cpt(EpicsSignal, 'CalibrationMode')
     copy_adc_offsets = Cpt(EpicsSignal, 'CopyADCOffsets.PROC')
-    compute_current_offset1  = Cpt(EpicsSignal, 'ComputeCurrentOffset1.PROC')
-    compute_current_offset2  = Cpt(EpicsSignal, 'ComputeCurrentOffset2.PROC')
+    compute_current_offset1 = Cpt(EpicsSignal, 'ComputeCurrentOffset1.PROC')
+    compute_current_offset2 = Cpt(EpicsSignal, 'ComputeCurrentOffset2.PROC')
 
     sigma1 = Cpt(EpicsSignal, 'Current1:Sigma_RBV')
     sigma2 = Cpt(EpicsSignal, 'Current1:Sigma_RBV')
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
