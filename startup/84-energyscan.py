@@ -816,9 +816,12 @@ def xafs(inifile, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
-        fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
-                                                         doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
-                                                         doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
+        if BMMuser.detector == 1:
+            fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
+        else:
+            fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
+                                                             doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
+                                                             doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
             plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
         elif 'trans' in p['mode']:

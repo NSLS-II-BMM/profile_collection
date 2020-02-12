@@ -228,6 +228,7 @@ def write_XDI(datafile, dataframe):
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
         if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
+        if BMMuser.detector == 1: plot_hint = '%s / I0  --  ($8+$9+$10+$11) / $5' % BMMuser.dtc1
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:

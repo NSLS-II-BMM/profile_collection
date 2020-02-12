@@ -191,7 +191,7 @@ class BMMDualEM(QuadEM):
 
 
 
-quadem2 = QuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
+quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 
 def dark_current():

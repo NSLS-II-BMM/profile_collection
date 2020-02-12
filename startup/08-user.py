@@ -29,6 +29,7 @@ class BMM_User(Borg):
       * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
       * macro_sleep:      float, the length of that sleep
       * motor_fault:      normally None, set to a string when motors are found in a fault state
+      * detector:         4=4-element detector, 1=1-element detector
 
     Current plot attributes
       * motor:            fast motor in current plot
@@ -90,6 +91,7 @@ class BMM_User(Borg):
         self.read_rois       = None
         self.user_is_defined = False
         self.motor_fault     = None
+        self.detector        = 4
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #

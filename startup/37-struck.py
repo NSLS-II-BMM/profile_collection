@@ -361,12 +361,16 @@ class BMMVortex(EpicsScaler):
           2) middle row of quad SCAs
           3) bottom row of quad SCAs
          10) setup for SDC experiment with single channel going into 2 quad SCAs
+         21) single element Vortex, ROI1
+         22) single element Vortex, ROI2
+         23) single element Vortex, ROI3
         '''
         for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4,
                    self.dtcorr21, self.dtcorr22, self.dtcorr23, self.dtcorr24,
                    self.dtcorr31, self.dtcorr32, self.dtcorr33, self.dtcorr34):
             pv.kind = 'normal'
             pv.off = True
+        BMMuser.detector = 4
             
         if chan == 1:
             for pv in (self.dtcorr1,  self.dtcorr2,  self.dtcorr3,  self.dtcorr4):
@@ -382,6 +386,21 @@ class BMMVortex(EpicsScaler):
                 pv.off = False
         elif chan == 10:
             for pv in (self.dtcorr1, self.dtcorr21, self.dtcorr31, self.dtcorr2, self.dtcorr22, self.dtcorr32):
+                pv.kind = 'hinted'
+                pv.off = False
+        elif chan == 21:
+            BMMuser.detector = 1
+            for pv in (self.dtcorr1,):
+                pv.kind = 'hinted'
+                pv.off = False
+        elif chan == 22:
+            BMMuser.detector = 1
+            for pv in (self.dtcorr21,):
+                pv.kind = 'hinted'
+                pv.off = False
+        elif chan == 23:
+            BMMuser.detector = 1
+            for pv in (self.dtcorr31,):
                 pv.kind = 'hinted'
                 pv.off = False
             
