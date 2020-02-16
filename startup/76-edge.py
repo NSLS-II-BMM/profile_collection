@@ -269,7 +269,7 @@ if BMMuser.read_rois is not None:
 def approximate_pitch(energy):
     if dcm._crystal is '111':
         m = -4.57145e-06
-        b = 4.04782
+        b = 4.04782 + 0.0303    # ad hoc correction....
         return(m*energy + b)
     else:
         m = -2.7015e-06

@@ -227,6 +227,51 @@ class WheelMacroBuilder():
             return False
 
 
+    def ini_sanity(self, default):
+        '''sanity checking default line from spreadsheet'''
+
+        message = ''
+        unrecoverable = False
+        
+        if default['experimenters'] is None or str(default['experimenters']).strip() == '':
+            default['experimenters'] = BMMuser.name
+
+        for k in ('sample', 'prep', 'comment'):
+            if default[k] is None or str(default[k]).strip() == '':
+                default[k] = '...'
+
+        try:
+            default['nscans'] = int(default['nscans'])
+        except:
+            default['nscans'] = 1
+
+        try:
+            default['start'] = int(default['start'])
+        except:
+            default['start'] = 'next'
+            
+        if default['mode'] is None or str(default['mode']).strip() == '':
+            default['mode'] = 'transmission'
+
+        #if str(default['element']).lower() not in element_list:
+        #    message += '\nDefault entry for element is not recognized.'
+        #    unrecoverable = True
+
+        if str(default['edge']).lower() not in ('k', 'l1', 'l2', 'l3'):
+            message += '\nDefault entry for edge is not recognized.'
+            unrecoverable = True
+
+        try:
+            default['e0'] = float(default['e0'])
+        except:
+            default['e0'] = edge_energy(default['element'], default['edge'])
+
+        if unrecoverable:
+            print(error_msg(message))
+            default = None
+        return default
+
+        
     def write_macro(self):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
@@ -340,8 +385,7 @@ class WheelMacroBuilder():
         for k in ('default', 'slot', 'measure', 'focus', 'samplex', 'sampley', 'slitwidth'): # things in the spreadsheet but not in the INI file
             default.pop(k, None)
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
-        if default['experimenters'] is None or str(default['experimenters']).strip() == '':
-            default['experimenters'] = BMMuser.name
+        default = self.ini_sanity(default)
         config.read_dict({'scan': default})
         with open(self.ini, 'w') as configfile:
             config.write(configfile)

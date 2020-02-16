@@ -158,8 +158,16 @@ class BMMDualEM(QuadEM):
             yield from shb.close_plan()
         print('Measuring current offsets, this will take several seconds')
 
-        ## this almost works....
+        ######################################################################
+        # from Pete (email Feb 7, 2020):                                     #
+        #   caput XF:06BM-BI{EM:3}EM180:CalibrationMode 1                    #
+        #   caput XF:06BM-BI{EM:3}EM180:CopyADCOffsets.PROC 1                #
+        #   caput XF:06BM-BI{EM:3}EM180:CalibrationMode 0                    #
+        # ADC offset values should be around 3800, might need to hit Compute #
+        # buttons to get lovely low dark current values                      #
+        ######################################################################
 
+        ## this almost works....
         self.current_offsets.ch1.put(0.0)
         self.current_offsets.ch2.put(0.0)
         self.calibration_mode.put(1)
@@ -170,6 +178,7 @@ class BMMDualEM(QuadEM):
         yield from sleep(0.5)
         self.compute_current_offset1.put(1)
         self.compute_current_offset1.put(2)
+        # EpicsSignal("XF:06BM-BI{EM:3}EM180:CalibrationMode", name='').put(1)
         # EpicsSignal("XF:06BM-BI{EM:3}EM180:CopyADCOffsets.PROC", name='').put(1)
         # EpicsSignal("XF:06BM-BI{EM:3}EM180:CalibrationMode", name='').put(0)
         # EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)

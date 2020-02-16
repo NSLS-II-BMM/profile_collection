@@ -46,20 +46,24 @@ def com(signal):
     '''Return the center of mass of a 1D array. This is used to find the
     center of rocking curve and slit height scans.'''
     return int(center_of_mass(signal)[0])
+def peak(signal):
+    '''Return the index of the maximum of a 1D array. This is used to find the
+    center of rocking curve and slit height scans.'''
+    return pandas.Series.idxmax(signal)
 
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=1.0):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=1.0, choice='com'):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
     the scan.
 
     Input:
-      start:   (float) starting position relative to current                         [-3.0]
-      end:     (float) ending position relative to current                           [3.0]
-      nsteps:  (int) number of steps                                                 [61]
+      start:   (float)   starting position relative to current                       [-3.0]
+      end:     (float)   ending position relative to current                         [3.0]
+      nsteps:  (int)     number of steps                                             [61]
       move:    (Boolean) True=move to position of max signal, False=pluck and move   [False]
-      sleep:   (float) length of sleep before trying to move dm3_bct                 [3.0]
-
+      sleep:   (float)   length of sleep before trying to move dm3_bct               [3.0]
+      choice:  (string)  'peak' or 'com' (center of mass)                            ['com']
     '''
 
     def main_plan(start, stop, nsteps, move, force):
@@ -96,7 +100,10 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
             if move:
                 t  = db[-1].table()
                 signal = t['I0']
-                position = com(signal)
+                if choice == 'peak':
+                    position = peak(signal)
+                else:
+                    position = com(signal)
                 top = t[motor.name][position]
                 
                 yield from bps.sleep(sleep)
@@ -140,7 +147,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
     RE.msg_hook = BMM_msg_hook
 
 
-def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak'):
     '''
     Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
@@ -152,6 +159,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
       end:      (float)  ending position relative to current    [0.1]
       nsteps:   (int)    number of steps                        [101]
       detector: (string) 'I0' or 'Bicron'                       ['I0']
+      choice:   (string) 'peak' or 'com' (center of mass)       ['peak']
     '''
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
@@ -201,7 +209,10 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0'):
             #                             backstep=True)
             t  = db[-1].table()
             signal = t[sgnl]
-            position = com(signal)
+            if choice.lower() == 'com':
+                position = com(signal)
+            else:
+                position = peak(signal)
             top = t[motor.name][position]
 
             yield from bps.sleep(3.0)

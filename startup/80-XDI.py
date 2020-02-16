@@ -34,7 +34,7 @@ _deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
 transmission = _ionchambers
 eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
-
+fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 
 XDI_record = {'xafs_linx'                        : (True,  'Sample.x_position'),
               'xafs_liny'                        : (True,  'Sample.y_position'),
@@ -146,7 +146,10 @@ def write_XDI(datafile, dataframe):
         detectors = eyield
     else:
         detectors = fluorescence
-
+        if BMMuser.detector == 1:
+            detectors = fluorescence_1ch
+            
+        
 
     ############################################
     # start gathering formatted metadata lines #
@@ -283,7 +286,14 @@ def write_XDI(datafile, dataframe):
         if kind == '333':
             table['333_energy'] = table['dcm_energy']*3
             column_list[0] = '333_energy'
+        #             en    en    dwti  xmu   io    it    ir    dtc1  dtc2  dtc3  dtc4  |----- 1 ------|  |----- 2 ------|  |----- 3 ------|  |----- 4 ------|  
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+        if BMMuser.element == 1:
+            #             en    en    dwti  xmu   io    it    ir    dtc1  |----- 1 ------|
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f\n"
+            column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',
+                           BMMuser.dtc1, BMMuser.roi1, 'ICR1', 'OCR1',]
+            
     else:
         if 'yield' in mode:     # yield is the primary measurement
             table['xmu'] = table['Iy'] / table['I0']

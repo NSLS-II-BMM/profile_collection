@@ -353,7 +353,8 @@ class BMMVortex(EpicsScaler):
         return float(rr * (totn*tt/oo))
 
     def set_hints(self, chan):
-        '''Set the dead time correction attributes to hinted for the selected, configured channel
+        '''Set the dead time correction attributes to hinted for the selected,
+        configured channels
         
         Channels
 
