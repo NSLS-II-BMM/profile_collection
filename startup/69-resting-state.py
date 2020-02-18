@@ -53,5 +53,6 @@ def end_of_macro():
     yield from vor.on_plan()
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     yield from dcm.kill_plan()
+    yield from xafs_wheel.recenter()
     RE.msg_hook = BMM_msg_hook
 

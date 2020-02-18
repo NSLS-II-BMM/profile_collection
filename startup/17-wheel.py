@@ -64,15 +64,14 @@ class WheelMotor(EndStationEpicsMotor):
         yield from mvr(self, angle)
         report('Arrived at sample wheel slot %d' % n, 'bold')
 
-    def slot_number(self, target):
+    def slot_number(self, target=None):
         try:
             target = target.capitalize()
             slot = xafs_ref.content.index(target) + 1
             return slot
         except:
             return self.current_slot()
-        
-        
+                
     def position_of_slot(self, target):
         if type(target) is int:
             angle = self.angle_from_current(target)
@@ -80,7 +79,13 @@ class WheelMotor(EndStationEpicsMotor):
             target = self.slot_number(target.capitalize())
             angle = self.angle_from_current(target)
         return(xafs_ref.user_readback.value+angle)
-        
+
+    def recenter(self):
+        here = self.user_readback.value
+        center = round(here / 15) * 15
+        yield from mv(self, center)
+        print(whisper('recentered %s to %.1f' % (self.name, center)))
+    
 
 xafs_wheel = xafs_rotb  = WheelMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.slotone = -30        # the angular position of slot #1
@@ -185,7 +190,8 @@ class WheelMacroBuilder():
         self.tab          = '        '
         self.content      = ''
         self.do_first_change = False
-        self.has_e0_column = False
+        self.has_e0_column   = False
+        self.verbose         = False
 
     def spreadsheet(self, spreadsheet, energy=False):
         '''Convert a wheel macro spreadsheet to a BlueSky plan.
@@ -194,7 +200,7 @@ class WheelMacroBuilder():
 
             xlsx('MySamples')
 
-        To include a change_edge command at the beginning of the macro:
+        To specify a change_edge() command at the beginning of the macro:
 
             xlsx('MySamples', energy=True)
 
@@ -213,10 +219,12 @@ class WheelMacroBuilder():
         if energy is True:
             self.do_first_change = True
 
-        if self.ws['H5'].value == 'e0':
+        if self.ws['H5'].value == 'e0': # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
             
         self.read_spreadsheet()
+        self.write_macro()
+
         
     def truefalse(self, value):
         '''Interpret certain strings from the spreadsheet as True/False'''
@@ -357,7 +365,8 @@ class WheelMacroBuilder():
                 edge    = m['edge']
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
             else:
-                #self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
+                if self.verbose:
+                    self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
                 pass
 
             ######################################
@@ -392,11 +401,6 @@ class WheelMacroBuilder():
             self.content += command
             self.content += self.tab + 'close_last_plot()\n\n'
 
-        ################################
-        # end macro by closing shutter #
-        ################################
-        #self.content += self.tab + 'yield from shb.close_plan()\n\n'
-
         
         #################################
         # write out the master INI file #
@@ -407,6 +411,9 @@ class WheelMacroBuilder():
             default.pop(k, None)
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
         default = self.ini_sanity(default)
+        if default is None:
+            print(error_msg("Could not interpret %s as a wheel macro." % self.source))
+            return
         config.read_dict({'scan': default})
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
@@ -467,7 +474,7 @@ class WheelMacroBuilder():
                                       'bounds':     row[13+offset].value,     # scan parameters
                                       'steps':      row[14+offset].value,
                                       'times':      row[15+offset].value,
-                                      'samplex':    row[16+offset].value,
+                                      'samplex':    row[16+offset].value,     # other motors 
                                       'sampley':    row[17+offset].value,
                                       'slitwidth':  row[18+offset].value,
                                       'snapshots':  self.truefalse(row[19+offset].value), # flags
@@ -478,7 +485,6 @@ class WheelMacroBuilder():
                                       'ththth':     self.truefalse(row[24+offset].value),
             })
         #pp.pprint(self.measurements)
-        self.write_macro()
         
 wmb = WheelMacroBuilder()
 #wmb.do_first_change = True
