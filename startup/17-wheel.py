@@ -185,6 +185,7 @@ class WheelMacroBuilder():
         self.tab          = '        '
         self.content      = ''
         self.do_first_change = False
+        self.has_e0_column = False
 
     def spreadsheet(self, spreadsheet, energy=False):
         '''Convert a wheel macro spreadsheet to a BlueSky plan.
@@ -211,12 +212,16 @@ class WheelMacroBuilder():
         self.do_first_change = False
         if energy is True:
             self.do_first_change = True
+
+        if self.ws['H5'].value == 'e0':
+            self.has_e0_column = True
+            
         self.read_spreadsheet()
         
     def truefalse(self, value):
         '''Interpret certain strings from the spreadsheet as True/False'''
         if value is None:
-            return self.measurements[0]['measure']
+            return True # self.measurements[0]['measure']
         if str(value).lower() == '=true()':
             return True
         elif str(value).lower() == 'true':
@@ -228,7 +233,23 @@ class WheelMacroBuilder():
 
 
     def ini_sanity(self, default):
-        '''sanity checking default line from spreadsheet'''
+        '''Sanity checks for the default line from the spreadsheet.
+
+        1. experimenters is a string (BMMuser.name)
+        2. sample, prep, and comment are not empty strings (set to '...')
+        3. nscans is an integer (set to 1)
+        4. start is an integer or "next"
+        5. mode is string (set to 'transmission')
+        6. element is an element (bail)
+        7. edge is k, l1, l2, or l3 (bail)
+        
+        To do:
+          * booleans are interpretable as booleans
+          * focused is focused or unfocused
+          * bounds, steps, times are sensible
+          * x, y, slits are floats and sensible for the respective ranges of motion
+
+        '''
 
         message = ''
         unrecoverable = False
@@ -253,18 +274,18 @@ class WheelMacroBuilder():
         if default['mode'] is None or str(default['mode']).strip() == '':
             default['mode'] = 'transmission'
 
-        #if str(default['element']).lower() not in element_list:
-        #    message += '\nDefault entry for element is not recognized.'
-        #    unrecoverable = True
+        if str(default['element']).capitalize() not in re.split('\s+', PERIODIC_TABLE): # see 06-periodic table 
+            message += '\nDefault entry for element is not recognized.'
+            unrecoverable = True
 
         if str(default['edge']).lower() not in ('k', 'l1', 'l2', 'l3'):
             message += '\nDefault entry for edge is not recognized.'
             unrecoverable = True
 
-        try:
-            default['e0'] = float(default['e0'])
-        except:
-            default['e0'] = edge_energy(default['element'], default['edge'])
+        # try:
+        #     default['e0'] = float(default['e0'])
+        # except:
+        #     default['e0'] = edge_energy(default['element'], default['edge'])
 
         if unrecoverable:
             print(error_msg(message))
@@ -419,6 +440,9 @@ class WheelMacroBuilder():
         '''
         print('Reading spreadsheet: %s' % self.source)
         count = 0
+        offset = 0
+        if self.has_e0_column:  # deal with older xlsx that have e0 in column H
+            offset = 1
         for row in self.ws.rows:
             count += 1
             if count < 6:
@@ -433,25 +457,25 @@ class WheelMacroBuilder():
                                       'nscans':     row[4].value,
                                       'start':      row[5].value,
                                       'mode':       row[6].value,
-                                      'e0':         row[7].value,      # energy range
-                                      'element':    row[8].value,
-                                      'edge':       row[9].value,
-                                      'focus':      row[10].value,
-                                      'sample':     row[11].value,     # scan metadata
-                                      'prep':       row[12].value,
-                                      'comment':    row[13].value,
-                                      'bounds':     row[14].value,     # scan parameters
-                                      'steps':      row[15].value,
-                                      'times':      row[16].value,
-                                      'samplex':    row[17].value,
-                                      'sampley':    row[18].value,
-                                      'slitwidth':  row[19].value,
-                                      'snapshots':  self.truefalse(row[20].value), # flags
-                                      'htmlpage':   self.truefalse(row[21].value),
-                                      'usbstick':   self.truefalse(row[22].value),
-                                      'bothways':   self.truefalse(row[23].value),
-                                      'channelcut': self.truefalse(row[24].value),
-                                      'ththth':     self.truefalse(row[25].value),
+                                      #'e0':         row[7].value,      
+                                      'element':    row[7+offset].value,      # energy range
+                                      'edge':       row[8+offset].value,
+                                      'focus':      row[9+offset].value,
+                                      'sample':     row[10+offset].value,     # scan metadata
+                                      'prep':       row[11+offset].value,
+                                      'comment':    row[13+offset].value,
+                                      'bounds':     row[13+offset].value,     # scan parameters
+                                      'steps':      row[14+offset].value,
+                                      'times':      row[15+offset].value,
+                                      'samplex':    row[16+offset].value,
+                                      'sampley':    row[17+offset].value,
+                                      'slitwidth':  row[18+offset].value,
+                                      'snapshots':  self.truefalse(row[19+offset].value), # flags
+                                      'htmlpage':   self.truefalse(row[20+offset].value),
+                                      'usbstick':   self.truefalse(row[21+offset].value),
+                                      'bothways':   self.truefalse(row[22+offset].value),
+                                      'channelcut': self.truefalse(row[23+offset].value),
+                                      'ththth':     self.truefalse(row[24+offset].value),
             })
         #pp.pprint(self.measurements)
         self.write_macro()

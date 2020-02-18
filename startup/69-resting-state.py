@@ -8,7 +8,7 @@ def resting_state():
     - quadEM and Struck scaler enabled and measuring
     - dwell time set to 1/2 second
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
-    - user prompt set to True and RE.msg_hook set to BMM_msg_hook
+    - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
     BMMuser.macro_dryrun = False
@@ -44,7 +44,7 @@ def end_of_macro():
     - quadEM and Struck scaler enabled and measuring
     - dwell time set to 1/2 second
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
-    - user prompt set to True and RE.msg_hook set to BMM_msg_hook
+    - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
     BMMuser.prompt = True
     BMMuser.macro_dryrun = False

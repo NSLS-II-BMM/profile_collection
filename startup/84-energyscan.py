@@ -306,8 +306,17 @@ def scan_metadata(inifile=None, **kwargs):
             return {}, {}
         else:
             found['e0'] = True
-            print('\nUsing tabulated value of %.1f for the %s %s edge\n' % (parameters['e0'], parameters['element'], parameters['edge']))
-        
+            #print('\nUsing tabulated value of %.1f for the %s %s edge\n' % (parameters['e0'], parameters['element'], parameters['edge']))
+        if parameters['e0'] > 23500:
+            print(error_msg('\nThe %s %s edge is at %.1f, which is ABOVE the measurement range for BMM\n' %
+                            (parameters['element'], parameters['edge'], parameters['e0'])))
+            return {}, {}
+        if parameters['e0'] < 4490:
+            print(error_msg('\nThe %s %s edge is at %.1f, which is BELOW the measurement range for BMM\n' %
+                            (parameters['element'], parameters['edge'], parameters['e0'])))
+            return {}, {}
+
+            
     return parameters, found
 
 
