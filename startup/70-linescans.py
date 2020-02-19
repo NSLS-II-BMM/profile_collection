@@ -4,6 +4,7 @@ import bluesky.plan_stubs as bps
 from bluesky import __version__ as bluesky_version
 import numpy
 import os
+from lmfit.models import SkewedGaussianModel
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
@@ -128,16 +129,16 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
-    ######################################################################
-    # this is a tool for verifying a macro.  this replaces an xafs scan  #
-    # with a sleep, allowing the user to easily map out motor motions in #
-    # a macro                                                            #
+    #######################################################################
+    # this is a tool for verifying a macro.  this replaces this slit      #
+    # height scan with a sleep, allowing the user to easily map out motor #
+    # motions in a macro                                                  #
     if BMMuser.macro_dryrun:
         print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
                        BMMuser.macro_sleep))
         countdown(BMMuser.macro_sleep)
         return(yield from null())
-    ######################################################################
+    #######################################################################
     
     motor = dm3_bct
     slit_height = slits3.vsize.readback.value
@@ -148,8 +149,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
 
 
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak'):
-    '''
-    Perform a relative scan of the DCM 2nd crystal pitch around the current
+    '''Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
     the hutch slits to 3 mm. At the end, move to the position of maximum 
     intensity on I0, then return to the hutch slits to their original height.
@@ -159,7 +159,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
       end:      (float)  ending position relative to current    [0.1]
       nsteps:   (int)    number of steps                        [101]
       detector: (string) 'I0' or 'Bicron'                       ['I0']
-      choice:   (string) 'peak' or 'com' (center of mass)       ['peak']
+      choice:   (string) 'peak', fit' or 'com' (center of mass) ['peak']
+
+    If choice is fit, the fit is performed using the
+    SkewedGaussianModel from lmfit, which works pretty well for this
+    measurement at BMM.  The line shape is a bit skewed due to the
+    convolution with the slightly misaligned entrance slits.
+
     '''
     def main_plan(start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
@@ -211,9 +217,18 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             signal = t[sgnl]
             if choice.lower() == 'com':
                 position = com(signal)
+                top      = t[motor.name][position]
+            elif choice.lower() == 'fit':
+                pitch    = t['dcm_pitch']
+                mod      = SkewedGaussianModel()
+                pars     = mod.guess(signal, x=pitch)
+                out      = mod.fit(signal, pars, x=pitch)
+                print(whisper(out.fit_report(min_correl=0)))
+                out.plot()
+                top      = out.params['center'].value
             else:
                 position = peak(signal)
-            top = t[motor.name][position]
+                top      = t[motor.name][position]
 
             yield from bps.sleep(3.0)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
@@ -237,9 +252,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     ######################################################################
-    # this is a tool for verifying a macro.  this replaces an xafs scan  #
-    # with a sleep, allowing the user to easily map out motor motions in #
-    # a macro                                                            #
+    # this is a tool for verifying a macro.  this replaces this rocking  #
+    # curve scan with a sleep, allowing the user to easily map out motor #
+    # motions in a macro                                                 #
     if BMMuser.macro_dryrun:
         print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a rocking curve scan.\n' %
                        BMMuser.macro_sleep))

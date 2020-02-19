@@ -797,7 +797,7 @@ def xafs(inifile, **kwargs):
         ## gather up input data into a format suitable for the dossier
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
-        clargs = textwrap.fill(str(kwargs), width=50).replace('\n', '<br>')
+        clargs = textwrap.fill(str(kwargs), width=50) # .replace('\n', '<br>')
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
         BMM_log_info(motor_status())
 

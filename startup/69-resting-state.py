@@ -38,8 +38,8 @@ def resting_state_plan():
     RE.msg_hook = BMM_msg_hook
 
 def end_of_macro():
-    '''
-    Plan for bringing controls into their resting state at the end of a macro:
+    '''Plan for bringing controls into their resting state at the end of
+    a macro or when a macro is stopped/aborted:
 
     - quadEM and Struck scaler enabled and measuring
     - dwell time set to 1/2 second
