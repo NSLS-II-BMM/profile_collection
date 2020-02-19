@@ -632,7 +632,8 @@ def write_manifest():
     for l in lines:
         if not os.path.isfile(l):
             continue
-        experimentlist += '<li><a href="%s">%s</a></li>\n' % (l, os.path.basename(l))
+        this = os.path.basename(l)
+        experimentlist += '<li><a href="./%s">%s</a></li>\n' % (this, this)
         
     with open(os.path.join(DATA, 'dossier', 'manifest.tmpl')) as f:
         content = f.readlines()
