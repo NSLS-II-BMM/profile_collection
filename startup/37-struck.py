@@ -290,7 +290,7 @@ class BMMVortex(EpicsScaler):
         self.names.name26.put('APD')
         self.names.name31.put('eyield')
 
-    def channel_names_plan(self):
+    def channel_names_plan(self, one, two, three):
         yield from abs_set(self.names.name3,  'ROI1' + ' - %s'%one)
         yield from abs_set(self.names.name4,  'ROI2' + ' - %s'%one)
         yield from abs_set(self.names.name5,  'ROI3' + ' - %s'%one)

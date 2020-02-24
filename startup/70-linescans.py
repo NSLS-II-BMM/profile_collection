@@ -265,7 +265,10 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     slit_height = slits3.vsize.readback.value
-    gonio_slit_height = slitsg.vsize.readback.value
+    try:
+        gonio_slit_height = slitsg.vsize.readback.value
+    except:
+        gonio_slit_height = 1
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     RE.msg_hook = BMM_msg_hook

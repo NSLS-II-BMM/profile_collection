@@ -30,6 +30,8 @@ class BMM_User(Borg):
       * macro_sleep:      float, the length of that sleep
       * motor_fault:      normally None, set to a string when motors are found in a fault state
       * detector:         4=4-element detector, 1=1-element detector
+      * echem:            flag, True is doing electrochemistry with the BioLogic
+      * echem_remote:     mounted path to cifs share on ws3
 
     Current plot attributes
       * motor:            fast motor in current plot
@@ -92,6 +94,8 @@ class BMM_User(Borg):
         self.user_is_defined = False
         self.motor_fault     = None
         self.detector        = 4
+        self.echem           = False
+        self.echem_remote    = None
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -110,12 +114,12 @@ class BMM_User(Borg):
         self.dtc4            = 'DTC4'
                 
         ## current plot attributes    #######################################################################
-        self.motor  = None            # these are used to keep track of mouse events on the plotting window #
-        self.motor2 = None            # see 70-linescans.py, and 71-areascan.py                             #
-        self.fig    = None            #######################################################################
-        self.ax     = None
-        self.x      = None
-        self.y      = None
+        self.motor    = None          # these are used to keep track of mouse events on the plotting window #
+        self.motor2   = None          # see 70-linescans.py, and 71-areascan.py                             #
+        self.fig      = None          #######################################################################
+        self.ax       = None
+        self.x        = None
+        self.y        = None
         self.prev_fig = None
         self.prev_ax  = None
         #self.all_figs = []
@@ -168,7 +172,7 @@ class BMM_User(Borg):
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils',
                     'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
-                    'detector'):
+                    'detector', 'echem', 'echem_remote'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
@@ -191,7 +195,7 @@ class BMM_User(Borg):
                         'dwell', 'delay'):
                 print('\t%-15s = %s' % (att, str(getattr(self, att))))
         
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False):
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a folder, if needed, and set the DATA variable
@@ -324,6 +328,24 @@ class BMM_User(Borg):
                 print('%d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
             step += 1
 
+        if echem:
+            ## make echem folder
+            self.echem = True
+            ecfolder = os.path.join(folder, 'electrochemistry')
+            if not os.path.isdir(ecfolder):
+                os.mkdir(ecfolder)
+                print('%d. Created folder for echem data:  %-75s' % (step,ecfolder))
+            else:
+                print('%d. Found folder for echem data:    %-75s' % (step,ecfolder))
+            self.echem_remote = os.path.join('/ws3_echem', name, self.date)
+            if not os.path.isdir(self.echem_remote):
+                os.makedirs(self.echem_remote)
+                print('   Created remote echem folder:    %-75s' % (self.echem_remote))
+            else:
+                print('   Found remote echem folder:      %-75s' % (self.echem_remote))
+            
+            step += 1
+
         self.gup = gup
         self.saf = saf
         print('%d. Set GUP and SAF numbers as metadata' % step)
@@ -333,7 +355,7 @@ class BMM_User(Borg):
     
         return None
 
-    def start_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False):
+    def start_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False, echem=False):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
@@ -377,7 +399,7 @@ class BMM_User(Borg):
             folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
         self.name = name
         self.date = date
-        self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus)
+        self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
@@ -419,6 +441,11 @@ class BMM_User(Borg):
         print('foils = %s' % ' '.join(map(str, foils.slots)))
         print('ROIs  = %s' % ' '.join(map(str, rois.slots)))
 
+    def fetch_echem(self):
+        dest = os.path.join(self.folder, 'electrochemistry')
+        copy_tree(self.echem_remote, dest)
+        report('Copied electrochemistry data from: "%s" to "%s"' % (self.echem_remote, dest), 'bold')
+
     def end_experiment(self, force=False):
         '''
         Copy data from the experiment that just finished to the NAS, then
@@ -426,11 +453,30 @@ class BMM_User(Borg):
         '''
         global DATA
 
+        if self.echem and not os.path.ismount('/ws3_echem'):
+            print(error_msg('''
+**************************************************************************
+   This is an electrochemistry experiment and /ws3_echem is not mounted
+   Electrochemistry data is not being backed up!
+**************************************************************************
+            '''))
+
         if not force:
             if not self.user_is_defined:
                 print(error_msg('There is not a current experiment!'))
                 return(None)
 
+            ######################################################################
+            #copy the electrochemistry data, if this was that sort of experiment #
+            ######################################################################
+            if self.echem and os.path.ismount('/ws3_echem'):
+                try:
+                    self.fetch_echem()
+                except:
+                    print(error_msg('Unable to copy electrochemistry data from ws3'))
+                    if not os.path.ismount('/ws3_echem'):
+                        print(error_msg('\t/ws3_echem seems not to be mounted...'))
+            
             #######################################################################################
             # create folder and sub-folders on NAS server for this user & experimental start date #
             #######################################################################################
@@ -445,14 +491,14 @@ class BMM_User(Borg):
                 report('NAS data store: "%s"' % destination, 'bold')
             except:
                 print(error_msg('Unable to write data to NAS server'))
-        
-            #####################################################################
-            # remove the json serialization of the start_experiment() arguments #
-            #####################################################################
-            jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-            if os.path.isfile(jsonfile):    
-                os.chmod(jsonfile, 0o644)
-                os.remove(jsonfile)
+
+        #####################################################################
+        # remove the json serialization of the start_experiment() arguments #
+        #####################################################################
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        if os.path.isfile(jsonfile):    
+            os.chmod(jsonfile, 0o644)
+            os.remove(jsonfile)
 
         ###############################################################
         # unset self attributes, DATA, and experiment specific logger #
@@ -468,7 +514,9 @@ class BMM_User(Borg):
         self.name = None
         self.staff = False
         self.user_is_defined = False
-
+        self.echem = False
+        self.echem_remote = None
+        
         return None
 
 BMMuser = BMM_User()
