@@ -215,12 +215,16 @@ class WheelMacroBuilder():
         self.tmpl     = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
         self.measurements = list()
-        self.do_first_change = False
+        #self.do_first_change = False
+        #self.close_shutters  = True
         if energy is True:
             self.do_first_change = True
 
         if self.ws['H5'].value == 'e0': # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
+
+        self.do_first_change = self.truefalse(self.ws['G2'])
+        self.close_shutters  = self.truefalse(self.ws['J2'])
             
         self.read_spreadsheet()
         self.write_macro()
@@ -324,7 +328,7 @@ class WheelMacroBuilder():
                 continue
             if type(m['slot']) is not int:
                 continue
-            if type(m['filename']) is None:
+            if type(m['filename']) is None or re.search('^\s*$', m['filename']) is not None:
                 continue
             if  self.truefalse(m['measure']) is False:
                 continue
@@ -401,7 +405,13 @@ class WheelMacroBuilder():
             self.content += command
             self.content += self.tab + 'close_last_plot()\n\n'
 
-        
+
+
+        if self.close_shutters:
+            self.content += self.tab + 'if not dryrun:\n'
+            self.content += self.tab + '    yield from shb.close_plan()\n'
+
+            
         #################################
         # write out the master INI file #
         #################################
