@@ -807,7 +807,7 @@ def xafs(inifile, **kwargs):
         if not dcm.suppress_channel_cut:
             report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
             dcm.mode = 'fixed'
-            dcm_bragg.clear_encoder_loss()
+            #dcm_bragg.clear_encoder_loss()
             yield from mv(dcm.energy, eave)
             if p['rockingcurve']:
                 report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
@@ -826,6 +826,7 @@ def xafs(inifile, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
+        xs2   = lambda doc: (doc['data']['dcm_energy'], doc['data']['xs_channel1_rois_roi02_value'] / doc['data']['I0'])
         if BMMuser.detector == 1:
             fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
         else:
@@ -847,6 +848,12 @@ def xafs(inifile, **kwargs):
         elif 'both'  in p['mode']:
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
+        elif 'xs2'  in p['mode']:
+            xs.channel1.rois.roi01.value.kind = 'omitted'
+            xs.channel1.rois.roi02.value.kind = 'hinted'
+            yield from mv(xs.settings.acquire_time, 1.5)
+            #yield from mv(xs.total_points, nsteps)
+            plot =  DerivedPlot(xs2,   xlabel='energy (eV)', ylabel='Xspress3 ROI2 / I0',           title=p['filename'])
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
@@ -867,6 +874,7 @@ def xafs(inifile, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
+            #yield from mv(xs.total_points, len(energy_grid)+1)
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
                 BMMuser.final_log_entry = False
@@ -997,14 +1005,14 @@ def xafs(inifile, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
-                    dcm_bragg.clear_encoder_loss()
+                    #dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[-1]+5)
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
                     print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.value)))
-                    dcm_bragg.clear_encoder_loss()
+                    #dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.value))
@@ -1028,6 +1036,9 @@ def xafs(inifile, **kwargs):
                 #if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
+                                       md={**xdi, **mtr, **supplied_metadata})
+                elif p['mode'] == 'xs2':
+                    yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
                                        md={**xdi, **mtr, **supplied_metadata})
                 else:
                     yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
@@ -1056,7 +1067,7 @@ def xafs(inifile, **kwargs):
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
-            dcm_bragg.clear_encoder_loss()
+            #dcm_bragg.clear_encoder_loss()
             yield from mv(dcm.energy, eave)
             yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
 

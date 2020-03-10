@@ -288,7 +288,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Xs1', 'Xs2'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -359,13 +359,16 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Xs1', 'Xs2'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
             yield from null()
             return
 
         yield from abs_set(_locked_dwell_time, inttime, wait=True)
+        if detector == 'Xs1' or detector == 'Xs2':
+            yield from mv(xs.settings.acquire_time, inttime)
+            yield from mv(xs.total_points, nsteps)
         dets  = [quadem1,]
         denominator = ''
         detname = ''
@@ -407,6 +410,24 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.dtc2] +
                                  doc['data'][BMMuser.dtc3] +
                                  doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
+        elif detector == 'Xs1':
+            dets.append(xs)
+            denominator = ' / I0'
+            detname = 'fluorescence'
+            this = 'xs_channel1_rois_roi01_value'
+            xs.channel1.rois.roi01.value.kind = 'hinted'
+            xs.channel1.rois.roi02.value.kind = 'omitted'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data'][this] / doc['data']['I0'])
+            
+        elif detector == 'Xs2':
+            dets.append(xs)
+            denominator = ' / I0'
+            detname = 'fluorescence'
+            this = 'xs_channel1_rois_roi02_value'
+            xs.channel1.rois.roi01.value.kind = 'omitted'
+            xs.channel1.rois.roi02.value.kind = 'hinted'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data'][this] / doc['data']['I0'])
+            
         elif detector == 'Both':
             dets.append(vor)
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])

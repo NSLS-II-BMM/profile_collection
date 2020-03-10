@@ -115,7 +115,7 @@ class ReferenceFoils():
             ast = ' '
             if abs(self.position(i) - xafs_linxs.user_readback.value) < 1:
                 ast = '*'
-            text += '      %s slot %d : %s at %d mm\n'% (ast, i+1, str(self.slots[i]), self.position(i))
+            text += '      slot %d : %s at %d mm\n'% (i+1, str(self.slots[i]), self.position(i))
         return(text)
             
 foils = ReferenceFoils()
@@ -191,14 +191,15 @@ class ROI():
         # save the ROI configuration to the user serialization #
         ########################################################
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-        user = dict()
         if os.path.isfile(jsonfile):
-            user = json.load(open(jsonfile))
-        user['rois'] = ' '.join(map(str, elements))
-        os.chmod(jsonfile, 0o644)
-        with open(jsonfile, 'w') as outfile:
-            json.dump(user, outfile)
-        os.chmod(jsonfile, 0o444)
+            user = dict()
+            if os.path.isfile(jsonfile):
+                user = json.load(open(jsonfile))
+            user['rois'] = ' '.join(map(str, elements))
+            os.chmod(jsonfile, 0o644)
+            with open(jsonfile, 'w') as outfile:
+                json.dump(user, outfile)
+            os.chmod(jsonfile, 0o444)
 
     def select(self, el):
         '''Choose the ROI configured for element el'''
@@ -241,10 +242,10 @@ class ROI():
         '''Show configuration of ROI channels'''
         text = ' ROI channels:\n'
         for i in range(3):
-            ast = ' '
             if i+1 == BMMuser.roi_channel:
-                ast = '*'
-            text +='      %s ROI %d : %s\n'% (ast, i+1, str(self.slots[i]))
+                text +='      ROI %d : %s\n'% (i+1, go_msg(str(self.slots[i])))
+            else:
+                text +='      ROI %d : %s\n'% (i+1, str(self.slots[i]))
         return text
 
 rois = ROI()

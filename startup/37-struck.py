@@ -51,7 +51,8 @@ class DTCorr(DerivedSignal):
         return self.parent.dtcorrect(self.derived_from.value,
                                      icrs[df].value,
                                      ocrs[df].value,
-                                     _locked_dwell_time.dwell_time.readback.value, self.off)
+                                     _locked_dwell_time.dwell_time.readback.value,
+                                     off=self.off)
 
         # elif any(scal in df for scal in ('S4', 'S16', 'S20')):
         #     return self.parent.dtcorrect(self.derived_from.value,

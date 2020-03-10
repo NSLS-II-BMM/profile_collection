@@ -95,7 +95,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           #base.extend([xafs_linxs, foils.position(reference.capitalize())])
           base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
      if edge is not None:
-          dcm_bragg.clear_encoder_loss()
+          #dcm_bragg.clear_encoder_loss()
           base.extend([dcm.energy, edge])
 
      ###################################################################

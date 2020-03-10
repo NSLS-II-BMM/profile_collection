@@ -97,7 +97,7 @@ xafs_ref.slotone = 0        # the angular position of slot #1
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', None, None, None]
+                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 
 def reference(target=None):
     if target is None:
@@ -223,8 +223,8 @@ class WheelMacroBuilder():
         if self.ws['H5'].value == 'e0': # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
 
-        self.do_first_change = self.truefalse(self.ws['G2'])
-        self.close_shutters  = self.truefalse(self.ws['J2'])
+        self.do_first_change = self.truefalse(self.ws['G2'].value)
+        self.close_shutters  = self.truefalse(self.ws['J2'].value)
             
         self.read_spreadsheet()
         self.write_macro()
@@ -328,7 +328,7 @@ class WheelMacroBuilder():
                 continue
             if type(m['slot']) is not int:
                 continue
-            if type(m['filename']) is None or re.search('^\s*$', m['filename']) is not None:
+            if m['filename'] is None or re.search('^\s*$', m['filename']) is not None:
                 continue
             if  self.truefalse(m['measure']) is False:
                 continue
