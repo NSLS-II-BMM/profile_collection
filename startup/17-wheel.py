@@ -480,7 +480,7 @@ class WheelMacroBuilder():
                                       'focus':      row[9+offset].value,
                                       'sample':     row[10+offset].value,     # scan metadata
                                       'prep':       row[11+offset].value,
-                                      'comment':    row[13+offset].value,
+                                      'comment':    row[12+offset].value,
                                       'bounds':     row[13+offset].value,     # scan parameters
                                       'steps':      row[14+offset].value,
                                       'times':      row[15+offset].value,
