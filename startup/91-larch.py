@@ -180,24 +180,27 @@ class Pandrosus():
         '''
         plt.cla()
         plt.xlabel(self.xe)
-        plt.ylabel('$\mu(E)$')
         plt.title(self.name + ' in energy')
 
         g = self.group
 
         if deriv is True:
+            plt.ylabel('$d[\mu(E)] / dE$')
             plt.plot(g.energy, g.dmude, label=self.name + ' derivative')
             y = numpy.interp(g.e0, g.energy, g.dmude)
             plt.scatter(g.e0, y, marker='d', color='orchid')
         elif flat is True:
+            plt.ylabel('flattened $\mu(E)$')
             plt.plot(g.energy, g.flat, label=self.name + ' flattened')
             y = numpy.interp(g.e0, g.energy, g.flat)
             plt.scatter(g.e0, y, marker='d', color='orchid')
         elif norm is True:
+            plt.ylabel('normalized $\mu(E)$')
             plt.plot(g.energy, g.norm, label=self.name + ' normalized')
             y = numpy.interp(g.e0, g.energy, g.norm)
             plt.scatter(g.e0, y, marker='d', color='orchid')
         else:
+            plt.ylabel('$\mu(E)$')
             if bkg is True:
                 plt.plot(g.energy, g.bkg, label='background', color='C1')
                 y = numpy.interp(g.e0, g.energy, g.mu)
@@ -231,7 +234,7 @@ class Pandrosus():
         '''
         plt.cla()
         plt.xlabel(self.xk)
-        plt.ylabel(f"$k^{kw}\cdot\chi(k)$  ($\AA^{kw}$)")
+        plt.ylabel(f"$k^{kw}\cdot\chi(k)$  ($\AA^{{-{kw}}}$)")
         plt.title(self.name + ' in k-space')
         y = self.group.chi*self.group.k**kw
         plt.plot(self.group.k, y, label='$\chi(k)$')
@@ -339,6 +342,8 @@ class Pandrosus():
         The order of the letters in the parts argument does not matter.
 
         '''
+        self.prep()
+        self.do_xftf(kw=kw)
         self.do_xftr()
         plt.cla()
         plt.xlabel(self.xk)
@@ -490,7 +495,7 @@ class Kekropidai():
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xk)
-        plt.ylabel(f"$k^{{{kw}}}\cdot\chi(k)$  ($\AA^{{{kw}}}$)")
+        plt.ylabel(f"$k^{{{kw}}}\cdot\chi(k)$  ($\AA^{{-{kw}}}$)")
         title = 'EXAFS data'
         if self.name is not None:
             title = self.name + ' in k-space'
