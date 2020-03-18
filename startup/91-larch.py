@@ -42,6 +42,7 @@ class Pandrosus():
       bkg:   Dictionary of background subtraction arguments
       fft:   Dictionary of forward Fourier transform arguments
       bft:   Dictionary of backward Fourier transform arguments
+      rmax:  upper bound of R-space plot
 
     See http://xraypy.github.io/xraylarch/xafs/preedge.html and
     http://xraypy.github.io/xraylarch/xafs/autobk.html for details
@@ -56,11 +57,11 @@ class Pandrosus():
       do_xftr:    perform the reverse (R->q) transform
 
     Plotting methods:
-      plot_xmu:   plot data in energy
-      plot_chik:  plot data in k-space
-      plot_chir:  plot data in R-space
-      plot_chiq:  plot data in back-transform k-space
-      plot_chikq: plot chi(k) + RE(chi(q))
+      plot_xmu:   plot data in energy (alias = pe)
+      plot_chik:  plot data in k-space (alias = pk)
+      plot_chir:  plot data in R-space (alias = pr)
+      plot_chiq:  plot data in back-transform k-space (alias = pq)
+      plot_chikq: plot chi(k) + RE(chi(q)) (alias = pkq)
 
     '''
     def __init__(self, uid=None, name=None):
@@ -76,7 +77,9 @@ class Pandrosus():
         self.xe     = 'energy (eV)'
         self.xk     = 'wavenumber ($\AA^{-1}$)'
         self.xr     = 'radial distance ($\AA$)'
+        self.rmax   = 6
 
+        ## flow control parameters
         
     def make_xmu(self, uid, mode):
         '''Load energy and mu(E) arrays into Larch and into this wrapper object.
@@ -85,7 +88,7 @@ class Pandrosus():
         beamline-specific configuration.  What is shown below is
         specific to how data are retrieved from Databroker at
         BMM. Other beamlines -- or reading data from files -- will
-        need to do something different.
+        need something different.
 
         Arguments:
           uid:   database identifier (assuming you are using databroker)
@@ -93,7 +96,7 @@ class Pandrosus():
 
         '''
         header = db[uid]
-        table = header.table()
+        table  = header.table()
         self.group.energy = numpy.array(table['dcm_energy'])
         if mode == 'flourescence': mode = 'fluorescence'
         if mode == 'reference':
@@ -312,6 +315,7 @@ class Pandrosus():
             color_counter += 1
         if win and parts.lower() != 'p':
             plt.plot(self.group.r, self.group.rwin*y.max()*1.1, label='window', color='C8')
+        plt.xlim(right=self.rmax)
         plt.legend(loc='best', shadow=True)
         
     def do_xftr(self):
@@ -321,7 +325,7 @@ class Pandrosus():
              rmax   = self.bft['rmax'],
              dr     = self.bft['dr'],
              with_phase=True, _larch=LARCH)
-    def plot_chiq(self, parts='r', win=True):
+    def plot_chiq(self, kw=2, parts='r', win=True):
         '''Make a plot in back-transformed k-space of a single data set.
 
         Arguments:
@@ -407,7 +411,11 @@ class Pandrosus():
             plt.plot(self.group.k, self.group.kwin*y.max()*1.1, label='window', color='C8')
         plt.legend(loc='best', shadow=True)
         
-
+    pe  = plot_xmu
+    pk  = plot_chi
+    pr  = plot_chir
+    pq  = plot_chiq
+    pkq = plot_chikq
 
 
 from collections.abc import Iterable
@@ -417,16 +425,22 @@ class Kekropidai():
     multiple data set plots in the manner of Athena's purple plot
     buttons.
 
+    Attributes:
+      groups:    list of Pandrosus groups for plotting
+      name:      name of this collection
+      rmax:      upper bound of R-space plot
+      
+
     Methods:
       add:       add a single group or a list of groups to the Kekropidai object
-      plot_xmu:  overplot all the groups in energy
-      plot_chi:  overplot all the groups in k-space
-      plot_chir: overplot all the groups in R-space
-      plot_chiq: overplot all the groups in q-space
+      plot_xmu:  (alias = pe) overplot all the groups in energy
+      plot_chi:  (alias = pk) overplot all the groups in k-space
+      plot_chir: (alias = pr) overplot all the groups in R-space
+      plot_chiq: (alias = pq) overplot all the groups in q-space
 
     Example:
 
-       bunch = Kekropidai()
+       bunch = Kekropidai(name='My data')
        bunch.add(data_set1)
        bunch.add(data_set2)
        bunch.add(data_set3)
@@ -435,6 +449,7 @@ class Kekropidai():
     def __init__(self, name=None):
         self.groups = list()
         self.name   = name
+        self.rmax   = 6
 
     def add(self, groups):
         if 'Pandrosus' in str(type(groups)):
@@ -487,11 +502,15 @@ class Kekropidai():
                 plt.plot(g.group.energy, g.group.mu, label=g.name)
         plt.legend(loc='best', shadow=True)
 
-    def plot_chi(self, kw=2):
+    def plot_chi(self, kw=2, part=None):
         '''Overplot multiple data sets in k-space.
 
         Arguments:
           kw:  the k-weight to use for all plots [2]
+
+        (The "part" argument is ignored.  It is there as a command
+        line convenience.)
+
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xk)
@@ -522,7 +541,7 @@ class Kekropidai():
         plt.xlabel(self.groups[0].xr)
         title = 'FT data'
         if self.name is not None:
-            title = self.name
+            title = self.name + ' in R-space'
         if part.lower() == 'r':
             plt.title(f"Real part of {title}")
             plt.ylabel(f"RE[$\chi$(R)]  ($\AA^{{-{kw+1}}}$)")
@@ -548,6 +567,7 @@ class Kekropidai():
             else:
                 plt.plot(g.group.r, g.group.chir_mag, label=g.name)
 
+        plt.xlim(right=self.rmax)
         plt.legend(loc='best', shadow=True)
 
     def plot_chiq(self, kw=2, part='r'):
@@ -563,9 +583,10 @@ class Kekropidai():
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xk)
+        maxk = 0
         title = 'back-transformed data'
         if self.name is not None:
-            title = self.name
+            title = self.name + ' in q-space'
         if part.lower() == 'r':
             plt.title(f"Real part of {title}")
             plt.ylabel(f"RE[$\chi$(q)]  ($\AA^{{-{kw}}}$)")
@@ -583,6 +604,7 @@ class Kekropidai():
             g.prep()
             g.do_xftf(kw=kw)
             g.do_xftr()
+            maxk = max([maxk, g.group.k.max()])
             if part.lower() == 'r':
                 plt.plot(g.group.q, g.group.chiq_re,  label=g.name)
             elif part.lower() == 'i':
@@ -592,8 +614,13 @@ class Kekropidai():
             else:
                 plt.plot(g.group.q, g.group.chiq_mag, label=g.name)
 
+        plt.xlim(right=maxk*1.1)
         plt.legend(loc='best', shadow=True)
 
+    pe = plot_xmu
+    pk = plot_chi
+    pr = plot_chir
+    pq = plot_chiq
 
     
 ## examples....
