@@ -279,25 +279,25 @@ class Pandrosus():
         color_counter = 0
         ylabel = False
         if 'e' in parts.lower():
-            plt.ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw}}}$)")
+            plt.ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw+1}}}$)")
             ylabel = True
             plt.plot(self.group.r, self.group.chir_mag, label='Env[$\chi(R)$]', color='C%d'%color_counter)
             plt.plot(self.group.r, -1*self.group.chir_mag, color='C%d'%color_counter)
             color_counter += 1
         if 'm' in parts.lower():
-            plt.ylabel('$|\chi(R)|$  ($\AA^{{-{kw}}}$)')
+            plt.ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw+1}}}$)")
             ylabel = True
             plt.plot(self.group.r, self.group.chir_mag, label='$|\chi(R)|$', color='C%d'%color_counter)
             color_counter += 1
         if 'r' in parts.lower():
             if not ylabel:
-                plt.ylabel('RE[$\chi$(R)]  ($\AA^{{-{kw}}}$)')
+                plt.ylabel(f"RE[$\chi$(R)]  ($\AA^{{-{kw+1}}}$)")
                 ylabel = True
             plt.plot(self.group.r, self.group.chir_re, label='RE[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
         if 'i' in parts.lower():
             if not ylabel:
-                plt.ylabel('IM[$\chi$(R)]  ($\AA^{{-{kw}}}$)')
+                plt.ylabel(f"IM[$\chi$(R)]  ($\AA^{{-{kw+1}}}$)")
                 ylabel = True
             plt.plot(self.group.r, self.group.chir_im, label='IM[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
