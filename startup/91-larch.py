@@ -1,4 +1,21 @@
 
+## Once upon a time Pallas hid a child, Erichthonius, born without a
+## human mother, in a box made of Actaean osiers. She gave this to the
+## three virgin daughters of two-natured Cecrops, who was part human
+## part serpent, and ordered them not to pry into its secret. Hidden
+## in the light leaves that grew thickly over an elm-tree I set out to
+## watch what they might do. Two of the girls, Pandrosus and Herse,
+## obeyed without cheating, but the third Aglauros called her sisters
+## cowards and undid the knots with her hand, and inside they found a
+## baby boy with a snake stretched out next to him. That act I
+## betrayed to the goddess. And this is the reward I got for it, no
+## longer consecrated to Minerva’s protection, and ranked below the
+## Owl, that night-bird! My punishment should be a warning to all
+## birds not to take risks by speaking out.’
+##
+##                           Ovid, Metamorphosis
+##                           Book II:531-565
+
 from larch import (Group, Parameter, isParameter, param_value, isNamedClass, Interpreter) 
 from larch.xafs import (find_e0, pre_edge, autobk, xftf, xftr)
 import larch.utils.show as lus
@@ -8,7 +25,6 @@ import matplotlib.pyplot as plt
 run_report(__file__)
 
 LARCH = Interpreter()
-LARCH_COLOR_COUNTER = 0
 
 
 class Pandrosus():
@@ -47,16 +63,21 @@ class Pandrosus():
       plot_chikq: plot chi(k) + RE(chi(q))
 
     '''
-    def __init__(self):
-        self.uid   = None
-        self.name   = None
+    def __init__(self, uid=None, name=None):
+        self.uid    = uid
+        self.name   = name
         self.group  = None
-        ## pre and post
-        self.pre    = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0}
+        ## Larch parameters
+        self.pre    = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
         self.bkg    = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':1,}
         self.fft    = {'window':'Hanning', 'kmin':3, 'kmax':12, 'dk':2,}
         self.bft    = {'window':'Hanning', 'rmin':1, 'rmax':3, 'dr':0.1,}
+        ## plotting parameters
+        self.xe     = 'energy (eV)'
+        self.xk     = 'wavenumber ($\AA^{-1}$)'
+        self.xr     = 'radial distance ($\AA$)'
 
+        
     def make_xmu(self, uid, mode):
         '''Load energy and mu(E) arrays into Larch and into this wrapper object.
 
@@ -76,11 +97,11 @@ class Pandrosus():
         self.group.energy = numpy.array(table['dcm_energy'])
         if mode == 'flourescence': mode = 'fluorescence'
         if mode == 'reference':
-            self.group.mu = numpy.array(log(table['It']/table['Ir']))
+            self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
         elif mode == 'fluorescence':
             self.group.mu = numpy.array((table['dtc1']+table['dtc2']+table['dtc3']+table['dtc4'])/table['I0'])
         else:
-            self.group.mu = numpy.array(log(table['I0']/table['It']))
+            self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
         
     def fetch(self, uid, name=None, mode='transmission'):
         self.uid = uid
@@ -111,14 +132,14 @@ class Pandrosus():
         if self.pre['pre2'] is None:
             self.pre['pre2'] = self.pre['pre1'] / 3
         pre_edge(self.group.energy, mu=self.group.mu, group=self.group,
-                 e0=ezero,
-                 step=None,
-                 pre1=self.pre['pre1'],
-                 pre2=self.pre['pre2'],
-                 norm1=self.pre['norm1'],
-                 norm2=self.pre['norm2'],
-                 nnorm=self.pre['nnorm'],
-                 nvict=self.pre['nvict'],
+                 e0    = ezero,
+                 step  = None,
+                 pre1  = self.pre['pre1'],
+                 pre2  = self.pre['pre2'],
+                 norm1 = self.pre['norm1'],
+                 norm2 = self.pre['norm2'],
+                 nnorm = self.pre['nnorm'],
+                 nvict = self.pre['nvict'],
                  _larch=LARCH)
         autobk(self.group.energy, mu=self.group.mu, group=self.group,
                rbkg    = self.bkg['rbkg'],
@@ -158,8 +179,8 @@ class Pandrosus():
         Setting deriv to True forces all other arguments to false.
         '''
         plt.cla()
-        plt.xlabel('energy (eV)')
-        plt.ylabel('xmu')
+        plt.xlabel(self.xe)
+        plt.ylabel('$\mu(E)$')
         plt.title(self.name + ' in energy')
 
         g = self.group
@@ -209,8 +230,8 @@ class Pandrosus():
           win:  plot FT window if True [True]
         '''
         plt.cla()
-        plt.xlabel('wavenumber (Å$^{-1}$)')
-        plt.ylabel('$\chi$(k) * k$^%d$  (Å$^%d$)' % (kw, kw))
+        plt.xlabel(self.xk)
+        plt.ylabel(f"$k^{kw}\cdot\chi(k)$  ($\AA^{kw}$)")
         plt.title(self.name + ' in k-space')
         y = self.group.chi*self.group.k**kw
         plt.plot(self.group.k, y, label='$\chi(k)$')
@@ -222,10 +243,10 @@ class Pandrosus():
         
     def do_xftf(self, kw=2):
         xftf(self.group.k, chi=self.group.chi, group=self.group,
-             window = self.fft['window'],
-             kmin   = self.fft['kmin'],
-             kmax   = self.fft['kmax'],
-             dk     = self.fft['dk'],
+             window  = self.fft['window'],
+             kmin    = self.fft['kmin'],
+             kmax    = self.fft['kmax'],
+             dk      = self.fft['dk'],
              kweight = kw,
              with_phase=True, _larch=LARCH)
     def plot_chir(self, kw=2, win=True, parts='m'):
@@ -252,31 +273,31 @@ class Pandrosus():
         self.do_xftf(kw=kw)
         self.do_xftr()
         plt.cla()
-        plt.xlabel('radial distance (Å)')
+        plt.xlabel(self.xr)
         plt.title(self.name + ' in R-space')
         y = self.group.chir_mag
         color_counter = 0
         ylabel = False
         if 'e' in parts.lower():
-            plt.ylabel('|$\chi$(R)|')
+            plt.ylabel(f"$|\chi(R)|$  ($\AA^{{{kw}}}$)")
             ylabel = True
             plt.plot(self.group.r, self.group.chir_mag, label='Env[$\chi(R)$]', color='C%d'%color_counter)
             plt.plot(self.group.r, -1*self.group.chir_mag, color='C%d'%color_counter)
             color_counter += 1
         if 'm' in parts.lower():
-            plt.ylabel('|$\chi$(R)|')
+            plt.ylabel('$|\chi(R)|$  ($\AA^{{{kw}}}$)')
             ylabel = True
             plt.plot(self.group.r, self.group.chir_mag, label='$|\chi(R)|$', color='C%d'%color_counter)
             color_counter += 1
         if 'r' in parts.lower():
             if not ylabel:
-                plt.ylabel('RE[$\chi$(R)]')
+                plt.ylabel('RE[$\chi$(R)]  ($\AA^{{{kw}}}$)')
                 ylabel = True
             plt.plot(self.group.r, self.group.chir_re, label='RE[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
         if 'i' in parts.lower():
             if not ylabel:
-                plt.ylabel('IM[$\chi$(R)]')
+                plt.ylabel('IM[$\chi$(R)]  ($\AA^{{{kw}}}$)')
                 ylabel = True
             plt.plot(self.group.r, self.group.chir_im, label='IM[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
@@ -320,32 +341,32 @@ class Pandrosus():
         '''
         self.do_xftr()
         plt.cla()
-        plt.xlabel('wavenumber (Å$^{-1}$)')
+        plt.xlabel(self.xk)
         plt.title(self.name + ' in back-transformed k-space')
         plt.xlim(right=self.group.k.max())
         y = self.group.chiq_mag
         color_counter = 0
         ylabel = False
         if 'e' in parts.lower():
-            plt.ylabel('|$\chi$(q)|')
+            plt.ylabel(f"|$\chi$(q)|  ($\AA^{{-{kw}}}$)")
             ylabel = True
             plt.plot(self.group.q, self.group.chiq_mag, label='Env[$\chi(R)$]', color='C%d'%color_counter)
             plt.plot(self.group.q, -1*self.group.chiq_mag, color='C%d'%color_counter)
             color_counter += 1
         if 'm' in parts.lower():
-            plt.ylabel('|$\chi$(q)|')
+            plt.ylabel(f"|$\chi$(q)|  ($\AA^{{-{kw}}}$)")
             ylabel = True
             plt.plot(self.group.q, self.group.chiq_mag, label='$|\chi(R)|$', color='C%d'%color_counter)
             color_counter += 1
         if 'r' in parts.lower():
             if not ylabel:
-                plt.ylabel('RE[$\chi$(q)]')
+                plt.ylabel(f"RE[$\chi$(q)]  ($\AA^{{-{kw}}}$)")
                 ylabel = True
             plt.plot(self.group.q, self.group.chiq_re, label='RE[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
         if 'i' in parts.lower():
             if not ylabel:
-                plt.ylabel('IM[$\chi$(q)]')
+                plt.ylabel(f"IM[$\chi$(q)]  ($\AA^{{-{kw}}}$)")
                 ylabel = True
             plt.plot(self.group.q, self.group.chiq_im, label='IM[$\chi(R)$]', color='C%d'%color_counter)
             color_counter += 1
@@ -370,7 +391,7 @@ class Pandrosus():
         self.do_xftf(kw=kw)
         self.do_xftr()
         plt.cla()
-        plt.xlabel('wavenumber (Å$^{-1}$)')
+        plt.xlabel('wavenumber ($\AA^{-1}$)')
         plt.ylabel('$\chi$(k)')
         plt.title(self.name + ' in k-space and q-space')
         plt.xlim(right=self.group.k.max())
@@ -387,8 +408,28 @@ class Pandrosus():
 from collections.abc import Iterable
 ## grouping of Pandrosus objects for making purple plots
 class Kekropidai():
-    def __init__(self):
+    '''Simple wrapper around a group of Pandrosus objects to facilitate
+    multiple data set plots in the manner of Athena's purple plot
+    buttons.
+
+    Methods:
+      add:       add a single group or a list of groups to the Kekropidai object
+      plot_xmu:  overplot all the groups in energy
+      plot_chi:  overplot all the groups in k-space
+      plot_chir: overplot all the groups in R-space
+      plot_chiq: overplot all the groups in q-space
+
+    Example:
+
+       bunch = Kekropidai()
+       bunch.add(data_set1)
+       bunch.add(data_set2)
+       bunch.add(data_set3)
+       bunch.plot_xmu()
+    '''
+    def __init__(self, name=None):
         self.groups = list()
+        self.name   = name
 
     def add(self, groups):
         if 'Pandrosus' in str(type(groups)):
@@ -401,17 +442,34 @@ class Kekropidai():
                     self.groups.append(item)
 
     def plot_xmu(self, norm=False, flat=False, deriv=False):
+        '''Overplot multiple data sets in energy.
+
+        The default is to plot all data as raw mu(E).
+
+        Arguments:
+          norm:  plot normalized data [False]
+          flat:  plot flattened data [False]
+          deriv: plot derivative data [False]
+
+        Setting deriv to True turns off flat and norm.
+
+        Setting flat to True turns off norm.
+
+        '''
         plt.cla()
-        plt.xlabel('energy (eV)')
+        plt.xlabel(self.groups[0].xe)
         plt.ylabel('$\mu(E)$')
+        title = '$\mu$(E)'
+        if self.name is not None:
+            title = self.name
         if deriv is True:
-            plt.title('Derivative of $\mu$(E)')
+            plt.title(f"Derivative of {title}")
         elif flat is True:
-            plt.title('Flattened $\mu$(E)')
+            plt.title(f"Flattened {title}")
         elif flat is True:
-            plt.title('Normalized $\mu$(E)')
+            plt.title(f"Normalized {title}")
         else:
-            plt.title('$\mu$(E)')
+            plt.title(f"{title}")
         for g in self.groups:
             g.prep()
             if deriv is True:
@@ -425,10 +483,18 @@ class Kekropidai():
         plt.legend(loc='best', shadow=True)
 
     def plot_chi(self, kw=2):
+        '''Overplot multiple data sets in k-space.
+
+        Arguments:
+          kw:  the k-weight to use for all plots [2]
+        '''
         plt.cla()
-        plt.xlabel('wavenumber (Å$^{-1}$)')
-        plt.ylabel('$\chi$(k) * k$^%d$  (Å$^%d$)' % (kw, kw))
-        plt.title('EXAFS data')
+        plt.xlabel(self.groups[0].xk)
+        plt.ylabel(f"$k^{{{kw}}}\cdot\chi(k)$  ($\AA^{{{kw}}}$)")
+        title = 'EXAFS data'
+        if self.name is not None:
+            title = self.name + ' in k-space'
+        plt.title(f"{title}")
         for g in self.groups:
             g.prep()
             y = g.group.chi*g.group.k**kw
@@ -437,20 +503,33 @@ class Kekropidai():
     plot_chik = plot_chi
 
     def plot_chir(self, kw=2, part='m'):
+        '''Overplot multiple data sets in R-space.
+
+        Arguments:
+          kw:   the k-weight to use in all Fourier transforms [2]
+          part: the part of the complex FT to plot ['m']
+                m = magnitude
+                r = real part
+                m = imaginary part
+                p = phase
+        '''
         plt.cla()
-        plt.xlabel('radial distance (Å)')
+        plt.xlabel(self.groups[0].xr)
+        title = 'FT data'
+        if self.name is not None:
+            title = self.name
         if part.lower() == 'r':
-            plt.title('Real part of FT data')
-            plt.ylabel('RE[$\chi$(R)]  (Å$^{-%d}$)' % (kw+1))
+            plt.title(f"Real part of {title}")
+            plt.ylabel(f"RE[$\chi$(R)]  ($\AA^{{-{kw+1}}}$)")
         elif part.lower() == 'i':
-            plt.title('Imaginary part of FT data')
-            plt.ylabel('Im[$\chi$(R)]  (Å$^{-%d}$)' % (kw+1))
+            plt.title(f"Imaginary part of {title}")
+            plt.ylabel(f"Im[$\chi$(R)]  ($\AA^{{-{kw+1}}}$)")
         elif part.lower() == 'p':
-            plt.title('Phase of FT data')
-            plt.ylabel('Phase[$\chi$(R)]  (Å$^{-%d}$)' % (kw+1))
+            plt.title(f"Phase of {title}")
+            plt.ylabel(f"Phase[$\chi$(R)]")
         else:
-            plt.title('Magnitude of FT data')
-            plt.ylabel('|$\chi$(R)|  (Å$^{-%d}$)' % (kw+1))
+            plt.title(f"Magnitude of {title}")
+            plt.ylabel(f"|$\chi$(R)|  ($\AA^{{-{kw+1}}}$)")
             
         for g in self.groups:
             g.prep()
@@ -467,20 +546,33 @@ class Kekropidai():
         plt.legend(loc='best', shadow=True)
 
     def plot_chiq(self, kw=2, part='r'):
+        '''Overplot multiple data sets in backtransformed k-space.
+
+        Arguments:
+          kw:   the k-weight to use in all Fourier transforms [2]
+          part: the part of the complex FT to plot ['r']
+                m = magnitude
+                r = real part
+                m = imaginary part
+                p = phase
+        '''
         plt.cla()
-        plt.xlabel('radial distance (Å)')
+        plt.xlabel(self.groups[0].xk)
+        title = 'back-transformed data'
+        if self.name is not None:
+            title = self.name
         if part.lower() == 'r':
-            plt.title('Real part of back-transformed data')
-            plt.ylabel('RE[$\chi$(q)]  (Å$^{-%d}$)' % kw)
+            plt.title(f"Real part of {title}")
+            plt.ylabel(f"RE[$\chi$(q)]  ($\AA^{{-{kw}}}$)")
         elif part.lower() == 'i':
-            plt.title('Imaginary part of back-transformed data')
-            plt.ylabel('Im[$\chi$(q)]  (Å$^{-%d}$)' % kw)
+            plt.title(f"Imaginary part of {title}")
+            plt.ylabel(f"Im[$\chi$(q)]  ($\AA^{{-{kw}}}$)")
         elif part.lower() == 'p':
-            plt.title('Phase of back-transformed data')
-            plt.ylabel('Phase[$\chi$(q)]  (Å$^{-%d}$)' % kw)
+            plt.title(f"Phase of {title}")
+            plt.ylabel('Phase[$\chi$(q)]')
         else:
-            plt.title('Magnitude of back-transformed data')
-            plt.ylabel('|$\chi$(q)|  (Å$^{-%d}$)' % kw)
+            plt.title(f"Magnitude of {title}")
+            plt.ylabel(f"|$\chi$(q)|  ($\AA^{{-{kw}}}$)")
             
         for g in self.groups:
             g.prep()
@@ -500,13 +592,13 @@ class Kekropidai():
 
     
 ## examples....
-bunch = Kekropidai()
 se = Pandrosus()
-se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', mode='transmission')
-se.name='Se metal'
+se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name='Se metal', mode='transmission')
+
 seo = Pandrosus()
-seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', mode='transmission')
-seo.name='SeO2'
+seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', name='SeO2', mode='transmission')
+
+bunch = Kekropidai(name='Selenium standards')
 bunch.add(se)
 bunch.add(seo)
 
