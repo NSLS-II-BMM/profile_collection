@@ -98,13 +98,20 @@ class Pandrosus():
         header = db[uid]
         table  = header.table()
         self.group.energy = numpy.array(table['dcm_energy'])
+        self.group.i0 = numpy.array(table['I0'])
         if mode == 'flourescence': mode = 'fluorescence'
         if mode == 'reference':
             self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
+            self.group.i0 = numpy.array(table['It'])
+            self.group.signal = numpy.array(table['Ir'])
         elif mode == 'fluorescence':
             self.group.mu = numpy.array((table['dtc1']+table['dtc2']+table['dtc3']+table['dtc4'])/table['I0'])
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table['dtc1']+table['dtc2']+table['dtc3']+table['dtc4'])
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table['It'])
         
     def fetch(self, uid, name=None, mode='transmission'):
         self.uid = uid
@@ -184,7 +191,8 @@ class Pandrosus():
         plt.cla()
         plt.xlabel(self.xe)
         plt.title(self.name + ' in energy')
-
+        plt.grid(which='major', axis='both')
+        
         g = self.group
 
         if deriv is True:
@@ -226,7 +234,31 @@ class Pandrosus():
                 plt.scatter(g.e0+g.pre_edge_details.norm2, y, marker='|', color='orchid')
         plt.legend(loc='best', shadow=True)
 
+    def plot_signals(self):
+        '''Make a plot of mu(E) for a single data set with I0 and the signal
+        (i.e. either If or It) both scaled to plot on the same y-axis.
 
+        This allows you to investigate the effect of monochromator
+        glitches and other experimental artifacts.
+
+        '''
+        plt.cla()
+        plt.xlabel(self.xe)
+        plt.title(self.name + ' in energy')
+        plt.grid(which='major', axis='both')
+
+        g = self.group
+
+        max_xmu    = g.mu.max()
+        max_i0     = g.i0.max()
+        max_signal = g.signal.max()
+
+        plt.plot(g.energy, g.mu, label='$\mu(E)$')
+        plt.plot(g.energy, g.i0*max_xmu/max_i0, label='$I_0$')
+        plt.plot(g.energy, g.signal*max_xmu/max_signal, label='signal')
+        plt.legend(loc='best', shadow=True)
+
+        
     def plot_chi(self, kw=2, win=True):
         '''
         Make a plot in k-space of a single data set.
@@ -239,6 +271,7 @@ class Pandrosus():
         plt.xlabel(self.xk)
         plt.ylabel(f"$k^{kw}\cdot\chi(k)$  ($\AA^{{-{kw}}}$)")
         plt.title(self.name + ' in k-space')
+        plt.grid(which='major', axis='both')
         y = self.group.chi*self.group.k**kw
         plt.plot(self.group.k, y, label='$\chi(k)$')
         if win:
@@ -281,6 +314,7 @@ class Pandrosus():
         plt.cla()
         plt.xlabel(self.xr)
         plt.title(self.name + ' in R-space')
+        plt.grid(which='major', axis='both')
         y = self.group.chir_mag
         color_counter = 0
         ylabel = False
@@ -353,6 +387,7 @@ class Pandrosus():
         plt.xlabel(self.xk)
         plt.title(self.name + ' in back-transformed k-space')
         plt.xlim(right=self.group.k.max())
+        plt.grid(which='major', axis='both')
         y = self.group.chiq_mag
         color_counter = 0
         ylabel = False
@@ -404,6 +439,7 @@ class Pandrosus():
         plt.ylabel('$\chi$(k)')
         plt.title(self.name + ' in k-space and q-space')
         plt.xlim(right=self.group.k.max())
+        plt.grid(which='major', axis='both')
         y = self.group.chi*self.group.k**kw
         plt.plot(self.group.k, y, label=self.name, color='C0')
         plt.plot(self.group.q, self.group.chiq_re, label='backtransform', color='C1')
@@ -479,6 +515,7 @@ class Kekropidai():
         plt.cla()
         plt.xlabel(self.groups[0].xe)
         plt.ylabel('$\mu(E)$')
+        plt.grid(which='major', axis='both')
         title = '$\mu$(E)'
         if self.name is not None:
             title = self.name
@@ -502,6 +539,19 @@ class Kekropidai():
                 plt.plot(g.group.energy, g.group.mu, label=g.name)
         plt.legend(loc='best', shadow=True)
 
+    def plot_i0(self):
+        '''Overplot I0 in energy.
+        '''
+        plt.cla()
+        plt.xlabel(self.groups[0].xe)
+        plt.ylabel('$I_0$  (nA)')
+        plt.grid(which='major', axis='both')
+        plt.title('$I_0$')
+        for g in self.groups:
+            plt.plot(g.group.energy, g.group.i0, label=g.name)
+
+        
+        
     def plot_chi(self, kw=2, part=None):
         '''Overplot multiple data sets in k-space.
 
@@ -515,6 +565,7 @@ class Kekropidai():
         plt.cla()
         plt.xlabel(self.groups[0].xk)
         plt.ylabel(f"$k^{{{kw}}}\cdot\chi(k)$  ($\AA^{{-{kw}}}$)")
+        plt.grid(which='major', axis='both')
         title = 'EXAFS data'
         if self.name is not None:
             title = self.name + ' in k-space'
@@ -539,6 +590,7 @@ class Kekropidai():
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xr)
+        plt.grid(which='major', axis='both')
         title = 'FT data'
         if self.name is not None:
             title = self.name + ' in R-space'
@@ -583,6 +635,7 @@ class Kekropidai():
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xk)
+        plt.grid(which='major', axis='both')
         maxk = 0
         title = 'back-transformed data'
         if self.name is not None:
