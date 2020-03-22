@@ -57,11 +57,12 @@ class Pandrosus():
       do_xftr:    perform the reverse (R->q) transform
 
     Plotting methods:
-      plot_xmu:   plot data in energy (alias = pe)
-      plot_chik:  plot data in k-space (alias = pk)
-      plot_chir:  plot data in R-space (alias = pr)
-      plot_chiq:  plot data in back-transform k-space (alias = pq)
-      plot_chikq: plot chi(k) + RE(chi(q)) (alias = pkq)
+      plot_xmu:     plot data in energy (alias = pe)
+      plot_signals: plot mu(E) with I0 and the transmission or fluorescence signal (allias = ps)
+      plot_chik:    plot data in k-space (alias = pk)
+      plot_chir:    plot data in R-space (alias = pr)
+      plot_chiq:    plot data in back-transform k-space (alias = pq)
+      plot_chikq:   plot chi(k) + RE(chi(q)) (alias = pkq)
 
     '''
     def __init__(self, uid=None, name=None):
@@ -450,6 +451,7 @@ class Pandrosus():
         plt.legend(loc='best', shadow=True)
         
     pe  = plot_xmu
+    ps  = plot_signals
     pk  = plot_chi
     pr  = plot_chir
     pq  = plot_chiq
@@ -472,6 +474,7 @@ class Kekropidai():
     Methods:
       add:       add a single group or a list of groups to the Kekropidai object
       plot_xmu:  (alias = pe) overplot all the groups in energy
+      plot_i0:   (alias = p0) overplot I0 for all the groups
       plot_chi:  (alias = pk) overplot all the groups in k-space
       plot_chir: (alias = pr) overplot all the groups in R-space
       plot_chiq: (alias = pq) overplot all the groups in q-space
@@ -673,6 +676,7 @@ class Kekropidai():
         plt.legend(loc='best', shadow=True)
 
     pe = plot_xmu
+    p0 = plot_i0
     pk = plot_chi
     pr = plot_chir
     pq = plot_chiq
