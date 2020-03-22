@@ -83,12 +83,14 @@ class Pandrosus():
         
     def make_xmu(self, uid, mode):
         '''Load energy and mu(E) arrays into Larch and into this wrapper object.
-
+        
+        ***************************************************************
         This should be the only part of this startup script that needs
         beamline-specific configuration.  What is shown below is
         specific to how data are retrieved from Databroker at
         BMM. Other beamlines -- or reading data from files -- will
         need something different.
+        ***************************************************************
 
         Arguments:
           uid:   database identifier (assuming you are using databroker)
@@ -676,14 +678,14 @@ class Kekropidai():
     pq = plot_chiq
 
     
-## examples....
-se = Pandrosus()
-se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name='Se metal', mode='transmission')
+## examples that only work at BMM...
+# se = Pandrosus()
+# se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name='Se metal', mode='transmission')
 
-seo = Pandrosus()
-seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', name='SeO2', mode='transmission')
+# seo = Pandrosus()
+# seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', name='SeO2', mode='transmission')
 
-bunch = Kekropidai(name='Selenium standards')
-bunch.add(se)
-bunch.add(seo)
+# bunch = Kekropidai(name='Selenium standards')
+# bunch.add(se)
+# bunch.add(seo)
 
