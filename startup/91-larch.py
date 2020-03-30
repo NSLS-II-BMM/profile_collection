@@ -169,13 +169,13 @@ class Pandrosus():
              _larch=LARCH)
 
     def show(self, which=None):
-        if which == 'pre-edge':
+        if 'pre' in which:
             lus.show(self.group.pre_edge_details, _larch=LARCH)
         elif which == 'autobk':
             lus.show(self.group.autobk_details, _larch=LARCH)
-        elif which == 'fft':
+        elif which == 'fft' or which == 'xftf':
             lus.show(self.group.xftf_details, _larch=LARCH)
-        elif which == 'bft':
+        elif which == 'bft' or which == 'xftr':
             lus.show(self.group.xftr_details, _larch=LARCH)
         else:
             lus.show(self.group, _larch=LARCH)
