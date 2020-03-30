@@ -168,8 +168,17 @@ class Pandrosus():
              dk     = self.fft['dk'],
              _larch=LARCH)
 
-    def show(self):
-        lus.show(self.group, _larch=LARCH)
+    def show(self, which=None):
+        if which == 'pre-edge':
+            lus.show(self.group.pre_edge_details, _larch=LARCH)
+        elif which == 'autobk':
+            lus.show(self.group.autobk_details, _larch=LARCH)
+        elif which == 'fft':
+            lus.show(self.group.xftf_details, _larch=LARCH)
+        elif which == 'bft':
+            lus.show(self.group.xftr_details, _larch=LARCH)
+        else:
+            lus.show(self.group, _larch=LARCH)
         
     def plot_xmu(self, bkg=False, pre=False, post=False, norm=False, flat=False, deriv=False):
         '''Make a plot of mu(E) for a single data set.
