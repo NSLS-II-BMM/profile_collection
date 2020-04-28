@@ -145,7 +145,7 @@ def boxedtext(title, text, tint, width=75):
     of the box will contain a title.  The box elements will
     be colored.
     '''
-    remainder = width - 5 - len(title)
+    remainder = width - 2 - len(title)
     ul        = u'\u2554' # u'\u250C'
     ur        = u'\u2557' # u'\u2510'
     ll        = u'\u255A' # u'\u2514'
@@ -155,12 +155,12 @@ def boxedtext(title, text, tint, width=75):
     template  = '%-' + str(width) + 's'
 
     print('')
-    print(colored(' '.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
+    print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
         lne = line.rstrip()
         add = ' '*(width-ansiwrap.ansilen(lne))
         print(' '.join([colored(strut, tint), lne, add, colored(strut, tint)]))
-    print(colored(' '.join([ll, bar*width, lr]), tint))
+    print(colored(''.join([ll, bar*(width+3), lr]), tint))
 
 
 def clear_dashboard():

@@ -105,20 +105,19 @@ class TCG(Device):
 ## at 6BM, # = (1 .. 6)
 
 class FEVac(Device):
-    pressure = [None,
-                Cpt(EpicsSignal, '-CCG:1}P:Raw-I'),
-                Cpt(EpicsSignal, '-CCG:2}P:Raw-I'),
-                Cpt(EpicsSignal, '-CCG:3}P:Raw-I'),
-                Cpt(EpicsSignal, '-CCG:4}P:Raw-I'),
-                Cpt(EpicsSignal, '-CCG:5}P:Raw-I'),
-                Cpt(EpicsSignal, '-CCG:6}P:Raw-I'),]
-    current = [None,
-               Cpt(EpicsSignal, '-IP:1}I-I'),
-               Cpt(EpicsSignal, '-IP:2}I-I'),
-               Cpt(EpicsSignal, '-IP:3}I-I'),
-               Cpt(EpicsSignal, '-IP:4}I-I'),
-               Cpt(EpicsSignal, '-IP:5}I-I'),
-               Cpt(EpicsSignal, '-IP:6}I-I'),]
+    #pressure = [None,
+    p1 = Cpt(EpicsSignal, 'CCG:1}P:Raw-I')
+    p2 = Cpt(EpicsSignal, 'CCG:2}P:Raw-I')
+    p3 = Cpt(EpicsSignal, 'CCG:3}P:Raw-I')
+    p4 = Cpt(EpicsSignal, 'CCG:4}P:Raw-I')
+    p5 = Cpt(EpicsSignal, 'CCG:5}P:Raw-I')
+    p6 = Cpt(EpicsSignal, 'CCG:6}P:Raw-I')
+    c1 = Cpt(EpicsSignal, 'IP:1}P-I')
+    c2 = Cpt(EpicsSignal, 'IP:2}P-I')
+    c3 = Cpt(EpicsSignal, 'IP:3}P-I')
+    c4 = Cpt(EpicsSignal, 'IP:4}P-I')
+    c5 = Cpt(EpicsSignal, 'IP:5}P-I')
+    c6 = Cpt(EpicsSignal, 'IP:6}P-I')
                
     def _pressure(self, num=None):
         if num is None:
@@ -127,19 +126,27 @@ class FEVac(Device):
             num = 1
         if num > 6:
             num = 6
+        sgnl = getattr(self, 'p'+str(num))
         #print(self.pressure.value)
         #print(type(self.pressure.value))
-        if self.pressure[num].value == 'OFF':
+        if sgnl.value == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
-        if float(self.pressure[num].value) > 1e-6:
+        if float(sgnl.value) > 1e-6:
             return error_msg(self.pressure.value)
-        if float(self.pressure[num].value) > 1e-8:
+        if float(sgnl.value) > 1e-8:
             return warning_msg(self.pressure.value)
-        return(self.pressure[num].value)
+        return(sgnl.value)
 
-    def _current(self):
-        curr = float(self.current[num].value)
+    def _current(self, num=None):
+        if num is None:
+            num = 1
+        if num < 1:
+            num = 1
+        if num > 6:
+            num = 6
+        sgnl = getattr(self, 'c'+str(num))
+        curr = float(sgnl.value)
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
             return(error_msg(out))
@@ -148,8 +155,8 @@ class FEVac(Device):
             return(warning_msg(out))
         out = '%.1f' % (1e6*curr)
         return(out)
-    
 
+fev = FEVac('FE:C06B-VA{', name='FrontEndVacuum')
 
 vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
        Vacuum('XF:06BMA-VA{Mono:DCM', name='Monochromator'),
@@ -165,16 +172,17 @@ flight_path = TCG('XF:06BMB-VA{FltPth:1', name='Flight Path')
 
 
 def show_vacuum():
-    print(' Vacuum section       pressure    current')
-    print('==================================================')
+    text  = ' Vacuum section       pressure    current\n'
+    text += '==================================================\n'
     for v in vac:
         if float(v.current.value) > 5e-4:
-            print('%-20s  %s    %4s  mA' % (v.name, v._pressure(), v._current()))
+            text += '%-20s  %s    %4s  mA\n' % (v.name, v._pressure(), v._current())
         else:
-            print('%-20s  %s    %4s μA' % (v.name, v._pressure(), v._current()))
-    print('%-20s  %s' % (flight_path.name, flight_path._pressure()))
-
-
+            text += '%-20s  %s    %4s μA\n' % (v.name, v._pressure(), v._current())
+    text += '%-20s  %s\n' % (flight_path.name, flight_path._pressure())
+    for i in range(1,7):
+        text += 'Front end section %d   %s\n' % (i, fev._pressure(i))
+    boxedtext('BMM vacuum', text, 'brown', width=55)
 
 ############################
 # state of gate valves     #

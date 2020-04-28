@@ -22,6 +22,12 @@ def ut(line):
     return None
 
 @register_line_magic
+def v(line):
+    '''show BMM vacuum status'''
+    show_vacuum()
+    return None
+
+@register_line_magic
 def se(line):
     '''show foils and ROIs cnfiguration'''
     show_edges()
