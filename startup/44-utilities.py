@@ -87,7 +87,6 @@ class Vacuum(Device):
             return(warning_msg(out))
         out = '%.1f' % (1e6*curr)
         return(out)
-        #return('%.1f' % 1000000.0*curr)
 
 class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
@@ -100,6 +99,57 @@ class TCG(Device):
         if float(self.pressure.value) > 6e-3:
             return error_msg(self.pressure.value)
         return(self.pressure.value)
+
+    
+## front end vacuum readings FE:C06B-VA{CCG:#}P-1 and FE:C06B-VA{IP:#}P-1
+## at 6BM, # = (1 .. 6)
+
+class FEVac(Device):
+    pressure = [None,
+                Cpt(EpicsSignal, '-CCG:1}P:Raw-I'),
+                Cpt(EpicsSignal, '-CCG:2}P:Raw-I'),
+                Cpt(EpicsSignal, '-CCG:3}P:Raw-I'),
+                Cpt(EpicsSignal, '-CCG:4}P:Raw-I'),
+                Cpt(EpicsSignal, '-CCG:5}P:Raw-I'),
+                Cpt(EpicsSignal, '-CCG:6}P:Raw-I'),]
+    current = [None,
+               Cpt(EpicsSignal, '-IP:1}I-I'),
+               Cpt(EpicsSignal, '-IP:2}I-I'),
+               Cpt(EpicsSignal, '-IP:3}I-I'),
+               Cpt(EpicsSignal, '-IP:4}I-I'),
+               Cpt(EpicsSignal, '-IP:5}I-I'),
+               Cpt(EpicsSignal, '-IP:6}I-I'),]
+               
+    def _pressure(self, num=None):
+        if num is None:
+            num = 1
+        if num < 1:
+            num = 1
+        if num > 6:
+            num = 6
+        #print(self.pressure.value)
+        #print(type(self.pressure.value))
+        if self.pressure[num].value == 'OFF':
+            return(disconnected_msg(-1.1E-15))
+
+        if float(self.pressure[num].value) > 1e-6:
+            return error_msg(self.pressure.value)
+        if float(self.pressure[num].value) > 1e-8:
+            return warning_msg(self.pressure.value)
+        return(self.pressure[num].value)
+
+    def _current(self):
+        curr = float(self.current[num].value)
+        if curr > 2e-3:
+            out = '%.1f' % (1e3*curr)
+            return(error_msg(out))
+        if curr > 5e-4:
+            out = '%.1f' % (1e3*curr)
+            return(warning_msg(out))
+        out = '%.1f' % (1e6*curr)
+        return(out)
+    
+
 
 vac = [Vacuum('XF:06BMA-VA{FS:1',     name='Diagnostic Module 1'),
        Vacuum('XF:06BMA-VA{Mono:DCM', name='Monochromator'),

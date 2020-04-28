@@ -155,12 +155,12 @@ def boxedtext(title, text, tint, width=75):
     template  = '%-' + str(width) + 's'
 
     print('')
-    print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
+    print(colored(' '.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
     for line in text.split('\n'):
         lne = line.rstrip()
         add = ' '*(width-ansiwrap.ansilen(lne))
-        print(''.join([colored(strut, tint), lne, add, colored(strut, tint)]))
-    print(colored(''.join([ll, bar*width, lr]), tint))
+        print(' '.join([colored(strut, tint), lne, add, colored(strut, tint)]))
+    print(colored(' '.join([ll, bar*width, lr]), tint))
 
 
 def clear_dashboard():

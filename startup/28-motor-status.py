@@ -97,38 +97,47 @@ def motor_sidebar(md=None):
     '''
     Generate a list of motor positions to be used in the static html page for a scan sequence.
     Return value is a long string with html tags and entities embedded in the string.
+
+    Argument:
+      md: dict with motor positions keyed by <motor>.name
+
+    If md is not provided, the current motor positions will be used.  If taking a 
+    record from Data Broker, then the start document contains a dict called 
+    BMM_motors, which is formatted correctly for this method.  If generating a dossier
+    from a Data Broker record, do:
+          text = motor_sidebar(h.start['BMM_motors'])
     '''
     if md is None or type(md) is not dict:
         md = motor_metadata()
     motors = ''
         
     mlist = []
-    mlist.append('XAFS stages (motor names are xafs_*):')
-    mlist.append('x = %.3f ; y = %.3f'         % (md[xafs_linx.name],  md[xafs_liny.name]))
-    mlist.append('pitch = %.3f ; roll = %.3f'  % (md[xafs_pitch.name], md[xafs_roll.name]))
-    mlist.append('ref = %.3f ; wheel = %.3f'   % (md[xafs_linxs.name], md[xafs_wheel.name]))
-    mlist.append('roth = %.3f ; rots = %.3f'   % (md[xafs_roth.name],  md[xafs_rots.name]))
-    mlist.append('wheel slot = %2d'            % xafs_wheel.current_slot())
+    mlist.append('XAFS stages:')
+    mlist.append('xafs_x, %.3f, xafs_y, %.3f'         % (md[xafs_linx.name],  md[xafs_liny.name]))
+    mlist.append('xafs_pitch, %.3f, xafs_roll, %.3f'  % (md[xafs_pitch.name], md[xafs_roll.name]))
+    mlist.append('xafs_ref, %.3f, xafs_wheel, %.3f'   % (md[xafs_linxs.name], md[xafs_wheel.name]))
+    mlist.append('xafs_roth, %.3f, xafs_rots, %.3f'   % (md[xafs_roth.name],  md[xafs_rots.name]))
+    mlist.append('wheel slot = %2d'                   % xafs_wheel.current_slot())
     motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
-    motors += '\n<br><br>DM3_BCT: %.3f mm' % md[dm3_bct.name]
+    motors += '\n<br><br>dm3_bct: %.3f' % md[dm3_bct.name]
 
     mlist = []
     mlist.append('Slits3:')
-    mlist.append('vsize = %.3f ; vcenter =%.3f'      % (md[slits3.vsize.name],    md[slits3.vcenter.name]))
-    mlist.append('hsize = %.3f ; hcenter =%.3f'      % (md[slits3.hsize.name],    md[slits3.hcenter.name]))
-    mlist.append('top  = %.3f ; bottom = %.3f'       % (md[slits3.top.name],      md[slits3.bottom.name]))
-    mlist.append('outboard  = %.3f ; inboard = %.3f' % (md[slits3.outboard.name], md[slits3.inboard.name]))
+    mlist.append('slits3.vsize, %.3f, slits3.vcenter,%.3f'      % (md[slits3.vsize.name],    md[slits3.vcenter.name]))
+    mlist.append('slits3.hsize, %.3f, slits3.hcenter,%.3f'      % (md[slits3.hsize.name],    md[slits3.hcenter.name]))
+    mlist.append('slits3.top, %.3f, slits3.bottom, %.3f'        % (md[slits3.top.name],      md[slits3.bottom.name]))
+    mlist.append('slits3.outboard, %.3f, slits3.inboard, %.3f'  % (md[slits3.outboard.name], md[slits3.inboard.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     mlist = []
     mlist.append('M2')
-    mlist.append('vertical = %.3f mm ; YU  = %.3f mm'   % (md[m2.vertical.name], md[m2.yu.name]))
-    mlist.append('lateral  = %.3f mm ; YDO = %.3f mm'   % (md[m2.lateral.name],  md[m2.ydo.name]))
-    mlist.append('pitch    = %.3f mrad ; YDI = %.3f mm' % (md[m2.pitch.name],    md[m2.ydi.name]))
-    mlist.append('roll     = %.3f mrad ; XU  = %.3f mm' % (md[m2.roll.name],     md[m2.xu.name]))
-    mlist.append('yaw      = %.3f mrad ; XD  = %.3f mm' % (md[m2.yaw.name],      md[m2.xd.name]))
-    mlist.append('bender   = %9.1f steps'               %  md[m2_bender.name])
+    mlist.append('m2.vertical, %.3f, m2.yu, %.3f' % (md[m2.vertical.name], md[m2.yu.name]))
+    mlist.append('m2.lateral, %.3f, m2.ydo, %.3f' % (md[m2.lateral.name],  md[m2.ydo.name]))
+    mlist.append('m2.pitch, %.3f, m2.ydi, %.3f'   % (md[m2.pitch.name],    md[m2.ydi.name]))
+    mlist.append('m2.roll, %.3f, m2.xu, %.3f'     % (md[m2.roll.name],     md[m2.xu.name]))
+    mlist.append('m2.yaw, %.3f, m2.xd, %.3f'      % (md[m2.yaw.name],      md[m2.xd.name]))
+    mlist.append('m2.bender, %9.1f'               %  md[m2_bender.name])
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
 
@@ -137,30 +146,30 @@ def motor_sidebar(md=None):
     if md[m3.xu.name] < 0:
         stripe = '(Si stripe)'
     mlist.append('M3  %s' % stripe)
-    mlist.append('vertical = %.3f  mm ; YU  = %.3f mm'   % (md[m3.vertical.name], md[m3.yu.name]))
-    mlist.append('lateral  = %.3f  mm ; YDO = %.3f mm'   % (md[m3.lateral.name],  md[m3.ydo.name]))
-    mlist.append('pitch    = %.3f  mrad ; YDI = %.3f mm' % (md[m3.pitch.name],    md[m3.ydi.name]))
-    mlist.append('roll     = %.3f  mrad ; XU  = %.3f mm' % (md[m3.roll.name],     md[m3.xu.name]))
-    mlist.append('yaw      = %.3f  mrad ; XD  = %.3f mm' % (md[m3.yaw.name],      md[m3.xd.name]))
+    mlist.append('m3.vertical, %.3f, m3.yu, %.3f' % (md[m3.vertical.name], md[m3.yu.name]))
+    mlist.append('m3.lateral, %.3f, m3.ydo, %.3f' % (md[m3.lateral.name],  md[m3.ydo.name]))
+    mlist.append('m3.pitch, %.3f, m3.ydi, %.3f'   % (md[m3.pitch.name],    md[m3.ydi.name]))
+    mlist.append('m3.roll, %.3f, m3.xu, %.3f'     % (md[m3.roll.name],     md[m3.xu.name]))
+    mlist.append('m3.yaw, %.3f, m3.xd, %.3f'      % (md[m3.yaw.name],      md[m3.xd.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     mlist = []
     mlist.append('XAFS table:')
-    mlist.append('vertical = %.3f ; YU = %.3f' % (md[xafs_table.vertical.name], md[xafs_table.yu.name]))
-    mlist.append('pitch = %.3f ; YDO = %.3f'   % (md[xafs_table.pitch.name],    md[xafs_table.ydo.name]))
-    mlist.append('roll = %.3f ; YDI = %.3f'    % (md[xafs_table.roll.name],     md[xafs_table.ydi.name]))
+    mlist.append('xt.vertical, %.3f, xt.yu, %.3f' % (md[xafs_table.vertical.name], md[xafs_table.yu.name]))
+    mlist.append('xt.pitch, %.3f, xt.ydo, %.3f'   % (md[xafs_table.pitch.name],    md[xafs_table.ydo.name]))
+    mlist.append('xt.roll, %.3f, xt.ydi, %.3f'    % (md[xafs_table.roll.name],     md[xafs_table.ydi.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     mlist = []
     mlist.append('Slits2:')
-    mlist.append('vsize = %.3f ; vcenter =%.3f'      % (md[slits2.vsize.name],    md[slits2.vcenter.name]))
-    mlist.append('hsize = %.3f ; hcenter =%.3f'      % (md[slits2.hsize.name],    md[slits2.hcenter.name]))
-    mlist.append('top  = %.3f ; bottom = %.3f'       % (md[slits2.top.name],      md[slits2.bottom.name]))
-    mlist.append('outboard  = %.3f ; inboard = %.3f' % (md[slits2.outboard.name], md[slits2.inboard.name]))
+    mlist.append('slits2.vsize, %.3f, slits2.vcenter,%.3f'     % (md[slits2.vsize.name],    md[slits2.vcenter.name]))
+    mlist.append('slits2.hsize, %.3f, slits2.hcenter,%.3f'     % (md[slits2.hsize.name],    md[slits2.hcenter.name]))
+    mlist.append('slits2.top, %.3f, slits2.bottom, %.3f'       % (md[slits2.top.name],      md[slits2.bottom.name]))
+    mlist.append('slits2.outboard, %.3f, slits2.inboard, %.3f' % (md[slits2.outboard.name], md[slits2.inboard.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
-    motors += '\n<br><br>DM3_foils: %.3f mm' % md[dm3_foils.name]
-    motors += '\n<br>DM2_foils: %.3f mm' % md[dm2_fs.name]
+    motors += '\n<br><br>dm3_foils, %.3f' % md[dm3_foils.name]
+    motors += '\n<br>dm2_fs, %.3f' % md[dm2_fs.name]
 
     
     return motors

@@ -1,5 +1,5 @@
 from bluesky import __version__ as bluesky_version
-import re
+import re, pathlib, sys
 
 run_report(__file__)
 
@@ -36,27 +36,28 @@ eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 
-XDI_record = {'xafs_linx'                        : (True,  'Sample.x_position'),
-              'xafs_liny'                        : (True,  'Sample.y_position'),
-              'xafs_lins'                        : (False, 'Sample.s_position'),
-              'xafs_linxs'                       : (False, 'Sample.ref_position'),
-              'xafs_pitch'                       : (False, 'Sample.pitch_position'),
-              'xafs_roll'                        : (False, 'Sample.roll_position'),
-              'xafs_roth'                        : (False, 'Sample.roth_position'),
-              'xafs_wheel'                       : (False, 'Sample.wheel_position'),
-              'xafs_rots'                        : (False, 'Sample.rots_position'),
-              'first_crystal_temperature'        : (False, 'Mono.first_crystal_temperature'),
-              'compton_shield_temperature'       : (False, 'Mono.compton_shield_temperature'),
-              'dm3_bct'                          : (False, 'Beamline.bct_position'),
-              'ring_current'                     : (False, 'Facility.ring_current'),
-              'bpm_upstream_x'                   : (False, 'Facility.bpm_upstream_x'),
-              'bpm_upstream_y'                   : (False, 'Facility.bpm_upstream_y'),
-              'bpm_downstream_x'                 : (False, 'Facility.bpm_downstream_x'),
-              'bpm_downstream_y'                 : (False, 'Facility.bpm_downstream_y'),
-              'monotc_inboard_temperature'       : (False, 'Mono.tc_inboard'),
-              'monotc_upstream_high_temperature' : (False, 'Mono.tc_upstream_high'),
-              'monotc_downstream_temperature'    : (False, 'Mono.tc_downstream'),
-              'monotc_upstream_low_temperature'  : (False, 'Mono.tc_upstream_low'),
+XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_position'),
+              'xafs_liny'                        : (True,  'BMM.sample_y_position'),
+              'xafs_lins'                        : (False, 'BMM.sample_s_position'),
+              'xafs_linxs'                       : (False, 'BMM.sample_ref_position'),
+              'xafs_pitch'                       : (False, 'BMM.sample_pitch_position'),
+              'xafs_roll'                        : (False, 'BMM.sample_roll_position'),
+              'xafs_roth'                        : (False, 'BMM.sample_roth_position'),
+              'xafs_wheel'                       : (False, 'BMM.sample_wheel_position'),
+              'xafs_ref'                         : (False, 'BMM.sample_ref_position'),
+              'xafs_rots'                        : (False, 'BMM.sample_rots_position'),
+              'first_crystal_temperature'        : (False, 'BMM.mono_first_crystal_temperature'),
+              'compton_shield_temperature'       : (False, 'BMM.mono_compton_shield_temperature'),
+              'dm3_bct'                          : (False, 'BMM.beamline_bct_position'),
+              'ring_current'                     : (False, 'BMM.facility_ring_current'),
+              'bpm_upstream_x'                   : (False, 'BMM.facility_bpm_upstream_x'),
+              'bpm_upstream_y'                   : (False, 'BMM.facility_bpm_upstream_y'),
+              'bpm_downstream_x'                 : (False, 'BMM.facility_bpm_downstream_x'),
+              'bpm_downstream_y'                 : (False, 'BMM.facility_bpm_downstream_y'),
+              'monotc_inboard_temperature'       : (False, 'BMM.mono_tc_inboard'),
+              'monotc_upstream_high_temperature' : (False, 'BMM.mono_tc_upstream_high'),
+              'monotc_downstream_temperature'    : (False, 'BMM.mono_tc_downstream'),
+              'monotc_upstream_low_temperature'  : (False, 'BMM.mono_tc_upstream_low'),
               }
 
 class metadata_for_XDI_file():
@@ -158,7 +159,7 @@ def write_XDI(datafile, dataframe):
     metadata.dataframe = dataframe
 
     ## snarf XDI metadata from the dataframe and elsewhere
-    metadata.insert_line('# XDI/1.0 BlueSky/%s' % bluesky_version)
+    metadata.insert_line('# XDI/1.0 BlueSky/%s BMM/%s' % (bluesky_version, pathlib.Path(sys.executable).parts[-3]))
     metadata.start_doc('# Beamline.name: %s',               'XDI.Beamline.name')
     metadata.start_doc('# Beamline.xray_source: %s',        'XDI.Beamline.xray_source')
     metadata.start_doc('# Beamline.collimation: %s',        'XDI.Beamline.collimation')
