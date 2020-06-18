@@ -60,11 +60,11 @@ class LockedDwellTimes(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         #pseudo_pos = self.PseudoPosition(*pseudo_pos)
-        # logger.debug('forward %s', pseudo_pos)
+        #print('forward %s'% pseudo_pos)
         return self.RealPosition(
             quadem_dwell_time=pseudo_pos.dwell_time,
-            #dualem_dwell_time=pseudo_pos.dwell_time,
             struck_dwell_time=pseudo_pos.dwell_time,
+            #dualem_dwell_time=pseudo_pos.dwell_time,
         )
 
     @real_position_argument

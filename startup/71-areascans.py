@@ -153,10 +153,10 @@ def areascan(detector,
                           fast, startfast, stopfast, nfast,
                           snake=False):
             BMMuser.final_log_entry = False
-            yield from grid_scan(dets,
-                                 slow, startslow, stopslow, nslow,
-                                 fast, startfast, stopfast, nfast,
-                                 snake)
+            uid = yield from grid_scan(dets,
+                                       slow, startslow, stopslow, nslow,
+                                       fast, startfast, stopfast, nfast,
+                                       snake)
             BMMuser.final_log_entry = True
 
         with open(dotfile, "w") as f:

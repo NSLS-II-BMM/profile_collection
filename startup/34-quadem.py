@@ -192,11 +192,11 @@ class BMMDualEM(QuadEM):
             print('You are ready to measure!\n')
 
         
-# dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
-# dualio.Ia.kind = 'hinted'
-# dualio.Ib.kind = 'hinted'
-# dualio.Ia.name = 'Ia'
-# dualio.Ib.name = 'Ib'
+dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+dualio.Ia.kind = 'hinted'
+dualio.Ib.kind = 'hinted'
+dualio.Ia.name = 'Ia'
+dualio.Ib.name = 'Ib'
 
 
 

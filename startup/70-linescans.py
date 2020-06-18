@@ -93,7 +93,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
             yield from abs_set(motor.velocity, 0.4, wait=True)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
 
-            yield from rel_scan([quadem1], motor, start, stop, nsteps)
+            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps)
 
             RE.msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
@@ -205,7 +205,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, 5)
                 
-            yield from rel_scan(dets, motor, start, stop, nsteps)
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps)
             #yield from rel_adaptive_scan(dets, 'I0', motor,
             #                             start=start,
             #                             stop=stop,
@@ -467,7 +467,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     
         @subs_decorator(plot)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
-            yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
 
         yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %

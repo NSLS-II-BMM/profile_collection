@@ -118,7 +118,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     
     @subs_decorator(plot)
     def count_scan(dets, readings, delay):
-        yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
+        uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
 
     dotfile = '/home/xf06bm/Data/.time.scan.running'
     with open(dotfile, "w") as f:
@@ -131,6 +131,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
 
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     RE.msg_hook = BMM_msg_hook
+    return(uid)
 
 
 
@@ -337,11 +338,11 @@ def sead(inifile, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
-        yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
+        uid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## write the output file
-        header = db[-1]
+        header = db[uid]
         write_XDI(outfile, header) # yield from ?
         report('wrote time scan to %s' % outfile)
         #BMM_log_info('wrote time scan to %s' % outfile)

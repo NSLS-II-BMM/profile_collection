@@ -1034,25 +1034,28 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
                 #if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
+                uid = None
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
-                    yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                       md={**xdi, **mtr, **supplied_metadata})
+                    uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **mtr, **supplied_metadata})
                 elif p['mode'] == 'xs2':
-                    yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
-                                       md={**xdi, **mtr, **supplied_metadata})
+                    uid= yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
+                                            md={**xdi, **mtr, **supplied_metadata})
                 else:
-                    yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                       md={**xdi, **mtr, **supplied_metadata})
-                header = db[-1]
+                    uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **mtr, **supplied_metadata})
+                ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
+                ## see #64 at https://github.com/bluesky/tutorials
+                header = db[uid]
                 write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))
                 BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
-                             % (header.start['uid'], header.start['scan_id'], datafile))
+                             % (uid, header.start['scan_id'], datafile))
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
                 js_text = '<a href="javascript:void(0)" onclick="toggle_visibility(\'%s\');" title="This is the scan number for %s, click to show/hide its UID">#%d</a><div id="%s" style="display:none;"><small>%s</small></div>' \
-                          % (fname, fname, header.start['scan_id'], fname, header.start['uid'])
+                          % (fname, fname, header.start['scan_id'], fname, uid)
                 printedname = fname
                 if len(p['filename']) > 11:
                     printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
