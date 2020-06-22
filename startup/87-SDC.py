@@ -8,13 +8,13 @@ spinner = itertools.cycle(['-', '\\', '|', '/'])
 run_report(__file__)
 
 def exposure(fname='spot', ncounts=1, nreps=1):
-    report('SDC: counting %s for %.2f seconds, %s\n' % (inflect('time', ncounts), dwell_time.readback.value, inflect('repetitions', nreps)), 'bold')
+    report('SDC: counting %s for %.2f seconds, %s\n' % (inflect('time', ncounts), dwell_time.readback.get(), inflect('repetitions', nreps)), 'bold')
     for n in range(nreps):
         results = dict()
         results['filename']     = fname
-        results['cradle.y']     = cradle.y.readback.value
-        results['xafs_x']       = xafs_x.user_readback.value
-        results['ring.current'] = ring.current.value
+        results['cradle.y']     = cradle.y.readback.get()
+        results['xafs_x']       = xafs_x.user_readback.get()
+        results['ring.current'] = ring.current.get()
         results['time_start']   = now()
 
         yield from count([dwell_time, quadem1, vor], ncounts)
@@ -52,9 +52,9 @@ def image_sequence(stub='test'):
     metadata = dict()
     for p in positions:
         this = dict()
-        this['I0_before']     = quadem1.I0.value
-        this['ring_current']  = ring.current.value
-        this['incident_energy'] = dcm.energy.readback.value
+        this['I0_before']     = quadem1.I0.get()
+        this['ring_current']  = ring.current.get()
+        this['incident_energy'] = dcm.energy.readback.get()
         this['xafs_mtr8']     = p
         this['time_start']    = now()
         pil.number = 1
@@ -63,14 +63,14 @@ def image_sequence(stub='test'):
         pil.snap()
         close_all_plots()
         pil.fetch()
-        this['I0_after']      = quadem1.I0.value
+        this['I0_after']      = quadem1.I0.get()
         this['time_end']      = now()
         this['filename']      = pil.fullname
         this['exposure_time'] = pil.time
-        this['slits3_hsize']  = slits3.hsize.readback.value
-        this['slits3_vsize']  = slits3.vsize.readback.value
-        this['xafs_x']        = xafs_x.user_readback.value
-        this['cradle_y']      = cradle.y.readback.value
+        this['slits3_hsize']  = slits3.hsize.readback.get()
+        this['slits3_vsize']  = slits3.vsize.readback.get()
+        this['xafs_x']        = xafs_x.user_readback.get()
+        this['cradle_y']      = cradle.y.readback.get()
         metadata['%s-%3.3d' % (stub, p)] = this
     yield from mv(xafs_mtr8, positions[0])
     close_all_plots()
@@ -152,9 +152,9 @@ def auscan(axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={
                 DerivedPlot(funau, xlabel=thismotor.name, ylabel='dtc3_1/I0', title='Au signal vs. %s' % thismotor.name)]
 
         if 'PseudoSingle' in str(type(axis)):
-            value = thismotor.readback.value
+            value = thismotor.readback.get()
         else:
-            value = thismotor.user_readback.value
+            value = thismotor.user_readback.get()
         line1 = '%s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (thismotor.name, start, stop, nsteps, value)
         ##BMM_suspenders()            # engage suspenders
@@ -173,11 +173,11 @@ def auscan(axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={
     
         @subs_decorator(plot)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
-            yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
 
-        yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+        uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
-                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                     (line1, uid, db[-1].start['scan_id']))
         if pluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':
@@ -258,7 +258,7 @@ def auslitscan(start=-0.2, stop=0.2, nsteps=21, pluck=False, force=False, inttim
                 DerivedPlot(funzn, xlabel=thismotor.name, ylabel='dtc2_1/I0', title='Zn signal vs. %s' % thismotor.name),
                 DerivedPlot(funau, xlabel=thismotor.name, ylabel='dtc3_1/I0', title='Au signal vs. %s' % thismotor.name)]
 
-        value = thismotor.user_readback.value
+        value = thismotor.user_readback.get()
         line1 = '%s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (thismotor.name, start, stop, nsteps, value)
         ##BMM_suspenders()            # engage suspenders
@@ -278,15 +278,15 @@ def auslitscan(start=-0.2, stop=0.2, nsteps=21, pluck=False, force=False, inttim
         @subs_decorator(plot)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
-            yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
 
         yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
         yield from sleep(3)
-        yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+        uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
         yield from sleep(3)
         yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
-                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                     (line1, uid, db[-1].start['scan_id']))
         if pluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':
@@ -353,19 +353,19 @@ def auscan2dat(datafile, key):
     st = pandas.Timestamp(start_time) # this is a UTC problem
     
     handle.write('# XDI/1.0 BlueSky/%s\n'          % bluesky_version)
-    handle.write('# Beamline.slits3_hsize: %.3f\n' % slits3.hsize.readback.value)
-    handle.write('# Beamline.slits3_vsize: %.3f\n' % slits3.vsize.readback.value)
-    handle.write('# Beamline.xafs_x: %.3f\n'       % xafs_x.user_readback.value)
-    handle.write('# Beamline.cradle_y: %.3f\n'     % cradle.y.readback.value)
-    handle.write('# Beamline.incident_energy: %.1f\n' % dcm.energy.readback.value)
+    handle.write('# Beamline.slits3_hsize: %.3f\n' % slits3.hsize.readback.get())
+    handle.write('# Beamline.slits3_vsize: %.3f\n' % slits3.vsize.readback.get())
+    handle.write('# Beamline.xafs_x: %.3f\n'       % xafs_x.user_readback.get())
+    handle.write('# Beamline.cradle_y: %.3f\n'     % cradle.y.readback.get())
+    handle.write('# Beamline.incident_energy: %.1f\n' % dcm.energy.readback.get())
     handle.write('# Scan.start_time: %s\n'         % start_time)
     handle.write('# Scan.end_time: %s\n'           % end_time)
     handle.write('# Scan.dwell_time: %s\n'         % dataframe.start['XDI']['Scan']['dwell_time'] )
     handle.write('# Scan.transient_id: %s\n'       % dataframe.start['scan_id'])
     handle.write('# Scan.uid: %s\n'                % dataframe.start['uid'])
-    handle.write('# Facility.energy: %.1f GeV\n'   % (ring.energy.value/1000))
-    handle.write('# Facility.current: %.1f\n'      % ring.current.value)
-    handle.write('# Facility.mode: %s\n'           % ring.mode.value)
+    handle.write('# Facility.energy: %.1f GeV\n'   % (ring.energy.get()/1000))
+    handle.write('# Facility.current: %.1f\n'      % ring.current.get())
+    handle.write('# Facility.mode: %s\n'           % ring.mode.get())
     handle.write('# Facility.GUP: %d\n'            % BMMuser.gup)
     handle.write('# Facility.SAF: %d\n'            % BMMuser.saf)
     handle.write('# Facility.cycle: %s\n'          % BMMuser.cycle)
@@ -402,14 +402,14 @@ def sdc(slp=1):
         BMM_suspenders()
         while True:
             close_all_plots()
-            stub=vor.names.name29.value
+            stub=vor.names.name29.get()
             print('\n' + go_msg('Waiting to begin SDC exposure '), end='')
             while not bool(stub):
                 sys.stdout.write(next(spinner))   # write the next character
                 sys.stdout.flush()                # flush stdout buffer (actual character display)
                 sys.stdout.write('\b')            # erase the last written char
                 yield from sleep(slp)
-                stub=vor.names.name29.value
+                stub=vor.names.name29.get()
         
             print()
             # instructions = json.loads(trigger)

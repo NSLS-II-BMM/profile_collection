@@ -14,13 +14,13 @@ class Slits(PseudoPositioner):
     def where(self):
         #print("%s:" % self.name.upper())
         text = "      vertical   size   = %7.3f mm            Top      = %7.3f mm\n" % \
-               (self.vsize.readback.value,   self.top.user_readback.value)
+               (self.vsize.readback.get(),   self.top.user_readback.get())
         text += "      vertical   center = %7.3f mm            Bottom   = %7.3f mm\n" % \
-                (self.vcenter.readback.value, self.bottom.user_readback.value)
+                (self.vcenter.readback.get(), self.bottom.user_readback.get())
         text += "      horizontal size   = %7.3f mm            Outboard = %7.3f mm\n" % \
-                (self.hsize.readback.value,   self.outboard.user_readback.value)
+                (self.hsize.readback.get(),   self.outboard.user_readback.get())
         text += "      horizontal center = %7.3f mm            Inboard  = %7.3f mm" % \
-                (self.hcenter.readback.value, self.inboard.user_readback.value)
+                (self.hcenter.readback.get(), self.inboard.user_readback.get())
         return text
     def wh(self):
         boxedtext(self.name, self.where(), 'cyan')
@@ -76,9 +76,9 @@ def recover_slits2():
     yield from abs_set(dm2_slits_i.home_signal, 1)
     yield from sleep(1.0)
     print('Begin homing %s motors:\n' % slits2.name)
-    hvalues = (dm2_slits_t.hocpl.value, dm2_slits_b.hocpl.value, dm2_slits_i.hocpl.value, dm2_slits_o.hocpl.value)
+    hvalues = (dm2_slits_t.hocpl.get(), dm2_slits_b.hocpl.get(), dm2_slits_i.hocpl.get(), dm2_slits_o.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (dm2_slits_t.hocpl.value, dm2_slits_b.hocpl.value, dm2_slits_i.hocpl.value, dm2_slits_o.hocpl.value)
+        hvalues = (dm2_slits_t.hocpl.get(), dm2_slits_b.hocpl.get(), dm2_slits_i.hocpl.get(), dm2_slits_o.hocpl.get())
         strings = ['top', 'bottom', 'inboard', 'outboard']
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
@@ -95,9 +95,9 @@ def recover_slits3():
     yield from abs_set(dm3_slits_i.home_signal, 1)
     yield from sleep(1.0)
     print('Begin homing %s motors:\n' % slits3.name)
-    hvalues = (dm3_slits_t.hocpl.value, dm3_slits_b.hocpl.value, dm3_slits_i.hocpl.value, dm3_slits_o.hocpl.value)
+    hvalues = (dm3_slits_t.hocpl.get(), dm3_slits_b.hocpl.get(), dm3_slits_i.hocpl.get(), dm3_slits_o.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (dm3_slits_t.hocpl.value, dm3_slits_b.hocpl.value, dm3_slits_i.hocpl.value, dm3_slits_o.hocpl.value)
+        hvalues = (dm3_slits_t.hocpl.get(), dm3_slits_b.hocpl.get(), dm3_slits_i.hocpl.get(), dm3_slits_o.hocpl.get())
         strings = ['top', 'bottom', 'inboard', 'outboard']
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
@@ -123,13 +123,13 @@ class GonioSlits(PseudoPositioner):
     def where(self):
         #print("%s:" % self.name.upper())
         text = "      vertical   size   = %7.3f mm            Top      = %7.3f mm\n" % \
-               (self.vsize.readback.value,   self.top.user_readback.value)
+               (self.vsize.readback.get(),   self.top.user_readback.get())
         text += "      vertical   center = %7.3f mm            Bottom   = %7.3f mm\n" % \
-                (self.vcenter.readback.value, self.bottom.user_readback.value)
+                (self.vcenter.readback.get(), self.bottom.user_readback.get())
         text += "      horizontal size   = %7.3f mm            Outboard = %7.3f mm\n" % \
-                (self.hsize.readback.value,   self.outboard.user_readback.value)
+                (self.hsize.readback.get(),   self.outboard.user_readback.get())
         text += "      horizontal center = %7.3f mm            Inboard  = %7.3f mm" % \
-                (self.hcenter.readback.value, self.inboard.user_readback.value)
+                (self.hcenter.readback.get(), self.inboard.user_readback.get())
         return text
     def wh(self):
         boxedtext(self.name, self.where(), 'cyan')

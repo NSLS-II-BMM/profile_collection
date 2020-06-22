@@ -12,21 +12,21 @@ run_report(__file__)
 
 class Nanoize(DerivedSignal):
     def forward(self, value):
-        return value * 1e-9 / _locked_dwell_time.dwell_time.readback.value
+        return value * 1e-9 / _locked_dwell_time.dwell_time.readback.get()
     def inverse(self, value):
-        return value * 1e9 * _locked_dwell_time.dwell_time.readback.value
+        return value * 1e9 * _locked_dwell_time.dwell_time.readback.get()
 
 # class Normalized(DerivedSignal):
 #     def forward(self, value):
-#         return value * self.parent.current1.mean_value.value
+#         return value * self.parent.current1.mean_value.get()
 #     def inverse(self, value):
-#         return value / self.parent.current1.mean_value.value
+#         return value / self.parent.current1.mean_value.get()
 
 # class TransXmu(DerivedSignal):
 #     def forward(self, value):
-#         return self.parent.current1.mean_value.value / exp(value)
+#         return self.parent.current1.mean_value.get() / exp(value)
 #     def inverse(self, value):
-#         arg = self.parent.current1.mean_value.value / value
+#         arg = self.parent.current1.mean_value.get() / value
 #         return log(abs(arg))
 
 class BMMQuadEM(QuadEM):
@@ -152,7 +152,7 @@ class BMMDualEM(QuadEM):
         yield from abs_set(self.acquire_mode, 2, wait=True)
 
     def dark_current(self):
-        reopen = shb.state.value == shb.openval 
+        reopen = shb.state.get() == shb.openval 
         if reopen:
             print('\nClosing photon shutter')
             yield from shb.close_plan()
@@ -184,7 +184,7 @@ class BMMDualEM(QuadEM):
         # EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
         # EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
         yield from sleep(0.5)
-        print(self.sigma1.value, self.sigma2.value)
+        print(self.sigma1.get(), self.sigma2.get())
         BMM_log_info('Measured dark current on dualio ion chamber')
         if reopen:
             print('Opening photon shutter')
@@ -204,7 +204,7 @@ quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 
 def dark_current():
-    reopen = shb.state.value == shb.openval 
+    reopen = shb.state.get() == shb.openval 
     if reopen:
         print('\nClosing photon shutter')
         yield from shb.close_plan()

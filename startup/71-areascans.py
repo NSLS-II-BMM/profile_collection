@@ -91,16 +91,16 @@ def areascan(detector,
 
         
         if 'PseudoSingle' in str(type(slow)):
-            valueslow = slow.readback.value
+            valueslow = slow.readback.get()
         else:
-            valueslow = slow.user_readback.value
+            valueslow = slow.user_readback.get()
             line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (slow.name, startslow, stopslow, nslow, valueslow)
 
         if 'PseudoSingle' in str(type(fast)):
-            valuefast = fast.readback.value
+            valuefast = fast.readback.get()
         else:
-            valuefast = fast.user_readback.value
+            valuefast = fast.user_readback.get()
         line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (fast.name, startfast, stopfast, nfast, valuefast)
 
@@ -158,15 +158,16 @@ def areascan(detector,
                                        fast, startfast, stopfast, nfast,
                                        snake)
             BMMuser.final_log_entry = True
+            return uid
 
         with open(dotfile, "w") as f:
             f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
             f.write('%d\n' % estimate)
         BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
-        yield from make_areascan(dets,
-                                 slow, valueslow+startslow, valueslow+stopslow, nslow,
-                                 fast, valuefast+startfast, valuefast+stopfast, nfast,
-                                 False)
+        uid = yield from make_areascan(dets,
+                                       slow, valueslow+startslow, valueslow+stopslow, nslow,
+                                       fast, valuefast+startfast, valuefast+stopfast, nfast,
+                                       False)
 
         if pluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))

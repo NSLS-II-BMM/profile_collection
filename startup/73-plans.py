@@ -29,7 +29,7 @@ def tune(step=0):
     Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a relative motion.
     '''
     dcm_pitch.kill_cmd.put(1)
-    dcm_pitch.user_setpoint.put(dcm_pitch.user_readback.value + step)
+    dcm_pitch.user_setpoint.put(dcm_pitch.user_readback.get() + step)
     time.sleep(2.0)
     dcm_pitch.kill_cmd.put(1)
 def tu():
@@ -41,7 +41,7 @@ def tweak_bct(step):
     if step is None:
         step = 0
     yield from abs_set(dm3_bct.kill_cmd,1, wait=True)
-    print('Moving from %.4f to %.4f' % (dm3_bct.user_readback.value, dm3_bct.user_readback.value + step))
+    print('Moving from %.4f to %.4f' % (dm3_bct.user_readback.get(), dm3_bct.user_readback.get() + step))
     yield from mvr(dm3_bct, step)
     time.sleep(3.0)
     yield from abs_set(dm3_bct.kill_cmd,1, wait=True)
@@ -83,9 +83,9 @@ def recover_screens():
     yield from abs_set(dm3_bct.home_signal, 1)
     yield from sleep(1.0)
     print('Begin homing dm2_fs, dm3_fs, and dm3_bct:\n')
-    hvalues = (dm2_fs.hocpl.value, dm3_fs.hocpl.value, dm3_bct.hocpl.value)
+    hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (dm2_fs.hocpl.value, dm3_fs.hocpl.value, dm3_bct.hocpl.value)
+        hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get())
         strings = ['dm2_fs', 'dm3_fs', 'dm3_bct']
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
@@ -101,9 +101,9 @@ def recover_mirror2():
     yield from abs_set(m2_xu.home_signal,  1)
     yield from sleep(1.0)
     print('Begin homing lateral and vertical motors in M2:\n')
-    hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value)
+    hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value)
+        hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get())
         strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd',]
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
@@ -124,11 +124,11 @@ def recover_mirrors():
     yield from abs_set(m3_xu.home_signal,  1)
     yield from sleep(1.0)
     print('Begin homing lateral and vertical motors in M2 and M3:\n')
-    hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value,
-               m3_yu.hocpl.value, m3_ydo.hocpl.value, m3_ydi.hocpl.value, m3_xu.hocpl.value, m3_xd.hocpl.value)
+    hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get(),
+               m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (m2_yu.hocpl.value, m2_ydo.hocpl.value, m2_ydi.hocpl.value, m2_xu.hocpl.value, m2_xd.hocpl.value,
-                   m3_yu.hocpl.value, m3_ydo.hocpl.value, m3_ydi.hocpl.value, m3_xu.hocpl.value, m3_xd.hocpl.value)
+        hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get(),
+                   m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
         strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])

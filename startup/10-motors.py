@@ -93,17 +93,17 @@ class FMBOEpicsMotor(EpicsMotor):
 
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
-        for signal in self.read_attrs:
+        for signal in list(self.configuration_attrs):
             if signal.upper() not in status_list.keys():
                 continue
             suffix = getattr(self, signal).pvname.replace(self.prefix, '')
-            string = getattr(self, signal).enum_strs[getattr(self, signal).value]
+            string = getattr(self, signal).enum_strs[getattr(self, signal).get()]
             if signal != 'asscs':
-                if getattr(self, signal).value != status_list[signal.upper()]:
+                if getattr(self, signal).get() != status_list[signal.upper()]:
                     string = error_msg('%-19s' % string)
-            text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').value,
+            text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').get(),
                                                      string,
-                                                     bold_msg(getattr(self, signal).value),
+                                                     bold_msg(getattr(self, signal).get()),
                                                      whisper(suffix))
         boxedtext('%s status signals' % self.name, text, 'green')
 
@@ -120,7 +120,7 @@ class FMBOEpicsMotor(EpicsMotor):
         BMM_log_info('clearing encoder loss for %s' % self.name)
 
     def wh(self):
-        return(round(self.user_readback.value, 3))
+        return(round(self.user_readback.get(), 3))
 
 class XAFSEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
@@ -135,7 +135,7 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
         
     
     #def wh(self):
-    #    return(round(self.user_readback.value, 3))
+    #    return(round(self.user_readback.get(), 3))
 
     
 class VacuumEpicsMotor(FMBOEpicsMotor):
@@ -144,7 +144,7 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
 
     #def wh(self):
-    #    return(round(self.user_readback.value, 3))
+    #    return(round(self.user_readback.get(), 3))
 
     # def _setup_move(self, *args):
     #     self.kill_cmd.put(1)
@@ -163,7 +163,7 @@ class EndStationEpicsMotor(EpicsMotor):
     kill_cmd = Cpt(EpicsSignal, ':KILL', kind='config')
 
     def wh(self):
-        return(round(self.user_readback.value, 3))
+        return(round(self.user_readback.get(), 3))
 
 
 mcs8_motors = list()
@@ -304,30 +304,30 @@ xafs_linx.kill_cmd.kind = 'config'
 
 def homed():
     for m in mcs8_motors:
-        if m.hocpl.value:
-            print("%-12s : %s" % (m.name, m.hocpl.enum_strs[m.hocpl.value]))
+        if m.hocpl.get():
+            print("%-12s : %s" % (m.name, m.hocpl.enum_strs[m.hocpl.get()]))
         else:
-            print("%-12s : %s" % (m.name, error_msg(m.hocpl.enum_strs[m.hocpl.value])))
+            print("%-12s : %s" % (m.name, error_msg(m.hocpl.enum_strs[m.hocpl.get()])))
 
 def ampen():
     for m in mcs8_motors:
-        if m.ampen.value:
-            print("%-12s : %s" % (m.name, warning_msg(m.ampen.enum_strs[m.ampen.value])))
+        if m.ampen.get():
+            print("%-12s : %s" % (m.name, warning_msg(m.ampen.enum_strs[m.ampen.get()])))
         else:
-            print("%-12s : %s" % (m.name, m.ampen.enum_strs[m.ampen.value]))
+            print("%-12s : %s" % (m.name, m.ampen.enum_strs[m.ampen.get()]))
             
 
 def amfe():
     print(bold_msg("%-12s : %s / %s" % ('motor', 'AMFE', 'AMFAE')))
     for m in mcs8_motors:
-        if m.amfe.value:
-            fe  = warning_msg(m.amfe.enum_strs[m.amfe.value])
+        if m.amfe.get():
+            fe  = warning_msg(m.amfe.enum_strs[m.amfe.get()])
         else:
-            fe  = m.amfe.enum_strs[m.amfe.value]
-        if m.amfae.value:
-            fae = warning_msg(m.amfae.enum_strs[m.amfae.value])
+            fe  = m.amfe.enum_strs[m.amfe.get()]
+        if m.amfae.get():
+            fae = warning_msg(m.amfae.enum_strs[m.amfae.get()])
         else:
-            fae = m.amfae.enum_strs[m.amfae.value]
+            fae = m.amfae.enum_strs[m.amfae.get()]
         print("%-12s : %s / %s" % (m.name, fe, fae))
 faults = amfe
             

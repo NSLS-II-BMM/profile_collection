@@ -5,9 +5,10 @@ from cycler import cycler
 import numpy as np
 import warnings
 from numpy import log
+import threading
 
-from bluesky.callbacks import CallbackBase
-#from bluesky.callbacks.mpl_plotting import QtAwareCallback
+#from bluesky.callbacks import CallbackBase
+from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
 run_report(__file__)
 
@@ -60,9 +61,11 @@ def close_all_plots():
     BMMuser.motor2   = None
     BMMuser.fig      = None
     BMMuser.ax       = None
-    
-#class DerivedPlot(QtAwareCallback):
-class DerivedPlot(CallbackBase):
+
+
+initialize_qt_teleporter()
+#class DerivedPlot(CallbackBase):
+class DerivedPlot(QtAwareCallback):
     def __init__(self, func, ax=None, xlabel=None, ylabel=None, title=None, legend_keys=None, stream_name='primary', **kwargs):
         """
         func expects an Event document which looks like this:
@@ -75,39 +78,49 @@ class DerivedPlot(CallbackBase):
         and should return (x, y)
         """
         super().__init__()
-        self.func = func
-        if ax is None:
-            fig, ax = plt.subplots()
-        self.ax = ax
-        if BMMuser.fig is not None:
-            BMMuser.prev_fig = BMMuser.fig
-        if BMMuser.ax is not None:
-            BMMuser.prev_ax  = BMMuser.ax
-        BMMuser.ax = ax
-        BMMuser.fig = fig
-        #BMMuser.all_figs.append(fig)
-        BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
-        if xlabel is None:
-            xlabel = ''
-        if ylabel is None:
-            ylabel = ''
-        self.ax.set_xlabel(xlabel)
-        self.ax.set_ylabel(ylabel)
-        if title is not None:
-            plt.title(title)
-        
-        if legend_keys is None:
-            legend_keys = []
-        self.legend_keys = ['scan_id'] + legend_keys
-        self.ax.margins(.1)
-        self.kwargs = kwargs
-        self.lines = []
-        self.legend = None
-        self.legend_title = " :: ".join([name for name in self.legend_keys])
-        self.stream_name = stream_name
-        self.descriptors = {}
+        self.__setup_lock = threading.Lock()
+        self.__setup_event = threading.Event()
+        def setup():
+            nonlocal func, ax, xlabel, ylabel, title, legend_keys, stream_name, kwargs
+            with self.__setup_lock:
+                if self.__setup_event.is_set():
+                    return
+                self.__setup_event.set()
+            self.func = func
+            if ax is None:
+                fig, ax = plt.subplots()
+            self.ax = ax
+            if BMMuser.fig is not None:
+                BMMuser.prev_fig = BMMuser.fig
+            if BMMuser.ax is not None:
+                BMMuser.prev_ax  = BMMuser.ax
+            BMMuser.ax = ax
+            BMMuser.fig = fig
+            #BMMuser.all_figs.append(fig)
+            BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
+            if xlabel is None:
+                xlabel = ''
+            if ylabel is None:
+                ylabel = ''
+            self.ax.set_xlabel(xlabel)
+            self.ax.set_ylabel(ylabel)
+            if title is not None:
+                plt.title(title)
+
+            if legend_keys is None:
+                legend_keys = []
+            self.legend_keys = ['scan_id'] + legend_keys
+            self.ax.margins(.1)
+            self.kwargs = kwargs
+            self.lines = []
+            self.legend = None
+            self.legend_title = " :: ".join([name for name in self.legend_keys])
+            self.stream_name = stream_name
+            self.descriptors = {}
+        self.__setup = setup
 
     def start(self, doc):
+        self.__setup()
         # The doc is not used; we just use the signal that a new run began.
         self.x_data, self.y_data = [], []
         self.descriptors.clear()

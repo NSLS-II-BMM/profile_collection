@@ -8,12 +8,12 @@ if BMMuser.pds_mode is None:
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
-        # if idps.state.value == 0:
+        # if idps.state.get() == 0:
         #     shatoken = (Token.OutPromptNum, ' A')
         # else:
         #     shatoken = (Token.Tilde, ' A')
 
-        # if shb.state.value == 1:
+        # if shb.state.get() == 1:
         #     shbtoken = (Token.OutPromptNum, 'B')
         # else:
         #     shbtoken = (Token.Tilde, 'B')
@@ -25,7 +25,7 @@ class MyPrompt(Prompts):
         ## BMM XRD.311 A•B 0.0 [5] ▶
         # rcv = None
         # try:
-        #     rcv = ring.current.value
+        #     rcv = ring.current.get()
         # except:
         #     rcv = None
         # if rcv is None:

@@ -12,10 +12,10 @@ class Cradle(PseudoPositioner):
         super().__init__(*args, **kwargs)
     def where(self):
         #print("%s:" % self.name.upper())
-        text  = "      Y  = %7.3f mm       yout (xafs_lins) = %7.3f mm\n" % (self.y.readback.value,  self.yout.user_readback.value)
-        text += "      Dy = %7.3f mm       yin  (xafs_y)    = %7.3f mm\n" % (self.dy.readback.value, self.yin.user_readback.value)
-        #text += "      X  = %7.3f mm       xout (xafs_lins)  = %7.3f mm\n" % (self.x.readback.value,  self.xout.user_readback.value)
-        #text += "      Dx = %7.3f mm       xin  (xafs_x)     = %7.3f mm"   % (self.dx.readback.value, self.xin.user_readback.value)
+        text  = "      Y  = %7.3f mm       yout (xafs_lins) = %7.3f mm\n" % (self.y.readback.get(),  self.yout.user_readback.get())
+        text += "      Dy = %7.3f mm       yin  (xafs_y)    = %7.3f mm\n" % (self.dy.readback.get(), self.yin.user_readback.get())
+        #text += "      X  = %7.3f mm       xout (xafs_lins)  = %7.3f mm\n" % (self.x.readback.get(),  self.xout.user_readback.get())
+        #text += "      Dx = %7.3f mm       xin  (xafs_x)     = %7.3f mm"   % (self.dx.readback.get(), self.xin.user_readback.get())
         return text
     def wh(self):
         boxedtext(self.name, self.where(), 'cyan', width=80)
@@ -59,7 +59,7 @@ xafs_lins.user_offset.put(27.477)
 cradle = Cradle('XF:06BMA-BI{XAFS-Ax:',  name='cradle')
 
 def set_cradle_offset(motor=xafs_lins):
-    motor.user_offset.put(motor.user_offset.value - (motor.user_readback.value - xafs_liny.user_readback.value))
+    motor.user_offset.put(motor.user_offset.get() - (motor.user_readback.get() - xafs_liny.user_readback.get()))
 
 def exercise_cradle(n=5):
     yield from mvr(cradle.y,    n)
@@ -68,7 +68,7 @@ def exercise_cradle(n=5):
 
 
 def crplan(slp=2):
-    while vor.names.name29.value.lower() != 'ready':
+    while vor.names.name29.get().lower() != 'ready':
         print('sleeping for %s seconds' % slp)
         yield from bps.sleep(slp)
     yield from exercise_cradle()

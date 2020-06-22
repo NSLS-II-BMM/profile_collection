@@ -79,7 +79,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                (motor.name, 'i0', start, stop, nsteps, motor.user_readback.value)
+                (motor.name, 'i0', start, stop, nsteps, motor.user_readback.get())
         with open(dotfile, "w") as f:
             f.write("")
 
@@ -97,7 +97,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
 
             RE.msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
-                         (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                         (line1, uid, db[-1].start['scan_id']))
             if move:
                 t  = db[-1].table()
                 signal = t['I0']
@@ -141,7 +141,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
     #######################################################################
     
     motor = dm3_bct
-    slit_height = slits3.vsize.readback.value
+    slit_height = slits3.vsize.readback.get()
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move, force), cleanup_plan())
@@ -196,7 +196,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         @subs_decorator(plot)
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.value)
+                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
             yield from abs_set(_locked_dwell_time, 0.1, wait=True)
             yield from dcm.kill_plan()
@@ -235,7 +235,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             RE.msg_hook = BMM_msg_hook
 
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
-                         (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                         (line1, uid, db[-1].start['scan_id']))
             yield from mv(motor, top)
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, gonio_slit_height)
@@ -264,9 +264,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         
     motor = dcm_pitch
     dotfile = '/home/xf06bm/Data/.line.scan.running'
-    slit_height = slits3.vsize.readback.value
+    slit_height = slits3.vsize.readback.get()
     try:
-        gonio_slit_height = slitsg.vsize.readback.value
+        gonio_slit_height = slitsg.vsize.readback.get()
     except:
         gonio_slit_height = 1
     RE.msg_hook = None
@@ -448,9 +448,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                ylabel=detector+denominator,
                                title='%s vs. %s' % (detname, thismotor.name))
         if 'PseudoSingle' in str(type(axis)):
-            value = thismotor.readback.value
+            value = thismotor.readback.get()
         else:
-            value = thismotor.user_readback.value
+            value = thismotor.user_readback.get()
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (thismotor.name, detector, start, stop, nsteps, value)
         ##BMM_suspenders()            # engage suspenders
@@ -468,10 +468,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         @subs_decorator(plot)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
-
-        yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+            return uid
+            
+        uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
-                     (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                     (line1, uid, db[-1].start['scan_id']))
         if pluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':

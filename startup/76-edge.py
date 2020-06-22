@@ -79,7 +79,7 @@ class ReferenceFoils():
         '''Return the xafs_linxs position corresponding to slot i where i ∈ (0 .. 4)'''
         if type(i) is str and i in foils.slots:
             i=foils.slots.index(i.capitalize())
-        if type(i) is not int: return xafs_linxs.user_readback.value # so it doesn't move...
+        if type(i) is not int: return xafs_linxs.user_readback.get() # so it doesn't move...
         if i > 4:        return 90
         if i < 0:        return -90
         return(-90 + i*45)
@@ -113,7 +113,7 @@ class ReferenceFoils():
         text = ' Reference foils (xafs_linxs):\n'
         for i in range(5):
             ast = ' '
-            if abs(self.position(i) - xafs_linxs.user_readback.value) < 1:
+            if abs(self.position(i) - xafs_linxs.user_readback.get()) < 1:
                 ast = '*'
             text += '      slot %d : %s at %d mm\n'% (i+1, str(self.slots[i]), self.position(i))
         return(text)
