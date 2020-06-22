@@ -34,23 +34,23 @@ class Mirrors(PseudoPositioner):
     def where(self):
         stripe = ''
         if self.name.lower() == 'm3':
-            if self.xu.user_readback.value > 0:
+            if self.xu.user_readback.get() > 0:
                 stripe = '(Rh/Pt stripe)'
             else:
                 stripe = '(Si stripe)'
         #text += "%s: %s" % (self.name.upper(), stripe))
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.value, self.yu.user_readback.value)
-        text += "      lateral  = %7.3f mm            YDO = %7.3f\n" % (self.lateral.readback.value,  self.ydo.user_readback.value)
-        text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.value,    self.ydi.user_readback.value)
-        text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.value,     self.xu.user_readback.value)
-        text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.value,      self.xd.user_readback.value)
+        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
+        text += "      lateral  = %7.3f mm            YDO = %7.3f\n" % (self.lateral.readback.get(),  self.ydo.user_readback.get())
+        text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.get(),    self.ydi.user_readback.get())
+        text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.get(),     self.xu.user_readback.get())
+        text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.get(),      self.xd.user_readback.get())
         if self.name.lower() == 'm2':
-            text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.value
+            text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
         return text
     def wh(self):
         stripe = ''
         if self.name.lower() == 'm3':
-            if self.xu.user_readback.value > 0:
+            if self.xu.user_readback.get() > 0:
                 stripe = ' (Rh/Pt stripe)'
             else:
                 stripe = ' (Si stripe)'
@@ -137,9 +137,9 @@ class XAFSTable(PseudoPositioner):
 
     def where(self):
         #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.value, self.yu.user_readback.value)
-        text += "      pitch    = %7.3f mrad          YDO = %7.3f\n" % (self.pitch.readback.value,    self.ydo.user_readback.value)
-        text += "      roll     = %7.3f mrad          YDI = %7.3f"   % (self.roll.readback.value,     self.ydi.user_readback.value)
+        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
+        text += "      pitch    = %7.3f mrad          YDO = %7.3f\n" % (self.pitch.readback.get(),    self.ydo.user_readback.get())
+        text += "      roll     = %7.3f mrad          YDI = %7.3f"   % (self.roll.readback.get(),     self.ydi.user_readback.get())
         return text
     def wh(self):
         boxedtext('XAFS table', self.where(), 'cyan')
@@ -184,9 +184,9 @@ class GonioTable(PseudoPositioner):
 
     def where(self):
         #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.value, self.yuo.user_readback.value)
-        text += "      pitch    = %7.3f mrad          YUI = %7.3f\n" % (self.pitch.readback.value,    self.yui.user_readback.value)
-        text += "      roll     = %7.3f mrad          YD  = %7.3f"   % (self.roll.readback.value,     self.yd.user_readback.value)
+        text  = "      vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.get(), self.yuo.user_readback.get())
+        text += "      pitch    = %7.3f mrad          YUI = %7.3f\n" % (self.pitch.readback.get(),    self.yui.user_readback.get())
+        text += "      roll     = %7.3f mrad          YD  = %7.3f"   % (self.roll.readback.get(),     self.yd.user_readback.get())
         return text
     def wh(self):
         boxedtext('goniometer table', self.where(), 'cyan')

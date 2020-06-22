@@ -48,28 +48,28 @@ class DCM(PseudoPositioner):
 
     def where(self):
         text  = "%s = %.1f   %s = Si(%s)\n" % \
-            (' Energy', self.energy.readback.value,
+            (' Energy', self.energy.readback.get(),
              'reflection', self._crystal)
         text += "%s: %s = %8.5f   %s  = %7.4f   %s = %8.4f\n" %\
             (' current',
-             'Bragg', self.bragg.user_readback.value,
-             '2nd Xtal Perp',  self.perp.user_readback.value,
-             'Para',  self.para.user_readback.value)
+             'Bragg', self.bragg.user_readback.get(),
+             '2nd Xtal Perp',  self.perp.user_readback.get(),
+             'Para',  self.para.user_readback.get())
         text += "                                      %s = %7.4f   %s = %8.4f" %\
-            ('Pitch', dcm_pitch.user_readback.value,
-             'Roll',  dcm_roll.user_readback.value)
+            ('Pitch', dcm_pitch.user_readback.get(),
+             'Roll',  dcm_roll.user_readback.get())
         #text += "                             %s = %7.4f   %s = %8.4f" %\
-        #    ('2nd Xtal pitch', self.pitch.user_readback.value,
-        #     '2nd Xtal roll',  self.roll.user_readback.value)
+        #    ('2nd Xtal pitch', self.pitch.user_readback.get(),
+        #     '2nd Xtal roll',  self.roll.user_readback.get())
         return text
     def wh(self):
         boxedtext('DCM', self.where(), 'cyan', width=74)
 
     def restore(self):
         self.mode = 'fixed'
-        if dcm_x.user_readback.value < 10:
+        if dcm_x.user_readback.get() < 10:
             self._crystal = '111'
-        elif dcm_x.user_readback.value > 10:
+        elif dcm_x.user_readback.get() > 10:
             self._crystal = '311'
 
     # The pseudo positioner axes:
@@ -100,11 +100,11 @@ class DCM(PseudoPositioner):
         yield from sleep(1.0)
         ## wait for them to be homed
         print('Begin homing DCM motors:\n')
-        hvalues = (dcm_bragg.hocpl.value, dcm_pitch.hocpl.value, dcm_roll.hocpl.value, dcm_para.hocpl.value,
-                   dcm_perp.hocpl.value, dcm_x.hocpl.value)
+        hvalues = (dcm_bragg.hocpl.get(), dcm_pitch.hocpl.get(), dcm_roll.hocpl.get(), dcm_para.hocpl.get(),
+                   dcm_perp.hocpl.get(), dcm_x.hocpl.get())
         while any(v == 0 for v in hvalues):
-            hvalues = (dcm_bragg.hocpl.value, dcm_pitch.hocpl.value, dcm_roll.hocpl.value, dcm_para.hocpl.value,
-                       dcm_perp.hocpl.value, dcm_x.hocpl.value)
+            hvalues = (dcm_bragg.hocpl.get(), dcm_pitch.hocpl.get(), dcm_roll.hocpl.get(), dcm_para.hocpl.get(),
+                       dcm_perp.hocpl.get(), dcm_x.hocpl.get())
             strings = ['Bragg', 'pitch', 'roll', 'para', 'perp', 'x']
             for i,v in enumerate(hvalues):
                 strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
@@ -117,11 +117,11 @@ class DCM(PseudoPositioner):
         yield from mv(dcm_x, 1)
         yield from mv(dcm_x, 0.3)
         ## move pitch and roll to the Si(111) positions
-        this_energy = dcm.energy.readback.value
+        this_energy = dcm.energy.readback.get()
         yield from dcm.kill_plan()
         yield from mv(dcm_pitch, approximate_pitch(this_energy), dcm_roll, -6.26)
         yield from mv(dcm.energy, this_energy)
-        print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.value)
+        print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.get())
         yield from sleep(2.0)
         yield from dcm.kill_plan()
         
@@ -164,8 +164,8 @@ class DCM(PseudoPositioner):
         angle = arcsin(wavelength / self._twod)
         if self._pseudo_channel_cut:
             return self.RealPosition(bragg = 180 * arcsin(wavelength/self._twod) / pi,
-                                     para  = self.para.user_readback.value,
-                                     perp  = self.perp.user_readback.value)
+                                     para  = self.para.user_readback.get(),
+                                     perp  = self.perp.user_readback.get())
         else:
             return self.RealPosition(bragg = 180 * arcsin(wavelength/self._twod) / pi,
                                      para  = self.offset / (2*sin(angle)),
@@ -179,5 +179,5 @@ class DCM(PseudoPositioner):
 
 
 dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
-if dcm_x.user_readback.value > 10: dcm.set_crystal('311')
+if dcm_x.user_readback.get() > 10: dcm.set_crystal('311')
 ## dcm_x is 29 for Si(311), -35 for Si(111)

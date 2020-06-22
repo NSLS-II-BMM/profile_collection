@@ -13,4 +13,4 @@ except:
     pass
 
 def read_bpms():
-    return(bpm_upstream.x.value, bpm_upstream.y.value, bpm_downstream.x.value, bpm_downstream.y.value)
+    return(bpm_upstream.x.get(), bpm_upstream.y.get(), bpm_downstream.x.get(), bpm_downstream.y.get())

@@ -1,5 +1,7 @@
 
-def motor_metadata():
+run_report(__file__)
+
+def motor_metadata(uid=None):
     biglist = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_linxs, xafs_wheel, xafs_roth, xafs_rots,
                dm3_bct, dm3_foils, dm2_fs,
                slits3.top, slits3.bottom, slits3.outboard, slits3.inboard, slits3.vsize, slits3.vcenter, slits3.hsize, slits3.hcenter, 
@@ -11,26 +13,35 @@ def motor_metadata():
                xafs_table.vertical, xafs_table.pitch, xafs_table.roll, 
            )
     md = dict()
+    table = None
+    try:
+        table = db[uid].table('baseline')
+    except:
+        pass
     for m in biglist:
-        try:
-            md[m.name] = m.readback.value
-        except:
-            pass
-        try:
-            md[m.name] = m.user_readback.value
-        except:
-            pass
+        if table is None:
+            try:
+                md[m.name] = m.readback.get()
+            except:
+                pass
+            try:
+                md[m.name] = m.user_readback.get()
+            except:
+                pass
+        else:
+            md[m.name] = table[m.name][1]
+            
     return(md)
 
 def motor_status():
     md = motor_metadata()
 
     line = ' ' + '=' * 78 + '\n'
-    text = '\n Energy = %.1f eV   reflection = Si(%s)   mode = %s\n' % (dcm.energy.readback.value, dcm._crystal, dcm.mode)
+    text = '\n Energy = %.1f eV   reflection = Si(%s)   mode = %s\n' % (dcm.energy.readback.get(), dcm._crystal, dcm.mode)
     text += '      Bragg = %8.5f   2nd Xtal Perp  = %7.4f   Para = %8.4f\n' % \
-            (dcm.bragg.user_readback.value, dcm.perp.user_readback.value, dcm.para.user_readback.value)
+            (dcm.bragg.user_readback.get(), dcm.perp.user_readback.get(), dcm.para.user_readback.get())
     text += '                                  Pitch = %7.4f   Roll = %8.4f\n\n' % \
-            (dcm_pitch.user_readback.value, dcm_roll.user_readback.value)
+            (dcm_pitch.user_readback.get(), dcm_roll.user_readback.get())
 
     text += ' M2\n      vertical = %7.3f mm            YU  = %7.3f mm\n' % (md[m2.vertical.name], md[m2.yu.name])
     text += '      lateral  = %7.3f mm            YDO = %7.3f mm\n'      % (md[m2.lateral.name],  md[m2.ydo.name])
@@ -40,7 +51,7 @@ def motor_status():
     text += '      bender   = %9.1f steps\n\n'                           %  md[m2_bender.name]
 
     stripe = '(Rh/Pt stripe)'
-    if m3.xu.user_readback.value < 0:
+    if m3.xu.user_readback.get() < 0:
         stripe = '(Si stripe)'
 
     text += ' M3  %s\n'                                                 % stripe
@@ -94,19 +105,23 @@ def ms():
 
 
 def motor_sidebar(md=None):
-    '''
-    Generate a list of motor positions to be used in the static html page for a scan sequence.
+    '''Generate a list of motor positions to be used in the static html page for a scan sequence.
     Return value is a long string with html tags and entities embedded in the string.
 
     Argument:
       md: dict with motor positions keyed by <motor>.name
 
-    If md is not provided, the current motor positions will be used.  If taking a 
-    record from Data Broker, then the start document contains a dict called 
-    BMM_motors, which is formatted correctly for this method.  If generating a dossier
-    from a Data Broker record, do:
-          text = motor_sidebar(h.start['BMM_motors'])
+    If md is not provided, the current motor positions will be used.
+    If taking a record from Data Broker, the motor positions have been
+    recorded in the baseline.  If generating a dossier from a Data
+    Broker record, do:
+
+          text = motor_sidebar(uid=uid)
+
+    where uid is the ID of the scan.
     '''
+    if type(md) == str:
+        md = motor_metadata(md)
     if md is None or type(md) is not dict:
         md = motor_metadata()
     motors = ''
@@ -183,7 +198,7 @@ def xrd_motors():
               xrd_samx,   xrd_samy,   xrd_samz,   xrd_tabyd,  xrd_tabyui,
               xrd_tabyuo, xrd_tabxu,  xrd_tabxd,  xrd_tabz,   xrd_slit1t,
               xrd_slit1b, xrd_slit1i, xrd_slit1o):
-        text += '  %-26s: %8.3f %s\n' % (m.name, m.user_readback.value, m.describe()[m.name]['units'])
+        text += '  %-26s: %8.3f %s\n' % (m.name, m.user_readback.get(), m.describe()[m.name]['units'])
     return text
 
 def xrdm():

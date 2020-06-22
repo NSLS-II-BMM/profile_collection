@@ -106,7 +106,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      problem_motors = list()
      for m in base[::2]:
           try:        # skip non-FMBO motors, which do not have the amfe or amfae attributes
-               if m.amfe.value == 1 or m.amfae.value == 1:
+               if m.amfe.get() == 1 or m.amfae.get() == 1:
                     motors_ready = False
                     problem_motors.append(m.name)
           except:
@@ -124,10 +124,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           if bender is True:
                yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
                if mode == 'XRD':
-                    if abs(m2_bender.user_readback.value - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
+                    if abs(m2_bender.user_readback.get() - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
                          base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
                elif mode in ('A', 'B', 'C'):
-                    if abs(m2_bender.user_readback.value - BMMuser.bender_xas) > BMMuser.bender_margin:
+                    if abs(m2_bender.user_readback.get() - BMMuser.bender_xas) > BMMuser.bender_margin:
                          base.extend([m2_bender, BMMuser.bender_xas])
           yield from mv(*base,
                         m2.yu,  float(MODEDATA['m2_yu'][mode]),
@@ -148,60 +148,60 @@ def mode():
      for m in (dm3_bct, xafs_yu, xafs_ydo, xafs_ydi, m2_yu, m2_ydo,
                m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
                dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
-          print('\t%-12s:\t%.3f' % (m.name, m.user_readback.value))
+          print('\t%-12s:\t%.3f' % (m.name, m.user_readback.get()))
           
-     if m2.vertical.readback.value < 0: # this is a focused mode
-          if m2.pitch.readback.value > 3:
+     if m2.vertical.readback.get() < 0: # this is a focused mode
+          if m2.pitch.readback.get() > 3:
                print('This appears to be mode XRD')
           else:
-               if m3.vertical.readback.value > -2:
+               if m3.vertical.readback.get() > -2:
                     print('This appears to be mode A')
-               elif m3.vertical.readback.value > -7:
+               elif m3.vertical.readback.get() > -7:
                     print('This appears to be mode B')
                else:
                     print('This appears to be mode C')
      else:
-          if m3.pitch.readback.value < 3:
+          if m3.pitch.readback.get() < 3:
                print('This appears to be mode F')
-          elif m3.lateral.readback.value > 0:
+          elif m3.lateral.readback.get() > 0:
                print('This appears to be mode D')
           else:
                print('This appears to be mode E')
 
 def get_mode():
-     if m2.vertical.readback.value < 0: # this is a focused mode
-          if m2.pitch.readback.value > 3:
+     if m2.vertical.readback.get() < 0: # this is a focused mode
+          if m2.pitch.readback.get() > 3:
                return 'XRD'
           else:
-               if m3.vertical.readback.value > -2:
+               if m3.vertical.readback.get() > -2:
                     return 'A'
-               elif m3.vertical.readback.value > -7:
+               elif m3.vertical.readback.get() > -7:
                     return 'B'
                else:
                     return 'C'
      else:
-          if m3.pitch.readback.value < 3:
+          if m3.pitch.readback.get() < 3:
                return 'F'
-          elif m3.lateral.readback.value > 0:
+          elif m3.lateral.readback.get() > 0:
                return 'D'
           else:
                return 'E'
 
 def describe_mode():
-     if m2.vertical.readback.value < 0: # this is a focused mode
-          if m2.pitch.readback.value > 3:
+     if m2.vertical.readback.get() < 0: # this is a focused mode
+          if m2.pitch.readback.get() > 3:
                return 'focused at goniometer, >8 keV'
           else:
-               if m3.vertical.readback.value > -2:
+               if m3.vertical.readback.get() > -2:
                     return 'focused, >8 keV'
-               elif m3.vertical.readback.value > -7:
+               elif m3.vertical.readback.get() > -7:
                     return 'focused, <6 keV'
                else:
                     return 'focused, 6 to 8 keV'
      else:
-          if m3.pitch.readback.value < 3:
+          if m3.pitch.readback.get() < 3:
                return 'unfocused, <6 keV'
-          elif m3.lateral.readback.value > 0:
+          elif m3.lateral.readback.get() > 0:
                return 'unfocused, >8 keV'
           else:
                return 'unfocused, 6 to 8 keV'
@@ -252,7 +252,7 @@ def change_xtals(xtal=None):
           yield from null()
           return
 
-     current_energy = dcm.energy.readback.value
+     current_energy = dcm.energy.readback.get()
      start = time.time()
 
      RE.msg_hook = None

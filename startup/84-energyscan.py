@@ -653,16 +653,16 @@ def xafs(inifile, **kwargs):
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
     def main_plan(inifile, **kwargs):
-        if '311' in dcm._crystal and dcm_x.user_readback.value < 10:
+        if '311' in dcm._crystal and dcm_x.user_readback.get() < 10:
             BMMuser.final_log_entry = False
             print(error_msg('The DCM is in the 111 position, configured as 311'))
-            print(error_msg('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
+            print(error_msg('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.get(), dcm._crystal)))
             yield from null()
             return
-        if '111' in dcm._crystal and dcm_x.user_readback.value > 10:
+        if '111' in dcm._crystal and dcm_x.user_readback.get() > 10:
             BMMuser.final_log_entry = False
             print(error_msg('The DCM is in the 311 position, configured as 111'))
-            print(error_msg('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.value, dcm._crystal)))
+            print(error_msg('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.get(), dcm._crystal)))
             yield from null()
             return
 
@@ -940,7 +940,7 @@ def xafs(inifile, **kwargs):
             html_dict['e0']            = p['e0']
             html_dict['element']       = p['element']
             html_dict['edge']          = p['edge']
-            html_dict['motors']        = motor_sidebar()
+            html_dict['motors']        = motor_sidebar() # this could be motor_sidebar(uid=uid)
             html_dict['sample']        = p['sample']
             html_dict['prep']          = p['prep']
             html_dict['comment']       = p['comment']
@@ -1011,11 +1011,11 @@ def xafs(inifile, **kwargs):
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
-                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.value)))
+                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get())))
                     #dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
-                    print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.value))
+                    print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
                     
                 rightnow = metadata_at_this_moment() # see 62-metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
@@ -1029,7 +1029,7 @@ def xafs(inifile, **kwargs):
                 if p['ththth']: md['_kind'] = '333'
 
                 xdi = {'XDI': md}
-                mtr = {'BMM_motors' : motor_metadata()}
+                #mtr = {'BMM_motors' : motor_metadata()}
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
@@ -1037,13 +1037,13 @@ def xafs(inifile, **kwargs):
                 uid = None
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **mtr, **supplied_metadata})
+                                             md={**xdi, **supplied_metadata})
                 elif p['mode'] == 'xs2':
                     uid= yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
-                                            md={**xdi, **mtr, **supplied_metadata})
+                                            md={**xdi, **supplied_metadata})
                 else:
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **mtr, **supplied_metadata})
+                                             md={**xdi, **supplied_metadata})
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
                 header = db[uid]
@@ -1086,9 +1086,12 @@ def xafs(inifile, **kwargs):
 
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished'
-        if 'primary' not in db[-1].stop['num_events']:
-            how = 'stopped'
-        elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+        try:
+            if 'primary' not in db[-1].stop['num_events']:
+                how = 'stopped'
+            elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+                how = 'stopped'
+        except:
             how = 'stopped'
         if BMMuser.final_log_entry is True:
             BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'

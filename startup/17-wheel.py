@@ -24,7 +24,7 @@ class WheelMotor(EndStationEpicsMotor):
         if value is not None:
             angle = round(value)
         else:
-            angle = round(self.user_readback.value)
+            angle = round(self.user_readback.get())
         this = round((-1*self.slotone-15+angle) / (-15)) % 24
         if this == 0: this = 24
         return this
@@ -78,10 +78,10 @@ class WheelMotor(EndStationEpicsMotor):
         elif type(target) is str:
             target = self.slot_number(target.capitalize())
             angle = self.angle_from_current(target)
-        return(xafs_ref.user_readback.value+angle)
+        return(xafs_ref.user_readback.get()+angle)
 
     def recenter(self):
-        here = self.user_readback.value
+        here = self.user_readback.get()
         center = round(here / 15) * 15
         yield from mv(self, center)
         print(whisper('recentered %s to %.1f' % (self.name, center)))

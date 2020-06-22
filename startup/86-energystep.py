@@ -36,8 +36,8 @@ def energystep(filename = None,
     
     if dosteps:
         yield from mv(dcm.energy, start)
-    print('  %.1f       %.1f     %.6f    %s' % (dcm.energy.readback.value, start, time.time(), now()))
-    handle.write('  %.1f       %.1f     %.6f    %s\n' % (dcm.energy.readback.value, start, time.time(), now()))
+    print('  %.1f       %.1f     %.6f    %s' % (dcm.energy.readback.get(), start, time.time(), now()))
+    handle.write('  %.1f       %.1f     %.6f    %s\n' % (dcm.energy.readback.get(), start, time.time(), now()))
     handle.flush()
     yield from sleep(delay)
 
@@ -46,8 +46,8 @@ def energystep(filename = None,
     while energy <= end:
         if dosteps:
             yield from mvr(dcm.energy, estep)
-        print('  %.1f       %.1f     %.6f    %s' % (dcm.energy.readback.value, energy, time.time(), now()))
-        handle.write('  %.1f       %.1f     %.6f    %s\n' % (dcm.energy.readback.value, energy, time.time(), now()))
+        print('  %.1f       %.1f     %.6f    %s' % (dcm.energy.readback.get(), energy, time.time(), now()))
+        handle.write('  %.1f       %.1f     %.6f    %s\n' % (dcm.energy.readback.get(), energy, time.time(), now()))
         handle.flush()
         energy = energy + estep
         yield from sleep(delay)

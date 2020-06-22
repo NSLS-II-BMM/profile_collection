@@ -19,7 +19,7 @@ class EPS_Shutter(Device):
         #self.color = 'red'
 
     def status(self):
-        if self.state.value == 1:
+        if self.state.get() == 1:
             return 'closed'
         else:
             return 'open'
@@ -27,7 +27,7 @@ class EPS_Shutter(Device):
     def open_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value != self.openval:
+        while self.state.get() != self.openval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.opn, 1)
@@ -41,7 +41,7 @@ class EPS_Shutter(Device):
     def close_plan(self):
         RE.msg_hook = None
         count = 0
-        while self.state.value != self.closeval:
+        while self.state.get() != self.closeval:
             count += 1
             print(u'\u231b', end=' ', flush=True)
             yield from mv(self.cls, 1)
@@ -54,9 +54,9 @@ class EPS_Shutter(Device):
 
     def open(self):
         RE.msg_hook = None
-        if self.state.value != self.openval:
+        if self.state.get() != self.openval:
             count = 0
-            while self.state.value != self.openval:
+            while self.state.get() != self.openval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.opn.put(1)
@@ -71,9 +71,9 @@ class EPS_Shutter(Device):
 
     def close(self):
         RE.msg_hook = None
-        if self.state.value != self.closeval:
+        if self.state.get() != self.closeval:
             count = 0
-            while self.state.value != self.closeval:
+            while self.state.get() != self.closeval:
                 count += 1
                 print(u'\u231b', end=' ', flush=True)
                 self.cls.put(1)
@@ -87,7 +87,7 @@ class EPS_Shutter(Device):
         RE.msg_hook = BMM_msg_hook
 
     def _state(self):
-        if self.state.value:
+        if self.state.get():
             state = 'closed'
             if self.name == 'FS1': state = 'in place'
             return error(state)

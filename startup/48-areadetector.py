@@ -1,3 +1,8 @@
+
+####################################################
+# this script has not had .value changed to .get() #
+####################################################
+
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, AreaDetector, SingleTrigger, ImagePlugin
 
 import numpy as np

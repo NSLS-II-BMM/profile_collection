@@ -18,12 +18,12 @@ except:
 def show_shutters():
 
     ena_text = '  Beamline: '
-    if bl_enabled.value == 1:
+    if bl_enabled.get() == 1:
         ena_text += 'enabled      '
     else:
         ena_text += error_msg('disabled      ')
     
-    bmps_state = bool(bmps.state.value)
+    bmps_state = bool(bmps.state.get())
     bmps_text = '  BMPS: '
 
     if bmps_state is True:
@@ -31,21 +31,21 @@ def show_shutters():
     else:
         bmps_text += error_msg('closed')
 
-    idps_state = bool(idps.state.value)
+    idps_state = bool(idps.state.get())
     idps_text = '            IDPS: '
     if idps_state is True:
         idps_text += 'open'
     else:
         idps_text += error_msg('closed')
 
-    # sha_state = bool(sha.enabled.value) and bool(sha.state.value)
+    # sha_state = bool(sha.enabled.get()) and bool(sha.state.get())
     # sha_text = '            FOE Shutter: '
     # if sha_state is True:
     #     sha_text += 'open'
     # else:
     #     sha_text += error_msg('closed')
 
-    shb_state = bool(shb.state.value)
+    shb_state = bool(shb.state.get())
     shb_text = '            Photon Shutter: '
     if shb_state is False:
         shb_text += 'open'
@@ -66,19 +66,19 @@ class Vacuum(Device):
     pressure = Cpt(EpicsSignal, '-CCG:1}P:Raw-I')
 
     def _pressure(self):
-        #print(self.pressure.value)
-        #print(type(self.pressure.value))
-        if self.pressure.value == 'OFF':
+        #print(self.pressure.get())
+        #print(type(self.pressure.get()))
+        if self.pressure.get() == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
-        if float(self.pressure.value) > 1e-6:
-            return error_msg(self.pressure.value)
-        if float(self.pressure.value) > 1e-8:
-            return warning_msg(self.pressure.value)
-        return(self.pressure.value)
+        if float(self.pressure.get()) > 1e-6:
+            return error_msg(self.pressure.get())
+        if float(self.pressure.get()) > 1e-8:
+            return warning_msg(self.pressure.get())
+        return(self.pressure.get())
 
     def _current(self):
-        curr = float(self.current.value)
+        curr = float(self.current.get())
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
             return(error_msg(out))
@@ -92,13 +92,13 @@ class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
 
     def _pressure(self):
-        if self.pressure.value == 'OFF':
+        if self.pressure.get() == 'OFF':
             return(disconnected_msg(-1.1e-15))
-        if float(self.pressure.value) > 1e-1:
-            return warning_msg(self.pressure.value)
-        if float(self.pressure.value) > 6e-3:
-            return error_msg(self.pressure.value)
-        return(self.pressure.value)
+        if float(self.pressure.get()) > 1e-1:
+            return warning_msg(self.pressure.get())
+        if float(self.pressure.get()) > 6e-3:
+            return error_msg(self.pressure.get())
+        return(self.pressure.get())
 
     
 ## front end vacuum readings FE:C06B-VA{CCG:#}P-1 and FE:C06B-VA{IP:#}P-1
@@ -127,16 +127,16 @@ class FEVac(Device):
         if num > 6:
             num = 6
         sgnl = getattr(self, 'p'+str(num))
-        #print(self.pressure.value)
-        #print(type(self.pressure.value))
-        if sgnl.value == 'OFF':
+        #print(self.pressure.get())
+        #print(type(self.pressure.get()))
+        if sgnl.get() == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
-        if float(sgnl.value) > 1e-6:
-            return error_msg(self.pressure.value)
-        if float(sgnl.value) > 1e-8:
-            return warning_msg(self.pressure.value)
-        return(sgnl.value)
+        if float(sgnl.get()) > 1e-6:
+            return error_msg(self.pressure.get())
+        if float(sgnl.get()) > 1e-8:
+            return warning_msg(self.pressure.get())
+        return(sgnl.get())
 
     def _current(self, num=None):
         if num is None:
@@ -146,7 +146,7 @@ class FEVac(Device):
         if num > 6:
             num = 6
         sgnl = getattr(self, 'c'+str(num))
-        curr = float(sgnl.value)
+        curr = float(sgnl.get())
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
             return(error_msg(out))
@@ -175,7 +175,7 @@ def show_vacuum():
     text  = ' Vacuum section       pressure    current\n'
     text += '==================================================\n'
     for v in vac:
-        if float(v.current.value) > 5e-4:
+        if float(v.current.get()) > 5e-4:
             text += '%-20s  %s    %4s  mA\n' % (v.name, v._pressure(), v._current())
         else:
             text += '%-20s  %s    %4s μA\n' % (v.name, v._pressure(), v._current())
@@ -211,7 +211,7 @@ class GateValve(Device):
         self.cls.put(1)
 
     def _state(self):
-        if self.state.value == 0:
+        if self.state.get() == 0:
             return error_msg('closed')
         return('open  ')
 
@@ -250,12 +250,12 @@ class Thermocouple(Device):
     alarm       = Cpt(EpicsSignal, '-I_HiHi-RB')
 
     def _state(self, info=False):
-        t = "%.1f" % self.temperature.value
-        if self.temperature.value > self.alarm.value:
+        t = "%.1f" % self.temperature.get()
+        if self.temperature.get() > self.alarm.get():
             return(error_msg(t))
-        if self.temperature.value > self.warning.value:
+        if self.temperature.get() > self.warning.get():
             return(warning_msg(t))
-        if info is True and self.temperature.value > (0.5 * self.warning.value):
+        if info is True and self.temperature.get() > (0.5 * self.warning.get()):
             return(info_msg(t))
         return(t)
 
@@ -295,12 +295,12 @@ class OneWireTC(Device):
     alarm       = Cpt(EpicsSignal, '-I.HIHI')
 
     def _state(self, info=False):
-        t = "%.1f" % self.temperature.value
-        if self.temperature.value > self.alarm.value:
+        t = "%.1f" % self.temperature.get()
+        if self.temperature.get() > self.alarm.get():
             return(error_msg(t))
-        if self.temperature.value > self.warning.value:
+        if self.temperature.get() > self.warning.get():
             return(warning_msg(t))
-        if info is True and self.temperature.value > (0.5 * self.warning.value):
+        if info is True and self.temperature.get() > (0.5 * self.warning.get()):
             return(info_msg(t))
         return(t)
 
@@ -350,14 +350,14 @@ def show_water():
     for pv in (bmm_di.dm1_flow, bmm_di.dcm_flow,
                bmm_di.supply_pressure, bmm_di.supply_temperature, bmm_di.return_pressure, bmm_di.return_temperature, 
                pbs_di_a, pbs_di_b, pcw_return_temperature, pcw_supply_temperature):
-        if pv.alarm_status.value:
-            text += error_msg('  %-28s     %.1f %s\n' % (pv.name, float(pv.value), pv.describe()[pv.name]['units']))
+        if pv.alarm_status.get():
+            text += error_msg('  %-28s     %.1f %s\n' % (pv.name, float(pv.get()), pv.describe()[pv.name]['units']))
         else:
-            text += '  %-28s     %.1f %s\n' % (pv.name, float(pv.value), pv.describe()[pv.name]['units'])
-    if foe_leak_detector.value > 0:
-        text += '  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.value].replace('  ', ' '))
+            text += '  %-28s     %.1f %s\n' % (pv.name, float(pv.get()), pv.describe()[pv.name]['units'])
+    if foe_leak_detector.get() > 0:
+        text += '  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.get()].replace('  ', ' '))
     else:
-        text += error_msg('  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.value].replace('  ', ' ')))
+        text += error_msg('  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.get()].replace('  ', ' ')))
     return text[:-1]
 
 
@@ -384,7 +384,7 @@ def show_utilities():
 
         if i < lvac and i < lgv:
             units = 'μA'
-            if float(vac[i].current.value) > 5e-4: units = 'mA'
+            if float(vac[i].current.get()) > 5e-4: units = 'mA'
             text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %s %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), vac[i]._current(), units)
 

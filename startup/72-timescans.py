@@ -111,7 +111,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     thismd['XDI']['Facility']['GUP']    = BMMuser.gup
     thismd['XDI']['Facility']['SAF']    = BMMuser.saf
     thismd['XDI']['Beamline'] = dict()
-    thismd['XDI']['Beamline']['energy'] = dcm.energy.readback.value
+    thismd['XDI']['Beamline']['energy'] = dcm.energy.readback.get()
     thismd['XDI']['Scan'] = dict()
     thismd['XDI']['Scan']['dwell_time'] = dwell
     thismd['XDI']['Scan']['delay']      = delay
@@ -119,14 +119,15 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     @subs_decorator(plot)
     def count_scan(dets, readings, delay):
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
-
+        return uid
+        
     dotfile = '/home/xf06bm/Data/.time.scan.running'
     with open(dotfile, "w") as f:
         f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
-    yield from count_scan(dets, readings, delay)
+    uid = yield from count_scan(dets, readings, delay)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
-                 (line1, db[-1].start['uid'], db[-1].start['scan_id']))
+                 (line1, uid, db[-1].start['scan_id']))
     if os.path.isfile(dotfile): os.remove(dotfile)
 
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)

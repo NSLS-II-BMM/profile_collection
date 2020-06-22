@@ -44,39 +44,39 @@ ocrs = {'XF:06BM-ES:1{Sclr:1}.S3' : ts,
 class DTCorr(DerivedSignal):
     off = False
     def forward(self, value):
-        return self.derived_from.value
+        return self.derived_from.get()
     def inverse(self, value):
         df = self.derived_from.pvname
 
-        return self.parent.dtcorrect(self.derived_from.value,
-                                     icrs[df].value,
-                                     ocrs[df].value,
-                                     _locked_dwell_time.dwell_time.readback.value,
+        return self.parent.dtcorrect(self.derived_from.get(),
+                                     icrs[df].get(),
+                                     ocrs[df].get(),
+                                     _locked_dwell_time.dwell_time.readback.get(),
                                      off=self.off)
 
         # elif any(scal in df for scal in ('S4', 'S16', 'S20')):
-        #     return self.parent.dtcorrect(self.derived_from.value,
-        #                                  self.parent.channels.chan8.value,
-        #                                  self.parent.channels.chan12.value,
-        #                                  _locked_dwell_time.dwell_time.readback.value)
+        #     return self.parent.dtcorrect(self.derived_from.get(),
+        #                                  self.parent.channels.chan8.get(),
+        #                                  self.parent.channels.chan12.get(),
+        #                                  _locked_dwell_time.dwell_time.readback.get())
 
         # elif any(scal in df for scal in ('S5', 'S17', 'S21')):
-        #     return self.parent.dtcorrect(self.derived_from.value,
-        #                                  self.parent.channels.chan9.value,
-        #                                  self.parent.channels.chan13.value,
-        #                                  _locked_dwell_time.dwell_time.readback.value)
+        #     return self.parent.dtcorrect(self.derived_from.get(),
+        #                                  self.parent.channels.chan9.get(),
+        #                                  self.parent.channels.chan13.get(),
+        #                                  _locked_dwell_time.dwell_time.readback.get())
 
         # elif any(scal in df for scal in ('S6', 'S18', 'S22')):
-        #     return self.parent.dtcorrect(self.derived_from.value,
-        #                                  self.parent.channels.chan10.value,
-        #                                  self.parent.channels.chan14.value,
-        #                                  _locked_dwell_time.dwell_time.readback.value)
+        #     return self.parent.dtcorrect(self.derived_from.get(),
+        #                                  self.parent.channels.chan10.get(),
+        #                                  self.parent.channels.chan14.get(),
+        #                                  _locked_dwell_time.dwell_time.readback.get())
 
         # else:
-        #     return self.parent.dtcorrect(self.derived_from.value,
-        #                                  self.parent.channels.chan7.value,
-        #                                  self.parent.channels.chan11.value,
-        #                                  _locked_dwell_time.dwell_time.readback.value)
+        #     return self.parent.dtcorrect(self.derived_from.get(),
+        #                                  self.parent.channels.chan7.get(),
+        #                                  self.parent.channels.chan11.get(),
+        #                                  _locked_dwell_time.dwell_time.readback.get())
 
 
 
@@ -84,123 +84,123 @@ class DTCorr(DerivedSignal):
 # class DTCorr1(DerivedSignal):
 #     off = False
 #     def forward(self, value):
-#         return self.parent.channels.chan3.value
+#         return self.parent.channels.chan3.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan3.value, # 21: chan15   31: chan19
-#                                      self.parent.channels.chan7.value,
-#                                      self.parent.channels.chan11.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan3.get(), # 21: chan15   31: chan19
+#                                      self.parent.channels.chan7.get(),
+#                                      self.parent.channels.chan11.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr2(DerivedSignal):
 #     off = False
 #     def forward(self, value):
-#         return self.parent.channels.chan4.value
+#         return self.parent.channels.chan4.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan4.value, # 22: chan16   32: chan20
-#                                      self.parent.channels.chan8.value,
-#                                      self.parent.channels.chan12.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan4.get(), # 22: chan16   32: chan20
+#                                      self.parent.channels.chan8.get(),
+#                                      self.parent.channels.chan12.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr3(DerivedSignal):
 #     off = False
 #     def forward(self, value):
-#         return self.parent.channels.chan5.value
+#         return self.parent.channels.chan5.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan5.value, # 23: chan17   33: chan21
-#                                      self.parent.channels.chan9.value,
-#                                      self.parent.channels.chan13.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan5.get(), # 23: chan17   33: chan21
+#                                      self.parent.channels.chan9.get(),
+#                                      self.parent.channels.chan13.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr4(DerivedSignal):
 #     off = False
 #     def forward(self, value):
-#         return self.parent.channels.chan6.value
+#         return self.parent.channels.chan6.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan6.value, # 24: chan18   34: chan22
-#                                      self.parent.channels.chan10.value,
-#                                      self.parent.channels.chan14.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan6.get(), # 24: chan18   34: chan22
+#                                      self.parent.channels.chan10.get(),
+#                                      self.parent.channels.chan14.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 
 # class DTCorr2_1(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan15.value
+#         return self.parent.channels.chan15.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan15.value, # 21: chan15   31: chan19
-#                                      self.parent.channels.chan7.value,
-#                                      self.parent.channels.chan11.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan15.get(), # 21: chan15   31: chan19
+#                                      self.parent.channels.chan7.get(),
+#                                      self.parent.channels.chan11.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr2_2(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan16.value
+#         return self.parent.channels.chan16.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan16.value, # 22: chan16   32: chan20
-#                                      self.parent.channels.chan8.value,
-#                                      self.parent.channels.chan12.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan16.get(), # 22: chan16   32: chan20
+#                                      self.parent.channels.chan8.get(),
+#                                      self.parent.channels.chan12.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr2_3(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan17.value
+#         return self.parent.channels.chan17.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan17.value, # 23: chan17   33: chan21
-#                                      self.parent.channels.chan9.value,
-#                                      self.parent.channels.chan13.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan17.get(), # 23: chan17   33: chan21
+#                                      self.parent.channels.chan9.get(),
+#                                      self.parent.channels.chan13.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr2_4(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan18.value
+#         return self.parent.channels.chan18.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan18.value, # 24: chan18   34: chan22
-#                                      self.parent.channels.chan10.value,
-#                                      self.parent.channels.chan14.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan18.get(), # 24: chan18   34: chan22
+#                                      self.parent.channels.chan10.get(),
+#                                      self.parent.channels.chan14.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr3_1(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan19.value
+#         return self.parent.channels.chan19.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan19.value, # 21: chan15   31: chan19
-#                                      self.parent.channels.chan7.value,
-#                                      self.parent.channels.chan11.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan19.get(), # 21: chan15   31: chan19
+#                                      self.parent.channels.chan7.get(),
+#                                      self.parent.channels.chan11.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr3_2(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan20.value
+#         return self.parent.channels.chan20.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan20.value, # 22: chan16   32: chan20
-#                                      self.parent.channels.chan8.value,
-#                                      self.parent.channels.chan12.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan20.get(), # 22: chan16   32: chan20
+#                                      self.parent.channels.chan8.get(),
+#                                      self.parent.channels.chan12.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr3_3(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan21.value
+#         return self.parent.channels.chan21.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan21.value, # 23: chan17   33: chan21
-#                                      self.parent.channels.chan9.value,
-#                                      self.parent.channels.chan13.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan21.get(), # 23: chan17   33: chan21
+#                                      self.parent.channels.chan9.get(),
+#                                      self.parent.channels.chan13.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
 # class DTCorr3_4(DerivedSignal):
 #     off = True
 #     def forward(self, value):
-#         return self.parent.channels.chan22.value
+#         return self.parent.channels.chan22.get()
 #     def inverse(self, value):
-#         return self.parent.dtcorrect(self.parent.channels.chan22.value, # 24: chan18   34: chan22
-#                                      self.parent.channels.chan10.value,
-#                                      self.parent.channels.chan14.value,
-#                                      _locked_dwell_time.dwell_time.readback.value, self.off)
+#         return self.parent.dtcorrect(self.parent.channels.chan22.get(), # 24: chan18   34: chan22
+#                                      self.parent.channels.chan10.get(),
+#                                      self.parent.channels.chan14.get(),
+#                                      _locked_dwell_time.dwell_time.readback.get(), self.off)
 
     
 #from subprocess import call
