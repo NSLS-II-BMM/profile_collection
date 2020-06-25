@@ -117,6 +117,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     thismd['XDI']['Scan']['delay']      = delay
     
     @subs_decorator(plot)
+    @subs_decorator(src.callback)
     def count_scan(dets, readings, delay):
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
         return uid

@@ -8,3 +8,6 @@ bec.disable_baseline()
 
 import ophyd
 ophyd.EpicsSignal.set_default_timeout(timeout=60, connection_timeout=10)
+
+from databroker.core import SingleRunCache
+src = SingleRunCache()

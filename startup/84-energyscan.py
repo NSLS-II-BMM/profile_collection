@@ -7,7 +7,7 @@ import re
 import subprocess
 import textwrap
 
-run_report(__file__)
+run_report(__file__, text='XAS scan and related components')
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
@@ -869,6 +869,7 @@ def xafs(inifile, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
         @subs_decorator(plot)
+        @subs_decorator(src.callback)
         def scan_sequence(clargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids

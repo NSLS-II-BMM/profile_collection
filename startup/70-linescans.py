@@ -84,6 +84,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
             f.write("")
 
         @subs_decorator(plot)
+        @subs_decorator(src.callback)
         def scan_slit():
 
             #if slit_height < 0.5:
@@ -194,6 +195,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             f.write("")
 
         @subs_decorator(plot)
+        @subs_decorator(src.callback)
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -294,6 +296,7 @@ def ls_backwards_compatibility(detin, axin):
         return(detin, axin)
 
 
+mytable = None
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
@@ -463,14 +466,17 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
         with open(dotfile, "w") as f:
             f.write("")
-                
-    
+
         @subs_decorator(plot)
+        @subs_decorator(src.callback)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
             return uid
             
         uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
+        #global mytable
+        #run = src.retrieve()
+        #mytable = run.primary.read().to_dataframe()
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, db[-1].start['scan_id']))
         if pluck is True:

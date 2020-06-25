@@ -64,11 +64,14 @@ def colored(text, tint='white', attrs=[]):
         tint = tint.capitalize()
     return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
 
-def run_report(thisfile):
+def run_report(thisfile, text=None):
     '''
     Noisily proclaim to be importing a file of python code.
     '''
-    print(colored('Importing %s ...' % thisfile.split('/')[-1], 'lightcyan'))
+    add = '...'
+    if text is not None:
+        add = f'({text})'
+    print(colored(f'Importing {thisfile.split("/")[-1]} {add}', 'lightcyan'))
 
 run_report(__file__)
 

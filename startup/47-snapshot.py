@@ -1,8 +1,12 @@
 
+## the analog camera part of this requires fswebcam
+## (package fswebcam in debian, https://github.com/fsphil/fswebcam)
+
+
 import requests
 import os
 import datetime
-from PIL import Image
+from PIL import Image, ImageFont, ImageDraw 
 from io import BytesIO
 
 run_report(__file__)
@@ -16,9 +20,6 @@ run_report(__file__)
 ## grab a snapshot from the analog camera
 ##    snap('analog', filename='/path/to/saved/image.jpg')
 
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw 
 
 def annotate_image(imagefile, text):
     bluesky_path_as_list = bluesky.__path__[0].split('/') # crude, but finds current collection folder
@@ -87,7 +88,7 @@ def anacam(filename    = None,
            title       = 'NIST BMM (NSLS-II 06BM)',
            timestamp   = '%Y-%m-%d %H:%M:%S'):
 
-    """A class for interacting with fswebcam in a way that meets the
+    """A function for interacting with fswebcam in a way that meets the
     needs of 06BM.
 
     Parameters:
