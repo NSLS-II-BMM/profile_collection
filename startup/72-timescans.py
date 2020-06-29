@@ -10,7 +10,9 @@ from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-run_report(__file__)
+from BMM.metadata import bmm_metadata
+
+run_report(__file__, text='generic time scans')
 
 ####################################
 # generic timescan vs. It/If/Ir/I0 #
@@ -117,7 +119,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     thismd['XDI']['Scan']['delay']      = delay
     
     @subs_decorator(plot)
-    @subs_decorator(src.callback)
+    #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay):
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
         return uid

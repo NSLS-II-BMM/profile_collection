@@ -1,6 +1,6 @@
 
 import xraylib
-run_report(__file__)
+run_report(__file__, text='help with element names, symbols, and Z numbers')
 
 PERIODIC_TABLE = '\
 H                                                                                            He \

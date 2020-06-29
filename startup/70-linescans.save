@@ -10,7 +10,7 @@ from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-run_report(__file__)
+run_report(__file__, text='generic and special purpose 1D motor scans')
 
 
     
@@ -84,7 +84,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
             f.write("")
 
         @subs_decorator(plot)
-        @subs_decorator(src.callback)
+        #@subs_decorator(src.callback)
         def scan_slit():
 
             #if slit_height < 0.5:
@@ -195,7 +195,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             f.write("")
 
         @subs_decorator(plot)
-        @subs_decorator(src.callback)
+        #@subs_decorator(src.callback)
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -440,7 +440,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                    doc['data'][BMMuser.dtc3] +
                                    doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
-        
+
         #abs_set(_locked_dwell_time, 0.5)
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
@@ -468,7 +468,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             f.write("")
 
         @subs_decorator(plot)
-        @subs_decorator(src.callback)
+        #@subs_decorator(src.callback)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
             return uid

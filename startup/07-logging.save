@@ -1,7 +1,7 @@
 import logging
 from os import chmod
 
-run_report(__file__)
+run_report(__file__, text='BMM-specific logging')
 
 BMM_logger          = logging.getLogger('BMM_logger')
 BMM_logger.handlers = []

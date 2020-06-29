@@ -10,7 +10,7 @@ from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-run_report(__file__)
+run_report(__file__, text='generic 2D motor scans')
 
 
 def areascan(detector,
@@ -148,7 +148,7 @@ def areascan(detector,
         if force is False: BMM_suspenders()
     
         @subs_decorator(areaplot)
-        @subs_decorator(src.callback)
+        #@subs_decorator(src.callback)
         def make_areascan(dets,
                           slow, startslow, stopslow, nslow,
                           fast, startfast, stopfast, nfast,

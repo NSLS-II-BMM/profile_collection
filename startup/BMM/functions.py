@@ -1,4 +1,4 @@
-import os, time
+import os, time, datetime
 from numpy import pi, sin, cos, arcsin, sqrt
 
 # read this
@@ -36,6 +36,7 @@ get_ipython().magic(u"%xmode Plain")
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
+HBARC = 1973.27053324
 
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
@@ -73,7 +74,7 @@ def run_report(thisfile, text=None):
         add = f'({text})'
     print(colored(f'Importing {thisfile.split("/")[-1]} {add}', 'lightcyan'))
 
-run_report(__file__)
+run_report(__file__, text='generally useful function definitions')
 
 
 def error_msg(text):

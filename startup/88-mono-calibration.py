@@ -1,6 +1,8 @@
 
 run_report(__file__)
 
+from BMM.functions import HBARC
+
 import configparser
 config = configparser.ConfigParser()
 

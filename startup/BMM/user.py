@@ -3,8 +3,13 @@ import shutil
 from distutils.dir_util import copy_tree
 import json
 import pprint
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
 
-run_report(__file__)
+from BMM.functions      import BMM_STAFF
+from BMM.logging        import BMM_user_log, BMM_unset_user_log
+
+#run_report(__file__, text='user definitions and start/stop an experiment')
 
 ## sort of a singleton, see http://code.activestate.com/recipes/66531/
 class Borg:
@@ -85,7 +90,7 @@ class BMM_User(Borg):
         self.date            = ''
         self.gup             = 0
         self.saf             = 0
-        self.cycle           = '2020-1'
+        self.cycle           = '2020-2'
         self.use_pilatus     = False
         self.name            = None
         self.staff           = False
@@ -436,10 +441,10 @@ class BMM_User(Borg):
     def show_experiment(self):
         '''Show serialized configuration parameters'''
         print('DATA  = %s' % DATA)
-        print('GUP   = %d' % self.gup)
-        print('SAF   = %d' % self.saf)
-        print('foils = %s' % ' '.join(map(str, foils.slots)))
-        print('ROIs  = %s' % ' '.join(map(str, rois.slots)))
+        print('GUP   = %s' % self.gup)
+        print('SAF   = %s' % self.saf)
+        print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
+        print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))
 
     def fetch_echem(self):
         dest = os.path.join(self.folder, 'electrochemistry')
@@ -519,19 +524,3 @@ class BMM_User(Borg):
         
         return None
 
-BMMuser = BMM_User()
-BMMuser.start_experiment_from_serialization()
-
-if BMMuser.pds_mode is None:
-    try:                        # do the right then when "%run -i"-ed
-        BMMuser.pds_mode = get_mode()
-    except:                     # else wait until later to set this correctly, get_mode() defined in 74-mode.py
-        pass
-
-
-pp = pprint.pprint
-    
-## some backwards compatibility....
-whoami           = BMMuser.show_experiment
-start_experiment = BMMuser.start_experiment
-end_experiment   = BMMuser.end_experiment

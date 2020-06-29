@@ -1,4 +1,4 @@
-#run_report(__file__)
+#run_report(__file__)  do not do this!  This file is used by non-BlueSky scripts
 
 class dcm_parameters():
     '''A simple class for maintaining calibration parameters for the

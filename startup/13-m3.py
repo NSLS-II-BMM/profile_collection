@@ -1,9 +1,7 @@
-from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
-from ophyd.pseudopos import (pseudo_position_argument,
-                             real_position_argument)
+run_report(__file__, text='mirror motor definitions and mirror functionality')
 
-run_report(__file__)
 
+from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable
 
 ## harmonic rejection mirror
 m3_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
@@ -12,86 +10,6 @@ m3_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDI}Mtr',  name='m3_ydi')
 m3_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
 m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
 mcs8_motors.extend([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
-
-
-
-from numpy import tan, arctan2
-
-
-class Mirrors(PseudoPositioner):
-    def __init__(self, *args, mirror_length, mirror_width, **kwargs):
-        self.mirror_length = mirror_length
-        self.mirror_width  = mirror_width
-        super().__init__(*args, **kwargs)
-
-    def _done_moving(self, *args, **kwargs):
-        ## this method is originally defined as Positioner, a base class of EpicsMotor
-        ## tack on instructions for killing the motor after movement
-        super()._done_moving(*args, **kwargs)
-        self.xd.kill_cmd.put(1)
-        self.xu.kill_cmd.put(1)
-
-    def where(self):
-        stripe = ''
-        if self.name.lower() == 'm3':
-            if self.xu.user_readback.get() > 0:
-                stripe = '(Rh/Pt stripe)'
-            else:
-                stripe = '(Si stripe)'
-        #text += "%s: %s" % (self.name.upper(), stripe))
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
-        text += "      lateral  = %7.3f mm            YDO = %7.3f\n" % (self.lateral.readback.get(),  self.ydo.user_readback.get())
-        text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.get(),    self.ydi.user_readback.get())
-        text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.get(),     self.xu.user_readback.get())
-        text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.get(),      self.xd.user_readback.get())
-        if self.name.lower() == 'm2':
-            text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
-        return text
-    def wh(self):
-        stripe = ''
-        if self.name.lower() == 'm3':
-            if self.xu.user_readback.get() > 0:
-                stripe = ' (Rh/Pt stripe)'
-            else:
-                stripe = ' (Si stripe)'
-        boxedtext(self.name + stripe, self.where(), 'cyan')
-
-    # The pseudo positioner axes:
-    vertical = Cpt(PseudoSingle, limits=(-8, 8))
-    lateral  = Cpt(PseudoSingle, limits=(-16, 16))
-    pitch    = Cpt(PseudoSingle, limits=(-5.5, 5.5))
-    roll     = Cpt(PseudoSingle, limits=(-3, 3))
-    yaw      = Cpt(PseudoSingle, limits=(-3, 3))
-
-
-    # The real (or physical) positioners:
-    yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
-    ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
-    ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
-    xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
-    xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
-
-    @pseudo_position_argument
-    def forward(self, pseudo_pos):
-        '''Run a forward (pseudo -> real) calculation'''
-        return self.RealPosition(xu  = pseudo_pos.lateral  - 0.5 * self.mirror_length * tan(pseudo_pos.yaw   / 1000),
-                                 xd  = pseudo_pos.lateral  + 0.5 * self.mirror_length * tan(pseudo_pos.yaw   / 1000),
-
-                                 yu  = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
-                                 ydo = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
-                                 ydi = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
-                                 )
-
-    @real_position_argument
-    def inverse(self, real_pos):
-        '''Run an inverse (real -> pseudo) calculation'''
-        return self.PseudoPosition(lateral  = (real_pos.xu + real_pos.xd) / 2,
-                                   yaw      = 1000*arctan2( real_pos.xd  - real_pos.xu,                    self.mirror_length),
-
-                                   vertical = (real_pos.yu + (real_pos.ydo + real_pos.ydi) / 2 ) / 2,
-                                   pitch    = 1000*arctan2( (real_pos.ydo + real_pos.ydi)/2 - real_pos.yu, self.mirror_length),
-                                   roll     = 1000*arctan2( real_pos.ydo - real_pos.ydi,                   self.mirror_width ))
-
 
 
 
@@ -128,94 +46,6 @@ def kill_mirror_jacks():
     yield from abs_set(m3_ydi.kill_cmd, 1, wait=True)
 
 
-
-class XAFSTable(PseudoPositioner):
-    def __init__(self, *args, mirror_length, mirror_width, **kwargs):
-        self.mirror_length = mirror_length
-        self.mirror_width  = mirror_width
-        super().__init__(*args, **kwargs)
-
-    def where(self):
-        #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
-        text += "      pitch    = %7.3f mrad          YDO = %7.3f\n" % (self.pitch.readback.get(),    self.ydo.user_readback.get())
-        text += "      roll     = %7.3f mrad          YDI = %7.3f"   % (self.roll.readback.get(),     self.ydi.user_readback.get())
-        return text
-    def wh(self):
-        boxedtext('XAFS table', self.where(), 'cyan')
-
-    # The pseudo positioner axes:
-    vertical = Cpt(PseudoSingle, limits=(5, 145))
-    pitch    = Cpt(PseudoSingle, limits=(-8, 6))
-    roll     = Cpt(PseudoSingle, limits=(5, 5))
-
-
-    # The real (or physical) positioners:
-    yu  = Cpt(EpicsMotor, 'YU}Mtr')
-    ydo = Cpt(EpicsMotor, 'YDO}Mtr')
-    ydi = Cpt(EpicsMotor, 'YDI}Mtr')
-
-    @pseudo_position_argument
-    def forward(self, pseudo_pos):
-        '''Run a forward (pseudo -> real) calculation'''
-        return self.RealPosition(yu  = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
-                                 ydo = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
-                                 ydi = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
-                                 )
-
-    @real_position_argument
-    def inverse(self, real_pos):
-        '''Run an inverse (real -> pseudo) calculation'''
-        return self.PseudoPosition(vertical = (real_pos.yu + (real_pos.ydo + real_pos.ydi) / 2 ) / 2,
-                                   pitch    = 1000*arctan2( (real_pos.ydo + real_pos.ydi)/2 - real_pos.yu, self.mirror_length),
-                                   roll     = 1000*arctan2( real_pos.ydo - real_pos.ydi,                   self.mirror_width ))
-
-
-
-
 xt = xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
-
-
-class GonioTable(PseudoPositioner):
-    def __init__(self, *args, mirror_length, mirror_width, **kwargs):
-        self.mirror_length = mirror_length
-        self.mirror_width  = mirror_width
-        super().__init__(*args, **kwargs)
-
-    def where(self):
-        #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.get(), self.yuo.user_readback.get())
-        text += "      pitch    = %7.3f mrad          YUI = %7.3f\n" % (self.pitch.readback.get(),    self.yui.user_readback.get())
-        text += "      roll     = %7.3f mrad          YD  = %7.3f"   % (self.roll.readback.get(),     self.yd.user_readback.get())
-        return text
-    def wh(self):
-        boxedtext('goniometer table', self.where(), 'cyan')
-
-    # The pseudo positioner axes:
-    vertical = Cpt(PseudoSingle, limits=(291, 412))
-    pitch    = Cpt(PseudoSingle, limits=(-8, 1))
-    roll     = Cpt(PseudoSingle, limits=(5, 5))
-
-
-    # The real (or physical) positioners:
-    yui = Cpt(EpicsMotor, 'YUI}Mtr')
-    yuo = Cpt(EpicsMotor, 'YUO}Mtr')
-    yd  = Cpt(EpicsMotor, 'YD}Mtr')
-
-    @pseudo_position_argument
-    def forward(self, pseudo_pos):
-        '''Run a forward (pseudo -> real) calculation'''
-        return self.RealPosition(yd  = pseudo_pos.vertical + 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000),
-                                 yuo = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) + 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000),
-                                 yui = pseudo_pos.vertical - 0.5 * self.mirror_length * tan(pseudo_pos.pitch / 1000) - 0.5 * self.mirror_width * tan(pseudo_pos.roll/1000)
-                                 )
-
-    @real_position_argument
-    def inverse(self, real_pos):
-        '''Run an inverse (real -> pseudo) calculation'''
-        return self.PseudoPosition(vertical = (real_pos.yd + (real_pos.yuo + real_pos.yui) / 2 ) / 2,
-                                   pitch    = 1000*arctan2( real_pos.yd - (real_pos.yuo + real_pos.yui)/2, self.mirror_length),
-                                   roll     = 1000*arctan2( real_pos.yuo - real_pos.yui,                   self.mirror_width ))
-
 
 gonio_table = GonioTable('XF:06BM-ES{SixC-Ax:Tbl_', name='gonio_table', mirror_length=1117.6,  mirror_width=711.12)

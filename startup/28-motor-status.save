@@ -1,5 +1,5 @@
 
-run_report(__file__)
+run_report(__file__, text='present motor positions in various useful ways')
 
 def motor_metadata(uid=None):
     biglist = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_linxs, xafs_wheel, xafs_roth, xafs_rots,

@@ -1,4 +1,4 @@
-from ophyd import Component as Cpt, EpicsSignalWithRBV, Signal
+from ophyd import Component as Cpt, EpicsSignalWithRBV, Signal, DerivedSignal
 from ophyd.scaler import EpicsScaler
 
 run_report(__file__)
