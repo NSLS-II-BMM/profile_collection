@@ -230,8 +230,7 @@ class BMM_User(Borg):
         else:
             print('   Found snapshot folder:          %-75s' % imagefolder)
     
-        global DATA
-        DATA = folder + '/'
+        user_ns['DATA'] = folder + '/'
         self.DATA = folder + '/'
         self.folder = folder + '/'
         try:
@@ -306,7 +305,7 @@ class BMM_User(Borg):
             os.mkdir(htmlfolder)
             for f in ('sample.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
-            manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
+            manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
             print('%d. Created dossier folder:         %-75s' % (step,htmlfolder))
             print('   copied html generation files, touched MANIFEST')
@@ -440,7 +439,7 @@ class BMM_User(Borg):
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
-        print('DATA  = %s' % DATA)
+        print('DATA  = %s' % self.DATA)
         print('GUP   = %s' % self.gup)
         print('SAF   = %s' % self.saf)
         print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))

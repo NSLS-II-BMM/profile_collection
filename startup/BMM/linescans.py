@@ -1,6 +1,4 @@
 import bluesky as bs
-import bluesky.plans as bp
-import bluesky.plan_stubs as bps
 
 from bluesky.plans import rel_scan
 from bluesky.plan_stubs import abs_set, sleep, mv

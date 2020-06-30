@@ -152,7 +152,7 @@ class DCM(PseudoPositioner):
     def e2a(self,energy):
         """convert absolute energy to monochromator angle"""
         wavelength = 2*pi*HBARC / energy
-        angle = 180 * arcsin(wavelength / dcm._twod) / pi
+        angle = 180 * arcsin(wavelength / self._twod) / pi
         return angle
 
     def wavelength(self,val):

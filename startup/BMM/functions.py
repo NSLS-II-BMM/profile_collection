@@ -35,7 +35,6 @@ get_ipython().magic(u"%xmode Plain")
 
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
-DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 HBARC = 1973.27053324
 
 
@@ -72,7 +71,10 @@ def run_report(thisfile, text=None):
     add = '...'
     if text is not None:
         add = f'({text})'
-    print(colored(f'Importing {thisfile.split("/")[-1]} {add}', 'lightcyan'))
+    importing = 'Importing'
+    if thisfile[0] == '\t':
+        importing = '\t'
+    print(colored(f'{importing} {thisfile.split("/")[-1]} {add}', 'lightcyan'))
 
 run_report(__file__, text='generally useful function definitions')
 

@@ -1,13 +1,8 @@
-import bluesky as bs
-import bluesky.plans as bp
-import bluesky.plan_stubs as bps
+from bluesky.plan_stubs import abs_set, sleep, mv, mvr
 import time
-#from subprocess import call
-#import os
-#import signal
 
-run_report(__file__)
-
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
 
 
 TUNE_STEP = 0.004
@@ -17,7 +12,7 @@ def tune_plan(step=0):
     '''
     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from mvr(dcm_pitch, step)
-    yield from bps.sleep(1.0)
+    yield from sleep(1.0)
     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
 def tune_up():
     yield from tune_plan(step=TUNE_STEP)
@@ -28,6 +23,7 @@ def tune(step=0):
     '''
     Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a relative motion.
     '''
+    dcm_pitch = user_ns['dcm_pitch']
     dcm_pitch.kill_cmd.put(1)
     dcm_pitch.user_setpoint.put(dcm_pitch.user_readback.get() + step)
     time.sleep(2.0)
@@ -38,6 +34,7 @@ def td():
     tune(step=-1*TUNE_STEP)
 
 def tweak_bct(step):
+    dm3_bct = user_ns['dm3_bct']
     if step is None:
         step = 0
     yield from abs_set(dm3_bct.kill_cmd,1, wait=True)
@@ -63,21 +60,26 @@ def kmvr(*args):
 
 def set_integration_time(time=0.5):
     '''
-    set integration times for electrometer and Struck from the command line
+    set integration times for electrometers and Struck from the command line
     '''
-    vor.auto_count_time.value = time
-    quadem1.averaging_time.value = time
+    user_ns['vor'].auto_count_time.value = time
+    user_ns['quadem1'].averaging_time.value = time
+    user_ns['dualio'].averaging_time.value = time
 
 def set_integration_plan(time=0.5):
     '''
-    set integration times for electrometer and Struck from a plan
+    set integration times for electrometers and Struck from a plan
     '''
-    yield from abs_set(vor.auto_count_time, time, wait=True)
-    yield from abs_set(quadem1.averaging_time, time, wait=True)
+    yield from abs_set(user_ns['vor'].auto_count_time, time, wait=True)
+    yield from abs_set(user_ns['quadem1'].averaging_time, time, wait=True)
+    yield from abs_set(user_ns['dualio'].averaging_time, time, wait=True)
 
 
 
 def recover_screens():
+    dm2_fs  = user_ns['dm2_fs']
+    dm3_fs  = user_ns['dm3_fs']
+    dm3_bct = user_ns['dm3_bct']
     yield from abs_set(dm2_fs.home_signal,  1)
     yield from abs_set(dm3_fs.home_signal,  1)
     yield from abs_set(dm3_bct.home_signal, 1)
@@ -97,8 +99,9 @@ def recover_screens():
 
     
 def recover_mirror2():
-    yield from abs_set(m2_yu.home_signal,  1)
-    yield from abs_set(m2_xu.home_signal,  1)
+    m2_xu, m2_xd, m2_yu, m2_ydo, m2_ydi = user_ns['m2_xu'], user_ns['m2_xd'], user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
+    yield from abs_set(m2_xu.home_signal,  1) # xu and xd home together
+    yield from abs_set(m2_yu.home_signal,  1) # yu, ydi, and ydo home together
     yield from sleep(1.0)
     print('Begin homing lateral and vertical motors in M2:\n')
     hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get())
@@ -118,6 +121,8 @@ def recover_mirror2():
 
 
 def recover_mirrors():
+    m2_xu, m2_xd, m2_yu, m2_ydo, m2_ydi = user_ns['m2_xu'], user_ns['m2_xd'], user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
+    m3_xu, m3_xd, m3_yu, m3_ydo, m3_ydi = user_ns['m3_xu'], user_ns['m3_xd'], user_ns['m3_yu'], user_ns['m3_ydo'], user_ns['m3_ydi']
     yield from abs_set(m2_yu.home_signal,  1)
     yield from abs_set(m2_xu.home_signal,  1)
     yield from abs_set(m3_yu.home_signal,  1)

@@ -1,11 +1,15 @@
-import bluesky as bs
-import bluesky.plans as bp
-import bluesky.plan_stubs as bps
+import json, time, os
 
-run_report(__file__)
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-import json
-import time
+from BMM.logging       import BMM_log_info, BMM_msg_hook
+from BMM.functions     import countdown
+from BMM.suspenders    import BMM_clear_to_start
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
+
 
 LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 MODEDATA = None
@@ -13,7 +17,6 @@ def read_mode_data():
      return json.load(open(os.path.join(LOCATION, 'Modes.json')))
 if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
-
 
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      '''Move the photon delivery system to a new mode. 
@@ -25,6 +28,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      F: unfocused, energy < 8000
      XRD: focused at XRD end station, energy > 8000
      '''
+     BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
+     xafs_table, m3, m2, m2_bender, xafs_ref = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['xafs_ref']
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -134,7 +139,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
                         m2.ydo, float(MODEDATA['m2_ydo'][mode]),
                         m2.ydi, float(MODEDATA['m2_ydi'][mode]))
 
-     yield from bps.sleep(2.0)
+     yield from sleep(2.0)
      yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
      yield from kill_mirror_jacks()
      
@@ -144,71 +149,72 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
 
 
 def mode():
-     print('Motor positions:')
-     for m in (dm3_bct, xafs_yu, xafs_ydo, xafs_ydi, m2_yu, m2_ydo,
-               m2_ydi, m2_bender, m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,
-               dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o):
-          print('\t%-12s:\t%.3f' % (m.name, m.user_readback.get()))
-          
-     if m2.vertical.readback.get() < 0: # this is a focused mode
-          if m2.pitch.readback.get() > 3:
-               print('This appears to be mode XRD')
-          else:
-               if m3.vertical.readback.get() > -2:
-                    print('This appears to be mode A')
-               elif m3.vertical.readback.get() > -7:
-                    print('This appears to be mode B')
-               else:
-                    print('This appears to be mode C')
-     else:
-          if m3.pitch.readback.get() < 3:
-               print('This appears to be mode F')
-          elif m3.lateral.readback.get() > 0:
-               print('This appears to be mode D')
-          else:
-               print('This appears to be mode E')
+    print('Motor positions:')
+    for m in ('dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi', 'm2_yu', 'm2_ydo',
+              'm2_ydi', 'm2_bender', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',
+              'dm3_slits_t', 'dm3_slits_b', 'dm3_slits_i', 'dm3_slits_o'):
+        mot = user_ns[m]
+        print('\t%-12s:\t%.3f' % (mot.name, mot.user_readback.get()))
+        
+    m2, m3 = user_ns['m2'], user_ns['m3']
+    if m2.vertical.readback.get() < 0: # this is a focused mode
+        if m2.pitch.readback.get() > 3:
+            print('This appears to be mode XRD')
+        else:
+            if m3.vertical.readback.get() > -2:
+                print('This appears to be mode A')
+            elif m3.vertical.readback.get() > -7:
+                print('This appears to be mode B')
+            else:
+                print('This appears to be mode C')
+    else:
+        if m3.pitch.readback.get() < 3:
+            print('This appears to be mode F')
+        elif m3.lateral.readback.get() > 0:
+            print('This appears to be mode D')
+        else:
+            print('This appears to be mode E')
 
 def get_mode():
-     if m2.vertical.readback.get() < 0: # this is a focused mode
-          if m2.pitch.readback.get() > 3:
-               return 'XRD'
-          else:
-               if m3.vertical.readback.get() > -2:
-                    return 'A'
-               elif m3.vertical.readback.get() > -7:
-                    return 'B'
-               else:
-                    return 'C'
-     else:
-          if m3.pitch.readback.get() < 3:
-               return 'F'
-          elif m3.lateral.readback.get() > 0:
-               return 'D'
-          else:
-               return 'E'
+    m2, m3 = user_ns['m2'], user_ns['m3']
+    if m2.vertical.readback.get() < 0: # this is a focused mode
+        if m2.pitch.readback.get() > 3:
+            return 'XRD'
+        else:
+            if m3.vertical.readback.get() > -2:
+                return 'A'
+            elif m3.vertical.readback.get() > -7:
+                return 'B'
+            else:
+                return 'C'
+    else:
+        if m3.pitch.readback.get() < 3:
+            return 'F'
+        elif m3.lateral.readback.get() > 0:
+            return 'D'
+        else:
+            return 'E'
 
 def describe_mode():
-     if m2.vertical.readback.get() < 0: # this is a focused mode
-          if m2.pitch.readback.get() > 3:
-               return 'focused at goniometer, >8 keV'
-          else:
-               if m3.vertical.readback.get() > -2:
-                    return 'focused, >8 keV'
-               elif m3.vertical.readback.get() > -7:
-                    return 'focused, <6 keV'
-               else:
-                    return 'focused, 6 to 8 keV'
-     else:
-          if m3.pitch.readback.get() < 3:
-               return 'unfocused, <6 keV'
-          elif m3.lateral.readback.get() > 0:
-               return 'unfocused, >8 keV'
-          else:
-               return 'unfocused, 6 to 8 keV'
-#    yield from null()
+    m2, m3 = user_ns['m2'], user_ns['m3']
+    if m2.vertical.readback.get() < 0: # this is a focused mode
+        if m2.pitch.readback.get() > 3:
+            return 'focused at goniometer, >8 keV'
+        else:
+            if m3.vertical.readback.get() > -2:
+                return 'focused, >8 keV'
+            elif m3.vertical.readback.get() > -7:
+                return 'focused, <6 keV'
+            else:
+                return 'focused, 6 to 8 keV'
+    else:
+        if m3.pitch.readback.get() < 3:
+            return 'unfocused, <6 keV'
+        elif m3.lateral.readback.get() > 0:
+            return 'unfocused, >8 keV'
+        else:
+            return 'unfocused, 6 to 8 keV'
 
-if BMMuser.pds_mode is None:
-    BMMuser.pds_mode = get_mode()
 
 
 def change_xtals(xtal=None):
@@ -226,6 +232,9 @@ def change_xtals(xtal=None):
           yield from null()
           return
 
+     BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
+     dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
+     
      if '111' in xtal:
           xtal = 'Si(111)'
      if '311' in xtal:
@@ -272,7 +281,7 @@ def change_xtals(xtal=None):
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
-     yield from bps.sleep(2.0)
+     yield from sleep(2.0)
      yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
      print('Returning to %.1f eV' % current_energy)
@@ -281,13 +290,14 @@ def change_xtals(xtal=None):
      print('Performing a rocking curve scan')
      yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      yield from mv(dcm_pitch, approximate_pitch(current_energy))
-     yield from bps.sleep(1)
+     yield from sleep(1)
      yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      yield from rocking_curve()
-     yield from bps.sleep(2.0)
+     yield from sleep(2.0)
      yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      close_last_plot()
      end = time.time()
      print('\n\nTime elapsed: %.1f min' % ((end-start)/60))
+        

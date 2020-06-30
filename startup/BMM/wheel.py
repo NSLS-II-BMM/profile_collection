@@ -3,10 +3,14 @@ import sys, os.path, re
 #pp = pprint.PrettyPrinter(indent=4)
 from openpyxl import load_workbook
 import configparser
+
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.motors    import EndStationEpicsMotor
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
-
-from BMM.motors import EndStationEpicsMotor
 
 class WheelMotor(EndStationEpicsMotor):
     '''Motor class for BMM sample wheels.
@@ -90,6 +94,49 @@ class WheelMotor(EndStationEpicsMotor):
 
 
 
+def reference(target=None):
+    xafs_ref = user_ns['xafs_ref']
+    if target is None:
+        print('Not moving reference wheel.')
+        return(yield from null())
+    if type(target) is int:
+        if target < 1 or target > 24:
+            print('An integer reference target must be between 1 and 24 (%d)' % target)
+            return(yield from null())
+        else:
+            yield from xafs_ref.set_slot(target)
+            return
+    try:
+        target = target.capitalize()
+        slot = xafs_ref.content.index(target) + 1
+        yield from xafs_ref.set_slot(slot)
+    except:
+        print('Element %s is not on the reference wheel.' % target)
+        
+
+def show_reference_wheel():
+    xafs_ref = user_ns['xafs_ref']
+    wheel = xafs_ref.content.copy()
+    this  = xafs_ref.current_slot() - 1
+    #wheel[this] = go_msg(wheel[this])
+    text = 'Foil wheel:\n'
+    text += bold_msg('    1      2      3      4      5      6      7      8      9     10     11     12\n')
+    text += ' '
+    for i in range(12):
+        if i==this:
+            text += go_msg('%4.4s' % str(wheel[i])) + '   '
+        else:
+            text += '%4.4s' % str(wheel[i]) + '   '
+    text += '\n'
+    text += bold_msg('   13     14     15     16     17     18     19     20     21     22     23     24\n')
+    text += ' '
+    for i in range(12, 24):
+        if i==this:
+            text += go_msg('%4.4s' % str(wheel[i])) + '   '
+        else:
+            text += '%4.4s' % str(wheel[i]) + '   '
+    text += '\n'
+    return(text)
 
 
 
