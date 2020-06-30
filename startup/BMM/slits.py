@@ -2,9 +2,11 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
-#run_report(__file__, text='coordinated slit motion')
+from bluesky.plan_stubs import abs_set, sleep, mv, null
 
 from BMM.functions import boxedtext
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
 
 class Slits(PseudoPositioner):
     def __init__(self, *args, **kwargs):
@@ -119,4 +121,44 @@ class GonioSlits(PseudoPositioner):
                                    vcenter = (real_pos.top      - real_pos.bottom )/2,
         ) ##                                                    ^
           ## note different +/- signs here compared to Slits __/ 
+
+def recover_slits2():
+    dm2_slits_t, dm2_slits_b, dm2_slits_i, dm2_slits_o = user_ns['dm2_slits_t'], user_ns['dm2_slits_b'], user_ns['dm2_slits_i'], user_ns['dm2_slits_o']
+    yield from abs_set(dm2_slits_t.home_signal, 1)
+    yield from abs_set(dm2_slits_i.home_signal, 1)
+    yield from sleep(1.0)
+    print('Begin homing %s motors:\n' % slits2.name)
+    hvalues = (dm2_slits_t.hocpl.get(), dm2_slits_b.hocpl.get(), dm2_slits_i.hocpl.get(), dm2_slits_o.hocpl.get())
+    while any(v == 0 for v in hvalues):
+        hvalues = (dm2_slits_t.hocpl.get(), dm2_slits_b.hocpl.get(), dm2_slits_i.hocpl.get(), dm2_slits_o.hocpl.get())
+        strings = ['top', 'bottom', 'inboard', 'outboard']
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(slits2.hsize,   slits2.nominal[0])
+    yield from mv(slits2.vsize,   slits2.nominal[1])
+    yield from mv(slits2.hcenter, slits2.nominal[2])
+    yield from mv(slits2.vcenter, slits2.nominal[3])
+
+def recover_slits3():
+    dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o = user_ns['dm3_slits_t'], user_ns['dm3_slits_b'], user_ns['dm3_slits_i'], user_ns['dm3_slits_o']
+    yield from abs_set(dm3_slits_t.home_signal, 1)
+    yield from abs_set(dm3_slits_i.home_signal, 1)
+    yield from sleep(1.0)
+    print('Begin homing %s motors:\n' % slits3.name)
+    hvalues = (dm3_slits_t.hocpl.get(), dm3_slits_b.hocpl.get(), dm3_slits_i.hocpl.get(), dm3_slits_o.hocpl.get())
+    while any(v == 0 for v in hvalues):
+        hvalues = (dm3_slits_t.hocpl.get(), dm3_slits_b.hocpl.get(), dm3_slits_i.hocpl.get(), dm3_slits_o.hocpl.get())
+        strings = ['top', 'bottom', 'inboard', 'outboard']
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(slits3.hsize,   slits3.nominal[0])
+    yield from mv(slits3.vsize,   slits3.nominal[1])
+    yield from mv(slits3.hcenter, slits3.nominal[2])
+    yield from mv(slits3.vcenter, slits3.nominal[3])
 

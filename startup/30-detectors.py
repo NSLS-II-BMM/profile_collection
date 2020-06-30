@@ -1,8 +1,21 @@
 
-from BMM.dwelltime import LockedDwellTimes
+from ophyd import EpicsSignal
+
 
 run_report(__file__)
 
+##############################################################
+# ______ _    _ _____ _      _    _____ ________  ___ _____  #
+# |  _  \ |  | |  ___| |    | |  |_   _|_   _|  \/  ||  ___| #
+# | | | | |  | | |__ | |    | |    | |   | | | .  . || |__   #
+# | | | | |/\| |  __|| |    | |    | |   | | | |\/| ||  __|  #
+# | |/ /\  /\  / |___| |____| |____| |  _| |_| |  | || |___  #
+# |___/  \/  \/\____/\_____/\_____/\_/  \___/\_|  |_/\____/  #
+##############################################################
+
+
+run_report('\tdwelltime')
+from BMM.dwelltime import LockedDwellTimes
 
 _locked_dwell_time = LockedDwellTimes('', name='dwti')
 dwell_time = _locked_dwell_time.dwell_time
@@ -11,6 +24,18 @@ dwell_time.name = 'inttime'
 #abs_set(_locked_dwell_time, 0.5)
 
 
+##########################################
+#  _____ ___________ _   _ _____  _   __ #
+# /  ___|_   _| ___ \ | | /  __ \| | / / #
+# \ `--.  | | | |_/ / | | | /  \/| |/ /  #
+#  `--. \ | | |    /| | | | |    |    \  #
+# /\__/ / | | | |\ \| |_| | \__/\| |\  \ #
+# \____/  \_/ \_| \_|\___/ \____/\_| \_/ #
+##########################################
+                                      
+                                      
+
+run_report('\tStruck')
 from BMM.struck import BMMVortex, GonioStruck, icrs, ocrs
 
 vor = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vor')
@@ -108,3 +133,58 @@ bicron.channels.chan25.kind = 'hinted'
 bicron.channels.chan26.kind = 'hinted'
 bicron.channels.chan25.name = 'Bicron'
 bicron.channels.chan26.name = 'APD'
+
+
+#######################################################################################
+#  _____ _      _____ _____ ___________ ________  ___ _____ _____ ___________  _____  #
+# |  ___| |    |  ___/  __ \_   _| ___ \  _  |  \/  ||  ___|_   _|  ___| ___ \/  ___| #
+# | |__ | |    | |__ | /  \/ | | | |_/ / | | | .  . || |__   | | | |__ | |_/ /\ `--.  #
+# |  __|| |    |  __|| |     | | |    /| | | | |\/| ||  __|  | | |  __||    /  `--. \ #
+# | |___| |____| |___| \__/\ | | | |\ \\ \_/ / |  | || |___  | | | |___| |\ \ /\__/ / #
+# \____/\_____/\____/ \____/ \_/ \_| \_|\___/\_|  |_/\____/  \_/ \____/\_| \_|\____/  #
+#######################################################################################
+
+
+run_report('\telectrometers')
+from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
+
+        
+quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
+
+quadem1.I0.kind = 'hinted'
+quadem1.It.kind = 'hinted'
+quadem1.Ir.kind = 'hinted'
+quadem1.Iy.kind = 'omitted'      # 'hinted'
+
+quadem1.I0.name = 'I0'
+quadem1.It.name = 'It'
+quadem1.Ir.name = 'Ir'
+quadem1.Iy.name = 'Iy'
+
+
+## need to do something like this:
+##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
+## to get a sensible reporting precision from the Ix channels
+def set_precision(pv, val):
+    EpicsSignal(pv.pvname + ".PREC", name='').put(val)
+
+set_precision(quadem1.current1.mean_value, 3)
+toss = quadem1.I0.describe()
+set_precision(quadem1.current2.mean_value, 3)
+toss = quadem1.It.describe()
+set_precision(quadem1.current3.mean_value, 3)
+toss = quadem1.Ir.describe()
+set_precision(quadem1.current4.mean_value, 3)
+toss = quadem1.Iy.describe()
+
+
+
+dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+dualio.Ia.kind = 'hinted'
+dualio.Ib.kind = 'hinted'
+dualio.Ia.name = 'Ia'
+dualio.Ib.name = 'Ib'
+
+
+
+quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')

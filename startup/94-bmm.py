@@ -71,3 +71,9 @@ from BMM.larch import Pandrosus, Kekropidai
 # bunch.add(seo)
 
 
+
+
+run_report('\tuser interaction')
+from BMM.prompt import MyPrompt, BMM_help, BMM_keys
+ip = get_ipython()
+ip.prompts = MyPrompt(ip)

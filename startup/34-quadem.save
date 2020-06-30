@@ -1,5 +1,5 @@
 from ophyd import EpicsSignal
-from BMM.electrometer import BMMQuadEM, BMMDualEM
+from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
 
 run_report(__file__)
 
@@ -34,7 +34,6 @@ toss = quadem1.Iy.describe()
 
 
 
-        
 dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
 dualio.Ia.kind = 'hinted'
 dualio.Ib.kind = 'hinted'
@@ -46,21 +45,5 @@ dualio.Ib.name = 'Ib'
 quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 
-def dark_current():
-    reopen = shb.state.get() == shb.openval 
-    if reopen:
-        print('\nClosing photon shutter')
-        yield from shb.close_plan()
-    print('Measuring current offsets, this will take several seconds')
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset3.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
-    yield from sleep(3)
-    BMM_log_info('Measured dark current on quadem1')
-    if reopen:
-        print('Opening photon shutter')
-        yield from shb.open_plan()
-        print('You are ready to measure!\n')
 
     

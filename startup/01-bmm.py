@@ -30,8 +30,6 @@ whoami           = BMMuser.show_experiment()
 start_experiment = BMMuser.start_experiment
 end_experiment   = BMMuser.end_experiment
 
-run_report('\tmirror trigonometry')
-from BMM.mirror_trigonometry import move_m2, move_m3
 
 
 
