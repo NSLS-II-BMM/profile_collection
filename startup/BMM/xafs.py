@@ -24,6 +24,7 @@ from BMM.linescans     import rocking_curve
 from BMM.suspenders    import BMM_suspenders
 from BMM.metadata      import display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar, motor_status
+from BMM.camera_device import snap
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns

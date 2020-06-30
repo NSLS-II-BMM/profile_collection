@@ -246,3 +246,29 @@ class BMMSnapshot(Device):
         thread.start()
         return status
 
+def snap(which, filename=None, **kwargs):
+    if which is None: which = 'XAS'
+    if which.lower() == 'xrd':
+        xrd_webcam(filename=filename, **kwargs)
+    elif 'ana' in which.lower() :
+        analog_camera(filename=filename, **kwargs)
+    else:
+        xas_webcam(filename=filename, **kwargs)
+
+
+
+def fetch_snapshot_filename(record):
+    '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device'''
+    if 'databroker.core.BlueskyRunFromGenerator' in str(type(record)) :
+        #template = os.path.join(record.describe()['args']['get_resources']()[0]['root'],
+        #                        record.describe()['args']['get_resources']()[0]['resource_path'])
+        #return(template % 0)
+        return(None)
+    elif 'databroker.core.BlueskyRun' in str(type(record)) :
+        template = os.path.join(record.describe()['args']['get_resources']()[0]['root'],
+                                record.describe()['args']['get_resources']()[0]['resource_path'])
+        return(template % 0)
+    else:
+        return(None)
+
+        

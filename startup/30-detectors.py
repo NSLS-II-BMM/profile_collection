@@ -188,3 +188,54 @@ dualio.Ib.name = 'Ib'
 
 
 quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
+
+
+####################################################
+#  _____   ___  ___  ___ ___________  ___   _____  #
+# /  __ \ / _ \ |  \/  ||  ___| ___ \/ _ \ /  ___| #
+# | /  \// /_\ \| .  . || |__ | |_/ / /_\ \\ `--.  #
+# | |    |  _  || |\/| ||  __||    /|  _  | `--. \ #
+# | \__/\| | | || |  | || |___| |\ \| | | |/\__/ / #
+#  \____/\_| |_/\_|  |_/\____/\_| \_\_| |_/\____/  #
+####################################################
+
+run_report('\tcameras')
+from BMM.camera_device import BMMSnapshot, snap, fetch_snapshot_filename
+
+xascam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='XAS',    name='xascam')
+xrdcam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='XRD',    name='xrdcam')
+anacam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='analog', name='anacam')
+
+## the output file names is hidden away in the dict returned by this: a.describe()['args']['get_resources']()
+#
+# a=db.v2[-1] 
+#
+# BMM XRD.111 [8] ▶ a.describe()['args']['get_resources']()[0]['root']                                                                                  
+# Out[8]: '/nist/xf06bm/experiments/XAS/snapshots'
+#
+# BMM XRD.111 [9] ▶ a.describe()['args']['get_resources']()[0]['resource_path']                                                                         
+# Out[9]: '17f7c1e0-6796-49da-95aa-c3f2ccc3d5ca_%d.jpg'
+
+# img=db.v2[-1].primary.read()['anacam_image']
+# this gives a 3D array, [480,640,3], where the 3 are RGB values 0-to-255
+# how to export this as a jpg image???
+
+    
+
+###############################################
+# ______ _____ _       ___ _____ _   _ _____  #
+# | ___ \_   _| |     / _ \_   _| | | /  ___| #
+# | |_/ / | | | |    / /_\ \| | | | | \ `--.  #
+# |  __/  | | | |    |  _  || | | | | |`--. \ #
+# | |    _| |_| |____| | | || | | |_| /\__/ / #
+# \_|    \___/\_____/\_| |_/\_/  \___/\____/  #
+###############################################
+                                           
+
+run_report('\tPilatus & prosilica')
+from BMM.pilatus_device import MyDetector, PilatusGrabber
+
+## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
+## p3         = ImageGrabber(prosilica3)
+pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
+pil     = PilatusGrabber(pilatus)
