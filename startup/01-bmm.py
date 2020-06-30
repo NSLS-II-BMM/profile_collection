@@ -41,6 +41,4 @@ from BMM.mirror_trigonometry import move_m2, move_m3
 
 
 
-
-
 RE.msg_hook = BMM_msg_hook

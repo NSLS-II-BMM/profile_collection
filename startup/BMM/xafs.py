@@ -667,6 +667,10 @@ def write_manifest():
     
 
 
+#from bluesky.log import config_bluesky_logging
+#config_bluesky_logging(level="DEBUG")
+
+    
 #########################
 # -- the main XAFS scan #
 #########################
@@ -847,8 +851,8 @@ def xafs(inifile, **kwargs):
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
         DerivedPlot = user_ns['DerivedPlot']
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
-        trans = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['I0'] / doc['data']['It']))
-        ref   = lambda doc: (doc['data']['dcm_energy'], log(doc['data']['It'] / doc['data']['Ir']))
+        trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
+        ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
         xs2   = lambda doc: (doc['data']['dcm_energy'], doc['data']['xs_channel1_rois_roi02_value'] / doc['data']['I0'])
         if BMMuser.detector == 1:
@@ -1068,7 +1072,7 @@ def xafs(inifile, **kwargs):
                                             md={**xdi, **supplied_metadata})
                 else:
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi}) #, **supplied_metadata})
+                                             md={**xdi, **supplied_metadata})
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
                 header = db[uid]
@@ -1134,7 +1138,7 @@ def xafs(inifile, **kwargs):
         yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
         yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
 
-    RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
+    RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     quadem1, vor, dualio = user_ns['quadem1'], user_ns['vor'], user_ns['dualio']
     ######################################################################

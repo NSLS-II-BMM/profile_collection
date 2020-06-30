@@ -151,3 +151,48 @@ def recover_mirrors():
                   m3_xu,  MODEDATA['m3_xu']['E'],
                   m3_xd,  MODEDATA['m3_xd']['E'])
 
+
+
+
+
+def mvbct(target=None):
+    '''
+    A workaround to kill the BCT motor, then do an absolute movement
+    '''
+    dm3_bct = user_ns['dm3_bct']
+    if target is None:
+        target = dm3_bct.user_readback.get()
+    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from mv(dm3_bct, target)
+
+def mvrbct(target=None):
+    '''
+    A workaround to kill the BCT motor, then do a relative movement
+    '''
+    dm3_bct = user_ns['dm3_bct']
+    if target is None:
+        target = 0
+    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from mvr(dm3_bct, target)
+
+
+def mvbender(target=None):
+    '''
+    A workaround to kill the M2 bender motor, then do an absolute movement
+    '''
+    m2_bender = user_ns['m2_bender']
+    if target is None:
+        target = m2_bender.user_readback.get()
+    yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
+    yield from mv(m2_bender, target)
+
+def mvrbender(target=None):
+    '''
+    A workaround to kill the M2 bender motor, then do a relative movement
+    '''
+    m2_bender = user_ns['m2_bender']
+    if target is None:
+        target = 0
+    yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
+    yield from mvr(m2_bender, target)
+    

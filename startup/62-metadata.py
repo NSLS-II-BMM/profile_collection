@@ -18,3 +18,5 @@ sd.baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_linxs, xafs_whe
                xafs_table.yu, xafs_table.ydo, xafs_table.ydi, xafs_xu , xafs_xd,
                xafs_table.vertical, xafs_table.pitch, xafs_table.roll, 
 )
+
+#sd.baseline = ()

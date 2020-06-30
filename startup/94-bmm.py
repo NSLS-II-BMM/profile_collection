@@ -9,7 +9,7 @@ run_report('\tlinescan, rocking curve, slit_height')
 from BMM.linescans import linescan
 
 run_report('\tother plans')
-from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens
+from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens, mvbct, mvrbct, mvbender, mvrbender
 
 run_report('\tchange_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals
@@ -53,3 +53,21 @@ from BMM.xdi import write_XDI
 
 run_report('\txafs')
 from BMM.xafs import howlong, xafs, db2xdi
+
+run_report('\tmono calibration')
+from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
+
+run_report('\tlarch')
+from BMM.larch import Pandrosus, Kekropidai
+## examples that only work at BMM...
+# se = Pandrosus()
+# se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name='Se metal', mode='transmission')
+
+# seo = Pandrosus()
+# seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', name='SeO2', mode='transmission')
+
+# bunch = Kekropidai(name='Selenium standards')
+# bunch.add(se)
+# bunch.add(seo)
+
+
