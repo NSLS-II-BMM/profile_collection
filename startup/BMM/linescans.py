@@ -1,7 +1,7 @@
 import bluesky as bs
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv
+from bluesky.plan_stubs import abs_set, sleep, mv, null
 from bluesky import __version__ as bluesky_version
 import numpy
 import os
@@ -47,6 +47,7 @@ def pluck():
     '''
     Call this to pluck a point from the most recent plot and move the motor to that point.
     '''
+    BMMuser = user_ns['BMMuser']    
     yield from move_after_scan(BMMuser.motor)
 
 from scipy.ndimage import center_of_mass

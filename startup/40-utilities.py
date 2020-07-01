@@ -4,7 +4,7 @@ from BMM.functions import boxedtext
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.utilities import Vacuum, TCG, FEVac, GateValve, Thermocouple, OneWireTC, BMM_DIWater
 
-run_report(__file__)
+run_report(__file__, text='monitor utilities')
 
 #############################
 # beamline enabled/disabled #

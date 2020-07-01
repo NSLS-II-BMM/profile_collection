@@ -141,7 +141,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
 
      yield from sleep(2.0)
      yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
-     yield from kill_mirror_jacks()
+     yield from user_ns['kill_mirror_jacks']()
      
      BMMuser.pds_mode = mode
      RE.msg_hook = BMM_msg_hook

@@ -163,7 +163,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
-    yield from kill_mirror_jacks()
+    yield from user_ns['kill_mirror_jacks']()
     yield from sleep(1)
     if BMMuser.motor_fault is not None:
         print(error_msg('\nSome motors are reporting amplifier faults: %s' % BMMuser.motor_fault))

@@ -1,17 +1,29 @@
 
 
-run_report(__file__, text='import more things')
+run_report(__file__, text='import the rest of the things')
 
-run_report('\tmotor status reporting')
+run_report('\t'+'resting state')
+from BMM.resting_state import resting_state, resting_state_plan, end_of_macro
+
+run_report('\t'+'motor status reporting')
 from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xrd_motors, xrdm
 
-run_report('\tlinescan, rocking curve, slit_height')
-from BMM.linescans import linescan
+run_report('\t'+'derived plot')
+from BMM.derivedplot import DerivedPlot, close_all_plots, close_last_plot, interpret_click
 
-run_report('\tother plans')
+run_report('\t'+'linescan, rocking curve, slit_height')
+from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
+
+run_report('\t'+'areascan')
+from BMM.areascan import areascan, as2dat
+
+run_report('\t'+'timescan')
+from BMM.timescan import timescan, ts2dat
+
+run_report('\t'+'other plans')
 from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens, mvbct, mvrbct, mvbender, mvrbender
 
-run_report('\tchange_mode, change_xtals')
+run_report('\t'+'change_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals
 LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
@@ -20,7 +32,7 @@ if BMMuser.pds_mode is None:
     BMMuser.pds_mode = get_mode()
 
 
-run_report('\tchange_edge')
+run_report('\t'+'change_edge')
 from BMM.edge import approximate_pitch, show_edges, change_edge
 
 
@@ -48,16 +60,16 @@ XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_positio
               'monotc_downstream_temperature'    : (False, 'BMM.mono_tc_downstream'),
               'monotc_upstream_low_temperature'  : (False, 'BMM.mono_tc_upstream_low'),
               }
-run_report('\tXDI')
+run_report('\t'+'XDI')
 from BMM.xdi import write_XDI
 
-run_report('\txafs')
+run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
-run_report('\tmono calibration')
+run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
 
-run_report('\tlarch')
+run_report('\t'+'larch')
 from BMM.larch import Pandrosus, Kekropidai
 ## examples that only work at BMM...
 # se = Pandrosus()
@@ -73,7 +85,7 @@ from BMM.larch import Pandrosus, Kekropidai
 
 
 
-run_report('\tuser interaction')
+run_report('\t'+'user interaction')
 from BMM.prompt import MyPrompt, BMM_help, BMM_keys
 ip = get_ipython()
 ip.prompts = MyPrompt(ip)

@@ -1,7 +1,7 @@
 
 from BMM.metadata import TC, Ring
 
-run_report(__file__)
+run_report(__file__, text='miscellaneous metadata and the baseline')
 
 first_crystal  = TC('XF:06BMA-OP{Mono:DCM-Crys:1}',      name='first_crystal')
 compton_shield = TC('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}', name='compton_shield')

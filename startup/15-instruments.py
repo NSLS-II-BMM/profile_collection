@@ -146,3 +146,87 @@ wmb = WheelMacroBuilder()
 xlsx = wmb.spreadsheet
 
 
+###########################################################
+#   ___  _____ _____ _   _  ___ _____ ___________  _____  #
+#  / _ \/  __ \_   _| | | |/ _ \_   _|  _  | ___ \/  ___| #
+# / /_\ \ /  \/ | | | | | / /_\ \| | | | | | |_/ /\ `--.  #
+# |  _  | |     | | | | | |  _  || | | | | |    /  `--. \ #
+# | | | | \__/\ | | | |_| | | | || | \ \_/ / |\ \ /\__/ / #
+# \_| |_/\____/ \_/  \___/\_| |_/\_/  \___/\_| \_|\____/  #
+###########################################################
+
+run_report('\tactuators')
+from BMM.actuators import BMPS_Shutter, IDPS_Shutter, EPS_Shutter, Spinner
+
+try:
+    bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
+except:
+    pass
+
+try:
+    idps = IDPS_Shutter('SR:C06-EPS{PLC:1}', name = 'IDPS')
+except:
+    pass
+
+
+sha = EPS_Shutter('XF:06BM-PPS{Sh:FE}', name = 'Front-End Shutter')
+sha.shutter_type = 'FE'
+sha.openval  = 0
+sha.closeval = 1
+shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
+shb.shutter_type = 'PH'
+shb.openval  = 0
+shb.closeval = 1
+
+fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'FS1')
+fs1.shutter_type = 'FS'
+fs1.openval  = 1
+fs1.closeval = 0
+
+
+fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
+
+
+
+
+###############################################
+# ______ _____ _    _____ ___________  _____  #
+# |  ___|_   _| |  |_   _|  ___| ___ \/  ___| #
+# | |_    | | | |    | | | |__ | |_/ /\ `--.  #
+# |  _|   | | | |    | | |  __||    /  `--. \ #
+# | |    _| |_| |____| | | |___| |\ \ /\__/ / #
+# \_|    \___/\_____/\_/ \____/\_| \_|\____/  #
+###############################################
+
+
+run_report('\tfilters')
+from BMM.attenuators import attenuator, filter_state, set_filters
+
+filter1 = attenuator()
+filter1.motor = dm1_filters1
+filter2 = attenuator()
+filter2.motor = dm1_filters2
+
+
+
+###############################################################################
+# ____________ _____ _   _ _____      _____ _   _______  _______________  ___ #
+# |  ___| ___ \  _  | \ | |_   _|    |  ___| \ | |  _  \ | ___ \ ___ \  \/  | #
+# | |_  | |_/ / | | |  \| | | |______| |__ |  \| | | | | | |_/ / |_/ / .  . | #
+# |  _| |    /| | | | . ` | | |______|  __|| . ` | | | | | ___ \  __/| |\/| | #
+# | |   | |\ \\ \_/ / |\  | | |      | |___| |\  | |/ /  | |_/ / |   | |  | | #
+# \_|   \_| \_|\___/\_| \_/ \_/      \____/\_| \_/___/   \____/\_|   \_|  |_/ #
+###############################################################################
+
+                                                                           
+run_report('\tfront-end beam position monitor')
+from BMM.frontend import FEBPM
+
+try:
+    bpm_upstream   = FEBPM('SR:C06-BI{BPM:4}Pos:', name='bpm_upstream')
+    bpm_downstream = FEBPM('SR:C06-BI{BPM:5}Pos:', name='bpm_downstream')
+except:
+    pass
+
+def read_bpms():
+    return(bpm_upstream.x.get(), bpm_upstream.y.get(), bpm_downstream.x.get(), bpm_downstream.y.get())

@@ -3,16 +3,16 @@ DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
 from BMM.functions           import now, colored, run_report, boxedtext
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-run_report('\tlogging')
+run_report('\t'+'logging')
 from BMM.logging             import report, BMM_log_info, BMM_msg_hook
 
 
-run_report('\tuser')
+run_report('\t'+'user')
 from BMM.user import BMM_User
-run_report('\tdetector ROIs')
+run_report('\t'+'detector ROIs')
 from BMM.referencefoils import ReferenceFoils
 foils = ReferenceFoils()
-run_report('\treference foils')
+run_report('\t'+'reference foils')
 from BMM.rois import ROI
 rois = ROI()
 

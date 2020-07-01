@@ -2,7 +2,7 @@
 from ophyd import EpicsSignal
 
 
-run_report(__file__)
+run_report(__file__, text='detectors and cameras')
 
 ##############################################################
 # ______ _    _ _____ _      _    _____ ________  ___ _____  #
@@ -14,7 +14,7 @@ run_report(__file__)
 ##############################################################
 
 
-run_report('\tdwelltime')
+run_report('\t'+'dwelltime')
 from BMM.dwelltime import LockedDwellTimes
 
 _locked_dwell_time = LockedDwellTimes('', name='dwti')
@@ -35,7 +35,7 @@ dwell_time.name = 'inttime'
                                       
                                       
 
-run_report('\tStruck')
+run_report('\t'+'Struck')
 from BMM.struck import BMMVortex, GonioStruck, icrs, ocrs
 
 vor = BMMVortex('XF:06BM-ES:1{Sclr:1}', name='vor')
@@ -145,7 +145,7 @@ bicron.channels.chan26.name = 'APD'
 #######################################################################################
 
 
-run_report('\telectrometers')
+run_report('\t'+'electrometers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
 
         
@@ -199,7 +199,7 @@ quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 #  \____/\_| |_/\_|  |_/\____/\_| \_\_| |_/\____/  #
 ####################################################
 
-run_report('\tcameras')
+run_report('\t'+'cameras')
 from BMM.camera_device import BMMSnapshot, snap, fetch_snapshot_filename
 
 xascam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='XAS',    name='xascam')
@@ -232,8 +232,8 @@ anacam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='analo
 ###############################################
                                            
 
-run_report('\tPilatus & prosilica')
-from BMM.pilatus_device import MyDetector, PilatusGrabber
+run_report('\t'+'Pilatus & prosilica')
+from BMM.pilatus import MyDetector, PilatusGrabber
 
 ## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
 ## p3         = ImageGrabber(prosilica3)
