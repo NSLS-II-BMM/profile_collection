@@ -6,7 +6,7 @@ from BMM.functions import boxedtext
 
 def motor_metadata(uid=None):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
-               user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'],
+               user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'], user_ns['xafs_ref'],
                
                user_ns['dm3_bct'], user_ns['dm3_foils'], user_ns['dm2_fs'],
                user_ns['slits3'].top, user_ns['slits3'].bottom, user_ns['slits3'].outboard, user_ns['slits3'].inboard,
@@ -100,16 +100,13 @@ def motor_status():
              md[user_ns['xafs_table'].yu.name], md[user_ns['xafs_table'].ydo.name], md[user_ns['xafs_table'].ydi.name])
 
     text += ' XAFS stages (motor names are xafs_<name>, units mm or deg):\n'
-    text += '     name =     x        y     roll    pitch    linxs    roth     wheel    rots\n'
-    text += '           %8.3f %8.3f %7.3f %7.3f %8.3f %8.3f %8.3f %8.3f\n' % \
+    text += '     name =     x        y     pitch    wheel    ref\n'
+    text += '           %8.3f %8.3f %7.3f %8.3f %8.3f\n' % \
             (md[user_ns['xafs_linx'].name],
              md[user_ns['xafs_liny'].name],
-             md[user_ns['xafs_roll'].name],
              md[user_ns['xafs_pitch'].name],
-             md[user_ns['xafs_linxs'].name],
-             md[user_ns['xafs_roth'].name],
              md[user_ns['xafs_rotb'].name],
-             md[user_ns['xafs_rots'].name]
+             md[user_ns['xafs_ref'].name]
             )
 
     return text
@@ -146,7 +143,7 @@ def motor_sidebar(md=None):
     mlist.append('xafs_x, %.3f, xafs_y, %.3f'         % (md[user_ns['xafs_linx'].name],  md[user_ns['xafs_liny'].name]))
     mlist.append('xafs_pitch, %.3f, xafs_roll, %.3f'  % (md[user_ns['xafs_pitch'].name], md[user_ns['xafs_roll'].name]))
     mlist.append('xafs_ref, %.3f, xafs_wheel, %.3f'   % (md[user_ns['xafs_linxs'].name], md[user_ns['xafs_wheel'].name]))
-    mlist.append('xafs_roth, %.3f, xafs_rots, %.3f'   % (md[user_ns['xafs_roth'].name],  md[user_ns['xafs_rots'].name]))
+    #mlist.append('xafs_roth, %.3f, xafs_rots, %.3f'   % (md[user_ns['xafs_roth'].name],  md[user_ns['xafs_rots'].name]))
     mlist.append('wheel slot = %2d'                   % user_ns['xafs_wheel'].current_slot())
     motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 

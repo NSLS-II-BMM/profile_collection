@@ -25,6 +25,7 @@ from BMM.suspenders    import BMM_suspenders
 from BMM.metadata      import display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar, motor_status
 from BMM.camera_device import snap
+from BMM.derivedplot   import DerivedPlot, interpret_click
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -850,7 +851,6 @@ def xafs(inifile, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
-        DerivedPlot = user_ns['DerivedPlot']
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
@@ -1182,11 +1182,14 @@ def howlong(inifile, interactive=True, **kwargs):
 
     Parameters from control file are composable via kwargs.
     '''
+
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     BMMuser = user_ns['BMMuser']
+    #if inifile is None:
+    #    inifile = 'scan.ini'
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'
     orig = inifile

@@ -19,6 +19,7 @@ from BMM.suspenders    import BMM_clear_to_start
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.derivedplot   import DerivedPlot, interpret_click
 
 def move_after_scan(thismotor):
     '''
@@ -85,7 +86,6 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         RE.msg_hook = None
         BMMuser.motor = user_ns['dm3_bct']
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-        DerivedPlot = user_ns['DerivedPlot']
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (motor.name, 'i0', start, stop, nsteps, motor.user_readback.get())
@@ -199,7 +199,6 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             sgnl = 'I0'
             titl = 'I0 signal vs. DCM 2nd crystal pitch'
 
-        DerivedPlot = user_ns['DerivedPlot']
         plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         with open(dotfile, "w") as f:
@@ -455,7 +454,6 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         ## and this is the appropriate way to plot this linescan
 
         #abs_set(_locked_dwell_time, 0.5)
-        DerivedPlot = user_ns['DerivedPlot']
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]

@@ -49,11 +49,6 @@ class BMMQuadEM(QuadEM):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        #for c in ['current{}'.format(j) for j in range(1, 5)]:
-        #     getattr(self, c).read_attrs = ['mean_value']
-
-        # self.read_attrs = ['current{}'.format(j) for j in range(1, 5)]
         self._acquisition_signal = self.acquire
         self.configuration_attrs = ['integration_time', 'averaging_time','em_range','num_averaged','values_per_read']
 

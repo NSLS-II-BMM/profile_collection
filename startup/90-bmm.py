@@ -9,9 +9,9 @@ run_report('\t'+'motor status reporting')
 from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xrd_motors, xrdm
 
 run_report('\t'+'derived plot')
-from BMM.derivedplot import DerivedPlot, close_all_plots, close_last_plot, interpret_click
+from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 
-run_report('\t'+'linescan, rocking curve, slit_height')
+run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
 
 run_report('\t'+'areascan')
@@ -19,6 +19,9 @@ from BMM.areascan import areascan, as2dat
 
 run_report('\t'+'timescan')
 from BMM.timescan import timescan, ts2dat
+
+run_report('\t'+'energystep')
+from BMM.energystep import energystep
 
 run_report('\t'+'other plans')
 from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens, mvbct, mvrbct, mvbender, mvrbender
