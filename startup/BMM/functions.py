@@ -76,8 +76,6 @@ def run_report(thisfile, text=None):
         importing = '\t'
     print(colored(f'{importing} {thisfile.split("/")[-1]} {add}', 'lightcyan'))
 
-run_report(__file__, text='generally useful function definitions')
-
 
 def error_msg(text):
     '''Red text'''

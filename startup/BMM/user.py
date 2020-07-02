@@ -442,7 +442,7 @@ class BMM_User(Borg):
         print('DATA  = %s' % self.DATA)
         print('GUP   = %s' % self.gup)
         print('SAF   = %s' % self.saf)
-        print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
+        #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
         print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))
 
     def fetch_echem(self):

@@ -3,6 +3,7 @@ DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 
 from BMM.functions           import now, colored, run_report, boxedtext
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+run_report(__file__, text='functions and other basics')
 run_report('\t'+'logging')
 from BMM.logging             import report, BMM_log_info, BMM_msg_hook
 
@@ -26,7 +27,7 @@ if BMMuser.pds_mode is None:
     except:                     # else wait until later to set this correctly, get_mode() defined in 74-mode.py
         pass
 ## some backwards compatibility....
-whoami           = BMMuser.show_experiment()
+whoami           = BMMuser.show_experiment
 start_experiment = BMMuser.start_experiment
 end_experiment   = BMMuser.end_experiment
 

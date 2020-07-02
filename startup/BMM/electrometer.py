@@ -17,18 +17,7 @@ class Nanoize(DerivedSignal):
     def inverse(self, value):
         return value * 1e9 * _locked_dwell_time.dwell_time.readback.get()
 
-# class Normalized(DerivedSignal):
-#     def forward(self, value):
-#         return value * self.parent.current1.mean_value.get()
-#     def inverse(self, value):
-#         return value / self.parent.current1.mean_value.get()
 
-# class TransXmu(DerivedSignal):
-#     def forward(self, value):
-#         return self.parent.current1.mean_value.get() / exp(value)
-#     def inverse(self, value):
-#         arg = self.parent.current1.mean_value.get() / value
-#         return log(abs(arg))
 
 class BMMQuadEM(QuadEM):
     _default_read_attrs = ['I0',
@@ -42,10 +31,7 @@ class BMMQuadEM(QuadEM):
     It = Cpt(Nanoize, derived_from='current2.mean_value')
     Ir = Cpt(Nanoize, derived_from='current3.mean_value')
     Iy = Cpt(Nanoize, derived_from='current4.mean_value')
-    #iti0   = Cpt(Normalized, derived_from='current2.mean_value')
-    #lni0it = Cpt(TransXmu,   derived_from='current2.mean_value')
-    state  = Cpt(EpicsSignal, 'Acquire')
-    #  = Cpt(EpicsSignal, 'PREC')
+    #state  = Cpt(EpicsSignal, 'Acquire')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
