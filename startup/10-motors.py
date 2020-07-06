@@ -106,7 +106,7 @@ dm3_bct.acceleration.put(0.25)
 dm3_bct.hvel_sp.put(0.05)
 
 
-bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
+#bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
 
 ## XAFS table
 xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')

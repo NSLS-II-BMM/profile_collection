@@ -1,6 +1,8 @@
 from bluesky.plan_stubs import abs_set, sleep, mv, mvr
 import time
 
+from BMM.modes import MODEDATA
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 

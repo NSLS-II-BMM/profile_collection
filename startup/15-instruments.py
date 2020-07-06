@@ -48,14 +48,8 @@ m3.yaw._limits      = (-1, 1)
 
 
 def kill_mirror_jacks():
-    yield from abs_set(m2_yu.kill_cmd,  1, wait=True)
-    #yield from sleep(1)
-    yield from abs_set(m2_ydo.kill_cmd, 1, wait=True)
-    yield from abs_set(m2_ydi.kill_cmd, 1, wait=True)
-
-    yield from abs_set(m3_yu.kill_cmd,  1, wait=True)
-    yield from abs_set(m3_ydo.kill_cmd, 1, wait=True)
-    yield from abs_set(m3_ydi.kill_cmd, 1, wait=True)
+    yield from m2.kill_jacks()
+    yield from m3.kill_jacks()
 
 
 xt = xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)

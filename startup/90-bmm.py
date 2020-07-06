@@ -11,6 +11,9 @@ from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xr
 run_report('\t'+'derived plot')
 from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 
+run_report('\t'+'suspenders')
+from BMM.suspenders import BMM_suspenders, BMM_clear_to_start
+
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
 
@@ -28,11 +31,11 @@ from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens,
 
 run_report('\t'+'change_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals
-LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
-if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
+
+if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 if BMMuser.pds_mode is None:
-    BMMuser.pds_mode = get_mode()
+     BMMuser.pds_mode = get_mode()
 
 
 run_report('\t'+'change_edge')

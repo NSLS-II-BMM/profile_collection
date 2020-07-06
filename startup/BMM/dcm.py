@@ -2,6 +2,8 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
+from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+
 from numpy import pi, sin, cos, arcsin
 
 from BMM.motors import FMBOEpicsMotor, VacuumEpicsMotor
@@ -89,6 +91,8 @@ class DCM(PseudoPositioner):
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
         '''
+        dcm_bragg, dcm_para, dcm_perp = user_ns['dcm_bragg'], user_ns['dcm_para'], user_ns['dcm_perp']
+        dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
         dcm_bragg.acceleration.put(BMMuser.acc_fast)
         dcm_para.velocity.put(0.75)
         dcm_para.hvel_sp.put(0.5)

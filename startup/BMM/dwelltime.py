@@ -2,7 +2,7 @@ from ophyd import PVPositionerPC, EpicsSignal, EpicsSignalRO, PseudoPositioner, 
 from ophyd import Component as Cpt
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
-
+from BMM.metadata import bmm_metadata
 
 class QuadEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'AveragingTime')
@@ -45,7 +45,7 @@ class LockedDwellTimes(PseudoPositioner):
     "Sync QuadEM, Struck, and DualEM dwell times to one pseudo-axis dwell time."
     dwell_time = Cpt(PseudoSingle, kind='hinted')
     quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
-    dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
+    #dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
     struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
     @property
     def settle_time(self):
@@ -55,7 +55,7 @@ class LockedDwellTimes(PseudoPositioner):
     def settle_time(self, val):
         self.quadem_dwell_time.settle_time = val
         self.struck_dwell_time.settle_time = val
-        self.dualem_dwell_time.settle_time = val
+        #self.dualem_dwell_time.settle_time = val
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -64,7 +64,7 @@ class LockedDwellTimes(PseudoPositioner):
         return self.RealPosition(
             quadem_dwell_time=pseudo_pos.dwell_time,
             struck_dwell_time=pseudo_pos.dwell_time,
-            dualem_dwell_time=pseudo_pos.dwell_time,
+            #dualem_dwell_time=pseudo_pos.dwell_time,
         )
 
     @real_position_argument

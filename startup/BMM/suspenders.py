@@ -14,8 +14,8 @@ suspender_I0 = SuspendFloor(user_ns['quadem1'].I0, 0.1, resume_thresh=1, sleep=5
 ## ----------------------------------------------------------------------------------
 ## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
 try:
-    if ring.filltarget.get() > 20:
-        suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10, resume_thresh=0.9 * ring.filltarget.get(), sleep=60)
+    if user_ns['ring'].filltarget.get() > 20:
+        suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10, resume_thresh=0.9 * user_ns['ring'].filltarget.get(), sleep=60)
         all_BMM_suspenders.append(suspender_ring_current)
 except:
     pass
@@ -32,7 +32,7 @@ except:
 ## ----------------------------------------------------------------------------------
 ## suspend if the main photon shutter closes, resume 5 seconds after opening
 try:
-    suspender_sha = SuspendBoolLow(user_ns['idps.state'], sleep=60)
+    suspender_sha = SuspendBoolLow(user_ns['idps'].state, sleep=60)
     all_BMM_suspenders.append(suspender_sha)
 except:
     pass

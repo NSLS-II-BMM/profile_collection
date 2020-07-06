@@ -1,6 +1,9 @@
 import logging
 import os
+from urllib import request, parse
+import json
 from os import chmod
+from IPython.paths           import get_ipython_module_path
 from IPython.utils.coloransi import TermColors as color
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
@@ -68,20 +71,51 @@ def BMM_log_info(message):
     chmod(BMM_nas_log_file, 0o444)
 
 
-def report(text, level=None):
-    '''Print a string to the screen AND to the log file.
+## small effort to obfuscate the web hook URL, which is secret-ish.  See:
+##   https://api.slack.com/messaging/webhooks#create_a_webhook
+## in the future, this could be an ini with per-user channel URLs...
+slack_secret = os.path.join(os.path.dirname(get_ipython_module_path('BMM.functions')), 'slack_secret')
+try:
+    with open(slack_secret, "r") as f:
+        default_slack_channel = f.read().replace('\n','')
+except:
+    print(error_msg('\t\t\tslack_secret file not found!'))
 
-    Report level decorations on screen:
+def post_to_slack(text):
+    try:
+        channel = BMMuser.slack_channel
+    except:
+        channel = default_slack_channel
+    if channel is None:
+        channel = default_slack_channel
+    post = {"text": "{0}".format(text)}
+    try:
+        json_data = json.dumps(post)
+        req = request.Request(channel,
+                              data=json_data.encode('ascii'),
+                              headers={'Content-Type': 'application/json'}) 
+        resp = request.urlopen(req)
+    except Exception as em:
+        print("EXCEPTION: " + str(em))
+        print(f'slack_secret = {slack_secret}')
+        
+def report(text, level=None, slack=False):
+    '''Print a string to:
+      * the log file
+      * the screen
+      * the BMM beamtime slack channel
 
-      * error (red)
-      * warning (yellow)
-      * info (brown)
-      * url (undecorated)
-      * bold (bright white)
-      * verbosebold (bright cyan)
-      * list (cyan)
-      * disconnected (purple)
-      * whisper (gray)
+    Report level decorations  on screen:
+
+      * 'error' (red)
+      * 'warning' (yellow)
+      * 'info' (brown)
+      * 'url' (undecorated)
+      * 'bold' (bright white)
+      * 'verbosebold' (bright cyan)
+      * 'list' (cyan)
+      * 'disconnected' (purple)
+      * 'whisper' (gray)
 
     not matching a report level will be undecorated
     '''
@@ -109,7 +143,8 @@ def report(text, level=None):
             print(text)
     else:
         print(text)
-
+    if slack:
+        post_to_slack(text)
 
 
 ######################################################################################

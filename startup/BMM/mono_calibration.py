@@ -40,7 +40,7 @@ def calibrate_low_end(mono='111'):
         ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
         ##  EDIT BELOW THIS LINE
 
-        foils.set('Fe Co Ni Cu Zn') 
+        #foils.set('Fe Co Ni Cu Zn') 
         
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'w')
@@ -124,7 +124,7 @@ def calibrate_high_end(mono='111'):
         ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
         ##  EDIT BELOW THIS LINE
 
-        foils.set('Pt Au Pb Nb Mo') 
+        #foils.set('Pt Au Pb Nb Mo') 
         
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'a')
@@ -178,7 +178,11 @@ def calibrate_high_end(mono='111'):
     yield from resting_state_plan()
     BMM_log_info('High end calibration macro finished!')
 
-    
+
+## there is a historical reason this is split into two halves
+def calibrate():
+    yield from calibrate_low_end()
+    yield from calibrate_high_end()
 
 def calibrate_mono(mono='111'):
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']

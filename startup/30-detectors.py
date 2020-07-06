@@ -135,6 +135,20 @@ bicron.channels.chan25.name = 'Bicron'
 bicron.channels.chan26.name = 'APD'
 
 
+## if this startup file is "%run -i"-ed, then need to reset
+## foils to the serialized configuration
+jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+if os.path.isfile(jsonfile):
+    user = json.load(open(jsonfile))
+    if 'rois' in user:
+        rois.set(user['rois'])
+        BMMuser.read_rois = None
+## else if starting bsui fresh, perform the delayed foil configuration
+if BMMuser.read_rois is not None:
+    rois.set(BMMuser.read_rois)
+    BMMuser.read_rois = None
+
+
 #######################################################################################
 #  _____ _      _____ _____ ___________ ________  ___ _____ _____ ___________  _____  #
 # |  ___| |    |  ___/  __ \_   _| ___ \  _  |  \/  ||  ___|_   _|  ___| ___ \/  ___| #
@@ -178,13 +192,14 @@ set_precision(quadem1.current4.mean_value, 3)
 toss = quadem1.Iy.describe()
 
 
-
-dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
-dualio.Ia.kind = 'hinted'
-dualio.Ib.kind = 'hinted'
-dualio.Ia.name = 'Ia'
-dualio.Ib.name = 'Ib'
-
+try:                            # not 100% guaranteed to be in place
+    dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
+    dualio.Ia.kind = 'hinted'
+    dualio.Ib.kind = 'hinted'
+    dualio.Ia.name = 'Ia'
+    dualio.Ib.name = 'Ib'
+except:
+    pass
 
 
 quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
@@ -239,3 +254,60 @@ from BMM.pilatus import MyDetector, PilatusGrabber
 ## p3         = ImageGrabber(prosilica3)
 pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
 pil     = PilatusGrabber(pilatus)
+
+
+
+#######################################################
+# __   __ _________________ _____ _____ _____  _____  #
+# \ \ / //  ___| ___ \ ___ \  ___/  ___/  ___||____ | #
+#  \ V / \ `--.| |_/ / |_/ / |__ \ `--.\ `--.     / / #
+#  /   \  `--. \  __/|    /|  __| `--. \`--. \    \ \ #
+# / /^\ \/\__/ / |   | |\ \| |___/\__/ /\__/ /.___/ / #
+# \/   \/\____/\_|   \_| \_\____/\____/\____/ \____/  #
+#######################################################
+
+run_report('\t'+'Xspress3')
+from BMM.xspress3 import BMMXspress3Detector
+
+try:                            # may be absent
+    xs = BMMXspress3Detector('XF:06BM-ES{Xsp:1}:', name='xs')
+
+    # This is necessary for when the ioc restarts
+    # we have to trigger one image for the hdf5 plugin to work correctly
+    # else, we get file writing errors
+    xs.hdf5.warmup()
+
+    # Hints:
+    for n in [1]:
+        getattr(xs, f'channel{n}').rois.roi01.value.kind = 'hinted'
+        getattr(xs, f'channel{n}').rois.roi02.value.kind = 'hinted'
+
+    xs.settings.configuration_attrs = ['acquire_period',
+                                       'acquire_time',
+                                       'gain',
+                                       'image_mode',
+                                       'manufacturer',
+                                       'model',
+                                       'num_exposures',
+                                       'num_images',
+                                       'temperature',
+                                       'temperature_actual',
+                                       'trigger_mode',
+                                       'config_path',
+                                       'config_save_path',
+                                       'invert_f0',
+                                       'invert_veto',
+                                       'xsp_name',
+                                       'num_channels',
+                                       'num_frames_config',
+                                       'run_flags',
+                                       'trigger_signal']
+
+    for n, d in xs.channels.items():
+        roi_names = ['roi{:02}'.format(j) for j in [1, 2, 3, 4]]
+        d.rois.read_attrs = roi_names
+        d.rois.configuration_attrs = roi_names
+        for roi_n in roi_names:
+            getattr(d.rois, roi_n).value_sum.kind = 'omitted'
+except:
+    pass

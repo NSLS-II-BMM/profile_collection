@@ -1,6 +1,7 @@
 from bluesky.plans import rel_scan, scan_nd
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
+from databroker.core import SingleRunCache
 
 import numpy
 import os
@@ -9,23 +10,21 @@ import subprocess
 import textwrap
 import configparser
 import datetime
+import shutil
 from cycler import cycler
 
-from BMM.functions     import etok, ktoe
-from BMM.periodictable import edge_energy, Z_number
-from BMM.metadata      import bmm_metadata
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.xdi           import write_XDI
-from BMM.linescans     import rocking_curve
-from BMM.suspenders    import BMM_suspenders
-from BMM.metadata      import display_XDI_metadata, metadata_at_this_moment
-from BMM.motor_status  import motor_sidebar, motor_status
 from BMM.camera_device import snap
 from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.linescans     import rocking_curve
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report
+from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.motor_status  import motor_sidebar, motor_status
+from BMM.periodictable import edge_energy, Z_number
+from BMM.resting_state import resting_state_plan
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start
+from BMM.xdi           import write_XDI
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -497,7 +496,7 @@ def db2xdi(datafile, key):
     The arguments are the resolved path to the output XDI file and
     a database key.
     '''
-    BMMuser = user_ns['BMMuser']
+    BMMuser, db = user_ns['BMMuser'], user_ns['db']
     dfile = datafile
     if BMMuser.DATA not in dfile:
         if 'bucket' not in BMMuser.DATA:
@@ -870,8 +869,8 @@ def xafs(inifile, **kwargs):
             plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',       title=p['filename'])
         elif 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-            plot =  [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)', title=p['filename']),
-                    DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',   title=p['filename'])]
+            plot = [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)',  title=p['filename']),
+                    DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])]
         elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
         elif 'both'  in p['mode']:
@@ -887,6 +886,10 @@ def xafs(inifile, **kwargs):
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
 
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## SingleRunCache -- manage data as it comes out
+        #src = SingleRunCache()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
@@ -988,16 +991,22 @@ def xafs(inifile, **kwargs):
             if p['snapshots']:
                 ahora = now()
 
+                annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
                 html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
                 image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
-                annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+                #xascam._annotation_string = annotation
+                #xascam_uid = yield from count([xascam]) #, md={'sample':'Hi there!'}), src.callback) 
+                #shutil.copyfile(fetch_snapshot_filename(db.v2[xascam_uid]), image_web)
                 snap('XAS', filename=image_web, annotation=annotation)
 
                 html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
                 image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
+                #anacam._annotation_string = p['filename']
+                #anacam_uid = yield from count([anacam])
+                #shutil.copyfile(fetch_snapshot_filename(db.v2[anacam_uid]), image_ana)
                 snap('analog', filename=image_ana, sample=p['filename'])
 
-                md['_snapshots'] = {'webcam': image_web, 'analog' : image_ana}
+                md['_snapshots'] = {'webcam_file': image_web, 'analog_file' : image_ana} #, 'webcam_uid': xascam_uid, 'anacam_uid': anacam_uid}
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile, used by cadashboard
@@ -1007,6 +1016,8 @@ def xafs(inifile, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
+            report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
+                   level='bold', slack=True)
             count = 0
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 count += 1
@@ -1018,7 +1029,8 @@ def xafs(inifile, **kwargs):
                     report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')
                     yield from null()
                     return
-                print(bold_msg('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid))))
+                #print(bold_msg('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid))))
+                report(f'starting scan {count} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points', level='bold', slack=True)
                 md['_filename'] = fname
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1079,9 +1091,9 @@ def xafs(inifile, **kwargs):
                 header = db[uid]
                 write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))
-                BMM_log_info('energy scan finished, uid = %s, scan_id = %d\ndata file written to %s'
-                             % (uid, header.start['scan_id'], datafile))
-
+                BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {header.start["scan_id"]}\ndata file written to {datafile}')
+                ## FYI: db.v2[-1].metadata['start']['scan_id']
+                
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
                 js_text = '<a href="javascript:void(0)" onclick="toggle_visibility(\'%s\');" title="This is the scan number for %s, click to show/hide its UID">#%d</a><div id="%s" style="display:none;"><small>%s</small></div>' \
@@ -1125,14 +1137,14 @@ def xafs(inifile, **kwargs):
         except:
             how = 'stopped'
         if BMMuser.final_log_entry is True:
-            BMM_log_info('XAFS scan sequence %s\nmost recent uid = %s, scan_id = %d'
-                         % (how, db[-1].start['uid'], db[-1].start['scan_id']))
+            report(f'== XAFS scan sequence {how}', level='bold', slack=True)
+            BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
+            ## FYI: db.v2[-1].metadata['start']['scan_id']
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
                 htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
-        #else:
-        #    BMM_log_info('XAFS scan sequence finished early')
+
         dcm.mode = 'fixed'
         yield from resting_state_plan()
         yield from sleep(2.0)

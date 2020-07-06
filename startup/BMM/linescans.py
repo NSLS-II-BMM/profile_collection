@@ -6,6 +6,7 @@ from bluesky import __version__ as bluesky_version
 import numpy
 import os
 from lmfit.models import SkewedGaussianModel
+from databroker.core import SingleRunCache
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
@@ -33,7 +34,7 @@ def move_after_scan(thismotor):
         print(error_msg('\nThe motor you are asking to move is not the motor in the current plot.\n'))
         return(yield from null())
     print('Single click the left mouse button on the plot to pluck a point...')
-    cid = BMMuser.fig.canvas.mpl_connect('button_press_event', user_ns['interpret_click']) # see 65-derivedplot.py and
+    cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see derivedplot.py and
     while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
         yield from sleep(0.5)
     if BMMuser.motor2 is None:
@@ -308,7 +309,7 @@ def ls_backwards_compatibility(detin, axin):
         return(detin, axin)
 
 
-mytable = None
+#mytable = None
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
@@ -393,11 +394,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             denominator = ' / I0'
             detname = 'transmission'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
-        elif detector == 'Ia':
+        elif detector == 'Ia' and dualio is not None:
             dets.append(dualio)
             detname = 'Ia'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ia'])
-        elif detector == 'Ib':
+        elif detector == 'Ib' and dualio is not None:
             dets.append(dualio)
             detname = 'Ib'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
@@ -530,14 +531,15 @@ def ls2dat(datafile, key):
     '''
     Export a linescan database entry to a simple column data file.
 
-      ls2dat('/path/to/myfile.dat', 1533)
+      ls2dat('/path/to/myfile.dat', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
     or
 
-      ls2dat('/path/to/myfile.dat', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+      ls2dat('/path/to/myfile.dat', 1533)
 
     The arguments are a data file name and the database key.
     '''
+    BMMuser, db = user_ns['BMMuser'], user_ns['db']
     if os.path.isfile(datafile):
         print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
@@ -558,19 +560,19 @@ def ls2dat(datafile, key):
         template = "  %.3f  %.6f  %.6f  %.6f\n"
         column_list = [abscissa, 'I0', 'It', 'Ir']
 
-    print(column_list)
+    #print(column_list)
     table = dataframe.table()
     this = table.loc[:,column_list]
 
-    handle.write('# XDI/1.0 BlueSky/%s\n' % bluesky_version)
-    handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
+    handle.write('# XDI/1.0 BlueSky/%s\n'    % bluesky_version)
+    handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
     try:
-        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI']['Facility']['GUP'])
+        handle.write('# Facility.GUP: %s\n'  % dataframe['start']['XDI']['Facility']['GUP'])
     except:
         pass
     try:
-        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI']['Facility']['SAF'])
+        handle.write('# Facility.SAF: %s\n'  % dataframe['start']['XDI']['Facility']['SAF'])
     except:
         pass
     handle.write('# ==========================================================\n')
@@ -582,6 +584,8 @@ def ls2dat(datafile, key):
     print(bold_msg('wrote linescan to %s' % datafile))
 
 
+## these should use src rather than db
+    
 def center_sample_y():
     yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
     table = db[-1].table()
@@ -597,9 +601,9 @@ def center_sample_roll():
     yield from mv(xafs_roll, peak)
     print(bold_msg('Optimal position in roll at %.3f' % peak))
 
-def align_flat_sample(angle=2):
+def align_flat_sample(angle=0):
     yield from center_sample_y()
     yield from center_sample_roll()
     yield from center_sample_y()
     yield from center_sample_roll()
-    yield from mv(xafs_roll, angle)
+    yield from mvr(xafs_roll, angle)

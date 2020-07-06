@@ -147,13 +147,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
                 return(yield from null())
         
     start = time.time()
-    BMM_log_info('Configuring beamline for %s edge' % el)
+    report(f'Configuring beamline for {el} edge', level='bold', slack=True)
     yield from dcm.kill_plan()
-    ###################################
-    # move the DCM to target eV above #
-    ###################################
-    # print('Moving mono to energy %.1f eV...' % (energy+target))
-    # yield from mv(dcm.energy, energy+target)
 
     ################################################
     # change to the correct photon delivery mode   #
@@ -204,10 +199,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         yield from rois.select(el)
         show_edges()
     
-    print('\nYou are now ready to measure at the %s edge' % el)
+    report(f'Finished configuring for {el} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
-    BMM_log_info('Finished configuring for %s edge' % el)
     yield from dcm.kill_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))

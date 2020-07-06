@@ -28,13 +28,13 @@ class BMM_User(Borg):
       * gup:              GUP number
       * saf:              SAF number
       * cycle:            NSLS-II ops cycle (e.g. '2020-1')
-      * use_pilatus:      flas, True make a folder for Pilatus images
       * name:             full name of PI
       * staff:            flag, True if a staff experiment
       * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
       * macro_sleep:      float, the length of that sleep
       * motor_fault:      normally None, set to a string when motors are found in a fault state
       * detector:         4=4-element detector, 1=1-element detector
+      * use_pilatus:      flas, True make a folder for Pilatus images
       * echem:            flag, True is doing electrochemistry with the BioLogic
       * echem_remote:     mounted path to cifs share on ws3
 
@@ -94,13 +94,14 @@ class BMM_User(Borg):
         self.use_pilatus     = False
         self.name            = None
         self.staff           = False
-        self.read_foils      = None
+        #self.read_foils      = None
         self.read_rois       = None
         self.user_is_defined = False
         self.motor_fault     = None
         self.detector        = 4
         self.echem           = False
         self.echem_remote    = None
+        self.slack_channel   = None
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -175,9 +176,9 @@ class BMM_User(Borg):
         Show the current contents of the BMMuser object
         '''
         print('Experiment attributes:')
-        for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 'read_foils',
+        for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 
                     'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
-                    'detector', 'echem', 'echem_remote'):
+                    'detector', 'use_pilatus', 'echem', 'echem_remote'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
@@ -220,15 +221,15 @@ class BMM_User(Borg):
         ## make folder
         if not os.path.isdir(folder):
             os.makedirs(folder)
-            print('%d. Created data folder:            %-75s' % (step, folder))
+            print('%d. Created data folder:               %-75s' % (step, folder))
         else:
-            print('%d. Found data folder:              %-75s' % (step, folder))
+            print('%d. Found data folder:                 %-75s' % (step, folder))
         imagefolder = os.path.join(folder, 'snapshots')
         if not os.path.isdir(imagefolder):
             os.mkdir(imagefolder)
-            print('   Created snapshot folder:        %-75s' % imagefolder)
+            print('   Created snapshot folder:           %-75s' % imagefolder)
         else:
-            print('   Found snapshot folder:          %-75s' % imagefolder)
+            print('   Found snapshot folder:             %-75s' % imagefolder)
     
         user_ns['DATA'] = folder + '/'
         self.DATA = folder + '/'
@@ -241,7 +242,7 @@ class BMM_User(Borg):
 
         ## setup logger
         BMM_user_log(os.path.join(folder, 'experiment.log'))
-        print('%d. Set up experimental log file:   %-75s' % (step, os.path.join(folder, 'experiment.log')))
+        print('%d. Set up experimental log file:      %-75s' % (step, os.path.join(folder, 'experiment.log')))
         step += 1
 
         startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
@@ -255,9 +256,9 @@ class BMM_User(Borg):
             o = open(scanini, 'w')
             o.write(''.join(content).format(folder=folder, name=name))
             o.close()
-            print('%d. Created INI template:           %-75s' % (step, scanini))
+            print('%d. Created INI template:              %-75s' % (step, scanini))
         else:
-            print('%d. Found INI template:             %-75s' % (step, scanini))
+            print('%d. Found INI template:                %-75s' % (step, scanini))
         step += 1
 
         ## write macro template
@@ -285,18 +286,19 @@ class BMM_User(Borg):
             o = open(macropy, 'w')
             o.write(''.join(content).format(folder=folder, base='sample', content=commands))
             o.close()
-            print('%d. Created macro template:         %-75s' % (step, macropy))
+            print('%d. Created macro template:            %-75s' % (step, macropy))
         else:
-            print('%d. Found macro template:           %-75s' % (step, macropy))
+            print('%d. Found macro template:              %-75s' % (step, macropy))
         step += 1
 
         xlsxtmpl = os.path.join(startup, 'wheel_template.xlsx')
         xlsxfile = os.path.join(folder, 'wheel_template.xlsx')
         if not os.path.isfile(xlsxfile):
             shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
-            print('%d. Copied macro building template: %-75s' % (step, xlsxfile))
+            print('%d. Copied macro building spreadsheet: %-75s' % (step, xlsxfile))
+
         else:
-            print('%d. Found macro building template:  %-75s' % (step, xlsxfile))
+            print('%d. Found macro building spreadsheet:  %-75s' % (step, xlsxfile))
         step += 1            
         
         ## make html folder, copy static html generation files
@@ -307,19 +309,19 @@ class BMM_User(Borg):
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
-            print('%d. Created dossier folder:         %-75s' % (step,htmlfolder))
+            print('%d. Created dossier folder:            %-75s' % (step,htmlfolder))
             print('   copied html generation files, touched MANIFEST')
         else:
-            print('%d. Found dossier folder:           %-75s' % (step,htmlfolder))
+            print('%d. Found dossier folder:              %-75s' % (step,htmlfolder))
         step += 1
      
         ## make prj folder
         prjfolder = os.path.join(folder, 'prj')
         if not os.path.isdir(prjfolder):
             os.mkdir(prjfolder)
-            print('%d. Created Athena prj folder:      %-75s' % (step,prjfolder))
+            print('%d. Created Athena prj folder:         %-75s' % (step,prjfolder))
         else:
-            print('%d. Found Athena prj folder:        %-75s' % (step,prjfolder))
+            print('%d. Found Athena prj folder:           %-75s' % (step,prjfolder))
         step += 1
 
         if use_pilatus:
@@ -327,9 +329,9 @@ class BMM_User(Borg):
             pilfolder = os.path.join(folder, 'Pilatus')
             if not os.path.isdir(pilfolder):
                 os.mkdir(pilfolder)
-                print('%d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
+                print('%d. Created folder for Pilatus images:    %-75s' % (step,pilfolder))
             else:
-                print('%d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
+                print('%d. Found folder for Pilatus images:      %-75s' % (step,pilfolder))
             step += 1
 
         if echem:
@@ -344,9 +346,9 @@ class BMM_User(Borg):
             self.echem_remote = os.path.join('/ws3_echem', name, self.date)
             if not os.path.isdir(self.echem_remote):
                 os.makedirs(self.echem_remote)
-                print('   Created remote echem folder:    %-75s' % (self.echem_remote))
+                print('   Created remote echem folder:       %-75s' % (self.echem_remote))
             else:
-                print('   Found remote echem folder:      %-75s' % (self.echem_remote))
+                print('   Found remote echem folder:         %-75s' % (self.echem_remote))
             
             step += 1
 
@@ -432,8 +434,8 @@ class BMM_User(Borg):
             user = json.load(open(jsonfile))
             if 'name' in user:
                 self.start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
-            if 'foils' in user:
-                self.read_foils = user['foils'] # see 76-edge.py, line 114, need to delay configuring foils until 76-edge is read
+            #if 'foils' in user:
+            #    self.read_foils = user['foils'] # see 76-edge.py, line 114, need to delay configuring foils until 76-edge is read
             if 'rois' in user:
                 self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
 

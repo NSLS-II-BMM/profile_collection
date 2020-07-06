@@ -11,11 +11,10 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 
-LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 MODEDATA = None
 def read_mode_data():
-     return json.load(open(os.path.join(LOCATION, 'Modes.json')))
-if os.path.isfile(os.path.join(LOCATION, 'Modes.json')):
+     return json.load(open(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json')))
+if os.path.isfile(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json')):
      MODEDATA = read_mode_data()
 
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):

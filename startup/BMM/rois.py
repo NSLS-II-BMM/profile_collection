@@ -55,7 +55,7 @@ class ROI():
         if type(elements) is str:
             elements = elements.split()
         if len(elements) != 3:
-            print(error_msg('\nThe list of foils must have three elements\n'))
+            print(error_msg('\nThe list of rois must have three elements\n'))
             return()
         for i in range(3):
             self.set_roi(i+1, elements[i])
@@ -125,19 +125,4 @@ class ROI():
             else:
                 text +='      ROI %d : %s\n'% (i+1, str(self.slots[i]))
         return text
-
-
-
-# ## if this startup file is "%run -i"-ed, then need to reset
-# ## foils to the serialized configuration
-# jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-# if os.path.isfile(jsonfile):
-#     user = json.load(open(jsonfile))
-#     if 'rois' in user:
-#         rois.set(user['rois'])
-#         BMMuser.read_rois = None
-# ## else if starting bsui fresh, perform the delayed foil configuration
-# if BMMuser.read_rois is not None:
-#     rois.set(BMMuser.read_rois)
-#     BMMuser.read_foils = None
-
+    

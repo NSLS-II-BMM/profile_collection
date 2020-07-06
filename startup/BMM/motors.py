@@ -1,6 +1,9 @@
 from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
+
+from bluesky.plan_stubs import abs_set, sleep, mv, null
+
 import time
 
 from BMM.functions import boxedtext
@@ -181,6 +184,12 @@ class Mirrors(PseudoPositioner):
         super()._done_moving(*args, **kwargs)
         self.xd.kill_cmd.put(1)
         self.xu.kill_cmd.put(1)
+
+    def kill_jacks(self):
+        yield from abs_set(self.yu.kill_cmd,  1, wait=True)
+        yield from abs_set(self.ydo.kill_cmd, 1, wait=True)
+        yield from abs_set(self.ydi.kill_cmd, 1, wait=True)
+        
 
     def where(self):
         stripe = ''

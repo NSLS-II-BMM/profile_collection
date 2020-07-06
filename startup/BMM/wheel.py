@@ -6,8 +6,10 @@ import configparser
 
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.motors    import EndStationEpicsMotor
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.motors        import EndStationEpicsMotor
+from BMM.periodictable import PERIODIC_TABLE
+from BMM.logging       import report
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -36,7 +38,7 @@ class WheelMotor(EndStationEpicsMotor):
     def reset(self):
         '''Return a sample wheel to slot 1'''
         yield from mv(self, self.slotone)
-        report('Returned to sample wheel slot 1 at %d degrees' % self.slotone, 'bold')
+        report('Returned to sample wheel slot 1 at %d degrees' % self.slotone, level='bold')
 
     def angle_from_current(self, n):
         '''Return the angle from the current position to the target'''
@@ -66,7 +68,7 @@ class WheelMotor(EndStationEpicsMotor):
             return(yield from null())
         angle = self.angle_from_current(n)
         yield from mvr(self, angle)
-        report('Arrived at sample wheel slot %d' % n, 'bold')
+        report('Arrived at sample wheel slot %d' % n, level='bold')
 
     def slot_number(self, target=None):
         try:
