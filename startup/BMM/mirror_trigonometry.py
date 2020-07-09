@@ -1,6 +1,7 @@
 
-import bluesky.plan_stubs as bps
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 from numpy import tan, pi
+from BMM.motor_status  import motor_status
 
 #run_report(__file__, text='mirror trigonometry')
 
@@ -54,7 +55,7 @@ def move_m3(target=5):
                   xafs_table.ydo, dnstr,
                   xafs_table.ydi, dnstr)
 
-    yield from bps.sleep(2.0)
+    yield from sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True) # and after
     RE.msg_hook = BMM_msg_hook
     BMM_log_info(motor_status())
@@ -108,7 +109,7 @@ def move_m2(target=3.5):
                   xafs_table.ydo, dnstr,
                   xafs_table.ydi, dnstr)
 
-    yield from bps.sleep(2.0)
+    yield from sleep(2.0)
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True) # and after
     RE.msg_hook = BMM_msg_hook
     BMM_log_info(motor_status())

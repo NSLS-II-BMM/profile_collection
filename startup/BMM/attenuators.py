@@ -1,3 +1,4 @@
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns

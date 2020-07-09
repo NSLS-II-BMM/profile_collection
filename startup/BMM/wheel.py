@@ -73,7 +73,7 @@ class WheelMotor(EndStationEpicsMotor):
     def slot_number(self, target=None):
         try:
             target = target.capitalize()
-            slot = xafs_ref.content.index(target) + 1
+            slot = self.content.index(target) + 1
             return slot
         except:
             return self.current_slot()
@@ -84,7 +84,7 @@ class WheelMotor(EndStationEpicsMotor):
         elif type(target) is str:
             target = self.slot_number(target.capitalize())
             angle = self.angle_from_current(target)
-        return(xafs_ref.user_readback.get()+angle)
+        return(self.user_readback.get()+angle)
 
     def recenter(self):
         here = self.user_readback.get()

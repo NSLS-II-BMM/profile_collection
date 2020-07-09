@@ -30,7 +30,7 @@ run_report('\t'+'other plans')
 from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens, mvbct, mvrbct, mvbender, mvrbender
 
 run_report('\t'+'change_mode, change_xtals')
-from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals
+from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals, pds_motors_ready
 
 if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
@@ -75,7 +75,7 @@ from BMM.xafs import howlong, xafs, db2xdi
 run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
 
-run_report('\t'+'larch')
+run_report('\t'+'Larch')
 from BMM.larch import Pandrosus, Kekropidai
 ## examples that only work at BMM...
 # se = Pandrosus()
@@ -89,6 +89,8 @@ from BMM.larch import Pandrosus, Kekropidai
 # bunch.add(seo)
 
 
+run_report('\t'+'Demeter')
+from BMM.demeter import athena, hephaestus, toprj
 
 
 run_report('\t'+'user interaction')

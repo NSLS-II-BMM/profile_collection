@@ -7,6 +7,7 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 from BMM.functions      import BMM_STAFF
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.logging        import BMM_user_log, BMM_unset_user_log
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
@@ -230,7 +231,7 @@ class BMM_User(Borg):
             print('   Created snapshot folder:           %-75s' % imagefolder)
         else:
             print('   Found snapshot folder:             %-75s' % imagefolder)
-    
+
         user_ns['DATA'] = folder + '/'
         self.DATA = folder + '/'
         self.folder = folder + '/'
@@ -457,7 +458,7 @@ class BMM_User(Borg):
         Copy data from the experiment that just finished to the NAS, then
         unset the logger and the DATA variable at the end of an experiment.
         '''
-        global DATA
+        #global DATA
 
         if self.echem and not os.path.ismount('/ws3_echem'):
             print(error_msg('''
@@ -493,7 +494,7 @@ class BMM_User(Borg):
                 if not os.path.isdir(os.path.join(destination, d)):
                     os.makedirs(os.path.join(destination, d))
             try:
-                copy_tree(DATA, destination)
+                copy_tree(self.DATA, destination)
                 report('NAS data store: "%s"' % destination, 'bold')
             except:
                 print(error_msg('Unable to write data to NAS server'))
@@ -513,7 +514,7 @@ class BMM_User(Borg):
         DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         self.DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         self.folder = self.DATA
-        wmb.folder = self.folder
+        user_ns["wmb"].folder = self.folder
         self.date = ''
         self.gup = 0
         self.saf = 0

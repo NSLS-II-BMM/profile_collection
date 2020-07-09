@@ -8,7 +8,7 @@ import os
 from lmfit.models import SkewedGaussianModel
 from databroker.core import SingleRunCache
 
-from bluesky.preprocessors import subs_decorator
+from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
@@ -57,12 +57,13 @@ def com(signal):
     '''Return the center of mass of a 1D array. This is used to find the
     center of rocking curve and slit height scans.'''
     return int(center_of_mass(signal)[0])
+import pandas
 def peak(signal):
     '''Return the index of the maximum of a 1D array. This is used to find the
     center of rocking curve and slit height scans.'''
     return pandas.Series.idxmax(signal)
 
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=1.0, choice='com'):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='com'):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -73,11 +74,11 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
       end:     (float)   ending position relative to current                         [3.0]
       nsteps:  (int)     number of steps                                             [61]
       move:    (Boolean) True=move to position of max signal, False=pluck and move   [False]
-      sleep:   (float)   length of sleep before trying to move dm3_bct               [3.0]
+      slp:     (float)   length of sleep before trying to move dm3_bct               [3.0]
       choice:  (string)  'peak' or 'com' (center of mass)                            ['com']
     '''
 
-    def main_plan(start, stop, nsteps, move, force):
+    def main_plan(start, stop, nsteps, move, slp, force):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
             print(error_msg(text))
@@ -95,7 +96,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
 
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
-        def scan_slit():
+        def scan_slit(slp):
 
             #if slit_height < 0.5:
             #    yield from mv(slits3.vsize, 0.5)
@@ -118,7 +119,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
                     position = com(signal)
                 top = t[motor.name][position]
                 
-                yield from sleep(sleep)
+                yield from sleep(slp)
                 yield from abs_set(motor.kill_cmd, 1, wait=True)
                 yield from mv(motor, top)
 
@@ -126,22 +127,21 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
                 action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
-                yield from sleep(sleep)
+                yield from sleep(slp)
                 yield from abs_set(motor.kill_cmd, 1, wait=True)
-                yield from move_after_scan(dm3_bct)
+                yield from move_after_scan(motor)
             yield from abs_set(quadem1.averaging_time, 0.5, wait=True)
-        yield from scan_slit()
+        yield from scan_slit(slp)
 
-    def cleanup_plan():
+    def cleanup_plan(slp):
         yield from mv(slits3.vsize, slit_height)
         yield from abs_set(user_ns['_locked_dwell_time'], 0.5, wait=True)
-        yield from sleep(sleep)
+        yield from sleep(slp)
         yield from abs_set(motor.kill_cmd, 1, wait=True)
         yield from resting_state_plan()
         if os.path.isfile(dotfile): os.remove(dotfile)
 
-    RE = user_ns['RE']
-    BMMuser = user_ns['BMMuser']
+    RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
     #######################################################################
     # this is a tool for verifying a macro.  this replaces this slit      #
     # height scan with a sleep, allowing the user to easily map out motor #
@@ -153,10 +153,10 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, sleep=
         return(yield from null())
     #######################################################################
     motor = user_ns['dm3_bct']
-    slit_height = user_ns['slits3'].vsize.readback.get()
+    slit_height = slits3.vsize.readback.get()
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, move, force), cleanup_plan())
+    yield from finalize_wrapper(main_plan(start, stop, nsteps, move, slp, force), cleanup_plan(slp))
     RE.msg_hook = BMM_msg_hook
 
 
@@ -212,11 +212,11 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
             yield from abs_set(user_ns['_locked_dwell_time'], 0.1, wait=True)
-            yield from user_ns['dcm'].kill_plan()
+            yield from dcm.kill_plan()
 
-            yield from mv(user_ns['slits3'].vsize, 3)
+            yield from mv(slits3.vsize, 3)
             if sgnl == 'Bicron':
-                yield from mv(user_ns['slitsg'].vsize, 5)
+                yield from mv(slitsg.vsize, 5)
                 
             uid = yield from rel_scan(dets, motor, start, stop, nsteps)
             #yield from rel_adaptive_scan(dets, 'I0', motor,
@@ -265,8 +265,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         if os.path.isfile(dotfile): os.remove(dotfile)
 
     
-    RE = user_ns['RE']
-    BMMuser = user_ns['BMMuser']
+    RE, BMMuser, db = user_ns['RE'], user_ns['BMMuser'], user_ns['db']
+    dcm, slits3, slitsg, quadem1 = user_ns['dcm'], user_ns['slits3'], user_ns['slitsg'], user_ns['quadem1']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces this rocking  #
     # curve scan with a sleep, allowing the user to easily map out motor #
@@ -281,11 +281,11 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     slit_height = user_ns['slits3'].vsize.readback.get()
     try:
-        gonio_slit_height = user_ns['slitsg'].vsize.readback.get()
+        gonio_slit_height = slitsg.vsize.readback.get()
     except:
         gonio_slit_height = 1
     RE.msg_hook = None
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
+    yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 
@@ -519,7 +519,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     ######################################################################
     dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
-    yield from bs.preprocessors.finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())
+    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 

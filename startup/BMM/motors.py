@@ -144,6 +144,7 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
 
     #def wh(self):
     #    return(round(self.user_readback.get(), 3))
@@ -189,7 +190,13 @@ class Mirrors(PseudoPositioner):
         yield from abs_set(self.yu.kill_cmd,  1, wait=True)
         yield from abs_set(self.ydo.kill_cmd, 1, wait=True)
         yield from abs_set(self.ydi.kill_cmd, 1, wait=True)
-        
+
+    def enable(self):
+        yield from abs_set(self.xu.enable_cmd,  1, wait=True)
+        yield from abs_set(self.xd.enable_cmd,  1, wait=True)
+        yield from abs_set(self.yu.enable_cmd,  1, wait=True)
+        yield from abs_set(self.ydo.enable_cmd, 1, wait=True)
+        yield from abs_set(self.ydi.enable_cmd, 1, wait=True)
 
     def where(self):
         stripe = ''

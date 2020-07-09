@@ -14,14 +14,16 @@ import shutil
 from cycler import cycler
 
 from BMM.camera_device import snap
-from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.demeter       import toprj
+from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.modes         import get_mode, describe_mode
 from BMM.motor_status  import motor_sidebar, motor_status
-from BMM.periodictable import edge_energy, Z_number
+from BMM.periodictable import edge_energy, Z_number, element_name
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start
 from BMM.xdi           import write_XDI
@@ -546,11 +548,11 @@ def scan_sequence_static_html(inifile       = None,
     filled up during an XAFS scan, then write a static html file as a dossier for a scan
     sequence using a bespoke html template file
     '''
-    BMMuser = user_ns['BMMuser']
+    BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
     if filename is None or start is None:
         return None
     firstfile = "%s.%3.3d" % (filename, start)
-    if not os.path.isfile(os.path.join(DATA, firstfile)):
+    if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):
         return None
     
     with open(os.path.join(BMMuser.DATA, 'dossier', 'sample.tmpl')) as f:
@@ -575,25 +577,8 @@ def scan_sequence_static_html(inifile       = None,
     if save is None: save = ''
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' # FIX ME!!!
     try:
-        ##########################################################################################
-        # Hi Tom!  Yes, I am making a system call right here.  Again.  And to run a perl script, #
-        # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #
-        # going to want to see that!  XOXO, Bruce                                                #
-        ##########################################################################################
-        print("/home/xf06bm/bin/toprj.pl --folder=%s --name=%s --base=%s --start=%d --end=%d --bounds=%s --mode=%s" %
-              (BMMuser.DATA, filename, basename, int(start), int(end), bounds, mode))
-        result = subprocess.run(['/home/xf06bm/bin/toprj.pl',
-                                 "--folder=%s" % DATA,         # data folder
-                                 "--name=%s"   % filename,     # file stub
-                                 "--base=%s"   % basename,     # basename (without scan sequence numbering)		 
-                                 "--start=%d"  % int(start),   # first suffix number					 
-                                 "--end=%d"    % int(end),     # last suffix number					 
-                                 "--bounds=%s" % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)
-                                 "--mode=%s"   % mode],        # measurement mode
-                                stdout=subprocess.PIPE)
-        png = open(os.path.join(BMMuser.DATA, 'snapshots', basename+'.png'), 'wb')
-        png.write(result.stdout)
-        png.close()
+        ## generate a png image, preferably of a quadplot of the data, using Demeter
+        pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
     except Exception as e:
         print(e)
     os.environ['DEMETER_FORCE_IFEFFIT'] = save # FIX ME!!!
@@ -635,7 +620,7 @@ def scan_sequence_static_html(inifile       = None,
                                 ))
     o.close()
 
-    manifest = open(os.path.join(DATA, 'dossier', 'MANIFEST'), 'a')
+    manifest = open(os.path.join(BMMuser.DATA, 'dossier', 'MANIFEST'), 'a')
     manifest.write(htmlfilename + '\n')
     manifest.close()
 
@@ -647,10 +632,10 @@ def scan_sequence_static_html(inifile       = None,
 
 def write_manifest():
     '''Update the scan manifest and the corresponding static html file.'''
+    BMMuser = user_ns['BMMuser']
     with open(os.path.join(BMMuser.DATA, 'dossier', 'MANIFEST')) as f:
         lines = [line.rstrip('\n') for line in f]
 
-    BMMuser = user_ns['BMMuser']
     experimentlist = ''
     for l in lines:
         if not os.path.isfile(l):
@@ -1153,7 +1138,8 @@ def xafs(inifile, **kwargs):
 
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
-    quadem1, vor, dualio = user_ns['quadem1'], user_ns['vor'], user_ns['dualio']
+    quadem1, vor = user_ns['quadem1'], user_ns['vor']
+    #dualio = user_ns['dualio']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #

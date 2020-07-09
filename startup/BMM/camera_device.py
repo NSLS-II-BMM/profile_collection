@@ -2,8 +2,10 @@ import os
 import uuid
 import threading
 import itertools
+import numpy
 
 import requests
+import bluesky
 from ophyd import Device, Component, Signal, DeviceStatus
 from ophyd.areadetector.filestore_mixins import resource_factory
 
@@ -26,7 +28,7 @@ from BMM.logging import report
 
 
 def annotate_image(imagefile, text):
-    bluesky_path_as_list = user_ns['bluesky'].__path__[0].split('/') # crude, but finds current collection folder
+    bluesky_path_as_list = bluesky.__path__[0].split('/') # crude, but finds current collection folder
     font_path = os.path.join('/', *bluesky_path_as_list[:4], 'lib', 'python3.7', 'site-packages', 'matplotlib', 'mpl-data', 'fonts', 'ttf')
     img = Image.open(imagefile)
     width, height = img.size
@@ -145,7 +147,7 @@ class BMM_JPEG_HANDLER:
 
     def __call__(self, index):
         filepath = self._template % index
-        return np.asarray(Image.open(filepath))
+        return numpy.asarray(Image.open(filepath))
 
 db = user_ns['db']
 db.reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)

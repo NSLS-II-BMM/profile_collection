@@ -4,14 +4,15 @@ import json
 
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from BMM.logging       import BMM_log_info, BMM_msg_hook
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.functions     import boxedtext, countdown
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
-from BMM.modes         import change_mode
+from BMM.modes         import change_mode, get_mode, pds_motors_ready
 from BMM.linescans     import rocking_curve, slit_height
+from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -70,11 +71,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
            the energy will be moved to the specified energy
            xrd=True implies focus=True and target=0
     '''
+    BMMuser, RE, dcm, dm3_bct, dcm_pitch = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'] , user_ns['dcm_pitch']
     #BMMuser.prompt = True
     el = el.capitalize()
     
     ######################################################################
-    # this is a tool for verifying a macro.  this replaces an xafs scan  #
+    # this is a tool for verifying a macro.  this replaces an xafsmod scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
@@ -83,6 +85,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
+
+    if pds_motors_ready() is False:
+        print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
+        return(yield from null())    
     
     (ok, text) = BMM_clear_to_start()
     if ok is False:
@@ -108,7 +114,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
         return(yield from null())
 
-    BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
     BMMuser.edge        = edge
     BMMuser.element     = el
     BMMuser.edge_energy = energy

@@ -1,5 +1,6 @@
 
 from bluesky.preprocessors import finalize_wrapper
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 import matplotlib.pyplot as plt
 
 import configparser
@@ -16,6 +17,7 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.xafs          import xafs
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
+from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
