@@ -6,9 +6,9 @@ import pprint
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
-from BMM.functions      import BMM_STAFF
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.logging        import BMM_user_log, BMM_unset_user_log
+from BMM.functions import BMM_STAFF
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -235,6 +235,10 @@ class BMM_User(Borg):
         user_ns['DATA'] = folder + '/'
         self.DATA = folder + '/'
         self.folder = folder + '/'
+        try:
+            user_ns['wmb'].folder = folder + '/'
+        except:
+            pass
         try:
             wmb.folder = self.folder
         except:

@@ -1,5 +1,5 @@
 from bluesky import __version__ as bluesky_version
-import re, pathlib, sys, datetime, pandas
+import re, pathlib, sys, datetime, pandas, numpy
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns

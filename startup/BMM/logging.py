@@ -143,8 +143,8 @@ def report(text, level=None, slack=False):
             print(text)
     else:
         print(text)
-    #if slack:
-    #    post_to_slack(text)
+    if slack:
+        post_to_slack(text)
 
 
 ######################################################################################

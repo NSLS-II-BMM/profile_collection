@@ -137,6 +137,7 @@ def setup_wheel():
     
         
 wmb = WheelMacroBuilder()
+wmb.folder = BMMuser.DATA
 xlsx = wmb.spreadsheet
 
 

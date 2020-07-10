@@ -568,20 +568,11 @@ def scan_sequence_static_html(inifile       = None,
         htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (filename,seqnumber))
 
 
-    ## write out the project file & crude processing image for this batch of scans
-    save = ''
+    ## generate a png image, preferably of a quadplot of the data, using Demeter
     try:
-        save = os.environ['DEMETER_FORCE_IFEFFIT'] # FIX ME!!!
-    except:
-        save = ''
-    if save is None: save = ''
-    os.environ['DEMETER_FORCE_IFEFFIT'] = '1' # FIX ME!!!
-    try:
-        ## generate a png image, preferably of a quadplot of the data, using Demeter
         pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
     except Exception as e:
         print(e)
-    os.environ['DEMETER_FORCE_IFEFFIT'] = save # FIX ME!!!
     
     with open(os.path.join(BMMuser.DATA, inifile)) as f:
         initext = ''.join(f.readlines())
@@ -653,10 +644,6 @@ def write_manifest():
     
 
 
-#from bluesky.log import config_bluesky_logging
-#config_bluesky_logging(level="DEBUG")
-
-    
 #########################
 # -- the main XAFS scan #
 #########################
