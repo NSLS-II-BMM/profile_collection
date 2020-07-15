@@ -100,12 +100,12 @@ def motor_status():
              md[user_ns['xafs_table'].yu.name], md[user_ns['xafs_table'].ydo.name], md[user_ns['xafs_table'].ydi.name])
 
     text += ' XAFS stages (motor names are xafs_<name>, units mm or deg):\n'
-    text += '     name =     x        y     pitch    wheel    ref\n'
-    text += '           %8.3f %8.3f %7.3f %8.3f %8.3f\n' % \
+    text += '     name =     x        y     pitch    wheel (slot)   ref\n'
+    text += '           %8.3f %8.3f %7.3f %8.3f   %d   %8.3f\n' % \
             (md[user_ns['xafs_linx'].name],
              md[user_ns['xafs_liny'].name],
              md[user_ns['xafs_pitch'].name],
-             md[user_ns['xafs_rotb'].name],
+             md[user_ns['xafs_rotb'].name], user_ns['xafs_rotb'].current_slot(user_ns['xafs_rotb'].position),
              md[user_ns['xafs_ref'].name]
             )
 

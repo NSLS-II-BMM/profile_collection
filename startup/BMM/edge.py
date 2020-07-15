@@ -152,7 +152,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
                 return(yield from null())
         
     start = time.time()
-    report(f'Configuring beamline for {el} edge', level='bold', slack=True)
+    report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     yield from dcm.kill_plan()
 
     ################################################
