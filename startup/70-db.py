@@ -76,18 +76,17 @@ def rationalize_mu(en, mu):
 
 def get_uid_list(mode='fluorescence'):
     if mode == 'verygood':
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
-        uidlist = os.path.join(startup, 'very_good_data')
+        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'ML')
+        uidlist = os.path.join(startup, 'very_good_data')  ## the "Elements" standards set
         with open(uidlist, "r") as f:
             uidstrings = f.read()
         these = uidstrings.split('\n')
-        these = catalog.search({"uid": {"$in": these}})
+        these = catalog.search({"uid": {"$in": these[:-1]}})
     else:
         allbmm = catalog['bmm']
-        ## xafs scans use scan_nd, linescans use rel_scan
-        query = {'plan_name': 'scan_nd'}
-        search_results = allbmm.search(query)
-        ## this is a weekend of measuring decent data with a long stretch of failure for the 0 part of training set
+        ## xafs scans use scan_nd, linescans use rel_scan, timescans use count, areascans use grid_scan
+        search_results = allbmm.search({'plan_name': 'scan_nd'})
+        ## this is a weekend of measuring decent data with a long stretch of failure for the 0 part of the training set
         timequery = TimeRange(since='2020-07-09', until='2020-13-09')
         these=search_results.search(timequery)
     return these
@@ -104,7 +103,8 @@ def process_catalog(mode='fluorescence'):
     #list(catalog['bmm'])
     print(f'Scoring {len(these)} records')
 
-    h5file = f'/home/xf06bm/{mode}_training_set.hdf5'
+    startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'ML')
+    h5file = os.path.join(startup, f'{mode}_training_set.hdf5')
     try:
         os.remove(h5file)
     except:
@@ -146,7 +146,9 @@ from joblib import dump, load
 def do_training():
     scores = list()
     data = list()
-    for h5file in ('/home/xf06bm/fluorescence_training_set.hdf5', '/home/xf06bm/transmission_training_set.hdf5'):
+    startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'ML')
+    h5file = os.path.join(startup, f'{mode}_training_set.hdf5')
+    for h5file in (os.path.join(startup, 'fluorescence_training_set.hdf5'), os.path.join(startup, 'transmission_training_set.hdf5')):
         f = h5py.File(h5file,'r')
         for uid in f.keys():
             score = int(f[uid].attrs['score'])
@@ -160,7 +162,7 @@ def do_training():
     #clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
     
     clf.fit(X_train, y_train)
-    dump(clf, '/home/xf06bm/data_recognition_model.joblib')
+    dump(clf, os.path.join(startup, 'data_recognition_model.joblib'))
     return(clf, X_test, y_test)
 
 
@@ -192,6 +194,6 @@ def test_data(uid, clf):
     return(clf.predict([m])[0])
     
 try:
-    clf = load('/home/xf06bm/data_recognition_model.joblib')
+    clf = load(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'ML', 'data_recognition_model.joblib'))
 except:
     pass
