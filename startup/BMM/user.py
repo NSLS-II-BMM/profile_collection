@@ -102,6 +102,7 @@ class BMM_User(Borg):
         self.detector        = 4
         self.echem           = False
         self.echem_remote    = None
+        self.use_slack       = True
         self.slack_channel   = None
         
         self.macro_dryrun    = False  ############################################################################

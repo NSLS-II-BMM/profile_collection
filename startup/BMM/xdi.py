@@ -19,13 +19,15 @@ def units(label):
         return 'dead-time corrected count rate'
     elif 'dtc' in label:
         return 'dead-time corrected count rate'
+    elif 'xs' in label:
+        return 'dead-time corrected count rate'
     elif 'encoder' in label:
         return 'counts'
     else:
         return ''
 
 
-quadem1, vor = user_ns['quadem1'], user_ns['vor']
+quadem1, vor, xs = user_ns['quadem1'], user_ns['vor'], user_ns['xs']
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
@@ -38,6 +40,7 @@ transmission = _ionchambers
 eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
+xspress      = _ionchambers + [xs.channel1.rois.roi02.value]
 
 class metadata_for_XDI_file():
     def __init__(self):
@@ -125,6 +128,8 @@ def write_XDI(datafile, dataframe):
         detectors = transmission
     elif 'yield' in mode:
         detectors = eyield
+    elif 'xs' in mode:
+        detectors = xspress
     else:
         detectors = fluorescence
         if BMMuser.detector == 1:
@@ -151,6 +156,8 @@ def write_XDI(datafile, dataframe):
     if 'fluo' in mode or 'flou' in mode or 'both' in mode:
         metadata.start_doc('# Detector.fluorescence: %s',        'XDI.Detector.fluorescence')
         metadata.start_doc('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
+    if 'xs' in mode:
+        metadata.start_doc('# Detector.fluorescence: %s',        'XDI.Detector.fluorescence')
     if 'yield' in mode:
         metadata.start_doc('# Detector.yield: %s', 'XDI.Detector.yield')
     if kind != 'sead':
@@ -214,6 +221,8 @@ def write_XDI(datafile, dataframe):
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
         if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
         if BMMuser.detector == 1: plot_hint = '%s / I0  --  ($8+$9+$10+$11) / $5' % BMMuser.dtc1
+    elif 'xs' in mode:
+        plot_hint = 'ROI1/I0  --  $8/$5'
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:
@@ -275,12 +284,14 @@ def write_XDI(datafile, dataframe):
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f\n"
             column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',
                            BMMuser.dtc1, BMMuser.roi1, 'ICR1', 'OCR1',]
-            
+
     else:
         if 'yield' in mode:     # yield is the primary measurement
             table['xmu'] = table['Iy'] / table['I0']
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
+        elif 'xs' in mode:     # reference is the primary measurement
+            table['xmu'] = numpy.log(table['xs_channel1_rois_roi02_value'] / table['I0'])
         elif 'test' in mode:    # test scan, no log!
             table['xmu'] = table['I0']
         else:                   # transmission is the primary measurement
@@ -292,6 +303,9 @@ def write_XDI(datafile, dataframe):
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f\n"
         if 'yield' in mode:
             column_list.append('Iy')
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+        if 'xs' in mode:
+            column_list.append('xs_channel1_rois_roi02_value')
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
         column_list.pop(0)

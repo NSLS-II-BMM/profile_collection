@@ -158,6 +158,10 @@ def bmm_metadata(measurement   = 'transmission',
         md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
         md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
 
+    if 'xs' in measurement:
+        md['Detector']['fluorescence'] = 'SII Vortex (1-element silicon drift)'
+        md['Detector']['deadtime_correction'] = 'Xspress3'
+        
     if 'yield' in measurement:
         md['Detector']['yield'] = 'in-vacuum electron yield detector'
 

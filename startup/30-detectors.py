@@ -281,6 +281,8 @@ try:                            # may be absent
     for n in [1]:
         getattr(xs, f'channel{n}').rois.roi01.value.kind = 'hinted'
         getattr(xs, f'channel{n}').rois.roi02.value.kind = 'hinted'
+        getattr(xs, f'channel{n}').rois.roi03.value.kind = 'hinted'
+        getattr(xs, f'channel{n}').rois.roi04.value.kind = 'hinted'
 
     xs.settings.configuration_attrs = ['acquire_period',
                                        'acquire_time',

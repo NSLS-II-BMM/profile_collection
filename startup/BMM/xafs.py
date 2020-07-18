@@ -826,7 +826,7 @@ def xafs(inifile, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
-        xs2   = lambda doc: (doc['data']['dcm_energy'], doc['data']['xs_channel1_rois_roi02_value'] / doc['data']['I0'])
+        xspress3 = lambda doc: (doc['data']['dcm_energy'], doc['data']['xs_channel1_rois_roi02_value'] / doc['data']['I0'])
         if BMMuser.detector == 1:
             fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
         else:
@@ -848,12 +848,12 @@ def xafs(inifile, **kwargs):
         elif 'both'  in p['mode']:
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
-        elif 'xs2'  in p['mode']:
-            xs.channel1.rois.roi01.value.kind = 'omitted'
+        elif 'xs'    in p['mode']:
+            xs.channel1.rois.roi01.value.kind = 'hinted'
             xs.channel1.rois.roi02.value.kind = 'hinted'
-            yield from mv(xs.settings.acquire_time, 1.5)
+            yield from mv(xs.settings.acquire_time, 0.5)
             #yield from mv(xs.total_points, nsteps)
-            plot =  DerivedPlot(xs2,   xlabel='energy (eV)', ylabel='Xspress3 ROI2 / I0',           title=p['filename'])
+            plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='Xspress3 ROI2 / I0',           title=p['filename'])
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
@@ -1052,7 +1052,7 @@ def xafs(inifile, **kwargs):
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata})
-                elif p['mode'] == 'xs2':
+                elif p['mode'] == 'xs':
                     uid= yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
                                             md={**xdi, **supplied_metadata})
                 else:
@@ -1064,6 +1064,13 @@ def xafs(inifile, **kwargs):
                 write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))
                 BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {header.start["scan_id"]}\ndata file written to {datafile}')
+
+                evaluation = user_ns['test_data'](uid, user_ns['clf'])
+                emoji = ':heavy_check_mark:'
+                if evaluation == 0:
+                    emoji = ':heavy_multiplication_x:'
+
+                report(f"Data evaluation score: {evaluation} {emoji}", level='bold', slack=True)
                 ## FYI: db.v2[-1].metadata['start']['scan_id']
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1126,6 +1133,7 @@ def xafs(inifile, **kwargs):
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     quadem1, vor = user_ns['quadem1'], user_ns['vor']
+    xs = user_ns['xs']
     #dualio = user_ns['dualio']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #

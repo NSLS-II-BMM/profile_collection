@@ -410,7 +410,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             detname = 'I0'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
         elif detector == 'Bicron':
-            dets.append(vor)
+            dets.append(user_ns['vor'])
             detname = 'Bicron'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Bicron'])
         elif detector == 'Iy':
@@ -418,7 +418,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             detname = 'electron yield'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
         elif detector == 'If':
-            dets.append(vor)
+            dets.append(user_ns['vor'])
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
@@ -445,7 +445,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             func = lambda doc: (doc['data'][thismotor.name], doc['data'][this] / doc['data']['I0'])
             
         elif detector == 'Both':
-            dets.append(vor)
+            dets.append(user_ns['vor'])
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
             funcfl = lambda doc: (doc['data'][thismotor.name],
                                   (doc['data'][BMMuser.dtc1] +

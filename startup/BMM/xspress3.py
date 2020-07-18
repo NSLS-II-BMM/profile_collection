@@ -103,6 +103,13 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                          read_attrs=read_attrs, **kwargs)
         self.set_channels_for_hdf5()
 
+    def _acquire_changed(self, value=None, old_value=None, **kwargs):
+        super()._acquire_changed(value=value, old_value=old_value, **kwargs)
+        status = self._status
+        if status is not None and status.done:
+            # Clear the state to be ready for the next round.
+            self._status = None
+            
     def stop(self):
         ret = super().stop()
         self.hdf5.stop()

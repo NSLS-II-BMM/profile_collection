@@ -7,6 +7,9 @@ from IPython.paths           import get_ipython_module_path
 from IPython.utils.coloransi import TermColors as color
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
+
 #run_report(__file__, text='BMM-specific logging')
 
 BMM_logger          = logging.getLogger('BMM_logger')
@@ -119,6 +122,7 @@ def report(text, level=None, slack=False):
 
     not matching a report level will be undecorated
     '''
+    BMMuser = user_ns['BMMuser']
     BMM_log_info(text)
     if color:                   # test that color is sensible...
         if level == 'error':
@@ -143,7 +147,7 @@ def report(text, level=None, slack=False):
             print(text)
     else:
         print(text)
-    if slack:
+    if BMMuser.use_slack and slack:
         post_to_slack(text)
 
 

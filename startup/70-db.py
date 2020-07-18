@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 plt.ion()
 import h5py
 
+run_report(__file__, text='machine learning prototype')
+
 
 ## "these" has a list of 158 db records, need:
 ##
@@ -70,8 +72,27 @@ def rationalize_mu(en, mu):
     ee=list(numpy.arange(float(en[0]), float(en[-1]), (float(en[-1])-float(en[0]))/GRIDSIZE))
     mm=numpy.interp(ee, en, mu)
     return(ee, mm)
-    
-def process_catalog(mode = 'fluorescence'):
+
+
+def get_uid_list(mode='fluorescence'):
+    if mode == 'verygood':
+        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
+        uidlist = os.path.join(startup, 'very_good_data')
+        with open(uidlist, "r") as f:
+            uidstrings = f.read()
+        these = uidstrings.split('\n')
+        these = catalog.search({"uid": {"$in": these}})
+    else:
+        allbmm = catalog['bmm']
+        ## xafs scans use scan_nd, linescans use rel_scan
+        query = {'plan_name': 'scan_nd'}
+        search_results = allbmm.search(query)
+        ## this is a weekend of measuring decent data with a long stretch of failure for the 0 part of training set
+        timequery = TimeRange(since='2020-07-09', until='2020-13-09')
+        these=search_results.search(timequery)
+    return these
+
+def process_catalog(mode='fluorescence'):
 
     #fig = plt.figure()
     #ax = fig.add_subplot(1,1,1)
@@ -79,16 +100,8 @@ def process_catalog(mode = 'fluorescence'):
     plt.show(False)
     plt.draw()
     fig.canvas.flush_events()
-    
+    these = get_uid_list(mode)
     #list(catalog['bmm'])
-    allbmm = catalog['bmm']
-
-    ## crude search, grabs all the Ti spectra, which were 451 long... a place to start
-    query = {'plan_name': 'scan_nd'}
-    search_results = allbmm.search(query)
-    ## len(search_results)  --> 334 ... all scans from forever with 451 points
-    timequery = TimeRange(since='2020-07-09', until='2040')
-    these=search_results.search(timequery)
     print(f'Scoring {len(these)} records')
 
     h5file = f'/home/xf06bm/{mode}_training_set.hdf5'
@@ -175,5 +188,10 @@ def test_data(uid, clf):
     e,m = rationalize_mu(en, mu)
     if len(m) > GRIDSIZE:
         m = m[:-1]
-    print(clf.predict([m]))
+    #print(clf.predict([m]))
+    return(clf.predict([m])[0])
     
+try:
+    clf = load('/home/xf06bm/data_recognition_model.joblib')
+except:
+    pass
