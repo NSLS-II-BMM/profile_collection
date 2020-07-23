@@ -31,7 +31,8 @@ def approximate_pitch(energy):
 
 def show_edges():
     rois = user_ns['rois']
-    text = show_reference_wheel() + '\n' + rois.show()
+    xsroi = user_ns['xsroi']
+    text = show_reference_wheel() + '\n' + rois.show() + '\n' + xsroi.show_xsrois()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):

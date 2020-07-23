@@ -102,6 +102,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
         self.set_channels_for_hdf5()
+        self.set_rois()
 
     def _acquire_changed(self, value=None, old_value=None, **kwargs):
         super()._acquire_changed(value=value, old_value=old_value, **kwargs)
@@ -149,4 +150,17 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
     # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
 
-
+    def set_roi_channel(self, channel=1, index=4, name='OCR', low=1, high=4095):
+        ch = getattr(self, f'channel{channel}')
+        rs = ch.rois
+        this = getattr(rs, 'roi{:02}'.format(index))
+        this.value.name = name
+        this.bin_low.put(low)
+        this.bin_high.put(high)
+        
+    def set_rois(self):
+        self.set_roi_channel(channel=1, index=1, name='Ti1',  low=440, high=459)
+        self.set_roi_channel(channel=1, index=2, name='Cr1',  low=530, high=549)
+        self.set_roi_channel(channel=1, index=3, name='Fe1',  low=626, high=651)
+        self.set_roi_channel(channel=1, index=4, name='OCR1', low=1,   high=4095)
+        

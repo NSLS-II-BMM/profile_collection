@@ -19,7 +19,7 @@ user_ns = get_ipython().user_ns
 
 class BMMDataEvaluation():
     '''A very simple machine learning model for recognizing when an XAS
-    measurement goes horribly awry.
+    scan goes horribly awry.
 
     '''
     def __init__(self):
@@ -178,6 +178,7 @@ class BMMDataEvaluation():
         data = list()
         for h5file in self.hdf5:
             if os.path.isfile(h5file):
+                print(f'reading data from {h5file}')
                 f = h5py.File(h5file,'r')
                 for uid in f.keys():
                     score = int(f[uid].attrs['score'])
@@ -186,27 +187,37 @@ class BMMDataEvaluation():
                     data.append(mu)
 
         X_train, X_test, y_train, y_test = train_test_split(data, scores, random_state=0)
+        print("training model...")
         #self.clf=KNeighborsClassifier(n_neighbors=1)
         self.clf=RandomForestClassifier(random_state=0)
         #self.clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
         
         self.clf.fit(X_train, y_train)
         dump(self.clf, self.model)
-        self.X = self.X_test
-        self.y = self.y_test
+        print(f'wrote model to {self.model}')
+        self.X = X_test
+        self.y = y_test
         return()
 
+    def score(self):
+        '''Thin wrapper around the classifier object's score method.'''
+        return(self.clf.score(self.X, self.y))
 
     def evaluate(self, uid, mode=None):
         '''Perform an evaluation of a measurement.  The data will be
         interpolated onto the same grid used for the training set,
-        then get subjected to the model.  This returns a 1 or 0 and
-        sets self.emoji to the Slack-appropriate value.
+        then get subjected to the model.  This returns a tuple with
+        the score (1 or 0) and the Slack-appropriate value (green
+        check or red cross).
+
+        arguments:
+          * uid: uid of data to be evaluated
+          * mode: when not None, used to specify fluorescence or transmission (for a data set that has both)
 
         '''
         db = user_ns['db']
         this = db.v2[uid]
-        if mode=None:
+        if mode is None:
             mode = this.metadata['start']['XDI']['_mode'][0]
         element = this.metadata['start']['XDI']['Element']['symbol']
         i0 = this.primary.read()['I0']
@@ -214,6 +225,10 @@ class BMMDataEvaluation():
         if mode == 'transmission':
             it = this.primary.read()['It']
             mu = numpy.log(abs(i0/it))
+        elif mode == 'reference':
+            it = this.primary.read()['It']
+            ir = this.primary.read()['Ir']
+            mu = numpy.log(abs(it/ir))
         else:
             if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
                 signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']

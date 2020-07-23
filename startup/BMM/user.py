@@ -120,6 +120,9 @@ class BMM_User(Borg):
         self.dtc2            = 'DTC2'
         self.dtc3            = 'DTC3'
         self.dtc4            = 'DTC4'
+
+        self.xs1             = None
+        self.xschannel1      = None
                 
         ## current plot attributes    #######################################################################
         self.motor    = None          # these are used to keep track of mouse events on the plotting window #
@@ -184,7 +187,7 @@ class BMM_User(Borg):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
-        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4'):
+        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4', 'xs1', 'xschannel1'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nCurrent plot attributes:')

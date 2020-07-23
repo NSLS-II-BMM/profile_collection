@@ -426,24 +426,12 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.dtc2] +
                                  doc['data'][BMMuser.dtc3] +
                                  doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
-        elif detector == 'Xs1':
+        elif detector == 'xs':
             dets.append(xs)
             denominator = ' / I0'
             detname = 'fluorescence'
-            this = 'xs_channel1_rois_roi01_value'
-            xs.channel1.rois.roi01.value.kind = 'hinted'
-            xs.channel1.rois.roi02.value.kind = 'omitted'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data'][this] / doc['data']['I0'])
-            
-        elif detector == 'Xs2':
-            dets.append(xs)
-            denominator = ' / I0'
-            detname = 'fluorescence'
-            this = 'xs_channel1_rois_roi02_value'
-            xs.channel1.rois.roi01.value.kind = 'omitted'
-            xs.channel1.rois.roi02.value.kind = 'hinted'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data'][this] / doc['data']['I0'])
-            
+            func = lambda doc: (doc['data'][thismotor.name], doc['data'][BMMuser.xs1] / doc['data']['I0'])
+                        
         elif detector == 'Both':
             dets.append(user_ns['vor'])
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])

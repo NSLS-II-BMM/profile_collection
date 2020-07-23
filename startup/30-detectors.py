@@ -311,5 +311,6 @@ try:                            # may be absent
         d.rois.configuration_attrs = roi_names
         for roi_n in roi_names:
             getattr(d.rois, roi_n).value_sum.kind = 'omitted'
+
 except:
     pass

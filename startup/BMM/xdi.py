@@ -7,27 +7,32 @@ user_ns = get_ipython().user_ns
 
 def units(label):
     label = label.lower()
-    if 'energy' in label:
-        return 'eV'
-    elif 'time' in label:
-        return 'seconds'
-    elif label in ('i0', 'it', 'ir', 'iy'):
-        return 'nA'
-    elif label[:-1] in ('roi', 'icr', 'ocr'):
-        return 'counts'
-    elif 'corr' in label:
-        return 'dead-time corrected count rate'
-    elif 'dtc' in label:
-        return 'dead-time corrected count rate'
-    elif 'xs' in label:
-        return 'dead-time corrected count rate'
-    elif 'encoder' in label:
-        return 'counts'
-    else:
+    try:
+        if 'energy' in label:
+            return 'eV'
+        elif 'time' in label:
+            return 'seconds'
+        elif label in ('i0', 'it', 'ir', 'iy'):
+            return 'nA'
+        elif label[:-1] in ('roi', 'icr', 'ocr'):
+            return 'counts'
+        elif 'corr' in label:
+            return 'dead-time corrected count rate'
+        elif 'dtc' in label:
+            return 'dead-time corrected count rate'
+        elif 'xs' in label:
+            return 'dead-time corrected count rate'
+        elif 'encoder' in label:
+            return 'counts'
+        elif user_ns['BMMuser'].xschannel1 in label:
+            return 'dead-time corrected count rate'
+        else:
+            return ''
+    except:
         return ''
 
 
-quadem1, vor, xs = user_ns['quadem1'], user_ns['vor'], user_ns['xs']
+quadem1, vor = user_ns['quadem1'], user_ns['vor']
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
@@ -40,7 +45,8 @@ transmission = _ionchambers
 eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
-xspress      = _ionchambers + [xs.channel1.rois.roi02.value]
+#xspress      = _ionchambers + [user_ns['quadem1'].xschannel1]
+#xspress      = _ionchambers + [xs.channel1.rois.roi02.value]
 
 class metadata_for_XDI_file():
     def __init__(self):
@@ -129,7 +135,7 @@ def write_XDI(datafile, dataframe):
     elif 'yield' in mode:
         detectors = eyield
     elif 'xs' in mode:
-        detectors = xspress
+        detectors = _ionchambers + [BMMuser.xschannel1]
     else:
         detectors = fluorescence
         if BMMuser.detector == 1:
@@ -291,7 +297,7 @@ def write_XDI(datafile, dataframe):
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
         elif 'xs' in mode:     # reference is the primary measurement
-            table['xmu'] = numpy.log(table['xs_channel1_rois_roi02_value'] / table['I0'])
+            table['xmu'] = numpy.log(table[BMMuser.xs1] / table['I0'])
         elif 'test' in mode:    # test scan, no log!
             table['xmu'] = table['I0']
         else:                   # transmission is the primary measurement
@@ -305,7 +311,7 @@ def write_XDI(datafile, dataframe):
             column_list.append('Iy')
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
         if 'xs' in mode:
-            column_list.append('xs_channel1_rois_roi02_value')
+            column_list.append(BMMuser.xs1)
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
         column_list.pop(0)

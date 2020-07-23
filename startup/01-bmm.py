@@ -20,8 +20,9 @@ from BMM.user import BMM_User
 #foils = ReferenceFoils()
 
 run_report('\t'+'detector ROIs')
-from BMM.rois import ROI
+from BMM.rois import ROI, XSROI
 rois = ROI()
+xsroi = XSROI()
 
 
 BMMuser = BMM_User()

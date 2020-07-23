@@ -826,7 +826,6 @@ def xafs(inifile, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
-        xspress3 = lambda doc: (doc['data']['dcm_energy'], doc['data']['xs_channel1_rois_roi02_value'] / doc['data']['I0'])
         if BMMuser.detector == 1:
             fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
         else:
@@ -849,9 +848,29 @@ def xafs(inifile, **kwargs):
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
-            xs.channel1.rois.roi01.value.kind = 'hinted'
-            xs.channel1.rois.roi02.value.kind = 'hinted'
+            if p['element'] == 'Ti':
+                xs.channel1.rois.roi01.value.kind = 'hinted'
+                xs.channel1.rois.roi02.value.kind = 'omitted'
+                xs.channel1.rois.roi03.value.kind = 'omitted'
+                xs.channel1.rois.roi04.value.kind = 'omitted'
+                BMMuser.xs1 = 'Ti1'
+                BMMuser.xschannel1 = xs.channel1.rois.roi01.value
+            elif p['element'] == 'Cr':
+                xs.channel1.rois.roi01.value.kind = 'omitted'
+                xs.channel1.rois.roi02.value.kind = 'hinted'
+                xs.channel1.rois.roi03.value.kind = 'omitted'
+                xs.channel1.rois.roi04.value.kind = 'omitted'
+                BMMuser.xs1 = 'Cr1'
+                BMMuser.xschannel1 = xs.channel1.rois.roi02.value
+            elif p['element'] == 'Fe':
+                xs.channel1.rois.roi01.value.kind = 'omitted'
+                xs.channel1.rois.roi02.value.kind = 'omitted'
+                xs.channel1.rois.roi03.value.kind = 'hinted'
+                xs.channel1.rois.roi04.value.kind = 'omitted'
+                BMMuser.xs1 = 'Fe1'
+                BMMuser.xschannel1 = xs.channel1.rois.roi03.value
             yield from mv(xs.settings.acquire_time, 0.5)
+            xspress3 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs1] / doc['data']['I0'])
             #yield from mv(xs.total_points, nsteps)
             plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='Xspress3 ROI2 / I0',           title=p['filename'])
         else:
@@ -1065,13 +1084,12 @@ def xafs(inifile, **kwargs):
                 print(bold_msg('wrote %s' % datafile))
                 BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {header.start["scan_id"]}\ndata file written to {datafile}')
 
-                evaluation = user_ns['test_data'](uid, user_ns['clf'])
-                emoji = ':heavy_check_mark:'
-                if evaluation == 0:
-                    emoji = ':heavy_multiplication_x:'
-
-                report(f"Data evaluation score: {evaluation} {emoji}", level='bold', slack=True)
-                ## FYI: db.v2[-1].metadata['start']['scan_id']
+                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+                ## data evaluation
+                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref')):
+                    score, emoji = user_ns['clf'].evaluate(uid)
+                    report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
+                    ## FYI: db.v2[-1].metadata['start']['scan_id']
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
@@ -1133,7 +1151,10 @@ def xafs(inifile, **kwargs):
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     quadem1, vor = user_ns['quadem1'], user_ns['vor']
-    xs = user_ns['xs']
+    try:
+        xs = user_ns['xs']
+    except:
+        pass
     #dualio = user_ns['dualio']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #

@@ -69,6 +69,10 @@ XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_positio
 run_report('\t'+'XDI')
 from BMM.xdi import write_XDI
 
+run_report('\t'+'machine learning and data evaluation')
+from BMM.ml import BMMDataEvaluation
+clf = BMMDataEvaluation()
+
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
@@ -79,7 +83,7 @@ run_report('\t'+'Larch')
 from BMM.larch import Pandrosus, Kekropidai
 ## examples that only work at BMM...
 # se = Pandrosus()
-# se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name='Se metal', mode='transmission')
+# se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name\='Se metal', mode='transmission')
 
 # seo = Pandrosus()
 # seo.fetch('69c35332-6c8a-4f43-9eb2-e5e9cbe7f798', name='SeO2', mode='transmission')
