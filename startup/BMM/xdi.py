@@ -135,7 +135,7 @@ def write_XDI(datafile, dataframe):
     elif 'yield' in mode:
         detectors = eyield
     elif 'xs' in mode:
-        detectors = _ionchambers + [BMMuser.xschannel1]
+        detectors = _ionchambers + [BMMuser.xschannel1, BMMuser.xschannel2, BMMuser.xschannel3, BMMuser.xschannel4]
     else:
         detectors = fluorescence
         if BMMuser.detector == 1:
@@ -228,7 +228,7 @@ def write_XDI(datafile, dataframe):
         if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
         if BMMuser.detector == 1: plot_hint = '%s / I0  --  ($8+$9+$10+$11) / $5' % BMMuser.dtc1
     elif 'xs' in mode:
-        plot_hint = 'ROI1/I0  --  $8/$5'
+        plot_hint = '(ROI1+ROI2+ROI3+ROI4)/I0  --  ($8+$9+$10+$11)/$5'
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:
@@ -297,7 +297,7 @@ def write_XDI(datafile, dataframe):
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
         elif 'xs' in mode:     # reference is the primary measurement
-            table['xmu'] = numpy.log(table[BMMuser.xs1] / table['I0'])
+            table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
         elif 'test' in mode:    # test scan, no log!
             table['xmu'] = table['I0']
         else:                   # transmission is the primary measurement
@@ -311,8 +311,8 @@ def write_XDI(datafile, dataframe):
             column_list.append('Iy')
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
         if 'xs' in mode:
-            column_list.append(BMMuser.xs1)
-            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+            column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
         column_list.pop(0)
         column_list.pop(0)

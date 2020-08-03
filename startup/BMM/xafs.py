@@ -542,6 +542,7 @@ def scan_sequence_static_html(inifile       = None,
                               anasnap       = '',
                               htmlpage      = None,
                               ththth        = None,
+                              initext       = None,
                               ):
     '''
     Gather information from various places, including html_dict, a temporary dictionary 
@@ -573,9 +574,10 @@ def scan_sequence_static_html(inifile       = None,
         pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
     except Exception as e:
         print(e)
-    
-    with open(os.path.join(BMMuser.DATA, inifile)) as f:
-        initext = ''.join(f.readlines())
+
+    if initext is None:
+        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            initext = ''.join(f.readlines())
         
     o = open(htmlfilename, 'w')
     pdstext = '%s (%s)' % (get_mode(), describe_mode())
@@ -848,31 +850,13 @@ def xafs(inifile, **kwargs):
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
-            if p['element'] == 'Ti':
-                xs.channel1.rois.roi01.value.kind = 'hinted'
-                xs.channel1.rois.roi02.value.kind = 'omitted'
-                xs.channel1.rois.roi03.value.kind = 'omitted'
-                xs.channel1.rois.roi04.value.kind = 'omitted'
-                BMMuser.xs1 = 'Ti1'
-                BMMuser.xschannel1 = xs.channel1.rois.roi01.value
-            elif p['element'] == 'Cr':
-                xs.channel1.rois.roi01.value.kind = 'omitted'
-                xs.channel1.rois.roi02.value.kind = 'hinted'
-                xs.channel1.rois.roi03.value.kind = 'omitted'
-                xs.channel1.rois.roi04.value.kind = 'omitted'
-                BMMuser.xs1 = 'Cr1'
-                BMMuser.xschannel1 = xs.channel1.rois.roi02.value
-            elif p['element'] == 'Fe':
-                xs.channel1.rois.roi01.value.kind = 'omitted'
-                xs.channel1.rois.roi02.value.kind = 'omitted'
-                xs.channel1.rois.roi03.value.kind = 'hinted'
-                xs.channel1.rois.roi04.value.kind = 'omitted'
-                BMMuser.xs1 = 'Fe1'
-                BMMuser.xschannel1 = xs.channel1.rois.roi03.value
             yield from mv(xs.settings.acquire_time, 0.5)
-            xspress3 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs1] / doc['data']['I0'])
+            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
+                                                                doc['data'][BMMuser.xs2] +
+                                                                doc['data'][BMMuser.xs3] +
+                                                                doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             #yield from mv(xs.total_points, nsteps)
-            plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='Xspress3 ROI2 / I0',           title=p['filename'])
+            plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
@@ -976,6 +960,8 @@ def xafs(inifile, **kwargs):
             html_dict['clargs']        = clargs
             html_dict['htmlpage']      = p['htmlpage']
             html_dict['ththth']        = p['ththth']
+            with open(os.path.join(BMMuser.DATA, inifile)) as f:
+                html_dict['initext'] = ''.join(f.readlines())
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## snap photos
@@ -1066,7 +1052,6 @@ def xafs(inifile, **kwargs):
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
-                #if 'trans' in p['mode'] or 'ref' in p['mode'] or 'yield' in p['mode'] or 'test' in p['mode']:
                 uid = None
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
@@ -1086,7 +1071,7 @@ def xafs(inifile, **kwargs):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation
-                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref')):
+                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
                     score, emoji = user_ns['clf'].evaluate(uid)
                     report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
                     ## FYI: db.v2[-1].metadata['start']['scan_id']
@@ -1155,7 +1140,10 @@ def xafs(inifile, **kwargs):
         xs = user_ns['xs']
     except:
         pass
-    #dualio = user_ns['dualio']
+    try:
+        dualio = user_ns['dualio']
+    except:
+        pass
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #

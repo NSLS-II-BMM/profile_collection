@@ -42,6 +42,7 @@ def {base}_macro(dryrun=False):
         ### ---------------------------------------------------------------------------------------
 
     def cleanup_plan():
+        yield from xafs_wheel.reset()
         yield from end_of_macro()
         
     yield from finalize_wrapper(main_plan(), cleanup_plan())    

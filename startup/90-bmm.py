@@ -97,6 +97,19 @@ run_report('\t'+'Demeter')
 from BMM.demeter import athena, hephaestus, toprj
 
 
+if rois.trigger is True:        # set Struck rois from persistent user information
+     if len(BMMuser.rois) == 3:
+          rois.set(BMMuser.rois)
+     rois.trigger = False
+if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
+     whoami()
+     BMMuser.trigger = False
+if BMMuser.element is not None: # make sure Xspress3 is configured to measure from the correct ROI
+     try:
+          xs.measure_roi()
+     except:
+          pass
+
 run_report('\t'+'user interaction')
 from BMM.prompt import MyPrompt, BMM_help, BMM_keys
 ip = get_ipython()

@@ -53,6 +53,7 @@ class ROI():
     '''
     def __init__(self):
         self.slots = [None, None, None]
+        self.trigger = False
 
     def unset(self):
         self.slots = [None, None, None]
@@ -88,8 +89,9 @@ class ROI():
             return()
         for i in range(3):
             self.set_roi(i+1, elements[i])
-        vor = user_ns['vor']
+        vor, BMMuser = user_ns['vor'], user_ns['BMMuser']
         vor.channel_names(*elements)
+        BMMuser.rois = elements
         print(self.show())
         ########################################################
         # save the ROI configuration to the user serialization #

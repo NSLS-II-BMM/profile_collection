@@ -73,6 +73,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
            xrd=True implies focus=True and target=0
     '''
     BMMuser, RE, dcm, dm3_bct, dcm_pitch = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'] , user_ns['dcm_pitch']
+    try:
+        xs = user_ns['xs']
+    except:
+        pass
     #BMMuser.prompt = True
     el = el.capitalize()
     
@@ -199,10 +203,16 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     # set roi channel #
     ###################
     if not xrd:
+        ## Struck
         rois = user_ns['rois']
         print('Moving reference foil...')
-        #yield from foils.move(el)
         yield from rois.select(el)
+        ## Xspress3
+        try:
+            xs.measure_roi()
+        except:
+            pass
+        ## feedback
         show_edges()
     
     report(f'Finished configuring for {el} edge', level='bold', slack=True)

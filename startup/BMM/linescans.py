@@ -303,7 +303,7 @@ motor_nicknames = {'x'    : user_ns['xafs_x'],     'roll' : user_ns['xafs_roll']
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Xs1', 'Xs2'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Xs'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -375,14 +375,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Xs1', 'Xs2'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Xs'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
             yield from null()
             return
 
         yield from abs_set(user_ns['_locked_dwell_time'], inttime, wait=True)
-        if detector == 'Xs1' or detector == 'Xs2':
+        if detector == 'Xs':
             yield from mv(xs.settings.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
         dets  = [user_ns['quadem1'],]
@@ -426,11 +426,15 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.dtc2] +
                                  doc['data'][BMMuser.dtc3] +
                                  doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
-        elif detector == 'xs':
-            dets.append(xs)
+        elif detector == 'Xs':
+            dets.append(user_ns['xs'])
             denominator = ' / I0'
             detname = 'fluorescence'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data'][BMMuser.xs1] / doc['data']['I0'])
+            func = lambda doc: (doc['data'][thismotor.name],
+                                (doc['data'][BMMuser.xs1] +
+                                 doc['data'][BMMuser.xs2] +
+                                 doc['data'][BMMuser.xs3] +
+                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
                         
         elif detector == 'Both':
             dets.append(user_ns['vor'])
@@ -493,8 +497,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         yield from resting_state_plan()
 
 
-    RE = user_ns['RE']
-    BMMuser = user_ns['BMMuser']
+    RE, BMMuser = user_ns['RE'], user_ns['BMMuser']
+    try:
+        xs = user_ns['xs']
+    except:
+        pass
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #

@@ -22,10 +22,16 @@ from pathlib import PurePath
 from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
-import numpy as np
+import numpy
 import itertools
 import time as ttime
 from collections import deque, OrderedDict
+
+import matplotlib.pyplot as plt
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
+
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
 
 class Xspress3FileStoreFlyable(Xspress3FileStore):
@@ -79,11 +85,21 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
 class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    # channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    # channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    # channel4 = Cpt(Xspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    # create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
+    channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
+    channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
+    channel4 = Cpt(Xspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
+    # mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
+    # mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
+    # mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
+    # mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    
+    mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
+    mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
+    mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
+    mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+    
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/home/xspress3/data/BMM',
                root='/home/xspress3',
@@ -97,13 +113,26 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                                    'spectra_per_point', 'settings',
                                    'rewindable']
         if read_attrs is None:
-            # read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
-            read_attrs = ['channel1', 'hdf5']
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
+        self.settings.num_images.put(1)   # number of frames
+        self.settings.trigger_mode.put(1) # trigger mode internal
+        self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
         self.set_channels_for_hdf5()
+        self.slots = [None,]*16
         self.set_rois()
 
+    def restart(self):
+        for n in range(1,5):
+            this = getattr(self, f'channel{n}')
+            this.vis_enabled.put(1)
+        self.settings.num_images.put(1)   # number of frames
+        self.settings.trigger_mode.put(1) # trigger mode internal
+        self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
+        self.set_channels_for_hdf5()
+        self.set_rois()
+        
     def _acquire_changed(self, value=None, old_value=None, **kwargs):
         super()._acquire_changed(value=value, old_value=old_value, **kwargs)
         status = self._status
@@ -127,8 +156,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.settings.trigger_mode.put(0)  # 'Software'
         super().unstage()
 
-    # def set_channels_for_hdf5(self, channels=(1, 2, 3, 4)):
-    def set_channels_for_hdf5(self, channels=(1,)):
+    def set_channels_for_hdf5(self, channels=(1, 2, 3, 4)):
         """
         Configure which channels' data should be saved in the resulted hdf5 file.
 
@@ -159,8 +187,65 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_high.put(high)
         
     def set_rois(self):
-        self.set_roi_channel(channel=1, index=1, name='Ti1',  low=440, high=459)
-        self.set_roi_channel(channel=1, index=2, name='Cr1',  low=530, high=549)
-        self.set_roi_channel(channel=1, index=3, name='Fe1',  low=626, high=651)
-        self.set_roi_channel(channel=1, index=4, name='OCR1', low=1,   high=4095)
+        self.slots[0:3] = ['Ti', 'Mn', 'Fe', 'OCR']
+        for n in range(1,5):
+            self.set_roi_channel(channel=n, index=1, name=f'Ti{n}',  low=440, high=459)
+            self.set_roi_channel(channel=n, index=2, name=f'Mn{n}',  low=580, high=598)
+            self.set_roi_channel(channel=n, index=3, name=f'Fe{n}',  low=626, high=651)
+            self.set_roi_channel(channel=n, index=4, name=f'OCR{n}', low=1,   high=4095)
+
+    def measure_roi(self):
+        BMMuser = user_ns['BMMuser']
+        for i in range(4):
+            for n in range(1,5):
+                ch = getattr(self, f'channel{n}')
+                this = getattr(ch.rois, 'roi{:02}'.format(i+1))
+                if self.slots[i] == BMMuser.element:
+                    this.value.kind = 'hinted'
+                    setattr(BMMuser, f'xs{n}', this.value.name)
+                    setattr(BMMuser, f'xschannel{n}', this.value)
+                else:
+                    this.value.kind = 'omitted'
+                
+
+    def show_rois(self):
+        BMMuser = user_ns['BMMuser']
+        text = 'Xspress3 ROIs:\n'
+        text += bold_msg('    1      2      3      4      5      6      7      8\n')
+        text += ' '
+        for i in range(8):
+            if self.slots[i] == BMMuser.element:
+                text += go_msg('%4.4s' % self.slots[i]) + '   '
+            else:
+                text += '%4.4s' % self.slots[i] + '   '
+        text += '\n'
+        text += bold_msg('    9     10     11     12     13     14     15     16\n')
+        text += ' '
+        for i in range(8, 16):
+            if self.slots[i] == BMMuser.element:
+                text += go_msg('%4.4s' % self.slots[i]) + '   '
+            else:
+                text += '%4.4s' % self.slots[i] + '   '
+        text += '\n'
+        return(text)
+            
+    def plot(self, add=False, only=None):
+        dcm = user_ns['dcm']
+        plt.cla()
+        plt.xlabel('Energy  (eV)')
+        plt.ylabel('counts')
+        plt.title('XRF Spectrum')
+        plt.grid(which='major', axis='both')
+        plt.xlim(2500, round(dcm.energy.position, -2)+500)
+        e = numpy.arange(0, len(self.mca1.value)) * 10
+        if only is not None:
+            this = getattr(self, f'mca{only}')
+            plt.plot(e, this.value)
+        elif add is True:
+            plt.plot(e, self.mca1.value+self.mca2.value+self.mca3.value+self.mca4.value)
+        else:
+            plt.plot(e, self.mca1.value)
+            plt.plot(e, self.mca2.value)
+            plt.plot(e, self.mca3.value)
+            plt.plot(e, self.mca4.value)
         

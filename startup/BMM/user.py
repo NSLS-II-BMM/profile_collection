@@ -1,8 +1,6 @@
-import sys, os, re
-import shutil
+import sys, os, re, shutil
 from distutils.dir_util import copy_tree
-import json
-import pprint
+import json, pprint, copy
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
@@ -104,13 +102,16 @@ class BMM_User(Borg):
         self.echem_remote    = None
         self.use_slack       = True
         self.slack_channel   = None
+        self.trigger         = False
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
                                       # When true, this will turn xafs scans, line scans, change_edge, etc into  #
                                       # a sleep.  This allows visual inspection of motor movement between scans. #
                                       ############################################################################
-        
+
+        self.readout_mode    = 'struck' ## 'analog'  'xspress3'  'digital'
+        self.rois            = list(),
         self.roi_channel     = None   ##################################################################
         self.roi1            = 'ROI1' # in 76-edge.py, the ROI class is defined for managing changes   #
         self.roi2            = 'ROI2' # of configured detector channels. the names of the channels are #
@@ -122,7 +123,13 @@ class BMM_User(Borg):
         self.dtc4            = 'DTC4'
 
         self.xs1             = None
+        self.xs2             = None
+        self.xs3             = None
+        self.xs4             = None
         self.xschannel1      = None
+        self.xschannel2      = None
+        self.xschannel3      = None
+        self.xschannel4      = None
                 
         ## current plot attributes    #######################################################################
         self.motor    = None          # these are used to keep track of mouse events on the plotting window #
@@ -175,7 +182,26 @@ class BMM_User(Borg):
         self.bender_margin = 30000   #####################################################################
 
         self.filter_state  = 0
-                                     
+
+    def to_json(self, filename=None):
+        d = copy.deepcopy(self.__dict__)
+        for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
+            del d[k]
+        if filename is None:
+            print(json.dumps(d))
+        else:
+            with open(filename, 'w') as outfile:
+                json.dump(d, outfile)
+            print(f'wrote BMMuser state to {filename}')
+
+    def from_json(self, filename):
+        if os.path.isfile(filename):
+            with open(filename, 'r') as jsonfile:
+                config = json.load(jsonfile)
+            for k in config.keys():
+                setattr(self, k, config[k])
+            user_ns['rois'].trigger = True
+            
     def show(self, scan=False):
         '''
         Show the current contents of the BMMuser object
@@ -416,6 +442,11 @@ class BMM_User(Borg):
         self.date = date
         self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
+        # preserve BMMuser state to a json string #
+        self.to_json(os.path.join(self.DATA, '.BMMuser'))
+        if not os.path.isfile(os.path.join(os.environ['HOME'], 'Data', '.BMMuser')):
+            os.symlink(os.path.join(self.DATA, '.BMMuser'), os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))
+
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
             os.chmod(jsonfile, 0o644)
@@ -438,15 +469,19 @@ class BMM_User(Borg):
         '''
         if self.user_is_defined:
             return()
-        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+        
+        jsonfile = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
+        #jsonfile = os.path.join(self.DATA, '.BMMuser')
         if os.path.isfile(jsonfile):
-            user = json.load(open(jsonfile))
-            if 'name' in user:
-                self.start_experiment(name=user['name'], date=user['date'], gup=user['gup'], saf=user['saf'])
+            self.from_json(jsonfile)
+            self.trigger = True
+            #user = json.load(open(jsonfile))
+            if self.name is not None:
+                self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
             #if 'foils' in user:
             #    self.read_foils = user['foils'] # see 76-edge.py, line 114, need to delay configuring foils until 76-edge is read
-            if 'rois' in user:
-                self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
+            #if 'rois' in user:
+            #    self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
@@ -510,11 +545,13 @@ class BMM_User(Borg):
         #####################################################################
         # remove the json serialization of the start_experiment() arguments #
         #####################################################################
+        os.remove(os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):    
             os.chmod(jsonfile, 0o644)
             os.remove(jsonfile)
 
+            
         ###############################################################
         # unset self attributes, DATA, and experiment specific logger #
         ###############################################################
