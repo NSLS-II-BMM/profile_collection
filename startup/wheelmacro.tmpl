@@ -23,7 +23,8 @@ def {base}_macro(dryrun=False):
     if ok is False:
         print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
         return(yield from null())
-    
+
+    from bluesky.preprocessors import finalize_wrapper
     BMMuser.macro_dryrun = dryrun
     BMMuser.prompt = False
     BMM_log_info('Beginning {base}_macro')
@@ -41,8 +42,9 @@ def {base}_macro(dryrun=False):
         ### ---------------------------------------------------------------------------------------
 
     def cleanup_plan():
+        yield from xafs_wheel.reset()
         yield from end_of_macro()
         
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from finalize_wrapper(main_plan(), cleanup_plan())    
     yield from end_of_macro()
     BMM_log_info('{base}_macro finished!')

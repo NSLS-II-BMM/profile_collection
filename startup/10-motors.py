@@ -1,169 +1,8 @@
-from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
-from ophyd.pseudopos import (pseudo_position_argument,
-                             real_position_argument)
-import time
+from ophyd import EpicsMotor, EpicsSignalRO
 
-run_report(__file__)
+run_report(__file__, text='most motor definitions')
 
-
-status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
-               'LOOPM' : 1, 'TIACT' : 0, 'INTMO' : 1, 'DWPRO' : 0,
-               'DAERR' : 0, 'DVZER' : 0, 'ABDEC' : 0, 'UWPEN' : 0,
-               'UWSEN' : 0, 'ERRTAG': 0, 'SWPOC' : 0, 'ASSCS' : 1,
-               'FRPOS' : 0, 'HSRCH' : 0, 'SODPL' : 0, 'SOPL'  : 0,
-               'HOCPL' : 1, 'PHSRA' : 0, 'PREFE' : 0, 'TRMOV' : 0,
-               'IFFE'  : 0, 'AMFAE' : 0, 'AMFE'  : 0, 'FAFOE' : 0,
-               'WFOER' : 0, 'INPOS' : 1, 'ENC_LSS' : 0}
-
-class FMBOEpicsMotor(EpicsMotor):
-    resolution = Cpt(EpicsSignal, '.MRES', kind = 'config')
-    encoder = Cpt(EpicsSignal, '.REP', kind = 'config')
-    
-    ###################################################################
-    # this is the complete list of status signals defined in the FMBO #
-    # IOC for thier MCS8 motor controllers                            #
-    ###################################################################
-    mtact      = Cpt(EpicsSignal, '_MTACT_STS',      kind = 'config')
-    mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC', kind = 'config')
-    mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'config')
-    mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC',  kind = 'config')
-    plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'config')
-    plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC',  kind = 'config')
-    ampen      = Cpt(EpicsSignal, '_AMPEN_STS',      kind = 'config')
-    ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC', kind = 'config')
-    loopm      = Cpt(EpicsSignal, '_LOOPM_STS',      kind = 'config')
-    loopm_desc = Cpt(EpicsSignal, '_LOOPM_STS.DESC', kind = 'config')
-    tiact      = Cpt(EpicsSignal, '_TIACT_STS',      kind = 'config')
-    tiact_desc = Cpt(EpicsSignal, '_TIACT_STS.DESC', kind = 'config')
-    intmo      = Cpt(EpicsSignal, '_INTMO_STS',      kind = 'config')
-    intmo_desc = Cpt(EpicsSignal, '_INTMO_STS.DESC', kind = 'config')
-    dwpro      = Cpt(EpicsSignal, '_DWPRO_STS',      kind = 'config')
-    dwpro_desc = Cpt(EpicsSignal, '_DWPRO_STS.DESC', kind = 'config')
-    daerr      = Cpt(EpicsSignal, '_DAERR_STS',      kind = 'config')
-    daerr_desc = Cpt(EpicsSignal, '_DAERR_STS.DESC', kind = 'config')
-    dvzer      = Cpt(EpicsSignal, '_DVZER_STS',      kind = 'config')
-    dvzer_desc = Cpt(EpicsSignal, '_DVZER_STS.DESC', kind = 'config')
-    abdec      = Cpt(EpicsSignal, '_ABDEC_STS',      kind = 'config')
-    abdec_desc = Cpt(EpicsSignal, '_ABDEC_STS.DESC', kind = 'config')
-    uwpen      = Cpt(EpicsSignal, '_UWPEN_STS',      kind = 'config')
-    uwpen_desc = Cpt(EpicsSignal, '_UWPEN_STS.DESC', kind = 'config')
-    uwsen      = Cpt(EpicsSignal, '_UWSEN_STS',      kind = 'config')
-    uwsen_desc = Cpt(EpicsSignal, '_UWSEN_STS.DESC', kind = 'config')
-    errtg      = Cpt(EpicsSignal, '_ERRTG_STS',      kind = 'config')
-    errtg_desc = Cpt(EpicsSignal, '_ERRTG_STS.DESC', kind = 'config')
-    swpoc      = Cpt(EpicsSignal, '_SWPOC_STS',      kind = 'config')
-    swpoc_desc = Cpt(EpicsSignal, '_SWPOC_STS.DESC', kind = 'config')
-    asscs      = Cpt(EpicsSignal, '_ASSCS_STS',      kind = 'config')
-    asscs_desc = Cpt(EpicsSignal, '_ASSCS_STS.DESC', kind = 'config')
-    frpos      = Cpt(EpicsSignal, '_FRPOS_STS',      kind = 'config')
-    frpos_desc = Cpt(EpicsSignal, '_FRPOS_STS.DESC', kind = 'config')
-    hsrch      = Cpt(EpicsSignal, '_HSRCH_STS',      kind = 'config')
-    hsrch_desc = Cpt(EpicsSignal, '_HSRCH_STS.DESC', kind = 'config')
-    sodpl      = Cpt(EpicsSignal, '_SODPL_STS',      kind = 'config')
-    sodpl_desc = Cpt(EpicsSignal, '_SODPL_STS.DESC', kind = 'config')
-    sopl       = Cpt(EpicsSignal, '_SOPL_STS',       kind = 'config')
-    sopl_desc  = Cpt(EpicsSignal, '_SOPL_STS.DESC',  kind = 'config')
-    hocpl      = Cpt(EpicsSignal, '_HOCPL_STS',      kind = 'config')
-    hocpl_desc = Cpt(EpicsSignal, '_HOCPL_STS.DESC', kind = 'config')
-    phsra      = Cpt(EpicsSignal, '_PHSRA_STS',      kind = 'config')
-    phsra_desc = Cpt(EpicsSignal, '_PHSRA_STS.DESC', kind = 'config')
-    prefe      = Cpt(EpicsSignal, '_PREFE_STS',      kind = 'config')
-    prefe_desc = Cpt(EpicsSignal, '_PREFE_STS.DESC', kind = 'config')
-    trmov      = Cpt(EpicsSignal, '_TRMOV_STS',      kind = 'config')
-    trmov_desc = Cpt(EpicsSignal, '_TRMOV_STS.DESC', kind = 'config')
-    iffe       = Cpt(EpicsSignal, '_IFFE_STS',       kind = 'config')
-    iffe_desc  = Cpt(EpicsSignal, '_IFFE_STS.DESC',  kind = 'config')
-    amfae      = Cpt(EpicsSignal, '_AMFAE_STS',      kind = 'config')
-    amfae_desc = Cpt(EpicsSignal, '_AMFAE_STS.DESC', kind = 'config')
-    amfe       = Cpt(EpicsSignal, '_AMFE_STS',       kind = 'config')
-    amfe_desc  = Cpt(EpicsSignal, '_AMFE_STS.DESC',  kind = 'config')
-    fafoe      = Cpt(EpicsSignal, '_FAFOE_STS',      kind = 'config')
-    fafoe_desc = Cpt(EpicsSignal, '_FAFOE_STS.DESC', kind = 'config')
-    wfoer      = Cpt(EpicsSignal, '_WFOER_STS',      kind = 'config')
-    wfoer_desc = Cpt(EpicsSignal, '_WFOER_STS.DESC', kind = 'config')
-    inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'config')
-    inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'config')
-
-    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'config')
-    enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'config')
-    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'config')
-    
-    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'config')
-    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'config') # how homing velocity gets set for an FMBO SAI
-
-    def status(self):
-        text = '\n  %s is %s\n\n' % (self.name, self.prefix)
-        for signal in list(self.configuration_attrs):
-            if signal.upper() not in status_list.keys():
-                continue
-            suffix = getattr(self, signal).pvname.replace(self.prefix, '')
-            string = getattr(self, signal).enum_strs[getattr(self, signal).get()]
-            if signal != 'asscs':
-                if getattr(self, signal).get() != status_list[signal.upper()]:
-                    string = error_msg('%-19s' % string)
-            text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').get(),
-                                                     string,
-                                                     bold_msg(getattr(self, signal).get()),
-                                                     whisper(suffix))
-        boxedtext('%s status signals' % self.name, text, 'green')
-
-    def home(self, force=False):
-        if force is False:
-            action = input("\nBegin homing %s? [Y/n then Enter] " % self.name)
-            if action.lower() == 'q' or action.lower() == 'n':
-                return
-        self.home_signal.put(1)
-
-    def clear_encoder_loss(self):
-        self.clear_enc_lss.put(1)
-        self.enable()
-        BMM_log_info('clearing encoder loss for %s' % self.name)
-
-    def wh(self):
-        return(round(self.user_readback.get(), 3))
-
-class XAFSEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
-    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
-
-    def kill(self):
-        self.kill_cmd.put(1)
-    def enable(self):
-        self.enable_cmd.put(1)
-        
-    
-    #def wh(self):
-    #    return(round(self.user_readback.get(), 3))
-
-    
-class VacuumEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
-
-    #def wh(self):
-    #    return(round(self.user_readback.get(), 3))
-
-    # def _setup_move(self, *args):
-    #     self.kill_cmd.put(1)
-    #     super()._setup_move(*args)
-        
-    def _done_moving(self, *args, **kwargs):
-        ## this method is originally defined as Positioner, a base class of EpicsMotor
-        ## tack on instructions for killing the motor after movement
-        super()._done_moving(*args, **kwargs)
-        time.sleep(0.05)
-        self.kill_cmd.put(1)
-
-class EndStationEpicsMotor(EpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, ':KILL', kind='config')
-
-    def wh(self):
-        return(round(self.user_readback.get(), 3))
+from BMM.motors import FMBOEpicsMotor, XAFSEpicsMotor, VacuumEpicsMotor, EndStationEpicsMotor
 
 
 mcs8_motors = list()
@@ -248,14 +87,14 @@ mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
 dm2_fs.hvel_sp.put(0.0005)
 
 ## DM3
-dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',     name='dm3_fs')
+dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
 dm3_foils   = XAFSEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
 dm3_bct     = XAFSEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
-dm3_bpm     = XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',     name='dm3_bpm')
-dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',    name='dm3_slits_o')
-dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',    name='dm3_slits_i')
-dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',    name='dm3_slits_t')
-dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',    name='dm3_slits_b')
+dm3_bpm     = XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
+dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
+dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
+dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
+dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
 mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
                     dm3_fs, dm3_foils, dm3_bct, dm3_bpm])
 
@@ -267,7 +106,7 @@ dm3_bct.acceleration.put(0.25)
 dm3_bct.hvel_sp.put(0.05)
 
 
-bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
+#bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
 
 ## XAFS table
 xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
