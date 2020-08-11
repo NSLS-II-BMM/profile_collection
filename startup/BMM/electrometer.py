@@ -94,6 +94,13 @@ class BMMDualEM(QuadEM):
         self._acquisition_signal = self.acquire
         self.configuration_attrs = ['integration_time', 'averaging_time','em_range','num_averaged','values_per_read']
 
+    def _acquire_changed(self, value=None, old_value=None, **kwargs):
+        super()._acquire_changed(value=value, old_value=old_value, **kwargs)
+        status = self._status
+        if status is not None and status.done:
+            # Clear the state to be ready for the next round.
+            self._status = None
+        
     def on(self):
         print('Turning {} on'.format(self.name))
         self.acquire_mode.put(0)

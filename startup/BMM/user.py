@@ -184,7 +184,11 @@ class BMM_User(Borg):
         self.filter_state  = 0
 
     def to_json(self, filename=None):
+        ## avoid this: TypeError: can't pickle _thread.RLock objects
+        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4]
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4 = None, None, None, None
         d = copy.deepcopy(self.__dict__)
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4 = save
         for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
             del d[k]
         if filename is None:
@@ -545,7 +549,9 @@ class BMM_User(Borg):
         #####################################################################
         # remove the json serialization of the start_experiment() arguments #
         #####################################################################
-        os.remove(os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))
+
+        if os.path.isfile(os.path.join(os.environ['HOME'], 'Data', '.BMMuser')):
+            os.remove(os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):    
             os.chmod(jsonfile, 0o644)

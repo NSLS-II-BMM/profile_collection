@@ -62,7 +62,23 @@ class BMMDataEvaluation():
             if mode == 'transmission' or mode == 'verygood':
                 signal = numpy.array(primary['It'])
                 mu = numpy.log(abs(i0/signal))
+            # elif mode == 'xs':
+            #     BMMuser, db = user_ns['BMMuser'], user_ns['db']
+            #     t = db[-1].table()
+            #     el = BMMuser.element
+            #     dtc1 = numpy.array(t[el+'1'])
+            #     dtc2 = numpy.array(t[el+'2'])
+            #     dtc3 = numpy.array(t[el+'3'])
+            #     dtc4 = numpy.array(t[el+'4'])
+            #     signal = dtc1+dtc2+dtc3+dtc4
+            #     mu = signal/i0
             else:
+                # BMMuser = user_ns['BMMuser']
+                # dtc1 = numpy.array(primary[BMMuser.dtc1])
+                # dtc2 = numpy.array(primary[BMMuser.dtc2])
+                # dtc3 = numpy.array(primary[BMMuser.dtc3])
+                # dtc4 = numpy.array(primary[BMMuser.dtc4])
+                
                 if clog[uid].metadata['start']['XDI']['Element']['symbol'] == 'Ti':
                     dtc1 = numpy.array(primary['DTC2_1'])
                     dtc2 = numpy.array(primary['DTC2_2'])
@@ -215,32 +231,45 @@ class BMMDataEvaluation():
           * mode: when not None, used to specify fluorescence or transmission (for a data set that has both)
 
         '''
-        db = user_ns['db']
-        this = db.v2[uid]
-        if mode is None:
-            mode = this.metadata['start']['XDI']['_mode'][0]
-        element = this.metadata['start']['XDI']['Element']['symbol']
-        i0 = this.primary.read()['I0']
-        en = this.primary.read()['dcm_energy']
-        if mode == 'transmission':
-            it = this.primary.read()['It']
-            mu = numpy.log(abs(i0/it))
-        elif mode == 'reference':
-            it = this.primary.read()['It']
-            ir = this.primary.read()['Ir']
-            mu = numpy.log(abs(it/ir))
-        else:
-            if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
-                signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']
-            elif element in str(this.primary.read()['vor:vor_names_name15'][0].values):
-                signal = this.primary.read()['DTC2_1'] + this.primary.read()['DTC2_2'] + this.primary.read()['DTC2_3'] + this.primary.read()['DTC2_4']
-            elif element in str(this.primary.read()['vor:vor_names_name19'][0].values):
-                signal = this.primary.read()['DTC3_1'] + this.primary.read()['DTC3_2'] + this.primary.read()['DTC3_3'] + this.primary.read()['DTC3_4']
-            else:
-                print('cannot figure out fluorescence signal')
-                #print(f'vor:vor_names_name3 {}')
-                return()
+        if mode == 'xs':
+            BMMuser, db = user_ns['BMMuser'], user_ns['db']
+            t = db[-1].table()
+            el = BMMuser.element
+            i0 = numpy.array(t['I0'])
+            en = numpy.array(t['dcm_energy'])
+            dtc1 = numpy.array(t[el+'1'])
+            dtc2 = numpy.array(t[el+'2'])
+            dtc3 = numpy.array(t[el+'3'])
+            dtc4 = numpy.array(t[el+'4'])
+            signal = dtc1+dtc2+dtc3+dtc4
             mu = signal/i0
+        else:
+            db = user_ns['db']
+            this = db.v2[uid]
+            if mode is None:
+                mode = this.metadata['start']['XDI']['_mode'][0]
+            element = this.metadata['start']['XDI']['Element']['symbol']
+            i0 = this.primary.read()['I0']
+            en = this.primary.read()['dcm_energy']
+            if mode == 'transmission':
+                it = this.primary.read()['It']
+                mu = numpy.log(abs(i0/it))
+            elif mode == 'reference':
+                it = this.primary.read()['It']
+                ir = this.primary.read()['Ir']
+                mu = numpy.log(abs(it/ir))
+            else:
+                if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
+                    signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']
+                elif element in str(this.primary.read()['vor:vor_names_name15'][0].values):
+                    signal = this.primary.read()['DTC2_1'] + this.primary.read()['DTC2_2'] + this.primary.read()['DTC2_3'] + this.primary.read()['DTC2_4']
+                elif element in str(this.primary.read()['vor:vor_names_name19'][0].values):
+                    signal = this.primary.read()['DTC3_1'] + this.primary.read()['DTC3_2'] + this.primary.read()['DTC3_3'] + this.primary.read()['DTC3_4']
+                else:
+                    print('cannot figure out fluorescence signal')
+                    #print(f'vor:vor_names_name3 {}')
+                    return()
+                mu = signal/i0
         e,m = self.rationalize_mu(en, mu)
         if len(m) > self.GRIDSIZE:
             m = m[:-1]

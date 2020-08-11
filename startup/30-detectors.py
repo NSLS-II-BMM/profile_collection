@@ -311,11 +311,13 @@ xs.settings.configuration_attrs = ['acquire_period',
                                    'trigger_signal']
 
 for n, d in xs.channels.items():
-    roi_names = ['roi{:02}'.format(j) for j in [1, 2, 3, 4]]
+    roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
     d.rois.read_attrs = roi_names
     d.rois.configuration_attrs = roi_names
     for roi_n in roi_names:
         getattr(d.rois, roi_n).value_sum.kind = 'omitted'
 
+xs.set_rois()
+        
 #except:
 #    pass

@@ -211,8 +211,8 @@ class Mirrors(PseudoPositioner):
         text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.get(),    self.ydi.user_readback.get())
         text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.get(),     self.xu.user_readback.get())
         text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.get(),      self.xd.user_readback.get())
-        if self.name.lower() == 'm2':
-            text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
+        #if self.name.lower() == 'm2':
+        #    text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
         return text
     def wh(self):
         stripe = ''

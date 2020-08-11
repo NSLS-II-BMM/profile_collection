@@ -15,6 +15,7 @@ from ophyd import Signal, EpicsSignal, EpicsSignalRO
 from ophyd.status import SubscriptionStatus
 from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
+from bluesky import __version__ as bluesky_version
 
 from pathlib import PurePath
 #from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
@@ -22,8 +23,8 @@ from pathlib import PurePath
 from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
-import numpy
-import itertools
+import numpy, pandas
+import itertools, os
 import time as ttime
 from collections import deque, OrderedDict
 
@@ -32,7 +33,34 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions     import now
+from BMM.metadata      import mirror_state
 
+from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
+
+import configparser
+
+class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
+    def __call__(self, *args, frame=None, **kwargs):
+        self._get_dataset()
+        shape = self.dataset.shape
+        if len(shape) != 3:
+            raise RuntimeError(f'The ndim of the dataset is not 3, but {len(shape)}')
+        num_channels = shape[1]
+        print(num_channels)
+        chanrois = [f'CHAN{c}ROI{r}' for c, r in product([1, 2, 3, 4], [1, 2, 3, 4])]
+        attrsdf = pd.DataFrame.from_dict(
+            {chanroi: self._file['/entry/instrument/detector/']['NDAttributes'][chanroi] for chanroi in chanrois}
+        )
+        ##print(attrsdf)
+        df = pd.DataFrame(data=self._dataset[frame, :, :].T,
+                          columns=[f'ch_{n+1}' for n in range(num_channels)])
+        #return pd.concat([df]+[attrsdf])
+        return df
+
+db = user_ns['db']
+db.reg.register_handler(BMMXspress3HDF5Handler.HANDLER_NAME,
+                        BMMXspress3HDF5Handler, overwrite=True)    
 
 class Xspress3FileStoreFlyable(Xspress3FileStore):
     def warmup(self):
@@ -81,13 +109,21 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         set_and_wait(self.capture, 0)
         return super().unstage()
 
+class BMMXspress3Channel(Xspress3Channel):
+    extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
 
+    
 class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
-    channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    channel4 = Cpt(Xspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
+    channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
+    channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
+    channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    # Currently only using four channels. Uncomment these to enable more channels:
+    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
+    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
+    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
+    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
     #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
     # mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
@@ -116,21 +152,32 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
-        self.settings.num_images.put(1)   # number of frames
-        self.settings.trigger_mode.put(1) # trigger mode internal
-        self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
+
         self.set_channels_for_hdf5()
-        self.slots = [None,]*16
-        self.set_rois()
+
+        self._asset_docs_cache = deque()
+        self._datum_counter = None
+        
+        self.slots = ['Ti', 'V',  'Cr', 'Mn',
+                      'Fe', 'Co', 'Ni', 'Cu',
+                      'Zn', 'As', 'Pt', 'Pb',
+                      None, None, None, 'OCR']
+        self.restart()
+        # self.settings.num_images.put(1)   # number of frames
+        # self.settings.trigger_mode.put(1) # trigger mode internal
+        # self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
+        # self.set_channels_for_hdf5()
+        # self.set_rois()
 
     def restart(self):
         for n in range(1,5):
             this = getattr(self, f'channel{n}')
             this.vis_enabled.put(1)
+            this.extra_rois_enabled.put(1)
+            #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
         self.settings.num_images.put(1)   # number of frames
         self.settings.trigger_mode.put(1) # trigger mode internal
         self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
-        self.set_channels_for_hdf5()
         self.set_rois()
         
     def _acquire_changed(self, value=None, old_value=None, **kwargs):
@@ -150,13 +197,15 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             raise NotImplementedError(
                 "multi spectra per point not supported yet")
         ret = super().stage()
+        self._datum_counter = itertools.count()
         return ret
 
     def unstage(self):
         self.settings.trigger_mode.put(0)  # 'Software'
         super().unstage()
+        self._datum_counter = None
 
-    def set_channels_for_hdf5(self, channels=(1, 2, 3, 4)):
+    def set_channels_for_hdf5(self, channels=range(1,5)):
         """
         Configure which channels' data should be saved in the resulted hdf5 file.
 
@@ -167,18 +216,12 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         """
         # The number of channel
         for n in channels:
-            getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in [1, 2, 3, 4]]
+            getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
         self.hdf5.num_extra_dims.put(0)
         self.settings.num_channels.put(len(channels))
 
-    # Currently only using four channels. Uncomment these to enable more
-    # channels:
-    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
-    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
-    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
-    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
 
-    def set_roi_channel(self, channel=1, index=4, name='OCR', low=1, high=4095):
+    def set_roi_channel(self, channel=1, index=16, name='OCR', low=1, high=4095):
         ch = getattr(self, f'channel{channel}')
         rs = ch.rois
         this = getattr(rs, 'roi{:02}'.format(index))
@@ -187,16 +230,33 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_high.put(high)
         
     def set_rois(self):
-        self.slots[0:3] = ['Ti', 'Mn', 'Fe', 'OCR']
-        for n in range(1,5):
-            self.set_roi_channel(channel=n, index=1, name=f'Ti{n}',  low=440, high=459)
-            self.set_roi_channel(channel=n, index=2, name=f'Mn{n}',  low=580, high=598)
-            self.set_roi_channel(channel=n, index=3, name=f'Fe{n}',  low=626, high=651)
-            self.set_roi_channel(channel=n, index=4, name=f'OCR{n}', low=1,   high=4095)
+        config = configparser.ConfigParser()
+        config.read_file(open(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'rois.ini')))
+        for i, el in enumerate(self.slots):
+            if el is None:
+                continue
+            bounds = config.get('rois', el).split(' ')
+            for ch in range(1,5):
+                self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
 
+    def roi_details(self):
+        BMMuser = user_ns['BMMuser']
+        print(' ROI  Elem   low   high')
+        print('==========================')
+        template = ' %3d  %-4s  %4d  %4d'
+        for i, el in enumerate(self.slots):
+            rs = self.channel1.rois
+            this = getattr(rs, 'roi{:02}'.format(i+1))
+            if el is None:
+                print(template % (i+1, 'None', this.bin_low.value, this.bin_high.value))
+            elif el == BMMuser.element:
+                print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
+            else:
+                print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
+                
     def measure_roi(self):
         BMMuser = user_ns['BMMuser']
-        for i in range(4):
+        for i in range(16):
             for n in range(1,5):
                 ch = getattr(self, f'channel{n}')
                 this = getattr(ch.rois, 'roi{:02}'.format(i+1))
@@ -238,7 +298,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         plt.grid(which='major', axis='both')
         plt.xlim(2500, round(dcm.energy.position, -2)+500)
         e = numpy.arange(0, len(self.mca1.value)) * 10
-        if only is not None:
+        if only is not None and only in (1, 2, 3, 4):
             this = getattr(self, f'mca{only}')
             plt.plot(e, this.value)
         elif add is True:
@@ -248,4 +308,50 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             plt.plot(e, self.mca2.value)
             plt.plot(e, self.mca3.value)
             plt.plot(e, self.mca4.value)
+
+
+    def to_xdi(self, filename=None):
+
+        dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
+
+        column_list = ['MCA1', 'MCA2', 'MCA3', 'MCA4']
+        #template = "  %.3f  %.6f  %.6f  %.6f  %.6f\n"
+        m2state, m3state = mirror_state()
+
+        handle = open(filename, 'w')
+        handle.write('# XDI/1.0 BlueSky/%s\n'                % bluesky_version)
+        #handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
+        #handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+        handle.write('# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement')
+        handle.write('# Beamline.xray_source: NSLS-II three-pole wiggler\n')
+        handle.write('# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
+        handle.write('# Beamline.focusing: %s\n'             % m2state)
+        handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
+        handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
+        handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
+        handle.write('# Scan.end_time: %s\n'                 % now())
+        handle.write('# Scan.dwell_time: %.2f\n'             % self.settings.acquire_time.value)
+        handle.write('# Facility.name: NSLS-II\n')
+        handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
+        handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
+        handle.write('# Facility.cycle: %s\n'                % BMMuser.cycle)
+        handle.write('# Facility.GUP: %d\n'                  % BMMuser.gup)
+        handle.write('# Facility.SAF: %d\n'                  % BMMuser.saf)
+        handle.write('# Column.1: energy (eV)\n')
+        handle.write('# Column.2: MCA1 (counts)\n')
+        handle.write('# Column.3: MCA2 (counts)\n')
+        handle.write('# Column.4: MCA3 (counts)\n')
+        handle.write('# Column.5: MCA4 (counts)\n')
+        handle.write('# ==========================================================\n')
+        handle.write('# energy ')
+
+        ## data table
+        e=numpy.arange(0, len(self.mca1.value)) * 10
+        a=numpy.vstack([self.mca1.value, self.mca2.value, self.mca3.value, self.mca4.value])
+        b=pandas.DataFrame(a.transpose(), index=e, columns=column_list)
+        handle.write(b.to_csv(sep=' '))
+
+        handle.flush()
+        handle.close()
+        print(bold_msg('wrote XRF spectra to %s' % filename))
         

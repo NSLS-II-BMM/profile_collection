@@ -1,17 +1,13 @@
-from bluesky.plans import rel_scan, scan_nd
+from bluesky.plans import rel_scan, scan_nd, count
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 from databroker.core import SingleRunCache
 
-import numpy
-import os
-import re
-import subprocess
-import textwrap
-import configparser
-import datetime
-import shutil
+import numpy, os, re, subprocess, shutil
+import textwrap, configparser, datetime
 from cycler import cycler
+import matplotlib
+import matplotlib.pyplot as plt
 
 from BMM.camera_device import snap
 from BMM.demeter       import toprj
@@ -540,6 +536,8 @@ def scan_sequence_static_html(inifile       = None,
                               clargs        = '',
                               websnap       = '',
                               anasnap       = '',
+                              xrfsnap       = '',
+                              xrffile       = '',
                               htmlpage      = None,
                               ththth        = None,
                               initext       = None,
@@ -609,6 +607,8 @@ def scan_sequence_static_html(inifile       = None,
                                     clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
                                     websnap       = quote('../snapshots/'+websnap),
                                     anasnap       = quote('../snapshots/'+anasnap),
+                                    xrffile       = quote('../'+xrffile),
+                                    xrfsnap       = quote('../snapshots/'+xrfsnap),
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
     o.close()
@@ -740,9 +740,9 @@ def xafs(inifile, **kwargs):
 
 
         bail = False
-        count = 0
+        cnt = 0
         for i in range(p['start'], p['start']+p['nscans'], 1):
-            count += 1
+            cnt += 1
             fname = "%s.%3.3d" % (p['filename'], i)
             datafile = os.path.join(p['folder'], fname)
             if os.path.isfile(datafile):
@@ -806,17 +806,40 @@ def xafs(inifile, **kwargs):
         ## perhaps enter pseudo-channel-cut mode
         ## need to do this define defining the plotting lambda otherwise
         ## BlueSky gets confused about the plotting window
-        if not dcm.suppress_channel_cut:
-            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
-            dcm.mode = 'fixed'
-            #dcm_bragg.clear_encoder_loss()
-            yield from mv(dcm.energy, eave)
-            if p['rockingcurve']:
-                report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
-                yield from rocking_curve()
-                RE.msg_hook = None
-                close_last_plot()
-            dcm.mode = 'channelcut'
+        #if not dcm.suppress_channel_cut:
+        report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
+        dcm.mode = 'fixed'
+        #dcm_bragg.clear_encoder_loss()
+        yield from mv(dcm.energy, eave)
+        if p['rockingcurve']:
+            report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
+            yield from rocking_curve()
+            RE.msg_hook = None
+            close_last_plot()
+        dcm.mode = 'channelcut'
+
+        xrfuid, xrfimage = None, None
+        print(xs._status, flush=True)
+        yield from sleep(3)
+        if 'xs' in p['mode']:
+            report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
+            yield from abs_set(xs.hdf5.capture, 1)
+            yield from abs_set(xs.settings.acquire_time, 1)
+            #yield from abs_set(xs.settings.acquire, 1)
+            xrfuid = yield from count([xs], 1)
+            #db.v2[-1].metadata['start']['uid']
+            yield from abs_set(xs.hdf5.capture, 0)
+            matplotlib.use('Agg') # produce a plot without screen display
+            xs.plot()
+            ahora = now()
+            html_dict['xrffile'] = "%s_%s.xrf" % (p['filename'], ahora)
+            html_dict['xrfsnap'] = "%s_XRF_%s.jpg" % (p['filename'], ahora)
+            xrffile  = os.path.join(p['folder'], html_dict['xrffile'])
+            xrfimage = os.path.join(p['folder'], 'snapshots', html_dict['xrfsnap'])
+            plt.savefig(xrfimage)
+            xs.to_xdi(xrffile)
+            matplotlib.use('Qt5Agg') # return to screen display
+            
 
         #legends = []
         #for i in range(p['start'], p['start']+p['nscans'], 1):
@@ -983,7 +1006,10 @@ def xafs(inifile, **kwargs):
                 #shutil.copyfile(fetch_snapshot_filename(db.v2[anacam_uid]), image_ana)
                 snap('analog', filename=image_ana, sample=p['filename'])
 
-                md['_snapshots'] = {'webcam_file': image_web, 'analog_file' : image_ana} #, 'webcam_uid': xascam_uid, 'anacam_uid': anacam_uid}
+                md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
+                                    'webcam_file': image_web, #, 'webcam_uid': xascam_uid,
+                                    'analog_file' : image_ana, # 'anacam_uid': anacam_uid,
+                }
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile, used by cadashboard
@@ -993,11 +1019,12 @@ def xafs(inifile, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
+            close_last_plot()
             report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True)
-            count = 0
+            cnt = 0
             for i in range(p['start'], p['start']+p['nscans'], 1):
-                count += 1
+                cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
                 datafile = os.path.join(p['folder'], fname)
                 if os.path.isfile(datafile):
@@ -1006,8 +1033,8 @@ def xafs(inifile, **kwargs):
                     report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')
                     yield from null()
                     return
-                #print(bold_msg('starting scan %d of %d, %d energy points' % (count, p['nscans'], len(energy_grid))))
-                report(f'starting scan {count} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points', level='bold', slack=True)
+                #print(bold_msg('starting scan %d of %d, %d energy points' % (cnt, p['nscans'], len(energy_grid))))
+                report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points', level='bold', slack=True)
                 md['_filename'] = fname
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1020,7 +1047,7 @@ def xafs(inifile, **kwargs):
                 ## mono direction, ... things that can change during or between scan sequences
                 
                 md['Mono']['direction'] = 'forward'
-                if p['bothways'] and count%2 == 0:
+                if p['bothways'] and cnt%2 == 0:
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
@@ -1072,7 +1099,7 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
-                    score, emoji = user_ns['clf'].evaluate(uid)
+                    score, emoji = user_ns['clf'].evaluate(uid, mode=p['mode'])
                     report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
                     ## FYI: db.v2[-1].metadata['start']['scan_id']
                 

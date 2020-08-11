@@ -31,8 +31,8 @@ def approximate_pitch(energy):
 
 def show_edges():
     rois = user_ns['rois']
-    xsroi = user_ns['xsroi']
-    text = show_reference_wheel() + '\n' + rois.show() + '\n' + xsroi.show_xsrois()
+    xs = user_ns['xs']
+    text = show_reference_wheel() + '\n' + rois.show() + '\n' + xs.show_rois()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
@@ -157,7 +157,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
                 return(yield from null())
         
     start = time.time()
-    report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
+    if mode == 'XRD':
+        report('Configuring beamline for XRD', level='bold', slack=True)
+    else:
+        report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     yield from dcm.kill_plan()
 
     ################################################
@@ -215,7 +218,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         ## feedback
         show_edges()
     
-    report(f'Finished configuring for {el} edge', level='bold', slack=True)
+    if mode == 'XRD':
+        report('Finished configuring for XRD', level='bold', slack=True)
+    else:
+        report(f'Finished configuring for {el} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     yield from dcm.kill_plan()

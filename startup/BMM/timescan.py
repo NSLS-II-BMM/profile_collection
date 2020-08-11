@@ -2,6 +2,8 @@
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
 from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky import __version__ as bluesky_version
+
 import numpy
 import os
 import pandas
