@@ -11,3 +11,5 @@ ophyd.EpicsSignal.set_default_timeout(timeout=10, connection_timeout=10)
 
 #from databroker.core import SingleRunCache
 
+from bluesky.utils import ts_msg_hook
+RE.msg_hook = ts_msg_hook

@@ -24,7 +24,7 @@ def resting_state():
     user_ns['_locked_dwell_time'].move(0.5)
     user_ns['quadem1'].Iy.kind = 'omitted'
     user_ns['dcm'].kill()
-    user_ns['RE'].msg_hook = BMM_msg_hook
+    #user_ns['RE'].msg_hook = BMM_msg_hook
 
 def resting_state_plan():
     '''
@@ -41,7 +41,7 @@ def resting_state_plan():
     user_ns['quadem1'].Iy.kind = 'omitted'
     yield from abs_set(user_ns['_locked_dwell_time'], 0.5, wait=True)
     user_ns['dcm'].kill()
-    user_ns['RE'].msg_hook = BMM_msg_hook
+    #user_ns['RE'].msg_hook = BMM_msg_hook
 
 def end_of_macro():
     '''Plan for bringing controls into their resting state at the end of

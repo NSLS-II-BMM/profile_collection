@@ -276,7 +276,7 @@ xs = BMMXspress3Detector('XF:06BM-ES{Xsp:1}:', name='xs')
 # This is necessary for when the ioc restarts
 # we have to trigger one image for the hdf5 plugin to work correctly
 # else, we get file writing errors
-xs.hdf5.warmup()
+#xs.hdf5.warmup()
 
 # Hints:
 for n in range(1,5):

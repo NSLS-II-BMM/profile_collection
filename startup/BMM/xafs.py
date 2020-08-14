@@ -814,7 +814,7 @@ def xafs(inifile, **kwargs):
         if p['rockingcurve']:
             report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
             yield from rocking_curve()
-            RE.msg_hook = None
+            #RE.msg_hook = None
             close_last_plot()
         dcm.mode = 'channelcut'
 
@@ -823,12 +823,12 @@ def xafs(inifile, **kwargs):
         yield from sleep(3)
         if 'xs' in p['mode']:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
-            yield from abs_set(xs.hdf5.capture, 1)
+            #yield from abs_set(xs.hdf5.capture, 1)
             yield from abs_set(xs.settings.acquire_time, 1)
             #yield from abs_set(xs.settings.acquire, 1)
             xrfuid = yield from count([xs], 1)
             #db.v2[-1].metadata['start']['uid']
-            yield from abs_set(xs.hdf5.capture, 0)
+            #yield from abs_set(xs.hdf5.capture, 0)
             matplotlib.use('Agg') # produce a plot without screen display
             xs.plot()
             ahora = now()
@@ -1036,6 +1036,11 @@ def xafs(inifile, **kwargs):
                 #print(bold_msg('starting scan %d of %d, %d energy points' % (cnt, p['nscans'], len(energy_grid))))
                 report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points', level='bold', slack=True)
                 md['_filename'] = fname
+
+                if p['mode'] == 'xs':
+                    yield from mv(xs.spectra_per_point, 1) 
+                    yield from mv(xs.total_points, len(energy_grid))
+
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -1191,12 +1196,12 @@ def xafs(inifile, **kwargs):
     html_scan_list = ''
     html_dict = {}
     BMMuser.final_log_entry = True
-    RE.msg_hook = None
+    #RE.msg_hook = None
     ## encapsulation!
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'    
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
-    RE.msg_hook = BMM_msg_hook
+    #RE.msg_hook = BMM_msg_hook
 
 
 def howlong(inifile, interactive=True, **kwargs):

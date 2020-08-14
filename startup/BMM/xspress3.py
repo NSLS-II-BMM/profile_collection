@@ -136,11 +136,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
     
-    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
-               read_path_template='/home/xspress3/data/BMM',
-               root='/home/xspress3',
-               write_path_template='/home/xspress3/data/BMM',
-               )
+    # hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
+    #            read_path_template='/home/xspress3/data/BMM',
+    #            root='/home/xspress3',
+    #            write_path_template='/home/xspress3/data/BMM',
+    #            )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -149,11 +149,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                                    'spectra_per_point', 'settings',
                                    'rewindable']
         if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4'] #, 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
-        self.set_channels_for_hdf5()
+        #self.set_channels_for_hdf5()
 
         self._asset_docs_cache = deque()
         self._datum_counter = None
@@ -189,7 +189,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             
     def stop(self):
         ret = super().stop()
-        self.hdf5.stop()
+        #self.hdf5.stop()
         return ret
 
     def stage(self):
