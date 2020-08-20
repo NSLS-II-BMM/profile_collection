@@ -270,7 +270,8 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         
     def set_rois(self):
         config = configparser.ConfigParser()
-        config.read_file(open(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'rois.ini')))
+        startup_dir = get_ipython().profile_dir.startup_dir
+        config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
         for i, el in enumerate(self.slots):
             if el is None:
                 continue
