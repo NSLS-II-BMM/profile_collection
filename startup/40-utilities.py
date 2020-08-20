@@ -181,8 +181,8 @@ bmm_di.dcm_flow.name = 'DCM DI flow'
 bmm_di.dm1_flow.name = 'DM1 DI flow'
 bmm_di.supply_pressure.name = 'DI supply pressure'
 bmm_di.supply_temperature.name = 'DI supply temperature'
-bmm_di.return_pressure.name = 'DI supply pressure'
-bmm_di.return_temperature.name = 'DI supply temperature'
+bmm_di.return_pressure.name = 'DI return pressure'
+bmm_di.return_temperature.name = 'DI return temperature'
 pbs_di_a = EpicsSignalRO('XF:06BM-PPS{DI}F:A1-I', name='PBS water flow A')
 pbs_di_b = EpicsSignalRO('XF:06BM-PPS{DI}F:B1-I', name='PBS water flow B')
 

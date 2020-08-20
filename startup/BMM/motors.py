@@ -3,6 +3,8 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
 from bluesky.plan_stubs import abs_set, sleep, mv, null
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
 
 import time
 
@@ -124,6 +126,18 @@ class FMBOEpicsMotor(EpicsMotor):
     def wh(self):
         return(round(self.user_readback.get(), 3))
 
+class FMBOThinEpicsMotor(EpicsMotor):
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
+
+    def kill(self):
+        self.kill_cmd.put(1)
+    def enable(self):
+        self.enable_cmd.put(1)
+        
+    
 class XAFSEpicsMotor(FMBOEpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
@@ -187,16 +201,16 @@ class Mirrors(PseudoPositioner):
         self.xu.kill_cmd.put(1)
 
     def kill_jacks(self):
-        yield from abs_set(self.yu.kill_cmd,  1, wait=True)
-        yield from abs_set(self.ydo.kill_cmd, 1, wait=True)
-        yield from abs_set(self.ydi.kill_cmd, 1, wait=True)
+        yield from mv(self.yu.kill_cmd,  1)
+        yield from mv(self.ydo.kill_cmd, 1)
+        yield from mv(self.ydi.kill_cmd, 1)
 
     def enable(self):
-        yield from abs_set(self.xu.enable_cmd,  1, wait=True)
-        yield from abs_set(self.xd.enable_cmd,  1, wait=True)
-        yield from abs_set(self.yu.enable_cmd,  1, wait=True)
-        yield from abs_set(self.ydo.enable_cmd, 1, wait=True)
-        yield from abs_set(self.ydi.enable_cmd, 1, wait=True)
+        yield from mv(self.xu.enable_cmd,  1)
+        yield from mv(self.xd.enable_cmd,  1)
+        yield from mv(self.yu.enable_cmd,  1)
+        yield from mv(self.ydo.enable_cmd, 1)
+        yield from mv(self.ydi.enable_cmd, 1)
 
     def where(self):
         stripe = ''

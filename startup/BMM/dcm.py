@@ -139,10 +139,10 @@ class DCM(PseudoPositioner):
         user_ns['dcm_roll'].kill_cmd.put(1)
 
     def kill_plan(self):
-        yield from abs_set(user_ns['dcm_para'].kill_cmd,  1, wait=True)
-        yield from abs_set(user_ns['dcm_perp'].kill_cmd,  1, wait=True)
-        yield from abs_set(user_ns['dcm_pitch'].kill_cmd, 1, wait=True)
-        yield from abs_set(user_ns['dcm_roll'].kill_cmd,  1, wait=True)
+        yield from mv(user_ns['dcm_para'].kill_cmd,  1)
+        yield from mv(user_ns['dcm_perp'].kill_cmd,  1)
+        yield from mv(user_ns['dcm_pitch'].kill_cmd, 1)
+        yield from mv(user_ns['dcm_roll'].kill_cmd,  1)
 
 
     def set_crystal(self, crystal=None):

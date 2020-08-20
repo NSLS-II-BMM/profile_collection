@@ -5,8 +5,8 @@ from ophyd.pseudopos import (pseudo_position_argument,
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 
 from BMM.functions import boxedtext
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.motors    import FMBOThinEpicsMotor
 
 class Slits(PseudoPositioner):
     def __init__(self, *args, **kwargs):
@@ -29,11 +29,11 @@ class Slits(PseudoPositioner):
     def wh(self):
         boxedtext(self.name, self.where(), 'cyan')
 
-    #def enable(self):
-    #    dm3_slits_t.enable()
-    #    dm3_slits_b.enable()
-    #    dm3_slits_i.enable()
-    #    dm3_slits_o.enable()
+    def enable(self):
+        self.top.enable()
+        self.bottom.enable()
+        self.inboard.enable()
+        self.outboard.enable()
 
     # The pseudo positioner axes:
     vsize   = Cpt(PseudoSingle, limits=(-15, 20))
@@ -42,10 +42,10 @@ class Slits(PseudoPositioner):
     hcenter = Cpt(PseudoSingle, limits=(-10, 10))
 
     # The real (or physical) positioners:
-    top      = Cpt(EpicsMotor, 'T}Mtr')
-    bottom   = Cpt(EpicsMotor, 'B}Mtr')
-    inboard  = Cpt(EpicsMotor, 'I}Mtr')
-    outboard = Cpt(EpicsMotor, 'O}Mtr')
+    top      = Cpt(FMBOThinEpicsMotor, 'T}Mtr')
+    bottom   = Cpt(FMBOThinEpicsMotor, 'B}Mtr')
+    inboard  = Cpt(FMBOThinEpicsMotor, 'I}Mtr')
+    outboard = Cpt(FMBOThinEpicsMotor, 'O}Mtr')
 
     
     @pseudo_position_argument

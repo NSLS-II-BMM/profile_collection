@@ -5,14 +5,14 @@ from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 OverlayPlugin)
 from ophyd.areadetector.plugins import PluginBase
 from ophyd.areadetector.cam import AreaDetectorCam
-from ophyd.device import BlueskyInterface
+from ophyd.device import BlueskyInterface, Staged
 from ophyd.areadetector.trigger_mixins import SingleTrigger
 from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
                                                  FileStoreTIFF)
 from ophyd import Signal, EpicsSignal, EpicsSignalRO
-from ophyd.status import SubscriptionStatus
+from ophyd.status import SubscriptionStatus, DeviceStatus
 from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
@@ -23,10 +23,12 @@ from pathlib import PurePath
 from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
-import numpy, pandas
+import numpy
+import pandas as pd
 import itertools, os
 import time as ttime
 from collections import deque, OrderedDict
+from itertools import product
 
 import matplotlib.pyplot as plt
 from IPython import get_ipython
@@ -40,27 +42,27 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 
 import configparser
 
-class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
-    def __call__(self, *args, frame=None, **kwargs):
-        self._get_dataset()
-        shape = self.dataset.shape
-        if len(shape) != 3:
-            raise RuntimeError(f'The ndim of the dataset is not 3, but {len(shape)}')
-        num_channels = shape[1]
-        print(num_channels)
-        chanrois = [f'CHAN{c}ROI{r}' for c, r in product([1, 2, 3, 4], [1, 2, 3, 4])]
-        attrsdf = pd.DataFrame.from_dict(
-            {chanroi: self._file['/entry/instrument/detector/']['NDAttributes'][chanroi] for chanroi in chanrois}
-        )
-        ##print(attrsdf)
-        df = pd.DataFrame(data=self._dataset[frame, :, :].T,
-                          columns=[f'ch_{n+1}' for n in range(num_channels)])
-        #return pd.concat([df]+[attrsdf])
-        return df
+# class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
+#     def __call__(self, *args, frame=None, **kwargs):
+#         self._get_dataset()
+#         shape = self.dataset.shape
+#         if len(shape) != 3:
+#             raise RuntimeError(f'The ndim of the dataset is not 3, but {len(shape)}')
+#         num_channels = shape[1]
+#         print(num_channels)
+#         chanrois = [f'CHAN{c}ROI{r}' for c, r in product([1, 2, 3, 4], [1, 2, 3, 4])]
+#         attrsdf = pd.DataFrame.from_dict(
+#             {chanroi: self._file['/entry/instrument/detector/']['NDAttributes'][chanroi] for chanroi in chanrois}
+#         )
+#         ##print(attrsdf)
+#         df = pd.DataFrame(data=self._dataset[frame, :, :].T,
+#                           columns=[f'ch_{n+1}' for n in range(num_channels)])
+#         #return pd.concat([df]+[attrsdf])
+#         return df
 
-db = user_ns['db']
-db.reg.register_handler(BMMXspress3HDF5Handler.HANDLER_NAME,
-                        BMMXspress3HDF5Handler, overwrite=True)    
+# db = user_ns['db']
+# db.reg.register_handler(BMMXspress3HDF5Handler.HANDLER_NAME,
+#                         BMMXspress3HDF5Handler, overwrite=True)    
 
 class Xspress3FileStoreFlyable(Xspress3FileStore):
     def warmup(self):
@@ -136,11 +138,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
     
-    # hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
-    #            read_path_template='/home/xspress3/data/BMM',
-    #            root='/home/xspress3',
-    #            write_path_template='/home/xspress3/data/BMM',
-    #            )
+    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
+               read_path_template='/xspress3/BMM/',
+               root='/xspress3/',
+               write_path_template='/home/xspress3/data/BMM',
+               )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -149,11 +151,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                                    'spectra_per_point', 'settings',
                                    'rewindable']
         if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4'] #, 'hdf5']
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
-        #self.set_channels_for_hdf5()
+        self.set_channels_for_hdf5()
 
         self._asset_docs_cache = deque()
         self._datum_counter = None
@@ -169,6 +171,30 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         # self.set_channels_for_hdf5()
         # self.set_rois()
 
+    def trigger(self):
+        if self._staged != Staged.yes:
+            raise RuntimeError("not staged")
+
+        import epics
+        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
+        #print('tr1 {} '.format(t))
+        self._status = DeviceStatus(self)
+        #self.settings.erase.put(1)
+        self._acquisition_signal.put(1, wait=False)
+        trigger_time = ttime.time()
+        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
+        #print('tr2 {} '.format(t))
+
+        for sn in self.read_attrs:
+            if sn.startswith('channel') and '.' not in sn:
+                ch = getattr(self, sn)
+                self.dispatch(ch.name, trigger_time)
+        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
+        #print('tr3 {} '.format(t))
+
+        self._abs_trigger_count += 1
+        return self._status
+        
     def restart(self):
         for n in range(1,5):
             this = getattr(self, f'channel{n}')
@@ -189,7 +215,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             
     def stop(self):
         ret = super().stop()
-        #self.hdf5.stop()
+        self.hdf5.stop()
         return ret
 
     def stage(self):
@@ -348,7 +374,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         ## data table
         e=numpy.arange(0, len(self.mca1.value)) * 10
         a=numpy.vstack([self.mca1.value, self.mca2.value, self.mca3.value, self.mca4.value])
-        b=pandas.DataFrame(a.transpose(), index=e, columns=column_list)
+        b=pd.DataFrame(a.transpose(), index=e, columns=column_list)
         handle.write(b.to_csv(sep=' '))
 
         handle.flush()
