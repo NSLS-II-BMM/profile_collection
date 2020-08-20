@@ -435,7 +435,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.xs2] +
                                  doc['data'][BMMuser.xs3] +
                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
-                        
+            yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
+
+        ## need a "Both" for trans + xs !!!!!!!!!!
         elif detector == 'Both':
             dets.append(user_ns['vor'])
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])

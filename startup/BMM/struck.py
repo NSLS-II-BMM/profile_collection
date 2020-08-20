@@ -10,7 +10,13 @@ user_ns = get_ipython().user_ns
 
 
 class toss():
+    '''The point of this throw-away class to be sure that the DTCorr class
+    loads and initializes sensibly as we are setting up to use the
+    analog fluorescence signal chains.  The values in icrs and ocrs
+    will soon be overwritten with proper signals.'''
     value = 1
+    def get(self):
+        return self.value
 ts = toss()
 
 icrs = {'XF:06BM-ES:1{Sclr:1}.S3' : ts,

@@ -878,7 +878,7 @@ def xafs(inifile, **kwargs):
                                                                 doc['data'][BMMuser.xs2] +
                                                                 doc['data'][BMMuser.xs3] +
                                                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
-            #yield from mv(xs.total_points, nsteps)
+            #yield from mv(xs.total_points, len(energy_grid))
             plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
@@ -905,7 +905,8 @@ def xafs(inifile, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], ththth=p['ththth'])
-            #yield from mv(xs.total_points, len(energy_grid)+1)
+            if 'xs' in p['mode']:
+                yield from mv(xs.total_points, len(energy_grid))
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
                 BMMuser.final_log_entry = False

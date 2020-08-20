@@ -42,6 +42,19 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 
 import configparser
 
+
+################################################################################
+# Notes:
+#
+# Before every count or scan, must explicitly set the number of points in the
+# measurement:
+#   xs.total_points.put(5) 
+#
+# This means that Xspress3 will require its own count plan
+# also that a linescan or xafs scan must set total_points up front
+
+
+
 # class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
 #     def __call__(self, *args, frame=None, **kwargs):
 #         self._get_dataset()
@@ -139,9 +152,9 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
-               read_path_template='/xspress3/BMM/',
-               root='/xspress3/',
-               write_path_template='/home/xspress3/data/BMM',
+               read_path_template='/xspress3/BMM/',           # path to data folder, as mounted on client (i.e. ws1) 
+               root='/xspress3/',                             # path to root, as mounted on client (i.e. ws1)
+               write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
@@ -179,7 +192,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr1 {} '.format(t))
         self._status = DeviceStatus(self)
-        #self.settings.erase.put(1)
+        #self.settings.erase.put(1)    # this was 
         self._acquisition_signal.put(1, wait=False)
         trigger_time = ttime.time()
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
