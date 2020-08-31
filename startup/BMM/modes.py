@@ -150,6 +150,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
         yield from mv(*base)
+    elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
+        yield from mv(*base)
     else:
         if bender is True:
             yield from abs_set(m2_bender.kill_cmd, 1, wait=True)

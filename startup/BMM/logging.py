@@ -107,7 +107,13 @@ def post_to_slack(text):
 
 
 def img_to_slack(imagefile):
-    token = 'xoxb-1220585156515-1339551980740-yckPYneqU7nsFEz4VmETvrce'
+    token_file = os.path.join(os.path.dirname(get_ipython_module_path('BMM.functions')), 'image_uploader_token')
+    try:
+        with open(token_file, "r") as f:
+            token = f.read().replace('\n','')
+    except:
+        post_to_slack('could not post image: {imagefile}')
+        return()
     client = WebClient(token=token)
     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
     try:
