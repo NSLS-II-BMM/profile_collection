@@ -18,6 +18,7 @@ def resting_state():
     '''
     user_ns['BMMuser'].prompt = True
     user_ns['BMMuser'].macro_dryrun = False
+    user_ns['BMMuser'].wheel = False
     user_ns['quadem1'].on()
     user_ns['vor'].on()
     user_ns['_locked_dwell_time'].move(0.3)
@@ -39,6 +40,7 @@ def resting_state_plan():
     #yield from user_ns['quadem1'].on_plan()
     #yield from user_ns['vor'].on_plan()
     user_ns['quadem1'].Iy.kind = 'omitted'
+    #user_ns['BMMuser'].wheel = False
     yield from abs_set(user_ns['_locked_dwell_time'], 0.5, wait=True)
     user_ns['dcm'].kill()
     #user_ns['RE'].msg_hook = BMM_msg_hook
@@ -54,6 +56,7 @@ def end_of_macro():
     '''
     user_ns['BMMuser'].prompt = True
     user_ns['BMMuser'].macro_dryrun = False
+    user_ns['BMMuser'].wheel = False
     user_ns['quadem1'].Iy.kind = 'omitted'
     yield from user_ns['quadem1'].on_plan()
     yield from user_ns['vor'].on_plan()

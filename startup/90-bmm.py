@@ -39,8 +39,8 @@ if BMMuser.pds_mode is None:
 
 
 run_report('\t'+'change_edge')
-from BMM.edge import approximate_pitch, show_edges, change_edge
-
+from BMM.edge import show_edges, change_edge
+from BMM.functions import approximate_pitch
 
 
 XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_position'),

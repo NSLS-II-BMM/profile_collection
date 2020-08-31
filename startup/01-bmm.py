@@ -40,7 +40,14 @@ start_experiment = BMMuser.start_experiment
 end_experiment   = BMMuser.end_experiment
 
 
+import atexit, os
 
+def teardown():
+    fname = os.path.join(BMMuser.DATA, '.BMMuser')
+    print(f"Shutting down: Preserving state to {fname}")
+    BMMuser.to_json()
+
+atexit.register(teardown)
 
 
 

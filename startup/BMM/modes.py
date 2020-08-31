@@ -2,13 +2,13 @@ import json, time, os
 
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown
-from BMM.suspenders    import BMM_clear_to_start
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.motor_status  import motor_status
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
-
+from BMM.functions     import approximate_pitch, countdown
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.linescans     import rocking_curve
+from BMM.logging       import BMM_log_info, BMM_msg_hook
+from BMM.motor_status  import motor_status
+from BMM.suspenders    import BMM_clear_to_start
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns

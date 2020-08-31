@@ -1,5 +1,7 @@
 import os, time, datetime
 from numpy import pi, sin, cos, arcsin, sqrt
+from IPython import get_ipython
+user_ns = get_ipython().user_ns
 
 # read this
 #
@@ -122,6 +124,18 @@ def e2l(val):
     """Convert absolute photon energy to photon wavelength"""
     return 2*pi*HBARC/val
 l2e = e2l
+
+
+def approximate_pitch(energy):
+    if user_ns['dcm']._crystal is '111':
+        m = -4.57145e-06
+        b = 4.04782 + 0.0303    # ad hoc correction....
+        return(m*energy + b)
+    else:
+        m = -2.7015e-06
+        b = 2.38638
+        return(m*energy + b)
+        
 
 def isfloat(value):
     try:

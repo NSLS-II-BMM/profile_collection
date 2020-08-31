@@ -154,7 +154,7 @@ class WheelMacroBuilder():
     '''
     def __init__(self, folder=None):
         self.basename     = None
-        self.folder       = user_ns['BMMuser'].folder
+        self.folder       = None
 
         self.source       = None
         self.wb           = None
@@ -241,7 +241,7 @@ class WheelMacroBuilder():
 
         message = ''
         unrecoverable = False
-        global BMMuser
+        BMMuser = user_ns['BMMuser']
         
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':
             default['experimenters'] = BMMuser.name

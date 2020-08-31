@@ -27,6 +27,7 @@ def {base}_macro(dryrun=False):
     from bluesky.preprocessors import finalize_wrapper
     BMMuser.macro_dryrun = dryrun
     BMMuser.prompt = False
+    BMMuser.wheel = True
     BMM_log_info('Beginning {base}_macro')
     def main_plan():
 

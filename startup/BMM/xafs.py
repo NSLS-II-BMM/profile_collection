@@ -15,7 +15,7 @@ from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, clo
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import rocking_curve
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.modes         import get_mode, describe_mode
 from BMM.motor_status  import motor_sidebar, motor_status
@@ -607,8 +607,8 @@ def scan_sequence_static_html(inifile       = None,
                                     clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
                                     websnap       = quote('../snapshots/'+websnap),
                                     anasnap       = quote('../snapshots/'+anasnap),
-                                    xrffile       = quote('../'+xrffile),
-                                    xrfsnap       = quote('../snapshots/'+xrfsnap),
+                                    xrffile       = quote('../'+str(xrffile)),
+                                    xrfsnap       = quote('../snapshots/'+str(xrfsnap)),
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
     o.close()
@@ -618,6 +618,9 @@ def scan_sequence_static_html(inifile       = None,
     manifest.close()
 
     write_manifest()
+
+    img_to_slack(os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png"))
+    
     return(htmlfilename)
 
 
@@ -818,10 +821,11 @@ def xafs(inifile, **kwargs):
             close_last_plot()
         dcm.mode = 'channelcut'
 
-        xrfuid, xrfimage = None, None
-        print(xs._status, flush=True)
-        yield from sleep(3)
+        xrfuid, xrffile, xrfimage = None, None, None
+        html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if 'xs' in p['mode']:
+            print(xs._status, flush=True)
+            yield from sleep(3)
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             #yield from abs_set(xs.hdf5.capture, 1)
             yield from abs_set(xs.settings.acquire_time, 1)
@@ -1034,14 +1038,16 @@ def xafs(inifile, **kwargs):
                     report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')
                     yield from null()
                     return
-                #print(bold_msg('starting scan %d of %d, %d energy points' % (cnt, p['nscans'], len(energy_grid))))
-                report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points', level='bold', slack=True)
+
+                slotno = ''
+                if BMMuser.wheel is True:
+                    slotno = f', slot {xafs_wheel.current_slot()}'
+                report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname
 
                 if p['mode'] == 'xs':
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
-
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -1105,10 +1111,13 @@ def xafs(inifile, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
-                    score, emoji = user_ns['clf'].evaluate(uid, mode=p['mode'])
-                    report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
-                    ## FYI: db.v2[-1].metadata['start']['scan_id']
-                
+                    try:
+                        score, emoji = user_ns['clf'].evaluate(uid, mode=p['mode'])
+                        report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
+                        ## FYI: db.v2[-1].metadata['start']['scan_id']
+                    except:
+                        pass
+                        
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
                 js_text = '<a href="javascript:void(0)" onclick="toggle_visibility(\'%s\');" title="This is the scan number for %s, click to show/hide its UID">#%d</a><div id="%s" style="display:none;"><small>%s</small></div>' \
@@ -1159,7 +1168,7 @@ def xafs(inifile, **kwargs):
                 htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
-
+                    
         dcm.mode = 'fixed'
         yield from resting_state_plan()
         yield from sleep(2.0)
@@ -1169,6 +1178,7 @@ def xafs(inifile, **kwargs):
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     quadem1, vor = user_ns['quadem1'], user_ns['vor']
+    xafs_wheel = user_ns['xafs_wheel']
     try:
         xs = user_ns['xs']
     except:
@@ -1197,12 +1207,12 @@ def xafs(inifile, **kwargs):
     html_scan_list = ''
     html_dict = {}
     BMMuser.final_log_entry = True
-    #RE.msg_hook = None
+    RE.msg_hook = None
     ## encapsulation!
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'    
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
-    #RE.msg_hook = BMM_msg_hook
+    RE.msg_hook = BMM_msg_hook
 
 
 def howlong(inifile, interactive=True, **kwargs):

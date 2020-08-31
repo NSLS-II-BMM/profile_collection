@@ -7,7 +7,7 @@ from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
 from numpy import pi, sin, cos, arcsin
 
 from BMM.motors import FMBOEpicsMotor, VacuumEpicsMotor
-from BMM.functions import HBARC, boxedtext
+from BMM.functions import HBARC, boxedtext, approximate_pitch
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 

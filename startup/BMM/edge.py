@@ -6,7 +6,7 @@ from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
-from BMM.functions     import boxedtext, countdown
+from BMM.functions     import boxedtext, countdown, approximate_pitch
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
@@ -18,21 +18,11 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 
-def approximate_pitch(energy):
-    if user_ns['dcm']._crystal is '111':
-        m = -4.57145e-06
-        b = 4.04782 + 0.0303    # ad hoc correction....
-        return(m*energy + b)
-    else:
-        m = -2.7015e-06
-        b = 2.38638
-        return(m*energy + b)
-        
 
 def show_edges():
     rois = user_ns['rois']
-    xs = user_ns['xs']
-    text = show_reference_wheel() + '\n' + rois.show() + '\n' + xs.show_rois()
+    #xs = user_ns['xs']
+    text = show_reference_wheel() + '\n' + rois.show()#  + '\n' + xs.show_rois()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):

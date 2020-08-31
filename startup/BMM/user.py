@@ -36,6 +36,7 @@ class BMM_User(Borg):
       * use_pilatus:      flas, True make a folder for Pilatus images
       * echem:            flag, True is doing electrochemistry with the BioLogic
       * echem_remote:     mounted path to cifs share on ws3
+      * wheel:            True when executing a wheel macro
 
     Current plot attributes
       * motor:            fast motor in current plot
@@ -103,6 +104,7 @@ class BMM_User(Borg):
         self.use_slack       = True
         self.slack_channel   = None
         self.trigger         = False
+        self.wheel           = False
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -576,4 +578,3 @@ class BMM_User(Borg):
         self.echem_remote = None
         
         return None
-

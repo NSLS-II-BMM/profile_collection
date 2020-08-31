@@ -3,6 +3,8 @@ import os
 from urllib import request, parse
 import json
 from os import chmod
+from slack import WebClient
+from slack.errors import SlackApiError
 from IPython.paths           import get_ipython_module_path
 from IPython.utils.coloransi import TermColors as color
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -101,6 +103,24 @@ def post_to_slack(text):
     except Exception as em:
         print("EXCEPTION: " + str(em))
         print(f'slack_secret = {slack_secret}')
+
+
+
+def img_to_slack(imagefile):
+    token = 'xoxb-1220585156515-1339551980740-yckPYneqU7nsFEz4VmETvrce'
+    client = WebClient(token=token)
+    #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
+    try:
+        response = client.files_upload(channels='#beamtime', file=imagefile)
+        assert response["file"]  # the uploaded file
+    except SlackApiError as e:
+        # You will get a SlackApiError if "ok" is False
+        assert e.response["ok"] is False
+        assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+        print(f"Got an error: {e.response['error']}")
+    
+
+
         
 def report(text, level=None, slack=False):
     '''Print a string to:
