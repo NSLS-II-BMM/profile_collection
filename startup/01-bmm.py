@@ -44,8 +44,8 @@ import atexit, os
 
 def teardown():
     fname = os.path.join(BMMuser.DATA, '.BMMuser')
-    print(f"Shutting down: Preserving state to {fname}")
-    BMMuser.to_json()
+    print("Shutting down: ", end=' ')
+    BMMuser.to_json(fname)
 
 atexit.register(teardown)
 

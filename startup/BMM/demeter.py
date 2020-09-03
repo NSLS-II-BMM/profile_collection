@@ -59,8 +59,8 @@ def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, 
                              '--mode',   '%s' % mode],        # measurement mode
                             stdout=subprocess.PIPE)
     pngfile = os.path.join(folder, 'snapshots', base+'.png')
-    png = open(pngfile, 'wb')    
-    png.write(result.stdout)
-    png.close()
+    #png = open(pngfile, 'wb')    
+    #png.write(result.stdout)
+    #png.close()
     return(pngfile)
 

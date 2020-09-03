@@ -21,6 +21,7 @@ from larch import (Group, Parameter, isParameter, param_value, isNamedClass, Int
 from larch.xafs import (find_e0, pre_edge, autobk, xftf, xftr)
 import larch.utils.show as lus
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from BMM.functions import etok, ktoe
 
@@ -54,6 +55,7 @@ class Pandrosus():
     Methods:
       fetch:      Get data set and prepare for analysis with Larch
       make_xmu:   method that actually constructs mu(E) from the data source
+      put:        make a Pandrosus object from ndarrays for energy and mu
       show:       wrapper around Larch's show command, examine the content of the Larch group
       prep:       normalize, background subtract, and forward transform the data
       do_xftf:    perform the forward (k->R) transform
@@ -66,6 +68,7 @@ class Pandrosus():
       plot_chir:    plot data in R-space (alias = pr)
       plot_chiq:    plot data in back-transform k-space (alias = pq)
       plot_chikq:   plot chi(k) + RE(chi(q)) (alias = pkq)
+      triplot:      plot mu(E), chi(k), and chi(R) in a grid
 
     '''
     def __init__(self, uid=None, name=None):
@@ -129,6 +132,13 @@ class Pandrosus():
         self.group = Group(__name__=self.name)
         self.make_xmu(uid, mode=mode)
         self.prep()
+
+    def put(self, energy, mu, name):
+        self.name = name
+        self.group = Group(__name__=self.name)
+        self.group.energy = energy
+        self.group.mu = mu
+        self.prep()
         
     def prep(self):
         ## the next several lines seem necessary because the version
@@ -173,7 +183,9 @@ class Pandrosus():
              _larch=LARCH)
 
     def show(self, which=None):
-        if 'pre' in which:
+        if which is None:
+            lus.show(self.group, _larch=LARCH)
+        elif 'pre' in which:
             lus.show(self.group.pre_edge_details, _larch=LARCH)
         elif which == 'autobk':
             lus.show(self.group.autobk_details, _larch=LARCH)
@@ -462,6 +474,35 @@ class Pandrosus():
         if win:
             plt.plot(self.group.k, self.group.kwin*y.max()*1.1, label='window', color='C8')
         plt.legend(loc='best', shadow=True)
+
+
+    def triplot(self, kw=2):
+        fig = plt.figure(tight_layout=True)
+        gs = gridspec.GridSpec(2,2)
+
+        self.prep()
+        self.do_xftf(kw=kw)
+
+        mu = fig.add_subplot(gs[0, :])
+        mu.plot(self.group.energy, self.group.mu, label='$\mu(E)$', color='C0')
+        mu.set_ylabel('$\mu(E)$')
+        mu.set_xlabel('energy (eV)')
+
+        chik = fig.add_subplot(gs[1, 0])
+        #chik.set_xlim(left=0)
+        y = self.group.chi*self.group.k**kw
+        chik.plot(self.group.k, y, label='$\chi(k)$', color='C0')
+        chik.set_ylabel(f'$\chi(k)$  ($\AA^{{-{kw}}}$)')
+        chik.set_xlabel('wavenumber ($\AA^{-1}$)')
+
+        chir = fig.add_subplot(gs[1, 1])
+        chir.set_xlim(0,6)
+        chir.plot(self.group.r, self.group.chir_mag, label='$|\chi(R)|$', color='C0')
+        chir.set_ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw+1}}}$)")
+        chir.set_xlabel('wavenumber ($\AA^{-1}$)')
+
+        fig.align_labels()
+        plt.show()
         
     pe  = plot_xmu
     ps  = plot_signals

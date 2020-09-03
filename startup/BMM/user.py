@@ -449,6 +449,8 @@ class BMM_User(Borg):
         self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
         # preserve BMMuser state to a json string #
+        self.prev_fig = None
+        self.prev_ax  = None
         self.to_json(os.path.join(self.DATA, '.BMMuser'))
         if not os.path.isfile(os.path.join(os.environ['HOME'], 'Data', '.BMMuser')):
             os.symlink(os.path.join(self.DATA, '.BMMuser'), os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))

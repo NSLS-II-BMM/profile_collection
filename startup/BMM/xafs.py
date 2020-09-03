@@ -14,6 +14,7 @@ from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.larch         import Pandrosus
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -513,6 +514,26 @@ from pygments.formatters import HtmlFormatter
 
 from urllib.parse import quote
 
+def make_merged_triplot(uidlist, filename):
+    base = Pandrosus()
+    base.fetch(uidlist[0])
+    ee = base.group.energy
+    mm = base.group.mu
+    for uid in uidlist[1:]:
+        this = Pandrosus()
+        this.fetch(uid)
+        mu = numpy.interp(ee, this.group.energy, this.group.mu)
+        mm = mm + mu
+    mm = mm / len(uidlist)
+    merge = Pandrosus()
+    merge.put(ee, mm, 'merge')
+    matplotlib.use('Agg') # produce a plot without screen display
+    merge.triplot()
+    plt.savefig(filename)
+    print(whisper(f'Wrote triplot to {filename}'))
+    matplotlib.use('Qt5Agg') # return to screen display
+
+
 def scan_sequence_static_html(inifile       = None,
                               filename      = None,
                               start         = None,
@@ -541,6 +562,7 @@ def scan_sequence_static_html(inifile       = None,
                               htmlpage      = None,
                               ththth        = None,
                               initext       = None,
+                              uidlist       = None,
                               ):
     '''
     Gather information from various places, including html_dict, a temporary dictionary 
@@ -569,10 +591,13 @@ def scan_sequence_static_html(inifile       = None,
 
     ## generate a png image, preferably of a quadplot of the data, using Demeter
     try:
-        pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
+          pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
     except Exception as e:
-        print(e)
+          print(e)
 
+    if uidlist is not None:
+        make_merged_triplot(uidlist, os.path.join(BMMuser.DATA, 'snapshots', basename+'.png'))
+        
     if initext is None:
         with open(os.path.join(BMMuser.DATA, inifile)) as f:
             initext = ''.join(f.readlines())
@@ -619,7 +644,9 @@ def scan_sequence_static_html(inifile       = None,
 
     write_manifest()
 
-    img_to_slack(os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png"))
+    pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
+    if os.path.isfile(pngfile):
+        img_to_slack(pngfile)
     
     return(htmlfilename)
 
@@ -1028,6 +1055,7 @@ def xafs(inifile, **kwargs):
             report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True)
             cnt = 0
+            uidlist = []
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -1103,6 +1131,7 @@ def xafs(inifile, **kwargs):
                                              md={**xdi, **supplied_metadata})
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
+                uidlist.append(uid)
                 header = db[uid]
                 write_XDI(datafile, header)
                 print(bold_msg('wrote %s' % datafile))
@@ -1132,6 +1161,7 @@ def xafs(inifile, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## finish up, close out
+            html_dict['uidlist'] = uidlist
             html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'

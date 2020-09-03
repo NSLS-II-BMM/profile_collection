@@ -249,6 +249,8 @@ class WheelMacroBuilder():
         for k in ('sample', 'prep', 'comment'):
             if default[k] is None or str(default[k]).strip() == '':
                 default[k] = '...'
+            if '%' in default[k]:
+                default[k] = default[k].replace('%', '%%')
 
         try:
             default['nscans'] = int(default['nscans'])
