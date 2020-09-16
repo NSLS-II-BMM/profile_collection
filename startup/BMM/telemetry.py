@@ -1,6 +1,7 @@
 from databroker import catalog
 from databroker.queries import TimeRange
 import numpy, json, os, time
+from tqdm import tqdm           # progress bar
 
 from BMM.periodictable import element_symbol, edge_energy, Z_number
 
@@ -8,27 +9,6 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 
-# Print iterations progress
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
-    # Print New Line on Complete
-    if iteration == total: 
-        print()
         
 
 
@@ -41,35 +21,37 @@ class BMMTelementry():
     of the dwell time column in the datatable from the measurement.
     '''
     def __init__(self):
-        self.folder = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'telemetry')
-        self.json = os.path.join(self.folder, 'telemetry.json')
-        self.bc = catalog['bmm']
-        self.start_date = '2019-09-01'
-        self.element = 'Dy'
+        self.folder      = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'telemetry')
+        self.json        = os.path.join(self.folder, 'telemetry.json')
+        self.bc          = catalog['bmm']
+        self.start_date  = '2019-09-01'
         self.reliability = 10
+        self.beamdump    = 3
         ###                         k-edges               l-edges
         self.all_elements = list(range(22, 46)) + list(range(55, 93))
 
         
-    def number(self):
-        db = user_ns['db']
-        query = TimeRange(since=self.start_date, until='2040')
-        time_search = self.bc.search(query)
-        xafs_search = time_search.search({'XDI._kind':'xafs'})
-        element_search = xafs_search.search({'XDI.Element.symbol': self.element})
-        print(f'Number of records for {self.element} since {self.start_date}: {len(element_search)}')
+    def records(self, element=None):
+        query          = TimeRange(since=self.start_date, until='2040')
+        time_search    = self.bc.search(query)
+        xafs_search    = time_search.search({'XDI._kind':'xafs'})
+        element_search = xafs_search.search({'XDI.Element.symbol': element})
+        print(f'Number of records for {element} since {self.start_date}: {len(element_search)}')
         return(element_search)
         
-    def scaling_factor(self):
+    def overhead(self, element=None):
+        if element is None: return(0)
         db = user_ns['db']
-        element_search = self.number()
+        element_search = self.records(element)
         ratio, difference, dpp = numpy.array([]), numpy.array([]), numpy.array([])
         l = len(list(element_search))
-        if l == 0:
-            return(0,0,0)
+        if l == 0: return(0)
         count = 0
-        for i,u in enumerate(list(element_search)):
+        for u in tqdm(list(element_search)):
+            
             this=db.v2[u]
+
+            ## records that did not complete normally
             if 'primary' in this.metadata['stop']['num_events']:
                 if this.metadata['start']['num_points'] != this.metadata['stop']['num_events']['primary']:
                     continue
@@ -78,8 +60,8 @@ class BMMTelementry():
                 measurement_time = float(t.sum())
                 elapsed_time = this.metadata['stop']['time'] - this.metadata['start']['time']
 
-                ## worry about beam dumps and such skewing the statistics
-                if elapsed_time/measurement_time > 3:
+                ## records that scan beam dumps or other pauses would skew the statistics
+                if elapsed_time/measurement_time > self.beamdump:
                     continue
 
                 difference = numpy.append(difference, (elapsed_time - measurement_time))
@@ -89,28 +71,22 @@ class BMMTelementry():
                 count = count + 1
             except:
                 pass
-            printProgressBar(i + 1, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
-        #ratio = ratio / count
-        #difference = difference / count
-        #dpp = dpp/count
-        #return(count, ratio, difference, dpp)
-
-        return({'count': count,
-                'ratio': [ratio.mean(), ratio.std()],
+        return({'count'     : count,
+                'ratio'     : [ratio.mean(), ratio.std()],
                 'difference': [difference.mean(), difference.std()],
-                'dpp': [dpp.mean(), dpp.std()],
+                'dpp'       : [dpp.mean(), dpp.std()],
             })
     
 
+    ## TODO: take a list of integers/element symbols as an input
+    ## parameter, extract just those, modify json file for those
+    ## elements
     def periodic_table(self, el=None):
         start = time.time()
         results = {}
-        ###             k-edges               l-edges
-        elements = list(range(22, 46)) + list(range(55, 93))
         for z in self.all_elements:
             el = element_symbol(z)
-            self.element = el
-            results[el] = self.scaling_factor()
+            results[el] = self.overhead(el)
             
         j = json.dumps(results)
         f = open(self.json,"w")
