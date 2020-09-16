@@ -63,7 +63,7 @@ def peak(signal):
     center of rocking curve and slit height scans.'''
     return pandas.Series.idxmax(signal)
 
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='com'):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak'):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -303,7 +303,7 @@ motor_nicknames = {'x'    : user_ns['xafs_x'],     'roll' : user_ns['xafs_roll']
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Xs'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Dualio', 'Xs'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -375,7 +375,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Xs'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Dualio', 'Xs'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
             yield from null()
@@ -386,6 +386,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             yield from mv(xs.settings.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
         dets  = [user_ns['quadem1'],]
+        if user_ns['with_dualem']:
+            dualio = user_ns['dualio']
         denominator = ''
         detname = ''
         
@@ -437,6 +439,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
 
+        elif detector == 'Dualio':
+            dets.append(dualio)
+            funcia = lambda doc: (doc['data'][thismotor.name], doc['data']['Ia'])
+            funcib = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
+
         ## need a "Both" for trans + xs !!!!!!!!!!
         elif detector == 'Both':
             dets.append(user_ns['vor'])
@@ -452,6 +459,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
+        elif detector == 'Dualio':
+            plot = [DerivedPlot(funcia, xlabel=thismotor.name, ylabel='Ia/I0', title='Ia vs. %s' % thismotor.name),
+                    DerivedPlot(funcib, xlabel=thismotor.name, ylabel='Ib/I0', title='Ib vs. %s' % thismotor.name)]
         else:
             plot = DerivedPlot(func,
                                xlabel=thismotor.name,
@@ -552,6 +562,10 @@ def ls2dat(datafile, key):
                        BMMuser.roi3, 'ICR3', 'OCR3',
                        BMMuser.roi4, 'ICR4', 'OCR4']
         template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+    elif 'DualI0' in devices:
+        abscissa = dataframe['start']['motors'][0]
+        column_list = [abscissa, 'Ia', 'Ib',]
+        template = "  %.3f  %.6f  %.6f\n"
     else:
         abscissa = dataframe['start']['motors'][0]
         template = "  %.3f  %.6f  %.6f  %.6f\n"

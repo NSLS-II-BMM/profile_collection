@@ -104,7 +104,7 @@ class Pandrosus():
           mode:  'transmission', 'fluorescence', or 'reference'
 
         '''
-        db = user_ns['db']
+        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         header = db[uid]
         table  = header.table()
         self.group.energy = numpy.array(table['dcm_energy'])
@@ -114,10 +114,19 @@ class Pandrosus():
             self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
             self.group.i0 = numpy.array(table['It'])
             self.group.signal = numpy.array(table['Ir'])
+
+        #######################################################################################
+        # CAUTION!!  This only works when BMMuser is correctly set.  This is unlikely to work #
+        # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
+        #######################################################################################
         elif mode == 'fluorescence':
-            self.group.mu = numpy.array((table['dtc1']+table['dtc2']+table['dtc3']+table['dtc4'])/table['I0'])
+            self.group.mu = numpy.array((table[BMMuser.dtc1]+table[BMMuser.dtc2]+table[BMMuser.dtc3]+table[BMMuser.dtc4])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table['dtc1']+table['dtc2']+table['dtc3']+table['dtc4'])
+            self.group.signal = numpy.array(table[BMMuser.dtc1]+table[BMMuser.dtc2]+table[BMMuser.dtc3]+table[BMMuser.dtc4])
+
+        # use the Xspress3
+        #elif
+            
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
             self.group.i0 = numpy.array(table['I0'])
@@ -546,6 +555,26 @@ class Kekropidai():
         self.name   = name
         self.rmax   = 6
 
+    def put(self, uidlist):
+        for u in uidlist:
+            this = Pandrosus()
+            this.fetch(uid)
+            self.add(this)
+
+    def merge(self):
+        base = self.groups[0]
+        base.fetch(uidlist[0])
+        ee = base.group.energy
+        mm = base.group.mu
+        for spectrum in self.groups[1:]:
+            mu = numpy.interp(ee, spectrum.group.energy, spectrum.group.mu)
+            mm = mm + mu
+        mm = mm / len(self.groups)
+        merge = Pandrosus()
+        merge.put(ee, mm, 'merge')
+        return(merge)
+        
+            
     def add(self, groups):
         if 'Pandrosus' in str(type(groups)):
             # this is a single group

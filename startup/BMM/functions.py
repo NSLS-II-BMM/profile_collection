@@ -201,3 +201,11 @@ def countdown(t):
         time.sleep(1)
         t -= 1
     print('Blast off!', end='\r')
+
+
+def elapsed_time(start):
+    end = time.time()
+    hours, rest = divmod(end-start, 3600)
+    minutes, seconds = divmod(rest, 60)
+    print(f'\n\nThat took {hours} hours, {minutes} minutes, {seconds} seconds')
+    

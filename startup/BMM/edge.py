@@ -199,7 +199,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         ## Struck
         rois = user_ns['rois']
         print('Moving reference foil...')
-        yield from rois.select(el)
+        yield from rois.select_plan(el)
         ## Xspress3
         try:
             xs.measure_roi()

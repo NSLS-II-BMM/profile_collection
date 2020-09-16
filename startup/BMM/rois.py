@@ -107,7 +107,7 @@ class ROI():
                 json.dump(user, outfile)
             os.chmod(jsonfile, 0o444)
 
-    def select(self, el):
+    def select_plan(self, el):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
@@ -144,6 +144,43 @@ class ROI():
             print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
             yield from null()
 
+    def select(self, el):
+        '''Choose the ROI configured for element el'''
+        if type(el) is int:
+            if el < 1 or el > 3:
+                print(error_msg('\n%d is not a valid ROI channel\n' % el))
+                return
+            el = self.slots[el-1]
+        if el is None:
+            print(error_msg('\nThat ROI is not configured\n'))
+            return
+        if Z_number(el) is None:
+            print(error_msg('\n%s is not an element\n' % el))
+            return
+        selected = False
+        vor = user_ns['vor']
+        BMMuser = user_ns['BMMuser']
+        for i in range(3):
+            if element_symbol(el) == self.slots[i]:
+                BMMuser.roi_channel = i+1
+                if i == 0:      # help out the best effort callback
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI1', 'ROI2', 'ROI3', 'ROI4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC1', 'DTC2', 'DTC3', 'DTC4')
+                    vor.set_hints(1)
+                elif i == 1:
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI2_1', 'ROI2_2', 'ROI2_3', 'ROI2_4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC2_1', 'DTC2_2', 'DTC2_3', 'DTC2_4')
+                    vor.set_hints(2)
+                elif i == 2:
+                    (BMMuser.roi1, BMMuser.roi2, BMMuser.roi3, BMMuser.roi4) = ('ROI3_1', 'ROI3_2', 'ROI3_3', 'ROI3_4')
+                    (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4) = ('DTC3_1', 'DTC3_2', 'DTC3_3', 'DTC3_4')
+                    vor.set_hints(3)
+                report('Set ROI channel to %s at channel %d' % (el.capitalize(), i+1))
+                selected = True
+        if not selected:
+            print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
+
+            
 # 22.265
             
     def show(self):

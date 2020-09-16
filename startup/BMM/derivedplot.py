@@ -45,7 +45,7 @@ def close_last_plot():
     '''Close the most recent plot on screen'''
     BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:
-        print('Oops... No last plot.')
+        #print('Oops... No last plot.')
         return
     if BMMuser.prev_fig is not None:
         plt.close(BMMuser.prev_fig)

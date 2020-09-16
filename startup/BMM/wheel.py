@@ -3,13 +3,16 @@ import sys, os.path, re
 #pp = pprint.PrettyPrinter(indent=4)
 from openpyxl import load_workbook
 import configparser
+import numpy
 
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.motors        import EndStationEpicsMotor
-from BMM.periodictable import PERIODIC_TABLE
-from BMM.logging       import report
+from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions      import isfloat
+from BMM.motors         import EndStationEpicsMotor
+from BMM.periodictable  import PERIODIC_TABLE, edge_energy
+from BMM.logging        import report
+from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -185,6 +188,7 @@ class WheelMacroBuilder():
             spreadsheet = spreadsheet+'.xlsx'
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
+        self.basename = re.sub('[ -]+', '_', self.basename)
         self.wb       = load_workbook(self.source, read_only=True);
         self.ws       = self.wb.active
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
@@ -201,8 +205,12 @@ class WheelMacroBuilder():
 
         self.do_first_change = self.truefalse(self.ws['G2'].value)
         self.close_shutters  = self.truefalse(self.ws['J2'].value)
+        self.append_element  = str(self.ws['L2'].value)
             
-        self.read_spreadsheet()
+        isok, explanation = self.read_spreadsheet()
+        if isok is False:
+            print(error_msg(explanation))
+            return
         self.write_macro()
 
         
@@ -294,6 +302,7 @@ class WheelMacroBuilder():
 
         Finally, write out the master INI and macro python files.
         '''
+        totaltime ,deltatime = 0, 0
         element, edge, focus = (None, None, None)
         self.content = ''
         for m in self.measurements:
@@ -342,11 +351,14 @@ class WheelMacroBuilder():
             if self.do_first_change is True:
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
+                totaltime += 4
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
+                totaltime += 4
+                
             else:
                 if self.verbose:
                     self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
@@ -374,7 +386,17 @@ class WheelMacroBuilder():
                     m[k] = None
                 ## if a cell has data, put it in the argument list for xafs()
                 if m[k] is not None:
-                    if type(m[k]) is int:
+                    if k == 'filename':
+                        fname = m[k]
+                        el = self.measurements[0]['element']
+                        if 'element' in m:
+                            el = m['element']
+                        if self.append_element.lower() == 'beginning':
+                            fname = el + '-' + fname
+                        elif self.append_element.lower() == 'end':
+                            fname = fname + '-' + el
+                        command += f', filename=\'{fname}\''
+                    elif type(m[k]) is int:
                         command += ', %s=%d' % (k, m[k])
                     elif type(m[k]) is float:
                         command += ', %s=%.3f' % (k, m[k])
@@ -385,6 +407,32 @@ class WheelMacroBuilder():
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
+            if type(m['bounds']) is str:
+                b = re.split('[ ,]+', m['bounds'])
+            else:
+                b = re.split('[ ,]+', self.measurements[0]['bounds'])
+            if type(m['steps']) is str:
+                s = re.split('[ ,]+', m['steps'])
+            else:
+                s = re.split('[ ,]+', self.measurements[0]['steps'])
+            if type(m['times']) is str:
+                t = re.split('[ ,]+', m['times'])
+            else:
+                t = re.split('[ ,]+', self.measurements[0]['times'])
+
+            b = [float(x) if isfloat(x) else x for x in b]
+            s = [float(x) if isfloat(x) else x for x in s]
+            t = [float(x) if isfloat(x) else x for x in t]
+                
+            (e,t,at,delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(element, edge), element=element, edge=edge, ththth=False)
+            
+            if type(m['nscans']) is str:
+                nsc = m['nscans']
+            else:
+                nsc = self.measurements[0]['nscans']
+            totaltime += at * nsc
+            deltatime += delta*delta
+            
 
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
@@ -429,6 +477,10 @@ class WheelMacroBuilder():
         print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
         print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
         print('Run:    '   + bold_msg('RE(%s_macro())' % self.basename))
+        hours = int(totaltime/60)
+        minutes = int(totaltime - hours*60)
+        deltatime = numpy.sqrt(deltatime)
+        print(f'\nApproximate time: {hours} hours, {minutes} minutes +/- {deltatime:.1f} minutes')
 
             
     def read_spreadsheet(self):
@@ -437,6 +489,7 @@ class WheelMacroBuilder():
         print('Reading spreadsheet: %s' % self.source)
         count = 0
         offset = 0
+        isok, explanation = True, ''
         if self.has_e0_column:  # deal with older xlsx that have e0 in column H
             offset = 1
         for row in self.ws.rows:
@@ -473,5 +526,25 @@ class WheelMacroBuilder():
                                       'channelcut': self.truefalse(row[23+offset].value),
                                       'ththth':     self.truefalse(row[24+offset].value),
             })
+
+            ## check that scan parameters make sense
+            if type(self.measurements[-1]['bounds']) is str:
+                b = re.split('[ ,]+', self.measurements[-1]['bounds'])
+            else:
+                b = re.split('[ ,]+', self.measurements[0]['bounds'])
+            if type(self.measurements[-1]['steps']) is str:
+                s = re.split('[ ,]+', self.measurements[-1]['steps'])
+            else:
+                s = re.split('[ ,]+', self.measurements[0]['steps'])
+            if type(self.measurements[-1]['times']) is str:
+                t = re.split('[ ,]+', self.measurements[-1]['times'])
+            else:
+                t = re.split('[ ,]+', self.measurements[0]['times'])
+
+            (problem, text ) = sanitize_step_scan_parameters(b, s, t)
+            if problem is True:
+                isok = False
+                explanation += f'row {count}:\n' + text
+        return(isok, explanation)
         #pp.pprint(self.measurements)
         

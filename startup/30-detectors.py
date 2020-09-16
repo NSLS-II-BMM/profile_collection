@@ -200,7 +200,7 @@ try:                            # not 100% guaranteed to be in place
     dualio.Ia.name = 'Ia'
     dualio.Ib.name = 'Ib'
 except:
-    pass
+    dualio = None
 
 
 quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')

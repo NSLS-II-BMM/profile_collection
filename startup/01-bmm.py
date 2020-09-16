@@ -1,15 +1,16 @@
 
-import json
+import json, time
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 
-from BMM.functions           import now, colored, run_report, boxedtext
+from BMM.functions           import now, colored, run_report, boxedtext, elapsed_time
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 run_report(__file__, text='functions and other basics')
 run_report('\t'+'logging')
 from BMM.logging             import report, BMM_log_info, BMM_msg_hook
 
+from bluesky.preprocessors   import finalize_wrapper
 
 run_report('\t'+'user')
 from BMM.user import BMM_User

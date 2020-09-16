@@ -105,7 +105,8 @@ def post_to_slack(text):
         print(f'slack_secret = {slack_secret}')
 
 
-
+## Simple but useful guide to configuring a slack app:        
+## https://hamzaafridi.com/2019/11/03/sending-a-file-to-a-slack-channel-using-api/
 def img_to_slack(imagefile):
     token_file = os.path.join(os.path.dirname(get_ipython_module_path('BMM.functions')), 'image_uploader_token')
     try:
