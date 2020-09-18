@@ -13,12 +13,14 @@ user_ns = get_ipython().user_ns
 
 
 class BMMTelementry():
-    '''A class for figuring out the historical average overhead for an XAFS scan at BMM
+    '''A class for figuring out the historical average overhead for an
+    XAS scan at BMM
 
     "Overhead" is defined as the excess time beyond the measurement
     time.  The time span of the scan is computed from the time stamps
     in the start and stop document.  The measurement time is the sum
     of the dwell time column in the datatable from the measurement.
+
     '''
     def __init__(self):
         self.folder      = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'telemetry')
