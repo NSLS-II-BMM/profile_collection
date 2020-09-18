@@ -76,23 +76,40 @@ def bmm_metadata(measurement   = 'transmission',
     '''
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 
-    Argument list:
-      measurement   -- 'transmission' or 'fluorescence'
-      edge          -- 'K', 'L3', 'L2', or 'L1'
-      element       -- one or two letter element symbol
-      edge_energy   -- edge energy used to constructing scan parameters
-      direction     -- 1/0/-1, 1 for increasing, -1 for decreasing, 0 for fixed energy
-      scan          -- 'step' or 'slew'
-      channelcut    -- True/False, False for fixed exit, True for pseudo-channel-cut
-      mono          -- 'Si(111)' or 'Si(311)'
-      i0_gas        -- a string using N2, He, Ar, and Kr
-      it_gas        -- a string using N2, He, Ar, and Kr
-      sample        -- one-line sample description
-      prep          -- one-line explanation of sample preparation
-      stoichiometry -- None or IUCr stoichiometry string
-      mode          -- transmission, fluorescence, reference
-      comment       -- user-supplied, free-form comment string
-      ththth        -- True is measuring with the Si(333) relfection
+    Parameter
+    ---------
+    measurement : str
+        'transmission' or 'fluorescence'
+    edge : str
+        'K', 'L3', 'L2', or 'L1'
+    element : str
+        one or two letter element symbol
+    edge_energy : float
+        edge energy used to constructing scan parameters
+    direction : int
+        1/0/-1, 1 for increasing, -1 for decreasing, 0 for fixed energy
+    scan : str
+        'step' or 'slew'
+    channelcut : bool
+        True/False, False for fixed exit, True for pseudo-channel-cut
+    mono : ste
+        'Si(111)' or 'Si(311)'
+    i0_gas : str
+        a string using N2, He, Ar, and Kr
+    it_gas : str
+        a string using N2, He, Ar, and Kr
+    sample : str
+        one-line sample description
+    prep : str
+        one-line explanation of sample preparation
+    stoichiometry : str
+        None or IUCr stoichiometry string
+    mode : str
+        transmission, fluorescence, reference
+    comment : str
+        user-supplied, free-form comment string
+    ththth : bool
+        True is measuring with the Si(333) relfection
     '''
 
     md                         = copy.deepcopy(bmm_metadata_stub)

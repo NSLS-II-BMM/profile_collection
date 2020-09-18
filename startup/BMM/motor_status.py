@@ -120,15 +120,17 @@ def motor_sidebar(md=None):
     '''Generate a list of motor positions to be used in the static html page for a scan sequence.
     Return value is a long string with html tags and entities embedded in the string.
 
-    Argument:
-      md: dict with motor positions keyed by <motor>.name
+    Parameters
+    ----------
+    md : dict
+        dict with motor positions keyed by <motor>.name
 
     If md is not provided, the current motor positions will be used.
     If taking a record from Data Broker, the motor positions have been
     recorded in the baseline.  If generating a dossier from a Data
     Broker record, do:
 
-          text = motor_sidebar(uid=uid)
+    >>> text = motor_sidebar(uid=uid)
 
     where uid is the ID of the scan.
     '''

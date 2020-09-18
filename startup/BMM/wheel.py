@@ -22,11 +22,12 @@ class WheelMotor(EndStationEpicsMotor):
     
     These wheels have 24 slots, spaced 15 degrees apart.
 
-    current_slot():
-       return the current slot number, even if the wheel has rotated many times
-
-    set_slot(n):
-       move to the given slot number, taking care to go the shorter way
+    Methods
+    -------
+    current_slot() :
+        return the current slot number, even if the wheel has rotated many times
+    set_slot(n) :
+        move to the given slot number, taking care to go the shorter way
     '''
     def current_slot(self, value=None):
         '''Return the current slot number for a sample wheel.'''
@@ -150,10 +151,11 @@ class WheelMacroBuilder():
     '''A class for parsing specially constructed spreadsheets and
     generating macros for measuring XAS on the BMM wheel.
 
-    Example:
-       mb = MacroBuilder()
-       mb.spreadsheet('wheel1.xlsx')
-       mb.write_macro()
+    Examples
+    --------
+    >>> mb = MacroBuilder()
+    >>> mb.spreadsheet('wheel1.xlsx')
+    >>> mb.write_macro()
     '''
     def __init__(self, folder=None):
         self.basename     = None
@@ -175,13 +177,15 @@ class WheelMacroBuilder():
     def spreadsheet(self, spreadsheet, energy=False):
         '''Convert a wheel macro spreadsheet to a BlueSky plan.
 
+        Examples
+        --------
         To create a macro from a spreadsheet called "MySamples.xlsx"
 
-            xlsx('MySamples')
+        >>> xlsx('MySamples')
 
         To specify a change_edge() command at the beginning of the macro:
 
-            xlsx('MySamples', energy=True)
+        >>> xlsx('MySamples', energy=True)
 
         '''
         if spreadsheet[-5:] != '.xlsx':

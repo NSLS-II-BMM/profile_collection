@@ -103,16 +103,30 @@ def sanitize_step_scan_parameters(bounds, steps, times):
 
 
 def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112, element=None, edge=None, ththth=False):
-    '''Input:
-       bounds:   (list) N relative energy values denoting the region boundaries of the step scan
-       steps:    (list) N-1 energy step sizes
-       times:    (list) N-1 integration time values
-       e0:       (float) edge energy, reference for boundary values
-       ththth:   (Boolean) using the Si(333) reflection
-    Output:
-       grid:     (list) absolute energy values
-       timegrid: (list) integration times
-       approximate_time: (float) a very crude estimate of how long in minutes the scan will take
+    '''
+    Parameters
+    ----------
+    bounds : list of float or str
+        N relative energy values denoting the region boundaries of the step scan
+    steps : list of float or str
+        N-1 energy step sizes
+    times : list of float or str
+        N-1 integration time values
+    e0 : float
+        edge energy, reference for boundary values
+    ththth : Boolean
+        using the Si(333) reflection
+
+    Output
+    ------
+    grid : list
+        absolute energy values
+    timegrid : list
+        integration times
+    approximate_time : float
+        a very crude estimate of how long in minutes the scan will take
+    delta : float
+        uncertainty in execution time (if available)
 
     Boundary values are either in eV units or wavenumber units.
     Values in eV units are floats, wavenumber units are strings of the
@@ -133,26 +147,31 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
     So at 5 invAng, integrate for 2.5 seconds.  At 10 invAng,
     integrate for 5 seconds.
 
-    Examples:
-       -- this is the default (same as (g,it,at) = conventional_grid()):
-       (grid, inttime, time) = conventional_grid(bounds=[-200, -30, 15.3, '14k'],
-                                                 steps=[10, 0.5, '0.05k'],
-                                                 times=[0.5, 0.5, '0.25k'], e0=7112)
+    Examples
+    --------
+    this is the default (same as (g,it,at) = conventional_grid()):
 
-       -- more regions
-       (grid, inttime, time) = conventional_grid(bounds=[-200.0, -20.0, 30.0, '5k', '14.5k'],
-                                                 steps=[10.0, 0.5, 2, '0.05k'],
-                                                 times=[1, 1, 1, '1k'], e0=7112)
+    >>> (grid, inttime, time) = conventional_grid(bounds=[-200, -30, 15.3, '14k'],
+    >>>                                           steps=[10, 0.5, '0.05k'],
+    >>>                                           times=[0.5, 0.5, '0.25k'], e0=7112)
 
-       -- many regions, energy boundaries, k-steps
-       (grid, inttime, time) = conventional_grid(bounds=[-200, -30, -10, 15, 100, 300, 500, 700, 900],
-                                                 steps=[10, 2, 0.5, '0.05k', '0.05k', '0.05k', '0.05k', '0.05k'],
-                                                 times=[0.5, 0.5, 0.5, 1, 2, 3, 4, 5], e0=7112)
+    more regions
 
-       -- a one-region xanes scan
-       (grid, inttime, time) = conventional_grid(bounds=[-10, 40],
-                                                 steps=[0.25,],
-                                                 times=[0.5,], e0=7112)
+    >>> (grid, inttime, time) = conventional_grid(bounds=[-200.0, -20.0, 30.0, '5k', '14.5k'],
+    >>>                                           steps=[10.0, 0.5, 2, '0.05k'],
+    >>>                                           times=[1, 1, 1, '1k'], e0=7112)
+
+    many regions, energy boundaries, k-steps
+
+    >>> (grid, inttime, time) = conventional_grid(bounds=[-200, -30, -10, 15, 100, 300, 500, 700, 900],
+    >>>                                           steps=[10, 2, 0.5, '0.05k', '0.05k', '0.05k', '0.05k', '0.05k'],
+    >>>                                           times=[0.5, 0.5, 0.5, 1, 2, 3, 4, 5], e0=7112)
+
+    a one-region xanes scan
+
+    >>> (grid, inttime, time) = conventional_grid(bounds=[-10, 40],
+    >>>                                           steps=[0.25,],
+    >>>                                           times=[0.5,], e0=7112)
     '''
     tele = user_ns['tele']
     

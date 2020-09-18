@@ -5,21 +5,28 @@ from BMM.periodictable import edge_energy, Z_number, element_symbol
 class ReferenceFoils():
     '''A simple class for managing the reference foil holder.
 
+    Examples
+    --------
     Configure reference holder:
-       foils.set('Mn Fe Cu Zn Pb')
+      
+    >>> foils.set('Mn Fe Cu Zn Pb')
 
     Configure one slot of the reference holder:
-       foils.set_slot(2, 'Fe')
+       
+    >>> foils.set_slot(2, 'Fe')
 
     Return the xafs_linxs value for a slot:
-       pos = foils.position(2)
+       
+    >>> pos = foils.position(2)
 
     Move to a slot by element symbol:
-       RE(foils.move('Fe'))
-       yield from foils.move('Fe')
+       
+    >>> RE(foils.move('Fe'))
+    >>> yield from foils.move('Fe')
 
     Print foils configuration to the screen:
-       print(foils.show())
+       
+    >>> print(foils.show())
     '''
     def __init__(self):
         self.slots = [None, None, None, None, None]
@@ -48,9 +55,10 @@ class ReferenceFoils():
         '''Configure the foils so that an energy change knows where to put the
         reference stage.
 
-        Input:
-          elements: a list of 5 foils, top to bottom in the foil holder
-                    if the list is a space separated string, it will be split into a list
+        Parameters
+        ----------
+        elements: list of str
+            a list of 5 foils, top to bottom in the foil holder if the list is a space separated string, it will be split into a list
         '''
         if type(elements) is str:
             elements = elements.split()

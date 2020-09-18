@@ -3,11 +3,16 @@ class dcm_parameters():
     '''A simple class for maintaining calibration parameters for the
     Si(111) and Si(311) monochromators.
 
-    BMM_dcm.dspacing_111:   d-spacing for the Si(111) mono
-    BMM_offset_111:         angular offset for the Si(111) mono
-
-    BMM_dcm.dspacing_311:   d-spacing for the Si(311) mono
-    BMM_offset_311:         angular offset for the Si(311) mono
+    Parameters
+    ----------
+    BMM_dcm.dspacing_111 : float
+        d-spacing for the Si(111) mono
+    BMM_offset_111 : float
+        angular offset for the Si(111) mono
+    BMM_dcm.dspacing_311 : float
+        d-spacing for the Si(311) mono
+    BMM_offset_311 : float
+        angular offset for the Si(311) mono
 
     '''
     def __init__(self):

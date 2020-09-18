@@ -38,37 +38,61 @@ class Pandrosus():
     The plotting capabilities of this class are very similar to the
     orange plot buttons in Athena.
 
-    Attributes:
-      uid:   Databroker unique ID of the data set, used to fetch mu(E) from the database
-      name:  Human-readable name of the data set
-      group: Larch group containing the data
-      pre:   Dictionary of pre-edge and normalization arguments
-      bkg:   Dictionary of background subtraction arguments
-      fft:   Dictionary of forward Fourier transform arguments
-      bft:   Dictionary of backward Fourier transform arguments
-      rmax:  upper bound of R-space plot
+    Attributes
+    ----------
+    uid : str
+        Databroker unique ID of the data set, used to fetch mu(E) from the database
+    name : str
+        Human-readable name of the data set
+    group : str
+        Larch group containing the data
+    pre : dict
+        Dictionary of pre-edge and normalization arguments
+    bkg : dict
+        Dictionary of background subtraction arguments
+    fft : dict   Dictionary of forward Fourier transform arguments
+    bft : dict
+        Dictionary of backward Fourier transform arguments
+    rmax : float
+        upper bound of R-space plot
 
     See http://xraypy.github.io/xraylarch/xafs/preedge.html and
     http://xraypy.github.io/xraylarch/xafs/autobk.html for details
     about these parameters.
 
-    Methods:
-      fetch:      Get data set and prepare for analysis with Larch
-      make_xmu:   method that actually constructs mu(E) from the data source
-      put:        make a Pandrosus object from ndarrays for energy and mu
-      show:       wrapper around Larch's show command, examine the content of the Larch group
-      prep:       normalize, background subtract, and forward transform the data
-      do_xftf:    perform the forward (k->R) transform
-      do_xftr:    perform the reverse (R->q) transform
+    Methods
+    ------
+    fetch:      
+        Get data set and prepare for analysis with Larch
+    make_xmu:
+        method that actually constructs mu(E) from the data source
+    put:
+        make a Pandrosus object from ndarrays for energy and mu
+    show:
+        wrapper around Larch's show command, examine the content of the Larch group
+    prep: 
+        normalize, background subtract, and forward transform the data
+    do_xftf:
+        perform the forward (k->R) transform
+    do_xftr:
+        perform the reverse (R->q) transform
 
-    Plotting methods:
-      plot_xmu:     plot data in energy (alias = pe)
-      plot_signals: plot mu(E) with I0 and the transmission or fluorescence signal (allias = ps)
-      plot_chik:    plot data in k-space (alias = pk)
-      plot_chir:    plot data in R-space (alias = pr)
-      plot_chiq:    plot data in back-transform k-space (alias = pq)
-      plot_chikq:   plot chi(k) + RE(chi(q)) (alias = pkq)
-      triplot:      plot mu(E), chi(k), and chi(R) in a grid
+    Plotting methods
+    ----------------
+    plot_xmu :
+        plot data in energy (alias = pe)
+    plot_signals : 
+        plot mu(E) with I0 and the transmission or fluorescence signal (allias = ps)
+    plot_chik :
+        plot data in k-space (alias = pk)
+    plot_chir :
+        plot data in R-space (alias = pr)
+    plot_chiq :
+        plot data in back-transform k-space (alias = pq)
+    plot_chikq :
+        plot chi(k) + RE(chi(q)) (alias = pkq)
+    triplot :
+        plot mu(E), chi(k), and chi(R) in a grid
 
     '''
     def __init__(self, uid=None, name=None):
@@ -99,9 +123,12 @@ class Pandrosus():
         need something different.
         ***************************************************************
 
-        Arguments:
-          uid:   database identifier (assuming you are using databroker)
-          mode:  'transmission', 'fluorescence', or 'reference'
+        Parameters
+        ----------
+        uid : str
+            database identifier (assuming you are using databroker)
+        mode : str
+            'transmission', 'fluorescence', or 'reference'
 
         '''
         db, BMMuser = user_ns['db'], user_ns['BMMuser']
@@ -211,13 +238,20 @@ class Pandrosus():
         All arguments default to plot, so you must explicitly turn on
         each additional modification or trace beyond the raw data.
 
-        Arguments:
-          bkg:   True to plot the background function
-          pre:   True to plot the pre-edge line
-          post:  True to plot the post-edge line
-          norm:  True to plot normalized mu(E)
-          flat:  True to plot "flattened" mu(E)
-          deriv: True to plot the derivative of mu(E)
+        Parameters
+        ----------
+        bkg : bool
+            True to plot the background function
+        pre : bool
+            True to plot the pre-edge line
+        post : bool
+            True to plot the post-edge line
+        norm : bool
+            True to plot normalized mu(E)
+        flat : bool
+            True to plot "flattened" mu(E)
+        deriv : bool
+            True to plot the derivative of mu(E)
 
         Setting norm, flat, or deriv to True, forces bkg, pre, and post to False.
 
@@ -328,20 +362,28 @@ class Pandrosus():
     def plot_chir(self, kw=2, win=True, parts='m'):
         '''Make a plot in R-space of a single data set.
 
-        Arguments:
-          kw:    specify the k-weight used in the plot [2]
-          win:   plot backtransform/fitting window if True [True]
-          parts: specify the parts of the complex transform to plot ['m']
+        Parameters
+        ----------
+        kw : int
+            specify the k-weight used in the plot [2]
+        win : bool
+            plot backtransform/fitting window if True [True]
+        parts : str
+            specify the parts of the complex transform to plot ['m']
 
         The argument to parts is a string that can contain the letters
         'm', 'r', 'i', 'p', or 'e', indicating the magnitude, real part,
         imaginary part, phase, or envelope of the complex transform. Examples:
 
+        Examples
+        --------
         plot the magnitude and imaginary parts:
-           data.plot_chir(parts='mi')
+
+        >>> data.plot_chir(parts='mi')
 
         plot the envelope, real, and imaginary parts:
-           data.plot_chir(parts='eri')
+
+        >>> data.plot_chir(parts='eri')
 
         The order of the letters in the parts argument does not matter.
 
@@ -399,20 +441,28 @@ class Pandrosus():
     def plot_chiq(self, kw=2, parts='r', win=True):
         '''Make a plot in back-transformed k-space of a single data set.
 
-        Arguments:
-          kw:    specify the k-weight used in the plot [2]
-          win:   plot FT window if True [True]
-          parts: specify the parts of the complex transform to plot ['r']
+        Parameters
+        ----------
+        kw : int
+            specify the k-weight used in the plot [2]
+        win : bool
+            plot FT window if True [True]
+        parts : str 
+            specify the parts of the complex transform to plot ['r']
 
         The argument to parts is a string that can contain the letters
         'm', 'r', 'i', 'p', or 'e', indicating the magnitude, real part,
         imaginary part, phase, or envelope of the complex transform. Examples:
 
+        Examples
+        --------
         plot the real parts (the part most like chi(k):
-           data.plot_chiq(parts='r')
+        
+        >>> data.plot_chiq(parts='r')
 
         plot the envelope, real, and imaginary parts:
-           data.plot_chir(parts='eri')
+
+        >>> data.plot_chir(parts='eri')
 
         The order of the letters in the parts argument does not matter.
 
@@ -465,9 +515,12 @@ class Pandrosus():
         '''Make a plot in k-space with the real part of the Fourier filtered
         data of a single data set.
 
-        Arguments:
-          kw:   specify the k-weight used in the plot [2]
-          win:  plot FT window if True [True]
+        Parameters
+        ----------
+        kw : int
+            specify the k-weight used in the plot [2]
+        win : bool
+            plot FT window if True [True]
         '''
         self.do_xftf(kw=kw)
         self.do_xftr()
@@ -528,27 +581,39 @@ class Kekropidai():
     multiple data set plots in the manner of Athena's purple plot
     buttons.
 
-    Attributes:
-      groups:    list of Pandrosus groups for plotting
-      name:      name of this collection
-      rmax:      upper bound of R-space plot
+    Attributes
+    ----------
+    groups : list of str
+        list of Pandrosus groups for plotting
+    name : str
+        name of this collection
+    rmax : float
+        upper bound of R-space plot
       
 
-    Methods:
-      add:       add a single group or a list of groups to the Kekropidai object
-      plot_xmu:  (alias = pe) overplot all the groups in energy
-      plot_i0:   (alias = p0) overplot I0 for all the groups
-      plot_chi:  (alias = pk) overplot all the groups in k-space
-      plot_chir: (alias = pr) overplot all the groups in R-space
-      plot_chiq: (alias = pq) overplot all the groups in q-space
+    Methods
+    -------
+    add :
+        add a single group or a list of groups to the Kekropidai object
+    plot_xmu : 
+        (alias = pe) overplot all the groups in energy
+    plot_i0 :
+        (alias = p0) overplot I0 for all the groups
+    plot_chi :
+        (alias = pk) overplot all the groups in k-space
+    plot_chir :
+        (alias = pr) overplot all the groups in R-space
+    plot_chiq : 
+        (alias = pq) overplot all the groups in q-space
 
-    Example:
+    Examples
+    --------
 
-       bunch = Kekropidai(name='My data')
-       bunch.add(data_set1)
-       bunch.add(data_set2)
-       bunch.add(data_set3)
-       bunch.plot_xmu()
+    >>> bunch = Kekropidai(name='My data')
+    >>> bunch.add(data_set1)
+    >>> bunch.add(data_set2)
+    >>> bunch.add(data_set3)
+    >>> bunch.plot_xmu()
     '''
     def __init__(self, name=None):
         self.groups = list()
@@ -590,10 +655,14 @@ class Kekropidai():
 
         The default is to plot all data as raw mu(E).
 
-        Arguments:
-          norm:  plot normalized data [False]
-          flat:  plot flattened data [False]
-          deriv: plot derivative data [False]
+        Parameters
+        ----------
+        norm :  bool
+            plot normalized data [False]
+        flat :  bool
+            plot flattened data [False]
+        deriv : bool
+            plot derivative data [False]
 
         Setting deriv to True turns off flat and norm.
 
@@ -643,8 +712,10 @@ class Kekropidai():
     def plot_chi(self, kw=2, part=None):
         '''Overplot multiple data sets in k-space.
 
-        Arguments:
-          kw:  the k-weight to use for all plots [2]
+        Parameters
+        ----------
+        kw : int
+            the k-weight to use for all plots [2]
 
         (The "part" argument is ignored.  It is there as a command
         line convenience.)
@@ -668,13 +739,17 @@ class Kekropidai():
     def plot_chir(self, kw=2, part='m'):
         '''Overplot multiple data sets in R-space.
 
-        Arguments:
-          kw:   the k-weight to use in all Fourier transforms [2]
-          part: the part of the complex FT to plot ['m']
-                m = magnitude
-                r = real part
-                m = imaginary part
-                p = phase
+        Parameters
+        ----------
+        kw : int
+            the k-weight to use in all Fourier transforms [2]
+        part : str
+            the part of the complex FT to plot ['m']
+            
+        m = magnitude
+        r = real part
+        m = imaginary part
+        p = phase
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xr)
@@ -713,13 +788,18 @@ class Kekropidai():
     def plot_chiq(self, kw=2, part='r'):
         '''Overplot multiple data sets in backtransformed k-space.
 
-        Arguments:
-          kw:   the k-weight to use in all Fourier transforms [2]
-          part: the part of the complex FT to plot ['r']
-                m = magnitude
-                r = real part
-                m = imaginary part
-                p = phase
+        Parameters
+        ----------
+        kw : int
+            the k-weight to use in all Fourier transforms [2]
+        part : str
+            the part of the complex FT to plot ['m']
+            
+        m = magnitude
+        r = real part
+        m = imaginary part
+        p = phase
+
         '''
         plt.cla()
         plt.xlabel(self.groups[0].xk)

@@ -30,18 +30,28 @@ def energystep(filename = None,
     anything.  This is a quick hack for use with a crude resonant
     reflectivity experiment with IBM folks.
 
-      filename: name of file, will be appended to DATA for the full path (required)
-      start:    starting energy value (required)
-      end:      ending energy value (required)
-      nsteps:   number of energy steps (required)
-      delay:    pause between energy steps, in seconds [5]
-      dosteps:  False to see energy values printed to screen without moving mono [True]
+    Parameters
+    ----------
+    filename : str
+        name of file, will be appended to DATA for the full path (required)
+    start : float
+        starting energy value (required)
+    end : float
+        ending energy value (required)
+    nsteps : int
+        number of energy steps (required)
+    delay : float
+        pause between energy steps, in seconds [5]
+    dosteps : bool
+        False to see energy values printed to screen without moving mono [True]
 
     Writes a data file with columns of energy readback, energy
     requested, time of epoch, and ISO 8601 timestamp
 
-    Example:
-       energystep(filename='blahblah', start=18936, end=19036, nsteps=101)
+    Example
+    -------
+
+    >>> energystep(filename='blahblah', start=18936, end=19036, nsteps=101)
     '''
 
     BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']

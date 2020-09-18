@@ -19,68 +19,124 @@ class Borg:
 class BMM_User(Borg):
     '''A class for managing the user interaction at BMM.
 
-    Experiment attributes:
-      * DATA:             path to folder containing data
-      * prompt:           flag, True prompt at beginning of plans
-      * final_log_entry:  flag, True write log entries during plan cleanup
-      * date:             start date of experiment as YYYY-MM-DD
-      * gup:              GUP number
-      * saf:              SAF number
-      * cycle:            NSLS-II ops cycle (e.g. '2020-1')
-      * name:             full name of PI
-      * staff:            flag, True if a staff experiment
-      * macro_dryrun:     flag, True will replace a call to xafs() with a sleep
-      * macro_sleep:      float, the length of that sleep
-      * motor_fault:      normally None, set to a string when motors are found in a fault state
-      * detector:         4=4-element detector, 1=1-element detector
-      * use_pilatus:      flas, True make a folder for Pilatus images
-      * echem:            flag, True is doing electrochemistry with the BioLogic
-      * echem_remote:     mounted path to cifs share on ws3
-      * wheel:            True when executing a wheel macro
+    Experiment attributes
+    ---------------------
+    DATA : str
+        path to folder containing data
+    prompt : bool
+        True prompt at beginning of plans
+    final_log_entry : bool
+        True write log entries during plan cleanup
+    date : str
+        start date of experiment as YYYY-MM-DD
+    gup : str
+        GUP number
+    saf : str
+        SAF number
+    cycle : str
+        NSLS-II ops cycle (e.g. '2020-1')
+    name : str
+        full name of PI
+    staff : bool
+        True if a staff experiment
+    macro_dryrun : bool
+        True will replace a call to xafs() with a sleep
+    macro_sleep : float
+        the length of that sleep
+    motor_fault : str of None
+        normally None, set to a string when motors are found in a fault state
+    detector : int
+        4=4-element detector, 1=1-element detector
+    use_pilatus : bool
+        True make a folder for Pilatus images
+    echem : bool
+        True is doing electrochemistry with the BioLogic
+    echem_remote : str
+        mounted path to cifs share on ws3
+    wheel : bool
+        True when executing a wheel macro
 
     Current plot attributes
-      * motor:            fast motor in current plot
-      * motor2:           slow motor in current plot
-      * fig:              matplotlib.figure.Figure object of current plot
-      * ax:               matplotlib.axes._subplots.AxisSubplot object of current plot
-      * x:                plucked-upon X coordinate
-      * y:                plucked-upon Y coordinate
+    -----------------------
+    motor : str
+        fast motor in current plot
+    motor2 : str
+        slow motor in current plot
+    fig : matplotlib.figure.Figure
+        figure object of current plot
+    ax : matplotlib.axes._subplots.AxisSubplot
+        axis object of current plot
+    x : int
+        plucked-upon X coordinate
+    y : int
+        plucked-upon Y coordinate
 
 
     Energy scan control attributes, default values
-      * pds_mode:         photon delivery system mode (A, B, C, D, E, F, XRD)
-      * bounds:           list of energy or k scan boundaries
-      * steps:            list of energy ot k steps
-      * times:            list of integration times
-      * folder:           data folder
-      * filename:         output data file stub
-      * experimenters:    names of experimenters
-      * e0:               edge energy, reference for bounds
-      * element:          absorbing element
-      * edge:             absorption edge
-      * sample:           sample composition or stoichiometry
-      * prep:             how sample was prepared for measurement
-      * comment:          anything else of interest about the sample
-      * nscans:           number of scan repititions
-      * start:            starting scan number
-      * snapshots:        flag for taking snapshots
-      * usbstick:         flag for rewriting USB-stick-safe filenames
-      * rockingcurve:     flag for doing a rocking curve scan at the pseudo-channel-cut energy
-      * htmlpage:         flag for writing dossier
-      * bothways:         flag for measuring in both directions on mono
-      * channelcut:       flag for measuring in pseudo-channel-cut mode
-      * ththth:           flag for measuring with the Si(333) reflection
-      * mode:             in-scan plotting mode
+    ----------------------------------------------
+    pds_mode : str
+        photon delivery system mode (A, B, C, D, E, F, XRD)
+    bounds : list of float or str
+        list of energy or k scan boundaries
+    steps : list of float or str
+        list of energy ot k steps
+    times : list of float or str
+        list of integration times
+    folder : str
+        data folder
+    filename : str
+        output data file stub
+    experimenters : str
+        names of experimenters
+    e0 : float
+        edge energy, reference for bounds
+    element : str
+        absorbing element
+    edge : str
+        absorption edge
+    sample : str
+        sample composition or stoichiometry
+    prep : str
+        how sample was prepared for measurement
+    comment : str
+        anything else of interest about the sample
+    nscans : int
+        number of scan repititions
+    start : int
+        starting scan number
+    snapshots : bool
+        take snapshots
+    usbstick : bool
+        rewrite USB-stick-safe filenames
+    rockingcurve : bool
+        do a rocking curve scan at the pseudo-channel-cut energy
+    htmlpage : bool
+        write dossier
+    bothways : bool
+        measuring in both directions on mono
+    channelcut : bool
+        measuring in pseudo-channel-cut mode
+    ththth : bool
+        measuring with the Si(333) reflection
+    mode : str
+        in-scan plotting mode
 
     Single energy time scan attributes, default values
-      * npoints:          number of time points
-      * dwell:            dwell time at each time step
-      * delay:            delay between time steps
+    --------------------------------------------------
+    npoints : int
+        number of time points
+    dwell : float
+        dwell time at each time step
+    delay : float
+        delay between time steps
 
-    Methods for public use:
-      * start_experiment(self, name=None, date=None, gup=0, saf=0)
-      * end_experiment(self, force=False)
-      * show_experiment(self)
+    Methods for public use
+    ----------------------
+    start_experiment(self, name=None, date=None, gup=0, saf=0)
+
+    end_experiment(self, force=False)
+
+    show_experiment(self)
     '''
     def __init__(self):
         ## experiment attributes
@@ -247,11 +303,16 @@ class BMM_User(Borg):
           * Make the snapshots, dossier, and prj folders
           * Set the GUP and SAF numbers as metadata
 
-        Input:
-          folder:   data destination
-          gup:      GUP number
-          saf:      SAF number
-          name:     name of PI (optional)
+        Parameters
+        ----------
+        folder : str
+            data destination
+        gup : str
+            GUP number
+        saf : str
+            SAF number
+        name : str
+            name of PI
         '''
 
         step = 1
@@ -413,11 +474,16 @@ class BMM_User(Borg):
           * Make snapshots, dossier, and prj folders
           * Set the GUP and SAF numbers as metadata
 
-        Input:
-          name:     name of PI
-          date:     YYYY-MM-DD start date of experiment (e.g. 2018-11-29)
-          gup:      GUP number
-          saf:      SAF number
+        Parameters
+        ---------
+        name : str
+            name of PI
+        date : str
+            YYYY-MM-DD start date of experiment (e.g. 2018-11-29)
+        gup : str
+            GUP number
+        saf : str
+            SAF number
         '''
         if self.user_is_defined:
             print(error_msg('An experiment is already started.'))

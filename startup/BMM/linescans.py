@@ -69,13 +69,20 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     motor will moved to the center of mass of the peak at the end of
     the scan.
 
-    Input:
-      start:   (float)   starting position relative to current                       [-3.0]
-      end:     (float)   ending position relative to current                         [3.0]
-      nsteps:  (int)     number of steps                                             [61]
-      move:    (Boolean) True=move to position of max signal, False=pluck and move   [False]
-      slp:     (float)   length of sleep before trying to move dm3_bct               [3.0]
-      choice:  (string)  'peak' or 'com' (center of mass)                            ['com']
+    Parameters
+    ----------
+    start : float
+        starting position relative to current [-3.0]
+    end : float 
+        ending position relative to current [3.0]
+    nsteps : int
+        number of steps [61]
+    move : bool
+        True=move to position of max signal, False=pluck and move [False]
+    slp : float
+        length of sleep before trying to move dm3_bct [3.0]
+    choice : str 
+        'peak' or 'com' (center of mass) ['peak']
     '''
 
     def main_plan(start, stop, nsteps, move, slp, force):
@@ -166,12 +173,18 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     the hutch slits to 3 mm. At the end, move to the position of maximum 
     intensity on I0, then return to the hutch slits to their original height.
 
-    Input:
-      start:    (float)  starting position relative to current  [-0.1]
-      end:      (float)  ending position relative to current    [0.1]
-      nsteps:   (int)    number of steps                        [101]
-      detector: (string) 'I0' or 'Bicron'                       ['I0']
-      choice:   (string) 'peak', fit' or 'com' (center of mass) ['peak']
+    Parameters
+    ----------
+    start : (float)
+        starting position relative to current [-0.1]
+    end : (float)
+        ending position relative to current [0.1]
+    nsteps : (int)
+        number of steps [101]
+    detector : (string)
+        'I0' or 'Bicron' ['I0']
+    choice : (string)
+        'peak', fit' or 'com' (center of mass) ['peak']
 
     If choice is fit, the fit is performed using the
     SkewedGaussianModel from lmfit, which works pretty well for this
@@ -318,17 +331,29 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
 
-    For example:
-       RE(linescan('it', 'x', -1, 1, 21))
+    Examples
+    --------
 
-       detector: detector to display -- if, it, ir, or i0
-       axis :    motor or nickname
-       start:    starting value for a relative scan
-       stop:     ending value for a relative scan
-       nsteps:   number of steps in scan
-       pluck:    flag for whether to offer to pluck & move motor
-       force:    flag for forcing a scan even if not clear to start
-       inttime:  integration time in seconds (default: 0.1)
+    >>> RE(linescan('it', 'x', -1, 1, 21))
+
+    Parameters
+    ----------
+    detector : str
+        detector to display -- if, it, ir, or i0
+    axis : str or EpicsMotor
+        motor or nickname
+    start : float
+        starting value for a relative scan
+    stop : float
+         ending value for a relative scan
+    nsteps : int
+        number of steps in scan
+    pluck : bool, optional
+        flag for whether to offer to pluck & move motor
+    force : bool, optional
+        flag for forcing a scan even if not clear to start
+    inttime : float, optional
+        integration time in seconds (default: 0.1)
 
     The motor is either the BlueSky name for a motor (e.g. xafs_linx)
     or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).

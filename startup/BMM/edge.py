@@ -27,40 +27,54 @@ def show_edges():
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
     '''Change edge energy by:
-       1. Moving the DCM above the edge energy
-       2. Moving the photon delivery system to the correct mode
-       3. Running a rocking curve scan
-       4. --(Running a slits_height scan)--
-       5. Moving the reference holder to the correct slot
+    1. Moving the DCM above the edge energy
+    2. Moving the photon delivery system to the correct mode
+    3. Running a rocking curve scan
+    4. Running a slits_height scan
 
-    Input:
-       el:     (string) one- or two-letter symbol
-       focus:  (Boolean) T=focused or F=unfocused beam         [False, unfocused]
-       edge:   (string) edge symbol                            ['K']
-       energy: (float) e0 value                                [None, determined from el/edge]
-       slits:  (Boolean) perform slit_height() scan            [False]
-       target: (float) energy where rocking curve is measured  [300]
-       xrd:    (Boolean) force photon delivery system to XRD   [False]
+    Parameters
+    ----------
+    el : str
+        one- or two-letter symbol
+    focus : bool, optional
+        T=focused or F=unfocused beam [False, unfocused]
+    edge : str, optional
+        edge symbol ['K']
+    energy : float, optional
+        e0 value [None, determined from el/edge]
+    slits : bool, optional
+        perform slit_height() scan [False]
+    target : float, optional
+        energy where rocking curve is measured [300]
+    xrd : boolean, optional
+        force photon delivery system to XRD [False]
 
-    Examples:
-
+    Examples
+    --------
     Normal use, unfocused beam:
-       RE(change_edge('Fe'))
+       
+    >>> RE(change_edge('Fe'))
 
     Normal use, focused beam:
-       RE(change_edge('Fe', focus=True))
+       
+    >>> RE(change_edge('Fe', focus=True))
 
     L2 or L1 edge:
-       RE(change_edge('Re', edge='L2'))
+       
+    >>> RE(change_edge('Re', edge='L2'))
 
     Measure rocking curve at edge energy:
-       RE(change_edge('Fe', target=0))
+      
+    >>> RE(change_edge('Fe', target=0))
 
     XRD, new energy:
-       RE(change_edge('Fe', xrd=True, energy=8600))
-           note that you must specify an element, but it doesn't matter which one
-           the energy will be moved to the specified energy
-           xrd=True implies focus=True and target=0
+       
+    >>> RE(change_edge('Fe', xrd=True, energy=8600))
+        
+    note that you must specify an element, but it doesn't matter which
+    one the energy will be moved to the specified energy xrd=True
+    implies focus=True and target=0
+
     '''
     BMMuser, RE, dcm, dm3_bct, dcm_pitch = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'] , user_ns['dcm_pitch']
     try:

@@ -20,27 +20,42 @@ class PilatusGrabber():
     the standard BlueSky AreaDetector interface, but monkey-patching
     functionality for the bits that Bruce is too dim to figure out.
 
+    Parameters
+    ----------
+    path : str
+        AreaDetector's file path (cannot have spaces)
+    fname : str
+        file name
+    template : str
+        substitution template for constructing the resolved file name
+    fullname : str
+        AreaDetector's fully resolved file name
+    number : int
+        file extension (auto increments)
+    threshold : float
+        detector energy threshold in keV
+    time : float
+        exposure time, sets the exposure time and acquire time
+    ready : bool
+        flag with a simple check to see if camera is ready to take a picture
+
+    Examples
+    --------
     Define the Pilatus Detector
-       pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
+
+    >>> pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
 
     Make an PilatusGrabber opbject
-       pil = PilatusGrabber(pilatus)
+       
+    >>> pil = PilatusGrabber(pilatus)
 
     Take an exposure
-       pil.snap()
+       
+    >>> pil.snap()
 
     Show the image (and maybe copy it elsewhere)
-       pil.fetch()
-
-    Properties:
-       path:      AreaDetector's file path (cannot have spaces)
-       fname:     file name
-       template:  substitution template for constructing the resolved file name
-       fullname:  AreaDetector's fully resolved file name
-       number:    file extension (auto increments)
-       threshold: detector energy threshold in keV
-       time:      exposure time, sets the exposure time and acquire time
-       ready:     flag with a simple check to see if camera is ready to take a picture
+       
+    >>> pil.fetch()
 
     '''
     def __init__(self, source):

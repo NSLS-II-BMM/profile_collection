@@ -42,12 +42,18 @@ class BMMDataEvaluation():
         '''Slurp a record from Databroker, contruct transmission or
         fluorescence XAS, and optionally make a plot.
 
-        Arguments:
-          clog:      catalog in which to find the record
-          uid:       identifier string for the record in the catalog
-          mode:      fluorescence or transmission
-          fig, ax:   figure and axes iof the plot
-          show_plot: True to show plot
+        Parameters
+        ----------
+        clog : catalog
+            catalog in which to find the record
+        uid : str
+            identifier string for the record in the catalog
+        mode : str
+            fluorescence or transmission
+        fig, ax : matplotlib fig and ax
+            figure and axes iof the plot
+        show_plot : bool
+            True to show plot
         '''
         try:
             primary = clog[uid].primary.read()
@@ -226,9 +232,12 @@ class BMMDataEvaluation():
         the score (1 or 0) and the Slack-appropriate value (green
         check or red cross).
 
-        arguments:
-          * uid: uid of data to be evaluated
-          * mode: when not None, used to specify fluorescence or transmission (for a data set that has both)
+        Parameters
+        ----------
+        uid : str
+            uid of data to be evaluated
+        mode : bool
+            when not None, used to specify fluorescence or transmission (for a data set that has both)
 
         '''
         if mode == 'xs':

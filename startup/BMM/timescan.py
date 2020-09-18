@@ -31,20 +31,30 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     '''
     Generic timescan plan.
 
-    For example:
-       RE(timescan('it', 100, 0.5))
-
-       detector: detector to display -- if, it, ir, or i0
-       readings: number of measurements to make
-       dwell:    dwell time in seconds for each measurement
-       delay:    pause in seconds between measurements
-       outfile:  data file name (relative to DATA), False to not write
-       force:    flag for forcing a scan even if not clear to start
+    Parameters
+    ----------
+    detector : str
+        detector to display -- if, it, ir, or i0
+    readings : int
+        number of measurements to make
+    dwell : float
+        dwell time in seconds for each measurement
+    delay : float
+        pause in seconds between measurements
+    outfile :  str
+        data file name (relative to DATA), False to not write
+    force : bool
+        flag for forcing a scan even if not clear to start
 
     This does not write an ASCII data file, but it does make a log entry.
 
     Use the ts2dat() function to extract the linescan from the
     database and write it to a file.
+
+    Examples
+       
+    >>> RE(timescan('it', 100, 0.5))
+
     '''
 
     RE, BMMuser, quadem1, _locked_dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['quadem1'], user_ns['_locked_dwell_time']
@@ -154,13 +164,21 @@ def ts2dat(datafile, key):
     '''
     Export an timescan database entry to a simple column data file.
 
-      ts2dat('/path/to/myfile.dat', '42447313-46a5-42ef-bf8a-46fedc2c2bd1')
+    Parameters
+    ----------
+    datafile : str
+        name of output data file
+    key : str
+        UID of record in database
 
-    or
+    Examples
+    --------
+    >>> ts2dat('/path/to/myfile.dat', '42447313-46a5-42ef-bf8a-46fedc2c2bd1')
 
-      ts2dat('/path/to/myfile.dat', 2948)
+    
 
-    The arguments are a data file name and the database key.
+    >>> ts2dat('/path/to/myfile.dat', 2948)
+
     '''
 
     BMMuser, db = user_ns['BMMuser'], user_ns['db']
@@ -348,7 +366,7 @@ def sead(inifile, force=False, **kwargs):
             image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
             snap('analog', filename=image)
 
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+!        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting measurement
         if not force: BMM_suspenders()
 

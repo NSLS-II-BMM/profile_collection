@@ -70,28 +70,52 @@ def scan_metadata(inifile=None, **kwargs):
     The kwarg keys are the same as the keys in the dictionary which is
     returned:
 
-      folder:       [str]   folder for saved XDI files
-      filename:     [str]   filename stub for saved XDI files
-      experimenters [str]   names of people involved in this measurements
-      e0:           [float] edge energy, reference value for energy grid
-      element:      [str]   one- or two-letter element symbol
-      edge:         [str]   K, L3, L2, or L1
-      sample:       [str]   description of sample, perhaps stoichiometry
-      prep:         [str]   a short statement about sample preparation
-      comment:      [str]   user-supplied comment about the data
-      nscan:        [int]   number of repetitions
-      start:        [int]   starting scan number, XDI file will be filename.###
-      snapshots:    [bool]  True = capture analog and XAS cameras before scan sequence
-      usbstick:     [bool]  True = munge filenames so they can be written to a VFAT USB stick
-      rockingcurve  [bool]  True = measure rocking curve at pseudo channel cut energy
-      htmlpage:     [bool]  True = capture dossier of a scan sequence as a static html page
-      bothways:     [bool]  True = measure in both monochromator directions
-      channelcut:   [bool]  True = measure in pseudo-channel-cut mode
-      ththth:       [bool]  True = measure using the Si(333) reflection
-      mode:         [str]   transmission, fluorescence, or reference -- how to display the data
-      bounds:       [list]  scan grid boundaries (not kwarg-able at this time)
-      steps:        [list]  scan grid step sizes (not kwarg-able at this time)
-      times:        [list]  scan grid dwell times (not kwarg-able at this time)
+    Parameters
+    ----------
+    folder : str
+        folder for saved XDI files
+    filename : str
+        filename stub for saved XDI files
+    experimenters [str] 
+        names of people involved in this measurements
+    e0 : float
+        edge energy, reference value for energy grid
+    element : str
+        one- or two-letter element symbol
+    edge : str
+        K, L3, L2, or L1
+    sample : str
+        description of sample, perhaps stoichiometry
+    prep : str
+        a short statement about sample preparation
+    comment : str
+        user-supplied comment about the data
+    nscan : int
+        number of repetitions
+    start : int
+        starting scan number, XDI file will be filename.###
+    snapshots : bool
+        True = capture analog and XAS cameras before scan sequence
+    usbstick : bool
+        True = munge filenames so they can be written to a VFAT USB stick
+    rockingcurve  [bool] 
+        True = measure rocking curve at pseudo channel cut energy
+    htmlpage : bool
+        True = capture dossier of a scan sequence as a static html page
+    bothways : bool
+        True = measure in both monochromator directions
+    channelcut : bool
+        True = measure in pseudo-channel-cut mode
+    ththth : bool
+        True = measure using the Si(333) reflection
+    mode : str
+        transmission, fluorescence, or reference -- how to display the data
+    bounds : list
+        scan grid boundaries (not kwarg-able at this time)
+    steps : list
+        scan grid step sizes (not kwarg-able at this time)
+    times : list
+        scan grid dwell times (not kwarg-able at this time)
 
     Any or all of these can be specified.  Values from the INI file
     are read first, then overridden with specified values.  If values
@@ -288,14 +312,21 @@ def db2xdi(datafile, key):
     '''
     Export a database entry for an XAFS scan to an XDI file.
 
-       db2xdi('/path/to/myfile.xdi', 1533)
+    Parameters
+    ----------
+    datafile : str
+        output file name
+    key : str
+        UID in database
 
-    or
 
-       db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+    Examples
+    --------
 
-    The arguments are the resolved path to the output XDI file and
-    a database key.
+    >>> db2xdi('/path/to/myfile.xdi', 1533)
+
+    >>> db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+
     '''
     BMMuser, db = user_ns['BMMuser'], user_ns['db']
     dfile = datafile
@@ -1055,14 +1086,18 @@ def xafs(inifile, **kwargs):
 def howlong(inifile, interactive=True, **kwargs):
     '''
     Estimate how long the scan sequence in an XAFS control file will take.
+    Parameters from control file are composable via kwargs.
 
+    Examples
+    --------
     Interactive (command line) use:
-        howlong('scan.ini')
+        
+    >>> howlong('scan.ini')
 
     Non-interactive use (for instance, to display the control file contents and a time estimate):
-        howlong('scan.ini', interactive=False)
+        
+    >>> howlong('scan.ini', interactive=False)
 
-    Parameters from control file are composable via kwargs.
     '''
 
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

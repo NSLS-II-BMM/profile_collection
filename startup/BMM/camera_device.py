@@ -83,21 +83,36 @@ def analog_camera(filename    = None,
     """A function for interacting with fswebcam in a way that meets the
     needs of 06BM.
 
-    Parameters:
-        folder:      location to drop jpg image         [$HOME]
-        device:      char device of camera              [/dev/video0]
-        camera:      camera number                      [0]
-        skip:        number of frames to skip waiting for camera to wake up [30]
-        frames:      number of frames to accumulate in image [5]
-        brightness:  brightness setting of camera as a percentage [20]
-        x:           X-location of cross hair           [320] (middle of image)
-        y:           Y-location of cross hair           [240] (middle of image)
-        linecolor:   color of cross hair lines          [white]
-        nocrosshair: flag to suppress cross hair        [True]
-        quiet:       flag to suppress screen messages   [False]
-        usbid:       vendor and product ID of camera    [534d:0021] (AV to USB device at 06BM)
-        title:       title string for fswebcam banner   [NIST BMM (NSLS-II 06BM)]
-        filename:    output file name                   [ISO 8601 timestamp in folder]
+    Parameters
+    ----------
+    folder : str
+        location to drop jpg image [$HOME]
+    device : str
+        char device of camera [/dev/video0]
+    camera : int
+        camera number[0]
+    skip : int
+        number of frames to skip waiting for camera to wake up  [30]
+    frames : int
+        number of frames to accumulate in image [5]
+    brightness : int
+        brightness setting of camera as a percentage [20]
+    x : int
+        middle of image, in pixels,  X-location of cross hair [320]
+    y : int
+        middle of image, in pixels,  Y-location of cross hair [240]
+    linecolor : str
+        color of cross hair lines [white]
+    nocrosshair : bool
+        flag to suppress cross hair [True]
+    quiet : bool
+        flag to suppress screen messages [False]
+    usbid : str
+        vendor and product ID of camera of AV to USB device at 06BM [534d:0021]
+    title : str
+        title string for fswebcam banner [NIST BMM (NSLS-II 06BM)]
+    filename : str
+        output file name                   
 
     """
 

@@ -39,17 +39,24 @@ class XSROI():
 class ROI():
     '''A simple class for managing the Struck ROI channels.
 
+    Examples
+    --------
+
     Configure the ROIs:
-       rois.set('Mn Fe Cu')
+
+    >>> rois.set('Mn Fe Cu')
 
     Configure one ROI channel:
-       rois.set_roi(1, 'Mn')
+       
+    >>> rois.set_roi(1, 'Mn')
 
     Choose an ROI channel:
-       rois.select('Mn')
+       
+    >>> rois.select('Mn')
 
     Print ROI configuration to the screen:
-       rois.show()
+       
+    >>> rois.show()
     '''
     def __init__(self):
         self.slots = [None, None, None]
@@ -78,9 +85,10 @@ class ROI():
     def set(self, elements):
         '''Configure the ROI channels so that an energy change knows which channel to use.
 
-        Input:
-          elements: a list of 3 elements, top to bottom in the SCAs
-                    if the list is a space separated string, it will be split into a list
+        Parameters
+        ----------
+        elements : list of str
+            a list of 3 elements, top to bottom in the SCAs if the list is a space separated string, it will be split into a list
         '''
         if type(elements) is str:
             elements = elements.split()
