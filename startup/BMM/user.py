@@ -604,7 +604,7 @@ class BMM_User(Borg):
             #######################################################################################
             # create folder and sub-folders on NAS server for this user & experimental start date #
             #######################################################################################
-            destination = os.path.join('/nist', 'xf06bm', 'user', self.name, self.date)
+            destination = os.path.join(user_ns('nas_mount_point'), 'xf06bm', 'user', self.name, self.date)
             if not os.path.isdir(destination):
                 os.makedirs(destination)
             for d in ('dossier', 'prj', 'snapshots'):

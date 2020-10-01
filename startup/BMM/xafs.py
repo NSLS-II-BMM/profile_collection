@@ -881,9 +881,10 @@ def xafs(inifile, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write dotfile, used by cadashboard
-            with open(dotfile, "w") as f:
-                f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
-                f.write('%.1f\n' % (approx_time * int(p['nscans']) * 60))
+            rkvs.set('BMM:scan:type',      'line')
+            rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+            rkvs.set('BMM:scan:estimated', (approx_time * int(p['nscans']) * 60))
+            
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -1014,8 +1015,6 @@ def xafs(inifile, **kwargs):
     def cleanup_plan(inifile):
         print('Cleaning up after an XAFS scan sequence')
         RE.clear_suspenders()
-        if os.path.isfile(dotfile):
-            os.remove(dotfile)
 
         db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
@@ -1047,6 +1046,7 @@ def xafs(inifile, **kwargs):
     quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel = user_ns['xafs_wheel']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
+    rkvs = user_ns['rkvs']
     try:
         xs = user_ns['xs']
     except:
@@ -1071,7 +1071,6 @@ def xafs(inifile, **kwargs):
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    dotfile = '/home/xf06bm/Data/.xafs.scan.running'
     html_scan_list = ''
     html_dict = {}
     BMMuser.final_log_entry = True

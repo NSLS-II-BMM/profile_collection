@@ -218,9 +218,10 @@ quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 run_report('\t'+'cameras')
 from BMM.camera_device import BMMSnapshot, snap, fetch_snapshot_filename
 
-xascam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='XAS',    name='xascam')
-xrdcam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='XRD',    name='xrdcam')
-anacam = BMMSnapshot(root='/nist/xf06bm/experiments/XAS/snapshots', which='analog', name='anacam')
+## see 01-bmm.py for definition of nas_path
+xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
+xrdcam = BMMSnapshot(root=nas_path, which='XRD',    name='xrdcam')
+anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
 
 ## the output file names is hidden away in the dict returned by this: a.describe()['args']['get_resources']()
 #

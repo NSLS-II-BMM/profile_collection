@@ -39,7 +39,7 @@ def annotate_image(imagefile, text):
     img.save(imagefile)
 
 def xas_webcam(filename=None, **kwargs):
-    XASURL = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'
+    XASURL = 'http://xf06bm-cam6/axis-cgi/jpg/image.cgi'
     CAM_PROXIES = {"http": None, "https": None,}
     if filename is None:
         filename = os.environ['HOME'] + '/XAS_camera_' + now() + '.jpg'
@@ -50,7 +50,7 @@ def xas_webcam(filename=None, **kwargs):
     report('XAS webcam image written to %s' % filename)
 
 def xrd_webcam(filename=None, **kwargs):
-    XRDURL = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
+    XRDURL = 'http://xf06bm-cam6/axis-cgi/jpg/image.cgi'
     CAM_PROXIES = {"http": None, "https": None,}
     if filename is None:
         filename = os.environ['HOME'] + '/XRD_camera_' + now() + '.jpg'

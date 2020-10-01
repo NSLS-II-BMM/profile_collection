@@ -168,9 +168,10 @@ def areascan(detector,
             BMMuser.final_log_entry = True
             return uid
 
-        with open(dotfile, "w") as f:
-            f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
-            f.write('%d\n' % estimate)
+        rkvs.set('BMM:scan:type',      'area')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', estimate)
+        
         BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
         uid = yield from make_areascan(dets,
                                        slow, valueslow+startslow, valueslow+stopslow, nslow,
@@ -203,7 +204,6 @@ def areascan(detector,
     def cleanup_plan():
         print('Cleaning up after an area scan')
         RE.clear_suspenders()
-        if os.path.isfile(dotfile): os.remove(dotfile)
         if BMMuser.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from resting_state_plan()
@@ -221,7 +221,7 @@ def areascan(detector,
         BMMuser.fig    = None
         BMMuser.ax     = None
 
-    RE, BMMuser, _locked_dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['_locked_dwell_time']
+    RE, BMMuser, _locked_dwell_time, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['_locked_dwell_time'], user_ns['rkvs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -232,7 +232,6 @@ def areascan(detector,
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    dotfile = '/home/xf06bm/Data/.area.scan.running'
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!

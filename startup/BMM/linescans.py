@@ -3,8 +3,7 @@ import bluesky as bs
 from bluesky.plans import rel_scan
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 from bluesky import __version__ as bluesky_version
-import numpy
-import os
+import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel
 from databroker.core import SingleRunCache
 
@@ -98,8 +97,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (motor.name, 'i0', start, stop, nsteps, motor.user_readback.get())
-        with open(dotfile, "w") as f:
-            f.write("")
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
 
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
@@ -146,9 +146,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         yield from sleep(slp)
         yield from abs_set(motor.kill_cmd, 1, wait=True)
         yield from resting_state_plan()
-        if os.path.isfile(dotfile): os.remove(dotfile)
 
     RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
+    rkvs = user_ns['rkvs']
     #######################################################################
     # this is a tool for verifying a macro.  this replaces this slit      #
     # height scan with a sleep, allowing the user to easily map out motor #
@@ -161,7 +161,6 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     #######################################################################
     motor = user_ns['dm3_bct']
     slit_height = slits3.vsize.readback.get()
-    dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from finalize_wrapper(main_plan(start, stop, nsteps, move, slp, force), cleanup_plan(slp))
     RE.msg_hook = BMM_msg_hook
@@ -215,8 +214,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 
         plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
-        with open(dotfile, "w") as f:
-            f.write("")
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
 
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
@@ -275,10 +275,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         yield from sleep(1.0)
         yield from user_ns['dcm'].kill_plan()
         yield from resting_state_plan()
-        if os.path.isfile(dotfile): os.remove(dotfile)
 
     
-    RE, BMMuser, db = user_ns['RE'], user_ns['BMMuser'], user_ns['db']
+    RE, BMMuser, db, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['rkvs']
     dcm, slits3, slitsg, quadem1 = user_ns['dcm'], user_ns['slits3'], user_ns['slitsg'], user_ns['quadem1']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces this rocking  #
@@ -291,7 +290,6 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         return(yield from null())
     ######################################################################
     motor = user_ns['dcm_pitch']
-    dotfile = '/home/xf06bm/Data/.line.scan.running'
     slit_height = user_ns['slits3'].vsize.readback.get()
     try:
         gonio_slit_height = slitsg.vsize.readback.get()
@@ -506,8 +504,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         thismd['XDI']['Facility']['GUP'] = BMMuser.gup
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
 
-        with open(dotfile, "w") as f:
-            f.write("")
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
 
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
@@ -529,12 +528,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
     
     def cleanup_plan():
-        if os.path.isfile(dotfile): os.remove(dotfile)
         ##RE.clear_suspenders()       # disable suspenders
         yield from resting_state_plan()
 
 
-    RE, BMMuser = user_ns['RE'], user_ns['BMMuser']
+    RE, BMMuser, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['rkvs']
     try:
         xs = user_ns['xs']
     except:
@@ -549,7 +547,6 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    dotfile = '/home/xf06bm/Data/.line.scan.running'
     RE.msg_hook = None
     yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())
     RE.msg_hook = BMM_msg_hook

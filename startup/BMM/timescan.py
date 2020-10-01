@@ -58,6 +58,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     '''
 
     RE, BMMuser, quadem1, _locked_dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['quadem1'], user_ns['_locked_dwell_time']
+    rkvs = user_ns['rkvs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -145,14 +146,14 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
         return uid
         
-    dotfile = '/home/xf06bm/Data/.time.scan.running'
-    with open(dotfile, "w") as f:
-        f.write(str(datetime.datetime.timestamp(datetime.datetime.now())) + '\n')
+    rkvs.set('BMM:scan:type',      'time')
+    rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+    rkvs.set('BMM:scan:estimated', 0)
+
     uid = yield from count_scan(dets, readings, delay)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))
-    if os.path.isfile(dotfile): os.remove(dotfile)
 
     yield from abs_set(_locked_dwell_time, 0.5, wait=True)
     RE.msg_hook = BMM_msg_hook
@@ -366,7 +367,7 @@ def sead(inifile, force=False, **kwargs):
             image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
             snap('analog', filename=image)
 
-!        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting measurement
         if not force: BMM_suspenders()
 
@@ -386,8 +387,6 @@ def sead(inifile, force=False, **kwargs):
         print('Cleaning up after single energy absorption detector measurement')
         RE.clear_suspenders()
         yield from resting_state_plan()
-        dotfile = '/home/xf06bm/Data/.time.scan.running'
-        if os.path.isfile(dotfile): os.remove(dotfile)
         dcm.mode = 'fixed'
 
     RE.msg_hook = None

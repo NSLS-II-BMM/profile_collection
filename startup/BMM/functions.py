@@ -183,11 +183,10 @@ def boxedtext(title, text, tint, width=75):
 
 def clear_dashboard():
     '''Clean up in a way that helps the cadashboard utility'''
-    for scan in ('xafs', 'line', 'area', 'time'):
-        fl = '/home/xf06bm/Data/.'+scan+'.scan.running'
-        if os.path.isfile(fl):
-            os.remove(fl)
-
+    user_ns['rkvs'].set('BMM:scan:type',      '')
+    user_ns['rkvs'].set('BMM:scan:starttime', '')
+    user_ns['rkvs'].set('BMM:scan:estimated', '')
+    
 
 def countdown(t):
     transition = max(int(t/10), 2)
