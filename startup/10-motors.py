@@ -54,6 +54,7 @@ dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
 dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
 dcm_bragg.user_setpoint.kind = 'normal'
+dcm_bragg.velocity.put(0.3)
 dcm_bragg.acceleration.put(BMMuser.acc_fast)
 
 ## for some reason, this needs to be set explicitly
@@ -62,8 +63,10 @@ dcm_x.llm.value = 0
 dcm_x.velocity.put(0.6)
 
 ## this is about as fast as this motor can go, 1.25 results in a following error
-dcm_para.velocity.put(0.75)
-dcm_para.hvel_sp.put(0.5)
+dcm_para.velocity.put(0.2)
+dcm_para.hvel_sp.put(0.2)
+dcm_perp.velocity.put(0.2)
+dcm_perp.hvel_sp.put(0.2)
 
 ## focusing mirror
 m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
@@ -98,6 +101,8 @@ dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
 mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
                     dm3_fs, dm3_foils, dm3_bct, dm3_bpm])
 
+dm3_slits_i.user_offset.put(-6.9181)
+dm3_slits_o.user_offset.put(7.087)
 
 
 dm3_fs.llm.value = -65

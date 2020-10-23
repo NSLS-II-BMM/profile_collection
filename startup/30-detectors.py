@@ -15,7 +15,7 @@ run_report(__file__, text='detectors and cameras')
 
 
 run_report('\t'+'dwelltime')
-with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, False
+with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
 from BMM.dwelltime import LockedDwellTimes
 
 _locked_dwell_time = LockedDwellTimes('', name='dwti')
@@ -216,7 +216,8 @@ quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 ####################################################
 
 run_report('\t'+'cameras')
-from BMM.camera_device import BMMSnapshot, snap, fetch_snapshot_filename
+from BMM.camera_device import BMMSnapshot, snap
+from BMM.db import file_resource
 
 ## see 01-bmm.py for definition of nas_path
 xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
@@ -228,7 +229,7 @@ anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
 # a=db.v2[-1] 
 #
 # BMM XRD.111 [8] ▶ a.describe()['args']['get_resources']()[0]['root']                                                                                  
-# Out[8]: '/nist/xf06bm/experiments/XAS/snapshots'
+# Out[8]: '/mnt/nfs/nas1/xf06bm/experiments/XAS/snapshots'
 #
 # BMM XRD.111 [9] ▶ a.describe()['args']['get_resources']()[0]['resource_path']                                                                         
 # Out[9]: '17f7c1e0-6796-49da-95aa-c3f2ccc3d5ca_%d.jpg'
@@ -320,6 +321,7 @@ if with_xspress3 is True:
             getattr(d.rois, roi_n).value_sum.kind = 'omitted'
 
     xs.set_rois()
+    xrf = xs.measure_xrf
         
 #except:
 #    pass

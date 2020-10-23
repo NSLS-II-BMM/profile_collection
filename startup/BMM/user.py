@@ -407,7 +407,7 @@ class BMM_User(Borg):
         htmlfolder = os.path.join(folder, 'dossier')
         if not os.path.isdir(htmlfolder):
             os.mkdir(htmlfolder)
-            for f in ('sample.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
+            for f in ('sample.tmpl', 'sample_xs.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
@@ -445,7 +445,7 @@ class BMM_User(Borg):
                 print('%d. Created folder for echem data:  %-75s' % (step,ecfolder))
             else:
                 print('%d. Found folder for echem data:    %-75s' % (step,ecfolder))
-            self.echem_remote = os.path.join('/ws3_echem', name, self.date)
+            self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
             if not os.path.isdir(self.echem_remote):
                 os.makedirs(self.echem_remote)
                 print('   Created remote echem folder:       %-75s' % (self.echem_remote))
@@ -577,10 +577,10 @@ class BMM_User(Borg):
         '''
         #global DATA
 
-        if self.echem and not os.path.ismount('/ws3_echem'):
+        if self.echem and not os.path.ismount('/mnt/nfs/ws3'):
             print(error_msg('''
 **************************************************************************
-   This is an electrochemistry experiment and /ws3_echem is not mounted
+   This is an electrochemistry experiment and /mnt/nfs/ws3 is not mounted
    Electrochemistry data is not being backed up!
 **************************************************************************
             '''))
@@ -593,18 +593,18 @@ class BMM_User(Borg):
             ######################################################################
             #copy the electrochemistry data, if this was that sort of experiment #
             ######################################################################
-            if self.echem and os.path.ismount('/ws3_echem'):
+            if self.echem and os.path.ismount('/mnt/nfs/ws3'):
                 try:
                     self.fetch_echem()
                 except:
                     print(error_msg('Unable to copy electrochemistry data from ws3'))
-                    if not os.path.ismount('/ws3_echem'):
-                        print(error_msg('\t/ws3_echem seems not to be mounted...'))
+                    if not os.path.ismount('/mnt/nfs/ws3'):
+                        print(error_msg('\t/mnt/nfs/ws3 seems not to be mounted...'))
             
             #######################################################################################
             # create folder and sub-folders on NAS server for this user & experimental start date #
             #######################################################################################
-            destination = os.path.join(user_ns('nas_mount_point'), 'xf06bm', 'user', self.name, self.date)
+            destination = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'user', self.name, self.date)
             if not os.path.isdir(destination):
                 os.makedirs(destination)
             for d in ('dossier', 'prj', 'snapshots'):

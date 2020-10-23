@@ -16,6 +16,8 @@ from ophyd.status import SubscriptionStatus, DeviceStatus
 from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
+from bluesky.plans import count
+from bluesky.plan_stubs import abs_set, sleep, mv, null
 
 from pathlib import PurePath
 #from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
@@ -39,6 +41,8 @@ from BMM.functions     import now
 from BMM.metadata      import mirror_state
 
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
+#db = user_ns['db']
+#db.reg.register_handler("BMM_XAS_WEBCAM",    Xspress3HDF5Handler)
 
 import configparser
 
@@ -152,8 +156,8 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
-               read_path_template='/xspress3/BMM/',           # path to data folder, as mounted on client (i.e. ws1) 
-               root='/xspress3/',                             # path to root, as mounted on client (i.e. ws1)
+               read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
+               root='/mnt/nfs/xspress3/',                     # path to root, as mounted on client (i.e. ws1)
                write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
                )
 
@@ -220,11 +224,13 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.set_rois()
         
     def _acquire_changed(self, value=None, old_value=None, **kwargs):
+        #print(f"!!! HERE I AM !!!   {value}  {old_value}  {id(self._status)}  {self._status}")
         super()._acquire_changed(value=value, old_value=old_value, **kwargs)
         status = self._status
         if status is not None and status.done:
             # Clear the state to be ready for the next round.
             self._status = None
+        #print(f"!!! END !!!   {value}  {old_value}  {status}  {id(self._status)}  {self._status}")
             
     def stop(self):
         ret = super().stop()
@@ -243,7 +249,8 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.settings.trigger_mode.put(0)  # 'Software'
         super().unstage()
         self._datum_counter = None
-
+        self._status = None
+        
     def set_channels_for_hdf5(self, channels=range(1,5)):
         """
         Configure which channels' data should be saved in the resulted hdf5 file.
@@ -268,7 +275,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_low.put(low)
         this.bin_high.put(high)
         
-    def set_rois(self):
+    def set_rois(self, lii=False):
         config = configparser.ConfigParser()
         startup_dir = get_ipython().profile_dir.startup_dir
         config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
@@ -277,7 +284,10 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                 continue
             bounds = config.get('rois', el).split(' ')
             for ch in range(1,5):
-                self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
+                if lii is True:
+                    self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[2], high=bounds[3])
+                else:
+                    self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
 
     def roi_details(self):
         BMMuser = user_ns['BMMuser']
@@ -328,10 +338,16 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                 text += '%4.4s' % self.slots[i] + '   '
         text += '\n'
         return(text)
-            
+
+
+    def measure_xrf(self, exposure=0.5):
+        yield from mv(self.settings.acquire_time, exposure)
+        yield from count([self], 1)
+        self.plot(add=True)
+    
     def plot(self, add=False, only=None):
         dcm = user_ns['dcm']
-        plt.cla()
+        plt.clf()
         plt.xlabel('Energy  (eV)')
         plt.ylabel('counts')
         plt.title('XRF Spectrum')

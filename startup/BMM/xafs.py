@@ -10,11 +10,12 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from BMM.camera_device import snap
+from BMM.db            import file_resource
 from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.larch         import Pandrosus
+from BMM.larch         import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -348,6 +349,9 @@ from pygments.formatters import HtmlFormatter
 from urllib.parse import quote
 
 def make_merged_triplot(uidlist, filename, mode):
+    #k=Kekropidai()
+    #k.put(uidlist)
+    #merge=k.merge()
     base = Pandrosus()
     base.fetch(uidlist[0])
     ee = base.group.energy
@@ -389,9 +393,12 @@ def scan_sequence_static_html(inifile       = None,
                               times         = None,
                               clargs        = '',
                               websnap       = '',
+                              webuid        = '',
                               anasnap       = '',
+                              anauid        = '',
                               xrfsnap       = '',
                               xrffile       = '',
+                              xrfuid        = '',
                               htmlpage      = None,
                               ththth        = None,
                               initext       = None,
@@ -408,8 +415,11 @@ def scan_sequence_static_html(inifile       = None,
     firstfile = "%s.%3.3d" % (filename, start)
     if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):
         return None
-    
-    with open(os.path.join(BMMuser.DATA, 'dossier', 'sample.tmpl')) as f:
+
+    tmpl = 'sample.tmpl'
+    if mode == 'xs':
+        tmpl = 'sample_xs.tmpl'
+    with open(os.path.join(BMMuser.DATA, 'dossier', tmpl)) as f:
         content = f.readlines()
     basename     = filename
     htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')
@@ -467,8 +477,11 @@ def scan_sequence_static_html(inifile       = None,
                                     times         = times,
                                     clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
                                     websnap       = quote('../snapshots/'+websnap),
+                                    webuid        = webuid,
                                     anasnap       = quote('../snapshots/'+anasnap),
+                                    anauid        = anauid,
                                     xrffile       = quote('../'+str(xrffile)),
+                                    xrfuid        = xrfuid,
                                     xrfsnap       = quote('../snapshots/'+str(xrfsnap)),
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
@@ -687,7 +700,7 @@ def xafs(inifile, **kwargs):
         xrfuid, xrffile, xrfimage = None, None, None
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if 'xs' in p['mode']:
-            print(xs._status, flush=True)
+            #print(xs._status, flush=True)
             yield from sleep(3)
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             #yield from abs_set(xs.hdf5.capture, 1)
@@ -706,6 +719,29 @@ def xafs(inifile, **kwargs):
             plt.savefig(xrfimage)
             xs.to_xdi(xrffile)
             matplotlib.use('Qt5Agg') # return to screen display
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## snap photos
+        if p['snapshots']:
+            ahora = now()
+
+            annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+            html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
+            image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
+            xascam._annotation_string = annotation
+            print(bold_msg('XAS webcam snapshot'))
+            xascam_uid = yield from count([xascam], 1) #, md={'sample':'Hi there!'}), src.callback) 
+            shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
+            #snap('XAS', filename=image_web, annotation=annotation)
+
+            html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
+            image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
+            anacam._annotation_string = p['filename']
+            print(bold_msg('analog camera snapshot'))
+            anacam_uid = yield from count([anacam], 1)
+            shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
+            #snap('analog', filename=image_ana, sample=p['filename'])
+
             
 
         #legends = []
@@ -741,10 +777,7 @@ def xafs(inifile, **kwargs):
                     DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
             yield from mv(xs.settings.acquire_time, 0.5)
-            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
-                                                                doc['data'][BMMuser.xs2] +
-                                                                doc['data'][BMMuser.xs3] +
-                                                                doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] + doc['data'][BMMuser.xs2] + doc['data'][BMMuser.xs3] + doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             #yield from mv(xs.total_points, len(energy_grid))
             plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
         else:
@@ -823,6 +856,9 @@ def xafs(inifile, **kwargs):
                               comment       = p['comment'],
                               ththth        = p['ththth'],
             )
+            md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
+                                'webcam_file': image_web, 'webcam_uid': xascam_uid,
+                                'analog_file': image_ana, 'anacam_uid': anacam_uid, }
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## show the metadata to the user
@@ -851,40 +887,20 @@ def xafs(inifile, **kwargs):
             html_dict['clargs']        = clargs
             html_dict['htmlpage']      = p['htmlpage']
             html_dict['ththth']        = p['ththth']
+            html_dict['xrfuid']        = xrfuid
+            html_dict['webuid']        = xascam_uid
+            html_dict['anauid']        = anacam_uid
             with open(os.path.join(BMMuser.DATA, inifile)) as f:
                 html_dict['initext'] = ''.join(f.readlines())
 
-            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## snap photos
-            if p['snapshots']:
-                ahora = now()
-
-                annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
-                html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
-                image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
-                #xascam._annotation_string = annotation
-                #xascam_uid = yield from count([xascam]) #, md={'sample':'Hi there!'}), src.callback) 
-                #shutil.copyfile(fetch_snapshot_filename(db.v2[xascam_uid]), image_web)
-                snap('XAS', filename=image_web, annotation=annotation)
-
-                html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
-                image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
-                #anacam._annotation_string = p['filename']
-                #anacam_uid = yield from count([anacam])
-                #shutil.copyfile(fetch_snapshot_filename(db.v2[anacam_uid]), image_ana)
-                snap('analog', filename=image_ana, sample=p['filename'])
-
-                md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
-                                    'webcam_file': image_web, #'webcam_uid': xascam_uid,
-                                    'analog_file': image_ana, #'anacam_uid': anacam_uid,
-                }
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## write dotfile, used by cadashboard
-            rkvs.set('BMM:scan:type',      'line')
+            ## store data in redis, used by cadashboard
+            rkvs.set('BMM:scan:type',      'xafs')
             rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
             rkvs.set('BMM:scan:estimated', (approx_time * int(p['nscans']) * 60))
-            
+            print(str(datetime.datetime.timestamp(datetime.datetime.now())))
+            print((approx_time * int(p['nscans']) * 60))
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -913,6 +929,8 @@ def xafs(inifile, **kwargs):
                 if p['mode'] == 'xs':
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
+                    hdf5_uid = xs.hdf5.file_name.value
+                    print(go_msg(hdf5_uid))
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -969,6 +987,11 @@ def xafs(inifile, **kwargs):
                                              md={**xdi, **supplied_metadata})
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
+
+                if p['mode'] == 'xs':
+                    hdf5_uid = xs.hdf5.file_name.value
+                    print(go_msg(hdf5_uid))
+                
                 uidlist.append(uid)
                 header = db[uid]
                 write_XDI(datafile, header)
@@ -1126,7 +1149,7 @@ def howlong(inifile, interactive=True, **kwargs):
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     if delta == 0:
         text = f'One scan of {len(energy_grid)} points will take about {approx_time} minutes\n'
-        text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60} hours'
+        text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours'
     else:
         text = f'One scan of {len(energy_grid)} points will take {approx_time} minutes +/- {delta} minutes \n'
         text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours +/- {delta*numpy.sqrt(int(p["nscans"])):.1f} minutes'

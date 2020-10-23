@@ -45,17 +45,6 @@
 	</div>
 	<div id="main">
 	  <div id="sidebar1">
-	    <h2>Sequence #{seqnumber}</h2>
-	    <br><br>
-	    <h2>Files</h2>
-	    <!-- <h3>XRF spectra</h3> -->
-	    <!-- <p> -->
-	    <!--   <a href="{xrffile}">{basename}: XRF</a> -->
-	    <!-- </p>	     -->
-	    <h3>Athena project</h3>
-	    <p>
-	      <a href="../prj/{basename}.prj">{basename}.prj</a>
-	    </p>
 
 	    <script type="text/javascript">
 	      <!--
@@ -68,7 +57,19 @@
 		  }}
 		  //-->
 	    </script>
-
+	    
+	    <h2>Sequence #{seqnumber}</h2>
+	    <br><br>
+	    <h2>Files</h2>
+	    <h3>XRF spectrum</h3>
+	    <p>
+	      <a href="{xrffile}" title="Click to see the text of {xrffile}">{basename}</a>&nbsp;&nbsp;&nbsp;&nbsp;
+	      <a href="javascript:void(0)" onclick="toggle_visibility('XRF');" title="Click to show/hide the UID of this XRF scan">(uid)</a><div id="XRF" style="display:none;"><small>{xrfuid}</small></div>
+	    </p>
+	    <h3>Athena project</h3>
+	    <p>
+	      <a href="../prj/{basename}.prj">{basename}.prj</a>
+	    </p>
 	    <h3>XAS scans</h3>
 	    <ul class="linkedList">
 	      {scanlist}
@@ -76,7 +77,7 @@
 	  </div>
 	  <div id="sidebar2">
 	    <h3>Motor positions</h3>
-	    <small><tt>{motors}</tt></small>
+	    <span style="font-size:0.6em;"><tt>{motors}</tt></span>
 	  </div>
 	  <div id="content">
 	    <div id="box1">
@@ -100,18 +101,18 @@
 		  <a href="{anasnap}">
 		    <img class="left" src="{anasnap}" width="80" height="80" alt="" /></a>
 		  <span>Image from analog pinhole camera</span>&nbsp;&nbsp;&nbsp;&nbsp;
-		  <a href="javascript:void(0)" onclick="toggle_visibility('anacam');" title="Click to show/hide the UID of this analog cam image">(uid)</a><div id="anacam" style="display:none;"><small>{anauid}</small></div>
+		  <a href="javascript:void(0)" onclick="toggle_visibility('anacam');" title="Click to show/hide the UID of this analog camera image">(uid)</a><div id="anacam" style="display:none;"><small>{anauid}</small></div>
 		</li>
 		<li>
 		  <a href="../snapshots/{basename}.png">
 		    <img class="left" src="../snapshots/{basename}.png" width="80" height="80" alt="" /></a>
 		  <span>Rough, automated data reduction</span>
 		</li>
-		<!-- <li> -->
-		<!--   <a href="{xrfsnap}"> -->
-		<!--     <img class="left" src="{xrfsnap}" width="80" height="80" alt="" /></a> -->
-		<!--   <span>XRF spectra at {pccenergy}</span> -->
-		<!-- </li> -->
+		<li>
+		  <a href="{xrfsnap}">
+		    <img class="left" src="{xrfsnap}" width="80" height="80" alt="" /></a>
+		  <span>XRF spectra at {pccenergy} eV</span>
+		</li>
 	      </ul>
 	    </div>
 	    <div id="box3">

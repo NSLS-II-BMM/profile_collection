@@ -7,7 +7,7 @@ rkvs = redis.Redis(host='localhost', port=6379, db=0)
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 
-nas_mount_point = '/nist'
+nas_mount_point = '/mnt/nfs/nas1'
 nas_path = os.path.join(nas_mount_point, 'xf06bm', 'experiments', 'XAS', 'snapshots')
 
 from BMM.functions           import now, colored, run_report, boxedtext, elapsed_time

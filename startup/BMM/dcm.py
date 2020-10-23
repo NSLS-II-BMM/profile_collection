@@ -6,8 +6,9 @@ from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
 
 from numpy import pi, sin, cos, arcsin
 
-from BMM.motors import FMBOEpicsMotor, VacuumEpicsMotor
-from BMM.functions import HBARC, boxedtext, approximate_pitch
+from BMM.motors         import FMBOEpicsMotor, VacuumEpicsMotor
+from BMM.functions      import HBARC, boxedtext, approximate_pitch
+from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
@@ -93,9 +94,12 @@ class DCM(PseudoPositioner):
         '''
         dcm_bragg, dcm_para, dcm_perp = user_ns['dcm_bragg'], user_ns['dcm_para'], user_ns['dcm_perp']
         dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         dcm_bragg.acceleration.put(BMMuser.acc_fast)
-        dcm_para.velocity.put(0.75)
-        dcm_para.hvel_sp.put(0.5)
+        dcm_para.velocity.put(0.2)
+        dcm_para.hvel_sp.put(0.2)
+        dcm_perp.velocity.put(0.2)
+        dcm_perp.hvel_sp.put(0.2)
         dcm_x.velocity.put(0.6)
         ## initiate homing for Bragg, pitch, roll, para, perp, and x
         yield from abs_set(dcm_bragg.home_signal, 1)
@@ -163,6 +167,14 @@ class DCM(PseudoPositioner):
         """convert between mono angle and photon wavelength"""
         return self._twod * sin(val*pi/180)
 
+    def motor_positions(self, energy):
+        wavelength = 2*pi*HBARC / energy
+        angle = arcsin(wavelength / self._twod)
+        bragg = 180 * arcsin(wavelength/self._twod) / pi
+        para  = self.offset / (2*sin(angle))
+        perp  = self.offset / (2*cos(angle))
+        print(f'for {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
+    
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

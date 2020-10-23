@@ -3,31 +3,10 @@ from numpy import pi, sin, cos, arcsin, sqrt
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
-# read this
-#
-#   https://github.com/yaml/pyyaml/wiki/PyYAML-yaml.load(input)-Deprecation
-#
-# to understand this:
-#
-#   Loading metadata history from /home/xf06bm/.config/bluesky/bluesky_history.db
-# /opt/conda_envs/collection-2019-3.0-bmm/lib/python3.7/site-packages/dask/config.py:168:
-# YAMLLoadWarning: calling yaml.load() without Loader=... is
-# deprecated, as the default Loader is unsafe. Please read
-# https://msg.pyyaml.org/load for full details.
-#  data = yaml.load(f.read()) or {}
-#
-# In short, edit
-#   .../dask/config.py at line 168 to use the "full_load" method
-
-
-
-#import warnings
-#with warnings.catch_warnings():
-#    warnings.filterwarnings("ignore", message="CA.Client.Exception")
 
 ## users find "less" unfamiliar and mistakes are made / confusion is
 ## had when doing <function>??  `cat` seems less likely to befuddle
-## the hoi palloi.
+## the hoi palloi, but it's not a pager.
 ##
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
@@ -89,7 +68,7 @@ def go_msg(text):
     '''Green text'''
     return colored(text, 'lightgreen')
 def url_msg(text):
-    '''Undecorated text, intended for URLs'''
+    '''Undecorated text, intended for URL decoration...'''
     return text
 def bold_msg(text):
     '''Bright white text'''

@@ -623,12 +623,11 @@ class Kekropidai():
     def put(self, uidlist):
         for u in uidlist:
             this = Pandrosus()
-            this.fetch(uid)
+            this.fetch(u)
             self.add(this)
 
     def merge(self):
         base = self.groups[0]
-        base.fetch(uidlist[0])
         ee = base.group.energy
         mm = base.group.mu
         for spectrum in self.groups[1:]:

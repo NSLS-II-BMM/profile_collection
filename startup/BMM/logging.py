@@ -34,8 +34,7 @@ if os.path.isfile(BMM_log_master_file):
     chmod(BMM_log_master_file, 0o444)
 
 BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
-#BMM_nas_log_file = '/nist/xf06bm/data/BMM_master.log'
-if os.path.isdir('/nist'):
+if os.path.isdir('/mnt/nfs/nas1'):
     if not os.path.isfile(BMM_nas_log_file):
         basedir = os.path.dirname(BMM_nas_log_file)
         if not os.path.exists(basedir):

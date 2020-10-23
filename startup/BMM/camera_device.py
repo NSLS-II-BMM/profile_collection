@@ -23,6 +23,7 @@ import fcntl
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
+from BMM.db import file_resource
 from BMM.functions import now
 from BMM.logging import report
 
@@ -195,10 +196,10 @@ class BMMSnapshot(Device):
         self._annotation_string = ''
         if which.lower() =='xrd':
             self._SPEC = "BMM_XRD_WEBCAM"
-            self._url = 'http://10.6.129.55/axis-cgi/jpg/image.cgi'
+            self._url = 'http://xf06bm-cam5/axis-cgi/jpg/image.cgi'
         elif which.lower() == 'xas':
             self._SPEC = "BMM_XAS_WEBCAM"
-            self._url = 'http://10.6.129.56/axis-cgi/jpg/image.cgi'
+            self._url = 'http://xf06bm-cam6/axis-cgi/jpg/image.cgi'
         else:
             self._SPEC = "BMM_ANALOG_CAMERA"
             self._url = None
@@ -274,18 +275,3 @@ def snap(which, filename=None, **kwargs):
 
 
 
-def fetch_snapshot_filename(record):
-    '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device'''
-    if 'databroker.core.BlueskyRunFromGenerator' in str(type(record)) :
-        #template = os.path.join(record.describe()['args']['get_resources']()[0]['root'],
-        #                        record.describe()['args']['get_resources']()[0]['resource_path'])
-        #return(template % 0)
-        return(None)
-    elif 'databroker.core.BlueskyRun' in str(type(record)) :
-        template = os.path.join(record.describe()['args']['get_resources']()[0]['root'],
-                                record.describe()['args']['get_resources']()[0]['resource_path'])
-        return(template % 0)
-    else:
-        return(None)
-
-        

@@ -48,7 +48,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     F: unfocused, energy < 8000
     XRD: focused at XRD end station, energy > 8000
     '''
-    BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
+    BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
     xafs_table, m3, m2, m2_bender, xafs_ref = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['xafs_ref']
     if mode is None:
         print('No mode specified')
@@ -121,11 +121,16 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
             m3.xu,           float(MODEDATA['m3_xu'][mode]),
             m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
     if reference is not None:
-        #base.extend([xafs_linxs, foils.position(reference.capitalize())])
-        base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
+         #base.extend([xafs_linxs, foils.position(reference.capitalize())])
+         base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
     if edge is not None:
-        #dcm_bragg.clear_encoder_loss()
-        base.extend([dcm.energy, edge])
+         #dcm_bragg.clear_encoder_loss()
+         base.extend([dcm.energy, edge])
+    if mode in ('D', 'E', 'F'):
+         base.extend([slits3.hcenter, 2])
+    else:
+         base.extend([slits3.hcenter, 0])
+          
 
     ###################################################################
     # check for amplifier faults on the motors, return without moving #

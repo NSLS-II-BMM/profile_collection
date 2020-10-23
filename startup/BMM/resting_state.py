@@ -28,7 +28,7 @@ def resting_state():
     #user_ns['RE'].msg_hook = BMM_msg_hook
     user_ns['rkvs'].set('BMM:scan:type',      '')
     user_ns['rkvs'].set('BMM:scan:starttime', '')
-    user_ns['rkvs'].set('BMM:scan:estimated', '')
+    user_ns['rkvs'].set('BMM:scan:estimated', 0)
 
 def resting_state_plan():
     '''

@@ -54,8 +54,11 @@ def xm(line):
 @register_line_magic
 def w(arg):
     '''show a motor position'''
-    motor = eval(arg)
-    return motor.wh()
+    try:
+        motor = eval(arg)
+        return motor.wh()
+    except:
+        print(f'{arg} is not a thing that can be probed for position')
 
 @register_line_magic
 def ca(arg):
