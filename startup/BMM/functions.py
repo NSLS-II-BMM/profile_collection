@@ -185,5 +185,5 @@ def elapsed_time(start):
     end = time.time()
     hours, rest = divmod(end-start, 3600)
     minutes, seconds = divmod(rest, 60)
-    print(f'\n\nThat took {hours} hours, {minutes} minutes, {seconds} seconds')
+    print(f'\n\nThat took {hours} hours, {minutes} minutes, {seconds:.0f} seconds')
     

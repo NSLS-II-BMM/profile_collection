@@ -3,7 +3,7 @@ from bluesky.plan_stubs import abs_set, sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 from databroker.core import SingleRunCache
 
-import numpy, os, re, subprocess, shutil
+import numpy, os, re, shutil
 import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
@@ -15,6 +15,7 @@ from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
 from BMM.larch         import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack
@@ -436,14 +437,17 @@ def scan_sequence_static_html(inifile       = None,
 
 
     ## generate a png image, preferably of a quadplot of the data, using Demeter
+    prjfilename, pngfilename = None, None
     try:
           pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
+          prjfilename = os.path.join(BMMuser.folder, 'prj', basename+'.prj')
     except Exception as e:
           print(e)
 
     try:
         if uidlist is not None:
-            make_merged_triplot(uidlist, os.path.join(BMMuser.DATA, 'snapshots', basename+'.png'), mode)
+            pngfilename = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
+            make_merged_triplot(uidlist, pngfilename, mode)
     except:
         pass
         
@@ -499,11 +503,11 @@ def scan_sequence_static_html(inifile       = None,
 
     write_manifest()
 
-    pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
-    if os.path.isfile(pngfile):
-        img_to_slack(pngfile)
+    #pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
+    if os.path.isfile(pngfilename):
+        img_to_slack(pngfilename)
     
-    return(htmlfilename)
+    return(htmlfilename, prjfilename, pngfilename)
 
 
 
@@ -592,6 +596,18 @@ def xafs(inifile, **kwargs):
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
+
+        
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## if in xs mode, make sure we are configured correctly
+        if p['mode'] is 'xs':
+            if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
+                                                          'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
+                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3'))
+                print(error_msg('Likely solution:'))
+                print(error_msg('Set element symbol:  BMMuser.element = Xx'))
+                print(error_msg('then do:             xs.measure_roi()'))
+                return(yield from null())
 
         if p['usbstick']:
             sub_dict = {'*' : '_STAR_',
@@ -759,6 +775,11 @@ def xafs(inifile, **kwargs):
             html_dict['xrfsnap'] = "%s_XRF_%s.png" % (p['filename'], ahora)
             xrffile  = os.path.join(p['folder'], 'XRF', html_dict['xrffile'])
             xrfimage = os.path.join(p['folder'], 'XRF', html_dict['xrfsnap'])
+            gdrive_dict['xrffile']  = {'source': xrffile,
+                                       'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'XRF', html_dict['xrffile'])}
+            gdrive_dict['xrfimage'] = {'source': xrfimage,
+                                       'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'XRF', html_dict['xrfsnap'])}
+            
             plt.savefig(xrfimage)
             xs.to_xdi(xrffile)
             matplotlib.use(thisagg) # return to screen display
@@ -784,6 +805,13 @@ def xafs(inifile, **kwargs):
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md})
             shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
             #snap('analog', filename=image_ana, sample=p['filename'])
+
+            
+            gdrive_dict['xascam']  = {'source': image_web,
+                                      'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', html_dict['websnap'])}
+            gdrive_dict['anacam']  = {'source': image_ana,
+                                      'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', html_dict['anasnap'])}
+            
 
         md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
                             'webcam_file': image_web, 'webcam_uid': xascam_uid,
@@ -1025,32 +1053,34 @@ def xafs(inifile, **kwargs):
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=p['mode'])
-                        report(f"Data evaluation: {score} {emoji}", level='bold', slack=True)
+                        report(f"Data evaluation: {emoji}", level='bold', slack=True)
                         ## FYI: db.v2[-1].metadata['start']['scan_id']
                     except:
                         pass
                     try:
-                        here = os.getcwd()
-                        gdrive = os.path.join(os.environ['HOME'], 'gdrive')
-                        os.chdir(gdrive)
-                        print(f'copying {fname} to {gdrive}')
-                        shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
-                        print(f'updating {gdrive}')
-                        subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
-                        os.chdir(here)
+                        copy_to_gdrive(fname)
+                        synch_gdrive_folder()
+                        # here = os.getcwd()
+                        # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
+                        # os.chdir(gdrive)
+                        # print(f'copying {fname} to {gdrive}')
+                        # shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
+                        # print(f'updating {gdrive}')
+                        # subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
+                        # os.chdir(here)
                     except Exception as e:
                         print(error_msg(e))
                         report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
                         
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
-                js_text = '<a href="javascript:void(0)" onclick="toggle_visibility(\'%s\');" title="This is the scan number for %s, click to show/hide its UID">#%d</a><div id="%s" style="display:none;"><small>%s</small></div>' \
-                          % (fname, fname, header.start['scan_id'], fname, uid)
+                js_text = f'<a href="javascript:void(0)" onclick="toggle_visibility(\'{fname}\');" title="This is the scan number for {fname}, click to show/hide its UID">#{header.start["scan_id"]}</a><div id="{fname}" style="display:none;"><small>{uid}</small></div>'
+                ##% (fname, fname, header.start['scan_id'], fname, uid)
                 printedname = fname
                 if len(p['filename']) > 11:
                     printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
-                html_scan_list += '<li><a href="../%s" title="Click to see the text of %s">%s</a>&nbsp;&nbsp;&nbsp;&nbsp;%s</li>\n' \
-                                  % (quote(fname), fname, printedname, js_text)
+                html_scan_list += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
+                #                  % (quote(fname), fname, printedname, js_text)
                 html_dict['scanlist'] = html_scan_list
 
 
@@ -1088,9 +1118,27 @@ def xafs(inifile, **kwargs):
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
             ## FYI: db.v2[-1].metadata['start']['scan_id']
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
-                htmlout = scan_sequence_static_html(inifile=inifile, **html_dict)
+                (htmlout, prjout, pngout) = scan_sequence_static_html(inifile=inifile, **html_dict)
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
+                    gdrive_dict['dossier']   = {'source': htmlout,
+                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', os.path.basename(htmlout))}
+                    gdrive_dict['manifest']  = {'source': os.path.join(os.path.dirname(htmlout), '00INDEX.html'),
+                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', '00INDEX.html')}
+                    gdrive_dict['prj']       = {'source': prjout,
+                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'prj', os.path.basename(htmlout).replace('html', 'prj'))}
+                    gdrive_dict['processed'] = {'source': pngout,
+                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
+                    
+            for k,v in gdrive_dict.items():
+                print(f'\n{k}')
+                print(f'   source: {v["source"]}')
+                print(f'   target: {v["target"]}')
+                if v['source'] is not None:
+                    try:
+                        shutil.copyfile(v['source'], v['target'])
+                    except Exception as e:
+                        print(e)
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
@@ -1130,6 +1178,7 @@ def xafs(inifile, **kwargs):
     ######################################################################
     html_scan_list = ''
     html_dict = {}
+    gdrive_dict = {}
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:

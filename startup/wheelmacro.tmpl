@@ -42,8 +42,8 @@ def {base}_macro(dryrun=False):
         ### ---------------------------------------------------------------------------------------
 
     def cleanup_plan():
-        yield from xafs_wheel.reset()
         yield from end_of_macro()
+        yield from xafs_wheel.reset()
         elapsed_time(start)
 
     start = time.time()        

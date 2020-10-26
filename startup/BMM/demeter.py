@@ -52,7 +52,7 @@ def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, 
     result = subprocess.run([TOPRJ,
                              '--folder', '%s' % folder,       # data folder
                              '--name',   '%s' % name,         # file stub
-                             '--base',   '%s' % base,         # basename (without scan sequence numbering)		 
+                             '--base',   '%s' % base,         # basename (with scan sequence numbering)		 
                              '--start',  '%d' % int(start),   # first suffix number					 
                              '--end',    '%d' % int(end),     # last suffix number					 
                              '--bounds', '%s' % bounds,       # scan boundaries (used to distinguish XANES from EXAFS)

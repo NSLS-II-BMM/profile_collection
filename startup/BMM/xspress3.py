@@ -134,7 +134,27 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
 
 class BMMXspress3Channel(Xspress3Channel):
     extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
+    reset1  = Cpt(EpicsSignal, 'ROI1:Reset')
+    reset2  = Cpt(EpicsSignal, 'ROI2:Reset')
+    reset3  = Cpt(EpicsSignal, 'ROI3:Reset')
+    reset4  = Cpt(EpicsSignal, 'ROI4:Reset')
+    reset5  = Cpt(EpicsSignal, 'ROI5:Reset')
+    reset6  = Cpt(EpicsSignal, 'ROI6:Reset')
+    reset7  = Cpt(EpicsSignal, 'ROI7:Reset')
+    reset8  = Cpt(EpicsSignal, 'ROI8:Reset')
+    reset9  = Cpt(EpicsSignal, 'ROI9:Reset')
+    reset10 = Cpt(EpicsSignal, 'ROI10:Reset')
+    reset11 = Cpt(EpicsSignal, 'ROI11:Reset')
+    reset12 = Cpt(EpicsSignal, 'ROI12:Reset')
+    reset13 = Cpt(EpicsSignal, 'ROI13:Reset')
+    reset14 = Cpt(EpicsSignal, 'ROI14:Reset')
+    reset15 = Cpt(EpicsSignal, 'ROI15:Reset')
+    reset16 = Cpt(EpicsSignal, 'ROI16:Reset')
 
+    def reset(self):
+        for i in range(1,17):
+            getattr(self, f'reset{i}').put(1)
+    
     
 class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
@@ -149,15 +169,16 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
     #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
-    # mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    # mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    # mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    # mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
+    mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
+    mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
+    mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
     
     mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
     mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
@@ -270,7 +291,13 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.hdf5.num_extra_dims.put(0)
         self.settings.num_channels.put(len(channels))
 
-
+    def reset(self):
+        for i in range(1,5):
+            getattr(self, f'channel{i}').reset()
+            ## this doesn't work, not seeing how those arrays get cleared in the IOC....
+            # getattr(self, f'mca{i}_sum').put(numpy.zeros)
+            
+        
     def set_roi_channel(self, channel=1, index=16, name='OCR', low=1, high=4095):
         ch = getattr(self, f'channel{channel}')
         rs = ch.rois

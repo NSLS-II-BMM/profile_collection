@@ -153,8 +153,8 @@ def motor_sidebar(md=None):
 
     mlist = []
     mlist.append('Slits3:')
-    mlist.append('slits3.vsize, %.3f, slits3.vcenter,%.3f'      % (md[user_ns['slits3'].vsize.name],    md[user_ns['slits3'].vcenter.name]))
-    mlist.append('slits3.hsize, %.3f, slits3.hcenter,%.3f'      % (md[user_ns['slits3'].hsize.name],    md[user_ns['slits3'].hcenter.name]))
+    mlist.append('slits3.vsize, %.3f, slits3.vcenter, %.3f'     % (md[user_ns['slits3'].vsize.name],    md[user_ns['slits3'].vcenter.name]))
+    mlist.append('slits3.hsize, %.3f, slits3.hcenter, %.3f'     % (md[user_ns['slits3'].hsize.name],    md[user_ns['slits3'].hcenter.name]))
     mlist.append('slits3.top, %.3f, slits3.bottom, %.3f'        % (md[user_ns['slits3'].top.name],      md[user_ns['slits3'].bottom.name]))
     mlist.append('slits3.outboard, %.3f, slits3.inboard, %.3f'  % (md[user_ns['slits3'].outboard.name], md[user_ns['slits3'].inboard.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
@@ -191,8 +191,8 @@ def motor_sidebar(md=None):
 
     mlist = []
     mlist.append('Slits2:')
-    mlist.append('slits2.vsize, %.3f, slits2.vcenter,%.3f'     % (md[user_ns['slits2'].vsize.name],    md[user_ns['slits2'].vcenter.name]))
-    mlist.append('slits2.hsize, %.3f, slits2.hcenter,%.3f'     % (md[user_ns['slits2'].hsize.name],    md[user_ns['slits2'].hcenter.name]))
+    mlist.append('slits2.vsize, %.3f, slits2.vcenter, %.3f'    % (md[user_ns['slits2'].vsize.name],    md[user_ns['slits2'].vcenter.name]))
+    mlist.append('slits2.hsize, %.3f, slits2.hcenter, %.3f'    % (md[user_ns['slits2'].hsize.name],    md[user_ns['slits2'].hcenter.name]))
     mlist.append('slits2.top, %.3f, slits2.bottom, %.3f'       % (md[user_ns['slits2'].top.name],      md[user_ns['slits2'].bottom.name]))
     mlist.append('slits2.outboard, %.3f, slits2.inboard, %.3f' % (md[user_ns['slits2'].outboard.name], md[user_ns['slits2'].inboard.name]))
     motors += '\n<br><br>' + '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)

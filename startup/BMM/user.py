@@ -6,6 +6,7 @@ user_ns = get_ipython().user_ns
 
 from BMM.functions import BMM_STAFF
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
@@ -323,15 +324,15 @@ class BMM_User(Borg):
         ## make folder
         if not os.path.isdir(folder):
             os.makedirs(folder)
-            print('%d. Created data folder:               %-75s' % (step, folder))
+            print('%2d. Created data folder:               %-75s' % (step, folder))
         else:
-            print('%d. Found data folder:                 %-75s' % (step, folder))
+            print('%2d. Found data folder:                 %-75s' % (step, folder))
         imagefolder = os.path.join(folder, 'snapshots')
         if not os.path.isdir(imagefolder):
             os.mkdir(imagefolder)
-            print('   Created snapshot folder:           %-75s' % imagefolder)
+            print('    Created snapshot folder:           %-75s' % imagefolder)
         else:
-            print('   Found snapshot folder:             %-75s' % imagefolder)
+            print('    Found snapshot folder:             %-75s' % imagefolder)
 
         user_ns['DATA'] = folder + '/'
         self.DATA = folder + '/'
@@ -349,7 +350,7 @@ class BMM_User(Borg):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## setup logger
         BMM_user_log(os.path.join(folder, 'experiment.log'))
-        print('%d. Set up experimental log file:      %-75s' % (step, os.path.join(folder, 'experiment.log')))
+        print('%2d. Set up experimental log file:      %-75s' % (step, os.path.join(folder, 'experiment.log')))
         step += 1
 
         startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
@@ -364,9 +365,9 @@ class BMM_User(Borg):
             o = open(scanini, 'w')
             o.write(''.join(content).format(folder=folder, name=name))
             o.close()
-            print('%d. Created INI template:              %-75s' % (step, scanini))
+            print('%2d. Created INI template:              %-75s' % (step, scanini))
         else:
-            print('%d. Found INI template:                %-75s' % (step, scanini))
+            print('%2d. Found INI template:                %-75s' % (step, scanini))
         step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -395,19 +396,19 @@ class BMM_User(Borg):
             o = open(macropy, 'w')
             o.write(''.join(content).format(folder=folder, base='sample', content=commands))
             o.close()
-            print('%d. Created macro template:            %-75s' % (step, macropy))
+            print('%2d. Created macro template:            %-75s' % (step, macropy))
         else:
-            print('%d. Found macro template:              %-75s' % (step, macropy))
+            print('%2d. Found macro template:              %-75s' % (step, macropy))
         step += 1
 
         xlsxtmpl = os.path.join(startup, 'wheel_template.xlsx')
         xlsxfile = os.path.join(folder, 'wheel_template.xlsx')
         if not os.path.isfile(xlsxfile):
             shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
-            print('%d. Copied macro building spreadsheet: %-75s' % (step, xlsxfile))
+            print('%2d. Copied macro building spreadsheet: %-75s' % (step, xlsxfile))
 
         else:
-            print('%d. Found macro building spreadsheet:  %-75s' % (step, xlsxfile))
+            print('%2d. Found macro building spreadsheet:  %-75s' % (step, xlsxfile))
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -419,10 +420,10 @@ class BMM_User(Borg):
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
-            print('%d. Created dossier folder:            %-75s' % (step,htmlfolder))
+            print('%2d. Created dossier folder:            %-75s' % (step,htmlfolder))
             print('   copied html generation files, touched MANIFEST')
         else:
-            print('%d. Found dossier folder:              %-75s' % (step,htmlfolder))
+            print('%2d. Found dossier folder:              %-75s' % (step,htmlfolder))
         step += 1
      
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -430,9 +431,9 @@ class BMM_User(Borg):
         prjfolder = os.path.join(folder, 'prj')
         if not os.path.isdir(prjfolder):
             os.mkdir(prjfolder)
-            print('%d. Created Athena prj folder:         %-75s' % (step,prjfolder))
+            print('%2d. Created Athena prj folder:         %-75s' % (step,prjfolder))
         else:
-            print('%d. Found Athena prj folder:           %-75s' % (step,prjfolder))
+            print('%2d. Found Athena prj folder:           %-75s' % (step,prjfolder))
         step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -440,9 +441,9 @@ class BMM_User(Borg):
         xrffolder = os.path.join(folder, 'XRF')
         if not os.path.isdir(xrffolder):
             os.mkdir(xrffolder)
-            print('%d. Created folder for XRF spectra:       %-75s' % (step,xrffolder))
+            print('%2d. Created folder for XRF spectra:    %-75s' % (step,xrffolder))
         else:
-            print('%d. Found folder for XRF spectra:         %-75s' % (step,xrffolder))
+            print('%2d. Found folder for XRF spectra:      %-75s' % (step,xrffolder))
         step += 1
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -451,9 +452,9 @@ class BMM_User(Borg):
             pilfolder = os.path.join(folder, 'Pilatus')
             if not os.path.isdir(pilfolder):
                 os.mkdir(pilfolder)
-                print('%d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
+                print('%2d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
             else:
-                print('%d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
+                print('%2d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
             step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -463,9 +464,9 @@ class BMM_User(Borg):
             ecfolder = os.path.join(folder, 'electrochemistry')
             if not os.path.isdir(ecfolder):
                 os.mkdir(ecfolder)
-                print('%d. Created folder for echem data:  %-75s' % (step,ecfolder))
+                print('%2d. Created folder for echem data:  %-75s' % (step,ecfolder))
             else:
-                print('%d. Found folder for echem data:    %-75s' % (step,ecfolder))
+                print('%2d. Found folder for echem data:    %-75s' % (step,ecfolder))
             self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
             if not os.path.isdir(self.echem_remote):
                 os.makedirs(self.echem_remote)
@@ -476,10 +477,19 @@ class BMM_User(Borg):
             step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## make gdrive folder
+        user_folder = make_gdrive_folder(prefix='    ')
+        for f in ('logo.png', 'style.css', 'trac.css'):
+            shutil.copyfile(os.path.join(startup, f),  os.path.join(user_folder, 'dossier', f))
+        print('%2d. Established Google Drive folder:   %-75s' % (step, user_folder))
+        print(whisper(f'    Don\'t foget to share Google drive folder and Slack channel with {name}'))
+        step += 1
+            
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## SAF and GUP
         self.gup = gup
         self.saf = saf
-        print('%d. Set GUP and SAF numbers as metadata' % step)
+        print('%2d. Set GUP and SAF numbers as metadata' % step)
         step += 1
 
         self.user_is_defined = True
