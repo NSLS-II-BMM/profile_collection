@@ -104,6 +104,8 @@ class BMM_User(Borg):
         number of scan repititions
     start : int
         starting scan number
+    lims : bool
+        perform LIMS chores (snapshots, XRF spectra, dossier)
     snapshots : bool
         take snapshots
     usbstick : bool
@@ -224,6 +226,7 @@ class BMM_User(Borg):
         self.bothways      = False
         self.channelcut    = True
         self.ththth        = False
+        self.lims          = True
         self.mode          = 'transmission'
         self.npoints       = 0     ###########################################################################
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
@@ -316,6 +319,7 @@ class BMM_User(Borg):
         '''
 
         step = 1
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make folder
         if not os.path.isdir(folder):
             os.makedirs(folder)
@@ -342,6 +346,7 @@ class BMM_User(Borg):
             pass
         step += 1
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## setup logger
         BMM_user_log(os.path.join(folder, 'experiment.log'))
         print('%d. Set up experimental log file:      %-75s' % (step, os.path.join(folder, 'experiment.log')))
@@ -349,6 +354,7 @@ class BMM_User(Borg):
 
         startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## write scan.ini template
         initmpl = os.path.join(startup, 'scan.tmpl')
         scanini = os.path.join(folder, 'scan.ini')
@@ -363,7 +369,8 @@ class BMM_User(Borg):
             print('%d. Found INI template:                %-75s' % (step, scanini))
         step += 1
 
-        ## write macro template
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## write macro template & wheel spreadsheet
         macrotmpl = os.path.join(startup, 'wheelmacro.tmpl')
         macropy = os.path.join(folder, 'sample_macro.py')
         commands = '''
@@ -403,6 +410,7 @@ class BMM_User(Borg):
             print('%d. Found macro building spreadsheet:  %-75s' % (step, xlsxfile))
         step += 1            
         
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make html folder, copy static html generation files
         htmlfolder = os.path.join(folder, 'dossier')
         if not os.path.isdir(htmlfolder):
@@ -417,6 +425,7 @@ class BMM_User(Borg):
             print('%d. Found dossier folder:              %-75s' % (step,htmlfolder))
         step += 1
      
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make prj folder
         prjfolder = os.path.join(folder, 'prj')
         if not os.path.isdir(prjfolder):
@@ -426,18 +435,30 @@ class BMM_User(Borg):
             print('%d. Found Athena prj folder:           %-75s' % (step,prjfolder))
         step += 1
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## make XRF folder
+        xrffolder = os.path.join(folder, 'XRF')
+        if not os.path.isdir(xrffolder):
+            os.mkdir(xrffolder)
+            print('%d. Created folder for XRF spectra:       %-75s' % (step,xrffolder))
+        else:
+            print('%d. Found folder for XRF spectra:         %-75s' % (step,xrffolder))
+        step += 1
+        
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## make prj folder
         if use_pilatus:
-            ## make prj folder
             pilfolder = os.path.join(folder, 'Pilatus')
             if not os.path.isdir(pilfolder):
                 os.mkdir(pilfolder)
-                print('%d. Created folder for Pilatus images:    %-75s' % (step,pilfolder))
+                print('%d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
             else:
-                print('%d. Found folder for Pilatus images:      %-75s' % (step,pilfolder))
+                print('%d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
             step += 1
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## make echem folder
         if echem:
-            ## make echem folder
             self.echem = True
             ecfolder = os.path.join(folder, 'electrochemistry')
             if not os.path.isdir(ecfolder):
@@ -454,6 +475,8 @@ class BMM_User(Borg):
             
             step += 1
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## SAF and GUP
         self.gup = gup
         self.saf = saf
         print('%d. Set GUP and SAF numbers as metadata' % step)
@@ -507,6 +530,8 @@ class BMM_User(Borg):
         if name in BMM_STAFF:
             self.staff = True
             folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
+            #if '' in name:
+            #    self.lims = False
         else:
             self.staff = False
             folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)

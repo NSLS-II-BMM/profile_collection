@@ -9,7 +9,7 @@ from cycler import cycler
 import matplotlib
 import matplotlib.pyplot as plt
 
-from BMM.camera_device import snap
+#from BMM.camera_device import snap
 from BMM.db            import file_resource
 from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
@@ -353,22 +353,23 @@ def make_merged_triplot(uidlist, filename, mode):
     #k.put(uidlist)
     #merge=k.merge()
     base = Pandrosus()
-    base.fetch(uidlist[0])
+    base.fetch(uidlist[0], mode=mode)
     ee = base.group.energy
     mm = base.group.mu
     for uid in uidlist[1:]:
         this = Pandrosus()
-        this.fetch(uid, name='merge', mode=mode)
+        this.fetch(uid, mode=mode)
         mu = numpy.interp(ee, this.group.energy, this.group.mu)
         mm = mm + mu
     mm = mm / len(uidlist)
     merge = Pandrosus()
     merge.put(ee, mm, 'merge')
+    thisagg = matplotlib.get_backend()
     matplotlib.use('Agg') # produce a plot without screen display
     merge.triplot()
     plt.savefig(filename)
     print(whisper(f'Wrote triplot to {filename}'))
-    matplotlib.use('Qt5Agg') # return to screen display
+    matplotlib.use(thisagg) # return to screen display
 
 
 def scan_sequence_static_html(inifile       = None,
@@ -399,6 +400,8 @@ def scan_sequence_static_html(inifile       = None,
                               xrfsnap       = '',
                               xrffile       = '',
                               xrfuid        = '',
+                              ocrs          = '',
+                              rois          = '',
                               htmlpage      = None,
                               ththth        = None,
                               initext       = None,
@@ -461,6 +464,7 @@ def scan_sequence_static_html(inifile       = None,
                                     seqend        = seqend,
                                     mono          = 'Si(%s)' % dcm._crystal,
                                     pdsmode       = pdstext,
+                                    symbol        = element,
                                     e0            = '%.1f' % e0,
                                     edge          = edge,
                                     element       = '%s (<a href="https://en.wikipedia.org/wiki/%s">%s</a>, %d)' % (element, element_name(element), element_name(element), Z_number(element)),
@@ -480,9 +484,11 @@ def scan_sequence_static_html(inifile       = None,
                                     webuid        = webuid,
                                     anasnap       = quote('../snapshots/'+anasnap),
                                     anauid        = anauid,
-                                    xrffile       = quote('../'+str(xrffile)),
+                                    xrffile       = quote('../XRF/'+str(xrffile)),
                                     xrfuid        = xrfuid,
-                                    xrfsnap       = quote('../snapshots/'+str(xrfsnap)),
+                                    xrfsnap       = quote('../XRF/'+str(xrfsnap)),
+                                    ocrs          = ocrs,
+                                    rois          = rois,
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
                                 ))
     o.close()
@@ -697,28 +703,65 @@ def xafs(inifile, **kwargs):
             close_last_plot()
         dcm.mode = 'channelcut'
 
+
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## organize metadata for injection into database and XDI output
+        print(bold_msg('gathering metadata'))
+        md = bmm_metadata(measurement   = p['mode'],
+                          experimenters = p['experimenters'],
+                          edge          = p['edge'],
+                          element       = p['element'],
+                          edge_energy   = p['e0'],
+                          direction     = 1,
+                          scantype      = 'step',
+                          channelcut    = p['channelcut'],
+                          mono          = 'Si(%s)' % dcm._crystal,
+                          i0_gas        = 'N2', #\
+                          it_gas        = 'N2', # > these three need to go into INI file
+                          ir_gas        = 'N2', #/
+                          sample        = p['sample'],
+                          prep          = p['prep'],
+                          stoichiometry = None,
+                          mode          = p['mode'],
+                          comment       = p['comment'],
+                          ththth        = p['ththth'],
+        )
+
+        
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## measure XRF spectrum at Eave
         xrfuid, xrffile, xrfimage = None, None, None
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
-        if 'xs' in p['mode']:
-            #print(xs._status, flush=True)
-            yield from sleep(3)
+        if 'xs' in p['mode'] and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
-            #yield from abs_set(xs.hdf5.capture, 1)
-            yield from abs_set(xs.settings.acquire_time, 1)
-            #yield from abs_set(xs.settings.acquire, 1)
-            xrfuid = yield from count([xs], 1)
-            #db.v2[-1].metadata['start']['uid']
-            #yield from abs_set(xs.hdf5.capture, 0)
+            yield from mv(xs.settings.acquire_time, 1)
+            xrfuid = yield from count([xs], 1, md = {'XDI':md})
+
+            ## capture OCR and target ROI values at Eave to report in dossier
+            ocrs = [int(xs.channel1.rois.roi16.value.get()),
+                    int(xs.channel2.rois.roi16.value.get()),
+                    int(xs.channel3.rois.roi16.value.get()),
+                    int(xs.channel4.rois.roi16.value.get()),]
+            html_dict['ocrs'] = ", ".join(map(str,ocrs))
+            rois = [int(BMMuser.xschannel1.get()),
+                    int(BMMuser.xschannel2.get()),
+                    int(BMMuser.xschannel3.get()),
+                    int(BMMuser.xschannel4.get()),]
+            html_dict['rois'] = ", ".join(map(str,rois))
+
+            ## make and save XRF plot
+            thisagg = matplotlib.get_backend()
             matplotlib.use('Agg') # produce a plot without screen display
-            xs.plot()
+            xs.plot(uid=xrfuid)
             ahora = now()
             html_dict['xrffile'] = "%s_%s.xrf" % (p['filename'], ahora)
-            html_dict['xrfsnap'] = "%s_XRF_%s.jpg" % (p['filename'], ahora)
-            xrffile  = os.path.join(p['folder'], html_dict['xrffile'])
-            xrfimage = os.path.join(p['folder'], 'snapshots', html_dict['xrfsnap'])
+            html_dict['xrfsnap'] = "%s_XRF_%s.png" % (p['filename'], ahora)
+            xrffile  = os.path.join(p['folder'], 'XRF', html_dict['xrffile'])
+            xrfimage = os.path.join(p['folder'], 'XRF', html_dict['xrfsnap'])
             plt.savefig(xrfimage)
             xs.to_xdi(xrffile)
-            matplotlib.use('Qt5Agg') # return to screen display
+            matplotlib.use(thisagg) # return to screen display
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -730,7 +773,7 @@ def xafs(inifile, **kwargs):
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1) #, md={'sample':'Hi there!'}), src.callback) 
+            xascam_uid = yield from count([xascam], 1, md = {'XDI':md})
             shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
             #snap('XAS', filename=image_web, annotation=annotation)
 
@@ -738,10 +781,13 @@ def xafs(inifile, **kwargs):
             image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
             anacam._annotation_string = p['filename']
             print(bold_msg('analog camera snapshot'))
-            anacam_uid = yield from count([anacam], 1)
+            anacam_uid = yield from count([anacam], 1, md = {'XDI':md})
             shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
             #snap('analog', filename=image_ana, sample=p['filename'])
 
+        md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
+                            'webcam_file': image_web, 'webcam_uid': xascam_uid,
+                            'analog_file': image_ana, 'anacam_uid': anacam_uid, }
             
 
         #legends = []
@@ -834,31 +880,6 @@ def xafs(inifile, **kwargs):
                 return
 
 
-            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## organize metadata for injection into database and XDI output
-            print(bold_msg('gathering metadata'))
-            md = bmm_metadata(measurement   = p['mode'],
-                              experimenters = p['experimenters'],
-                              edge          = p['edge'],
-                              element       = p['element'],
-                              edge_energy   = p['e0'],
-                              direction     = 1,
-                              scantype      = 'step',
-                              channelcut    = p['channelcut'],
-                              mono          = 'Si(%s)' % dcm._crystal,
-                              i0_gas        = 'N2', #\
-                              it_gas        = 'N2', # > these three need to go into INI file
-                              ir_gas        = 'N2', #/
-                              sample        = p['sample'],
-                              prep          = p['prep'],
-                              stoichiometry = None,
-                              mode          = p['mode'],
-                              comment       = p['comment'],
-                              ththth        = p['ththth'],
-            )
-            md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
-                                'webcam_file': image_web, 'webcam_uid': xascam_uid,
-                                'analog_file': image_ana, 'anacam_uid': anacam_uid, }
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## show the metadata to the user
@@ -930,7 +951,6 @@ def xafs(inifile, **kwargs):
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
                     hdf5_uid = xs.hdf5.file_name.value
-                    print(go_msg(hdf5_uid))
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -951,11 +971,11 @@ def xafs(inifile, **kwargs):
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
-                    yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
+                    yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
                     print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get())))
                     #dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[0]-5)
-                    yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
+                    yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
                     
                 rightnow = metadata_at_this_moment() # see 62-metadata.py
@@ -968,7 +988,10 @@ def xafs(inifile, **kwargs):
                 
                 md['_kind'] = 'xafs'
                 if p['ththth']: md['_kind'] = '333'
-                md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
+                if p['mode'] == 'xs':
+                    md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
+                else:
+                    md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
                 
                 xdi = {'XDI': md}
                 #mtr = {'BMM_motors' : motor_metadata()}
@@ -990,7 +1013,6 @@ def xafs(inifile, **kwargs):
 
                 if p['mode'] == 'xs':
                     hdf5_uid = xs.hdf5.file_name.value
-                    print(go_msg(hdf5_uid))
                 
                 uidlist.append(uid)
                 header = db[uid]
@@ -1007,6 +1029,18 @@ def xafs(inifile, **kwargs):
                         ## FYI: db.v2[-1].metadata['start']['scan_id']
                     except:
                         pass
+                    try:
+                        here = os.getcwd()
+                        gdrive = os.path.join(os.environ['HOME'], 'gdrive')
+                        os.chdir(gdrive)
+                        print(f'copying {fname} to {gdrive}')
+                        shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
+                        print(f'updating {gdrive}')
+                        subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
+                        os.chdir(here)
+                    except Exception as e:
+                        print(error_msg(e))
+                        report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
                         
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
@@ -1026,10 +1060,10 @@ def xafs(inifile, **kwargs):
             html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
-            yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_slow, wait=True)
+            yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
             #dcm_bragg.clear_encoder_loss()
             yield from mv(dcm.energy, eave)
-            yield from abs_set(dcm_bragg.acceleration, BMMuser.acc_fast, wait=True)
+            yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan
@@ -1061,8 +1095,8 @@ def xafs(inifile, **kwargs):
         dcm.mode = 'fixed'
         yield from resting_state_plan()
         yield from sleep(2.0)
-        yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
-        yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
+        yield from mv(dcm_pitch.kill_cmd, 1)
+        yield from mv(dcm_roll.kill_cmd, 1)
 
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
@@ -1098,6 +1132,9 @@ def xafs(inifile, **kwargs):
     html_dict = {}
     BMMuser.final_log_entry = True
     RE.msg_hook = None
+    if BMMuser.lims is False:
+        BMMuser.snapshot = False
+        BMMuser.htmlout  = False
     ## encapsulation!
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'    

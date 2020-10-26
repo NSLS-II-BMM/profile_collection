@@ -430,7 +430,7 @@ class WheelMacroBuilder():
                 
             (e,t,at,delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(element, edge), element=element, edge=edge, ththth=False)
             
-            if type(m['nscans']) is str:
+            if type(m['nscans']) is int:
                 nsc = m['nscans']
             else:
                 nsc = self.measurements[0]['nscans']
@@ -530,7 +530,7 @@ class WheelMacroBuilder():
                                       'channelcut': self.truefalse(row[23+offset].value),
                                       'ththth':     self.truefalse(row[24+offset].value),
             })
-
+            
             ## check that scan parameters make sense
             if type(self.measurements[-1]['bounds']) is str:
                 b = re.split('[ ,]+', self.measurements[-1]['bounds'])

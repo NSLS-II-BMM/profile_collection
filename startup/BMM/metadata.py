@@ -210,6 +210,8 @@ def metadata_at_this_moment():
 
 def display_XDI_metadata(dct):
     for family, ddd in dct.items():
+        if family[0:1] == '_':
+            continue
         if type(ddd) is dict:
             for item, value in ddd.items():
                 print("\t{:30} {}".format(family+'.'+item+':', value))

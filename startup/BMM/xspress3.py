@@ -25,7 +25,7 @@ from pathlib import PurePath
 from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
-import numpy
+import numpy, h5py
 import pandas as pd
 import itertools, os
 import time as ttime
@@ -36,15 +36,19 @@ import matplotlib.pyplot as plt
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
+from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
 
+from BMM.periodictable import Z_number
+import json
+#import configparser
+        
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 #db = user_ns['db']
 #db.reg.register_handler("BMM_XAS_WEBCAM",    Xspress3HDF5Handler)
 
-import configparser
 
 
 ################################################################################
@@ -180,7 +184,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.slots = ['Ti', 'V',  'Cr', 'Mn',
                       'Fe', 'Co', 'Ni', 'Cu',
                       'Zn', 'As', 'Pt', 'Pb',
-                      None, None, None, 'OCR']
+                      'Ce', None, None, 'OCR']
         self.restart()
         # self.settings.num_images.put(1)   # number of frames
         # self.settings.trigger_mode.put(1) # trigger mode internal
@@ -275,20 +279,60 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_low.put(low)
         this.bin_high.put(high)
         
-    def set_rois(self, lii=False):
-        config = configparser.ConfigParser()
+    def set_rois(self):
         startup_dir = get_ipython().profile_dir.startup_dir
-        config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
+        with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
+            js = fl.read()
+        allrois = json.loads(js)
         for i, el in enumerate(self.slots):
-            if el is None:
+            if el == 'OCR':
+                self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
                 continue
-            bounds = config.get('rois', el).split(' ')
+            elif el is None:
+                continue
+            edge = 'k'
+            if Z_number(el) > 46:
+                edge = 'l3'
             for ch in range(1,5):
-                if lii is True:
-                    self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[2], high=bounds[3])
-                else:
-                    self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
+                self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
+                    
+    # def set_rois(self, lii=False):
+    #     config = configparser.ConfigParser()
+    #     startup_dir = get_ipython().profile_dir.startup_dir
+    #     config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
+    #     for i, el in enumerate(self.slots):
+    #         if el is None:
+    #             continue
+    #         bounds = config.get('rois', el).split(' ')
+    #         for ch in range(1,5):
+    #             if lii is True:
+    #                 self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[2], high=bounds[3])
+    #             else:
+    #                 self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
 
+    # def ini2json(self):
+    #     rj = {'OCR': {'k':  {'low': 1, 'high': 4095}},}
+    #     config = configparser.ConfigParser()
+    #     startup_dir = get_ipython().profile_dir.startup_dir
+    #     config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
+    #     for i in range(20, 93):
+    #         el = element_symbol(i)
+    #         bounds = config.get('rois', el).split(' ')
+    #         if bounds[0] == '0':
+    #             rj[el] = {}
+    #             continue
+    #         if len(bounds) == 2:
+    #             bounds.append(0)
+    #             bounds.append(0)
+    #         if i < 46:
+    #             rj[el] = {'k':  {'low': int(bounds[0]), 'high': int(bounds[1])}}
+    #         else:
+    #             rj[el] = {'l3': {'low': int(bounds[0]), 'high': int(bounds[1])},
+    #                       'l2': {'low': int(bounds[2]), 'high': int(bounds[3])},
+    #                       'l1': {'low': 0             , 'high': 0}, }
+    #     with open(os.path.join(startup_dir, 'rois.json'), 'w') as fp:
+    #         json.dump(rj, fp, indent=4)
+                
     def roi_details(self):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
@@ -345,26 +389,46 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         yield from count([self], 1)
         self.plot(add=True)
     
-    def plot(self, add=False, only=None):
+    def plot(self, uid=None, add=False, only=None):
         dcm = user_ns['dcm']
         plt.clf()
         plt.xlabel('Energy  (eV)')
         plt.ylabel('counts')
-        plt.title('XRF Spectrum')
         plt.grid(which='major', axis='both')
         plt.xlim(2500, round(dcm.energy.position, -2)+500)
-        e = numpy.arange(0, len(self.mca1.value)) * 10
+        try:
+            print(f'{uid}')
+            fname = file_resource(uid)
+            db = user_ns['db']
+            plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
+            f = h5py.File(fname,'r')
+            g = f['entry']['instrument']['detector']['data']
+            data_array = g.value
+            s1 = data_array[0][0]
+            s2 = data_array[0][1]
+            s3 = data_array[0][2]
+            s4 = data_array[0][3]
+        except Exception as e:
+            print(e)
+            plt.title('XRF Spectrum')
+            s1 = self.mca1.value
+            s2 = self.mca2.value
+            s3 = self.mca3.value
+            s4 = self.mca4.value
+        e = numpy.arange(0, len(s1)) * 10
         if only is not None and only in (1, 2, 3, 4):
             this = getattr(self, f'mca{only}')
-            plt.plot(e, this.value)
+            plt.plot(e, this.value, label=f'channel {only}')
+            plt.legend()
         elif add is True:
-            plt.plot(e, self.mca1.value+self.mca2.value+self.mca3.value+self.mca4.value)
+            plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
+            plt.legend()
         else:
-            plt.plot(e, self.mca1.value)
-            plt.plot(e, self.mca2.value)
-            plt.plot(e, self.mca3.value)
-            plt.plot(e, self.mca4.value)
-
+            plt.plot(e, s1, label='channel 1')
+            plt.plot(e, s2, label='channel 2')
+            plt.plot(e, s3, label='channel 3')
+            plt.plot(e, s4, label='channel 4')
+            plt.legend()
 
     def to_xdi(self, filename=None):
 

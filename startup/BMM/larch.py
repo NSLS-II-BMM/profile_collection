@@ -101,7 +101,7 @@ class Pandrosus():
         self.group  = None
         ## Larch parameters
         self.pre    = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
-        self.bkg    = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':1,}
+        self.bkg    = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':2,}
         self.fft    = {'window':'Hanning', 'kmin':3, 'kmax':12, 'dk':2,}
         self.bft    = {'window':'Hanning', 'rmin':1, 'rmax':3, 'dr':0.1,}
         ## plotting parameters
@@ -147,13 +147,17 @@ class Pandrosus():
         # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
         #######################################################################################
         elif mode == 'fluorescence':
-            self.group.mu = numpy.array((table[BMMuser.dtc1]+table[BMMuser.dtc2]+table[BMMuser.dtc3]+table[BMMuser.dtc4])/table['I0'])
+            columns = header.start['XDI']['_dtc']
+            self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table[BMMuser.dtc1]+table[BMMuser.dtc2]+table[BMMuser.dtc3]+table[BMMuser.dtc4])
+            self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
-        # use the Xspress3
-        #elif
-            
+        elif mode == 'xs':
+            columns = header.start['XDI']['_dtc']
+            self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
+
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
             self.group.i0 = numpy.array(table['I0'])
