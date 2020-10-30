@@ -20,14 +20,17 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.metadata      import bmm_metadata
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 ####################################
 # generic timescan vs. It/If/Ir/I0 #
 ####################################
-def timescan(detector, readings, dwell, delay, force=False, md={}):
+@set_user_ns
+def timescan(detector, readings, dwell, delay, force=False, md={}, user_ns=None):
     '''
     Generic timescan plan.
 
@@ -160,8 +163,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     return(uid)
 
 
-
-def ts2dat(datafile, key):
+@set_user_ns
+def ts2dat(datafile, key, user_ns):
     '''
     Export an timescan database entry to a simple column data file.
 

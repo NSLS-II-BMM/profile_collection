@@ -33,8 +33,11 @@ from collections import deque, OrderedDict
 from itertools import product
 
 import matplotlib.pyplot as plt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.db            import file_resource
 from BMM.edge          import show_edges
@@ -336,8 +339,9 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     #                       'l1': {'low': 0             , 'high': 0}, }
     #     with open(os.path.join(startup_dir, 'rois.json'), 'w') as fp:
     #         json.dump(rj, fp, indent=4)
-                
-    def roi_details(self):
+
+    @set_user_ns
+    def roi_details(self, user_ns):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
         print('==========================')
@@ -351,9 +355,10 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
                 print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
             else:
                 print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
-                
 
-    def show_rois(self):
+
+    @set_user_ns
+    def show_rois(self, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')
@@ -374,7 +379,6 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         text += '\n'
         return(text)
 
-
     def check_element(self, element, edge):
         '''Check that the current element and edge is tabulate in rois.json
         '''
@@ -393,7 +397,6 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
             #print(f'ROIs for the {element} {edge} edge are not tabulated')
             return False
         return True
-    
 
     def measure_xrf_plan(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)
@@ -410,5 +413,3 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         ttime.sleep(1.5)
         self.table()
         self.plot(add=True)
-    
-        

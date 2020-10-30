@@ -5,8 +5,10 @@ from numpy import exp
 
 from bluesky.plan_stubs import abs_set
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 class toss():
@@ -54,9 +56,12 @@ ocrs = {'XF:06BM-ES:1{Sclr:1}.S3' : ts,
 ####                  ROI           ICR              OCR             time       ####
 class DTCorr(DerivedSignal):
     off = False
+
     def forward(self, value):
         return self.derived_from.get()
-    def inverse(self, value):
+
+    @set_user_ns
+    def inverse(self, value, user_ns):
         df = self.derived_from.pvname
         dwell_time = user_ns['dwell_time']
         return self.parent.dtcorrect(self.derived_from.get(),
@@ -364,7 +369,8 @@ class BMMVortex(EpicsScaler):
         self.niter = count
         return float(rr * (totn*tt/oo))
 
-    def set_hints(self, chan):
+    @set_user_ns
+    def set_hints(self, chan, user_ns):
         '''Set the dead time correction attributes to hinted for the selected,
         configured channels
         

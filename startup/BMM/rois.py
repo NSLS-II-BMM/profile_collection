@@ -4,8 +4,10 @@ from BMM.logging       import BMM_log_info, report
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 class XSROI():
@@ -14,7 +16,9 @@ class XSROI():
                       None, None, None, None,
                       None, None, None, None,
                       None, None, None, None,]
-    def show_xsrois(self):
+
+    @set_user_ns
+    def show_xsrois(self, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')
@@ -87,7 +91,8 @@ class ROI():
         if user_ns['with_xspress3'] is False:
             BMM_log_info('Set ROI channel %d to %s' % (i, str(self.slots[i-1])))
 
-    def set(self, elements):
+    @set_user_ns
+    def set(self, elements, user_ns):
         '''Configure the ROI channels so that an energy change knows which channel to use.
 
         Parameters
@@ -120,7 +125,8 @@ class ROI():
                 json.dump(user, outfile)
             os.chmod(jsonfile, 0o444)
 
-    def select_plan(self, el):
+    @set_user_ns
+    def select_plan(self, el, user_ns):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
@@ -157,7 +163,8 @@ class ROI():
             self.myprint(whisper('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
             yield from null()
 
-    def select(self, el):
+    @set_user_ns
+    def select(self, el, user_ns):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
@@ -195,8 +202,9 @@ class ROI():
 
             
 # 22.265
-            
-    def show(self):
+
+    @set_user_ns
+    def show(self, user_ns):
         '''Show configuration of ROI channels'''
         BMMuser = user_ns['BMMuser']
         text = 'Analog ROI channels:\n'

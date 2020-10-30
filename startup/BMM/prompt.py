@@ -1,13 +1,16 @@
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
-    def in_prompt_tokens(self, cli=None):
+    @set_user_ns
+    def in_prompt_tokens(self, cli=None, user_ns=None):
         BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         # if idps.state.get() == 0:
         #     shatoken = (Token.OutPromptNum, ' A')
@@ -66,8 +69,8 @@ class MyPrompt(Prompts):
 import types
 get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose that command in RE()'))
 
-
-def BMM_help():
+@set_user_ns
+def BMM_help(user_ns):
     '''
     Print a concise summary of data acquisition commands.
     '''

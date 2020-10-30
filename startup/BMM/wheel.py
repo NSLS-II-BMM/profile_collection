@@ -15,8 +15,10 @@ from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.logging        import report
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 class WheelMotor(EndStationEpicsMotor):
     '''Motor class for BMM sample wheels.
@@ -100,8 +102,8 @@ class WheelMotor(EndStationEpicsMotor):
 
 
 
-
-def reference(target=None):
+@set_user_ns
+def reference(target=None, user_ns=None):
     xafs_ref = user_ns['xafs_ref']
     if target is None:
         print('Not moving reference wheel.')
@@ -121,7 +123,8 @@ def reference(target=None):
         print('Element %s is not on the reference wheel.' % target)
         
 
-def show_reference_wheel():
+@set_user_ns
+def show_reference_wheel(user_ns):
     xafs_ref = user_ns['xafs_ref']
     wheel = xafs_ref.content.copy()
     this  = xafs_ref.current_slot() - 1
@@ -155,7 +158,6 @@ class WheelMacroBuilder(BMMMacroBuilder):
     >>> mb.spreadsheet('wheel1.xlsx')
     >>> mb.write_macro()
     '''
-    
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the

@@ -1,11 +1,14 @@
 from bluesky import __version__ as bluesky_version
 import re, pathlib, sys, datetime, pandas, numpy
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
-def units(label):
+@set_user_ns
+def units(label, user_ns):
     label = label.lower()
     try:
         if 'energy' in label:
@@ -32,7 +35,15 @@ def units(label):
         return ''
 
 
-quadem1, vor = user_ns['quadem1'], user_ns['vor']
+@set_user_ns
+def get_quadem1(user_ns):
+    return user_ns['quadem1']
+
+@set_user_ns
+def get_vor(user_ns):
+    return user_ns['vor']
+
+quadem1, vor = get_quadem1(), get_vor()
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
@@ -93,8 +104,8 @@ class metadata_for_XDI_file():
         self.xdilist.append(text)
 
 
-
-def write_XDI(datafile, dataframe):
+@set_user_ns
+def write_XDI(datafile, dataframe, user_ns):
     BMMuser, xafs_wheel, ga = user_ns['BMMuser'], user_ns['xafs_wheel'], user_ns['ga']
     handle = open(datafile, 'w')
 

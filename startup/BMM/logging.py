@@ -9,8 +9,10 @@ from IPython.paths           import get_ipython_module_path
 from IPython.utils.coloransi import TermColors as color
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 #run_report(__file__, text='BMM-specific logging')
 
@@ -33,7 +35,13 @@ if os.path.isfile(BMM_log_master_file):
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+@set_user_ns
+def get_BMM_nas_log_file(user_ns):
+    os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+
+BMM_nas_log_file = get_BMM_nas_log_file()
+
+
 if os.path.isdir('/mnt/nfs/nas1'):
     if not os.path.isfile(BMM_nas_log_file):
         basedir = os.path.dirname(BMM_nas_log_file)
@@ -131,8 +139,8 @@ def img_to_slack(imagefile):
         report(f'failed to post image: {imagefile}', level='bold', slack=True)
 
 
-        
-def report(text, level=None, slack=False):
+@set_user_ns
+def report(text, level=None, slack=False, user_ns=None):
     '''Print a string to:
       * the log file
       * the screen
