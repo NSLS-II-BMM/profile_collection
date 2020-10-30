@@ -11,8 +11,11 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
@@ -21,7 +24,8 @@ from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 
-def get_mode():
+@set_user_ns
+def get_mode(user_ns):
     m2, m3 = user_ns['m2'], user_ns['m3']
     if m2.vertical.readback.get() < 0: # this is a focused mode
         if m2.pitch.readback.get() > 3:
@@ -41,7 +45,8 @@ def get_mode():
         else:
             return 'E'
 
-def move_after_scan(thismotor):
+@set_user_ns
+def move_after_scan(thismotor, user_ns):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
@@ -64,7 +69,8 @@ def move_after_scan(thismotor):
     cid = BMMuser.fig.canvas.mpl_disconnect(cid)
     BMMuser.x = BMMuser.y = None
 
-def pluck():
+@set_user_ns
+def pluck(user_ns):
     '''
     Call this to pluck a point from the most recent plot and move the motor to that point.
     '''
@@ -82,7 +88,8 @@ def peak(signal):
     center of rocking curve and slit height scans.'''
     return pandas.Series.idxmax(signal)
 
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak'):
+@set_user_ns
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak', user_ns=None):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -186,7 +193,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     RE.msg_hook = BMM_msg_hook
 
 
-def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak'):
+@set_user_ns
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak', user_ns=None):
     '''Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
     the hutch slits to 3 mm. At the end, move to the position of maximum 
@@ -319,13 +327,17 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
+@set_user_ns
+def get_user_nicknames(user_ns):
+    ##                     linear stages        tilt stage           rotation stages
+    motor_nicknames = {'x'    : user_ns['xafs_x'],     'roll' : user_ns['xafs_roll'],  'rh' : user_ns['xafs_roth'],
+                       'y'    : user_ns['xafs_y'],     'pitch': user_ns['xafs_pitch'], 'wh' : user_ns['xafs_wheel'],
+                       's'    : user_ns['xafs_lins'],  'p'    : user_ns['xafs_pitch'], 'rs' : user_ns['xafs_rots'],
+                       'xs'   : user_ns['xafs_linxs'], 'r'    : user_ns['xafs_roll'],
+                   }
+    return motor_nicknames
 
-##                     linear stages        tilt stage           rotation stages
-motor_nicknames = {'x'    : user_ns['xafs_x'],     'roll' : user_ns['xafs_roll'],  'rh' : user_ns['xafs_roth'],
-                   'y'    : user_ns['xafs_y'],     'pitch': user_ns['xafs_pitch'], 'wh' : user_ns['xafs_wheel'],
-                   's'    : user_ns['xafs_lins'],  'p'    : user_ns['xafs_pitch'], 'rs' : user_ns['xafs_rots'],
-                   'xs'   : user_ns['xafs_linxs'], 'r'    : user_ns['xafs_roll'],
-               }
+motor_nicknames = get_user_nicknames()
 
 ## before 29 August 2018, the order of arguments for linescan() was
 ##   linescan(axis, detector, ...)
@@ -344,7 +356,8 @@ def ls_backwards_compatibility(detin, axin):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}): # integration time?
+@set_user_ns
+def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}, user_ns=None): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -584,7 +597,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 #############################################################
 # extract a linescan from the database, write an ascii file #
 #############################################################
-def ls2dat(datafile, key):
+@set_user_ns
+def ls2dat(datafile, key, user_ns):
     '''
     Export a linescan database entry to a simple column data file.
 

@@ -3,8 +3,10 @@ import os
 
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 def athena():
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
@@ -17,7 +19,8 @@ def hephaestus():
 
 TOPRJ = '/home/xf06bm/bin/toprj.pl'
 
-def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, mode=None):
+@set_user_ns
+def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, mode=None, user_ns=None):
     ##########################################################################################
     # Hi Tom!  Yes, I am making a system call right here.  Again.  And to run a perl script, #
     # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #

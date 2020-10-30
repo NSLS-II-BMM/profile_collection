@@ -10,8 +10,10 @@ import threading
 #from bluesky.callbacks import CallbackBase
 from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
 ## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:
@@ -22,13 +24,15 @@ user_ns = get_ipython().user_ns
 #############################################################################
 # this is the callback that gets assigned to mouse clicks on theplot window #
 #############################################################################
-def interpret_click(ev):
+@set_user_ns
+def interpret_click(ev, user_ns):
     BMMuser = user_ns['BMMuser']
     print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
     BMMuser.x = ev.xdata
     BMMuser.y = ev.ydata
 
-def handle_close(ev):
+@set_user_ns
+def handle_close(ev, user_ns):
     ## if closing a stale plot, take care to preserve current plot in BMMuser object
     BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:
@@ -41,7 +45,8 @@ def handle_close(ev):
         BMMuser.fig    = None
         BMMuser.ax     = None
 
-def close_last_plot():
+@set_user_ns
+def close_last_plot(user_ns):
     '''Close the most recent plot on screen'''
     BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:
@@ -55,7 +60,8 @@ def close_last_plot():
     #if BMMuser.fig in BMMuser.all_figs:
     #    BMMuser.all_figs.remove(BMMuser.fig)
 
-def close_all_plots():
+@set_user_ns
+def close_all_plots(user_ns):
     '''Close all plots on screen'''
     BMMuser = user_ns['BMMuser']    
     plt.close('all')
@@ -85,7 +91,9 @@ class DerivedPlot(QtAwareCallback):
         super().__init__()
         self.__setup_lock = threading.Lock()
         self.__setup_event = threading.Event()
-        def setup():
+
+        @set_user_ns
+        def setup(user_ns):
             nonlocal func, ax, xlabel, ylabel, title, legend_keys, stream_name, kwargs
             BMMuser = user_ns['BMMuser']    
             with self.__setup_lock:
@@ -123,6 +131,7 @@ class DerivedPlot(QtAwareCallback):
             self.legend_title = " :: ".join([name for name in self.legend_keys])
             self.stream_name = stream_name
             self.descriptors = {}
+
         self.__setup = setup
 
     def start(self, doc):
