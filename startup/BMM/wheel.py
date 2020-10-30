@@ -381,6 +381,8 @@ class WheelMacroBuilder():
                     continue
                 elif k in ('samplex', 'sampley', 'slitwidth'):
                     continue
+                elif k in ('url', 'doi', 'cif'):
+                    continue
                 ## skip element & edge if they are same as default
                 elif k in ('element', 'edge'):
                     if m[k] == self.measurements[0][k]:
@@ -472,11 +474,11 @@ class WheelMacroBuilder():
         from IPython import get_ipython
         ipython = get_ipython()
         ipython.magic('run -i \'%s\'' % self.macro)
-        print(whisper('Wrote macro file: %s' % self.macro))
-            
+        print(whisper('Wrote and read macro file: %s' % self.macro))
+
         #######################################
         # explain to the user what to do next #
-        #######################################
+         #######################################
         print('\nYour new plan is called: ' + bold_msg('%s_macro' % self.basename))
         print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
         print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
@@ -529,6 +531,9 @@ class WheelMacroBuilder():
                                       'bothways':   self.truefalse(row[22+offset].value),
                                       'channelcut': self.truefalse(row[23+offset].value),
                                       'ththth':     self.truefalse(row[24+offset].value),
+                                      'url':        row[25+offset].value,
+                                      'doi':        row[26+offset].value,
+                                      'cif':        row[27+offset].value,
             })
             
             ## check that scan parameters make sense

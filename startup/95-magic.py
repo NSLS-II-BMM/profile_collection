@@ -61,7 +61,13 @@ def w(arg):
         print(f'{arg} is not a thing that can be probed for position')
 
 @register_line_magic
-def ca(arg):
+def ca():
     '''close all plots'''
     close_all_plots()
+    return None
+
+@register_line_magic
+def cr():
+    '''Take a 1 second Xspress3 exposure and print a count rate table to the screen.'''
+    xs.cr()
     return None

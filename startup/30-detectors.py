@@ -270,12 +270,13 @@ pil     = PilatusGrabber(pilatus)
 #######################################################
 
 if with_xspress3 is True:
-    run_report('\t'+'Xspress3')
-    from BMM.xspress3 import BMMXspress3Detector
+    run_report('\t'+'Xspress3_4element & Xspress3_1element')
+    from BMM.xspress3_4element import BMMXspress3Detector
+    from BMM.xspress3_1element import BMMXspress3Detector_1Element
 
     #try:                            # may be absent
     xs = BMMXspress3Detector('XF:06BM-ES{Xsp:1}:', name='xs')
-
+    xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
     # This is necessary for when the ioc restarts
     # we have to trigger one image for the hdf5 plugin to work correctly
     # else, we get file writing errors
@@ -283,7 +284,7 @@ if with_xspress3 is True:
 
     # Hints:
     for n in range(1,5):
-        for m in range(1,5):
+        for m in range(1,17):
             r = getattr(xs, f'channel{n}').rois
             thisroi = getattr(r, 'roi{:02}'.format(m))
             thisroi.value.kind = 'hinted'
@@ -322,6 +323,42 @@ if with_xspress3 is True:
 
     xs.set_rois()
     xrf = xs.measure_xrf
-        
+
+
+    for m in range(1,17):
+        r = xs1.channel8.rois
+        thisroi = getattr(r, 'roi{:02}'.format(m))
+        thisroi.value.kind = 'hinted'
+    xs1.settings.configuration_attrs = ['acquire_period',
+                                        'acquire_time',
+                                        'gain',
+                                        'image_mode',
+                                        'manufacturer',
+                                        'model',
+                                        'num_exposures',
+                                        'num_images',
+                                        'temperature',
+                                        'temperature_actual',
+                                        'trigger_mode',
+                                        'config_path',
+                                        'config_save_path',
+                                        'invert_f0',
+                                        'invert_veto',
+                                        'xsp_name',
+                                        'num_channels',
+                                        'num_frames_config',
+                                        'run_flags',
+                                        'trigger_signal']
+
+    for n, d in xs1.channels.items():
+        roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
+        d.rois.read_attrs = roi_names
+        d.rois.configuration_attrs = roi_names
+        for roi_n in roi_names:
+            getattr(d.rois, roi_n).value_sum.kind = 'omitted'
+    xs1.set_rois()
+    xrf1 = xs1.measure_xrf
+
+    
 #except:
 #    pass

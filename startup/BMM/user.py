@@ -478,11 +478,11 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make gdrive folder
-        user_folder = make_gdrive_folder(prefix='    ')
+        user_folder = make_gdrive_folder(prefix='    ', update=False)
         for f in ('logo.png', 'style.css', 'trac.css'):
             shutil.copyfile(os.path.join(startup, f),  os.path.join(user_folder, 'dossier', f))
         print('%2d. Established Google Drive folder:   %-75s' % (step, user_folder))
-        print(whisper(f'    Don\'t foget to share Google drive folder and Slack channel with {name}'))
+        print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
         step += 1
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

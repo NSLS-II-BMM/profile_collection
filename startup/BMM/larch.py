@@ -99,6 +99,7 @@ class Pandrosus():
         self.uid    = uid
         self.name   = name
         self.group  = None
+        self.title  = ''
         ## Larch parameters
         self.pre    = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
         self.bkg    = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':2,}
@@ -146,7 +147,7 @@ class Pandrosus():
         # CAUTION!!  This only works when BMMuser is correctly set.  This is unlikely to work #
         # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
         #######################################################################################
-        elif mode == 'fluorescence':
+        elif any(md in p['mode'] for md in ('fluo', 'flou', 'both')):
             columns = header.start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
@@ -158,18 +159,25 @@ class Pandrosus():
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
+        elif mode == 'ref':
+            self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
+            self.group.i0 = numpy.array(table['It'])
+            self.group.signal = numpy.array(table['Ir'])
+
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table['It'])
-        
+            
     def fetch(self, uid, name=None, mode='transmission'):
+        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         self.uid = uid
         if name is not None:
             self.name = name
         else:
             self.name = uid[-6:]
         self.group = Group(__name__=self.name)
+        self.title = db.v2[uid].metadata['start']['XDI']['Sample']['name']
         self.make_xmu(uid, mode=mode)
         self.prep()
 
@@ -551,6 +559,7 @@ class Pandrosus():
 
         mu = fig.add_subplot(gs[0, :])
         mu.plot(self.group.energy, self.group.mu, label='$\mu(E)$', color='C0')
+        mu.set_title(self.title)
         mu.set_ylabel('$\mu(E)$')
         mu.set_xlabel('energy (eV)')
 

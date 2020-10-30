@@ -162,6 +162,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
     channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
     channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
     # Currently only using four channels. Uncomment these to enable more channels:
     # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
     # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
@@ -173,11 +174,13 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
     mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
     mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
     
     mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
     mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+    #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
 
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
@@ -242,7 +245,9 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             this = getattr(self, f'channel{n}')
             this.vis_enabled.put(1)
             this.extra_rois_enabled.put(1)
-            #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
+        self.channel8.vis_enabled.put(1)
+        self.channel8.extra_rois_enabled.put(1)
+        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
         self.settings.num_images.put(1)   # number of frames
         self.settings.trigger_mode.put(1) # trigger mode internal
         self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
@@ -313,7 +318,8 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         allrois = json.loads(js)
         for i, el in enumerate(self.slots):
             if el == 'OCR':
-                self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
+                for ch in range(1,5):
+                    self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
                 continue
             elif el is None:
                 continue
@@ -424,7 +430,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         plt.grid(which='major', axis='both')
         plt.xlim(2500, round(dcm.energy.position, -2)+500)
         try:
-            print(f'{uid}')
+            #print(f'{uid}')
             fname = file_resource(uid)
             db = user_ns['db']
             plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
@@ -456,6 +462,34 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
             plt.legend()
+
+    def table(self):
+        BMMuser = user_ns['BMMuser']
+        print(' ROI    Chan1      Chan2      Chan3      Chan4 ')
+        print('=================================================')
+        for r in range(1,17):
+            el = getattr(self.channel1.rois, f'roi{r:02}').value.name
+            if len(el) > 3:
+                continue
+            if el != 'OCR':
+                el = el[:-1]
+            if el == BMMuser.element or el == 'OCR':
+                print(go_msg(f' {el:3} '), end='')
+                for c in (1,2,3,4):
+                    print(go_msg(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  "), end='')
+                print('')
+            else:                
+                print(f' {el:3} ', end='')
+                for c in (1,2,3,4):
+                    print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
+                print('')
+
+    def cr(self, plot=False):
+        yield from mv(self.settings.acquire_time, 1)
+        yield from mv(self.settings.acquire.put,  1)
+        self.table()
+        if plot:
+            self.plot()
 
     def to_xdi(self, filename=None):
 

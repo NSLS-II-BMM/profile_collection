@@ -36,11 +36,12 @@ def synch_gdrive_folder(prefix=''):
     os.chdir(here)
     return()
 
-def make_gdrive_folder(prefix=''):
+def make_gdrive_folder(prefix='', update=True):
     BMMuser = user_ns['BMMuser']
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     os.makedirs(user_folder, exist_ok=True)
     for f in ('dossier', 'prj', 'snapshots', 'XRF'):
         os.makedirs(os.path.join(user_folder, f), exist_ok=True)
-    synch_gdrive_folder(prefix)
+    if update is True:
+        synch_gdrive_folder(prefix)
     return(user_folder)

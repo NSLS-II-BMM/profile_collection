@@ -175,7 +175,7 @@ def scan_metadata(inifile=None, **kwargs):
 
     ## ----- strings
     for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
-              'mode', 'sample', 'prep'):
+              'mode', 'sample', 'prep', 'url', 'doi', 'cif'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -789,7 +789,8 @@ def xafs(inifile, **kwargs):
         if p['snapshots']:
             ahora = now()
 
-            annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+            #annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+            annotation = p['filename']
             html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
             xascam._annotation_string = annotation
@@ -939,6 +940,10 @@ def xafs(inifile, **kwargs):
             html_dict['xrfuid']        = xrfuid
             html_dict['webuid']        = xascam_uid
             html_dict['anauid']        = anacam_uid
+            ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
+            html_dict['url']           = p['url']
+            html_dict['doi']           = p['doi']
+            html_dict['cif']           = p['cif']
             with open(os.path.join(BMMuser.DATA, inifile)) as f:
                 html_dict['initext'] = ''.join(f.readlines())
 
