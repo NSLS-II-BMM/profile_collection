@@ -50,7 +50,7 @@ def pds_motors_ready(user_ns):
 
      
 @set_user_ns
-def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, user_ns=None):
+def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, *, user_ns=None):
     '''Move the photon delivery system to a new mode. 
     A: focused at XAS end station, energy > 8000
     B: focused at XAS end station, energy < 6000
@@ -267,7 +267,7 @@ def describe_mode(user_ns):
 
 
 @set_user_ns
-def change_xtals(xtal=None, user_ns=None):
+def change_xtals(xtal=None, *, user_ns=None):
      '''Move between the Si(111) and Si(311) monochromators, also moving
      2nd crystal pitch and roll to approximate positions.  Then do a
      rocking curve scan.

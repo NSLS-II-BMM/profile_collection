@@ -61,7 +61,7 @@ class DTCorr(DerivedSignal):
         return self.derived_from.get()
 
     @set_user_ns
-    def inverse(self, value, user_ns):
+    def inverse(self, value, *, user_ns):
         df = self.derived_from.pvname
         dwell_time = user_ns['dwell_time']
         return self.parent.dtcorrect(self.derived_from.get(),
@@ -370,7 +370,7 @@ class BMMVortex(EpicsScaler):
         return float(rr * (totn*tt/oo))
 
     @set_user_ns
-    def set_hints(self, chan, user_ns):
+    def set_hints(self, chan, *, user_ns):
         '''Set the dead time correction attributes to hinted for the selected,
         configured channels
         

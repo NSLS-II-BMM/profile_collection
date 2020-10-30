@@ -40,7 +40,7 @@ class BMMDataEvaluation():
             self.clf = load(self.model)
         
     @set_user_ns
-    def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True, user_ns=None):
+    def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True, *, user_ns=None):
         '''Slurp a record from Databroker, contruct transmission or
         fluorescence XAS, and optionally make a plot.
 
@@ -228,7 +228,7 @@ class BMMDataEvaluation():
         return(self.clf.score(self.X, self.y))
 
     @set_user_ns
-    def evaluate(self, uid, mode=None, user_ns=None):
+    def evaluate(self, uid, mode=None, *, user_ns=None):
         '''Perform an evaluation of a measurement.  The data will be
         interpolated onto the same grid used for the training set,
         then get subjected to the model.  This returns a tuple with

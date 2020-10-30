@@ -20,7 +20,7 @@ def hephaestus():
 TOPRJ = '/home/xf06bm/bin/toprj.pl'
 
 @set_user_ns
-def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, mode=None, user_ns=None):
+def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, mode=None, *, user_ns=None):
     ##########################################################################################
     # Hi Tom!  Yes, I am making a system call right here.  Again.  And to run a perl script, #
     # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #

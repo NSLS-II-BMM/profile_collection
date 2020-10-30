@@ -58,7 +58,7 @@ def next_index(folder, stub):
     
 
 @set_user_ns
-def scan_metadata(inifile=None, user_ns=None, **kwargs):
+def scan_metadata(inifile=None, *, user_ns=None, **kwargs):
     """Typical use is to specify an INI file, which contains all the
     metadata relevant to a set of scans.  This function is called with
     one argument:
@@ -279,7 +279,7 @@ def scan_metadata(inifile=None, user_ns=None, **kwargs):
 
 
 @set_user_ns
-def channelcut_energy(e0, bounds, ththth, user_ns):
+def channelcut_energy(e0, bounds, ththth, *, user_ns):
     '''From the scan parameters, find the energy at the center of the angular range of the scan.'''
     dcm = user_ns['dcm']
     for i,s in enumerate(bounds):
@@ -313,7 +313,7 @@ def ini_sanity(found):
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
 @set_user_ns
-def db2xdi(datafile, key, user_ns):
+def db2xdi(datafile, key, *, user_ns):
     '''
     Export a database entry for an XAFS scan to an XDI file.
 
@@ -544,7 +544,7 @@ def write_manifest(user_ns):
 # -- the main XAFS scan #
 #########################
 @set_user_ns
-def xafs(inifile, user_ns, **kwargs):
+def xafs(inifile, *, user_ns, **kwargs):
     '''
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
@@ -1197,7 +1197,7 @@ def xafs(inifile, user_ns, **kwargs):
     RE.msg_hook = BMM_msg_hook
 
 @set_user_ns
-def howlong(inifile, interactive=True, user_ns=None, **kwargs):
+def howlong(inifile, interactive=True, *, user_ns=None, **kwargs):
     '''
     Estimate how long the scan sequence in an XAFS control file will take.
     Parameters from control file are composable via kwargs.

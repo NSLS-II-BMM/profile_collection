@@ -366,7 +366,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     #         json.dump(rj, fp, indent=4)
 
     @set_user_ns
-    def roi_details(self, user_ns):
+    def roi_details(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
         print('==========================')
@@ -382,7 +382,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                 print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
 
     @set_user_ns
-    def measure_roi(self, user_ns):
+    def measure_roi(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         for i in range(16):
             for n in range(1,5):
@@ -397,7 +397,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                 
 
     @set_user_ns
-    def show_rois(self, user_ns):
+    def show_rois(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')
@@ -425,7 +425,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.plot(add=True)
 
     @set_user_ns
-    def plot(self, uid=None, add=False, only=None, user_ns=None):
+    def plot(self, uid=None, add=False, only=None, *, user_ns=None):
         dcm = user_ns['dcm']
         plt.clf()
         plt.xlabel('Energy  (eV)')
@@ -467,7 +467,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             plt.legend()
 
     @set_user_ns
-    def to_xdi(self, filename=None, user_ns=None):
+    def to_xdi(self, filename=None, *, user_ns=None):
 
         dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
 

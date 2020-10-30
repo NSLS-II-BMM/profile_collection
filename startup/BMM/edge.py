@@ -31,7 +31,7 @@ def show_edges(user_ns):
 
 
 @set_user_ns
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True, user_ns=None):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True, *, user_ns=None):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode

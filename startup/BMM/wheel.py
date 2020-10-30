@@ -102,7 +102,7 @@ class WheelMotor(EndStationEpicsMotor):
 
 
 @set_user_ns
-def reference(target=None, user_ns=None):
+def reference(target=None, *, user_ns=None):
     xafs_ref = user_ns['xafs_ref']
     if target is None:
         print('Not moving reference wheel.')
@@ -236,7 +236,7 @@ class WheelMacroBuilder():
 
 
     @set_user_ns
-    def ini_sanity(self, default, user_ns):
+    def ini_sanity(self, default, *, user_ns):
         '''Sanity checks for the default line from the spreadsheet.
 
         1. experimenters is a string (BMMuser.name)

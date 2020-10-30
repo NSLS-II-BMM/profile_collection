@@ -112,7 +112,7 @@ l2e = e2l
 
 
 @set_user_ns
-def approximate_pitch(energy, user_ns):
+def approximate_pitch(energy, *, user_ns):
     if user_ns['dcm']._crystal is '111':
         m = -4.57145e-06
         b = 4.04782 + 0.0303    # ad hoc correction....

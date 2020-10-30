@@ -7,7 +7,7 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 from BMM.functions import boxedtext
 
 @set_user_ns
-def motor_metadata(uid=None, user_ns=None):
+def motor_metadata(uid=None, *, user_ns=None):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
                user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'], user_ns['xafs_ref'],
                
@@ -121,7 +121,7 @@ def ms():
 
 
 @set_user_ns
-def motor_sidebar(md=None, user_ns=None):
+def motor_sidebar(md=None, *, user_ns=None):
     '''Generate a list of motor positions to be used in the static html page for a scan sequence.
     Return value is a long string with html tags and entities embedded in the string.
 
