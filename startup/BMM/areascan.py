@@ -29,7 +29,7 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, dwell=0.1, md={}, user_ns):
+             pluck=True, force=False, dwell=0.1, md={}, user_ns=None):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.

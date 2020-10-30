@@ -67,7 +67,12 @@ class MyPrompt(Prompts):
 
 ## from Tom on Gitter: https://gitter.im/NSLS-II/DAMA?at=5cdf02ab7c363c75a7f983e1
 import types
-get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose that command in RE()'))
+try:
+    get_ipython().display_formatter.formatters['text/plain'].for_type(
+        types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose that command in RE()')
+    )
+except Exception:
+    print("Format was not set")
 
 @set_user_ns
 def BMM_help(user_ns):

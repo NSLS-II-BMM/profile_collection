@@ -303,8 +303,9 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         this.value.name = name
         this.bin_low.put(low)
         this.bin_high.put(high)
-        
-    def reset_rois(self, el=None):
+
+    @set_user_ns
+    def reset_rois(self, el=None, user_ns=None):
         BMMuser = user_ns['BMMuser']
         if el is None:
             el = BMMuser.element
