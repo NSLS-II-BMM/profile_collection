@@ -30,8 +30,10 @@ class Xspress3DwellTime(PVPositionerPC):
 
 ## RE(test_dwelltimes([quadem_dwell_time,struck_dwell_time]))
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
 from ophyd.sim import det
@@ -49,65 +51,73 @@ def test_dwelltimes(dt, md=None):
     yield from scan(*args, md=md)
 
 
-class LockedDwellTimes(PseudoPositioner):
-    "Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one pseudo-axis dwell time."
-    dwell_time = Cpt(PseudoSingle, kind='hinted')
-    if user_ns['with_quadem'] is True:
-        quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
-    if user_ns['with_struck'] is True:
-        struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
-    if user_ns['with_dualem'] is True:
-        dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
-    if user_ns['with_xspress3'] is True:
-        xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
-    
-    @property
-    def settle_time(self):
-        return self.quadem_dwell_time.settle_time
+@set_user_ns
+def get_class_locked_dwell_times(user_ns):
 
-    @settle_time.setter
-    def settle_time(self, val):
-        if 'quadem_dwell_time' in self.read_attrs:
-            self.quadem_dwell_time.settle_time = val
-        if 'struck_dwell_time' in self.read_attrs:
-            self.struck_dwell_time.settle_time = val
-        if 'dualem_dwell_time' in self.read_attrs:
-            self.dualem_dwell_time.settle_time = val
-        if 'xspress3_dwell_time' in self.read_attrs:
-            self.xspress3_dwell_time.settle_time = val
+    class LockedDwellTimes(PseudoPositioner):
+        "Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one pseudo-axis dwell time."
+        dwell_time = Cpt(PseudoSingle, kind='hinted')
+        if user_ns['with_quadem'] is True:
+            quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
+        if user_ns['with_struck'] is True:
+            struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
+        if user_ns['with_dualem'] is True:
+            dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
+        if user_ns['with_xspress3'] is True:
+            xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
 
-    @pseudo_position_argument
-    def forward(self, pseudo_pos):
-        #pseudo_pos = self.PseudoPosition(*pseudo_pos)
-        #print('forward %s'% pseudo_pos)
-            
-        if 'xspress3_dwell_time' in self.read_attrs and 'dualem_dwell_time' in self.read_attrs:
-            return self.RealPosition(
-                quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
-                dualem_dwell_time=pseudo_pos.dwell_time,
-                xspress3_dwell_time=pseudo_pos.dwell_time,
-            )
-        elif 'xspress3_dwell_time' in self.read_attrs:
-            return self.RealPosition(
-                quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
-                xspress3_dwell_time=pseudo_pos.dwell_time,
-            )
-        elif 'dualem_dwell_time' in self.read_attrs:
-            return self.RealPosition(
-                quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
-                dualem_dwell_time=pseudo_pos.dwell_time,
-            )
-        else:
-            return self.RealPosition(
-                quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
-            )
-            
+        @property
+        def settle_time(self):
+            return self.quadem_dwell_time.settle_time
 
-    @real_position_argument
-    def inverse(self, real_pos):
-        #real_pos = self.RealPosition(*real_pos)
-        return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
+        @settle_time.setter
+        def settle_time(self, val):
+            if 'quadem_dwell_time' in self.read_attrs:
+                self.quadem_dwell_time.settle_time = val
+            if 'struck_dwell_time' in self.read_attrs:
+                self.struck_dwell_time.settle_time = val
+            if 'dualem_dwell_time' in self.read_attrs:
+                self.dualem_dwell_time.settle_time = val
+            if 'xspress3_dwell_time' in self.read_attrs:
+                self.xspress3_dwell_time.settle_time = val
+
+        @pseudo_position_argument
+        def forward(self, pseudo_pos):
+            #pseudo_pos = self.PseudoPosition(*pseudo_pos)
+            #print('forward %s'% pseudo_pos)
+
+            if 'xspress3_dwell_time' in self.read_attrs and 'dualem_dwell_time' in self.read_attrs:
+                return self.RealPosition(
+                    quadem_dwell_time=pseudo_pos.dwell_time,
+                    struck_dwell_time=pseudo_pos.dwell_time,
+                    dualem_dwell_time=pseudo_pos.dwell_time,
+                    xspress3_dwell_time=pseudo_pos.dwell_time,
+                )
+            elif 'xspress3_dwell_time' in self.read_attrs:
+                return self.RealPosition(
+                    quadem_dwell_time=pseudo_pos.dwell_time,
+                    struck_dwell_time=pseudo_pos.dwell_time,
+                    xspress3_dwell_time=pseudo_pos.dwell_time,
+                )
+            elif 'dualem_dwell_time' in self.read_attrs:
+                return self.RealPosition(
+                    quadem_dwell_time=pseudo_pos.dwell_time,
+                    struck_dwell_time=pseudo_pos.dwell_time,
+                    dualem_dwell_time=pseudo_pos.dwell_time,
+                )
+            else:
+                return self.RealPosition(
+                    quadem_dwell_time=pseudo_pos.dwell_time,
+                    struck_dwell_time=pseudo_pos.dwell_time,
+                )
+
+
+        @real_position_argument
+        def inverse(self, real_pos):
+            #real_pos = self.RealPosition(*real_pos)
+            return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
+
+    return LockedDwellTimes
+
+
+LockedDwellTimes = get_class_locked_dwell_times()

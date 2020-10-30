@@ -1,7 +1,9 @@
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
 class attenuator():
@@ -23,8 +25,8 @@ class attenuator():
             yield from mv(self.motor,  31)
 
 
-
-def filter_state():
+@set_user_ns
+def filter_state(user_ns):
     BMMuser = user_ns['BMMuser']
     states = ['Both filters are out of the beam',
               'Filter 1: 100 μm, Filter 2: out, total: 100  μm',
@@ -42,8 +44,9 @@ def filter_state():
               'Filter 1: 1700 μm, Filter 2: 1700 μm, total:2400  μm',
         ]
     print(states[BMMuser.filter_state])
-        
-def set_filters(thickness=None, state=None):
+
+@set_user_ns
+def set_filters(thickness=None, state=None, user_ns):
     positions = [55, -46.5, -20.5, 5.5, 31]
 
     BMMuser = user_ns['BMMuser']

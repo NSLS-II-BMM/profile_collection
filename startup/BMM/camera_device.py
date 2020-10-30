@@ -20,8 +20,10 @@ from os import system
 from subprocess import Popen, PIPE, call
 import fcntl
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 from BMM.db import file_resource
 from BMM.functions import now
@@ -165,10 +167,17 @@ class BMM_JPEG_HANDLER:
         filepath = self._template % index
         return numpy.asarray(Image.open(filepath))
 
-db = user_ns['db']
-db.reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
-db.reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
-db.reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
+
+@set_user_ns
+def set_db(user_ns):
+    db = user_ns['db']
+    db.reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
+    db.reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
+    db.reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
+
+
+set_db()
+
 
 class ExternalFileReference(Signal):
     """

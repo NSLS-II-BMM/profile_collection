@@ -12,8 +12,10 @@ from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
 # PV for clearing encoder signal loss
@@ -52,7 +54,8 @@ class DCM(PseudoPositioner):
         self.para.kill_cmd.put(1)
         self.perp.kill_cmd.put(1)
 
-    def where(self):
+    @set_user_ns
+    def where(self, user_ns):
         text  = "%s = %.1f   %s = Si(%s)\n" % \
             (' Energy', self.energy.readback.get(),
              'reflection', self._crystal)
@@ -89,7 +92,8 @@ class DCM(PseudoPositioner):
     #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
     #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
 
-    def recover(self):
+    @set_user_ns
+    def recover(self, user_ns):
         '''Home and re-position all DCM motors after a power interruption.
         '''
         dcm_bragg, dcm_para, dcm_perp = user_ns['dcm_bragg'], user_ns['dcm_para'], user_ns['dcm_perp']
@@ -135,14 +139,16 @@ class DCM(PseudoPositioner):
         print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.get())
         yield from sleep(2.0)
         yield from dcm.kill_plan()
-        
-    def kill(self):
+
+    @set_user_ns
+    def kill(self, user_ns):
         user_ns['dcm_para'].kill_cmd.put(1)
         user_ns['dcm_perp'].kill_cmd.put(1)
         user_ns['dcm_pitch'].kill_cmd.put(1)
         user_ns['dcm_roll'].kill_cmd.put(1)
 
-    def kill_plan(self):
+    @set_user_ns
+    def kill_plan(self, user_ns):
         yield from mv(user_ns['dcm_para'].kill_cmd,  1)
         yield from mv(user_ns['dcm_perp'].kill_cmd,  1)
         yield from mv(user_ns['dcm_pitch'].kill_cmd, 1)

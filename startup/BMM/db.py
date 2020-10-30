@@ -1,9 +1,13 @@
 import os
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
 
-def file_resource(record):
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
+
+
+@set_user_ns
+def file_resource(record, user_ns):
     '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device
 
     Argument is either a uid string or db.v2 (databroker.core.BlueskyRun) object.

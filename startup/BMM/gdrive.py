@@ -13,15 +13,17 @@
 
 import os, subprocess, shutil
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+##from IPython import get_ipython
+##user_ns = get_ipython().user_ns
 
 gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
 
-        
-def copy_to_gdrive(fname):
+@set_user_ns
+def copy_to_gdrive(fname, user_ns):
     BMMuser = user_ns['BMMuser']
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     print(f'copying {fname} to {user_gdrive_folder}')
@@ -36,7 +38,8 @@ def synch_gdrive_folder(prefix=''):
     os.chdir(here)
     return()
 
-def make_gdrive_folder(prefix=''):
+@set_user_ns
+def make_gdrive_folder(prefix='', user_ns=None):
     BMMuser = user_ns['BMMuser']
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     os.makedirs(user_folder, exist_ok=True)
