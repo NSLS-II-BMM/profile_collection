@@ -46,7 +46,7 @@ def filter_state(user_ns):
     print(states[BMMuser.filter_state])
 
 @set_user_ns
-def set_filters(thickness=None, state=None, user_ns):
+def set_filters(thickness=None, state=None, user_ns=None):
     positions = [55, -46.5, -20.5, 5.5, 31]
 
     BMMuser = user_ns['BMMuser']
