@@ -15,7 +15,10 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
 
-get_ipython().magic(u"%xmode Plain")
+try:
+    get_ipython().magic(u"%xmode Plain")
+except Exception:
+    pass
 
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
