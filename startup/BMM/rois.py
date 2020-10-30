@@ -18,7 +18,7 @@ class XSROI():
                       None, None, None, None,]
 
     @set_user_ns
-    def show_xsrois(self, user_ns):
+    def show_xsrois(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')
@@ -92,7 +92,7 @@ class ROI():
             BMM_log_info('Set ROI channel %d to %s' % (i, str(self.slots[i-1])))
 
     @set_user_ns
-    def set(self, elements, user_ns):
+    def set(self, elements, *, user_ns):
         '''Configure the ROI channels so that an energy change knows which channel to use.
 
         Parameters
@@ -126,7 +126,7 @@ class ROI():
             os.chmod(jsonfile, 0o444)
 
     @set_user_ns
-    def select_plan(self, el, user_ns):
+    def select_plan(self, el, *, user_ns):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
@@ -164,7 +164,7 @@ class ROI():
             yield from null()
 
     @set_user_ns
-    def select(self, el, user_ns):
+    def select(self, el, *, user_ns):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
@@ -204,7 +204,7 @@ class ROI():
 # 22.265
 
     @set_user_ns
-    def show(self, user_ns):
+    def show(self, *, user_ns):
         '''Show configuration of ROI channels'''
         BMMuser = user_ns['BMMuser']
         text = 'Analog ROI channels:\n'

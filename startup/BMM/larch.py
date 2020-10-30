@@ -116,7 +116,7 @@ class Pandrosus():
         ## flow control parameters
 
     @set_user_ns
-    def make_xmu(self, uid, mode, user_ns):
+    def make_xmu(self, uid, mode, *, user_ns):
         '''Load energy and mu(E) arrays into Larch and into this wrapper object.
         
         ***************************************************************

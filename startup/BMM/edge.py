@@ -30,7 +30,7 @@ def show_edges(user_ns):
 
 
 @set_user_ns
-def arrived_in_mode(mode=None, user_ns=None):
+def arrived_in_mode(mode=None, *, user_ns=None):
     motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
               'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
               'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
@@ -47,7 +47,7 @@ def arrived_in_mode(mode=None, user_ns=None):
 
     
 @set_user_ns
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True, user_ns=None):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True, *, user_ns=None):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode

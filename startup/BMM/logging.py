@@ -140,7 +140,7 @@ def img_to_slack(imagefile):
 
 
 @set_user_ns
-def report(text, level=None, slack=False, user_ns=None):
+def report(text, level=None, slack=False, *, user_ns=None):
     '''Print a string to:
       * the log file
       * the screen

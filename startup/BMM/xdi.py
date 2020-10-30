@@ -8,7 +8,7 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 
 
 @set_user_ns
-def units(label, user_ns):
+def units(label, *, user_ns):
     label = label.lower()
     try:
         if 'energy' in label:
@@ -105,7 +105,7 @@ class metadata_for_XDI_file():
 
 
 @set_user_ns
-def write_XDI(datafile, dataframe, user_ns):
+def write_XDI(datafile, dataframe, *, user_ns):
     BMMuser, xafs_wheel, ga = user_ns['BMMuser'], user_ns['xafs_wheel'], user_ns['ga']
     handle = open(datafile, 'w')
 

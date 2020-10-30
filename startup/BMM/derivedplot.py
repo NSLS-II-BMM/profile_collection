@@ -25,14 +25,14 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 # this is the callback that gets assigned to mouse clicks on theplot window #
 #############################################################################
 @set_user_ns
-def interpret_click(ev, user_ns):
+def interpret_click(ev, *, user_ns):
     BMMuser = user_ns['BMMuser']
     print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
     BMMuser.x = ev.xdata
     BMMuser.y = ev.ydata
 
 @set_user_ns
-def handle_close(ev, user_ns):
+def handle_close(ev, *, user_ns):
     ## if closing a stale plot, take care to preserve current plot in BMMuser object
     BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:

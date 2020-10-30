@@ -55,7 +55,7 @@ class DCM(PseudoPositioner):
         self.perp.kill_cmd.put(1)
 
     @set_user_ns
-    def where(self, user_ns):
+    def where(self, *, user_ns):
         text  = "%s = %.1f   %s = Si(%s)\n" % \
             (' Energy', self.energy.readback.get(),
              'reflection', self._crystal)
@@ -93,7 +93,7 @@ class DCM(PseudoPositioner):
     #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
 
     @set_user_ns
-    def recover(self, user_ns):
+    def recover(self, *, user_ns):
         '''Home and re-position all DCM motors after a power interruption.
         '''
         dcm_bragg, dcm_para, dcm_perp = user_ns['dcm_bragg'], user_ns['dcm_para'], user_ns['dcm_perp']
@@ -156,14 +156,14 @@ class DCM(PseudoPositioner):
         user_ns['dcm_roll'].enable()
 
     @set_user_ns
-    def kill(self, user_ns):
+    def kill(self, *, user_ns):
         user_ns['dcm_para'].kill_cmd.put(1)
         user_ns['dcm_perp'].kill_cmd.put(1)
         user_ns['dcm_pitch'].kill_cmd.put(1)
         user_ns['dcm_roll'].kill_cmd.put(1)
 
     @set_user_ns
-    def kill_plan(self, user_ns):
+    def kill_plan(self, *, user_ns):
         yield from mv(user_ns['dcm_para'].kill_cmd,  1)
         yield from mv(user_ns['dcm_perp'].kill_cmd,  1)
         yield from mv(user_ns['dcm_pitch'].kill_cmd, 1)

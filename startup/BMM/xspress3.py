@@ -342,7 +342,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     #         json.dump(rj, fp, indent=4)
 
     @set_user_ns
-    def roi_details(self, user_ns):
+    def roi_details(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
         print('==========================')
@@ -357,9 +357,8 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
             else:
                 print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
 
-
     @set_user_ns
-    def show_rois(self, user_ns):
+    def show_rois(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')

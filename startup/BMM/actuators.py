@@ -32,7 +32,7 @@ class EPS_Shutter(Device):
             return 'open'
 
     @set_user_ns
-    def open_plan(self, user_ns):
+    def open_plan(self, *, user_ns):
         RE = user_ns['RE']
         RE.msg_hook = None
         count = 0
@@ -48,7 +48,7 @@ class EPS_Shutter(Device):
         RE.msg_hook = BMM_msg_hook
 
     @set_user_ns
-    def close_plan(self, user_ns,):
+    def close_plan(self, *, user_ns,):
         RE = user_ns['RE']
         RE.msg_hook = None
         count = 0
@@ -64,7 +64,7 @@ class EPS_Shutter(Device):
         RE.msg_hook = BMM_msg_hook
 
     @set_user_ns
-    def open(self, user_ns):
+    def open(self, *, user_ns):
         RE = user_ns['RE']
         RE.msg_hook = None
         if self.state.get() != self.openval:
@@ -83,7 +83,7 @@ class EPS_Shutter(Device):
         RE.msg_hook = BMM_msg_hook
 
     @set_user_ns
-    def close(self, user_ns):
+    def close(self, *, user_ns):
         RE = user_ns['RE']
         RE.msg_hook = None
         if self.state.get() != self.closeval:

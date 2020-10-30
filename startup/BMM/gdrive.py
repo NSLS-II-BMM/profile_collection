@@ -23,7 +23,7 @@ gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
 @set_user_ns
-def copy_to_gdrive(fname, user_ns):
+def copy_to_gdrive(fname, *, user_ns):
     BMMuser = user_ns['BMMuser']
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     print(f'copying {fname} to {user_gdrive_folder}')
@@ -44,8 +44,12 @@ def synch_gdrive_folder(prefix=''):
 def make_gdrive_folder(prefix='', update=True):
 =======
 @set_user_ns
+<<<<<<< HEAD
 def make_gdrive_folder(prefix='', user_ns=None):
 >>>>>>> Some changes (incomplete) - compatiblity with QueueServer
+=======
+def make_gdrive_folder(prefix='', *, user_ns=None):
+>>>>>>> MNT: make user_ns keyword only
     BMMuser = user_ns['BMMuser']
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     os.makedirs(user_folder, exist_ok=True)
