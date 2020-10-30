@@ -58,7 +58,7 @@ def next_index(folder, stub):
     
 
 @set_user_ns
-def scan_metadata(inifile=None, *, user_ns=None, **kwargs):
+def scan_metadata(inifile=None, *, user_ns, **kwargs):
     """Typical use is to specify an INI file, which contains all the
     metadata relevant to a set of scans.  This function is called with
     one argument:
@@ -1252,7 +1252,7 @@ def xafs(inifile=None, *, user_ns, **kwargs):
     RE.msg_hook = BMM_msg_hook
 
 @set_user_ns
-def howlong(inifile=None, interactive=True, *, user_ns=None, **kwargs):
+def howlong(inifile=None, interactive=True, *, user_ns, **kwargs):
     '''
     Estimate how long the scan sequence in an XAFS control file will take.
     Parameters from control file are composable via kwargs.

@@ -24,7 +24,7 @@ def tune_down():
     yield from tune_plan(step=-1*TUNE_STEP)
 
 @set_user_ns
-def tune(step=0, *, user_ns=None):
+def tune(step=0, *, user_ns):
     '''
     Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a relative motion.
     '''
@@ -65,7 +65,7 @@ def kmvr(*args):
 
 
 @set_user_ns
-def set_integration_time(time=0.5, *, user_ns=None):
+def set_integration_time(time=0.5, *, user_ns):
     '''
     set integration times for electrometers and Struck from the command line
     '''
@@ -74,7 +74,7 @@ def set_integration_time(time=0.5, *, user_ns=None):
     user_ns['dualio'].averaging_time.value = time
 
 @set_user_ns
-def set_integration_plan(time=0.5, *, user_ns=None):
+def set_integration_plan(time=0.5, *, user_ns):
     '''
     set integration times for electrometers and Struck from a plan
     '''
@@ -164,7 +164,7 @@ def recover_mirrors(user_ns):
 
 
 @set_user_ns
-def mvbct(target=None, *, user_ns=None):
+def mvbct(target=None, *, user_ns):
     '''
     A workaround to kill the BCT motor, then do an absolute movement
     '''
@@ -175,7 +175,7 @@ def mvbct(target=None, *, user_ns=None):
     yield from mv(dm3_bct, target)
 
 @set_user_ns
-def mvrbct(target=None, *, user_ns=None):
+def mvrbct(target=None, *, user_ns):
     '''
     A workaround to kill the BCT motor, then do a relative movement
     '''
@@ -187,7 +187,7 @@ def mvrbct(target=None, *, user_ns=None):
 
 
 @set_user_ns
-def mvbender(target=None, *, user_ns=None):
+def mvbender(target=None, *, user_ns):
     '''
     A workaround to kill the M2 bender motor, then do an absolute movement
     '''
@@ -198,7 +198,7 @@ def mvbender(target=None, *, user_ns=None):
     yield from mv(m2_bender, target)
 
 @set_user_ns
-def mvrbender(target=None, *, user_ns=None):
+def mvrbender(target=None, *, user_ns):
     '''
     A workaround to kill the M2 bender motor, then do a relative movement
     '''

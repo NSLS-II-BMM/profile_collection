@@ -347,7 +347,7 @@ class BMM_User(Borg):
                 print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
     @set_user_ns
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False, *, user_ns=None):
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False, *, user_ns):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a folder, if needed, and set the DATA variable
@@ -667,7 +667,7 @@ class BMM_User(Borg):
         report('Copied electrochemistry data from: "%s" to "%s"' % (self.echem_remote, dest), 'bold')
 
     @set_user_ns
-    def end_experiment(self, force=False, *, user_ns=None):
+    def end_experiment(self, force=False, *, user_ns):
         '''
         Copy data from the experiment that just finished to the NAS, then
         unset the logger and the DATA variable at the end of an experiment.

@@ -33,7 +33,7 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 ##  https://doi.org/10.1063/1.1146657
 
 @set_user_ns
-def calibrate_low_end(mono='111', *, user_ns=None):
+def calibrate_low_end(mono='111', *, user_ns):
     '''Step through the lower 5 elements of the mono calibration procedure.'''
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
@@ -108,7 +108,7 @@ def calibrate_low_end(mono='111', *, user_ns=None):
 
 
 @set_user_ns
-def calibrate_high_end(mono='111', *, user_ns=None):
+def calibrate_high_end(mono='111', *, user_ns):
     '''Step through the upper 5 elements of the mono calibration procedure.'''
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
@@ -208,7 +208,7 @@ def calibrate_pitch(mono='111'):
 
     
 @set_user_ns
-def calibrate_mono(mono='111', *, user_ns=None):
+def calibrate_mono(mono='111', *, user_ns):
     BMMuser, shb, dcm, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm'], user_ns['dcm_pitch']
     BMM_dcm = dcm_parameters()
     # read content from INI file

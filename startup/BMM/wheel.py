@@ -103,7 +103,7 @@ class WheelMotor(EndStationEpicsMotor):
 
 
 @set_user_ns
-def reference(target=None, *, user_ns=None):
+def reference(target=None, *, user_ns):
     xafs_ref = user_ns['xafs_ref']
     if target is None:
         print('Not moving reference wheel.')
