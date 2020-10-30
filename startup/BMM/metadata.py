@@ -3,8 +3,10 @@ from ophyd import QuadEM, Component as Cpt, EpicsSignal, EpicsSignalRO, EpicsSig
 import datetime
 import copy
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 class TC(Device):
@@ -20,7 +22,8 @@ class Ring(Device):
 
 
 ## some heuristics for determining state of M2 and M3
-def mirror_state():
+@set_user_ns
+def mirror_state(user_ns):
     if user_ns['m2'].vertical.readback.get() > 0:
         m2state = 'not in use'
     else:
@@ -55,6 +58,7 @@ bmm_metadata_stub = {'Beamline': {'name'        : 'BMM (06BM) -- Beamline for Ma
                  }
 
 
+@set_user_ns
 def bmm_metadata(measurement   = 'transmission',
                  experimenters = '',
                  edge          = 'K',
@@ -72,7 +76,8 @@ def bmm_metadata(measurement   = 'transmission',
                  stoichiometry = None,
                  mode          = 'transmission',
                  comment       = '',
-                 ththth        = False,):
+                 ththth        = False,
+                 user_ns       = None):
     '''
     fill a dictionary with BMM-specific metadata.  this will be stored in the <db>.start['md'] field
 

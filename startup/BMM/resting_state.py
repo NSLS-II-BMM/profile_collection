@@ -1,13 +1,15 @@
 
 from bluesky.plan_stubs import abs_set
 
+from bluesky_queueserver.manager.profile_tools import set_user_ns
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.logging import BMM_msg_hook
 
-def resting_state():
+@set_user_ns
+def resting_state(user_ns):
     '''
     Command line tool to bring controls into their resting state:
 
@@ -30,7 +32,9 @@ def resting_state():
     user_ns['rkvs'].set('BMM:scan:starttime', '')
     user_ns['rkvs'].set('BMM:scan:estimated', 0)
 
-def resting_state_plan():
+
+@set_user_ns
+def resting_state_plan(user_ns):
     '''
     Plan for bringing controls into their resting state:
 
@@ -52,7 +56,8 @@ def resting_state_plan():
     user_ns['rkvs'].set('BMM:scan:estimated', '')
     
 
-def end_of_macro():
+@set_user_ns
+def end_of_macro(user_ns):
     '''Plan for bringing controls into their resting state at the end of
     a macro or when a macro is stopped/aborted:
 

@@ -8,6 +8,8 @@ from BMM.functions import boxedtext
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.motors    import FMBOThinEpicsMotor
 
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
 class Slits(PseudoPositioner):
     def __init__(self, *args, **kwargs):
         #self.width = mirror_length
@@ -122,7 +124,8 @@ class GonioSlits(PseudoPositioner):
         ) ##                                                    ^
           ## note different +/- signs here compared to Slits __/ 
 
-def recover_slits2():
+@set_user_ns
+def recover_slits2(user_ns):
     dm2_slits_t, dm2_slits_b, dm2_slits_i, dm2_slits_o = user_ns['dm2_slits_t'], user_ns['dm2_slits_b'], user_ns['dm2_slits_i'], user_ns['dm2_slits_o']
     yield from abs_set(dm2_slits_t.home_signal, 1)
     yield from abs_set(dm2_slits_i.home_signal, 1)
@@ -142,7 +145,8 @@ def recover_slits2():
     yield from mv(slits2.hcenter, slits2.nominal[2])
     yield from mv(slits2.vcenter, slits2.nominal[3])
 
-def recover_slits3():
+@set_user_ns
+def recover_slits3(user_ns):
     dm3_slits_t, dm3_slits_b, dm3_slits_i, dm3_slits_o = user_ns['dm3_slits_t'], user_ns['dm3_slits_b'], user_ns['dm3_slits_i'], user_ns['dm3_slits_o']
     yield from abs_set(dm3_slits_t.home_signal, 1)
     yield from abs_set(dm3_slits_i.home_signal, 1)

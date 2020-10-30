@@ -19,14 +19,17 @@ from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 ##  Kraft et al, Review of Scientific Instruments 67, 681 (1996)
 ##  https://doi.org/10.1063/1.1146657
 
-def calibrate_low_end(mono='111'):
+@set_user_ns
+def calibrate_low_end(mono='111', user_ns=None):
     '''Step through the lower 5 elements of the mono calibration procedure.'''
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
@@ -110,7 +113,8 @@ def calibrate_low_end(mono='111'):
     BMM_log_info('Low end calibration macro finished!')
 
 
-def calibrate_high_end(mono='111'):
+@set_user_ns
+def calibrate_high_end(mono='111', user_ns=None):
     '''Step through the upper 5 elements of the mono calibration procedure.'''
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
@@ -186,7 +190,9 @@ def calibrate():
     yield from calibrate_low_end()
     yield from calibrate_high_end()
 
-def calibrate_mono(mono='111'):
+
+@set_user_ns
+def calibrate_mono(mono='111', user_ns=None):
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     # read content from INI file
     if mono == '111':

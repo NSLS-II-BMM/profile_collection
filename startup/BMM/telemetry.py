@@ -5,11 +5,10 @@ from tqdm import tqdm           # progress bar
 
 from BMM.periodictable import element_symbol, edge_energy, Z_number
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from bluesky_queueserver.manager.profile_tools import set_user_ns
 
-
-        
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 class BMMTelementry():
@@ -40,7 +39,8 @@ class BMMTelementry():
         element_search = xafs_search.search({'XDI.Element.symbol': element})
         print(f'Number of records for {element} since {self.start_date}: {len(element_search)}')
         return(element_search)
-        
+
+    @set_user_ns
     def overhead(self, element=None):
         if element is None: return(0)
         db = user_ns['db']
