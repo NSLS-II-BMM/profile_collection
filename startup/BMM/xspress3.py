@@ -425,7 +425,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         self.plot(add=True)
 
     @set_user_ns
-    def plot(self, uid=None, add=False, only=None, *, user_ns=None):
+    def plot(self, uid=None, add=False, only=None, *, user_ns):
         dcm = user_ns['dcm']
         plt.clf()
         plt.xlabel('Energy  (eV)')
@@ -467,7 +467,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             plt.legend()
 
     @set_user_ns
-    def to_xdi(self, filename=None, *, user_ns=None):
+    def to_xdi(self, filename=None, *, user_ns):
 
         dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
 

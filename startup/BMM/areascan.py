@@ -26,7 +26,7 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, dwell=0.1, md={}, user_ns=None):
+             pluck=True, force=False, dwell=0.1, md={}, *, user_ns):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -99,7 +99,7 @@ def areascan(detector,
             dets.append(vor)
             detector = 'ROI1'
 
-        
+
         if 'PseudoSingle' in str(type(slow)):
             valueslow = slow.readback.get()
         else:
@@ -116,7 +116,7 @@ def areascan(detector,
 
         npoints = nfast * nslow
         estimate = int(npoints*(dwell+0.7))
-    
+
         # extent = (
         #     valuefast + startfast,
         #     valueslow + startslow,
@@ -131,11 +131,11 @@ def areascan(detector,
         # )
         # print(extent)
         # return(yield from null())
-    
+
 
         # areaplot = LiveScatter(fast.name, slow.name, detector,
         #                        xlim=(startfast, stopfast), ylim=(startslow, stopslow))
-    
+
         areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
                             xlabel='fast motor: %s' % fast.name,
                             ylabel='slow motor: %s' % slow.name)
@@ -156,7 +156,7 @@ def areascan(detector,
 
         ## engage suspenders right before starting scan sequence
         if force is False: BMM_suspenders()
-    
+
         @subs_decorator(areaplot)
         #@subs_decorator(src.callback)
         def make_areascan(dets,
@@ -174,7 +174,7 @@ def areascan(detector,
         rkvs.set('BMM:scan:type',      'area')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', estimate)
-        
+
         BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
         uid = yield from make_areascan(dets,
                                        slow, valueslow+startslow, valueslow+stopslow, nslow,
@@ -195,7 +195,7 @@ def areascan(detector,
             stepsize = (stopfast - startfast) / (nfast - 1)
             pointfast = begin + stepsize * BMMuser.x
             #print(BMMuser.x, pointfast)
-        
+
             begin = valueslow + startslow
             stepsize = (stopslow - startslow) / (nslow - 1)
             pointslow = begin + stepsize * BMMuser.y
@@ -203,7 +203,7 @@ def areascan(detector,
 
             print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
             yield from mv(fast, pointfast, slow, pointslow)
-        
+
     def cleanup_plan():
         print('Cleaning up after an area scan')
         RE.clear_suspenders()
@@ -245,7 +245,7 @@ def areascan(detector,
                                                       cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
-        
+
 def as2dat(datafile, key):
     '''
     Export an areascan database entry to a simple column data file.

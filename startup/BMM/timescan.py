@@ -30,7 +30,7 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 # generic timescan vs. It/If/Ir/I0 #
 ####################################
 @set_user_ns
-def timescan(detector, readings, dwell, delay, force=False, md={}, *, user_ns=None):
+def timescan(detector, readings, dwell, delay, force=False, md={}, *, user_ns):
     '''
     Generic timescan plan.
 

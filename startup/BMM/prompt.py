@@ -10,7 +10,7 @@ from bluesky_queueserver.manager.profile_tools import set_user_ns
 from IPython.terminal.prompts import Prompts, Token
 class MyPrompt(Prompts):
     @set_user_ns
-    def in_prompt_tokens(self, cli=None, *, user_ns=None):
+    def in_prompt_tokens(self, cli=None, *, user_ns):
         BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         # if idps.state.get() == 0:
         #     shatoken = (Token.OutPromptNum, ' A')

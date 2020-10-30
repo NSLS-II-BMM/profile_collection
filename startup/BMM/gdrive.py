@@ -39,7 +39,7 @@ def synch_gdrive_folder(prefix=''):
     return()
 
 @set_user_ns
-def make_gdrive_folder(prefix='', *, user_ns=None):
+def make_gdrive_folder(prefix='', *, user_ns):
     BMMuser = user_ns['BMMuser']
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     os.makedirs(user_folder, exist_ok=True)

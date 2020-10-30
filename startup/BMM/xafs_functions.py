@@ -99,13 +99,13 @@ def sanitize_step_scan_parameters(bounds, steps, times):
     if text:
         text += error_msg('\nsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
 
-            
+
     return problem, text
-    
+
 
 @set_user_ns
 def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
-                      element=None, edge=None, ththth=False, user_ns=None):
+                      element=None, edge=None, ththth=False, *, user_ns):
     '''
     Parameters
     ----------

@@ -68,7 +68,7 @@ def peak(signal):
     return pandas.Series.idxmax(signal)
 
 @set_user_ns
-def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak', *, user_ns=None):
+def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak', *, user_ns):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
     motor will moved to the center of mass of the peak at the end of
@@ -173,7 +173,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
 
 
 @set_user_ns
-def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak', *, user_ns=None):
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak', *, user_ns):
     '''Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
     the hutch slits to 3 mm. At the end, move to the position of maximum 
@@ -336,7 +336,7 @@ def ls_backwards_compatibility(detin, axin):
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
 @set_user_ns
-def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}, *, user_ns=None): # integration time?
+def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}, *, user_ns): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
