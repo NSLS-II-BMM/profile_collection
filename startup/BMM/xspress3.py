@@ -310,7 +310,9 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_high.put(high)
         
     def set_rois(self):
-        startup_dir = get_ipython().profile_dir.startup_dir
+        # startup_dir = get_ipython().profile_dir.startup_dir
+        # Find path based on the location of the current file instead of using ipython
+        startup_dir = os.path.split(os.path.split(__file__)[0])[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)
