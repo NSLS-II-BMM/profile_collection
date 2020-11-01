@@ -10,7 +10,10 @@ import threading
 #from bluesky.callbacks import CallbackBase
 from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns

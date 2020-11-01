@@ -12,7 +12,10 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # from IPython import get_ipython
 # user_ns = get_ipython().user_ns

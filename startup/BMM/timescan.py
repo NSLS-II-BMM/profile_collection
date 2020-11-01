@@ -20,7 +20,10 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.metadata      import bmm_metadata
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # from IPython import get_ipython
 # user_ns = get_ipython().user_ns

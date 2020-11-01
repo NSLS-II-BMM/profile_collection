@@ -6,7 +6,10 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class

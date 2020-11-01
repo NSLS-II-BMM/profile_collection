@@ -15,7 +15,10 @@ from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.logging        import report
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # from IPython import get_ipython
 # user_ns = get_ipython().user_ns

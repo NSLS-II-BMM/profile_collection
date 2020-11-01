@@ -1,6 +1,9 @@
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns

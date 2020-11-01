@@ -6,7 +6,10 @@ from BMM.logging import report, BMM_msg_hook
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 
 class EPS_Shutter(Device):

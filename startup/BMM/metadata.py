@@ -9,7 +9,10 @@ from databroker import __version__ as databroker_version
 from IPython    import __version__ as ipython_version
 import sys, re
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # from IPython import get_ipython
 # user_ns = get_ipython().user_ns
