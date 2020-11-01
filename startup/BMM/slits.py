@@ -8,7 +8,10 @@ from BMM.functions import boxedtext
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.motors    import FMBOThinEpicsMotor
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 class Slits(PseudoPositioner):
     def __init__(self, *args, **kwargs):

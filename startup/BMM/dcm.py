@@ -12,7 +12,10 @@ from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns

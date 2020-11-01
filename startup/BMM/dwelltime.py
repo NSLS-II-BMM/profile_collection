@@ -30,7 +30,10 @@ class Xspress3DwellTime(PVPositionerPC):
 
 ## RE(test_dwelltimes([quadem_dwell_time,struck_dwell_time]))
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns

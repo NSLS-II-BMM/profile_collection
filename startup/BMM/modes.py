@@ -10,7 +10,10 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.motor_status  import motor_status
 from BMM.suspenders    import BMM_clear_to_start
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # from IPython import get_ipython
 # user_ns = get_ipython().user_ns

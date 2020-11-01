@@ -20,7 +20,10 @@ from os import system
 from subprocess import Popen, PIPE, call
 import fcntl
 
-from bluesky_queueserver.manager.profile_tools import set_user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 ## from IPython import get_ipython
 ## user_ns = get_ipython().user_ns
