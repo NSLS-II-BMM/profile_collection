@@ -134,7 +134,7 @@ def inflect(word, number):
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
-import textwrap3
+import textwrap
 import ansiwrap
 def boxedtext(title, text, tint, width=75):
     '''
