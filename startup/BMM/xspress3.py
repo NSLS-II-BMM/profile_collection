@@ -11,7 +11,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
                                                  FileStoreTIFF)
-from ophyd import Signal, EpicsSignal, EpicsSignalRO
+from ophyd import Signal, EpicsSignal, EpicsSignalRO, DynamicDeviceComponent as DDCpt
 from ophyd.status import SubscriptionStatus, DeviceStatus
 from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
@@ -132,32 +132,49 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         set_and_wait(self.capture, 0)
         return super().unstage()
 
+################################################################################
+## see an example of using DynamicDeviceComponent at
+## https://github.com/bluesky/ophyd/blob/70315c21903b162d6d16e6521ebac348830e59c6/ophyd/quadem.py#L80-L86
+## This is a modification of the _current_fields function appropriate to this problem
+def _reset_fields(attr_base, field_base, range_, **kwargs):
+    defn = OrderedDict()
+    for i in range_:
+        attr = '{attr}{i}'.format(attr=attr_base, i=i)
+        suffix = 'ROI{i}:{field}'.format(field=field_base, i=i)
+        defn[attr] = (EpicsSignal, suffix, kwargs)
+    return defn
+    
 class BMMXspress3Channel(Xspress3Channel):
     extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
-    reset1  = Cpt(EpicsSignal, 'ROI1:Reset')
-    reset2  = Cpt(EpicsSignal, 'ROI2:Reset')
-    reset3  = Cpt(EpicsSignal, 'ROI3:Reset')
-    reset4  = Cpt(EpicsSignal, 'ROI4:Reset')
-    reset5  = Cpt(EpicsSignal, 'ROI5:Reset')
-    reset6  = Cpt(EpicsSignal, 'ROI6:Reset')
-    reset7  = Cpt(EpicsSignal, 'ROI7:Reset')
-    reset8  = Cpt(EpicsSignal, 'ROI8:Reset')
-    reset9  = Cpt(EpicsSignal, 'ROI9:Reset')
-    reset10 = Cpt(EpicsSignal, 'ROI10:Reset')
-    reset11 = Cpt(EpicsSignal, 'ROI11:Reset')
-    reset12 = Cpt(EpicsSignal, 'ROI12:Reset')
-    reset13 = Cpt(EpicsSignal, 'ROI13:Reset')
-    reset14 = Cpt(EpicsSignal, 'ROI14:Reset')
-    reset15 = Cpt(EpicsSignal, 'ROI15:Reset')
-    reset16 = Cpt(EpicsSignal, 'ROI16:Reset')
-
+    resets = DDCpt(_reset_fields('reset', 'Reset', range(1, 17)))
+    # reset1  = Cpt(EpicsSignal, 'ROI1:Reset')  # set this for 1 to 16, replaced by DDCpt line :)
     def reset(self):
-        for i in range(1,17):
-            getattr(self, f'reset{i}').put(1)
+        for r in self.resets.read_attrs:
+            getattr(self.resets, r).put(1)
+################################################################################
     
     
-class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
+class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
+
+    channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
+    channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
+    channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
+    channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
+    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
+
+    mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
+    mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
+    mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
+    mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
+    
+    mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
+    mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
+    mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
+    mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+    mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
@@ -172,7 +189,7 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                                    'spectra_per_point', 'settings',
                                    'rewindable']
         if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'channel8', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
@@ -287,37 +304,6 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         this.bin_low.put(low)
         this.bin_high.put(high)
         
-    def set_rois(self):
-        startup_dir = get_ipython().profile_dir.startup_dir
-        with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
-            js = fl.read()
-        allrois = json.loads(js)
-        for i, el in enumerate(self.slots):
-            if el == 'OCR':
-                for ch in range(1,5):
-                    self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
-                continue
-            elif el is None:
-                continue
-            edge = 'k'
-            if Z_number(el) > 46:
-                edge = 'l3'
-            for ch in range(1,5):
-                self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
-                    
-    # def set_rois(self, lii=False):
-    #     config = configparser.ConfigParser()
-    #     startup_dir = get_ipython().profile_dir.startup_dir
-    #     config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
-    #     for i, el in enumerate(self.slots):
-    #         if el is None:
-    #             continue
-    #         bounds = config.get('rois', el).split(' ')
-    #         for ch in range(1,5):
-    #             if lii is True:
-    #                 self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[2], high=bounds[3])
-    #             else:
-    #                 self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=bounds[0], high=bounds[1])
 
     # def ini2json(self):
     #     rj = {'OCR': {'k':  {'low': 1, 'high': 4095}},}
@@ -357,19 +343,6 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
             else:
                 print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
                 
-    def measure_roi(self):
-        BMMuser = user_ns['BMMuser']
-        for i in range(16):
-            for n in range(1,5):
-                ch = getattr(self, f'channel{n}')
-                this = getattr(ch.rois, 'roi{:02}'.format(i+1))
-                if self.slots[i] == BMMuser.element:
-                    this.value.kind = 'hinted'
-                    setattr(BMMuser, f'xs{n}', this.value.name)
-                    setattr(BMMuser, f'xschannel{n}', this.value)
-                else:
-                    this.value.kind = 'omitted'
-                
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
@@ -393,122 +366,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         return(text)
 
 
-    def measure_xrf(self, exposure=0.5):
+    def measure_xrf(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)
-        yield from count([self], 1)
-        self.plot(add=True)
-    
-    def plot(self, uid=None, add=False, only=None):
-        dcm = user_ns['dcm']
-        plt.clf()
-        plt.xlabel('Energy  (eV)')
-        plt.ylabel('counts')
-        plt.grid(which='major', axis='both')
-        plt.xlim(2500, round(dcm.energy.position, -2)+500)
-        try:
-            #print(f'{uid}')
-            fname = file_resource(uid)
-            db = user_ns['db']
-            plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
-            f = h5py.File(fname,'r')
-            g = f['entry']['instrument']['detector']['data']
-            data_array = g.value
-            s1 = data_array[0][0]
-            s2 = data_array[0][1]
-            s3 = data_array[0][2]
-            s4 = data_array[0][3]
-        except Exception as e:
-            print(e)
-            plt.title('XRF Spectrum')
-            s1 = self.mca1.value
-            s2 = self.mca2.value
-            s3 = self.mca3.value
-            s4 = self.mca4.value
-        e = numpy.arange(0, len(s1)) * 10
-        if only is not None and only in (1, 2, 3, 4):
-            this = getattr(self, f'mca{only}')
-            plt.plot(e, this.value, label=f'channel {only}')
-            plt.legend()
-        elif add is True:
-            plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
-            plt.legend()
-        else:
-            plt.plot(e, s1, label='channel 1')
-            plt.plot(e, s2, label='channel 2')
-            plt.plot(e, s3, label='channel 3')
-            plt.plot(e, s4, label='channel 4')
-            plt.legend()
-
-    def table(self):
-        BMMuser = user_ns['BMMuser']
-        print(' ROI    Chan1      Chan2      Chan3      Chan4 ')
-        print('=================================================')
-        for r in range(1,17):
-            el = getattr(self.channel1.rois, f'roi{r:02}').value.name
-            if len(el) > 3:
-                continue
-            if el != 'OCR':
-                el = el[:-1]
-            if el == BMMuser.element or el == 'OCR':
-                print(go_msg(f' {el:3} '), end='')
-                for c in (1,2,3,4):
-                    print(go_msg(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  "), end='')
-                print('')
-            else:                
-                print(f' {el:3} ', end='')
-                for c in (1,2,3,4):
-                    print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
-                print('')
-
-    def cr(self, plot=False):
-        yield from mv(self.settings.acquire_time, 1)
+        #yield from count([self], 1)
         yield from mv(self.settings.acquire.put,  1)
         self.table()
-        if plot:
-            self.plot()
-
-    def to_xdi(self, filename=None):
-
-        dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
-
-        column_list = ['MCA1', 'MCA2', 'MCA3', 'MCA4']
-        #template = "  %.3f  %.6f  %.6f  %.6f  %.6f\n"
-        m2state, m3state = mirror_state()
-
-        handle = open(filename, 'w')
-        handle.write('# XDI/1.0 BlueSky/%s\n'                % bluesky_version)
-        #handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
-        #handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-        handle.write('# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement')
-        handle.write('# Beamline.xray_source: NSLS-II three-pole wiggler\n')
-        handle.write('# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
-        handle.write('# Beamline.focusing: %s\n'             % m2state)
-        handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
-        handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
-        handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
-        handle.write('# Scan.end_time: %s\n'                 % now())
-        handle.write('# Scan.dwell_time: %.2f\n'             % self.settings.acquire_time.value)
-        handle.write('# Facility.name: NSLS-II\n')
-        handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
-        handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
-        handle.write('# Facility.cycle: %s\n'                % BMMuser.cycle)
-        handle.write('# Facility.GUP: %d\n'                  % BMMuser.gup)
-        handle.write('# Facility.SAF: %d\n'                  % BMMuser.saf)
-        handle.write('# Column.1: energy (eV)\n')
-        handle.write('# Column.2: MCA1 (counts)\n')
-        handle.write('# Column.3: MCA2 (counts)\n')
-        handle.write('# Column.4: MCA3 (counts)\n')
-        handle.write('# Column.5: MCA4 (counts)\n')
-        handle.write('# ==========================================================\n')
-        handle.write('# energy ')
-
-        ## data table
-        e=numpy.arange(0, len(self.mca1.value)) * 10
-        a=numpy.vstack([self.mca1.value, self.mca2.value, self.mca3.value, self.mca4.value])
-        b=pd.DataFrame(a.transpose(), index=e, columns=column_list)
-        handle.write(b.to_csv(sep=' '))
-
-        handle.flush()
-        handle.close()
-        print(bold_msg('wrote XRF spectra to %s' % filename))
+        self.plot(add=True)
+    
         

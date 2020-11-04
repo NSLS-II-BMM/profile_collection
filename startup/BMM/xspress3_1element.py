@@ -40,15 +40,13 @@ from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
+from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
 from BMM.periodictable import Z_number
 import json
 #import configparser
         
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
-#db = user_ns['db']
-#db.reg.register_handler("BMM_XAS_WEBCAM",    Xspress3HDF5Handler)
-
 
 
 ################################################################################
@@ -61,166 +59,15 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 # This means that Xspress3 will require its own count plan
 # also that a linescan or xafs scan must set total_points up front
 
-
-
-# class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
-#     def __call__(self, *args, frame=None, **kwargs):
-#         self._get_dataset()
-#         shape = self.dataset.shape
-#         if len(shape) != 3:
-#             raise RuntimeError(f'The ndim of the dataset is not 3, but {len(shape)}')
-#         num_channels = shape[1]
-#         print(num_channels)
-#         chanrois = [f'CHAN{c}ROI{r}' for c, r in product([1, 2, 3, 4], [1, 2, 3, 4])]
-#         attrsdf = pd.DataFrame.from_dict(
-#             {chanroi: self._file['/entry/instrument/detector/']['NDAttributes'][chanroi] for chanroi in chanrois}
-#         )
-#         ##print(attrsdf)
-#         df = pd.DataFrame(data=self._dataset[frame, :, :].T,
-#                           columns=[f'ch_{n+1}' for n in range(num_channels)])
-#         #return pd.concat([df]+[attrsdf])
-#         return df
-
-# db = user_ns['db']
-# db.reg.register_handler(BMMXspress3HDF5Handler.HANDLER_NAME,
-#                         BMMXspress3HDF5Handler, overwrite=True)    
-
-from BMM.xspress3_4element import Xspress3FileStoreFlyable, BMMXspress3Channel
-
-    
-class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
-    roi_data = Cpt(PluginBase, 'ROIDATA:')
-    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
-
-    mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
-    
-    mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
-
-    
-    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
-               read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
-               root='/mnt/nfs/xspress3/',                     # path to root, as mounted on client (i.e. ws1)
-               write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
-               )
+class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
-        if configuration_attrs is None:
-            configuration_attrs = ['external_trig', 'total_points',
-                                   'spectra_per_point', 'settings',
-                                   'rewindable']
         if read_attrs is None:
             read_attrs = ['channel8', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
-        self.set_channels_for_hdf5()
-
-        self._asset_docs_cache = deque()
-        self._datum_counter = None
-        
-        self.slots = ['Ti', 'V',  'Cr', 'Mn',
-                      'Fe', 'Co', 'Ni', 'Cu',
-                      'Zn', 'As', 'Pt', 'Pb',
-                      'Ce', None, None, 'OCR']
-        self.restart()
-        # self.settings.num_images.put(1)   # number of frames
-        # self.settings.trigger_mode.put(1) # trigger mode internal
-        # self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
-        # self.set_channels_for_hdf5()
-        # self.set_rois()
-
-    def trigger(self):
-        if self._staged != Staged.yes:
-            raise RuntimeError("not staged")
-
-        import epics
-        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
-        #print('tr1 {} '.format(t))
-        self._status = DeviceStatus(self)
-        #self.settings.erase.put(1)    # this was 
-        self._acquisition_signal.put(1, wait=False)
-        trigger_time = ttime.time()
-        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
-        #print('tr2 {} '.format(t))
-
-        for sn in self.read_attrs:
-            if sn.startswith('channel') and '.' not in sn:
-                ch = getattr(self, sn)
-                self.dispatch(ch.name, trigger_time)
-        #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
-        #print('tr3 {} '.format(t))
-
-        self._abs_trigger_count += 1
-        return self._status
-        
-    def restart(self):
-        self.channel8.vis_enabled.put(1)
-        self.channel8.extra_rois_enabled.put(1)
-        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
-        self.settings.num_images.put(1)   # number of frames
-        self.settings.trigger_mode.put(1) # trigger mode internal
-        self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
-        self.set_rois()
-        
-    def _acquire_changed(self, value=None, old_value=None, **kwargs):
-        #print(f"!!! HERE I AM !!!   {value}  {old_value}  {id(self._status)}  {self._status}")
-        super()._acquire_changed(value=value, old_value=old_value, **kwargs)
-        status = self._status
-        if status is not None and status.done:
-            # Clear the state to be ready for the next round.
-            self._status = None
-        #print(f"!!! END !!!   {value}  {old_value}  {status}  {id(self._status)}  {self._status}")
-            
-    def stop(self):
-        ret = super().stop()
-        self.hdf5.stop()
-        return ret
-
-    def stage(self):
-        if self.spectra_per_point.get() != 1:
-            raise NotImplementedError(
-                "multi spectra per point not supported yet")
-        ret = super().stage()
-        self._datum_counter = itertools.count()
-        return ret
-
-    def unstage(self):
-        self.settings.trigger_mode.put(0)  # 'Software'
-        super().unstage()
-        self._datum_counter = None
-        self._status = None
-        
-    def set_channels_for_hdf5(self, channels=(8,)):
-        """
-        Configure which channels' data should be saved in the resulted hdf5 file.
-
-        Parameters
-        ----------
-        channels: tuple, optional
-            the channels to save the data for
-        """
-        # The number of channel
-        for n in channels:
-            getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
-        self.hdf5.num_extra_dims.put(0)
-        #self.settings.num_channels.put(len(channels))
-        self.settings.num_channels.put(8)
-
-    def reset(self):
-        self.channel8.reset()
-        ## this doesn't work, not seeing how those arrays get cleared in the IOC....
-        # getattr(self, f'mca{i}_sum').put(numpy.zeros)
-            
-        
-    def set_roi_channel(self, channel=8, index=16, name='OCR', low=1, high=4095):
-        ch = getattr(self, f'channel{channel}')
-        rs = ch.rois
-        this = getattr(rs, 'roi{:02}'.format(index))
-        this.value.name = name
-        this.bin_low.put(low)
-        this.bin_high.put(high)
         
     def set_rois(self):
         startup_dir = get_ipython().profile_dir.startup_dir
@@ -239,20 +86,6 @@ class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
             self.set_roi_channel(channel=8, index=i+1, name=f'{el.capitalize()}8', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
                     
                 
-    def roi_details(self):
-        BMMuser = user_ns['BMMuser']
-        print(' ROI  Elem   low   high')
-        print('==========================')
-        template = ' %3d  %-4s  %4d  %4d'
-        for i, el in enumerate(self.slots):
-            rs = self.channel8.rois
-            this = getattr(rs, 'roi{:02}'.format(i+1))
-            if el is None:
-                print(template % (i+1, 'None', this.bin_low.value, this.bin_high.value))
-            elif el == BMMuser.element:
-                print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
-            else:
-                print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
                 
     def measure_roi(self):
         BMMuser = user_ns['BMMuser']
@@ -265,37 +98,8 @@ class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
             else:
                 this.value.kind = 'omitted'
                 
-
-    def show_rois(self):
-        BMMuser = user_ns['BMMuser']
-        text = 'Xspress3 ROIs:\n'
-        text += bold_msg('    1      2      3      4      5      6      7      8\n')
-        text += ' '
-        for i in range(8):
-            if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
-            else:
-                text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
-        text += bold_msg('    9     10     11     12     13     14     15     16\n')
-        text += ' '
-        for i in range(8, 16):
-            if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
-            else:
-                text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
-        return(text)
-
-
-    def measure_xrf(self, exposure=1.0):
-        yield from mv(self.settings.acquire_time, exposure)
-        #yield from count([self], 1)
-        yield from mv(self.settings.acquire.put,  1)
-        self.table()
-        self.plot(add=True)
     
-    def plot(self, uid=None, add=False, only=None):
+    def plot(self, uid=None):
         dcm = user_ns['dcm']
         plt.clf()
         plt.xlabel('Energy  (eV)')

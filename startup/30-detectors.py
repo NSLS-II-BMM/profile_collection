@@ -271,11 +271,11 @@ pil     = PilatusGrabber(pilatus)
 
 if with_xspress3 is True:
     run_report('\t'+'Xspress3_4element & Xspress3_1element')
-    from BMM.xspress3_4element import BMMXspress3Detector
+    from BMM.xspress3_4element import BMMXspress3Detector_4Element
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
 
     #try:                            # may be absent
-    xs = BMMXspress3Detector('XF:06BM-ES{Xsp:1}:', name='xs')
+    xs  = BMMXspress3Detector_4Element('XF:06BM-ES{Xsp:1}:', name='xs')
     xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
     # This is necessary for when the ioc restarts
     # we have to trigger one image for the hdf5 plugin to work correctly
