@@ -1,36 +1,8 @@
-
-from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
-                                TIFFPlugin, StatsPlugin, HDF5Plugin,
-                                ProcessPlugin, ROIPlugin, TransformPlugin,
-                                OverlayPlugin)
-from ophyd.areadetector.plugins import PluginBase
-from ophyd.areadetector.cam import AreaDetectorCam
-from ophyd.device import BlueskyInterface, Staged
-from ophyd.areadetector.trigger_mixins import SingleTrigger
-from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
-                                                 FileStoreHDF5IterativeWrite,
-                                                 FileStoreTIFFSquashing,
-                                                 FileStoreTIFF)
-from ophyd import Signal, EpicsSignal, EpicsSignalRO
-from ophyd.status import SubscriptionStatus, DeviceStatus
-from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
-from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
-from bluesky.plans import count
-from bluesky.plan_stubs import abs_set, sleep, mv, null
-
-from pathlib import PurePath
-#from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
-#                                         Xspress3Channel, Xspress3FileStore, logger)
-from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
-                                       Xspress3Channel, Xspress3FileStore, logger)
 
 import numpy, h5py
 import pandas as pd
-import itertools, os
-import time as ttime
-from collections import deque, OrderedDict
-from itertools import product
+import itertools, os, json
 
 import matplotlib.pyplot as plt
 from IPython import get_ipython
@@ -40,13 +12,10 @@ from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
-from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
-
 from BMM.periodictable import Z_number
-import json
-#import configparser
+from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase
         
-from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
+# from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
 
 ################################################################################
@@ -60,6 +29,8 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 # also that a linescan or xafs scan must set total_points up front
 
 class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
+    '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
+    '''
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -70,6 +41,8 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
 
         
     def set_rois(self):
+        '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channel8.
+        '''
         startup_dir = get_ipython().profile_dir.startup_dir
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
@@ -88,6 +61,8 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
                 
                 
     def measure_roi(self):
+        '''Hint the ROI currently in use for XAS
+        '''
         BMMuser = user_ns['BMMuser']
         for i in range(16):
             this = getattr(self.channel8.rois, 'roi{:02}'.format(i+1))
@@ -100,6 +75,14 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
                 
     
     def plot(self, uid=None):
+        '''Make a plot appropriate for the 4-element detector.
+
+        Parameters
+        ----------
+        uid : str
+            DataBroker UID. If None, use the current values in the IOC
+        
+        '''
         dcm = user_ns['dcm']
         plt.clf()
         plt.xlabel('Energy  (eV)')
@@ -124,6 +107,8 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
         plt.legend()
 
     def table(self):
+        '''Pretty print a table of values for each ROI.
+        '''
         BMMuser = user_ns['BMMuser']
         print(' ROI    Chan1 ')
         print('================')
@@ -145,6 +130,10 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
                 print('')
 
     def to_xdi(self, filename=None):
+        '''Write an XDI-style file with bin energy in the first column and the
+        waveform of the measurement channel in the second column.
+
+        '''
 
         dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
 

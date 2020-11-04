@@ -274,7 +274,6 @@ if with_xspress3 is True:
     from BMM.xspress3_4element import BMMXspress3Detector_4Element
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
 
-    #try:                            # may be absent
     xs  = BMMXspress3Detector_4Element('XF:06BM-ES{Xsp:1}:', name='xs')
     xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
     # This is necessary for when the ioc restarts
@@ -359,6 +358,3 @@ if with_xspress3 is True:
     xs1.set_rois()
     xrf1 = xs1.measure_xrf
 
-    
-#except:
-#    pass

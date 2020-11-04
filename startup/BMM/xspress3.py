@@ -26,7 +26,7 @@ from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
 import numpy, h5py
-import pandas as pd
+#import pandas as pd
 import itertools, os
 import time as ttime
 from collections import deque, OrderedDict
@@ -38,16 +38,9 @@ user_ns = get_ipython().user_ns
 
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions     import now
-from BMM.metadata      import mirror_state
-
-from BMM.periodictable import Z_number
-import json
-#import configparser
+#import json
         
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
-#db = user_ns['db']
-#db.reg.register_handler("BMM_XAS_WEBCAM",    Xspress3HDF5Handler)
 
 
 
@@ -143,8 +136,11 @@ def _reset_fields(attr_base, field_base, range_, **kwargs):
         suffix = 'ROI{i}:{field}'.format(field=field_base, i=i)
         defn[attr] = (EpicsSignal, suffix, kwargs)
     return defn
-    
+
 class BMMXspress3Channel(Xspress3Channel):
+    '''Subclass of Xspress3Channel to capture the reset PVs for each ROI
+    in a channel
+    '''
     extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
     resets = DDCpt(_reset_fields('reset', 'Reset', range(1, 17)))
     # reset1  = Cpt(EpicsSignal, 'ROI1:Reset')  # set this for 1 to 16, replaced by DDCpt line :)
@@ -155,6 +151,9 @@ class BMMXspress3Channel(Xspress3Channel):
     
     
 class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
+    '''This class captures everything that is in common for the 1-element
+    and 4-element detector interfaces.
+    '''
     roi_data = Cpt(PluginBase, 'ROIDATA:')
 
     channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
@@ -290,7 +289,9 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         self.settings.num_channels.put(len(channels))
 
     def reset(self):
-        for i in range(1,5):
+        '''call the signals to clear ROIs.  Would like to clear array sums as well....
+        '''
+        for i in range(1,2,3,4,8):
             getattr(self, f'channel{i}').reset()
             ## this doesn't work, not seeing how those arrays get cleared in the IOC....
             # getattr(self, f'mca{i}_sum').put(numpy.zeros)

@@ -398,9 +398,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Dualio', 'Xs'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Dualio', 'Xs', 'Xs1'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron roi1')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron, dualio, xs, xs1')))
             yield from null()
             return
 
@@ -461,6 +461,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.xs3] +
                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
+
+        elif detector == 'Xs1':
+            dets.append(user_ns['xs'])
+            denominator = ' / I0'
+            detname = 'fluorescence'
+            func = lambda doc: (doc['data'][thismotor.name],
+                                doc['data'][BMMuser.xs8] / doc['data']['I0'])
+            yield from mv(xs1.total_points, nsteps) # Xspress3 demands that this be set up front
 
         elif detector == 'Dualio':
             dets.append(dualio)
