@@ -187,10 +187,12 @@ class BMM_User(Borg):
         self.xs2             = None
         self.xs3             = None
         self.xs4             = None
+        self.xs8             = None
         self.xschannel1      = None
         self.xschannel2      = None
         self.xschannel3      = None
         self.xschannel4      = None
+        self.xschannel8      = None
                 
         ## current plot attributes    #######################################################################
         self.motor    = None          # these are used to keep track of mouse events on the plotting window #
@@ -247,11 +249,11 @@ class BMM_User(Borg):
 
     def to_json(self, filename=None):
         ## avoid this: TypeError: can't pickle _thread.RLock objects
-        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4]
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4 = None, None, None, None
+        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8]
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8 = [None, ] * 5
         d = copy.deepcopy(self.__dict__)
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4 = save
-        for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8 = save
+        for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8'):
             del d[k]
         if filename is None:
             print(json.dumps(d))
@@ -598,7 +600,8 @@ class BMM_User(Borg):
         print('GUP   = %s' % self.gup)
         print('SAF   = %s' % self.saf)
         #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
-        print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))
+        if user_ns['with_xspress3'] is False:
+            print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))
 
     def fetch_echem(self):
         dest = os.path.join(self.folder, 'electrochemistry')

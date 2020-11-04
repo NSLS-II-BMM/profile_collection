@@ -158,30 +158,6 @@ class BMMXspress3Channel(Xspress3Channel):
     
 class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
-    channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    # Currently only using four channels. Uncomment these to enable more channels:
-    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
-    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
-    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
-    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
-    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
-
-    mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
-    
-    mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
-    mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
-    mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
-    mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
-
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 

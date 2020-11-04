@@ -90,7 +90,7 @@ from BMM.xspress3_4element import Xspress3FileStoreFlyable, BMMXspress3Channel
     
 class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
     roi_data = Cpt(PluginBase, 'ROIDATA:')
-    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=1, read_attrs=['rois'])
+    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
     #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
     mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
@@ -260,8 +260,8 @@ class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
             this = getattr(self.channel8.rois, 'roi{:02}'.format(i+1))
             if self.slots[i] == BMMuser.element:
                 this.value.kind = 'hinted'
-                setattr(BMMuser, f'xs{n}', this.value.name)
-                setattr(BMMuser, f'xschannel{n}', this.value)
+                BMMuser.xs8 = this.value.name
+                BMMuser.xschannel8 = this.value
             else:
                 this.value.kind = 'omitted'
                 
@@ -288,9 +288,11 @@ class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
         return(text)
 
 
-    def measure_xrf(self, exposure=0.5):
+    def measure_xrf(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)
-        yield from count([self], 1)
+        #yield from count([self], 1)
+        yield from mv(self.settings.acquire.put,  1)
+        self.table()
         self.plot(add=True)
     
     def plot(self, uid=None, add=False, only=None):
@@ -337,13 +339,6 @@ class BMMXspress3Detector_1Element(XspressTrigger, Xspress3Detector):
                 for c in (8,):
                     print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
                 print('')
-
-    def cr(self, plot=False):
-        yield from mv(self.settings.acquire_time, 1)
-        yield from mv(self.settings.acquire.put,  1)
-        self.table()
-        if plot:
-            self.plot()
 
     def to_xdi(self, filename=None):
 

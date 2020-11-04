@@ -350,12 +350,12 @@ if with_xspress3 is True:
                                         'run_flags',
                                         'trigger_signal']
 
-    for n, d in xs1.channels.items():
-        roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
-        d.rois.read_attrs = roi_names
-        d.rois.configuration_attrs = roi_names
-        for roi_n in roi_names:
-            getattr(d.rois, roi_n).value_sum.kind = 'omitted'
+    #for n, d in xs1.channels.items():
+    roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
+    xs1.channel8.rois.read_attrs = roi_names
+    xs1.channel8.rois.configuration_attrs = roi_names
+    for roi_n in roi_names:
+        getattr(xs1.channel8.rois, roi_n).value_sum.kind = 'omitted'
     xs1.set_rois()
     xrf1 = xs1.measure_xrf
 

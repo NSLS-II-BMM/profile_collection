@@ -62,6 +62,10 @@ class ROI():
         self.slots = [None, None, None]
         self.trigger = False
 
+    def myprint(self, string):
+        if user_ns['with_xspress3'] is False:
+            print(string)
+        
     def unset(self):
         self.slots = [None, None, None]
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
@@ -80,7 +84,8 @@ class ROI():
             self.slots[i-1] = None
         else:
             self.slots[i-1] = element_symbol(el)
-        BMM_log_info('Set ROI channel %d to %s' % (i, str(self.slots[i-1])))
+        if user_ns['with_xspress3'] is False:
+            BMM_log_info('Set ROI channel %d to %s' % (i, str(self.slots[i-1])))
 
     def set(self, elements):
         '''Configure the ROI channels so that an energy change knows which channel to use.
@@ -93,14 +98,14 @@ class ROI():
         if type(elements) is str:
             elements = elements.split()
         if len(elements) != 3:
-            print(error_msg('\nThe list of rois must have three elements\n'))
+            self.myprint(error_msg('\nThe list of rois must have three elements\n'))
             return()
         for i in range(3):
             self.set_roi(i+1, elements[i])
         vor, BMMuser = user_ns['vor'], user_ns['BMMuser']
         vor.channel_names(*elements)
         BMMuser.rois = elements
-        print(self.show())
+        self.myprint(self.show())
         ########################################################
         # save the ROI configuration to the user serialization #
         ########################################################
@@ -119,14 +124,14 @@ class ROI():
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
-                print(error_msg('\n%d is not a valid ROI channel\n' % el))
+                self.myprint(error_msg('\n%d is not a valid ROI channel\n' % el))
                 return(yield from null())
             el = self.slots[el-1]
         if el is None:
-            print(error_msg('\nThat ROI is not configured\n'))
+            self.myprint(error_msg('\nThat ROI is not configured\n'))
             return(yield from null())
         if Z_number(el) is None:
-            print(error_msg('\n%s is not an element\n' % el))
+            self.myprint(error_msg('\n%s is not an element\n' % el))
             return(yield from null())
         selected = False
         vor = user_ns['vor']
@@ -149,21 +154,21 @@ class ROI():
                 report('Set ROI channel to %s at channel %d' % (el.capitalize(), i+1))
                 selected = True
         if not selected:
-            print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
+            self.myprint(whisper('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
             yield from null()
 
     def select(self, el):
         '''Choose the ROI configured for element el'''
         if type(el) is int:
             if el < 1 or el > 3:
-                print(error_msg('\n%d is not a valid ROI channel\n' % el))
+                self.myprint(error_msg('\n%d is not a valid ROI channel\n' % el))
                 return
             el = self.slots[el-1]
         if el is None:
-            print(error_msg('\nThat ROI is not configured\n'))
+            self.myprint(error_msg('\nThat ROI is not configured\n'))
             return
         if Z_number(el) is None:
-            print(error_msg('\n%s is not an element\n' % el))
+            self.myprint(error_msg('\n%s is not an element\n' % el))
             return
         selected = False
         vor = user_ns['vor']
@@ -186,7 +191,7 @@ class ROI():
                 report('Set ROI channel to %s at channel %d' % (el.capitalize(), i+1))
                 selected = True
         if not selected:
-            print(warning_msg('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
+            self.myprint(whisper('%s is not in a configured channel, not changing BMMuser.roi_channel' % el.capitalize()))
 
             
 # 22.265

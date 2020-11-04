@@ -62,4 +62,4 @@ atexit.register(teardown)
 
 
 
-RE.msg_hook = BMM_msg_hook
+# RE.msg_hook = BMM_msg_hook

@@ -11,7 +11,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
                                                  FileStoreTIFF)
-from ophyd import Signal, EpicsSignal, EpicsSignalRO
+from ophyd import Signal, EpicsSignal, EpicsSignalRO, DynamicDeviceComponent as DDCpt
 from ophyd.status import SubscriptionStatus, DeviceStatus
 from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
@@ -132,28 +132,24 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         set_and_wait(self.capture, 0)
         return super().unstage()
 
+## see an example of using DynamicDeviceComponent at
+## https://github.com/bluesky/ophyd/blob/70315c21903b162d6d16e6521ebac348830e59c6/ophyd/quadem.py#L80-L86
+## This is a modification of the _current_fields function appropriate to this problem
+def _reset_fields(attr_base, field_base, range_, **kwargs):
+    defn = OrderedDict()
+    for i in range_:
+        attr = '{attr}{i}'.format(attr=attr_base, i=i)
+        suffix = 'ROI{i}:{field}'.format(field=field_base, i=i)
+        defn[attr] = (EpicsSignal, suffix, kwargs)
+    return defn
+    
 class BMMXspress3Channel(Xspress3Channel):
     extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
-    reset1  = Cpt(EpicsSignal, 'ROI1:Reset')
-    reset2  = Cpt(EpicsSignal, 'ROI2:Reset')
-    reset3  = Cpt(EpicsSignal, 'ROI3:Reset')
-    reset4  = Cpt(EpicsSignal, 'ROI4:Reset')
-    reset5  = Cpt(EpicsSignal, 'ROI5:Reset')
-    reset6  = Cpt(EpicsSignal, 'ROI6:Reset')
-    reset7  = Cpt(EpicsSignal, 'ROI7:Reset')
-    reset8  = Cpt(EpicsSignal, 'ROI8:Reset')
-    reset9  = Cpt(EpicsSignal, 'ROI9:Reset')
-    reset10 = Cpt(EpicsSignal, 'ROI10:Reset')
-    reset11 = Cpt(EpicsSignal, 'ROI11:Reset')
-    reset12 = Cpt(EpicsSignal, 'ROI12:Reset')
-    reset13 = Cpt(EpicsSignal, 'ROI13:Reset')
-    reset14 = Cpt(EpicsSignal, 'ROI14:Reset')
-    reset15 = Cpt(EpicsSignal, 'ROI15:Reset')
-    reset16 = Cpt(EpicsSignal, 'ROI16:Reset')
-
+    resets = DDCpt(_reset_fields('reset', 'Reset', range(1, 17)))
+    # reset1  = Cpt(EpicsSignal, 'ROI1:Reset')  # set this for 1 to 16
     def reset(self):
-        for i in range(1,17):
-            getattr(self, f'reset{i}').put(1)
+        for r in self.resets.read_attrs:
+            getattr(self.resets, r).put(1)
     
     
 class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
@@ -162,24 +158,21 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
     channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
     channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
     channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    # Currently only using four channels. Uncomment these to enable more channels:
-    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
-    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
-    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
-    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
     #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
     mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
     mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
     mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
     mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
     
     mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
     mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+
+    ## see Xspress3_1element.py:
+    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
+    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
     #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
 
     
@@ -416,9 +409,11 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
         return(text)
 
 
-    def measure_xrf(self, exposure=0.5):
+    def measure_xrf(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)
-        yield from count([self], 1)
+        #yield from count([self], 1)
+        yield from mv(self.settings.acquire.put,  1)
+        self.table()
         self.plot(add=True)
     
     def plot(self, uid=None, add=False, only=None):
@@ -483,12 +478,6 @@ class BMMXspress3Detector(XspressTrigger, Xspress3Detector):
                     print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
                 print('')
 
-    def cr(self, plot=False):
-        yield from mv(self.settings.acquire_time, 1)
-        yield from mv(self.settings.acquire.put,  1)
-        self.table()
-        if plot:
-            self.plot()
 
     def to_xdi(self, filename=None):
 
