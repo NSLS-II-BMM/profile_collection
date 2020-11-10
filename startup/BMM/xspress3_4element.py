@@ -39,11 +39,20 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
         #     configuration_attrs = ['external_trig', 'total_points',
         #                            'spectra_per_point', 'settings',
         #                            'rewindable']
-        if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
-        super().__init__(prefix, configuration_attrs=configuration_attrs,
+        #if read_attrs is None:
+        #    read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
+        super().__init__(prefix, configuration_attrs=None,
                          read_attrs=read_attrs, **kwargs)
+        #self.set_channels_for_hdf5(channels=range(1,5))
 
+        
+    def reset(self):
+        '''call the signals to clear ROIs.  Would like to clear array sums as well....
+        '''
+        for i in range(1,5):
+            getattr(self, f'channel{i}').reset()
+            ## this doesn't work, not seeing how those arrays get cleared in the IOC....
+            # getattr(self, f'mca{i}_sum').put(numpy.zeros)
         
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.
@@ -114,7 +123,7 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
             s3 = data_array[0][2]
             s4 = data_array[0][3]
         except Exception as e:
-            print(e)
+            if uid is not None: print(e)
             plt.title('XRF Spectrum')
             s1 = self.mca1.value
             s2 = self.mca2.value
@@ -134,7 +143,7 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
             plt.legend()
-
+            
     def table(self):
         '''Pretty print a table of values for each ROI and for all four channels.
         '''

@@ -147,7 +147,7 @@ class Pandrosus():
         # CAUTION!!  This only works when BMMuser is correctly set.  This is unlikely to work #
         # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
         #######################################################################################
-        elif any(md in p['mode'] for md in ('fluo', 'flou', 'both')):
+        elif any(md in mode for md in ('fluo', 'flou', 'both')):
             columns = header.start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])

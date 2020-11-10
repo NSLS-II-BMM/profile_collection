@@ -38,7 +38,14 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
             read_attrs = ['channel8', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
+        #self.set_channels_for_hdf5(channels=(8,))
 
+    def reset(self):
+        '''call the signals to clear ROIs.  Would like to clear array sums as well....
+        '''
+        self.channel8.reset()
+        ## this doesn't work, not seeing how those arrays get cleared in the IOC....
+        # self.mca8_sum.put(numpy.zeros())
         
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channel8.

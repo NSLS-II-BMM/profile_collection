@@ -407,6 +407,9 @@ def scan_sequence_static_html(inifile       = None,
                               ththth        = None,
                               initext       = None,
                               uidlist       = None,
+                              url           = None,
+                              doi           = None,
+                              cif           = None,
                               ):
     '''
     Gather information from various places, including html_dict, a temporary dictionary 
@@ -444,11 +447,16 @@ def scan_sequence_static_html(inifile       = None,
     except Exception as e:
           print(e)
 
+
+    #print(warning_msg(f'{uidlist}  {BMMuser.DATA}   {basename}   {mode}'))
     try:
         if uidlist is not None:
             pngfilename = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
+            #print(warning_msg(f'   {pngfilename}'))
             make_merged_triplot(uidlist, pngfilename, mode)
-    except:
+    except Exception as e:
+        print(error_msg('failure to make triplot'))
+        print(e)
         pass
         
     if initext is None:
@@ -503,9 +511,9 @@ def scan_sequence_static_html(inifile       = None,
 
     write_manifest()
 
-    #pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
-    if os.path.isfile(pngfilename):
-        img_to_slack(pngfilename)
+    pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
+    if os.path.isfile(pngfile):
+        img_to_slack(pngfile)
     
     return(htmlfilename, prjfilename, pngfilename)
 
@@ -1136,9 +1144,9 @@ def xafs(inifile, **kwargs):
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
                     
             for k,v in gdrive_dict.items():
-                print(f'\n{k}')
-                print(f'   source: {v["source"]}')
-                print(f'   target: {v["target"]}')
+                #print(f'\n{k}')
+                #print(f'   source: {v["source"]}')
+                #print(f'   target: {v["target"]}')
                 if v['source'] is not None:
                     try:
                         shutil.copyfile(v['source'], v['target'])

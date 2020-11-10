@@ -89,7 +89,7 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         We had to replace "cam" with "settings" here.
         Also modified the stage sigs.
         """
-        print("warming up the hdf5 plugin...")
+        print(whisper("                warming up the hdf5 plugin..."))
         set_and_wait(self.enable, 1)
         sigs = OrderedDict([(self.parent.settings.array_callbacks, 1),
                             (self.parent.settings.trigger_mode, 'Internal'),
@@ -112,7 +112,7 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
             set_and_wait(sig, val)
-        print("done")
+        print(whisper("                done"))
 
     def unstage(self):
         """A custom unstage method is needed to avoid these messages:
@@ -160,20 +160,20 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
     channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
     channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
+    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
     #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
     mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
     mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
     mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
     mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
+    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
     
     mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
     mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
     mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
     mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
+    #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
@@ -188,7 +188,8 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
                                    'spectra_per_point', 'settings',
                                    'rewindable']
         if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'channel8', 'hdf5']
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5'] #, 'channel8'
+            #, 'channel5', 'channel6', 'channel7', 'channel8'
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
@@ -237,8 +238,8 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
             this = getattr(self, f'channel{n}')
             this.vis_enabled.put(1)
             this.extra_rois_enabled.put(1)
-        self.channel8.vis_enabled.put(1)
-        self.channel8.extra_rois_enabled.put(1)
+        #self.channel8.vis_enabled.put(1)
+        #self.channel8.extra_rois_enabled.put(1)
         #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
         self.settings.num_images.put(1)   # number of frames
         self.settings.trigger_mode.put(1) # trigger mode internal
@@ -287,14 +288,8 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
             getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
         self.hdf5.num_extra_dims.put(0)
         self.settings.num_channels.put(len(channels))
+        #self.settings.num_channels.put(4)
 
-    def reset(self):
-        '''call the signals to clear ROIs.  Would like to clear array sums as well....
-        '''
-        for i in range(1,2,3,4,8):
-            getattr(self, f'channel{i}').reset()
-            ## this doesn't work, not seeing how those arrays get cleared in the IOC....
-            # getattr(self, f'mca{i}_sum').put(numpy.zeros)
             
         
     def set_roi_channel(self, channel=1, index=16, name='OCR', low=1, high=4095):
@@ -367,10 +362,19 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         return(text)
 
 
-    def measure_xrf(self, exposure=1.0):
+    def measure_xrf_plan(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)
         #yield from count([self], 1)
-        yield from mv(self.settings.acquire.put,  1)
+        yield from mv(self.settings.acquire,  1)
+        yield from sleep(1.5)
+        self.table()
+        #self.plot(add=True)
+    
+    def measure_xrf(self, exposure=1.0):
+        self.settings.acquire_time.put(exposure)
+        #yield from count([self], 1)
+        self.settings.acquire.put(1)
+        ttime.sleep(1.5)
         self.table()
         self.plot(add=True)
     

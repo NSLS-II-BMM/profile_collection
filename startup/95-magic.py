@@ -61,9 +61,14 @@ def w(arg):
         print(f'{arg} is not a thing that can be probed for position')
 
 @register_line_magic
-def ca():
+def ca(arg):
     '''close all plots'''
     close_all_plots()
+    return None
+
+@register_line_magic
+def xrf(arg):
+    xs.measure_xrf()
     return None
 
 if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
