@@ -1,7 +1,7 @@
 import nslsii
 ip = get_ipython()
 
-nslsii.configure_base(ip.user_ns, 'temp', configure_logging=False) ###
+nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=False)
 
 bec.disable_plots()
 bec.disable_baseline()
