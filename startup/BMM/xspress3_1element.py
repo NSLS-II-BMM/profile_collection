@@ -1,4 +1,6 @@
 from bluesky import __version__ as bluesky_version
+from ophyd import Component as Cpt
+from ophyd import EpicsSignal
 
 import numpy, h5py
 import pandas as pd
@@ -13,9 +15,8 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number
-from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase
+from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
         
-# from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
 
 ################################################################################
@@ -31,6 +32,9 @@ from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase
 class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
     '''
+    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
+    mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
+    mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -38,7 +42,7 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
             read_attrs = ['channel8', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
-        #self.set_channels_for_hdf5(channels=(8,))
+        self.set_channels_for_hdf5(channels=(8,))
 
     def reset(self):
         '''call the signals to clear ROIs.  Would like to clear array sums as well....
@@ -46,6 +50,12 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
         self.channel8.reset()
         ## this doesn't work, not seeing how those arrays get cleared in the IOC....
         # self.mca8_sum.put(numpy.zeros())
+        
+    def restart(self):
+        self.channel8.vis_enabled.put(1)
+        self.channel8.extra_rois_enabled.put(1)
+        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
+        super().restart()
         
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channel8.
@@ -81,7 +91,7 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
                 this.value.kind = 'omitted'
                 
     
-    def plot(self, uid=None):
+    def plot(self, uid=None, add=False):
         '''Make a plot appropriate for the 4-element detector.
 
         Parameters
@@ -106,7 +116,7 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
             data_array = g.value
             s1 = data_array[0][0]
         except Exception as e:
-            print(e)
+            if uid is not None: print(e)
             plt.title('XRF Spectrum')
             s1 = self.mca8.value
         e = numpy.arange(0, len(s1)) * 10

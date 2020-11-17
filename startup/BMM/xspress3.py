@@ -137,6 +137,8 @@ def _reset_fields(attr_base, field_base, range_, **kwargs):
         defn[attr] = (EpicsSignal, suffix, kwargs)
     return defn
 
+
+
 class BMMXspress3Channel(Xspress3Channel):
     '''Subclass of Xspress3Channel to capture the reset PVs for each ROI
     in a channel
@@ -156,24 +158,24 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     '''
     roi_data = Cpt(PluginBase, 'ROIDATA:')
 
-    channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
+    # channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
+    # channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
+    # channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
+    # channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    # #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
+    # #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
 
-    mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
+    # mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
+    # mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
+    # mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
+    # mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    # #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
     
-    mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
-    mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
-    mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
-    mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
+    # mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
+    # mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
+    # mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
+    # mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+    # #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
@@ -193,7 +195,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
-        self.set_channels_for_hdf5()
+        #self.set_channels_for_hdf5()
 
         self._asset_docs_cache = deque()
         self._datum_counter = None
@@ -232,15 +234,13 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
 
         self._abs_trigger_count += 1
         return self._status
-        
+
+    def set_rois():
+        '''Must be implemented by the subclass.
+        '''
+        pass
+    
     def restart(self):
-        for n in range(1,5):
-            this = getattr(self, f'channel{n}')
-            this.vis_enabled.put(1)
-            this.extra_rois_enabled.put(1)
-        #self.channel8.vis_enabled.put(1)
-        #self.channel8.extra_rois_enabled.put(1)
-        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
         self.settings.num_images.put(1)   # number of frames
         self.settings.trigger_mode.put(1) # trigger mode internal
         self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
@@ -274,7 +274,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         self._datum_counter = None
         self._status = None
         
-    def set_channels_for_hdf5(self, channels=range(1,5)):
+    def set_channels_for_hdf5(self, channels=range(1,9)):
         """
         Configure which channels' data should be saved in the resulted hdf5 file.
 
@@ -288,7 +288,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
             getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
         self.hdf5.num_extra_dims.put(0)
         self.settings.num_channels.put(len(channels))
-        #self.settings.num_channels.put(4)
+        #self.settings.num_channels.put(8)
 
             
         

@@ -452,6 +452,9 @@ class WheelMacroBuilder():
         default = self.measurements[0].copy()
         for k in ('default', 'slot', 'measure', 'focus', 'samplex', 'sampley', 'slitwidth'): # things in the spreadsheet but not in the INI file
             default.pop(k, None)
+        default['url'] = '...'
+        default['doi'] = '...'
+        default['cif'] = '...'
         default['experimenters'] = self.ws['E1'].value # top line of xlsx file
         default = self.ini_sanity(default)
         if default is None:
@@ -498,6 +501,7 @@ class WheelMacroBuilder():
         isok, explanation = True, ''
         if self.has_e0_column:  # deal with older xlsx that have e0 in column H
             offset = 1
+
         for row in self.ws.rows:
             count += 1
             if count < 6:
@@ -505,6 +509,8 @@ class WheelMacroBuilder():
             defaultline = False
             if count == 6:
                 defaultline = True
+            if count > 200:
+                break
             self.measurements.append({'default' :   defaultline,
                                       'slot':       row[1].value,      # sample location
                                       'measure':    self.truefalse(row[2].value),  # filename and visualization

@@ -71,6 +71,7 @@ def xrf(arg):
     xs.measure_xrf()
     return None
 
+
 if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
     print('')
     whoami()

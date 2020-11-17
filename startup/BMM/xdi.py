@@ -164,6 +164,7 @@ def write_XDI(datafile, dataframe):
         metadata.start_doc('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
     if 'xs' in mode:
         metadata.start_doc('# Detector.fluorescence: %s',        'XDI.Detector.fluorescence')
+        metadata.start_doc('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
     if 'yield' in mode:
         metadata.start_doc('# Detector.yield: %s', 'XDI.Detector.yield')
     if kind != 'sead':

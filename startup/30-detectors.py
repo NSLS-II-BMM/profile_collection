@@ -269,92 +269,97 @@ pil     = PilatusGrabber(pilatus)
 # \/   \/\____/\_|   \_| \_\____/\____/\____/ \____/  #
 #######################################################
 
+from BMM.xspress3_4element import BMMXspress3Detector_4Element
+from BMM.xspress3_1element import BMMXspress3Detector_1Element
+use_4element = True
 if with_xspress3 is True:
-    run_report('\t'+'4-element & 1-element SDD with Xspress3')
-    from BMM.xspress3_4element import BMMXspress3Detector_4Element
-    from BMM.xspress3_1element import BMMXspress3Detector_1Element
+    if use_4element:
+        run_report('\t'+'4-element SDD with Xspress3')
 
-    xs  = BMMXspress3Detector_4Element('XF:06BM-ES{Xsp:1}:', name='xs')
-    #xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
-    # This is necessary for when the ioc restarts
-    # we have to trigger one image for the hdf5 plugin to work correctly
-    # else, we get file writing errors
-    xs.hdf5.warmup()
+        xs  = BMMXspress3Detector_4Element('XF:06BM-ES{Xsp:1}:', name='xs')
+        # This is necessary for when the ioc restarts
+        # we have to trigger one image for the hdf5 plugin to work correctly
+        # else, we get file writing errors
+        xs.hdf5.warmup()
 
-    # Hints:
-    for n in range(1,5):
+        # Hints:
+        for n in range(1,5):
+            for m in range(1,17):
+                r = getattr(xs, f'channel{n}').rois
+                thisroi = getattr(r, 'roi{:02}'.format(m))
+                thisroi.value.kind = 'hinted'
+                #getattr(xs, f'channel{n}').rois.roi01.value.kind = 'hinted'
+                #getattr(xs, f'channel{n}').rois.roi02.value.kind = 'hinted'
+                #getattr(xs, f'channel{n}').rois.roi03.value.kind = 'hinted'
+                #getattr(xs, f'channel{n}').rois.roi04.value.kind = 'hinted'
+
+        xs.settings.configuration_attrs = ['acquire_period',
+                                           'acquire_time',
+                                           'gain',
+                                           'image_mode',
+                                           'manufacturer',
+                                           'model',
+                                           'num_exposures',
+                                           'num_images',
+                                           'temperature',
+                                           'temperature_actual',
+                                           'trigger_mode',
+                                           'config_path',
+                                           'config_save_path',
+                                           'invert_f0',
+                                           'invert_veto',
+                                           'xsp_name',
+                                           'num_channels',
+                                           'num_frames_config',
+                                           'run_flags',
+                                           'trigger_signal']
+
+        for n, d in xs.channels.items():
+            roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
+            d.rois.read_attrs = roi_names
+            d.rois.configuration_attrs = roi_names
+            for roi_n in roi_names:
+                getattr(d.rois, roi_n).value_sum.kind = 'omitted'
+
+        xs.set_rois()
+        #xrf = xs.measure_xrf
+
+    else:
+        run_report('\t'+'1-element SDD with Xspress3')
+        xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
+        xs1.hdf5.warmup()
+
         for m in range(1,17):
-            r = getattr(xs, f'channel{n}').rois
+            r = xs1.channel8.rois
             thisroi = getattr(r, 'roi{:02}'.format(m))
             thisroi.value.kind = 'hinted'
-            #getattr(xs, f'channel{n}').rois.roi01.value.kind = 'hinted'
-            #getattr(xs, f'channel{n}').rois.roi02.value.kind = 'hinted'
-            #getattr(xs, f'channel{n}').rois.roi03.value.kind = 'hinted'
-            #getattr(xs, f'channel{n}').rois.roi04.value.kind = 'hinted'
+        xs1.settings.configuration_attrs = ['acquire_period',
+                                            'acquire_time',
+                                            'gain',
+                                            'image_mode',
+                                            'manufacturer',
+                                            'model',
+                                            'num_exposures',
+                                            'num_images',
+                                            'temperature',
+                                            'temperature_actual',
+                                            'trigger_mode',
+                                            'config_path',
+                                            'config_save_path',
+                                            'invert_f0',
+                                            'invert_veto',
+                                            'xsp_name',
+                                            'num_channels',
+                                            'num_frames_config',
+                                            'run_flags',
+                                            'trigger_signal']
 
-    xs.settings.configuration_attrs = ['acquire_period',
-                                       'acquire_time',
-                                       'gain',
-                                       'image_mode',
-                                       'manufacturer',
-                                       'model',
-                                       'num_exposures',
-                                       'num_images',
-                                       'temperature',
-                                       'temperature_actual',
-                                       'trigger_mode',
-                                       'config_path',
-                                       'config_save_path',
-                                       'invert_f0',
-                                       'invert_veto',
-                                       'xsp_name',
-                                       'num_channels',
-                                       'num_frames_config',
-                                       'run_flags',
-                                       'trigger_signal']
-
-    for n, d in xs.channels.items():
+        #for n, d in xs1.channels.items():
         roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
-        d.rois.read_attrs = roi_names
-        d.rois.configuration_attrs = roi_names
+        xs1.channel8.rois.read_attrs = roi_names
+        xs1.channel8.rois.configuration_attrs = roi_names
         for roi_n in roi_names:
-            getattr(d.rois, roi_n).value_sum.kind = 'omitted'
-
-    xs.set_rois()
-    #xrf = xs.measure_xrf
-
-
-    # for m in range(1,17):
-    #     r = xs1.channel8.rois
-    #     thisroi = getattr(r, 'roi{:02}'.format(m))
-    #     thisroi.value.kind = 'hinted'
-    # xs1.settings.configuration_attrs = ['acquire_period',
-    #                                     'acquire_time',
-    #                                     'gain',
-    #                                     'image_mode',
-    #                                     'manufacturer',
-    #                                     'model',
-    #                                     'num_exposures',
-    #                                     'num_images',
-    #                                     'temperature',
-    #                                     'temperature_actual',
-    #                                     'trigger_mode',
-    #                                     'config_path',
-    #                                     'config_save_path',
-    #                                     'invert_f0',
-    #                                     'invert_veto',
-    #                                     'xsp_name',
-    #                                     'num_channels',
-    #                                     'num_frames_config',
-    #                                     'run_flags',
-    #                                     'trigger_signal']
-
-    # #for n, d in xs1.channels.items():
-    # roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
-    # xs1.channel8.rois.read_attrs = roi_names
-    # xs1.channel8.rois.configuration_attrs = roi_names
-    # for roi_n in roi_names:
-    #     getattr(xs1.channel8.rois, roi_n).value_sum.kind = 'omitted'
-    # xs1.set_rois()
-    # #xrf1 = xs1.measure_xrf
+            getattr(xs1.channel8.rois, roi_n).value_sum.kind = 'omitted'
+        xs1.set_rois()
+        #xrf1 = xs1.measure_xrf
 

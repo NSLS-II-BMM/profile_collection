@@ -113,7 +113,7 @@ def img_to_slack(imagefile):
         with open(token_file, "r") as f:
             token = f.read().replace('\n','')
     except:
-        post_to_slack('could not post image: {imagefile}')
+        post_to_slack(f'failed to post image: {imagefile}')
         return()
     client = WebClient(token=token)
     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
@@ -121,11 +121,14 @@ def img_to_slack(imagefile):
         response = client.files_upload(channels='#beamtime', file=imagefile)
         assert response["file"]  # the uploaded file
     except SlackApiError as e:
+        post_to_slack('failed to post image: {imagefile}')
         # You will get a SlackApiError if "ok" is False
         assert e.response["ok"] is False
         assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
         print(f"Got an error: {e.response['error']}")
-    
+    except Exception as em:
+        print("EXCEPTION: " + str(em))
+        report(f'failed to post image: {imagefile}', level='bold', slack=True)
 
 
         

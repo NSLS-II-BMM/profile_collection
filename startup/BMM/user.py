@@ -164,6 +164,9 @@ class BMM_User(Borg):
         self.slack_channel   = None
         self.trigger         = False
         self.wheel           = False
+        self.url             = False
+        self.doi             = False
+        self.cif             = False
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #

@@ -502,6 +502,9 @@ def scan_sequence_static_html(inifile       = None,
                                     ocrs          = ocrs,
                                     rois          = rois,
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),
+                                    url           = url,
+                                    doi           = doi,
+                                    cif           = cif,
                                 ))
     o.close()
 
@@ -513,8 +516,12 @@ def scan_sequence_static_html(inifile       = None,
 
     pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
     if os.path.isfile(pngfile):
-        img_to_slack(pngfile)
-    
+        try:
+            img_to_slack(pngfile)
+        except:
+            post_to_slack('failed to post image: {pngfile}')
+            pass
+            
     return(htmlfilename, prjfilename, pngfilename)
 
 

@@ -1,4 +1,6 @@
 from bluesky import __version__ as bluesky_version
+from ophyd import Component as Cpt
+from ophyd import EpicsSignal
 
 import numpy, h5py
 import pandas as pd
@@ -13,9 +15,8 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number
-from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase
+from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
-#from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
 
 
@@ -32,6 +33,23 @@ from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase
 class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
     '''
+
+    channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
+    channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
+    channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
+    channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
+    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
+
+    mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
+    mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
+    mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
+    mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
+    
+    mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
+    mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
+    mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
+    mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
+    
     
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -39,11 +57,11 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
         #     configuration_attrs = ['external_trig', 'total_points',
         #                            'spectra_per_point', 'settings',
         #                            'rewindable']
-        #if read_attrs is None:
-        #    read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
+        if read_attrs is None:
+            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5']
         super().__init__(prefix, configuration_attrs=None,
                          read_attrs=read_attrs, **kwargs)
-        #self.set_channels_for_hdf5(channels=range(1,5))
+        self.set_channels_for_hdf5(channels=range(1,5))
 
         
     def reset(self):
@@ -53,6 +71,14 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
             getattr(self, f'channel{i}').reset()
             ## this doesn't work, not seeing how those arrays get cleared in the IOC....
             # getattr(self, f'mca{i}_sum').put(numpy.zeros)
+        
+    def restart(self):
+        for n in range(1,5):
+            this = getattr(self, f'channel{n}')
+            this.vis_enabled.put(1)
+            this.extra_rois_enabled.put(1)
+        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
+        super().restart()
         
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.
