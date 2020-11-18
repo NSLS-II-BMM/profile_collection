@@ -3,7 +3,7 @@ resources:
     - repository: templates
       type: github
       name: NSLS-II/profile-collection-ci
-      ref: refs/heads/collection-2020-2.0rc7-1
+      ref: refs/heads/collection-2020-2.0rc9
       endpoint: github
 
 jobs:
