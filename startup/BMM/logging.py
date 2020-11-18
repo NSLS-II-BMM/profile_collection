@@ -40,7 +40,7 @@ if os.path.isfile(BMM_log_master_file):
 
 @set_user_ns
 def get_BMM_nas_log_file(user_ns):
-    os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+    return os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
 
 BMM_nas_log_file = get_BMM_nas_log_file()
 
