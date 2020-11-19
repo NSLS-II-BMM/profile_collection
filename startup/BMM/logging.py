@@ -98,6 +98,7 @@ except:
     print(error_msg('\t\t\tslack_secret file not found!'))
 
 def post_to_slack(text):
+    return
     try:
         channel = BMMuser.slack_channel
     except:

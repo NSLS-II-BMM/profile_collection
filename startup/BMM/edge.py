@@ -180,15 +180,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
     print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
     print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
-    if BMMuser.prompt:
-        action = input("\nBegin energy change? [Y/n then Enter] ")
-        if action.lower() == 'q' or action.lower() == 'n':
-            return(yield from null())
-        if mode == 'C' and energy < 6000:
-            print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-            action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
-            if action.lower() == 'q' or action.lower() == 'n':
-                return(yield from null())
+    # if BMMuser.prompt:
+    #     action = input("\nBegin energy change? [Y/n then Enter] ")
+    #     if action.lower() == 'q' or action.lower() == 'n':
+    #         return(yield from null())
+    #     if mode == 'C' and energy < 6000:
+    #         print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
+    #         action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
+    #         if action.lower() == 'q' or action.lower() == 'n':
+    #             return(yield from null())
         
     start = time.time()
     if mode == 'XRD':

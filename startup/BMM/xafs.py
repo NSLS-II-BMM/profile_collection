@@ -720,11 +720,11 @@ def xafs(inifile=None, *, user_ns, **kwargs):
                 else:
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
 
-            action = input("\nBegin scan sequence? [Y/n then Enter] ")
-            if action.lower() == 'q' or action.lower() == 'n':
-                BMMuser.final_log_entry = False
-                yield from null()
-                return
+            # action = input("\nBegin scan sequence? [Y/n then Enter] ")
+            # if action.lower() == 'q' or action.lower() == 'n':
+            #     BMMuser.final_log_entry = False
+            #     yield from null()
+            #     return
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -780,7 +780,6 @@ def xafs(inifile=None, *, user_ns, **kwargs):
         ## measure XRF spectrum at Eave
         xrfuid, xrffile, xrfimage = None, None, None
         image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
-
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')) and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
