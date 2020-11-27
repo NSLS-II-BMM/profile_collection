@@ -29,10 +29,12 @@ def copy_to_gdrive(fname):
     return()
 
 def synch_gdrive_folder(prefix=''):
+    BMMuser = user_ns['BMMuser']
     print(f'{prefix}updating {gdrive_folder}')
+    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     here = os.getcwd()
-    os.chdir(gdrive_folder)
-    subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
+    os.chdir(user_gdrive_folder)
+    subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet', '.']) 
     os.chdir(here)
     return()
 

@@ -156,6 +156,7 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Beamline.collimation: %s',        'XDI.Beamline.collimation')
     metadata.start_doc('# Beamline.focusing: %s',           'XDI.Beamline.focusing')
     metadata.start_doc('# Beamline.harmonic_rejection: %s', 'XDI.Beamline.harmonic_rejection')
+    metadata.start_doc('# Beamline.software: %s',           'XDI.Beamline.software')
     metadata.start_doc('# Detector.I0: %s',                 'XDI.Detector.I0')
     metadata.start_doc('# Detector.I1: %s',                 'XDI.Detector.It')
     metadata.start_doc('# Detector.I2: %s',                 'XDI.Detector.Ir')

@@ -3,6 +3,12 @@ from ophyd import QuadEM, Component as Cpt, EpicsSignal, EpicsSignalRO, EpicsSig
 import datetime
 import copy
 
+from bluesky    import __version__ as bluesky_version
+from ophyd      import __version__ as ophyd_version
+from databroker import __version__ as databroker_version
+from IPython    import __version__ as ipython_version
+import sys, re
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
@@ -151,6 +157,9 @@ def bmm_metadata(measurement   = 'transmission',
             
         
     (md['Beamline']['focusing'], md['Beamline']['harmonic_rejection']) = mirror_state()
+    collection = re.findall('collection[^/]*', sys.executable)[0]
+    python_version = sys.version.split(' ')[0]
+    md['Beamline']['software'] = f'Bluesky {bluesky_version}, Ophyd {ophyd_version}, DataBroker {databroker_version}, Python {python_version}, IPython {ipython_version}, {collection}'
 
     if direction > 0:
         md['Mono']['direction'] = 'increasing in energy'

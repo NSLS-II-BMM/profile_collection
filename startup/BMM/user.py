@@ -213,7 +213,7 @@ class BMM_User(Borg):
         self.bounds        = [-200, -30, 15.3, '14k']  ## scan grid parameters
         self.steps         = [10, 0.5, '0.05k']
         self.times         = [0.5, 0.5, '0.25k']
-        self.folder        = os.environ.get('HOME')+'/data/'
+        self.folder        = os.environ.get('HOME')+'/Data/'
         self.filename      = 'data.dat'
         self.experimenters = ''
         self.e0            = None
@@ -284,7 +284,8 @@ class BMM_User(Borg):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
-        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4', 'xs1', 'xschannel1'):
+        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4', 'xs1', 'xs2', 'xs3', 'xs4',
+                    'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nCurrent plot attributes:')

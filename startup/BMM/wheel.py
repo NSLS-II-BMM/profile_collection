@@ -395,12 +395,19 @@ class WheelMacroBuilder():
                     if k == 'filename':
                         fname = m[k]
                         el = self.measurements[0]['element']
+                        ed = self.measurements[0]['edge']
                         if 'element' in m:
                             el = m['element']
-                        if self.append_element.lower() == 'beginning':
+                        if 'edge' in m:
+                            ed = m['edge']
+                        if self.append_element.lower() == 'element at beginning':
                             fname = el + '-' + fname
-                        elif self.append_element.lower() == 'end':
+                        elif self.append_element.lower() == 'element at end':
                             fname = fname + '-' + el
+                        elif self.append_element.lower() == 'element+edge at beginning':
+                            fname = el + '-' + ed + '-' +  fname
+                        elif self.append_element.lower() == 'element+edge at end':
+                            fname = fname + '-' + el + '-' + ed
                         command += f', filename=\'{fname}\''
                     elif type(m[k]) is int:
                         command += ', %s=%d' % (k, m[k])

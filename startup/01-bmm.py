@@ -1,4 +1,10 @@
 
+import logging
+logger = logging.getLogger('ophyd')
+logger.setLevel('WARNING')
+logger = logging.getLogger('bluesky')
+logger.setLevel('WARNING')
+
 import json, time
 
 import redis

@@ -116,7 +116,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         edge = 'L3'
         energy = edge_energy(el,'L3')
 
-    if energy < 4950:
+    if energy < 4000:
         print(warning_msg('The %s edge energy is below 4950 eV' % el))
         print(warning_msg('You have to change energy by hand.'))
         return(yield from null())

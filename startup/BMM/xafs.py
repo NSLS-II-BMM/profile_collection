@@ -267,7 +267,7 @@ def scan_metadata(inifile=None, **kwargs):
             print(error_msg('\nThe %s %s edge is at %.1f, which is ABOVE the measurement range for BMM\n' %
                             (parameters['element'], parameters['edge'], parameters['e0'])))
             return {}, {}
-        if parameters['e0'] < 4490:
+        if parameters['e0'] < 4000:
             print(error_msg('\nThe %s %s edge is at %.1f, which is BELOW the measurement range for BMM\n' %
                             (parameters['element'], parameters['edge'], parameters['e0'])))
             return {}, {}
@@ -763,6 +763,8 @@ def xafs(inifile, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
         xrfuid, xrffile, xrfimage = None, None, None
+        image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
+
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if 'xs' in p['mode'] and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
@@ -819,7 +821,11 @@ def xafs(inifile, **kwargs):
             anacam._annotation_string = p['filename']
             print(bold_msg('analog camera snapshot'))
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md})
-            shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
+            try:
+                shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
+            except:
+                print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
+                pass
             #snap('analog', filename=image_ana, sample=p['filename'])
 
             
@@ -862,9 +868,15 @@ def xafs(inifile, **kwargs):
                     DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])]
         elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
+        # elif 'both'  in p['mode']:
+        #     plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
+        #             DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'both'  in p['mode']:
+            yield from mv(xs.settings.acquire_time, 0.5)
+            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] + doc['data'][BMMuser.xs2] + doc['data'][BMMuser.xs3] + doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            #yield from mv(xs.total_points, len(energy_grid))
             plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
-                    DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
+                    DerivedPlot(xspress3,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
             yield from mv(xs.settings.acquire_time, 0.5)
             xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] + doc['data'][BMMuser.xs2] + doc['data'][BMMuser.xs3] + doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
