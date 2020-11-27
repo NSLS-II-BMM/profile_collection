@@ -421,17 +421,17 @@ class WheelMacroBuilder():
 
 
             if type(m['bounds']) is str:
-                b = re.split('[ ,]+', m['bounds'])
+                b = re.split('[ ,]+', m['bounds'].strip())
             else:
-                b = re.split('[ ,]+', self.measurements[0]['bounds'])
+                b = re.split('[ ,]+', self.measurements[0]['bounds'].strip())
             if type(m['steps']) is str:
-                s = re.split('[ ,]+', m['steps'])
+                s = re.split('[ ,]+', m['steps'].strip())
             else:
-                s = re.split('[ ,]+', self.measurements[0]['steps'])
+                s = re.split('[ ,]+', self.measurements[0]['steps'].strip())
             if type(m['times']) is str:
-                t = re.split('[ ,]+', m['times'])
+                t = re.split('[ ,]+', m['times'].strip())
             else:
-                t = re.split('[ ,]+', self.measurements[0]['times'])
+                t = re.split('[ ,]+', self.measurements[0]['times'].strip())
 
             b = [float(x) if isfloat(x) else x for x in b]
             s = [float(x) if isfloat(x) else x for x in s]
