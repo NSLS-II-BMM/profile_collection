@@ -143,7 +143,10 @@ xafs_linx.kill_cmd.kind = 'config'
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
 
-
+xafs_x.default_llm = 2
+xafs_x.default_hlm = 126
+xafs_y.default_llm = 10
+xafs_y.default_hlm = 200
 
 
 def homed():

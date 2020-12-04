@@ -2,7 +2,8 @@
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
 from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
-import numpy
+from bluesky.preprocessors import subs_decorator, finalize_wrapper
+import numpy, datetime
 import os
 
 from bluesky.preprocessors import subs_decorator
@@ -11,10 +12,12 @@ from bluesky.preprocessors import subs_decorator
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
+from BMM.linescans     import motor_nicknames
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -95,6 +98,9 @@ def areascan(detector,
         if detector == 'If':
             dets.append(vor)
             detector = 'ROI1'
+        if detector.lower() == 'xs':
+            dets.append(xs)
+            detector = BMMuser.xs1
 
         
         if 'PseudoSingle' in str(type(slow)):
@@ -136,11 +142,11 @@ def areascan(detector,
         areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
                             xlabel='fast motor: %s' % fast.name,
                             ylabel='slow motor: %s' % slow.name)
-        BMMuser.ax     = areaplot.ax
-        BMMuser.fig    = areaplot.ax.figure
+        #BMMuser.ax     = areaplot.ax
+        #BMMuser.fig    = areaplot.ax.figure
         BMMuser.motor  = fast
         BMMuser.motor2 = slow
-        BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
+        #BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
 
         thismd = dict()
         thismd['XDI'] = dict()
@@ -222,6 +228,9 @@ def areascan(detector,
         BMMuser.ax     = None
 
     RE, BMMuser, _locked_dwell_time, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['_locked_dwell_time'], user_ns['rkvs']
+    db, quadem1, vor = user_ns['db'], user_ns['quadem1'], user_ns['vor']
+    if user_ns['with_xspress3']:
+        xs = user_ns['xs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -235,11 +244,11 @@ def areascan(detector,
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     ## encapsulation!
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(detector,
-                                                                slow, startslow, stopslow, nslow,
-                                                                fast, startfast, stopfast, nfast,
-                                                                pluck, force, dwell, md),
-                                                      cleanup_plan())
+    yield from finalize_wrapper(main_plan(detector,
+                                          slow, startslow, stopslow, nslow,
+                                          fast, startfast, stopfast, nfast,
+                                          pluck, force, dwell, md),
+                                cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
         

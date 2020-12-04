@@ -79,6 +79,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
 
     '''
     BMMuser, RE, dcm, dm3_bct, dcm_pitch = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'] , user_ns['dcm_pitch']
+    rkvs = user_ns['rkvs']
     try:
         xs = user_ns['xs']
     except:
@@ -128,7 +129,11 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     BMMuser.edge        = edge
     BMMuser.element     = el
     BMMuser.edge_energy = energy
+    rkvs.set('BMM:pds:edge',        edge)
+    rkvs.set('BMM:pds:element',     el)
+    rkvs.set('BMM:pds:edge_energy', energy)
 
+    
     if energy > 8000:
         mode = 'A' if focus else 'D'
     elif energy < 6000:

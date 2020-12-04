@@ -144,9 +144,6 @@ def show_reference_wheel():
     text += '\n'
     return(text)
 
-
-
-
 class WheelMacroBuilder():
     '''A class for parsing specially constructed spreadsheets and
     generating macros for measuring XAS on the BMM wheel.
@@ -339,9 +336,9 @@ class WheelMacroBuilder():
             ############################
             self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
             if m['samplex'] is not None:
-                self.content += self.tab + 'yield from mv(xafs_x, %d)\n' % m['samplex']
+                self.content += self.tab + 'yield from mv(xafs_x, %.3f)\n' % m['samplex']
             if m['sampley'] is not None:
-                self.content += self.tab + 'yield from mv(xafs_y, %d)\n' % m['sampley']
+                self.content += self.tab + 'yield from mv(xafs_y, %.3f)\n' % m['sampley']
             if m['slitwidth'] is not None:
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
 

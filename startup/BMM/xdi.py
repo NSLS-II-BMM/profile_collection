@@ -272,7 +272,12 @@ def write_XDI(datafile, dataframe):
     handle.write('# -----------' + eol)
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
-    if 'fluo' in mode or 'flou' in mode or 'both' in mode:
+    if user_ns['with_xspress3'] and 'fluo' in mode or 'flou' in mode or 'both' in mode:
+        table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
+        column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+    elif 'fluo' in mode or 'flou' in mode or 'both' in mode:
         table['xmu'] = (table[BMMuser.dtc1] + table[BMMuser.dtc2] + table[BMMuser.dtc4]) / table['I0']
         if kind == '333':
             table['333_energy'] = table['dcm_energy']*3

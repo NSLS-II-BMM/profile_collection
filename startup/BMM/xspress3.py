@@ -37,7 +37,7 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 from BMM.db            import file_resource
-from BMM.edge          import show_edges()
+from BMM.edge          import show_edges
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
         
@@ -304,15 +304,15 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     def reset_rois(self, el=None):
         BMMuser = user_ns['BMMuser']
         if el is None:
-            el = BMMuser.element()
+            el = BMMuser.element
         if el in self.slots:
-            print(error_msg(f'Resetting rois with {el} as the active ROI')
+            print(error_msg(f'Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
             show_edges()
         else:
-            print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots')
+            print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
             
     # def ini2json(self):
     #     rj = {'OCR': {'k':  {'low': 1, 'high': 4095}},}

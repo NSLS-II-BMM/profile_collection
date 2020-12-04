@@ -1,5 +1,5 @@
 
-from bluesky.plan_stubs import abs_set
+from bluesky.plan_stubs import abs_set, mv
 
 
 from IPython import get_ipython

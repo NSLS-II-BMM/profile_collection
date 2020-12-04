@@ -850,6 +850,12 @@ def xafs(inifile, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
+        if user_ns['with_xspress3']:
+            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
+                                                                doc['data'][BMMuser.xs2] +
+                                                                doc['data'][BMMuser.xs3] +
+                                                                doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            
         if BMMuser.detector == 1:
             fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
         else:
@@ -857,7 +863,12 @@ def xafs(inifile, **kwargs):
                                                              doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
                                                              doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
-            plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
+            if user_ns['with_xspress3']:
+                yield from mv(xs.settings.acquire_time, 0.5)
+                #yield from mv(xs.total_points, len(energy_grid))
+                plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
+            else:
+                plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
         elif 'trans' in p['mode']:
             plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
         elif 'ref'   in p['mode']:
@@ -868,18 +879,17 @@ def xafs(inifile, **kwargs):
                     DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])]
         elif 'test'  in p['mode']:
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
-        # elif 'both'  in p['mode']:
-        #     plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
-        #             DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'both'  in p['mode']:
-            yield from mv(xs.settings.acquire_time, 0.5)
-            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] + doc['data'][BMMuser.xs2] + doc['data'][BMMuser.xs3] + doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
-            #yield from mv(xs.total_points, len(energy_grid))
-            plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
-                    DerivedPlot(xspress3,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
+            if user_ns['with_xspress3']:
+                yield from mv(xs.settings.acquire_time, 0.5)
+                #yield from mv(xs.total_points, len(energy_grid))
+                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
+                        DerivedPlot(xspress3,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
+            else:
+                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
+                        DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
             yield from mv(xs.settings.acquire_time, 0.5)
-            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] + doc['data'][BMMuser.xs2] + doc['data'][BMMuser.xs3] + doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             #yield from mv(xs.total_points, len(energy_grid))
             plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
         else:
@@ -1062,7 +1072,7 @@ def xafs(inifile, **kwargs):
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata})
-                elif p['mode'] == 'xs':
+                elif user_ns['with_xspress3'] is True:
                     uid= yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
                                             md={**xdi, **supplied_metadata})
                 else:

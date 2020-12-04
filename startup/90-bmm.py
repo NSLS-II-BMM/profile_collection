@@ -17,6 +17,9 @@ from BMM.suspenders import BMM_suspenders, BMM_clear_to_start
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
 
+run_report('\t'+'positioning of instruments')
+from BMM.positioning import find_slot
+
 run_report('\t'+'areascan')
 from BMM.areascan import areascan, as2dat
 
@@ -110,6 +113,10 @@ if rois.trigger is True:        # set Struck rois from persistent user informati
           rois.set(BMMuser.rois)
           rois.select(BMMuser.element)
      rois.trigger = False
+
+if BMMuser.element is None:
+     BMMuser.element = rkvs.get('BMM:pds:element')
+     BMMuser.edge    = rkvs.get('BMM:pds:edge')
 if BMMuser.element is not None: # make sure Xspress3 is configured to measure from the correct ROI
      try:
           xs.measure_roi()

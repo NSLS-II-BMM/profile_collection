@@ -8,6 +8,7 @@ from BMM.functions import BMM_STAFF
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
+from BMM.periodictable import edge_energy
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -252,10 +253,10 @@ class BMM_User(Borg):
 
     def to_json(self, filename=None):
         ## avoid this: TypeError: can't pickle _thread.RLock objects
-        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8]
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8 = [None, ] * 5
+        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig]
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig = [None, ] * 7
         d = copy.deepcopy(self.__dict__)
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8 = save
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig = save
         for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8'):
             del d[k]
         if filename is None:
@@ -266,12 +267,17 @@ class BMM_User(Borg):
             print(f'wrote BMMuser state to {filename}')
 
     def from_json(self, filename):
+        rkvs = user_ns['rkvs']
         if os.path.isfile(filename):
             with open(filename, 'r') as jsonfile:
                 config = json.load(jsonfile)
             for k in config.keys():
                 setattr(self, k, config[k])
             user_ns['rois'].trigger = True
+        rkvs.set('BMM:pds:edge',        config['edge'])
+        rkvs.set('BMM:pds:element',     config['element'])
+        rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
+            
             
     def show(self, scan=False):
         '''
