@@ -8,7 +8,7 @@ import numpy
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import isfloat
+from BMM.functions      import isfloat, present_options
 from BMM.motors         import EndStationEpicsMotor
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.logging        import report
@@ -171,7 +171,8 @@ class WheelMacroBuilder():
         self.has_e0_column   = False
         self.verbose         = False
 
-    def spreadsheet(self, spreadsheet, energy=False):
+            
+    def spreadsheet(self, spreadsheet=None, energy=False):
         '''Convert a wheel macro spreadsheet to a BlueSky plan.
 
         Examples
@@ -185,6 +186,11 @@ class WheelMacroBuilder():
         >>> xlsx('MySamples', energy=True)
 
         '''
+        if spreadsheet is None:
+            spreadsheet = present_options('xlsx')
+        if spreadsheet is None:
+            print(error_msg('No spreadsheet specified!'))
+            return
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
         self.source   = os.path.join(self.folder, spreadsheet)

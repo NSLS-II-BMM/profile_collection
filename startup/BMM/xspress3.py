@@ -25,7 +25,7 @@ from pathlib import PurePath
 from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
                                        Xspress3Channel, Xspress3FileStore, logger)
 
-import numpy, h5py
+import numpy, h5py, json
 #import pandas as pd
 import itertools, os
 import time as ttime
@@ -203,8 +203,8 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         
         self.slots = ['Ti', 'V',  'Cr', 'Mn',
                       'Fe', 'Co', 'Ni', 'Cu',
-                      'Zn', 'As', 'Pt', 'Pb',
-                      'Ce', 'Gd', 'I',  'OCR']
+                      'Zn', 'Ge', 'As', 'Br',
+                      None, None, None, 'OCR']
         self.restart()
         # self.settings.num_images.put(1)   # number of frames
         # self.settings.trigger_mode.put(1) # trigger mode internal
@@ -374,6 +374,26 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         text += '\n'
         return(text)
 
+
+    def check_element(self, element, edge):
+        '''Check that the current element and edge is tabulate in rois.json
+        '''
+        startup_dir = get_ipython().profile_dir.startup_dir
+        with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
+            js = fl.read()
+        allrois = json.loads(js)
+        if element.capitalize() not in allrois:
+            #print(f'{element} is not a tabulated element')
+            return False
+        this = allrois[element]
+        if edge.lower() not in this:
+            #print(f'ROIs for the {element} {edge} edge are not tabulated')
+            return False
+        if this[edge.lower()]['low'] == 0 or this[edge.lower()]['high'] == 0:
+            #print(f'ROIs for the {element} {edge} edge are not tabulated')
+            return False
+        return True
+    
 
     def measure_xrf_plan(self, exposure=1.0):
         yield from mv(self.settings.acquire_time, exposure)

@@ -8,7 +8,7 @@ logger.setLevel('WARNING')
 import json, time
 
 import redis
-rkvs = redis.Redis(host='localhost', port=6379, db=0)
+rkvs = redis.Redis(host='xf06bm-ws1', port=6379, db=0)
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'

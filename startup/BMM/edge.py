@@ -205,7 +205,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     close_last_plot()
     
     ##########################
-    # run a slits height scan #
+    # run a slit height scan #
     ##########################
     if slits:
         print('Optimizing slits height...')
@@ -213,17 +213,33 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         close_last_plot()
         ## redo rocking curve?
 
-    ###################
-    # set roi channel #
-    ###################
+    ##################################
+    # set reference and roi channels #
+    ##################################
     if not xrd:
-        ## Struck
+        ## reference channel
         rois = user_ns['rois']
         print('Moving reference foil...')
         yield from rois.select_plan(el)
         ## Xspress3
         try:
-            xs.measure_roi()
+            ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
+            if xs.check_element(el, edge):
+                #forceit = False
+                #if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
+                #    forceit = True # Pb and Pt L3 edges are "standard" ROIs
+                if el not in xs.slots: # or forceit:
+                    xs.set_rois()
+                    xs.slots[12] = el
+                    for ch in range(1,5):
+                        xs.set_roi_channel(channel=ch, index=13, name=f'{el.capitalize()}{ch}',
+                                           low =allrois[el.capitalize()][edge.lower()]['low'],
+                                           high=allrois[el.capitalize()][edge.lower()]['high'])
+
+                xs.measure_roi()
+            else:
+                report(f'No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
+                       level='bold', slack=True)
         except:
             pass
         ## feedback
@@ -232,7 +248,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     if mode == 'XRD':
         report('Finished configuring for XRD', level='bold', slack=True)
     else:
-        report(f'Finished configuring for {el} edge', level='bold', slack=True)
+        report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     yield from dcm.kill_plan()

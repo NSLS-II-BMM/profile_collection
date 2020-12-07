@@ -187,3 +187,20 @@ def elapsed_time(start):
     minutes, seconds = divmod(rest, 60)
     print(f'\n\nThat took {hours} hours, {minutes} minutes, {seconds:.0f} seconds')
     
+
+def present_options(suffix='xlsx'):
+    BMMuser = user_ns['BMMuser']
+    options = [x for x in os.listdir(BMMuser.folder) if x.endswith(suffix)]
+    print(f'Select your {suffix} file:\n')
+    for i,x in enumerate(sorted(options)):
+        print(f' {i+1:2}: {x}')
+
+    print('\n  c: cancel')
+    choice = input("\nSelect a file > ")
+    try:
+        if int(choice) > 0 and int(choice) <= len(options):
+            return options[int(choice)-1]
+        else:
+            return None
+    except:
+        return None

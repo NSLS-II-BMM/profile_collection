@@ -95,7 +95,7 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
             elif el is None:
                 continue
             edge = 'k'
-            if Z_number(el) > 46:
+            if Z_number(el) > 45:
                 edge = 'l3'
             for ch in range(1,5):
                 self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])

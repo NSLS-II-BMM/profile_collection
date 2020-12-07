@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from BMM.db            import file_resource
 from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
 from BMM.larch         import Pandrosus, Kekropidai
@@ -553,7 +553,7 @@ def write_manifest():
 #########################
 # -- the main XAFS scan #
 #########################
-def xafs(inifile, **kwargs):
+def xafs(inifile=None, **kwargs):
     '''
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
@@ -766,7 +766,7 @@ def xafs(inifile, **kwargs):
         image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
 
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
-        if 'xs' in p['mode'] and BMMuser.lims is True:
+        if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')) and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.settings.acquire_time, 1)
             xrfuid = yield from count([xs], 1, md = {'XDI':md})
@@ -917,7 +917,7 @@ def xafs(inifile, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
-            if 'xs' in p['mode']:
+            if uxer_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
                 yield from mv(xs.total_points, len(energy_grid))
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
@@ -1017,7 +1017,7 @@ def xafs(inifile, **kwargs):
                 report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname
 
-                if p['mode'] == 'xs':
+                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
                     hdf5_uid = xs.hdf5.file_name.value
@@ -1058,7 +1058,7 @@ def xafs(inifile, **kwargs):
                 
                 md['_kind'] = 'xafs'
                 if p['ththth']: md['_kind'] = '333'
-                if p['mode'] == 'xs':
+                if user_ns['with_xspress3'] and any(x in m for p['mode'] in ('xs', 'fluo', 'flou')):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
@@ -1081,7 +1081,7 @@ def xafs(inifile, **kwargs):
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
-                if p['mode'] == 'xs':
+                if user_ns['with_xspress3'] and any(x in m for p['mode'] in ('xs', 'fluo', 'flou')):
                     hdf5_uid = xs.hdf5.file_name.value
                 
                 uidlist.append(uid)
@@ -1226,14 +1226,18 @@ def xafs(inifile, **kwargs):
     if BMMuser.lims is False:
         BMMuser.snapshot = False
         BMMuser.htmlout  = False
-    ## encapsulation!
+
+    if inifile is None:
+        inifile = present_options('ini')
+    if inifile is None:
+        return(yield from null())
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'    
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 
 
-def howlong(inifile, interactive=True, **kwargs):
+def howlong(inifile=None, interactive=True, **kwargs):
     '''
     Estimate how long the scan sequence in an XAFS control file will take.
     Parameters from control file are composable via kwargs.
@@ -1255,8 +1259,10 @@ def howlong(inifile, interactive=True, **kwargs):
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     BMMuser = user_ns['BMMuser']
-    #if inifile is None:
-    #    inifile = 'scan.ini'
+    if inifile is None:
+        inifile = present_options('ini')
+    if inifile is None:
+        return('', -1)
     if inifile[-4:] != '.ini':
         inifile = inifile+'.ini'
     orig = inifile
