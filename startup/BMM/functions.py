@@ -191,8 +191,9 @@ def elapsed_time(start):
 def present_options(suffix='xlsx'):
     BMMuser = user_ns['BMMuser']
     options = [x for x in os.listdir(BMMuser.folder) if x.endswith(suffix)]
+    options = sorted(options)
     print(f'Select your {suffix} file:\n')
-    for i,x in enumerate(sorted(options)):
+    for i,x in enumerate(options):
         print(f' {i+1:2}: {x}')
 
     print('\n  c: cancel')
@@ -204,3 +205,4 @@ def present_options(suffix='xlsx'):
             return None
     except:
         return None
+

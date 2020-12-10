@@ -104,6 +104,10 @@ from BMM.telemetry import BMMTelementry
 tele = BMMTelementry()
 
 run_report('\t'+'user interaction')
+from BMM.wdywtd import WDYWTD
+_do = WDYWTD()
+do = _do.wdywtd
+
 from BMM.prompt import MyPrompt, BMM_help, BMM_keys
 ip = get_ipython()
 ip.prompts = MyPrompt(ip)

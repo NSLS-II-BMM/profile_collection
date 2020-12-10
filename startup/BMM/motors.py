@@ -182,7 +182,13 @@ class EndStationEpicsMotor(EpicsMotor):
     def wh(self):
         return(round(self.user_readback.get(), 3))
 
-
+    def reset_limits(self):
+        '''Reset motor limits if default limit values are explicitly defined.'''
+        if hasattr(self, 'default_llm'):
+            self.llm.put(self.default_llm)
+        if hasattr(self, 'default_hlm'):
+            self.hlm.put(self.default_hlm)
+    
 
 from numpy import tan, arctan2
 

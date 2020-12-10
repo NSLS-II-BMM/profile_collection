@@ -45,7 +45,7 @@ BMMuser.start_experiment_from_serialization()
 if BMMuser.pds_mode is None:
     try:                        # do the right then when "%run -i"-ed
         BMMuser.pds_mode = get_mode()
-    except:                     # else wait until later to set this correctly, get_mode() defined in 74-mode.py
+    except:                     # else wait until later to set this correctly, get_mode()
         pass
 ## some backwards compatibility....
 whoami           = BMMuser.show_experiment

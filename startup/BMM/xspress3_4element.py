@@ -2,7 +2,7 @@ from bluesky import __version__ as bluesky_version
 from ophyd import Component as Cpt
 from ophyd import EpicsSignal
 
-import numpy, h5py
+import numpy, h5py, math
 import pandas as pd
 import itertools, os, json
 
@@ -182,15 +182,26 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
                 continue
             if el != 'OCR':
                 el = el[:-1]
-            if el == BMMuser.element or el == 'OCR':
+            if '_value' in el:
+                print(' None', end='')
+                for c in (1,2,3,4):
+                    print(f"  {0:7}  ", end='')
+                print('')
+            elif el == BMMuser.element or el == 'OCR':
                 print(go_msg(f' {el:3} '), end='')
                 for c in (1,2,3,4):
-                    print(go_msg(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  "), end='')
+                    val = getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()
+                    if math.isnan(val):
+                        val = 0
+                    print(go_msg(f"  {int(val):7}  "), end='')
                 print('')
             else:                
                 print(f' {el:3} ', end='')
                 for c in (1,2,3,4):
-                    print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
+                    val = getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()
+                    if math.isnan(val):
+                        val = 0
+                    print(f"  {int(val):7}  ", end='')
                 print('')
 
 
