@@ -34,7 +34,7 @@ mcs8_motors.extend([m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd])
 dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
 dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
 mcs8_motors.extend([dm1_filters1, dm1_filters2])
-dm1_filters2.llm.value = -52
+dm1_filters2.llm.put(-52)
 
 
 ## monochromator
@@ -48,8 +48,8 @@ dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
 mcs8_motors.extend([dcm_bragg, dcm_pitch, dcm_roll, dcm_perp,
                    dcm_para, dcm_x, dcm_y])
 
-dcm_para.hlm.value = 161        # this is 21200 on the Si(111) mono
-#                               # hard limit is at 162.48
+dcm_para.hlm.put(161)        # this is 21200 on the Si(111) mono
+#                            # hard limit is at 162.48
 
 dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
@@ -58,8 +58,8 @@ dcm_bragg.velocity.put(0.3)
 dcm_bragg.acceleration.put(BMMuser.acc_fast)
 
 ## for some reason, this needs to be set explicitly
-dcm_x.hlm.value = 68
-dcm_x.llm.value = 0
+dcm_x.hlm.put(68)
+dcm_x.llm.put(0)
 dcm_x.velocity.put(0.6)
 
 ## this is about as fast as this motor can go, 1.25 results in a following error

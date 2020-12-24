@@ -80,7 +80,7 @@ run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
-from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
+from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
 
 run_report('\t'+'Larch')
 from BMM.larch import Pandrosus, Kekropidai

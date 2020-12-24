@@ -917,7 +917,7 @@ def xafs(inifile=None, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
-            if uxer_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
+            if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
                 yield from mv(xs.total_points, len(energy_grid))
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
@@ -1058,7 +1058,7 @@ def xafs(inifile=None, **kwargs):
                 
                 md['_kind'] = 'xafs'
                 if p['ththth']: md['_kind'] = '333'
-                if user_ns['with_xspress3'] and any(x in m for p['mode'] in ('xs', 'fluo', 'flou')):
+                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
@@ -1081,7 +1081,7 @@ def xafs(inifile=None, **kwargs):
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
-                if user_ns['with_xspress3'] and any(x in m for p['mode'] in ('xs', 'fluo', 'flou')):
+                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
                     hdf5_uid = xs.hdf5.file_name.value
                 
                 uidlist.append(uid)

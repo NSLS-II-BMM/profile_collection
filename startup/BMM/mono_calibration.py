@@ -3,21 +3,24 @@ from bluesky.preprocessors import finalize_wrapper
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 import matplotlib.pyplot as plt
 
-import configparser
+import configparser, os
 config = configparser.ConfigParser()
 
 import lmfit
-from numpy import array
+from numpy import array, pi, sin, linspace, arange
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 
-from BMM.functions     import HBARC, boxedtext
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.xafs          import xafs
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start
-from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.dcm_parameters import dcm_parameters
+from BMM.edge           import change_edge
+from BMM.functions      import HBARC, boxedtext
+from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.logging        import BMM_log_info, BMM_msg_hook
+from BMM.xafs           import xafs
+from BMM.resting_state  import resting_state_plan
+from BMM.suspenders     import BMM_clear_to_start
+from BMM.derivedplot    import close_all_plots, close_last_plot, interpret_click
+
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -131,6 +134,8 @@ def calibrate_high_end(mono='111'):
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'a')
     
+        yield from shb.open_plan()
+
         yield from change_edge('Pt', target=0)
         pitch = dcm_pitch.user_readback.get()
         yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', edge='Pt', e0=11563, sample='Pt foil')
@@ -187,12 +192,16 @@ def calibrate():
     yield from calibrate_high_end()
 
 def calibrate_mono(mono='111'):
-    BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
+    BMMuser, shb, dcm, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm'], user_ns['dcm_pitch']
+    BMM_dcm = dcm_parameters()
     # read content from INI file
-    if mono == '111':
-        config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges111.ini'))
-    else:
-        config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges311.ini'))
+    datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
+    print(f'reading {datafile}')
+    config.read_file(open(datafile))
+    #if mono == '111':
+    #    config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges111.ini'))
+    #else:
+    #    config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges311.ini'))
     # mono      = config.get('config', 'mono')
     DSPACING  = float(config.get('config', 'DSPACING'))
     # thistitle = config.get('config', 'thistitle')
@@ -257,11 +266,11 @@ def calibrate_mono(mono='111'):
     boxedtext('comparison with tabulated values', text, 'lightgray')
     text = ' self.dspacing_%s = %.7f\n' % (dcm._crystal, d_spacing)
     if dcm._crystal == '111':
-        text += ' self.offset_111 = %.7f' % (BMM_dcm.offset_111 - offset)
+        text += ' self.offset_111 = %.7f' % (BMM_dcm.offset_111 + offset)
         boxedtext('new values for 19-dcm-parameters.py', text, 'lightgray')
     else:
-        text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 - offset)
-        boxedtext('new values for 19-dcm-parameters.py', text, 'lightgray')
+        text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 + offset)
+        boxedtext('new values for BMM/dcm-parameters.py', text, 'lightgray')
     
     y1 = 13.5
     y2 = 12.9
@@ -269,7 +278,7 @@ def calibrate_mono(mono='111'):
         (y1, y2) = (2*y1, 2*y2)
 
     ## cubic interpolation of tabulated edge energies ... eye candy
-    xnew = np.linspace(min(ee),max(ee),100)
+    xnew = linspace(min(ee),max(ee),100)
     f = interp1d(ee, tt, kind='cubic')
         
     plt.cla()
@@ -284,6 +293,6 @@ def calibrate_mono(mono='111'):
     legend = plt.legend(loc='upper right', shadow=True)
     plt.show()
     
-    plottheta = numpy.arange(20.0, 5.0,-0.1)
+    plottheta = arange(20.0, 5.0,-0.1)
     if mono == '311':
-        plottheta = numpy.arange(36.0,10.0,-0.1)
+        plottheta = arange(36.0,10.0,-0.1)

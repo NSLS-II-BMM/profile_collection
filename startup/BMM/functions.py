@@ -196,7 +196,7 @@ def present_options(suffix='xlsx'):
     for i,x in enumerate(options):
         print(f' {i+1:2}: {x}')
 
-    print('\n  c: cancel')
+    print('\n  r: return')
     choice = input("\nSelect a file > ")
     try:
         if int(choice) > 0 and int(choice) <= len(options):
