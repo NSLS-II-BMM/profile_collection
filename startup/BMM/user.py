@@ -274,8 +274,8 @@ class BMM_User(Borg):
             for k in config.keys():
                 setattr(self, k, config[k])
             user_ns['rois'].trigger = True
-        rkvs.set('BMM:pds:edge',        config['edge'])
-        rkvs.set('BMM:pds:element',     config['element'])
+        rkvs.set('BMM:pds:edge',        str(config['edge']))
+        rkvs.set('BMM:pds:element',     str(config['element']))
         rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
             
             

@@ -5,10 +5,11 @@ logger.setLevel('WARNING')
 logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
 
+from BMM.workspace import initialize_workspace, rkvs
+initialize_workspace()
+
 import json, time
 
-import redis
-rkvs = redis.Redis(host='xf06bm-ws1', port=6379, db=0)
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'

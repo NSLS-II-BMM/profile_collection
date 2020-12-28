@@ -41,12 +41,6 @@ def calibrate_low_end(mono='111'):
     def main_plan():
         BMMuser.prompt = False
 
-        ### ---------------------------------------------------------------------------------------
-        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
-        ##  EDIT BELOW THIS LINE
-
-        #foils.set('Fe Co Ni Cu Zn') 
-        
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'w')
         handle.write('[config]\n')
@@ -100,11 +94,7 @@ def calibrate_low_end(mono='111'):
         handle.flush()
         handle.close()
 
-        yield from shb.close_plan()
-        
-        ##  EDIT ABOVE THIS LINE
-        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
-        ### ---------------------------------------------------------------------------------------
+        #yield from shb.close_plan()
 
     def cleanup_plan():
         yield from resting_state_plan()
@@ -124,17 +114,10 @@ def calibrate_high_end(mono='111'):
     BMM_log_info('Beginning high end calibration macro')
     def main_plan():
         BMMuser.prompt = False
-
-        ### ---------------------------------------------------------------------------------------
-        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
-        ##  EDIT BELOW THIS LINE
-
-        #foils.set('Pt Au Pb Nb Mo') 
-        
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'a')
     
-        yield from shb.open_plan()
+        #yield from shb.open_plan()
 
         yield from change_edge('Pt', target=0)
         pitch = dcm_pitch.user_readback.get()
@@ -173,11 +156,7 @@ def calibrate_high_end(mono='111'):
         handle.flush()
         handle.close()
 
-        yield from shb.close_plan()
-        
-        ##  EDIT ABOVE THIS LINE
-        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
-        ### ---------------------------------------------------------------------------------------
+        #yield from shb.close_plan()
 
     def cleanup_plan():
         yield from resting_state_plan()
@@ -194,17 +173,12 @@ def calibrate():
 def calibrate_mono(mono='111'):
     BMMuser, shb, dcm, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm'], user_ns['dcm_pitch']
     BMM_dcm = dcm_parameters()
+
     # read content from INI file
     datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
     print(f'reading {datafile}')
     config.read_file(open(datafile))
-    #if mono == '111':
-    #    config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges111.ini'))
-    #else:
-    #    config.read_file(open('/home/xf06bm/Data/Staff/mono_calibration/edges311.ini'))
-    # mono      = config.get('config', 'mono')
     DSPACING  = float(config.get('config', 'DSPACING'))
-    # thistitle = config.get('config', 'thistitle')
     thistitle = 'Si(%s) calibration curve' % mono
 
     edges = dict()

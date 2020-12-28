@@ -10,6 +10,7 @@ pid/
 
 
 slack_secret
+image_uploader_token
 *.save__
 
 

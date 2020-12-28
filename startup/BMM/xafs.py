@@ -1311,4 +1311,39 @@ def howlong(inifile=None, interactive=True, **kwargs):
         return(inifile, text)
 
 
-    
+def xafs_grid(inifile=None, **kwargs):
+    '''
+    Return the energy and time grids specified in an INI file.
+
+    '''
+
+    ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+    ## user input, find and parse the INI file
+    ## try inifile as given then DATA + inifile
+    ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
+    BMMuser = user_ns['BMMuser']
+    if inifile is None:
+        inifile = present_options('ini')
+    if inifile is None:
+        return('', -1)
+    if inifile[-4:] != '.ini':
+        inifile = inifile+'.ini'
+    orig = inifile
+    if not os.path.isfile(inifile):
+        inifile = os.path.join(BMMuser.DATA, inifile)
+        if not os.path.isfile(inifile):
+            print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
+            return(orig, -1)
+    print(bold_msg('reading ini file: %s' % inifile))
+    (p, f) = scan_metadata(inifile=inifile, **kwargs)
+    if not p:
+        print(error_msg('%s could not be read as an XAFS control file\n' % inifile))
+        return(orig, -1)
+    (ok, missing) = ini_sanity(f)
+    if not ok:
+        print(error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing))
+        return(orig, -1)
+    (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
+    print(f'{p["element"]} {p["edge"]}')
+    return(energy_grid, time_grid)
+

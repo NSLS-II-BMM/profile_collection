@@ -188,7 +188,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
     enot = e0
     if ththth:
         enot = e0/3.0
-        bounds = list(array(bounds)/3)
+        bounds = list(numpy.array(bounds)/3)
     grid = list()
     timegrid = list()
     for i,s in enumerate(steps):

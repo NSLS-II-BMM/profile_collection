@@ -80,7 +80,7 @@ run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
-from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
+from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
 
 run_report('\t'+'Larch')
 from BMM.larch import Pandrosus, Kekropidai
@@ -119,8 +119,14 @@ if rois.trigger is True:        # set Struck rois from persistent user informati
      rois.trigger = False
 
 if BMMuser.element is None:
-     BMMuser.element = rkvs.get('BMM:pds:element')
-     BMMuser.edge    = rkvs.get('BMM:pds:edge')
+     try:
+          BMMuser.element = str(rkvs.get('BMM:pds:element'), 'utf-8')
+     except:
+          pass
+     try:
+          BMMuser.edge    = str(rkvs.get('BMM:pds:edge'), 'utf-8')
+     except:
+          pass
 if BMMuser.element is not None: # make sure Xspress3 is configured to measure from the correct ROI
      try:
           xs.measure_roi()
