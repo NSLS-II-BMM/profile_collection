@@ -95,10 +95,11 @@ def initialize_secrets():
             print(f'{TAB}Found {fname} file: {CHECK}')
         else:
             try:
-                shutil.copyfile(os.path.join(SECRETS, fname), STARTUP)
+                shutil.copyfile(os.path.join(SECRETS, fname), os.path.join(STARTUP, fname))
                 print(f'{TAB}Copied {fname} file')
-            except:
-                print(error_msg(f'{TAB}Failed to copy {fname} file!'))
+            except Exception as e:
+                print(e)
+                print(error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
 
                 
 def initialize_redis():
