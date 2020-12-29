@@ -22,26 +22,35 @@ except:
 def show_shutters():
 
     ena_text = '  Beamline: '
-    if bl_enabled.get() == 1:
-        ena_text += 'enabled      '
-    else:
-        ena_text += error_msg('disabled      ')
-    
-    bmps_state = bool(bmps.state.get())
+    try:
+        if bl_enabled.get() == 1:
+            ena_text += 'enabled      '
+        else:
+            ena_text += error_msg('disabled      ')
+    except:
+        ena_text += whisper('unavailable   ')
+        
     bmps_text = '  BMPS: '
+    try:
+        bmps_state = bool(bmps.state.get())
+        if bmps_state is True:
+            bmps_text += 'open'
+        else:
+            bmps_text += error_msg('closed')
+    except:
+        bmps_text += whisper('unavailable   ')
 
-    if bmps_state is True:
-        bmps_text += 'open'
-    else:
-        bmps_text += error_msg('closed')
-
-    idps_state = bool(idps.state.get())
+        
     idps_text = '            IDPS: '
-    if idps_state is True:
-        idps_text += 'open'
-    else:
-        idps_text += error_msg('closed')
-
+    try:
+        idps_state = bool(idps.state.get())
+        if idps_state is True:
+            idps_text += 'open'
+        else:
+            idps_text += error_msg('closed')
+    except:
+        idps_text += whisper('unavailable   ')
+        
     # sha_state = bool(sha.enabled.get()) and bool(sha.state.get())
     # sha_text = '            FOE Shutter: '
     # if sha_state is True:
