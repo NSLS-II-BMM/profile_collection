@@ -194,6 +194,7 @@ class BMMSnapshot(Device):
         self._counter = None  # set to an itertools.count object when staged
         self._asset_docs_cache = []
         self._annotation_string = ''
+        self.device = None      # needed for the fswebcam interface
         if which.lower() =='xrd':
             self._SPEC = "BMM_XRD_WEBCAM"
             self._url = 'http://xf06bm-cam5/axis-cgi/jpg/image.cgi'
@@ -243,7 +244,7 @@ class BMMSnapshot(Device):
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
                 annotate_image(filename, annotation)
             else:
-                analog_camera(filename=filename, sample=self._annotation_string, folder=self._root, quiet=True)
+                analog_camera(device=self.device, filename=filename, sample=self._annotation_string, folder=self._root, quiet=True)
                 self.image.shape = (480, 640, 3)
             self._annotation_string = ''
 
