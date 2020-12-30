@@ -1,5 +1,5 @@
 
-import os, subprocess, shutil
+import os, subprocess, shutil, socket
 from IPython.paths import get_ipython_module_path
 import redis
 from BMM.functions import verbosebold_msg, error_msg
@@ -8,7 +8,8 @@ from BMM.functions import verbosebold_msg, error_msg
 # things that are configurable                                    #
 ###################################################################
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
-SECRETS = "/mnt/nfs/nas1/xf06bm/secrets/"
+NAS = '/mnt/nfs/nas1'
+SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')
 REDISVAR="BMM:scan:type"
 ###################################################################
@@ -20,24 +21,28 @@ TAB = '\t\t\t'
 def initialize_workspace():
     '''Perform a series of checks to see if the workspace on this computer
     is set up as expected by the BMM data collection profile.  This
-    includes checks for:
-      * the presence of various directories
-      * that a redis server is available
-      * that certain git repositories are cloned onto this computer
-      * that authentication files for Slack are available.
+    includes checks that:
+      * various directories exist
+      * NAS1 is mounted
+      * a redis server is available
+      * certain git repositories are cloned onto this computer
+      * authentication files for Slack are available.
+      * the public key for xf06bm@xf06bm-ws1 is available or that this is xf06bm-ws1
 
-    For most checks, a failure triggers a corrective action.  The
-    exception is that a missing redis server is flagged on screen, but
-    no corrective action is attempted.
+    For most checks, a failure triggers a corrective action, if
+    possible.  Some failures print a warning to screen, with no
+    corrective action.
 
     '''
     print(verbosebold_msg('Checking workspace on this computer ...'))
     initialize_data_directories()
     initialize_beamline_configuration()
+    initialize_nas()
     initialize_secrets()
     initialize_redis()
     #initialize_gdrive()
-
+    initialize_ssh()
+    
 
 def check_directory(dir, desc):
     if os.path.isdir(dir):
@@ -83,6 +88,16 @@ def initialize_beamline_configuration():
         subprocess.run(['git', 'clone', 'https://github.com/NSLS-II-BMM/BMM-beamline-configuration']) 
     os.chdir(here)
 
+def initialize_nas():
+    '''Check if a the NAS1 mount point is mounted.  If not, complain on
+    screen.
+
+    '''
+    if os.path.ismount(NAS):
+        print(f'{TAB}Found NAS1 mount point: {CHECK}')
+    else:
+        print(error_msg('{TAB}NAS1 is not mounted!'))
+    
 
 def initialize_secrets():
     '''Check that the Slack secret files are in their expected locations.
@@ -111,3 +126,20 @@ def initialize_redis():
         print(f'{TAB}Found Redis server: {CHECK}')
     else:
         print(error_msg('{TAB}Did not find redis server'))
+
+
+def initialize_ssh():
+    '''Check to see if xf06bm-ws1 has an authorized key on this computer.
+    If not, complain on screen.
+
+    '''
+    AK=os.path.join(os.environ["HOME"], '.ssh', 'authorized_keys')
+
+    with open(AK) as x: f = x.read()
+    if socket.gethostname() == 'xf06bm-ws1':
+        print(f'{TAB}This is xf06bm-ws1, no public key needed: {CHECK}')
+    elif 'xf06bm@xf06bm-ws1' in f:
+        print(f'{TAB}Found public key for xf06bm@xf06bm-ws1: {CHECK}')
+    else:
+        print(error_msg('{TAB}Did not find public key for xf06bm@xf06bm-ws1'))
+        

@@ -70,7 +70,7 @@ def analog_camera(filename    = None,
            camera      = 0,
            skip        = 30,
            frames      = 5,
-           brightness  = 20,
+           brightness  = 30,
            x           = 320,
            y           = 240,
            linecolor   = 'white',
@@ -89,7 +89,7 @@ def analog_camera(filename    = None,
     folder : str
         location to drop jpg image [$HOME]
     device : str
-        char device of camera [/dev/video0]
+        char device of camera [/dev/video0] should be set to something in /dev/v4l/by-id/
     camera : int
         camera number[0]
     skip : int
@@ -97,7 +97,7 @@ def analog_camera(filename    = None,
     frames : int
         number of frames to accumulate in image [5]
     brightness : int
-        brightness setting of camera as a percentage [20]
+        brightness setting of camera as a percentage [30]
     x : int
         middle of image, in pixels,  X-location of cross hair [320]
     y : int
@@ -143,9 +143,12 @@ def analog_camera(filename    = None,
 
     if sample is not None:
         title = title + ' - ' + sample
-    command = "fswebcam %s-i %s -d %s -r 640x480 --title \"%s\" --timestamp \"%s\" -S %d -F %d --set brightness=%s%% \"%s\"" %\
-              (quiet, camera, device, title, timestamp, skip, frames, brightness, filename)
-    system(command)
+    if user_ns['BMMuser'].host == 'xf06bm-ws1':
+        command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
+        system(command)
+    else:
+        command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
+        system(f'ssh xf06bm@xf06bm-ws1 "{command}"')
 
     report('Analog camera image written to %s' % filename)
 
@@ -195,6 +198,9 @@ class BMMSnapshot(Device):
         self._asset_docs_cache = []
         self._annotation_string = ''
         self.device = None      # needed for the fswebcam interface
+        self.x = 640
+        self.y = 480
+        self.brightness = 30
         if which.lower() =='xrd':
             self._SPEC = "BMM_XRD_WEBCAM"
             self._url = 'http://xf06bm-cam5/axis-cgi/jpg/image.cgi'
@@ -244,8 +250,9 @@ class BMMSnapshot(Device):
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
                 annotate_image(filename, annotation)
             else:
-                analog_camera(device=self.device, filename=filename, sample=self._annotation_string, folder=self._root, quiet=True)
-                self.image.shape = (480, 640, 3)
+                analog_camera(device=self.device, x=self.x, y=self.y, brightness=self.brightness,
+                              filename=filename, sample=self._annotation_string, folder=self._root, quiet=True)
+                self.image.shape = (self.y, self.x, 3)
             self._annotation_string = ''
 
             datum = self._datum_factory({"index": i})

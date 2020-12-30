@@ -224,9 +224,12 @@ xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
 xrdcam = BMMSnapshot(root=nas_path, which='XRD',    name='xrdcam')
 anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
+anacam.x, anacam.y = 640, 480    # width, height
 
-econcam = BMMSnapshot(root=nas_path, which='econ', name='econcamcam')
+econcam = BMMSnapshot(root=nas_path, which='econ', name='econcam')
 econcam.device = '/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU55_1CD90500-video-index0'
+econcam.x, econcam.y = 1280, 720 # width, height
+econcam.brightness = 50
 
 ## the output file names is hidden away in the dict returned by this: a.describe()['args']['get_resources']()
 #

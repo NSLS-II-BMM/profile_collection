@@ -1,4 +1,4 @@
-import sys, os, re, shutil
+import sys, os, re, shutil, socket
 from distutils.dir_util import copy_tree
 import json, pprint, copy
 from IPython import get_ipython
@@ -151,6 +151,7 @@ class BMM_User(Borg):
         self.gup             = 0
         self.saf             = 0
         self.cycle           = '2020-2'
+        self.host            = socket.gethostname()
         self.use_pilatus     = False
         self.name            = None
         self.staff           = False
