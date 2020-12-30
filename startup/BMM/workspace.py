@@ -135,7 +135,7 @@ def initialize_ssh():
     '''
     if socket.gethostname() == 'xf06bm-ws1':
         print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
-    elif system('ssh -oBatchMode=yes xf06bm@xf06bm-ws1 true') == 0:
+    elif os.system('ssh -oBatchMode=yes xf06bm@xf06bm-ws1 true') == 0:
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws1: {CHECK}')
     else:
         print(error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
