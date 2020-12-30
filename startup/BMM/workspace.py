@@ -96,7 +96,7 @@ def initialize_nas():
     if os.path.ismount(NAS):
         print(f'{TAB}Found NAS1 mount point: {CHECK}')
     else:
-        print(error_msg('{TAB}NAS1 is not mounted!'))
+        print(error_msg(f'{TAB}NAS1 is not mounted!'))
     
 
 def initialize_secrets():
@@ -125,24 +125,18 @@ def initialize_redis():
     if rkvs.get(REDISVAR) is not None:
         print(f'{TAB}Found Redis server: {CHECK}')
     else:
-        print(error_msg('{TAB}Did not find redis server'))
+        print(error_msg(f'{TAB}Did not find redis server'))
 
 
 def initialize_ssh():
-    '''Check to see if xf06bm-ws1 has an authorized key on this computer.
-    If not, complain on screen.
+    '''Check to see if xf06bm-ws1 has an authorized ssh key from this
+    computer.  If not, complain on screen.
 
     '''
-    AK=os.path.join(os.environ["HOME"], '.ssh', 'authorized_keys')
-    if not os.path.isfile(AK):
-        print(error_msg('{TAB}Did not find public key for xf06bm@xf06bm-ws1'))
-        return
-    
-    with open(AK) as x: f = x.read()
     if socket.gethostname() == 'xf06bm-ws1':
-        print(f'{TAB}This is xf06bm-ws1, no public key needed: {CHECK}')
-    elif 'xf06bm@xf06bm-ws1' in f:
-        print(f'{TAB}Found public key for xf06bm@xf06bm-ws1: {CHECK}')
+        print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
+    elif system('ssh -oBatchMode=yes xf06bm@xf06bm-ws1 true') == 0:
+        print(f'{TAB}Key exists for xf06bm@xf06bm-ws1: {CHECK}')
     else:
-        print(error_msg('{TAB}Did not find public key for xf06bm@xf06bm-ws1'))
+        print(error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
         
