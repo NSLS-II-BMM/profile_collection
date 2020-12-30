@@ -134,7 +134,10 @@ def initialize_ssh():
 
     '''
     AK=os.path.join(os.environ["HOME"], '.ssh', 'authorized_keys')
-
+    if not os.path.isfile(AK):
+        print(error_msg('{TAB}Did not find public key for xf06bm@xf06bm-ws1'))
+        return
+    
     with open(AK) as x: f = x.read()
     if socket.gethostname() == 'xf06bm-ws1':
         print(f'{TAB}This is xf06bm-ws1, no public key needed: {CHECK}')
