@@ -17,7 +17,7 @@ from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
 
 from os import system
-from subprocess import Popen, PIPE, call
+from subprocess import Popen, PIPE, call, run
 import fcntl
 
 from IPython import get_ipython
@@ -141,15 +141,21 @@ def analog_camera(filename    = None,
     if filename is None:
         filename = folder + '/analog_camera_' + now() + '.jpg'
 
-    if sample is not None:
+    if sample is not None and sample != '':
         title = title + ' - ' + sample
-    if user_ns['BMMuser'].host == 'xf06bm-ws1':
-        command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
-        system(command)
-    else:
-        command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
-        system(f'ssh xf06bm@xf06bm-ws1 "{command}"')
+    command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
+               '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
+    if user_ns['BMMuser'].host != 'xf06bm-ws1':
+        command = ['ssh', 'xf06bm@xf06bm-ws1'] + command
+    run(command)
 
+
+        #command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
+        #system(command)
+        #command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
+        #system(f'ssh xf06bm@xf06bm-ws1 "{command}"')
+
+    
     report('Analog camera image written to %s' % filename)
 
     ## crosshairs
