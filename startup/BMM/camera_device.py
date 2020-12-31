@@ -143,10 +143,11 @@ def analog_camera(filename    = None,
 
     if sample is not None and sample != '':
         title = title + ' - ' + sample
-    command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
+    if user_ns['BMMuser'].host == 'xf06bm-ws1':
+        command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
                '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
-    if user_ns['BMMuser'].host != 'xf06bm-ws1':
-        command = ['ssh', 'xf06bm@xf06bm-ws1'] + command
+    else
+        command = ['ssh', 'xf06bm@xf06bm-ws1', f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"]
     run(command)
 
 
