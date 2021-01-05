@@ -16,7 +16,6 @@ import requests
 from PIL import Image, ImageFont, ImageDraw 
 from io import BytesIO
 
-from os import system
 from subprocess import Popen, PIPE, call, run
 import fcntl
 
@@ -146,7 +145,7 @@ def analog_camera(filename    = None,
     if user_ns['BMMuser'].host == 'xf06bm-ws1':
         command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
                '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
-    else
+    else:
         command = ['ssh', 'xf06bm@xf06bm-ws1', f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"]
     run(command)
 

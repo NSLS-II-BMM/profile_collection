@@ -190,7 +190,7 @@ class WheelMacroBuilder():
             spreadsheet = present_options('xlsx')
         if spreadsheet is None:
             print(error_msg('No spreadsheet specified!'))
-            return
+            return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
         self.source   = os.path.join(self.folder, spreadsheet)
@@ -217,8 +217,9 @@ class WheelMacroBuilder():
         isok, explanation = self.read_spreadsheet()
         if isok is False:
             print(error_msg(explanation))
-            return
+            return None
         self.write_macro()
+        return 0
 
         
     def truefalse(self, value):

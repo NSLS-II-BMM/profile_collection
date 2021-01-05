@@ -1,10 +1,13 @@
 
 from bluesky.plan_stubs import null, mv
 
-import os, subprocess
+import os, subprocess, inspect
 
+from BMM.edge          import change_edge
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import present_options
+from BMM.linescans     import rocking_curve, slit_height
+from BMM.modes         import change_xtals
 from BMM.periodictable import ELEMENTS, Z_number
 from BMM.positioning   import find_slot, align_ga
 from BMM.xafs          import howlong, xafs
@@ -23,22 +26,33 @@ class WDYWTD():
         '''Prompt the user to do a thing.
         '''
 
-        actions = {'1':'XAFS', '2':'ChangeEdge', '3':'Spreadsheet', '4':'RunMacro', '5':'AlignSlot', '6':'AlignGA', '7':'XRFSpectrum',
-                   'A':'RockingCurve', 'B':'SlitHeight', 'C':'AdjustSlits', 'D':'ChangeXtals', 'E':'SetupXRD',}
+        actions = {'1': ('XAFS',         'measure XAFS'),
+                   '2': ('ChangeEdge',   'change edge'),
+                   '3': ('Spreadsheet',  'import spreadsheet'),
+                   '4': ('RunMacro',     'run macro'),
+                   '5': ('AlignSlot',    'align wheel slot'),
+                   '6': ('AlignGA',      'align glancing angle stage'),
+                   '7': ('XRFSpectrum',  'view XRF spectrum'),
 
+                   'A': ('RockingCurve', 'measure rocking curve'),
+                   'B': ('SlitHeight',   'measure slit height'),
+                   'C': ('AdjustSlits',  'adjust slit size'),
+                   'D': ('ChangeXtals',  'change monochrometer crystals'),
+                   'E': ('SetupXRD',     'prepare for XRD'),
+        }
+        
         print('''
-  COMMON CHORES                            LESS COMMON CHORES
-================================================================================
- 1. measure XAFS                          A. measure rocking curve
- 2. change edge                           B. measure slit height
- 3. import spreadsheet                    C. adjust slit size
- 4. run macro                             D. change monochrometer crystals
- 5. align wheel slot                      E. set up for XRD
- 6. align glancing angle stage           
- 7. see XRF spectrum
+  COMMON CHORES                            OTHER CHORES
+================================================================================''')
 
- q. quit
-    ''')
+        for i in range(1,8):
+            text  = actions[str(i)][1]
+            try:
+                other = actions[chr(64+i)][1]
+                print(f' {i}. {text:37} {chr(64+i)}. {other:37}')
+            except:
+                print(f' {i}. {text:37}')
+        print('')
         choice = input(" What do you want to do? ")
         choice = choice.upper()
         print('\n')
@@ -47,7 +61,7 @@ class WDYWTD():
             yield from null()
         thing = 'do_nothing'
         if choice in actions:
-            thing = f'do_{actions[choice]}'
+            thing = f'do_{actions[choice][0]}'
         return getattr(self, thing, lambda: bailout)()
 
 
@@ -97,24 +111,28 @@ class WDYWTD():
     def do_Spreadsheet(self):
         print(go_msg('You would like to import a spreadsheet...\n'))
         ## prompt for type of spreadsheet: wheel or glancing angle
-        user_ns['wmb'].spreadsheet()
-
-        fullpath = os.path.join(user_ns['BMMuser'].folder, user_ns['wmb'].basename+'.py')
-        ipython = get_ipython()
-        which = input("\n View, run macro, or return? [v/m/r] ")
-        if which.startswith('v'):
-            #ipython.magic(f'page \'{fullpath}\'')
-            subprocess.run([os.environ['PAGER'], f'"{fullpath}"'])
-            yield from null()
-        elif which.startswith('m'):
-            print('run ' + user_ns['wmb'].basename)
-            yield from null()
-        else:
-            yield from null()
+        ret = user_ns['wmb'].spreadsheet()
+        yield from null()
+        # if ret is None:
+        #     return        
+        # fullpath = os.path.join(user_ns['BMMuser'].folder, user_ns['wmb'].basename+'.py')
+        # ipython = get_ipython()
+        # which = input("\n View, run macro, or return? [v/m/r] ").lower()
+        # if which.startswith('v'):
+        #     #ipython.magic(f'page \'{fullpath}\'')
+        #     print(inspect.getsource(eval(f'{user_ns["wmb"].basename}_macro')))
+        #     yield from null()
+        # elif which.startswith('m'):
+        #     print('run ' + user_ns['wmb'].basename)
+        #     yield from null()
+        # else:
+        #     yield from null()
             
     def do_RunMacro(self):
         print(go_msg('You would like to run a measurement macro...\n'))
         macro = present_options('py')
+        if macro is None:
+            return
         ipython = get_ipython()
         fullpath = os.path.join(user_ns['BMMuser'].folder, macro)
         ipython.magic(f'run -i \'{fullpath}\'')
@@ -132,10 +150,12 @@ class WDYWTD():
     def do_RockingCurve(self):
         print(go_msg('You would like to measure a rocking curve scan...\n'))
         print(disconnected_msg('yield from rocking_curve()'))
+        yield from null()
             
     def do_SlitHeight(self):
         print(go_msg('You would like to set the slit height...\n'))
         print(disconnected_msg('yield from slit_height()'))
+        yield from null()
             
     def do_AdjustSlits(self):
         print(go_msg('You would like to adjust the size of the hutch slits...\n'))
@@ -158,11 +178,13 @@ class WDYWTD():
             yield from null()
             return
         if is_horiz:
-            print(disconnected_msg(f'yield from mv(slits3.hsize, {size})'))
-            ##yield from mv(slits3.hsize, size)
+            #print(disconnected_msg(f'yield from mv(slits3.hsize, {size})'))
+            #yield from null()
+            yield from mv(user_ns['slits3'].hsize, size)
         else:
-            print(disconnected_msg(f'yield from mv(slits3.vsize, {size})'))
-            ##yield from mv(slits3.vsize, size)
+            #print(disconnected_msg(f'yield from mv(slits3.vsize, {size})'))
+            #yield from null()
+            yield from mv(user_ns['slits3'].vsize, size)
             
     def do_XRFSpectrum(self):
         print(go_msg('You would like to see an XRF spectrum...\n'))
