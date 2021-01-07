@@ -218,6 +218,13 @@ class Mirrors(PseudoPositioner):
         yield from mv(self.ydo.enable_cmd, 1)
         yield from mv(self.ydi.enable_cmd, 1)
 
+    def ena(self):
+        self.xu.enable_cmd.put(1)
+        self.xd.enable_cmd.put(1)
+        self.yu.enable_cmd.put(1)
+        self.ydo.enable_cmd.put(1)
+        self.ydi.enable_cmd.put(1)
+
     def where(self):
         stripe = ''
         if self.name.lower() == 'm3':

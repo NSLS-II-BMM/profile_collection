@@ -178,7 +178,7 @@ def countdown(t):
         print(timeformat, end='\r')
         time.sleep(1)
         t -= 1
-    print('Blast off!', end='\r')
+    print('Done!', end='\r')
 
 
 def elapsed_time(start):

@@ -133,9 +133,8 @@ xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_mtr8') # EPICS names are swapped. 
-xafs_mtr8._limits = (5, 195)
-xafs_mtr8.user_offset.put(-253.9756)
+xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_mtr8') # EPICS names are swapped. 
+xafs_garot.user_offset.put(179.47455)
 
 xafs_linxs._limits = (-95, 95)
 xafs_linxs.user_offset.put(102)

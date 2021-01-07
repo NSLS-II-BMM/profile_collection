@@ -135,7 +135,20 @@ class DCM(PseudoPositioner):
         print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.get())
         yield from sleep(2.0)
         yield from dcm.kill_plan()
+
+    def enable(self):
+        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
+        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
+        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
+        yield from mv(user_ns['dcm_para'].enable_cmd, 1)
+        yield from mv(user_ns['dcm_para'].enable_cmd, 1)
         
+    def ena(self):
+        user_ns['dcm_para'].enable()
+        user_ns['dcm_perp'].enable()
+        user_ns['dcm_pitch'].enable()
+        user_ns['dcm_roll'].enable()
+
     def kill(self):
         user_ns['dcm_para'].kill_cmd.put(1)
         user_ns['dcm_perp'].kill_cmd.put(1)

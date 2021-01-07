@@ -37,7 +37,7 @@ m2.vertical._limits = (-6.0, 8.0)
 m2.lateral._limits  = (-2, 2)
 m2.pitch._limits    = (-0.5, 5.0)
 m2.roll._limits     = (-2, 2)
-m2.yaw._limits      = (-1, 1)
+m2.yaw._limits      = (-1, 2)
 
 m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
 m3.vertical._limits = (-11, 1)
@@ -241,3 +241,19 @@ run_report('\tglancing angle stage')
 from BMM.glancing_angle import GlancingAngle
 ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 
+
+
+
+####################################################################################
+#  _   _______ _      _       _____  _    _ _____ _____ _____  _   _  _____ _____  #
+# | | / /_   _| |    | |     /  ___|| |  | |_   _|_   _/  __ \| | | ||  ___/  ___| #
+# | |/ /  | | | |    | |     \ `--. | |  | | | |   | | | /  \/| |_| || |__ \ `--.  #
+# |    \  | | | |    | |      `--. \| |/\| | | |   | | | |    |  _  ||  __| `--. \ #
+# | |\  \_| |_| |____| |____ /\__/ /\  /\  /_| |_  | | | \__/\| | | || |___/\__/ / #
+# \_| \_/\___/\_____/\_____/ \____/  \/  \/ \___/  \_/  \____/\_| |_/\____/\____/  #
+####################################################################################
+                                                                                
+
+run_report('\tamplifier kill switches')
+from BMM.killswitch import KillSwitch
+ks = KillSwitch('XF:06BMB-CT{DIODE-Local:4}', name='amplifier kill switches')
