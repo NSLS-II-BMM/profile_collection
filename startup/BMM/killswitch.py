@@ -14,23 +14,37 @@ class KillSwitch(Device):
     '''A simple interface to the DIODE kill switches for the Phytron
     amplifiers on the FMBO Delta Tau motor controllers.
 
+    In BMM's DIODE box, these are implemented on channels 0 to 4 of
+    slot 4.
+
     attributes
-    ==========
-    dcm : kill switch for MC02, monochromator
-    slits2 : kill switch for MC03, DM2 slits
-    m2 : kill switch for MC04, focusing mirror
-    m3 : kill switch for MC05, harmonic rejection mirror
-    dm3 : kill switch for MC06, hutch slits and diagnostics
+    ----------
+    dcm 
+       kill switch for MC02, monochromator
+    slits2
+       kill switch for MC03, DM2 slits
+    m2
+       kill switch for MC04, focusing mirror
+    m3
+       kill switch for MC05, harmonic rejection mirror
+    dm3
+       kill switch for MC06, hutch slits and diagnostics
 
     methods
-    =======
-    kill : disable Phytron
-    enable : activate Phytron
-    cycle : disable, wait 5 seconds, reactivate, then re-enable all motors
+    -------
+    kill(mc)
+       disable Phytron
+    enable(mc)
+       activate Phytron
+    cycle(mc)
+       disable, wait 5 seconds, reactivate, then re-enable all motors
 
-    Here's a common situation which is resolved using a kill switch.
+    Specify the motor controller as a string, i.e. 'dcm', 'slits2',
+    'm2', 'm3', 'dm3'
 
-      BMM E.111 [36] ▶ RE(mvr(m2.pitch, 0.05))                                                                                                                                     
+    Here's a common problem which is resolved using a kill switch.
+
+      BMM E.111 [36] ▶ RE(mvr(m2.pitch, 0.05))
       INFO:BMM_logger:    Moving m2_pitch to 2.550
 
       Moving m2_pitch to 2.550
@@ -46,7 +60,7 @@ class KillSwitch(Device):
 
     The solution to this one is:
 
-      BMM E.111 [1] ▶ ks.cycle('m2')                                                                                                                                               
+      BMM E.111 [1] ▶ ks.cycle('m2')
       Cycling amplifiers on m2 motor controller
       killing amplifiers
       reactivating amplifiers
@@ -61,6 +75,9 @@ class KillSwitch(Device):
 
     def check(self, mc):
         '''Verify the string identifying the motor controller.
+
+        Identify the motor controller by these strings:
+           'dcm', 'slits2', 'm2', 'm3', 'dm3'
         '''
         if mc is None:
             print(error_msg("Specify a device: ks.kill(device), device is dcm/slits2/m2/m3/dm3"))
@@ -73,6 +90,9 @@ class KillSwitch(Device):
 
     def kill(self, mc=None):
         '''Kill the amplifiers on a motor controller.
+
+        Identify the motor controller by these strings:
+           'dcm', 'slits2', 'm2', 'm3', 'dm3'
         '''
         if self.check(mc) is False:
             return
@@ -81,6 +101,9 @@ class KillSwitch(Device):
 
     def enable(self, mc=None):
         '''Reactivate the amplifiers on a motor controller.
+
+        Identify the motor controller by these strings:
+           'dcm', 'slits2', 'm2', 'm3', 'dm3'
         '''
         if self.check(mc) is False:
             return
@@ -88,8 +111,11 @@ class KillSwitch(Device):
         switch.put(0)
 
     def cycle(self, mc=None):
-        '''Cycle the amplifiers on a motor controller, then reenable the
-        motors on that controller.
+        '''Cycle power to the amplifiers on a motor controller, then reenable
+        the motors on that controller.
+
+        Identify the motor controller by these strings:
+           'dcm', 'slits2', 'm2', 'm3', 'dm3'
 
         '''
         if self.check(mc) is False:
