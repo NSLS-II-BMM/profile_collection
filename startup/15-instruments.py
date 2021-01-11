@@ -238,9 +238,12 @@ def read_bpms():
 
 
 run_report('\tglancing angle stage')
-from BMM.glancing_angle import GlancingAngle
+from BMM.glancing_angle import GlancingAngle, PinWheelMacroBuilder
 ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 
+pinwheel = PinWheelMacroBuilder()
+pinwheel.folder = BMMuser.folder
+#xlsx = wmb.spreadsheet
 
 
 

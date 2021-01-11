@@ -1,4 +1,6 @@
 from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
+from ophyd.epics_motor import EpicsMotor, required_for_connection, AlarmSeverity
+from ophyd.utils.epics_pvs import fmt_time
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
@@ -95,6 +97,57 @@ class FMBOEpicsMotor(EpicsMotor):
     home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'config')
     hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'config') # how homing velocity gets set for an FMBO SAI
 
+    @required_for_connection
+    @EpicsMotor.motor_done_move.sub_value
+    def _move_changed(self, timestamp=None, value=None, sub_type=None,
+                      **kwargs):
+        '''Callback from EPICS, indicating that movement status has changed'''
+        was_moving = self._moving
+        self._moving = (value != 1)
+
+        started = False
+        if not self._started_moving:
+            started = self._started_moving = (not was_moving and self._moving)
+
+        self.log.debug('[ts=%s] %s moving: %s (value=%s)', fmt_time(timestamp),
+                       self, self._moving, value)
+
+        if started:
+            self._run_subs(sub_type=self.SUB_START, timestamp=timestamp,
+                           value=value, **kwargs)
+
+        if was_moving and not self._moving:
+            success = True
+            # Check if we are moving towards the low limit switch
+            if self.direction_of_travel.get() == 0:
+                if self.low_limit_switch.get() == 1:
+                    success = False
+            # No, we are going to the high limit switch
+            else:
+                if self.high_limit_switch.get() == 1:
+                    success = False
+
+            # Check the severity of the alarm field after motion is complete.
+            # If there is any alarm at all warn the user, and if the alarm is
+            # greater than what is tolerated, mark the move as unsuccessful
+            severity = self.user_readback.alarm_severity
+
+            if severity != AlarmSeverity.NO_ALARM:
+                status = self.user_readback.alarm_status
+                if severity > self.tolerated_alarm:
+                    self.log.error('Motion failed: %s is in an alarm state '
+                                   'status=%s severity=%s',
+                                   self.name, status, severity)
+                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    success = False
+                else:
+                    self.log.warning('Motor %s raised an alarm during motion '
+                                     'status=%s severity %s',
+                                     self.name, status, severity)
+            self._done_moving(success=success, timestamp=timestamp,
+                              value=value)
+    
+    
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
         for signal in list(self.configuration_attrs):
@@ -132,6 +185,56 @@ class FMBOThinEpicsMotor(EpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
     enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
 
+    @required_for_connection
+    @EpicsMotor.motor_done_move.sub_value
+    def _move_changed(self, timestamp=None, value=None, sub_type=None,
+                      **kwargs):
+        '''Callback from EPICS, indicating that movement status has changed'''
+        was_moving = self._moving
+        self._moving = (value != 1)
+
+        started = False
+        if not self._started_moving:
+            started = self._started_moving = (not was_moving and self._moving)
+
+        self.log.debug('[ts=%s] %s moving: %s (value=%s)', fmt_time(timestamp),
+                       self, self._moving, value)
+
+        if started:
+            self._run_subs(sub_type=self.SUB_START, timestamp=timestamp,
+                           value=value, **kwargs)
+
+        if was_moving and not self._moving:
+            success = True
+            # Check if we are moving towards the low limit switch
+            if self.direction_of_travel.get() == 0:
+                if self.low_limit_switch.get() == 1:
+                    success = False
+            # No, we are going to the high limit switch
+            else:
+                if self.high_limit_switch.get() == 1:
+                    success = False
+
+            # Check the severity of the alarm field after motion is complete.
+            # If there is any alarm at all warn the user, and if the alarm is
+            # greater than what is tolerated, mark the move as unsuccessful
+            severity = self.user_readback.alarm_severity
+
+            if severity != AlarmSeverity.NO_ALARM:
+                status = self.user_readback.alarm_status
+                if severity > self.tolerated_alarm:
+                    self.log.error('Motion failed: %s is in an alarm state '
+                                   'status=%s severity=%s',
+                                   self.name, status, severity)
+                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    success = False
+                else:
+                    self.log.warning('Motor %s raised an alarm during motion '
+                                     'status=%s severity %s',
+                                     self.name, status, severity)
+            self._done_moving(success=success, timestamp=timestamp,
+                              value=value)
+
     def kill(self):
         self.kill_cmd.put(1)
     def enable(self):
@@ -144,6 +247,56 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
     kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
     enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
 
+
+    @required_for_connection
+    @EpicsMotor.motor_done_move.sub_value
+    def _move_changed(self, timestamp=None, value=None, sub_type=None,
+                      **kwargs):
+        '''Callback from EPICS, indicating that movement status has changed'''
+        was_moving = self._moving
+        self._moving = (value != 1)
+
+        started = False
+        if not self._started_moving:
+            started = self._started_moving = (not was_moving and self._moving)
+
+        self.log.debug('[ts=%s] %s moving: %s (value=%s)', fmt_time(timestamp),
+                       self, self._moving, value)
+
+        if started:
+            self._run_subs(sub_type=self.SUB_START, timestamp=timestamp,
+                           value=value, **kwargs)
+
+        if was_moving and not self._moving:
+            success = True
+            # Check if we are moving towards the low limit switch
+            if self.direction_of_travel.get() == 0:
+                if self.low_limit_switch.get() == 1:
+                    success = False
+            # No, we are going to the high limit switch
+            else:
+                if self.high_limit_switch.get() == 1:
+                    success = False
+
+            # Check the severity of the alarm field after motion is complete.
+            # If there is any alarm at all warn the user, and if the alarm is
+            # greater than what is tolerated, mark the move as unsuccessful
+            severity = self.user_readback.alarm_severity
+
+            if severity != AlarmSeverity.NO_ALARM:
+                status = self.user_readback.alarm_status
+                if severity > self.tolerated_alarm:
+                    self.log.error('Motion failed: %s is in an alarm state '
+                                   'status=%s severity=%s',
+                                   self.name, status, severity)
+                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    success = False
+                else:
+                    self.log.warning('Motor %s raised an alarm during motion '
+                                     'status=%s severity %s',
+                                     self.name, status, severity)
+            self._done_moving(success=success, timestamp=timestamp,
+                              value=value)
     def kill(self):
         self.kill_cmd.put(1)
     def enable(self):

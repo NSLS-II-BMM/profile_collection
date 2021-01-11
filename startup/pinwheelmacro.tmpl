@@ -1,0 +1,57 @@
+######################################################### -*- python -*-
+# Cut and paste this line to import your macro after editing:
+#
+#     %run -i '{folder}/{base}_macro.py'
+#
+# Verify that your macro was loaded correctly:
+#
+#     {base}_macro??
+#
+# Then run the macro:
+#
+#     RE({base}_macro())
+#                /
+############### / #######################################
+#              / 
+#             /  Note that you are defining a command
+#            /   that gets run in BlueSky
+#           V
+def {base}_macro(dryrun=False):
+    '''User-defined macro for running a sequence of glancing angle XAFS
+    measurements at BMM.
+
+    '''
+    (ok, text) = BMM_clear_to_start()
+    if ok is False:
+        print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
+        yield from ga.alloff_plan()
+        return
+
+    BMMuser.macro_dryrun = dryrun
+    BMMuser.prompt = False
+    BMMuser.wheel = False
+    BMM_log_info('Beginning {base}_macro')
+    def main_plan():
+
+        ### ---------------------------------------------------------------------------------------
+        ### BOILERPLATE ABOVE THIS LINE -----------------------------------------------------------
+        ##  EDIT BELOW THIS LINE
+        #<--indentation matters!
+    
+{content}
+        
+        ##  EDIT ABOVE THIS LINE
+        ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
+        ### ---------------------------------------------------------------------------------------
+
+    def cleanup_plan():
+        yield from end_of_macro()
+        yield from ga.alloff_plan()
+        yield from xafs_garot.reset()
+        elapsed_time(start)
+
+    start = time.time()        
+    yield from finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from end_of_macro()
+    yield from ga.alloff_plan()
+    BMM_log_info('{base}_macro finished!')

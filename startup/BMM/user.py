@@ -418,10 +418,20 @@ class BMM_User(Borg):
         xlsxfile = os.path.join(folder, 'wheel_template.xlsx')
         if not os.path.isfile(xlsxfile):
             shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
-            print('%2d. Copied macro building spreadsheet: %-75s' % (step, xlsxfile))
+            print('%2d. Copied wheel macro spreadsheet:    %-75s' % (step, xlsxfile))
 
         else:
-            print('%2d. Found macro building spreadsheet:  %-75s' % (step, xlsxfile))
+            print('%2d. Found wheel macro spreadsheet:     %-75s' % (step, xlsxfile))
+        step += 1            
+        
+        xlsxtmpl = os.path.join(startup, 'pinwheel_template.xlsx')
+        xlsxfile = os.path.join(folder, 'pinwheel_template.xlsx')
+        if not os.path.isfile(xlsxfile):
+            shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
+            print('%2d. Copied pinwheel macro spreadsheet: %-75s' % (step, xlsxfile))
+
+        else:
+            print('%2d. Found pinwheel macro spreadsheet:  %-75s' % (step, xlsxfile))
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
