@@ -493,7 +493,7 @@ class WheelMacroBuilder():
         #######################################
         # explain to the user what to do next #
          #######################################
-        print('\nYour new plan is called: ' + bold_msg('%s_macro' % self.basename))
+        print('\nYour new sample wheel plan is called: ' + bold_msg('%s_macro' % self.basename))
         print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
         print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
         print('Run:    '   + bold_msg('RE(%s_macro())' % self.basename))

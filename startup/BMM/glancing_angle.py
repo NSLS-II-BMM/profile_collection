@@ -173,12 +173,12 @@ class PinWheelMacroBuilder():
         self.do_first_change = self.truefalse(self.ws['H2'].value)
         self.close_shutters  = self.truefalse(self.ws['K2'].value)
         self.append_element  = str(self.ws['M2'].value)
-        if str(self.ws['B1'].value).lower() == 'pinwheel':
-            self.instrument = 'pinwheel'
+        if str(self.ws['B1'].value).lower() == 'glancing angle':
+            self.instrument = 'glancing angle'
 
-        if self.instrument != 'pinwheel':
-            print(error_msg('This does not appear to be spreadsheet for use with the pinwheel.'))
-            print(whisper('Cell B1 does not say "pinwheel".'))
+        if self.instrument != 'glancing angle':
+            print(error_msg('This does not appear to be spreadsheet for use with the glancing angle stage.'))
+            print(whisper('Cell B1 does not say "Glancing angle".'))
             return None
         
         isok, explanation = self.read_spreadsheet()
@@ -301,7 +301,7 @@ class PinWheelMacroBuilder():
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge', 'method', 'focus', 'spin'):
+            for k in ('element', 'edge', 'method', 'focus', 'spin', 'angle'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 
@@ -327,33 +327,36 @@ class PinWheelMacroBuilder():
                     self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
                 pass
 
-            ############################
-            # sample and slit movement #
-            ############################
+            #######################################
+            # sample alignment and glancing angle #
+            #######################################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + 'yield from align_ga()\n'
             else:
                 if m['samplep'] is not None:
-                    self.content += self.tab + f'yield from mv(xafs_pitch, m{m["samplep"]})\n'
+                    self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
                 if m['sampley'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]})\n'
+            self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
 
-            
-            ######################################
-            # measure XAFS, then close all plots #
-            ######################################
+                    
+            ############################################################
+            # measure XAFS, then return to 0 pitch and close all plots #
+            ############################################################
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
-                if k in ('default', 'slot', 'spin', 'focus', 'measure', 'method'):
+                if k in ('default', 'slot', 'spin', 'focus', 'measure', 'method', 'angle'):
                     continue
                 ## skip the flags for now
                 elif k in ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth'):
                     continue
+                ## motor alignment cells
                 elif k in ('samplep', 'sampley'):
                     continue
+                ## placeholders for scientific metadata
                 elif k in ('url', 'doi', 'cif'):
                     continue
                 ## skip element & edge if they are same as default
@@ -390,9 +393,13 @@ class PinWheelMacroBuilder():
                         command += ', %s=\'%s\'' % (k, m[k])
             command += ')\n'
             self.content += command
+            self.content += self.tab + f'yield from mvr(xafs_pitch, {-1*m["angle"]})\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
+            ########################################
+            # approximate time cost of this sample #
+            ########################################
             if type(m['bounds']) is str:
                 b = re.split('[ ,]+', m['bounds'].strip())
             else:
@@ -461,8 +468,8 @@ class PinWheelMacroBuilder():
 
         #######################################
         # explain to the user what to do next #
-         #######################################
-        print('\nYour new plan is called: ' + bold_msg('%s_macro' % self.basename))
+        #######################################
+        print('\nYour new glancing angle plan is called: ' + bold_msg('%s_macro' % self.basename))
         print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
         print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
         print('Run:    '   + bold_msg('RE(%s_macro())' % self.basename))
