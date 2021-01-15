@@ -55,8 +55,8 @@ class BMM_User(Borg):
         True is doing electrochemistry with the BioLogic
     echem_remote : str
         mounted path to cifs share on ws3
-    wheel : bool
-        True when executing a wheel macro
+    instrument : str
+        name of sample instrument, e.g. "sample wheel" or "glancing angle stage"
 
     Current plot attributes
     -----------------------
@@ -165,7 +165,7 @@ class BMM_User(Borg):
         self.use_slack       = True
         self.slack_channel   = None
         self.trigger         = False
-        self.wheel           = False
+        self.instrument      = ''
         self.url             = False
         self.doi             = False
         self.cif             = False

@@ -95,7 +95,7 @@ class metadata_for_XDI_file():
 
 
 def write_XDI(datafile, dataframe):
-    BMMuser = user_ns['BMMuser']
+    BMMuser, xafs_wheel, ga = user_ns['BMMuser'], user_ns['xafs_wheel'], user_ns['ga']
     handle = open(datafile, 'w')
 
     ## set Scan.start_time & Scan.end_time ... this is how it is done
@@ -193,6 +193,11 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Sample.name: %s',                      'XDI.Sample.name')
     metadata.start_doc('# Sample.prep: %s',                      'XDI.Sample.prep')
 
+    if BMMuser.instrument == 'sample wheel':
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} slot {xafs_wheel.current_slot()}')
+    elif BMMuser.instrument == 'glancing angle stage':
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} spinner {ga.current()}')
+        
     ## record selected baseline measurements as XDI metadata
     XDI_record = user_ns['XDI_record']
     for r in XDI_record.keys():

@@ -7,6 +7,7 @@ from BMM.functions import boxedtext
 def motor_metadata(uid=None):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
                user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'], user_ns['xafs_ref'],
+               user_ns['xafs_lins'], user_ns['xafs_mtr8'],
                
                user_ns['dm3_bct'], user_ns['dm3_foils'], user_ns['dm2_fs'],
                user_ns['slits3'].top, user_ns['slits3'].bottom, user_ns['slits3'].outboard, user_ns['slits3'].inboard,
@@ -145,8 +146,9 @@ def motor_sidebar(md=None):
     mlist.append('xafs_x, %.3f, xafs_y, %.3f'         % (md[user_ns['xafs_linx'].name],  md[user_ns['xafs_liny'].name]))
     mlist.append('xafs_pitch, %.3f, xafs_roll, %.3f'  % (md[user_ns['xafs_pitch'].name], md[user_ns['xafs_roll'].name]))
     mlist.append('xafs_ref, %.3f, xafs_wheel, %.3f'   % (md[user_ns['xafs_linxs'].name], md[user_ns['xafs_wheel'].name]))
-    #mlist.append('xafs_roth, %.3f, xafs_rots, %.3f'   % (md[user_ns['xafs_roth'].name],  md[user_ns['xafs_rots'].name]))
+    mlist.append('xafs_garot, %.3f, xafs_det, %.3f'   % (md[user_ns['xafs_mtr8'].name],  md[user_ns['xafs_lins'].name]))
     mlist.append('wheel slot = %2d'                   % user_ns['xafs_wheel'].current_slot())
+    mlist.append('glancing angle spinner = %2d'       % user_ns['ga'].current())
     motors += '<br>\n&nbsp;&nbsp;&nbsp;'.join(mlist)
 
     motors += '\n<br><br>dm3_bct: %.3f' % md[user_ns['dm3_bct'].name]
