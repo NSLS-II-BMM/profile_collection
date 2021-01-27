@@ -202,7 +202,8 @@ def write_XDI(datafile, dataframe):
     XDI_record = user_ns['XDI_record']
     for r in XDI_record.keys():
         if XDI_record[r][0] is True:
-            metadata.insert_line('# %s: %.3f mm' % (XDI_record[r][1], dataframe.table('baseline')[r][1]))
+            if r in dataframe.table('baseline'):
+                metadata.insert_line('# %s: %.3f mm' % (XDI_record[r][1], dataframe.table('baseline')[r][1]))
     
     metadata.start_doc('# Scan.experimenters: %s', 'XDI.Scan.experimenters')
     metadata.start_doc('# Scan.edge_energy: %s',   'XDI.Scan.edge_energy')

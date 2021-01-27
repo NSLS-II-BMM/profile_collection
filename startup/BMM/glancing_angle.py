@@ -7,9 +7,16 @@ from openpyxl import load_workbook
 import configparser
 import numpy
 
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
+from lmfit.models import StepModel
+from scipy.ndimage import center_of_mass
+
+from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import isfloat, present_options
-from BMM.logging        import report
+from BMM.functions      import isfloat, present_options, now
+from BMM.logging        import report, img_to_slack, post_to_slack
+from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
@@ -31,6 +38,12 @@ class GlancingAngle(Device):
     spin = True
     home = 0
     garot = user_ns['xafs_garot']
+    inverted = ''
+    flat = [0,0]
+    y_uid = ''
+    pitch_uid = ''
+    f_uid = ''
+    alignment_filename = ''
     
     def current(self):
         pos = self.garot.position
@@ -104,6 +117,165 @@ class GlancingAngle(Device):
             yield from mv(this, 1)
 
 
+    def pitch_plot(self, pitch, signal, filename=None):
+        target = signal.idxmax()
+        plt.cla()
+        plt.plot(pitch, signal)
+        plt.scatter(pitch[target], signal.max(), s=160, marker='x', color='green')
+        plt.xlabel('xafs_pitch (deg)')
+        plt.ylabel('It/I0')
+        plt.title(f'pitch scan, spinner {self.current()}')
+        plt.show()
+        plt.pause(0.05)
+        
+            
+    def align_pitch(self, force=False):
+        xafs_pitch = user_ns['xafs_pitch']
+        db = user_ns['db']
+        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
+        close_last_plot()
+        table  = db[-1].table()
+        pitch  = table['xafs_pitch']
+        signal = table['It']/table['I0']
+        target = signal.idxmax()
+        self.pitch_plot(pitch, signal)
+        yield from mv(xafs_pitch, pitch[target])
+    
+
+    def y_plot(self, yy, out, filename=None):
+        plt.cla()
+        plt.scatter(yy, out.data)
+        plt.plot(yy, out.best_fit, color='red')
+        plt.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=160, marker='x', color='green')
+        plt.xlabel('xafs_y (mm)')
+        plt.ylabel(f'{self.inverted}data and error function')
+        plt.title(f'fit to Y scan, spinner {self.current()}')
+        plt.show()
+        plt.pause(0.05)
+
+
+    def alignment_plot(self, yt, pitch, yf):
+        db, BMMuser = user_ns['db'], user_ns['BMMuser']
+        fig = plt.figure(tight_layout=True) #, figsize=(9,6))
+        gs = gridspec.GridSpec(1,3)
+
+
+        t  = fig.add_subplot(gs[0, 0])
+        tt = db[yt].table()
+        yy = tt['xafs_y']
+        signal = tt['It']/tt['I0']
+        if float(signal[2]) > list(signal)[-2] :
+            ss     = -(signal - signal[2])
+            self.inverted = 'inverted '
+        else:
+            ss     = signal - signal[2]
+            self.inverted    = ''
+        mod    = StepModel(form='erf')
+        pars   = mod.guess(ss, x=numpy.array(yy))
+        out    = mod.fit(ss, pars, x=numpy.array(yy))
+        t.scatter(yy, out.data)
+        t.plot(yy, out.best_fit, color='red')
+        t.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=120, marker='x', color='green')
+        t.set_xlabel('xafs_y (mm)')
+        t.set_ylabel(f'{self.inverted}data and error function')
+
+        p  = fig.add_subplot(gs[0, 1])
+        tp = db[pitch].table()
+        xp = tp['xafs_pitch']
+        signal = tp['It']/tp['I0']
+        target = signal.idxmax()
+        p.plot(xp, signal)
+        p.scatter(xp[target], signal.max(), s=120, marker='x', color='green')
+        p.set_xlabel('xafs_pitch (deg)')
+        p.set_ylabel('It/I0')
+        p.set_title(f'alignment of spinner {self.current()}')
+
+        f = fig.add_subplot(gs[0, 2])
+        tf = db[yf].table()
+        yy = tf['xafs_y']
+        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        com = int(center_of_mass(signal)[0])+1
+        centroid = yy[com]
+        f.plot(yy, signal)
+        f.scatter(centroid, signal[com], s=120, marker='x', color='green')
+        f.set_xlabel('xafs_y (mm)')
+        f.set_ylabel('If/I0')
+        
+        plt.pause(0.05)
+
+        
+    def align_y(self, force=False):
+        xafs_y = user_ns['xafs_y']
+        db = user_ns['db']
+        yield from linescan(xafs_y, 'it', -1, 1, 31, pluck=False)
+        close_last_plot()
+        table  = db[-1].table()
+        yy     = table['xafs_y']
+        signal = table['It']/table['I0']
+        if float(signal[2]) > list(signal)[-2] :
+            ss     = -(signal - signal[2])
+            self.inverted = 'inverted '
+        else:
+            ss     = signal - signal[2]
+            self.inverted    = ''
+        mod    = StepModel(form='erf')
+        pars   = mod.guess(ss, x=numpy.array(yy))
+        out    = mod.fit(ss, pars, x=numpy.array(yy))
+        print(whisper(out.fit_report(min_correl=0)))
+        self.y_plot(yy, out)
+        target = out.params['center'].value
+        yield from mv(xafs_y, target)
+
+
+    def auto_align(self, pitch=2):
+        BMMuser, db, xafs_pitch, xafs_y = user_ns['BMMuser'], user_ns['db'], user_ns['xafs_pitch'], user_ns['xafs_y']
+        report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
+
+        ## first pass in transmission
+        yield from self.align_y()
+        yield from self.align_pitch()
+
+        ## for realsies Y in transmission
+        yield from self.align_y()
+        self.y_uid = db.v2[-1].metadata['start']['uid'] 
+
+        ## for realsies Y in pitch
+        yield from self.align_pitch()
+        self.pitch_uid = db.v2[-1].metadata['start']['uid'] 
+
+        ## record the flat position
+        self.flat = [xafs_y.position, xafs_pitch.position]
+
+        ## move to measurement angle and align
+        yield from mvr(xafs_pitch, pitch)
+        yield from linescan(xafs_y, 'xs', -2, 2, 31, pluck=False)
+        self.f_uid = db.v2[-1].metadata['start']['uid'] 
+        tf = db[-1].table()
+        yy = tf['xafs_y']
+        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        com = int(center_of_mass(signal)[0])+1
+        centroid = yy[com]
+        yield from mv(xafs_y, centroid)
+        
+        ## make a pretty picture, post it to slack
+        self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
+        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
+        plt.savefig(self.alignment_filename)
+        try:
+            img_to_slack(self.alignment_filename)
+        except:
+            post_to_slack('failed to post image: {self.alignment_filename}')
+            pass
+
+        
+    def flatten(self):
+        xafs_pitch, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_y']
+        if self.flat != [0, 0]:
+            yield from mv(xafs_y, self.flat[0], xafs_pitch, self.flat[1])
+        
+
+            
+
 class PinWheelMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and
     generating macros for measuring XAS on the BMM glancing angle
@@ -172,13 +344,14 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
             if m['method'].lower() == 'automatic':
-                self.content += self.tab + 'yield from align_ga()\n'
+                self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
-                if m['samplep'] is not None:
-                    self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
                 if m['sampley'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]})\n'
-            self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
+                if m['samplep'] is not None:
+                    self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
+                self.content += self.tab + f'ga.flat = [{xafs_y.position}, {xafs_pitch.position}]\n'
+                self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
 
                     
             ############################################################
@@ -209,7 +382,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                         command += ', %s=\'%s\'' % (k, m[k])
             command += ')\n'
             self.content += command
-            self.content += self.tab + f'yield from mvr(xafs_pitch, {-1*m["angle"]})\n'
+            self.content += self.tab + 'yield from ga.flatten()\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 

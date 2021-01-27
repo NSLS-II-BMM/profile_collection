@@ -20,6 +20,25 @@ from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
 run_report('\t'+'positioning of instruments')
 from BMM.positioning import find_slot
 
+###########################################################################################
+#  _____  _       ___   _   _ _____ _____ _   _ _____    ___   _   _ _____  _      _____  #
+# |  __ \| |     / _ \ | \ | /  __ \_   _| \ | |  __ \  / _ \ | \ | |  __ \| |    |  ___| #
+# | |  \/| |    / /_\ \|  \| | /  \/ | | |  \| | |  \/ / /_\ \|  \| | |  \/| |    | |__   #
+# | | __ | |    |  _  || . ` | |     | | | . ` | | __  |  _  || . ` | | __ | |    |  __|  #
+# | |_\ \| |____| | | || |\  | \__/\_| |_| |\  | |_\ \ | | | || |\  | |_\ \| |____| |___  #
+#  \____/\_____/\_| |_/\_| \_/\____/\___/\_| \_/\____/ \_| |_/\_| \_/\____/\_____/\____/  #
+###########################################################################################
+
+
+run_report('\tglancing angle stage')
+from BMM.glancing_angle import GlancingAngle, PinWheelMacroBuilder
+ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
+
+pinwheel = PinWheelMacroBuilder()
+#xlsx = wmb.spreadsheet
+
+
+
 run_report('\t'+'areascan')
 from BMM.areascan import areascan, as2dat
 
@@ -47,7 +66,9 @@ from BMM.functions import approximate_pitch
 
 
 XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_position'),
+              'xafs_x'                           : (True,  'BMM.sample_x_position'),
               'xafs_liny'                        : (True,  'BMM.sample_y_position'),
+              'xafs_y'                           : (True,  'BMM.sample_y_position'),
               'xafs_lins'                        : (False, 'BMM.sample_s_position'),
               'xafs_linxs'                       : (False, 'BMM.sample_ref_position'),
               'xafs_pitch'                       : (False, 'BMM.sample_pitch_position'),
@@ -80,7 +101,7 @@ run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
-from BMM.mono_calibration import calibrate_high_end, calibrate_low_end, calibrate_mono
+from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
 
 run_report('\t'+'Larch')
 from BMM.larch import Pandrosus, Kekropidai
@@ -138,6 +159,9 @@ if BMMuser.element is not None: # make sure Xspress3 is configured to measure fr
           pass
 
 
-
+wmb.folder = BMMuser.folder
+wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+pinwheel.folder = BMMuser.folder
+pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
 
 RE.msg_hook = BMM_msg_hook

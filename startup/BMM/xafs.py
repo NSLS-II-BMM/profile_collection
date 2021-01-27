@@ -18,7 +18,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
 from BMM.larch         import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.modes         import get_mode, describe_mode
 from BMM.motor_status  import motor_sidebar, motor_status
@@ -416,7 +416,7 @@ def scan_sequence_static_html(inifile       = None,
     filled up during an XAFS scan, then write a static html file as a dossier for a scan
     sequence using a bespoke html template file
     '''
-    BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+    BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
     if filename is None or start is None:
         return None
     firstfile = "%s.%3.3d" % (filename, start)
@@ -425,8 +425,11 @@ def scan_sequence_static_html(inifile       = None,
 
     tmpl = 'sample.tmpl'
     if mode == 'xs':
-        tmpl = 'sample_xs.tmpl'
-    with open(os.path.join(BMMuser.DATA, 'dossier', tmpl)) as f:
+        if BMMuser.instrument == 'glancing angle stage':
+            tmpl = 'sample_ga.tmpl'
+        else:
+            tmpl = 'sample_xs.tmpl'
+    with open(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', tmpl)) as f:
         content = f.readlines()
     basename     = filename
     htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')
@@ -499,6 +502,10 @@ def scan_sequence_static_html(inifile       = None,
                                     xrffile       = quote('../XRF/'+str(xrffile)),
                                     xrfuid        = xrfuid,
                                     xrfsnap       = quote('../XRF/'+str(xrfsnap)),
+                                    ga_align      = ga.alignment_filename,
+                                    ga_yuid       = ga.y_uid,
+                                    ga_puid       = ga.pitch_uid,
+                                    ga_fuid       = ga.f_uid,
                                     ocrs          = ocrs,
                                     rois          = rois,
                                     initext       = highlight(initext, IniLexer(), HtmlFormatter()),

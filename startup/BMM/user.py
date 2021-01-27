@@ -254,11 +254,13 @@ class BMM_User(Borg):
 
     def to_json(self, filename=None):
         ## avoid this: TypeError: can't pickle _thread.RLock objects
-        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig]
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig = [None, ] * 7
+        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor]
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = [None, ] * 8
         d = copy.deepcopy(self.__dict__)
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig = save
-        for k in ('prev_fig', 'prev_ax', 'user_is_defined', 'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8'):
+        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = save
+        for k in ('prev_fig', 'prev_ax', 'user_is_defined',
+                  'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8',
+                  'motor', 'motor2'):
             del d[k]
         if filename is None:
             print(json.dumps(d))
@@ -439,7 +441,7 @@ class BMM_User(Borg):
         htmlfolder = os.path.join(folder, 'dossier')
         if not os.path.isdir(htmlfolder):
             os.mkdir(htmlfolder)
-            for f in ('sample.tmpl', 'sample_xs.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
+            for f in ('sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
                 shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()

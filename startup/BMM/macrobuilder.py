@@ -84,6 +84,7 @@ class BMMMacroBuilder():
         self.totaltime        = 0
         self.deltatime        = 0
 
+        self.tmpl             = None
         self.instrument       = None
 
         self.experiment       = ('default', 'slot', 'focus', 'measure', 'spin', 'angle', 'method')
@@ -118,7 +119,6 @@ class BMMMacroBuilder():
         self.wb       = load_workbook(self.source, read_only=True);
         self.ws       = self.wb.active
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
-        self.tmpl     = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
         self.measurements = list()
         #self.do_first_change = False
@@ -178,7 +178,14 @@ class BMMMacroBuilder():
         message = ''
         unrecoverable = False
         BMMuser = user_ns['BMMuser']
-        
+
+        if 'mode' not in default:
+            if 'glancing angle' in self.instrument:
+                default['mode'] = 'xs'
+            else:
+                default['mode'] = 'transmission'
+
+            
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':
             default['experimenters'] = BMMuser.name
 

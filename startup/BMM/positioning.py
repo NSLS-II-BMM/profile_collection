@@ -2,10 +2,14 @@
 from bluesky.plans import rel_scan
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 
+import matplotlib.pyplot as plt
+from lmfit.models import StepModel
+import numpy
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
-from BMM.derivedplot   import close_all_plots
+from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import linescan
 
@@ -118,6 +122,7 @@ def align_ga(ymargin=0.5, force=False):
 
     '''
     xafs_pitch, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_y']
+    db = user_ns['db']
     count = 1
     if ymargin < 0.05:
         ymargin = 0.05
@@ -127,8 +132,25 @@ def align_ga(ymargin=0.5, force=False):
             yield from linescan(xafs_pitch, 'it', -2, 2, 31, force=force)
         elif action[:1].lower() == 'y':
             yield from mv(xafs_y.hlm, xafs_y.default_hlm, xafs_y.llm, xafs_y.default_llm)
-            yield from linescan(xafs_y, 'it', -1, 1, 31, force=force)
-            yield from mv(xafs_y.hlm, xafs_y.position+ymargin, xafs_y.llm, xafs_y.position-ymargin)
+            yield from linescan(xafs_y, 'it', -1, 1, 31, force=force, pluck=False)
+            #yield from mv(xafs_y.hlm, xafs_y.position+ymargin, xafs_y.llm, xafs_y.position-ymargin)
+            close_last_plot()
+            table  = db[-1].table()
+            yy     = table['xafs_y']
+            signal = table['It']/table['I0']
+            if float(signal[2]) > list(signal)[-2] :
+                ss     = -(signal - signal[2])
+            else:
+                ss     = signal - signal[2]
+            mod    = StepModel(form='erf')
+            pars   = mod.guess(ss, x=numpy.array(yy))
+            out    = mod.fit(ss, pars, x=numpy.array(yy))
+            print(whisper(out.fit_report(min_correl=0)))
+            out.plot()
+            target = out.params['center'].value
+            #response = input(f"moving to xafs_y={target}, ok? [Y/n]")
+            #if response.lower() != 'n':
+            yield from mv(xafs_y, target)
         elif action[:1].lower() in ('q', 'n', 'c'): # quit/no/cancel
             yield from null()
             close_all_plots()
@@ -140,4 +162,5 @@ def align_ga(ymargin=0.5, force=False):
             print('Three iterations is plenty....')
             close_all_plots()
             return
+
     

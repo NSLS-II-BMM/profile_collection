@@ -21,6 +21,26 @@ from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 
+def get_mode():
+    m2, m3 = user_ns['m2'], user_ns['m3']
+    if m2.vertical.readback.get() < 0: # this is a focused mode
+        if m2.pitch.readback.get() > 3:
+            return 'XRD'
+        else:
+            if m3.vertical.readback.get() > -2:
+                return 'A'
+            elif m3.vertical.readback.get() > -7:
+                return 'B'
+            else:
+                return 'C'
+    else:
+        if m3.pitch.readback.get() < 3:
+            return 'F'
+        elif m3.lateral.readback.get() > 0:
+            return 'D'
+        else:
+            return 'E'
+
 def move_after_scan(thismotor):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
@@ -120,6 +140,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             if move:
                 t  = db[-1].table()
                 signal = t['I0']
+                if get_mode() in ('A', 'B', 'C'):
+                    choice = 'com'
                 if choice == 'peak':
                     position = peak(signal)
                 else:
