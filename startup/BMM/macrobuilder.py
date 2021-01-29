@@ -185,10 +185,18 @@ class BMMMacroBuilder():
             else:
                 default['mode'] = 'transmission'
 
+        if default['filename'] is None or str(default['filename']).strip() == '':
+            default['filename'] = 'filename'
             
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':
             default['experimenters'] = BMMuser.name
 
+        defaultdefaults = {'bounds': '-200  -30  -10 15.5  570', 'steps': '10  2  0.25  0.05k', 'times': '1 1 1 1'}
+        for k in ('bounds', 'steps', 'times'):
+            if default[k] is None or str(default[k]).strip() == '':
+                default[k] = defaultdefaults[k]
+
+            
         for k in ('sample', 'prep', 'comment'):
             if default[k] is None or str(default[k]).strip() == '':
                 default[k] = '...'

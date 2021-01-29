@@ -129,28 +129,11 @@ def align_ga(ymargin=0.5, force=False):
     while True:
         action = input(bold_msg("\nScan axis? [p=xafs_pitch / y=xafs_y / q=quit] (then Enter) "))
         if action[:1].lower() == 'p':
-            yield from linescan(xafs_pitch, 'it', -2, 2, 31, force=force)
+            yield from linescan(xafs_pitch, 'it', -3, 3, 31, force=force)
         elif action[:1].lower() == 'y':
             yield from mv(xafs_y.hlm, xafs_y.default_hlm, xafs_y.llm, xafs_y.default_llm)
-            yield from linescan(xafs_y, 'it', -1, 1, 31, force=force, pluck=False)
+            yield from linescan(xafs_y, 'it', -2, 2, 31, force=force)
             #yield from mv(xafs_y.hlm, xafs_y.position+ymargin, xafs_y.llm, xafs_y.position-ymargin)
-            close_last_plot()
-            table  = db[-1].table()
-            yy     = table['xafs_y']
-            signal = table['It']/table['I0']
-            if float(signal[2]) > list(signal)[-2] :
-                ss     = -(signal - signal[2])
-            else:
-                ss     = signal - signal[2]
-            mod    = StepModel(form='erf')
-            pars   = mod.guess(ss, x=numpy.array(yy))
-            out    = mod.fit(ss, pars, x=numpy.array(yy))
-            print(whisper(out.fit_report(min_correl=0)))
-            out.plot()
-            target = out.params['center'].value
-            #response = input(f"moving to xafs_y={target}, ok? [Y/n]")
-            #if response.lower() != 'n':
-            yield from mv(xafs_y, target)
         elif action[:1].lower() in ('q', 'n', 'c'): # quit/no/cancel
             yield from null()
             close_all_plots()

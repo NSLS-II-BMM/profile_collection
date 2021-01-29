@@ -1019,7 +1019,7 @@ def xafs(inifile=None, **kwargs):
                     return
 
                 slotno = ''
-                if BMMuser.wheel is True:
+                if BMMuser.instrument == 'sample wheel':
                     slotno = f', slot {xafs_wheel.current_slot()}'
                 report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname

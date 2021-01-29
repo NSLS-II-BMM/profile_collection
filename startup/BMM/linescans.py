@@ -141,11 +141,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 t  = db[-1].table()
                 signal = t['I0']
                 if get_mode() in ('A', 'B', 'C'):
-                    choice = 'com'
-                if choice == 'peak':
-                    position = peak(signal)
-                else:
                     position = com(signal)
+                else:
+                    position = peak(signal)
                 top = t[motor.name][position]
                 
                 yield from sleep(slp)

@@ -350,13 +350,16 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                     self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]})\n'
                 if m['samplep'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
-                self.content += self.tab + f'ga.flat = [{xafs_y.position}, {xafs_pitch.position}]\n'
-                self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
+                #self.content += self.tab + f'ga.flat = [{xafs_y.position}, {xafs_pitch.position}]\n'
+                #self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
 
                     
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
             ############################################################
+            self.content += self.tab + 'yield from mvr(xafs_y, -5)\n'
+            self.content += self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="Nbfoil", nscans=1, sample="Nb foil", bounds="-40 40", steps="0.5", times="0.5")\n'
+            self.content += self.tab + 'yield from mvr(xafs_y, 5)\n'
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -382,7 +385,8 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                         command += ', %s=\'%s\'' % (k, m[k])
             command += ')\n'
             self.content += command
-            self.content += self.tab + 'yield from ga.flatten()\n'
+            if m['method'].lower() == 'automatic':
+                self.content += self.tab + 'yield from ga.flatten()\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
