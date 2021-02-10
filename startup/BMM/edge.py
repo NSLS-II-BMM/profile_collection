@@ -10,7 +10,7 @@ from BMM.functions     import boxedtext, countdown, approximate_pitch
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
-from BMM.modes         import change_mode, get_mode, pds_motors_ready
+from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 
@@ -26,6 +26,23 @@ def show_edges():
     else:
         text = show_reference_wheel() + '\n' + rois.show()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
+
+
+def arrived_in_mode(mode=None):
+    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
+              'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
+              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+
+    ok = True
+    for m in motors:
+        target = float(MODEDATA[m][mode])
+        achieved = user_ns[m].position
+        diff = abs(target - achieved)
+        if diff > 0.5:
+            print(f'{m} is out of position, target={target}, current position={achieved}')
+            ok = False
+    return ok
+
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
     '''Change edge energy by:
@@ -182,6 +199,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
+    if arrived_in_mode(mode=mode) is False:
+        print(error_msg(f'\nFailed to arrive in Mode {mode}'))
+        print('Fixing this is often as simple as re-running the change_mode() command.')
+        print('If that doesn\'t work, call for help')
+        return(yield from null())
+        
     yield from user_ns['kill_mirror_jacks']()
     yield from sleep(1)
     if BMMuser.motor_fault is not None:

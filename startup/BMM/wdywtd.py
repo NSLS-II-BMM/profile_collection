@@ -193,14 +193,16 @@ class WDYWTD():
             
     def do_ChangeXtals(self):
         if user_ns['dcm']._crystal == '111':
-            print(go_msg('You would like to change to the Si(311) crystals...\n'))
+            print(go_msg('You would like to change from the ') + whisper('Si(111)') + go_msg(' to the ') + bold_msg('Si(311)') + go_msg(' crystals...\n'))
             print(disconnected_msg('yield from change_xtals("311")'))
         else:
-            print(go_msg('You would like to change to the Si(111) crystals...\n'))
+            print(go_msg('You would like to change from the ') + whisper('Si(311)') + go_msg(' to the ') + bold_msg('Si(111)') + go_msg(' crystals...\n'))
             print(disconnected_msg('yield from change_xtals("111")'))
         yield from null()
 
     def do_SetupXRD(self):
         print(go_msg('You would like to set up for XRD...\n'))
         print(disconnected_msg('yield from change_edge("Ni", xrd=True, energy=8600)'))
+        #yield from change_edge("Ni", xrd=True, energy=8600)
         yield from null()
+

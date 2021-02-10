@@ -1,4 +1,4 @@
-import sys, os, re, shutil, socket
+import sys, os, re, shutil, socket, datetime
 from distutils.dir_util import copy_tree
 import json, pprint, copy
 from IPython import get_ipython
@@ -150,7 +150,8 @@ class BMM_User(Borg):
         self.date            = ''
         self.gup             = 0
         self.saf             = 0
-        self.cycle           = '2020-2'
+        cnum = (0,1,1,1,1,2,2,2,2,3,3,3,3)[int(datetime.datetime.now().strftime("%m"))]
+        self.cycle           = f'{datetime.datetime.now().strftime("%Y")}-{cnum}'
         self.host            = socket.gethostname()
         self.use_pilatus     = False
         self.name            = None
@@ -263,10 +264,10 @@ class BMM_User(Borg):
                   'motor', 'motor2'):
             del d[k]
         if filename is None:
-            print(json.dumps(d))
+            print(json.dumps(d, indent=4))
         else:
             with open(filename, 'w') as outfile:
-                json.dump(d, outfile)
+                json.dump(d, outfile, indent=4)
             print(f'wrote BMMuser state to {filename}')
 
     def from_json(self, filename):

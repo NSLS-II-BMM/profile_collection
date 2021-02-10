@@ -1019,9 +1019,11 @@ def xafs(inifile=None, **kwargs):
                     return
 
                 slotno = ''
-                if BMMuser.instrument == 'sample wheel':
+                if 'sample wheel' in BMMuser.instrument:
                     slotno = f', slot {xafs_wheel.current_slot()}'
-                report(f'starting scan {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
+                elif 'glancing angle' in BMMuser.instrument:
+                    slotno = f', spinner {ga.current()}'
+                report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname
 
                 if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
@@ -1198,7 +1200,7 @@ def xafs(inifile=None, **kwargs):
     RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     quadem1, vor = user_ns['quadem1'], user_ns['vor']
-    xafs_wheel = user_ns['xafs_wheel']
+    xafs_wheel, ga = user_ns['xafs_wheel'], user_ns['ga']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     rkvs = user_ns['rkvs']
     try:

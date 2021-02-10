@@ -248,7 +248,7 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(xafs_y, 'xs', -2, 2, 31, pluck=False)
+        yield from linescan(xafs_y, 'xs', -2, 1.7, 31, pluck=False)
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
         yy = tf['xafs_y']
@@ -342,9 +342,12 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             # sample alignment and glancing angle #
             #######################################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
+            if m['method'].lower() == 'automatic':
+                self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
+                self.content += self.tab + 'yield from mvr(xafs_lins, -5)\n'
             else:
                 if m['sampley'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]})\n'
@@ -357,9 +360,9 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
             ############################################################
-            self.content += self.tab + 'yield from mvr(xafs_y, -5)\n'
-            self.content += self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="Nbfoil", nscans=1, sample="Nb foil", bounds="-40 40", steps="0.5", times="0.5")\n'
-            self.content += self.tab + 'yield from mvr(xafs_y, 5)\n'
+            #self.content += self.tab + 'yield from mvr(xafs_y, -5)\n'
+            #self.content += self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="Nbfoil", nscans=1, sample="Nb foil", bounds="-40 40", steps="0.5", times="0.5")\n'
+            #self.content += self.tab + 'yield from mvr(xafs_y, 5)\n'
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -386,7 +389,9 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             command += ')\n'
             self.content += command
             if m['method'].lower() == 'automatic':
+                self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
                 self.content += self.tab + 'yield from ga.flatten()\n'
+                self.content += self.tab + 'yield from mvr(xafs_lins, -5)\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
