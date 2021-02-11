@@ -96,8 +96,8 @@ class DCM(PseudoPositioner):
         dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
         BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         dcm_bragg.acceleration.put(BMMuser.acc_fast)
-        dcm_para.velocity.put(0.2)
-        dcm_para.hvel_sp.put(0.2)
+        dcm_para.velocity.put(0.8)
+        dcm_para.hvel_sp.put(0.8)
         dcm_perp.velocity.put(0.2)
         dcm_perp.hvel_sp.put(0.2)
         dcm_x.velocity.put(0.6)
