@@ -193,6 +193,8 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + 'yield from mv(xafs_y, %.3f)\n' % m['sampley']
             if m['slitwidth'] is not None:
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
+            if m['detectorx'] is not None:
+                self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
 
             
             ##########################
@@ -280,15 +282,16 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 'samplex':    row[16+self.offset].value,     # other motors 
                 'sampley':    row[17+self.offset].value,
                 'slitwidth':  row[18+self.offset].value,
-                'snapshots':  self.truefalse(row[19+self.offset].value), # flags
-                'htmlpage':   self.truefalse(row[20+self.offset].value),
-                'usbstick':   self.truefalse(row[21+self.offset].value),
-                'bothways':   self.truefalse(row[22+self.offset].value),
-                'channelcut': self.truefalse(row[23+self.offset].value),
-                'ththth':     self.truefalse(row[24+self.offset].value),
-                'url':        row[25+self.offset].value,
-                'doi':        row[26+self.offset].value,
-                'cif':        row[27+self.offset].value, }
+                'detectorx':  row[19+self.offset].value,
+                'snapshots':  self.truefalse(row[20+self.offset].value), # flags
+                'htmlpage':   self.truefalse(row[21+self.offset].value),
+                'usbstick':   self.truefalse(row[22+self.offset].value),
+                'bothways':   self.truefalse(row[23+self.offset].value),
+                'channelcut': self.truefalse(row[24+self.offset].value),
+                'ththth':     self.truefalse(row[25+self.offset].value),
+                'url':        row[26+self.offset].value,
+                'doi':        row[27+self.offset].value,
+                'cif':        row[28+self.offset].value, }
         return this
                          
             

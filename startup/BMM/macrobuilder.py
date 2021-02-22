@@ -89,7 +89,7 @@ class BMMMacroBuilder():
 
         self.experiment       = ('default', 'slot', 'focus', 'measure', 'spin', 'angle', 'method')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
-        self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth')
+        self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
         
     def spreadsheet(self, spreadsheet=None, energy=False):
@@ -353,7 +353,7 @@ class BMMMacroBuilder():
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
         #          things in the spreadsheet but not in the INI file
-        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth'):
+        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth', 'detectorx'):
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'

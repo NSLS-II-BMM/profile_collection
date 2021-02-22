@@ -440,6 +440,8 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             #######################################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
             self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
+            if m['detectorx'] is not None:
+                self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
@@ -543,14 +545,15 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                 'method':     row[17].value,
                 'samplep':    row[18].value,     # other motors 
                 'sampley':    row[19].value,
-                'snapshots':  self.truefalse(row[20].value), # flags
-                'htmlpage':   self.truefalse(row[21].value),
-                'usbstick':   self.truefalse(row[22].value),
-                'bothways':   self.truefalse(row[23].value),
-                'channelcut': self.truefalse(row[24].value),
-                'ththth':     self.truefalse(row[25].value),
-                'url':        row[26].value,
-                'doi':        row[27].value,
-                'cif':        row[28].value, }
+                'detectorx':  row[20].value,
+                'snapshots':  self.truefalse(row[21].value), # flags
+                'htmlpage':   self.truefalse(row[22].value),
+                'usbstick':   self.truefalse(row[23].value),
+                'bothways':   self.truefalse(row[24].value),
+                'channelcut': self.truefalse(row[25].value),
+                'ththth':     self.truefalse(row[26].value),
+                'url':        row[27].value,
+                'doi':        row[28].value,
+                'cif':        row[29].value, }
         return this
 

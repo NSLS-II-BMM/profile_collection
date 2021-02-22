@@ -151,14 +151,9 @@ if BMMuser.element is None:
      except:
           pass
 if BMMuser.element is not None: # make sure Xspress3 is configured to measure from the correct ROI
-     try:
-          xs.measure_roi()
-     except:
-          pass
-     try:
-          xs1.measure_roi()
-     except:
-          pass
+     BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge)
+     #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
+     show_edges()
 
 
 wmb.folder = BMMuser.folder

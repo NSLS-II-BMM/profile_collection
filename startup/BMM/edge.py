@@ -244,30 +244,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print('Moving reference foil...')
         yield from rois.select_plan(el)
         ## Xspress3
-        try:
-            ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
-            if xs.check_element(el, edge):
-                #forceit = False
-                #if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
-                #    forceit = True # Pb and Pt L3 edges are "standard" ROIs
-                if el not in xs.slots: # or forceit:
-                    startup_dir = get_ipython().profile_dir.startup_dir
-                    with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
-                        js = fl.read()
-                    allrois = json.loads(js)
-                    xs.set_rois()
-                    xs.slots[12] = el
-                    for ch in range(1,5):
-                        xs.set_roi_channel(channel=ch, index=13, name=f'{el.capitalize()}{ch}',
-                                           low =allrois[el.capitalize()][edge.lower()]['low'],
-                                           high=allrois[el.capitalize()][edge.lower()]['high'])
-
-                xs.measure_roi()
-            else:
-                report(f'No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
-                       level='bold', slack=True)
-        except Exception as E:
-            print(error_msg(E))
+        BMMuser.verify_roi(xs, el, edge)
         ## feedback
         show_edges()
     
@@ -281,3 +258,5 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))
     return()
+
+    
