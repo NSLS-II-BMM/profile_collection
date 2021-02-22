@@ -140,5 +140,7 @@ class KillSwitch(Device):
                 time.sleep(0.5)
                 user_ns[axis].kill()
         elif mc == 'dcm':
-            dcm.ena()
+            user_ns['dcm'].ena()
+            time.sleep(0.5)
+            user_ns['dcm'].kill()
             

@@ -1,6 +1,5 @@
 
-import time
-import json
+import time, json, os
 
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
@@ -221,7 +220,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ############################
     print('Optimizing rocking curve...')
     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
-    yield from mv(dcm_pitch, approximate_pitch(energy+target)+0.04)
+    yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from sleep(1)
     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from rocking_curve()
@@ -252,6 +251,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
                 #if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
                 #    forceit = True # Pb and Pt L3 edges are "standard" ROIs
                 if el not in xs.slots: # or forceit:
+                    startup_dir = get_ipython().profile_dir.startup_dir
+                    with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
+                        js = fl.read()
+                    allrois = json.loads(js)
                     xs.set_rois()
                     xs.slots[12] = el
                     for ch in range(1,5):
@@ -263,8 +266,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
             else:
                 report(f'No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
-        except:
-            pass
+        except Exception as E:
+            print(error_msg(E))
         ## feedback
         show_edges()
     

@@ -14,7 +14,7 @@ from scipy.ndimage import center_of_mass
 
 from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import isfloat, present_options, now
+from BMM.functions      import countdown, isfloat, present_options, now
 from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
@@ -25,6 +25,43 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 class GlancingAngle(Device):
+    '''A class capturing the movement and control of the glancing angle
+    spinner stage.
+
+    Attributes
+    ==========
+    spinner1 .. spinner8 : EpicsSignal
+        The EpicsSignal component for spinner #1 .. 8
+    spin : Bool
+        When True, the ga.to() method will start the spinner
+    home : float
+        Position in xafs_garot of spinner 0
+    inverted : str
+        A string used to recognize whether the xafs_y scan steps up or down
+    flat : list
+        The xafs_y and xafs_pitch positions of the flat sample on the current spinner
+    y_uid : str
+        The DataBroker UID of the most recent xafs_y against It scan
+    pitch_uid : str
+        The DataBroker UID of the most recent xafs_pitch against It scan
+    f_uid : str
+        The DataBroker UID of the most recent xafs_y against fluorescence scan
+    alignment_filename : str
+        The fully resolved path to the three-panel, auto-alignment png image
+
+
+    Methods
+    =======
+    current : return the current spoinner number as an integer
+    reset : return xafs_garot to its home position
+    on : turn on the specified spinner
+    off : turn off the specified spinner
+    alloff : turn off all spinners
+    alloff_plan : turn off all spinners as a plan
+    to : move to the specified spinner, turn off all other spinners, turn on this spinner
+    auto_align : perform an automated alignment for the current spinner
+
+    '''
     spinner1 = Cpt(EpicsSignal, 'OutPt08:Data-Sel')
     spinner2 = Cpt(EpicsSignal, 'OutPt09:Data-Sel')
     spinner3 = Cpt(EpicsSignal, 'OutPt10:Data-Sel')
@@ -46,6 +83,7 @@ class GlancingAngle(Device):
     alignment_filename = ''
     
     def current(self):
+        '''Return the current spinner number as an integer'''
         pos = self.garot.position
         cur = pos % 360
         here = (9-round(cur/45)) % 8
@@ -60,6 +98,7 @@ class GlancingAngle(Device):
         report('Returned to spinner 1 at %d degrees and turned off all spinners' % self.home, level='bold')
         
     def valid(self, number=None):
+        '''Check that an argument is an integer between 1 and 8'''
         if number is None:
             return False
         if type(number) is not int:
@@ -69,6 +108,7 @@ class GlancingAngle(Device):
         return True
         
     def on(self, number):
+        '''Turn on the specified spinner'''
         if self.spin is False:
             print(warning_msg('The spinners are currently disabled.  do "ga.spin = True" to re-enable.'))
             return
@@ -78,6 +118,7 @@ class GlancingAngle(Device):
         this = getattr(self, f'spinner{number}')
         this.put(1)
     def off(self, number=None):
+        '''Turn off the specified spinner'''
         if number is None:
             self.alloff()
             return
@@ -88,9 +129,11 @@ class GlancingAngle(Device):
         this.put(0)
         
     def alloff(self):
+        '''Turn off all spinners'''
         for i in range(1,9):
             self.off(i)
     def alloff_plan(self):
+        '''Turn off all spinners as a plan'''
         RE = user_ns['RE']
         save = RE.msg_hook
         RE.msg_hook = None
@@ -100,6 +143,8 @@ class GlancingAngle(Device):
         RE.msg_hook = save
             
     def to(self, number):
+        '''Rotate to the specified spinner. Turn off all other spinners.  Turn
+        on the specified spinner.'''
         if not self.valid(number):
             print(error_msg('The fans are numbered from 1 to 8'))
             yield from null()
@@ -130,6 +175,8 @@ class GlancingAngle(Device):
         
             
     def align_pitch(self, force=False):
+        '''Find the peak of xafs_pitch scan against It. Plot the
+        result. Move to the peak.'''        
         xafs_pitch = user_ns['xafs_pitch']
         db = user_ns['db']
         yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
@@ -155,6 +202,7 @@ class GlancingAngle(Device):
 
 
     def alignment_plot(self, yt, pitch, yf):
+        '''Make a pretty, three-panel plot at the end of an auto-alignment'''
         db, BMMuser = user_ns['db'], user_ns['BMMuser']
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
         gs = gridspec.GridSpec(1,3)
@@ -204,7 +252,9 @@ class GlancingAngle(Device):
         plt.pause(0.05)
 
         
-    def align_y(self, force=False):
+    def align_y(self, force=False, drop=None):
+        '''Fit an error function to the xafs_y scan against It. Plot the
+        result. Move to the centroid of the error function.'''
         xafs_y = user_ns['xafs_y']
         db = user_ns['db']
         yield from linescan(xafs_y, 'it', -1, 1, 31, pluck=False)
@@ -212,6 +262,9 @@ class GlancingAngle(Device):
         table  = db[-1].table()
         yy     = table['xafs_y']
         signal = table['It']/table['I0']
+        if drop is not None:
+            yy = yy[:-drop]
+            signal = signal[:-drop]
         if float(signal[2]) > list(signal)[-2] :
             ss     = -(signal - signal[2])
             self.inverted = 'inverted '
@@ -227,16 +280,58 @@ class GlancingAngle(Device):
         yield from mv(xafs_y, target)
 
 
-    def auto_align(self, pitch=2):
+    def auto_align(self, pitch=2, drop=None):
+        '''Align a sample on a spinner automatically.  This performs 5 scans.
+        The first four iterate twice between xafs_y and xafs_pitch
+        against the signal in It.  This find the flat position.
+
+        Then the sample is pitched to the requested angle and a fifth
+        scan is done to optimize the xafs_y position against the
+        fluorescence signal.
+
+        The xafs_y scans against It look like a step-down function.
+        The center of this step is found as the centroid of a fitted
+        error function.
+
+        The xafs_pitch scan should be peaked.  Move to the max of the
+        signal.
+
+        The xafs_y scan against fluorescence ideally looks like a
+        flat-topped peak.  Move to the center of mass.
+
+        At the end, a three-panel figure is drawn showing the last
+        three scans.  This is posted to Slack.  It also finds its way
+        into the dossier as a record of the quality of the alignment.
+
+        Arguments
+        =========
+        pitch : int
+          The angle at which to make the glancing angle measurements.
+        drop : int or None
+          If not None, then this many points will be dropped from the
+          end of xafs_y scan against transmission when fitting the error
+          function. This is an attempt to deal gracefully with leakage 
+          through the adhesive at very high energy.
+
+        '''
         BMMuser, db, xafs_pitch, xafs_y = user_ns['BMMuser'], user_ns['db'], user_ns['xafs_pitch'], user_ns['xafs_y']
+
+        if BMMuser.macro_dryrun:
+            report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
+            print(info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
+                           (BMMuser.macro_sleep, self.current())))
+            countdown(BMMuser.macro_sleep)
+            return(yield from null())
+
         report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
+            
 
         ## first pass in transmission
-        yield from self.align_y()
+        yield from self.align_y(drop=drop)
         yield from self.align_pitch()
 
         ## for realsies Y in transmission
-        yield from self.align_y()
+        yield from self.align_y(drop=drop)
         self.y_uid = db.v2[-1].metadata['start']['uid'] 
 
         ## for realsies Y in pitch
@@ -248,7 +343,7 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(xafs_y, 'xs', -2, 1.7, 31, pluck=False)
+        yield from linescan(xafs_y, 'xs', -1.7, 1.7, 31, pluck=False)
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
         yy = tf['xafs_y']
@@ -269,6 +364,7 @@ class GlancingAngle(Device):
 
         
     def flatten(self):
+        '''Return the stage to its nominally flat position.'''
         xafs_pitch, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_y']
         if self.flat != [0, 0]:
             yield from mv(xafs_y, self.flat[0], xafs_pitch, self.flat[1])
@@ -343,8 +439,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             # sample alignment and glancing angle #
             #######################################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
-            if m['method'].lower() == 'automatic':
-                self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
+            self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
@@ -362,7 +457,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             #############################################################
             self.content += self.tab + 'if ref is True:\n'
             self.content += self.tab + self.tab + 'yield from mvr(xafs_y, -5)\n'
-            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{BMMuser.element}foil", nscans=1, sample="{BMMuser.element} foil", bounds="-40 40", steps="0.5", times="0.5")\n'
+            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{BMMuser.element}foil", nscans=1, sample="{BMMuser.element} foil", bounds="-100 -30 40 70", steps="10 0.5 2", times="0.5 0.5 0.5")\n'
             self.content += self.tab + self.tab + 'yield from mvr(xafs_y, 5)\n'
 
             ############################################################

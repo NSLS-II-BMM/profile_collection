@@ -9,7 +9,7 @@ class DetectorMount():
     def __init__(self):
         self.motor = user_ns['xafs_det']
         self.low   = 10
-        self.high  = 210
+        self.high  = 205
         self.sampley = user_ns['xafs_x']
         self.margin = 15
 

@@ -204,7 +204,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         self.slots = ['Ti', 'V',  'Cr', 'Mn',
                       'Fe', 'Co', 'Ni', 'Cu',
                       'Zn', 'Ge', 'As', 'Br',
-                      'Nb', None, None, 'OCR']
+                      'Nb', 'Mo', None, 'OCR']
         self.restart()
         # self.settings.num_images.put(1)   # number of frames
         # self.settings.trigger_mode.put(1) # trigger mode internal

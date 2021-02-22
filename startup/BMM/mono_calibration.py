@@ -2,6 +2,7 @@
 from bluesky.preprocessors import finalize_wrapper
 from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 import matplotlib.pyplot as plt
+from lmfit.models import LinearModel
 
 import configparser, os
 config = configparser.ConfigParser()
@@ -15,7 +16,7 @@ from BMM.dcm_parameters import dcm_parameters
 from BMM.edge           import change_edge
 from BMM.functions      import HBARC, boxedtext
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.logging        import BMM_log_info, BMM_msg_hook
+from BMM.logging        import BMM_log_info, BMM_msg_hook, report
 from BMM.xafs           import xafs
 from BMM.resting_state  import resting_state_plan
 from BMM.suspenders     import BMM_clear_to_start
@@ -167,9 +168,43 @@ def calibrate_high_end(mono='111'):
 
 ## there is a historical reason this is split into two halves
 def calibrate():
-    yield from calibrate_low_end()
-    yield from calibrate_high_end()
+    dcm = user_ns['dcm']
+    report(f'Calibrating the {dcm._crystal} monochrmoator', 'bold')
+    yield from calibrate_low_end(mono=dcm._crystal)
+    yield from calibrate_high_end(mono=dcm._crystal)
+    yield from resting_state_plan()
 
+
+def calibrate_pitch(mono='111'):
+    BMMuser = user_ns['BMMuser']
+    # read content from INI file
+    datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
+    print(f'reading {datafile}')
+    config.read_file(open(datafile))
+
+    edges = dict()
+    for i in config.items('edges'):
+        el   = i[0]
+        vals = [float(j) for j in i[1].split(',')] # convert CSV string -> list of strings -> list of floats
+        edges[el] = vals
+
+
+    
+    # organize the data from the INI file
+    ordered = [y[1] for y in sorted([(edges[x][1], x) for x in edges.keys()])]
+    ee = list()
+    tt = list()
+    for el in ordered:
+        ee.append(edges[el][1])
+        tt.append(edges[el][3])
+        
+    mod    = LinearModel()
+    pars   = mod.guess(tt, x=ee)
+    out    = mod.fit(tt, pars, x=ee)
+    print(whisper(out.fit_report(min_correl=0)))
+    out.plot()
+
+    
 def calibrate_mono(mono='111'):
     BMMuser, shb, dcm, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm'], user_ns['dcm_pitch']
     BMM_dcm = dcm_parameters()

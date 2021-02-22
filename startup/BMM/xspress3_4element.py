@@ -104,7 +104,7 @@ class BMMXspress3Detector_4Element(BMMXspress3DetectorBase):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
-        for i in range(17):
+        for i in range(16):
             for n in range(1,5):
                 ch = getattr(self, f'channel{n}')
                 this = getattr(ch.rois, 'roi{:02}'.format(i+1))

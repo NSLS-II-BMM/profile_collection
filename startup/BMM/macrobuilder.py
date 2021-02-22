@@ -389,9 +389,11 @@ class BMMMacroBuilder():
         # explain to the user what to do next #
         #######################################
         print('\nYour new glancing angle plan is called: ' + bold_msg('%s_macro' % self.basename))
-        print('\nVerify: ' + bold_msg('%s_macro??' % self.basename))
-        print('Dryrun: '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
-        print('Run:    '   + bold_msg('RE(%s_macro())' % self.basename))
+        print('\nVerify:  ' + bold_msg('%s_macro??' % self.basename))
+        if 'glancing angle' in self.instrument:
+            print('Add ref: '   + bold_msg('RE(%s_macro(ref=True))' % self.basename))
+        print('Dryrun:  '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
+        print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
         hours = int(self.totaltime/60)
         minutes = int(self.totaltime - hours*60)
         self.deltatime = numpy.sqrt(self.deltatime)
