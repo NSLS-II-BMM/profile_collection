@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from BMM.db            import file_resource
 from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
 from BMM.larch         import Pandrosus, Kekropidai
@@ -24,7 +24,7 @@ from BMM.modes         import get_mode, describe_mode
 from BMM.motor_status  import motor_sidebar, motor_status
 from BMM.periodictable import edge_energy, Z_number, element_name
 from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xdi           import write_XDI
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
@@ -423,8 +423,10 @@ def scan_sequence_static_html(inifile       = None,
     if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):
         return None
 
+    thismode = plotting_mode(mode)
+    
     tmpl = 'sample.tmpl'
-    if mode == 'xs':
+    if thismode == 'xs':
         if BMMuser.instrument == 'glancing angle stage':
             tmpl = 'sample_ga.tmpl'
         else:
@@ -445,7 +447,7 @@ def scan_sequence_static_html(inifile       = None,
     ## generate a png image, preferably of a quadplot of the data, using Demeter
     prjfilename, pngfilename = None, None
     try:
-          pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=mode)
+          pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=thismode)
           prjfilename = os.path.join(BMMuser.folder, 'prj', basename+'.prj')
     except Exception as e:
           print(e)
@@ -622,7 +624,7 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if p['mode'] is 'xs':
+        if plotting_mode(p['mode']) is 'xs':
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3'))
@@ -631,20 +633,20 @@ def xafs(inifile=None, **kwargs):
                 print(error_msg('then do:             xs.measure_roi()'))
                 return(yield from null())
 
+        sub_dict = {'*' : '_STAR_',
+                    '/' : '_SLASH_',
+                    '\\': '_BACKSLASH_',
+                    '?' : '_QM_',
+                    '%' : '_PERCENT_',
+                    ':' : '_COLON_',
+                    '|' : '_VERBAR_',
+                    '"' : '_QUOTE_',
+                    '<' : '_LT_',
+                    '>' : '_GT_',
+                }
+        vfatify = lambda m: sub_dict[m.group()]
         if p['usbstick']:
-            sub_dict = {'*' : '_STAR_',
-                        '/' : '_SLASH_',
-                        '\\': '_BACKSLASH_',
-                        '?' : '_QM_',
-                        '%' : '_PERCENT_',
-                        ':' : '_COLON_',
-                        '|' : '_VERBAR_',
-                        '"' : '_QUOTE_',
-                        '<' : '_LT_',
-                        '>' : '_GT_',
-                    }
 
-            vfatify = lambda m: sub_dict[m.group()]
             new_filename = re.sub(r'[*:?"<>|/\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
@@ -667,6 +669,8 @@ def xafs(inifile=None, **kwargs):
         for i in range(p['start'], p['start']+p['nscans'], 1):
             cnt += 1
             fname = "%s.%3.3d" % (p['filename'], i)
+            if p['usbstick']:
+                fname = re.sub(r'[*:?"<>|/\\]', vfatify, fname)
             datafile = os.path.join(p['folder'], fname)
             if os.path.isfile(datafile):
                 report('%s already exists!' % (datafile), 'error')
@@ -773,7 +777,7 @@ def xafs(inifile=None, **kwargs):
         image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
 
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
-        if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')) and BMMuser.lims is True:
+        if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.settings.acquire_time, 1)
             xrfuid = yield from count([xs], 1, md = {'XDI':md})
@@ -924,7 +928,7 @@ def xafs(inifile=None, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
-            if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
+            if plotting_mode(p['mode']) == 'xs':
                 yield from mv(xs.total_points, len(energy_grid))
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
@@ -1026,7 +1030,7 @@ def xafs(inifile=None, **kwargs):
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname
 
-                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
+                if plotting_mode(p['mode']) == 'xs':
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
                     hdf5_uid = xs.hdf5.file_name.value
@@ -1067,7 +1071,7 @@ def xafs(inifile=None, **kwargs):
                 
                 md['_kind'] = 'xafs'
                 if p['ththth']: md['_kind'] = '333'
-                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
+                if plotting_mode(p['mode']) == 'xs':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
@@ -1090,7 +1094,7 @@ def xafs(inifile=None, **kwargs):
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
-                if user_ns['with_xspress3'] and any(x in p['mode'] for x in ('xs', 'fluo', 'flou')):
+                if plotting_mode(p['mode']) == 'xs':
                     hdf5_uid = xs.hdf5.file_name.value
                 
                 uidlist.append(uid)
@@ -1103,7 +1107,7 @@ def xafs(inifile=None, **kwargs):
                 ## data evaluation
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
                     try:
-                        score, emoji = user_ns['clf'].evaluate(uid, mode=p['mode'])
+                        score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"Data evaluation: {emoji}", level='bold', slack=True)
                         ## FYI: db.v2[-1].metadata['start']['scan_id']
                     except:
@@ -1152,7 +1156,7 @@ def xafs(inifile=None, **kwargs):
 
     def cleanup_plan(inifile):
         print('Cleaning up after an XAFS scan sequence')
-        RE.clear_suspenders()
+        BMM_clear_suspenders()
 
         db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
@@ -1176,8 +1180,10 @@ def xafs(inifile=None, **kwargs):
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', os.path.basename(htmlout))}
                     gdrive_dict['manifest']  = {'source': os.path.join(os.path.dirname(htmlout), '00INDEX.html'),
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', '00INDEX.html')}
+                if prjout is not None:
                     gdrive_dict['prj']       = {'source': prjout,
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'prj', os.path.basename(htmlout).replace('html', 'prj'))}
+                if pngout is not None:
                     gdrive_dict['processed'] = {'source': pngout,
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
                     

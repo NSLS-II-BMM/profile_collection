@@ -5,7 +5,8 @@ from bluesky.plan_stubs import abs_set, mv
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
-from BMM.logging import BMM_msg_hook
+from BMM.logging    import BMM_msg_hook
+from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 
 def resting_redis():
     rkvs = user_ns['rkvs']
@@ -73,6 +74,7 @@ def end_of_macro():
     xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
+    BMMuser.running_macro = False
     yield from quadem1.on_plan()
     yield from vor.on_plan()
     yield from mv(_locked_dwell_time, 0.5)
@@ -80,4 +82,5 @@ def end_of_macro():
     yield from xafs_wheel.recenter()
     RE.msg_hook = BMM_msg_hook
     resting_redis()
+    BMM_clear_suspenders()
 

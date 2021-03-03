@@ -12,7 +12,7 @@ run_report('\t'+'derived plot')
 from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 
 run_report('\t'+'suspenders')
-from BMM.suspenders import BMM_suspenders, BMM_clear_to_start
+from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat
@@ -155,7 +155,11 @@ if BMMuser.element is not None: # make sure Xspress3 is configured to measure fr
      #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
      show_edges()
 
+from BMM.edge import all_connected
+if all_connected(True) is False:
+     print(error_msg('Ophyd connection failure (testing main PDS motors)'))
 
+     
 wmb.folder = BMMuser.folder
 wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
 pinwheel.folder = BMMuser.folder

@@ -167,9 +167,8 @@ class BMM_User(Borg):
         self.slack_channel   = None
         self.trigger         = False
         self.instrument      = ''
-        self.url             = False
-        self.doi             = False
-        self.cif             = False
+        self.running_macro   = False
+        self.suspenders_engaged = False
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -237,6 +236,9 @@ class BMM_User(Borg):
         self.ththth        = False
         self.lims          = True
         self.mode          = 'transmission'
+        self.url           = False
+        self.doi           = False
+        self.cif           = False
         self.npoints       = 0     ###########################################################################
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
         self.delay         = 0.1   ###########################################################################

@@ -15,7 +15,7 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start
+from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -556,6 +556,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
     
     def cleanup_plan():
+        ## BMM_clear_suspenders()
         ##RE.clear_suspenders()       # disable suspenders
         yield from resting_state_plan()
 

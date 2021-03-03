@@ -13,7 +13,7 @@ from bluesky.preprocessors import subs_decorator
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
 from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start
+from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -385,7 +385,8 @@ def sead(inifile, force=False, **kwargs):
 
     def cleanup_plan():
         print('Cleaning up after single energy absorption detector measurement')
-        RE.clear_suspenders()
+        BMM_clear_suspenders()
+        #RE.clear_suspenders()
         yield from resting_state_plan()
         dcm.mode = 'fixed'
 

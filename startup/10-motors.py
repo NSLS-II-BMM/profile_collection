@@ -135,7 +135,7 @@ xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_ro
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
 xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped. 
-xafs_garot.user_offset.put(179.47455)
+xafs_garot.user_offset.put(136.47471875)
 
 xafs_linxs._limits = (-95, 95)
 xafs_linxs.user_offset.put(102)

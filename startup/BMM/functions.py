@@ -208,3 +208,12 @@ def present_options(suffix='xlsx'):
     except:
         return None
 
+def plotting_mode(mode):
+    if user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+        return 'xs'
+    elif not user_ns['with_xspress3'] and any(x in mode for x in ('fluo', 'flou', 'both')):
+        return 'fluo'
+    elif mode == 'ref':
+        return 'ref'
+    else:
+        return 'trans'

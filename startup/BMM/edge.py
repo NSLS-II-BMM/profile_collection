@@ -27,11 +27,22 @@ def show_edges():
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
 
 
+def all_connected(with_m2=False):
+    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
+              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    if with_m2 is True:
+        motors.extend(['m2_yu', 'm2_ydo', 'm2_ydi'])
+    ok = True
+    for m in motors:
+        if user_ns[m].connected is False:
+            print(f'{m} is not connected')
+            ok = False
+    return ok
+    
 def arrived_in_mode(mode=None):
     motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
               'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
               'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
-
     ok = True
     for m in motors:
         target = float(MODEDATA[m][mode])
@@ -94,7 +105,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     implies focus=True and target=0
 
     '''
-    BMMuser, RE, dcm, dm3_bct, dcm_pitch = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'] , user_ns['dcm_pitch']
+    BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
+    dcm_pitch, dcm_bragg = user_ns['dcm_pitch'], user_ns['dcm_bragg']
     rkvs = user_ns['rkvs']
     try:
         xs = user_ns['xs']
@@ -162,6 +174,16 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         focus  = True
         target = 0.0
     current_mode = get_mode()
+    if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
+        with_m2 = False
+    elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
+        with_m2 = False
+    else:
+        with_m2 = True
+    if all_connected(with_m2) is False:
+        print(warning_msg('Ophyd connection failure' % el))
+        return(yield from null())
+
 
     ################################
     # confirm configuration change #
@@ -197,7 +219,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ################################################
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
+    yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
+    yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
     if arrived_in_mode(mode=mode) is False:
         print(error_msg(f'\nFailed to arrive in Mode {mode}'))
         print('Fixing this is often as simple as re-running the change_mode() command.')

@@ -47,8 +47,20 @@ except:
 
     
 def BMM_suspenders():
+    BMMuser = user_ns['BMMuser']
+    if BMMuser.suspenders_engaged:
+        return
     for s in all_BMM_suspenders:
         user_ns['RE'].install_suspender(s)
+    BMMuser.suspenders_engaged = True
+
+def BMM_clear_suspenders():
+    RE = user_ns['RE']
+    BMMuser = user_ns['BMMuser']
+    if BMMuser.running_macro is False:
+        RE.clear_suspenders()
+        BMMuser.suspenders_engaged = False
+    
 
 def BMM_clear_to_start():
     ok = True

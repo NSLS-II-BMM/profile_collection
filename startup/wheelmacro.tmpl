@@ -16,6 +16,7 @@
 #             /  Note that you are defining a command
 #            /   that gets run in BlueSky
 #           V
+from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 def {base}_macro(dryrun=False):
     '''User-defined macro for running a sequence of XAFS measurements at BMM.
     '''
@@ -25,7 +26,7 @@ def {base}_macro(dryrun=False):
         return(yield from null())
 
     BMMuser.macro_dryrun = dryrun
-    BMMuser.prompt = False
+    BMMuser.prompt, BMMuser.running_macro = False, True
     BMMuser.instrument = 'sample wheel'
     BMM_log_info('Beginning {base}_macro')
     def main_plan():
@@ -46,7 +47,8 @@ def {base}_macro(dryrun=False):
         yield from xafs_wheel.reset()
         elapsed_time(start)
 
-    start = time.time()        
+    start = time.time()
+    BMM_suspenders()
     yield from finalize_wrapper(main_plan(), cleanup_plan())    
     yield from end_of_macro()
     BMM_log_info('{base}_macro finished!')

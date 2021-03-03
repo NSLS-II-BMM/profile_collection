@@ -19,6 +19,7 @@ from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
+from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
 from IPython import get_ipython
@@ -257,7 +258,7 @@ class GlancingAngle(Device):
         result. Move to the centroid of the error function.'''
         xafs_y = user_ns['xafs_y']
         db = user_ns['db']
-        yield from linescan(xafs_y, 'it', -1, 1, 31, pluck=False)
+        yield from linescan(xafs_y, 'it', -2.3, 2.3, 51, pluck=False)
         close_last_plot()
         table  = db[-1].table()
         yy     = table['xafs_y']
@@ -314,7 +315,7 @@ class GlancingAngle(Device):
           through the adhesive at very high energy.
 
         '''
-        BMMuser, db, xafs_pitch, xafs_y = user_ns['BMMuser'], user_ns['db'], user_ns['xafs_pitch'], user_ns['xafs_y']
+        RE, BMMuser, db, xafs_pitch, xafs_y = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['xafs_pitch'], user_ns['xafs_y']
 
         if BMMuser.macro_dryrun:
             report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
@@ -325,6 +326,7 @@ class GlancingAngle(Device):
 
         report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
             
+        BMM_suspenders()
 
         ## first pass in transmission
         yield from self.align_y(drop=drop)
@@ -343,7 +345,7 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(xafs_y, 'xs', -1.7, 1.7, 31, pluck=False)
+        yield from linescan(xafs_y, 'xs', -2.3, 2.3, 51, pluck=False)
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
         yy = tf['xafs_y']
@@ -361,6 +363,8 @@ class GlancingAngle(Device):
         except:
             post_to_slack('failed to post image: {self.alignment_filename}')
             pass
+        BMM_clear_suspenders()
+        #RE.clear_suspenders()
 
         
     def flatten(self):
@@ -435,14 +439,27 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                     self.content += self.tab + '## staying at %s %s\n' % (m['element'], m['edge'])
                 pass
 
-            #######################################
-            # sample alignment and glancing angle #
-            #######################################
+            #######################
+            # move to next sample #
+            #######################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
-            self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
+            self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             if m['detectorx'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
+
+
+            #############################################################
+            # lower stage and measure reference channel for calibration #
+            #############################################################
+            self.content += self.tab + 'if ref is True:\n'
+            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, -5)\n'
+            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{BMMuser.element}foil", nscans=1, sample="{BMMuser.element} foil", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
+            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, 5)\n'
+
+            ####################################
+            # move to correct height and pitch #
+            ####################################
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
@@ -452,20 +469,11 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                     self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
                 #self.content += self.tab + f'ga.flat = [{xafs_y.position}, {xafs_pitch.position}]\n'
                 #self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
-
-
-            #############################################################
-            # lower stage and measure reference channel for calibration #
-            #############################################################
-            self.content += self.tab + 'if ref is True:\n'
-            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, -5)\n'
-            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{BMMuser.element}foil", nscans=1, sample="{BMMuser.element} foil", bounds="-100 -30 40 70", steps="10 0.5 2", times="0.5 0.5 0.5")\n'
-            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, 5)\n'
-
+            
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
             ############################################################
-            self.content += self.tab + 'yield from mvr(xafs_lins, -5)\n'
+            self.content += self.tab + 'yield from mvr(xafs_det, -5)\n'
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -492,9 +500,9 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             command += ')\n'
             self.content += command
             if m['method'].lower() == 'automatic':
-                self.content += self.tab + 'yield from mvr(xafs_lins, 5)\n'
+                self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
                 self.content += self.tab + 'yield from ga.flatten()\n'
-                self.content += self.tab + 'yield from mvr(xafs_lins, -5)\n'
+                self.content += self.tab + 'yield from mvr(xafs_det, -5)\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
@@ -506,6 +514,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
 
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
+            self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
 
             

@@ -257,6 +257,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
 
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
+            self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
 
 

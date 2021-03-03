@@ -27,7 +27,7 @@ def sample_sequence(dryrun=False):
 
     from bluesky.preprocessors import finalize_wrapper
     BMMuser.macro_dryrun = dryrun
-    BMMuser.prompt = False
+    BMMuser.prompt, BMMuser.running_macro = False, True
     BMM_log_info('Beginning sample macro')
     def main_plan():
 
@@ -57,7 +57,8 @@ def sample_sequence(dryrun=False):
 
     def cleanup_plan():
         yield from end_of_macro()
-        
+
+    BMM_suspenders()
     yield from finalize_wrapper(main_plan(), cleanup_plan())    
     yield from end_of_macro()
     BMM_log_info('Sample macro finished!')

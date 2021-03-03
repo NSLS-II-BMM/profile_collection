@@ -1,6 +1,8 @@
 from bluesky import __version__ as bluesky_version
 import re, pathlib, sys, datetime, pandas, numpy
 
+from BMM.functions import plotting_mode
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
@@ -278,7 +280,7 @@ def write_XDI(datafile, dataframe):
     handle.write('# -----------' + eol)
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
-    if user_ns['with_xspress3'] and 'fluo' in mode or 'flou' in mode or 'both' in mode:
+    if plotting_mode(mode) == 'xs':
         table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
         column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
