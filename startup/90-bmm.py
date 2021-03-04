@@ -150,7 +150,7 @@ if BMMuser.element is None:
           BMMuser.edge    = str(rkvs.get('BMM:pds:edge'), 'utf-8')
      except:
           pass
-if BMMuser.element is not None: # make sure Xspress3 is configured to measure from the correct ROI
+if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
      BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge)
      #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
      show_edges()
@@ -158,6 +158,7 @@ if BMMuser.element is not None: # make sure Xspress3 is configured to measure fr
 from BMM.edge import all_connected
 if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
+     print(error_msg('You likely have to restart bsui.'))
 
      
 wmb.folder = BMMuser.folder
@@ -166,3 +167,11 @@ pinwheel.folder = BMMuser.folder
 pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
 
 RE.msg_hook = BMM_msg_hook
+
+#from bluesky_widgets.utils.streaming import stream_documents_into_runs
+#from bluesky_widgets.models.plot_builders import Lines
+#from bluesky_widgets.qt.figures import QtFigure
+
+# model = Lines("xafs_y", ["I0"], max_runs=1)
+# view = QtFigure(model.figure)
+# view.show()

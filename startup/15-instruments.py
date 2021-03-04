@@ -107,12 +107,12 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
-xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
+#xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+#                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
-#xafs_ref.content = [None, 'La', None, 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', None,
-#                    'Eu', None, None, None, 'Gd', None, None, None, None, 'Nb', None, 'Ti']
+xafs_ref.content = ['Ti', 'La', None, 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', 'Tm',
+                    'Eu', None, None, None, 'Gd', None, 'Dy', None, None, 'Nb', None, 'Fe']
 
         
 ## reference foil wheel will be something like this:
