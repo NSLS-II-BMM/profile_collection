@@ -140,9 +140,12 @@ class WDYWTD():
         macro = present_options('py')
         if macro is None:
             return
-        ipython = get_ipython()
         fullpath = os.path.join(user_ns['BMMuser'].folder, macro)
-        ipython.magic(f'run -i \'{fullpath}\'')
+        try:
+            ipython = get_ipython()
+            ipython.magic(f'run -i \'{fullpath}\'')
+        except Exception as ex:
+            print(f'Failed to execute magic: {ex}')
         print(disconnected_msg(f'yield from {macro[:-3]}()'))
         yield from null()
             
