@@ -6,14 +6,20 @@ import matplotlib.pyplot as plt
 from lmfit.models import StepModel
 import numpy
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import linescan
 
-def find_slot(xmargin=0.5, ymargin=2, force=False):
+@set_user_ns
+def find_slot(xmargin=0.5, ymargin=2, force=False, *, user_ns):
     '''Thin wrapper around repeated calls to linescan in order to align a
     sample wheel slot in the beam. This will perform a linescan in
     xafs_x over the range of -10 to 10 or in xafs_y from -3 to 3
@@ -85,7 +91,8 @@ def find_slot(xmargin=0.5, ymargin=2, force=False):
             return
 
 
-def align_ga(ymargin=0.5, force=False):
+@set_user_ns
+def align_ga(ymargin=0.5, force=False, *, user_ns):
     '''Thin wrapper around repeated calls to linescan in order to align 
     the glancing angle stage in the beam. This will perform a linescan in
     xafs_pitch over the range of -2 to 2 or in xafs_y from -1 to 1

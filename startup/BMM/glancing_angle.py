@@ -21,8 +21,13 @@ from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 class GlancingAngle(Device):
     '''A class capturing the movement and control of the glancing angle
@@ -72,15 +77,17 @@ class GlancingAngle(Device):
     spinner8 = Cpt(EpicsSignal, 'OutPt15:Data-Sel')
     #rotation
 
-    spin = True
-    home = 0
-    garot = user_ns['xafs_garot']
-    inverted = ''
-    flat = [0,0]
-    y_uid = ''
-    pitch_uid = ''
-    f_uid = ''
-    alignment_filename = ''
+    @set_user_ns
+    def __init__(self, *, user_ns):
+        self.spin = True
+        self.home = 0
+        self.garot = user_ns['xafs_garot']
+        self.inverted = ''
+        self.flat = [0,0]
+        self.y_uid = ''
+        self.pitch_uid = ''
+        self.f_uid = ''
+        self.alignment_filename = ''
     
     def current(self):
         '''Return the current spinner number as an integer'''
@@ -132,7 +139,9 @@ class GlancingAngle(Device):
         '''Turn off all spinners'''
         for i in range(1,9):
             self.off(i)
-    def alloff_plan(self):
+
+    @set_user_ns
+    def alloff_plan(self, *, user_ns):
         '''Turn off all spinners as a plan'''
         RE = user_ns['RE']
         save = RE.msg_hook
@@ -173,8 +182,8 @@ class GlancingAngle(Device):
         plt.show()
         plt.pause(0.05)
         
-            
-    def align_pitch(self, force=False):
+    @set_user_ns
+    def align_pitch(self, force=False, *, user_ns):
         '''Find the peak of xafs_pitch scan against It. Plot the
         result. Move to the peak.'''        
         xafs_pitch = user_ns['xafs_pitch']
@@ -200,8 +209,8 @@ class GlancingAngle(Device):
         plt.show()
         plt.pause(0.05)
 
-
-    def alignment_plot(self, yt, pitch, yf):
+    @set_user_ns
+    def alignment_plot(self, yt, pitch, yf, *, user_ns):
         '''Make a pretty, three-panel plot at the end of an auto-alignment'''
         db, BMMuser = user_ns['db'], user_ns['BMMuser']
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
@@ -251,8 +260,8 @@ class GlancingAngle(Device):
         
         plt.pause(0.05)
 
-        
-    def align_y(self, force=False, drop=None):
+    @set_user_ns
+    def align_y(self, force=False, drop=None, *, user_ns):
         '''Fit an error function to the xafs_y scan against It. Plot the
         result. Move to the centroid of the error function.'''
         xafs_y = user_ns['xafs_y']
@@ -279,8 +288,8 @@ class GlancingAngle(Device):
         target = out.params['center'].value
         yield from mv(xafs_y, target)
 
-
-    def auto_align(self, pitch=2, drop=None):
+    @set_user_ns
+    def auto_align(self, pitch=2, drop=None, *, user_ns):
         '''Align a sample on a spinner automatically.  This performs 5 scans.
         The first four iterate twice between xafs_y and xafs_pitch
         against the signal in It.  This find the flat position.
@@ -362,8 +371,8 @@ class GlancingAngle(Device):
             post_to_slack('failed to post image: {self.alignment_filename}')
             pass
 
-        
-    def flatten(self):
+    @set_user_ns
+    def flatten(self, *, user_ns):
         '''Return the stage to its nominally flat position.'''
         xafs_pitch, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_y']
         if self.flat != [0, 0]:
@@ -384,8 +393,8 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
     >>> mb.write_macro()
 
     '''
-        
-    def _write_macro(self):
+    @set_user_ns
+    def _write_macro(self, *, user_ns):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
         correct spinner, lines to find or move to the center-aligned
