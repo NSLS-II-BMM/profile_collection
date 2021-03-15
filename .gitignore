@@ -161,3 +161,4 @@ cython_debug/
 #VSCode
 .vscode/
 
+existing_plans_and_devices.yaml
