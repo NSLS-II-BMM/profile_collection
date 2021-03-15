@@ -77,18 +77,20 @@ class GlancingAngle(Device):
     spinner8 = Cpt(EpicsSignal, 'OutPt15:Data-Sel')
     #rotation
 
+    spin = True
+    home = 0
+    inverted = ''
+    flat = [0, 0]
+    y_uid = ''
+    pitch_uid = ''
+    f_uid = ''
+    alignment_filename = ''
+
     @set_user_ns
-    def __init__(self, *, user_ns):
-        self.spin = True
-        self.home = 0
+    def __init__(self, *args, user_ns, **kwargs):
+        super().__init__(*args, **kwargs)
         self.garot = user_ns['xafs_garot']
-        self.inverted = ''
-        self.flat = [0,0]
-        self.y_uid = ''
-        self.pitch_uid = ''
-        self.f_uid = ''
-        self.alignment_filename = ''
-    
+
     def current(self):
         '''Return the current spinner number as an integer'''
         pos = self.garot.position
