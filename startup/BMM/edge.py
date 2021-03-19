@@ -13,12 +13,17 @@ from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
-
-def show_edges():
+@set_user_ns
+def show_edges(user_ns):
     rois = user_ns['rois']
     if user_ns['with_xspress3'] is True:
         text = show_reference_wheel() + '\n' + user_ns['xs'].show_rois()
@@ -27,7 +32,8 @@ def show_edges():
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
 
 
-def arrived_in_mode(mode=None):
+@set_user_ns
+def arrived_in_mode(mode=None, *, user_ns):
     motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
               'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
               'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
@@ -43,7 +49,8 @@ def arrived_in_mode(mode=None):
     return ok
 
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
+@set_user_ns
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True, *, user_ns):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
@@ -173,15 +180,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
     print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
     print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
-    if BMMuser.prompt:
-        action = input("\nBegin energy change? [Y/n then Enter] ")
-        if action.lower() == 'q' or action.lower() == 'n':
-            return(yield from null())
-        if mode == 'C' and energy < 6000:
-            print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-            action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
-            if action.lower() == 'q' or action.lower() == 'n':
-                return(yield from null())
+    # if BMMuser.prompt:
+    #     action = input("\nBegin energy change? [Y/n then Enter] ")
+    #     if action.lower() == 'q' or action.lower() == 'n':
+    #         return(yield from null())
+    #     if mode == 'C' and energy < 6000:
+    #         print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
+    #         action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
+    #         if action.lower() == 'q' or action.lower() == 'n':
+    #             return(yield from null())
         
     start = time.time()
     if mode == 'XRD':

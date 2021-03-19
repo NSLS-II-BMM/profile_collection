@@ -10,17 +10,31 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.motor_status  import motor_status
 from BMM.suspenders    import BMM_clear_to_start
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 MODEDATA = None
-def read_mode_data():
+
+@set_user_ns
+def read_mode_data(user_ns):
      return json.load(open(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json')))
-if os.path.isfile(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json')):
+
+@set_user_ns
+def is_modes_json_exists(user_ns):
+    return os.path.isfile(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json'))
+
+if is_modes_json_exists():
      MODEDATA = read_mode_data()
 
-def pds_motors_ready():
+
+@set_user_ns
+def pds_motors_ready(user_ns):
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg = user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"]
     mcs8_motors = [m3.xu, m3.xd, m3.yu, m3.ydo, m3.ydi, m2.xu, m2.xd, m2.yu, m2.ydo, m2.ydi, m2_bender, dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg, dm3_bct]
@@ -38,7 +52,8 @@ def pds_motors_ready():
         return(True)
 
      
-def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
+@set_user_ns
+def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, *, user_ns):
     '''Move the photon delivery system to a new mode. 
     A: focused at XAS end station, energy > 8000
     B: focused at XAS end station, energy < 6000
@@ -183,7 +198,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     BMM_log_info(motor_status())
 
 
-def mode():
+@set_user_ns
+def mode(user_ns):
     print('Motor positions:')
     for m in ('dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi', 'm2_yu', 'm2_ydo',
               'm2_ydi', 'm2_bender', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',
@@ -210,7 +226,8 @@ def mode():
         else:
             print('This appears to be mode E')
 
-def get_mode():
+@set_user_ns
+def get_mode(user_ns):
     m2, m3 = user_ns['m2'], user_ns['m3']
     if m2.vertical.readback.get() < 0: # this is a focused mode
         if m2.pitch.readback.get() > 3:
@@ -230,7 +247,8 @@ def get_mode():
         else:
             return 'E'
 
-def describe_mode():
+@set_user_ns
+def describe_mode(user_ns):
     m2, m3 = user_ns['m2'], user_ns['m3']
     if m2.vertical.readback.get() < 0: # this is a focused mode
         if m2.pitch.readback.get() > 3:
@@ -251,8 +269,8 @@ def describe_mode():
             return 'unfocused, 6 to 8 keV'
 
 
-
-def change_xtals(xtal=None):
+@set_user_ns
+def change_xtals(xtal=None, *, user_ns):
      '''Move between the Si(111) and Si(311) monochromators, also moving
      2nd crystal pitch and roll to approximate positions.  Then do a
      rocking curve scan.

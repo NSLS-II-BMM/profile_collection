@@ -1,10 +1,16 @@
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.functions import boxedtext
 
-def motor_metadata(uid=None):
+@set_user_ns
+def motor_metadata(uid=None, *, user_ns):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
                user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'], user_ns['xafs_ref'],
                user_ns['xafs_lins'], user_ns['xafs_mtr8'],
@@ -49,7 +55,8 @@ def motor_metadata(uid=None):
             
     return(md)
 
-def motor_status():
+@set_user_ns
+def motor_status(user_ns):
     md = motor_metadata()
 
     line = ' ' + '=' * 78 + '\n'
@@ -117,7 +124,8 @@ def ms():
     boxedtext('BMM motor status', motor_status(), 'cyan', width=84)
 
 
-def motor_sidebar(md=None):
+@set_user_ns
+def motor_sidebar(md=None, *, user_ns):
     '''Generate a list of motor positions to be used in the static html page for a scan sequence.
     Return value is a long string with html tags and entities embedded in the string.
 

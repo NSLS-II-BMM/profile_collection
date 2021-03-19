@@ -83,6 +83,8 @@ slits2.bottom.user_offset.put(0.264)
         
 slitsg = GonioSlits('XF:06BM-ES{SixC-Ax:Slt1_',  name='slitsg')
 
+# We need to pass this device to plans executed in RE Worker, therefore we need the distinct name for it
+slits3_hsize = slits3.hsize
 
 
 #####################################

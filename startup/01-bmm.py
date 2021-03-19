@@ -6,6 +6,7 @@ logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
 
 from BMM.workspace import initialize_workspace, rkvs
+
 initialize_workspace()
 
 import json, time

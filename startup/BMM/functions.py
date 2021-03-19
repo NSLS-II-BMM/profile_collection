@@ -1,7 +1,13 @@
 import os, time, datetime
 from numpy import pi, sin, cos, arcsin, sqrt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
 ## users find "less" unfamiliar and mistakes are made / confusion is
@@ -12,7 +18,10 @@ user_ns = get_ipython().user_ns
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
 
-get_ipython().magic(u"%xmode Plain")
+try:
+    get_ipython().magic(u"%xmode Plain")
+except Exception:
+    pass
 
 ## some global parameters
 BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
@@ -105,9 +114,9 @@ def e2l(val):
 l2e = e2l
 
 
-
 ## see calibrate_pitch in BMM/mono_calibration.py
-def approximate_pitch(energy):
+@set_user_ns
+def approximate_pitch(energy, *, user_ns):
     if user_ns['dcm']._crystal is '111':
         m = -3.9241e-06 
         b = 4.15159473
@@ -162,7 +171,8 @@ def boxedtext(title, text, tint, width=75):
     print(colored(''.join([ll, bar*(width+3), lr]), tint))
 
 
-def clear_dashboard():
+@set_user_ns
+def clear_dashboard(user_ns):
     '''Clean up in a way that helps the cadashboard utility'''
     user_ns['rkvs'].set('BMM:scan:type',      '')
     user_ns['rkvs'].set('BMM:scan:starttime', '')

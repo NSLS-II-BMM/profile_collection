@@ -6,10 +6,20 @@ from bluesky.plan_stubs import abs_set, sleep
 
 from BMM.logging import BMM_log_info
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
-_locked_dwell_time = user_ns['_locked_dwell_time']
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
+
+@set_user_ns
+def get_locked_dwell_time(user_ns):
+    return user_ns['_locked_dwell_time']
+
+_locked_dwell_time = get_locked_dwell_time()
+
 
 class Nanoize(DerivedSignal):
     def forward(self, value):
@@ -158,8 +168,9 @@ class BMMDualEM(QuadEM):
             print('Opening photon shutter')
             yield from shb.open_plan()
             print('You are ready to measure!\n')
-        
-def dark_current():
+
+@set_user_ns
+def dark_current(user_ns):
     shb = user_ns['shb']
     reopen = shb.state.get() == shb.openval 
     if reopen:

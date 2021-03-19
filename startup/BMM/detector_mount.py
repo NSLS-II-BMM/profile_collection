@@ -1,12 +1,18 @@
 from bluesky.plan_stubs import sleep, mv, mvr, null
 
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 class DetectorMount():
-    def __init__(self):
+
+    @set_user_ns
+    def __init__(self, *, user_ns):
         self.motor = user_ns['xafs_det']
         self.low   = 10
         self.high  = 205
