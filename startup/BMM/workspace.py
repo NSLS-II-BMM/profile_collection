@@ -4,10 +4,15 @@ from IPython.paths import get_ipython_module_path
 import redis
 from BMM.functions import verbosebold_msg, error_msg
 
+if not os.environ.get('AZURE_TESTING'):
+    redis_host = 'xf06bm-ioc2'
+else:
+    redis_host = '127.0.0.1'
+
 ###################################################################
 # things that are configurable                                    #
 ###################################################################
-rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
+rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 NAS = '/mnt/nfs/nas1'
 SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')
