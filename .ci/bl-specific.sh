@@ -8,3 +8,7 @@ sudo systemctl status redis
 sudo systemctl start redis
 sudo systemctl status redis
 
+if [ "$CONDA_ENV_NAME" == "collection-2021-1.0" ]; then
+    conda install -y -c ${CONDA_CHANNEL_NAME} xraylarch
+fi
+
