@@ -107,12 +107,12 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
-#xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-#                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
+xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
-xafs_ref.content = ['Ti', 'La', None, 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', 'Tm',
-                    'Eu', None, None, None, 'Gd', None, 'Dy', None, None, 'Nb', None, 'Fe']
+#xafs_ref.content = ['Ti', 'La', 'Ce', 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', 'Tm',
+#                    'Eu', None, None, None, 'Gd', None, None, 'Fe', None, 'Nb', None, 'Fe']
 
         
 ## reference foil wheel will be something like this:
@@ -251,43 +251,6 @@ def read_bpms():
 
 
 
-#########################################################################################
-# ___  ___  ___  _____ ______ _____  ______ _   _ _____ _    ______ ___________  _____  #
-# |  \/  | / _ \/  __ \| ___ \  _  | | ___ \ | | |_   _| |   |  _  \  ___| ___ \/  ___| #
-# | .  . |/ /_\ \ /  \/| |_/ / | | | | |_/ / | | | | | | |   | | | | |__ | |_/ /\ `--.  #
-# | |\/| ||  _  | |    |    /| | | | | ___ \ | | | | | | |   | | | |  __||    /  `--. \ #
-# | |  | || | | | \__/\| |\ \\ \_/ / | |_/ / |_| |_| |_| |___| |/ /| |___| |\ \ /\__/ / #
-# \_|  |_/\_| |_/\____/\_| \_|\___/  \____/ \___/ \___/\_____/___/ \____/\_| \_|\____/  #
-#########################################################################################
-                                                                                     
-
-from BMM.functions import present_options, bold_msg
-from openpyxl import load_workbook
-def xlsx():
-    '''Prompt for a macro building spreadsheet for any instrument. Use the
-    content of cell B1 to direct this spreadsheet to the correct builder.
-
-    if cell B1 is "Glancing angle" --> build a glancing angle macro
-
-    if cell B1 is "Sample wheel" --> build a sample wheel macro
-
-    if cell B1 is empty --> build a sample wheel macro
-
-    '''
-    spreadsheet = present_options('xlsx')
-    if spreadsheet is None:
-        print(error_msg('No spreadsheet specified!'))
-        return None
-    #spreadsheet = os.path.join(BMMuser.folder, spreadsheet)
-    wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True);
-    ws = wb.active
-    instrument = str(ws['B1'].value).lower()
-    if instrument == 'glancing angle':
-        print(bold_msg('This is a glancing angle spreadsheet'))
-        pinwheel.spreadsheet(spreadsheet)
-    else:
-        print(bold_msg('This is a sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet)
 
 ####################################################################################
 #  _   _______ _      _       _____  _    _ _____ _____ _____  _   _  _____ _____  #

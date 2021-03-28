@@ -225,6 +225,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     if arrived_in_mode(mode=mode) is False:
         print(error_msg(f'\nFailed to arrive in Mode {mode}'))
         print('Fixing this is often as simple as re-running the change_mode() command.')
+        print('Or try dm3_bct.kill() the re-run the change_mode() command.')
         print('If that doesn\'t work, call for help')
         return(yield from null())
         
@@ -278,6 +279,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
+    self.to_json(os.path.join(self.DATA, '.BMMuser'))
     yield from dcm.kill_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))

@@ -140,10 +140,10 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             if move:
                 t  = db[-1].table()
                 signal = t['I0']
-                if get_mode() in ('A', 'B', 'C'):
-                    position = com(signal)
-                else:
-                    position = peak(signal)
+                #if get_mode() in ('A', 'B', 'C'):
+                #    position = com(signal)
+                #else:
+                position = peak(signal)
                 top = t[motor.name][position]
                 
                 yield from sleep(slp)
@@ -415,6 +415,17 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             thismotor = axis
         else:                       # presume it's an xafs_XXXX motor
             thismotor = motor_nicknames[axis]
+
+        current = thismotor.position
+        if current+start < thismotor.limits[0]:
+            print(error_msg(f'These scan parameters will take {thismotor.name} outside it\'s lower limit of {thismotor.limits[0]}'))
+            print(whisper(f'(starting position = {thismotor.position})'))
+            return(yield from null())
+        if current+stop > thismotor.limits[1]:
+            print(error_msg(f'These scan parameters will take {thismotor.name} outside it\'s upper limit of {thismotor.limits[1]}'))
+            print(whisper(f'(starting position = {thismotor.position})'))
+            return(yield from null())
+
         BMMuser.motor = thismotor
 
         ## sanity checks on detector
@@ -448,9 +459,10 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             detname = 'Ib'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
         elif detector == 'Ir':
-            denominator = ' / It'
+            #denominator = ' / It'
             detname = 'reference'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
+            #func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir'])
         elif detector == 'I0':
             detname = 'I0'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])

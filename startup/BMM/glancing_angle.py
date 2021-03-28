@@ -443,9 +443,9 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             # move to next sample #
             #######################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
-            self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             if m['detectorx'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
+            self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
 
@@ -454,7 +454,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             #############################################################
             self.content += self.tab + 'if ref is True:\n'
             self.content += self.tab + self.tab + 'yield from mvr(xafs_y, -5)\n'
-            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{BMMuser.element}foil", nscans=1, sample="{BMMuser.element} foil", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
+            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}foil", nscans=1, sample="{m["element"]} foil", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
             self.content += self.tab + self.tab + 'yield from mvr(xafs_y, 5)\n'
 
             ####################################
@@ -514,6 +514,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
 
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
+            self.content += self.tab + '    BMMuser.running_macro = False\n'
             self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
 

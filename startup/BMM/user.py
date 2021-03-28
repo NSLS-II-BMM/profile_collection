@@ -215,7 +215,7 @@ class BMM_User(Borg):
         self.bounds        = [-200, -30, 15.3, '14k']  ## scan grid parameters
         self.steps         = [10, 0.5, '0.05k']
         self.times         = [0.5, 0.5, '0.25k']
-        self.folder        = os.environ.get('HOME')+'/Data/'
+        self.folder        = os.path.join(os.getenv('HOME'), 'Data', 'bucket')
         self.filename      = 'data.dat'
         self.experimenters = ''
         self.e0            = None

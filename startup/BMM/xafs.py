@@ -102,6 +102,8 @@ def scan_metadata(inifile=None, **kwargs):
         True = munge filenames so they can be written to a VFAT USB stick
     rockingcurve  [bool] 
         True = measure rocking curve at pseudo channel cut energy
+    lims : bool
+        False = force both htmlpage and snapshot to be false
     htmlpage : bool
         True = capture dossier of a scan sequence as a static html page
     bothways : bool
@@ -239,7 +241,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'htmlpage', 'bothways', 'channelcut', 'usbstick', 'rockingcurve', 'ththth'):
+    for a in ('snapshots', 'htmlpage', 'lims', 'bothways', 'channelcut', 'usbstick', 'rockingcurve', 'ththth'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -250,7 +252,10 @@ def scan_metadata(inifile=None, **kwargs):
         else:
             parameters[a] = bool(kwargs[a])
             found[a] = True
-
+    if parameters['lims'] is False:
+        parameters['htmlpage'] = False
+        parameters['snapshots'] = False
+            
     if dcm._crystal != '111' and parameters['ththth']:
         print(error_msg('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n'))
         return {}, {}
@@ -618,6 +623,8 @@ def xafs(inifile=None, **kwargs):
             yield from null()
             return
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
+        if p['lims']is False:
+            BMMuser.lims = False
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
 
@@ -737,6 +744,7 @@ def xafs(inifile=None, **kwargs):
         report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
         dcm.mode = 'fixed'
         #dcm_bragg.clear_encoder_loss()
+        #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
         yield from mv(dcm.energy, eave)
         if p['rockingcurve']:
             report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
@@ -923,7 +931,7 @@ def xafs(inifile=None, **kwargs):
         ## begin the scan sequence with the plotting subscription
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
-        def scan_sequence(clargs):
+        def scan_sequence(clargs): #, noreturn=False):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
@@ -1112,20 +1120,21 @@ def xafs(inifile=None, **kwargs):
                         ## FYI: db.v2[-1].metadata['start']['scan_id']
                     except:
                         pass
-                    try:
-                        copy_to_gdrive(fname)
-                        synch_gdrive_folder()
-                        # here = os.getcwd()
-                        # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
-                        # os.chdir(gdrive)
-                        # print(f'copying {fname} to {gdrive}')
-                        # shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
-                        # print(f'updating {gdrive}')
-                        # subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
-                        # os.chdir(here)
-                    except Exception as e:
-                        print(error_msg(e))
-                        report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
+                    if p['lims'] is True:
+                        try:
+                            copy_to_gdrive(fname)
+                            synch_gdrive_folder()
+                            # here = os.getcwd()
+                            # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
+                            # os.chdir(gdrive)
+                            # print(f'copying {fname} to {gdrive}')
+                            # shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
+                            # print(f'updating {gdrive}')
+                            # subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
+                            # os.chdir(here)
+                        except Exception as e:
+                            print(error_msg(e))
+                            report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
                         
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
@@ -1143,6 +1152,7 @@ def xafs(inifile=None, **kwargs):
             ## finish up, close out
             html_dict['uidlist'] = uidlist
             html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
+            #if 'noreturn' is True:
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
@@ -1152,7 +1162,10 @@ def xafs(inifile=None, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan
-        yield from scan_sequence(clargs)
+        #noreturn = False
+        #if 'noreturn' in kwargs and kwargs['noreturn'] is True:
+        #    noreturn=True
+        yield from scan_sequence(clargs) #, noreturn)
 
     def cleanup_plan(inifile):
         print('Cleaning up after an XAFS scan sequence')
@@ -1187,15 +1200,16 @@ def xafs(inifile=None, **kwargs):
                     gdrive_dict['processed'] = {'source': pngout,
                                                 'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
                     
-            for k,v in gdrive_dict.items():
-                #print(f'\n{k}')
-                #print(f'   source: {v["source"]}')
-                #print(f'   target: {v["target"]}')
-                if v['source'] is not None:
-                    try:
-                        shutil.copyfile(v['source'], v['target'])
-                    except Exception as e:
-                        print(e)
+            if 'htmlpage' in html_dict and html_dict['htmlpage']:
+                for k,v in gdrive_dict.items():
+                    #print(f'\n{k}')
+                    #print(f'   source: {v["source"]}')
+                    #print(f'   target: {v["target"]}')
+                    if v['source'] is not None:
+                        try:
+                            shutil.copyfile(v['source'], v['target'])
+                        except Exception as e:
+                            print(e)
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
@@ -1247,7 +1261,7 @@ def xafs(inifile=None, **kwargs):
     if inifile is None:
         return(yield from null())
     if inifile[-4:] != '.ini':
-        inifile = inifile+'.ini'    
+        inifile = inifile+'.ini'
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 

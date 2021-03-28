@@ -35,9 +35,54 @@ from BMM.glancing_angle import GlancingAngle, PinWheelMacroBuilder
 ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 
 pinwheel = PinWheelMacroBuilder()
-#xlsx = wmb.spreadsheet
+
+#########################################################################################
+# ___  ___  ___  _____ ______ _____  ______ _   _ _____ _    ______ ___________  _____  #
+# |  \/  | / _ \/  __ \| ___ \  _  | | ___ \ | | |_   _| |   |  _  \  ___| ___ \/  ___| #
+# | .  . |/ /_\ \ /  \/| |_/ / | | | | |_/ / | | | | | | |   | | | | |__ | |_/ /\ `--.  #
+# | |\/| ||  _  | |    |    /| | | | | ___ \ | | | | | | |   | | | |  __||    /  `--. \ #
+# | |  | || | | | \__/\| |\ \\ \_/ / | |_/ / |_| |_| |_| |___| |/ /| |___| |\ \ /\__/ / #
+# \_|  |_/\_| |_/\____/\_| \_|\___/  \____/ \___/ \___/\_____/___/ \____/\_| \_|\____/  #
+#########################################################################################
+                                                                                     
+
+from BMM.functions import present_options, bold_msg
+from openpyxl import load_workbook
+def xlsx():
+    '''Prompt for a macro building spreadsheet for any instrument. Use the
+    content of cell B1 to direct this spreadsheet to the correct builder.
+
+    if cell B1 is "Glancing angle" --> build a glancing angle macro
+
+    if cell B1 is "Sample wheel" --> build a sample wheel macro
+
+    if cell B1 is empty --> build a sample wheel macro
+
+    '''
+    spreadsheet = present_options('xlsx')
+    if spreadsheet is None:
+        print(error_msg('No spreadsheet specified!'))
+        return None
+    #spreadsheet = os.path.join(BMMuser.folder, spreadsheet)
+    wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True);
+    ws = wb.active
+    instrument = str(ws['B1'].value).lower()
+    if instrument == 'glancing angle':
+        print(bold_msg('This is a glancing angle spreadsheet'))
+        pinwheel.spreadsheet(spreadsheet)
+        rkvs.set('BMM:spreadsheet:type', 'glancing angle')
+    else:
+        print(bold_msg('This is a sample wheel spreadsheet'))
+        wmb.spreadsheet(spreadsheet)
+        rkvs.set('BMM:spreadsheet:type', 'sample wheel')
 
 
+
+
+
+
+
+        
 
 run_report('\t'+'areascan')
 from BMM.areascan import areascan, as2dat
@@ -168,9 +213,9 @@ pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'
 
 RE.msg_hook = BMM_msg_hook
 
-#from bluesky_widgets.utils.streaming import stream_documents_into_runs
-#from bluesky_widgets.models.plot_builders import Lines
-#from bluesky_widgets.qt.figures import QtFigure
+from bluesky_widgets.utils.streaming import stream_documents_into_runs
+from bluesky_widgets.models.plot_builders import Lines
+from bluesky_widgets.qt.figures import QtFigure
 
 # model = Lines("xafs_y", ["I0"], max_runs=1)
 # view = QtFigure(model.figure)

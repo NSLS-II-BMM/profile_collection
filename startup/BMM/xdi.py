@@ -128,15 +128,16 @@ def write_XDI(datafile, dataframe):
     ##########################
     # grab the detector list #
     ##########################
-    if 'trans' in mode:
+    mm = plotting_mode(mode)
+    if 'trans' in mm:
         detectors = transmission
-    elif 'test' in mode:
+    elif 'test' in mm:
         detectors = transmission
-    elif 'ref' in mode:
+    elif 'ref' in mm:
         detectors = transmission
-    elif 'yield' in mode:
+    elif 'yield' in mm:
         detectors = eyield
-    elif 'xs' in mode:
+    elif 'xs' in mm:
         detectors = _ionchambers + [BMMuser.xschannel1, BMMuser.xschannel2, BMMuser.xschannel3, BMMuser.xschannel4]
     else:
         detectors = fluorescence
@@ -285,7 +286,7 @@ def write_XDI(datafile, dataframe):
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
         column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
-    elif 'fluo' in mode or 'flou' in mode or 'both' in mode:
+    elif plotting_mode(mode) == 'fluo':
         table['xmu'] = (table[BMMuser.dtc1] + table[BMMuser.dtc2] + table[BMMuser.dtc4]) / table['I0']
         if kind == '333':
             table['333_energy'] = table['dcm_energy']*3

@@ -74,7 +74,7 @@ def end_of_macro():
     xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
-    BMMuser.running_macro = False
+    BMMuser.running_macro, BMMuser.lims = False, True
     yield from quadem1.on_plan()
     yield from vor.on_plan()
     yield from mv(_locked_dwell_time, 0.5)

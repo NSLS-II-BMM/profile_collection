@@ -134,6 +134,7 @@ class BMMMacroBuilder():
         self.append_element  = str(self.ws['L2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
+
         
         isok, explanation = self.read_spreadsheet()
         if isok is False:
