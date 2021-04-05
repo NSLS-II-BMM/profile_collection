@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# cp -v <...> ~/.ipython/profile_${TEST_PROFILE}/
+export AZURE_TESTING=1
 
-# The beamline-specific metapackages are not used since 2020-2.0 deployment.
-# conda install -y -c ${CONDA_CHANNEL_NAME} 06-bm-bmm-collection
+if [ "$CONDA_ENV_NAME" == "collection-2021-1.0" ]; then
+    conda remove wxpython --force -y
+fi
+
