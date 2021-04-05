@@ -6,3 +6,5 @@ if [ "$CONDA_ENV_NAME" == "collection-2021-1.0" ]; then
     conda remove wxpython --force -y
 fi
 
+pip install -v git+https://github.com/bluesky/bluesky-widgets
+
