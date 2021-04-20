@@ -194,6 +194,8 @@ def present_options(suffix='xlsx'):
     BMMuser = user_ns['BMMuser']
     options = [x for x in os.listdir(BMMuser.folder) if x.endswith(suffix)]
     options = sorted(options)
+    print(bold_msg(f'Looking in {BMMuser.folder}\n'))
+    
     print(f'Select your {suffix} file:\n')
     for i,x in enumerate(options):
         print(f' {i+1:2}: {x}')

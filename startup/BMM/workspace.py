@@ -138,7 +138,7 @@ def initialize_ssh():
     computer.  If not, complain on screen.
 
     '''
-    if socket.gethostname() == 'xf06bm-ws1':
+    if 'xf06bm-ws1' in socket.gethostname():
         print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
         return
     s = subprocess.run(['ssh', '-oBatchMode=yes', 'xf06bm@xf06bm-ws1', 'true'])

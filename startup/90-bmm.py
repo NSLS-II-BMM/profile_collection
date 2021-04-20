@@ -213,10 +213,13 @@ pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'
 
 RE.msg_hook = BMM_msg_hook
 
-from bluesky_widgets.utils.streaming import stream_documents_into_runs
-from bluesky_widgets.models.plot_builders import Lines
-from bluesky_widgets.qt.figures import QtFigure
+try:
+    from bluesky_widgets.utils.streaming import stream_documents_into_runs
+    from bluesky_widgets.models.plot_builders import Lines
+    from bluesky_widgets.qt.figures import QtFigure
+    # model = Lines("xafs_y", ["I0"], max_runs=1)
+    # view = QtFigure(model.figure)
+    # view.show()
+except:
+    pass
 
-# model = Lines("xafs_y", ["I0"], max_runs=1)
-# view = QtFigure(model.figure)
-# view.show()

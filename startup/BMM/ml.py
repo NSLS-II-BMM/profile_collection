@@ -17,6 +17,16 @@ from joblib import dump, load
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
+# when pickle changes version number, this error message will happen twice:
+# /opt/conda_envs/collection-2021-1.2/lib/python3.7/site-packages/sklearn/base.py:315:
+#   UserWarning: Trying to unpickle estimator DecisionTreeClassifier
+#   from version 0.23.1 when using version 0.24.1. This might lead to
+#   breaking code or invalid results. Use at your own risk.
+#   UserWarning)
+#
+# would be nice to add a check at self.clf = load(self.model) (line 48)
+# or simply rerun clf.train() at the bsui command line.
+
 class BMMDataEvaluation():
     '''A very simple machine learning model for recognizing when an XAS
     scan goes horribly awry.
