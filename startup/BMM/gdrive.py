@@ -33,7 +33,8 @@ def copy_to_gdrive(fname, *, user_ns):
     shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(user_gdrive_folder, fname))
     return()
 
-def synch_gdrive_folder(prefix=''):
+@set_user_ns
+def synch_gdrive_folder(prefix='', *, user_ns):
     BMMuser = user_ns['BMMuser']
     print(f'{prefix}updating {gdrive_folder}')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)

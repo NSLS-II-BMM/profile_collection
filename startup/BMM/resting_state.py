@@ -11,6 +11,7 @@ except ModuleNotFoundError:
 
 from BMM.logging import BMM_msg_hook
 
+@set_user_ns
 def resting_redis(user_ns):
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:scan:type',      '')

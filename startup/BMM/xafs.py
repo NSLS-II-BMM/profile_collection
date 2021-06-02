@@ -569,7 +569,7 @@ def write_manifest(user_ns):
 # -- the main XAFS scan #
 #########################
 @set_user_ns
-def xafs(inifile=None, *, user_ns, **kwargs):
+def xafs(inifile='/home/xf06bm/5LS/profile_collection_BMM/startup/scan.ini', *, user_ns, **kwargs):
     '''
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
@@ -1117,8 +1117,8 @@ def xafs(inifile=None, *, user_ns, **kwargs):
                     except:
                         pass
                     try:
-                        copy_to_gdrive(fname)
-                        synch_gdrive_folder()
+                        #copy_to_gdrive(fname)
+                        #synch_gdrive_folder()
                         # here = os.getcwd()
                         # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
                         # os.chdir(gdrive)
@@ -1127,6 +1127,7 @@ def xafs(inifile=None, *, user_ns, **kwargs):
                         # print(f'updating {gdrive}')
                         # subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
                         # os.chdir(here)
+                        pass
                     except Exception as e:
                         print(error_msg(e))
                         report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)

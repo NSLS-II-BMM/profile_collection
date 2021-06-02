@@ -165,7 +165,7 @@ def bmm_metadata(measurement   = 'transmission',
             
         
     (md['Beamline']['focusing'], md['Beamline']['harmonic_rejection']) = mirror_state()
-    collection = re.findall('collection[^/]*', sys.executable)[0]
+    collection = "" #re.findall('collection[^/]*', sys.executable)[0]
     python_version = sys.version.split(' ')[0]
     md['Beamline']['software'] = f'Bluesky {bluesky_version}, Ophyd {ophyd_version}, DataBroker {databroker_version}, Python {python_version}, IPython {ipython_version}, {collection}'
 

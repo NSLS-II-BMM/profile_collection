@@ -1,7 +1,21 @@
 user_groups:
   root:  # The group includes all available plan and devices
     allowed_plans:
-      - null  # Allow all
+      - "^xafs$"
+      - "^slot$"
+      - "^linescan$"
+      - "^change_edge$"
+      - "^change_xtals$"
+      - "^rocking_curve$"
+      - "^slit_height$"
+      - "^mv$"
+      - "^mvr$"
+      - "^count$"
+      - "^areascan$"
+      - "^timescan$"
+      - "^reference$"
+      - "^shb_open_plan$"
+      - "^shb_close_plan$"
     forbidden_plans:
       - null  # Nothing is forbidden
     allowed_devices:
