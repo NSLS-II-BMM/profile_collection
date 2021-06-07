@@ -53,7 +53,6 @@ whoami           = BMMuser.show_experiment
 start_experiment = BMMuser.start_experiment
 end_experiment   = BMMuser.end_experiment
 
-
 import atexit, os
 
 def teardown():

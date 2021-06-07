@@ -15,7 +15,7 @@ run_report(__file__, text='detectors and cameras')
 
 
 run_report('\t'+'dwelltime')
-with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, False
+with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
 if with_xspress3 is True:
     BMMuser.readout_mode = 'xspress3'
 from BMM.dwelltime import LockedDwellTimes
@@ -220,6 +220,7 @@ quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 run_report('\t'+'cameras')
 from BMM.camera_device import BMMSnapshot, snap
 from BMM.db import file_resource
+
 
 ## see 01-bmm.py for definition of nas_path
 xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')

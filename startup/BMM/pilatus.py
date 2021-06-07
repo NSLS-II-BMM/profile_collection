@@ -5,7 +5,8 @@
 
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, AreaDetector, SingleTrigger, ImagePlugin
 
-import numpy as np
+import time, os
+import numpy
 #from PIL import Image
 import matplotlib.pyplot  as plt
 from scipy import ndimage
@@ -69,13 +70,14 @@ class PilatusGrabber():
         self._fullname  = EpicsSignalRO(self.source.prefix + 'cam1:FullFileName_RBV')
         self._statusmsg = EpicsSignalRO(self.source.prefix + 'cam1:StatusMessage_RBV')
         self._busy      = EpicsSignalRO(self.source.prefix + 'cam1:AcquireBusy')
+        self.autoincrement = EpicsSignal(self.source.prefix + 'cam1:AutoIncrement')
         
     @property
     def path(self):
         return(''.join([chr(x) for x in self._path.value[self._path.value.nonzero()]]) )
     @path.setter
     def path(self, path):
-        a = numpy.pad(array([ord(x) for x in path]), (0,256-len(path)), mode='constant')
+        a = numpy.pad(numpy.array([ord(x) for x in path]), (0,256-len(path)), mode='constant')
         self._path.put(a)
 
     @property
@@ -83,7 +85,7 @@ class PilatusGrabber():
         return(''.join([chr(x) for x in self._fname.value[self._fname.value.nonzero()]]) )
     @fname.setter
     def fname(self, fname):
-        a = numpy.pad(array([ord(x) for x in fname]), (0,256-len(fname)), mode='constant')
+        a = numpy.pad(numpy.array([ord(x) for x in fname]), (0,256-len(fname)), mode='constant')
         self._fname.put(a)
     
     @property
@@ -91,7 +93,7 @@ class PilatusGrabber():
         return(''.join([chr(x) for x in self._template.value[self._template.value.nonzero()]]) )
     @template.setter
     def template(self, template):
-        a = numpy.pad(array([ord(x) for x in template]), (0,256-len(template)), mode='constant')
+        a = numpy.pad(numpy.array([ord(x) for x in template]), (0,256-len(template)), mode='constant')
         self._template.put(a)
 
     @property
@@ -153,18 +155,20 @@ class PilatusGrabber():
     def fetch(self, fname='/home/xf06bm/test.tif'):
         array = self.image.get()
         size  = (self.source.image.height.value, self.source.image.width.value)
-        img = np.reshape(array, size).astype('float')
+        img = numpy.reshape(array, size).astype('float')
             
         #Image.fromarray(img).save(fname, "TIFF")
         ## symlink to file on /nist ???  copy???
         
         fig,ax = plt.subplots(1)  # Create figure and axes
-        rotated_img = ndimage.rotate(img, 90)
-        plt.imshow(rotated_img, cmap='bone') ## https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html
-
+        #rotated_img = ndimage.rotate(img, 90)
+        plt.imshow(img, cmap='bone') ## https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html
+        
         imfile = os.path.basename(self.fullname)
         plt.title(imfile)
         plt.colorbar()
+        plt.xlim([147,206])
+        plt.ylim([77,98])
         plt.clim(0, array.max())
         plt.show()
 

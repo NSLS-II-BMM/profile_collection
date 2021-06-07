@@ -4,7 +4,7 @@ import json, pprint, copy
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
-from BMM.functions import BMM_STAFF
+from BMM.functions import BMM_STAFF, LUSTRE_XAS
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
@@ -145,6 +145,7 @@ class BMM_User(Borg):
     def __init__(self):
         ## experiment attributes
         self.DATA            = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
+        self.gdrive          = None
         self.prompt          = True
         self.final_log_entry = True
         self.date            = ''
@@ -255,7 +256,7 @@ class BMM_User(Borg):
 
         self.filter_state  = 0
 
-    def to_json(self, filename=None):
+    def to_json(self, filename=None, prefix=''):
         ## avoid this: TypeError: can't pickle _thread.RLock objects
         save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor]
         self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = [None, ] * 8
@@ -263,14 +264,14 @@ class BMM_User(Borg):
         self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = save
         for k in ('prev_fig', 'prev_ax', 'user_is_defined',
                   'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8',
-                  'motor', 'motor2'):
+                  'motor', 'motor2', 'cycle'):
             del d[k]
         if filename is None:
             print(json.dumps(d, indent=4))
         else:
             with open(filename, 'w') as outfile:
                 json.dump(d, outfile, indent=4)
-            print(f'wrote BMMuser state to {filename}')
+            print(f'{prefix}wrote BMMuser state to {filename}')
 
 
     def verify_roi(self, xs, el, edge):
@@ -307,6 +308,8 @@ class BMM_User(Borg):
             with open(filename, 'r') as jsonfile:
                 config = json.load(jsonfile)
             for k in config.keys():
+                if k in ('cycle',):
+                    continue
                 setattr(self, k, config[k])
             user_ns['rois'].trigger = True
         rkvs.set('BMM:pds:edge',        str(config['edge']))
@@ -344,14 +347,45 @@ class BMM_User(Borg):
                         'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
                         'dwell', 'delay'):
                 print('\t%-15s = %s' % (att, str(getattr(self, att))))
+
+
+    def establish_folder(self, i, text, folder):
+        '''Locate or create the folders we need for this user.
+        '''
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+            verb, pad = 'Created', ''
+        else:
+            verb, pad = 'Found', '  '
+        self.print_verb_message(i, verb, text, pad, folder)
+        return(verb)
+
+    def find_or_copy_file(self, i, text, fname):
+        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
+        src     = os.path.join(startup, fname)
+        dst     = os.path.join(self.folder, fname)
+        if not os.path.isfile(dst):
+            shutil.copyfile(src,  dst)
+            verb, pad = 'Copied', ' '
+        else:
+            verb, pad = 'Found', '  '
+        self.print_verb_message(i, verb, text, pad, dst)
         
+    def print_verb_message(self, i, verb, text, pad, result):
+        if i == 0:
+            print(f'    {verb} {text:28}{pad}   {result:75}')
+        else:
+            print(f'{i:2d}. {verb} {text:28}{pad}   {result:75}')
+
+            
+            
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
         '''
         Do the work of prepping for a new experiment.  This will:
-          * Create a folder, if needed, and set the DATA variable
+          * Create a data folder and it's subfolders, if needed, and set the DATA variable
           * Set up the experimental log, creating an experiment.log file, if needed
           * Write templates for scan.ini and macro.py, if needed
-          * Make the snapshots, dossier, and prj folders
+          * Make folders for XRF, HDF5, Pilatus, and electrochemistry
           * Set the GUP and SAF numbers as metadata
 
         Parameters
@@ -364,63 +398,62 @@ class BMM_User(Borg):
             SAF number
         name : str
             name of PI
+        use_pilatus : bool
+            true if this experiment uses the Pilatus
+        echem : bool
+            true if this experiment uses the BioLogic potentiostat
         '''
 
+        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
         step = 1
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make folder
-        if not os.path.isdir(folder):
-            os.makedirs(folder)
-            print('%2d. Created data folder:               %-75s' % (step, folder))
-        else:
-            print('%2d. Found data folder:                 %-75s' % (step, folder))
-        imagefolder = os.path.join(folder, 'snapshots')
-        if not os.path.isdir(imagefolder):
-            os.mkdir(imagefolder)
-            print('    Created snapshot folder:           %-75s' % imagefolder)
-        else:
-            print('    Found snapshot folder:             %-75s' % imagefolder)
-
-        user_ns['DATA'] = folder + '/'
-        self.DATA = folder + '/'
-        self.folder = folder + '/'
+        ## Main folders, point BMMuser and wmb objects at data folder
+        data_folder = os.path.join(folder, self.date)
+        user_ns['DATA'] = self.DATA = self.folder = data_folder + '/'
         try:
-            user_ns['wmb'].folder = folder + '/'
+            user_ns['wmb'].folder = data_folder + '/'
         except:
             pass
-        try:
-            wmb.folder = self.folder
-        except:
-            pass
+        
+        imagefolder = os.path.join(data_folder, 'snapshots')
+        prjfolder   = os.path.join(data_folder, 'prj')
+        htmlfolder  = os.path.join(data_folder, 'dossier')
+        self.establish_folder(step, 'Lustre folder', folder)
+        self.establish_folder(0,    'data folder', data_folder)
+        self.establish_folder(0,    'snapshot folder', imagefolder)
+        self.establish_folder(0,    'Athena prj folder', prjfolder)
+        if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
+            for f in ('sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
+                shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
+            manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
+            manifest.close()
+            print('    copied html generation files, touched MANIFEST')
+     
         step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## setup logger
-        BMM_user_log(os.path.join(folder, 'experiment.log'))
-        print('%2d. Set up experimental log file:      %-75s' % (step, os.path.join(folder, 'experiment.log')))
+        BMM_user_log(os.path.join(data_folder, 'experiment.log'))
+        print('%2d. Set up experimental log file:          %-75s' % (step, os.path.join(data_folder, 'experiment.log')))
         step += 1
 
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
-
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## write scan.ini template
+        ## scan.ini template, macro template & wheel/ga spreadsheets
         initmpl = os.path.join(startup, 'scan.tmpl')
-        scanini = os.path.join(folder, 'scan.ini')
+        scanini = os.path.join(data_folder, 'scan.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
             o = open(scanini, 'w')
-            o.write(''.join(content).format(folder=folder, name=name))
+            o.write(''.join(content).format(folder=data_folder, name=name))
             o.close()
-            print('%2d. Created INI template:              %-75s' % (step, scanini))
+            verb, pad = 'Copied', ' '
         else:
-            print('%2d. Found INI template:                %-75s' % (step, scanini))
-        step += 1
+            verb, pad = 'Found', '  '
+        self.print_verb_message(step, verb, 'INI file', pad, scanini)
 
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## write macro template & wheel spreadsheet
         macrotmpl = os.path.join(startup, 'wheelmacro.tmpl')
-        macropy = os.path.join(folder, 'sample_macro.py')
+        macropy = os.path.join(data_folder, 'sample_macro.py')
         commands = '''
         ## sample 1
         yield from slot(1)
@@ -441,104 +474,51 @@ class BMM_User(Borg):
             with open(macrotmpl) as f:
                 content = f.readlines()
             o = open(macropy, 'w')
-            o.write(''.join(content).format(folder=folder, base='sample', content=commands))
+            o.write(''.join(content).format(folder=data_folder, base='sample', content=commands))
             o.close()
-            print('%2d. Created macro template:            %-75s' % (step, macropy))
+            verb, pad = 'Copied', ' '
         else:
-            print('%2d. Found macro template:              %-75s' % (step, macropy))
-        step += 1
+            verb, pad = 'Found', '  '
+        self.print_verb_message(0, verb, 'macro template', pad, macropy)
 
-        xlsxtmpl = os.path.join(startup, 'wheel_template.xlsx')
-        xlsxfile = os.path.join(folder, 'wheel_template.xlsx')
-        if not os.path.isfile(xlsxfile):
-            shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
-            print('%2d. Copied wheel macro spreadsheet:    %-75s' % (step, xlsxfile))
-
-        else:
-            print('%2d. Found wheel macro spreadsheet:     %-75s' % (step, xlsxfile))
-        step += 1            
-        
-        xlsxtmpl = os.path.join(startup, 'pinwheel_template.xlsx')
-        xlsxfile = os.path.join(folder, 'pinwheel_template.xlsx')
-        if not os.path.isfile(xlsxfile):
-            shutil.copyfile(os.path.join(startup, 'wheel_template.xlsx'),  xlsxfile)
-            print('%2d. Copied pinwheel macro spreadsheet: %-75s' % (step, xlsxfile))
-
-        else:
-            print('%2d. Found pinwheel macro spreadsheet:  %-75s' % (step, xlsxfile))
+        self.find_or_copy_file(0, 'wheel macro spreadsheet', 'wheel_template.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'pinwheel_template.xlsx')
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make html folder, copy static html generation files
-        htmlfolder = os.path.join(folder, 'dossier')
-        if not os.path.isdir(htmlfolder):
-            os.mkdir(htmlfolder)
-            for f in ('sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
-                shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
-            manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
-            manifest.close()
-            print('%2d. Created dossier folder:            %-75s' % (step,htmlfolder))
-            print('   copied html generation files, touched MANIFEST')
-        else:
-            print('%2d. Found dossier folder:              %-75s' % (step,htmlfolder))
-        step += 1
-     
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make prj folder
-        prjfolder = os.path.join(folder, 'prj')
-        if not os.path.isdir(prjfolder):
-            os.mkdir(prjfolder)
-            print('%2d. Created Athena prj folder:         %-75s' % (step,prjfolder))
-        else:
-            print('%2d. Found Athena prj folder:           %-75s' % (step,prjfolder))
-        step += 1
-
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make XRF folder
-        xrffolder = os.path.join(folder, 'XRF')
-        if not os.path.isdir(xrffolder):
-            os.mkdir(xrffolder)
-            print('%2d. Created folder for XRF spectra:    %-75s' % (step,xrffolder))
-        else:
-            print('%2d. Found folder for XRF spectra:      %-75s' % (step,xrffolder))
-        step += 1
+        ## XRF & HDF5folders
+        xrffolder = os.path.join(data_folder, 'XRF')
+        self.establish_folder(step, 'XRF spectra folder', xrffolder)
+        hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
+        self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make prj folder
+        ## Pilatus folder
         if use_pilatus:
-            pilfolder = os.path.join(folder, 'Pilatus')
-            if not os.path.isdir(pilfolder):
-                os.mkdir(pilfolder)
-                print('%2d. Created folder for Pilatus images: %-75s' % (step,pilfolder))
-            else:
-                print('%2d. Found folder for Pilatus images:   %-75s' % (step,pilfolder))
-            step += 1
+            pilfolder = os.path.join(data_folder, 'raw', 'Pilatus')
+            self.establish_folder(0, 'Pilatus folder', pilfolder)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make echem folder
+        ## echem folder
         if echem:
             self.echem = True
-            ecfolder = os.path.join(folder, 'electrochemistry')
-            if not os.path.isdir(ecfolder):
-                os.mkdir(ecfolder)
-                print('%2d. Created folder for echem data:  %-75s' % (step,ecfolder))
-            else:
-                print('%2d. Found folder for echem data:    %-75s' % (step,ecfolder))
-            self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
-            if not os.path.isdir(self.echem_remote):
-                os.makedirs(self.echem_remote)
-                print('   Created remote echem folder:       %-75s' % (self.echem_remote))
-            else:
-                print('   Found remote echem folder:         %-75s' % (self.echem_remote))
+            ecfolder = os.path.join(data_folder, 'raw', 'electrochemistry')
+            self.establish_folder(0, 'electrochemistry folder', ecfolder)
+            #self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
+            #if not os.path.isdir(self.echem_remote):
+            #    os.makedirs(self.echem_remote)
+            #    print('   Created remote echem folder:       %-75s' % (self.echem_remote))
+            #else:
+            #    print('   Found remote echem folder:         %-75s' % (self.echem_remote))
             
-            step += 1
+        step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make gdrive folder
+        ## GDrive folder
         user_folder = make_gdrive_folder(prefix='    ', update=False)
         for f in ('logo.png', 'style.css', 'trac.css'):
             shutil.copyfile(os.path.join(startup, f),  os.path.join(user_folder, 'dossier', f))
-        print('%2d. Established Google Drive folder:   %-75s' % (step, user_folder))
+        print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
         print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
         step += 1
             
@@ -546,7 +526,7 @@ class BMM_User(Borg):
         ## SAF and GUP
         self.gup = gup
         self.saf = saf
-        print('%2d. Set GUP and SAF numbers as metadata' % step)
+        print(f'{step:2d}. Set GUP and SAF numbers as metadata    GUP: {gup}   SAF: {saf}')
         step += 1
 
         self.user_is_defined = True
@@ -574,6 +554,10 @@ class BMM_User(Borg):
             GUP number
         saf : str
             SAF number
+        use_pilatus : bool
+            true if this experiment uses the Pilatus
+        echem : bool
+            true if this experiment uses the BioLogic potentiostat
         '''
         if self.user_is_defined:
             print(error_msg('An experiment is already started.'))
@@ -594,24 +578,31 @@ class BMM_User(Borg):
         if saf == 0:
             print(error_msg('You did not supply the SAF number'))
             return()
+        
+        lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
+        if not os.path.isdir(lustre_root):
+            os.makedirs(lustre_root)
         if name in BMM_STAFF:
             self.staff = True
-            folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
+            local_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
             #if '' in name:
             #    self.lims = False
         else:
             self.staff = False
-            folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
+            local_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
         self.name = name
         self.date = date
-        self.new_experiment(folder, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
+        
+        self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
-        self.to_json(os.path.join(self.DATA, '.BMMuser'))
-        if not os.path.isfile(os.path.join(os.environ['HOME'], 'Data', '.BMMuser')):
-            os.symlink(os.path.join(self.DATA, '.BMMuser'), os.path.join(os.environ['HOME'], 'Data', '.BMMuser'))
+        self.to_json(filename=os.path.join(self.DATA, '.BMMuser'), prefix='    ')
+        slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
+        if os.path.isfile(slink):
+            os.remove(slink)
+        os.symlink(os.path.join(self.DATA, '.BMMuser'), slink)
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
@@ -620,6 +611,18 @@ class BMM_User(Borg):
             json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
         os.chmod(jsonfile, 0o444)
 
+        if not os.path.islink(local_folder):
+            os.symlink(self.DATA, local_folder, target_is_directory=True)
+        print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
+
+        try:
+            xascam._root = os.path.join(self.folder, 'snapshots')
+            xrdcam._root = os.path.join(self.folder, 'snapshots')
+            anacam._root = os.path.join(self.folder, 'snapshots')
+        except:
+            pass
+
+            
 
     def start_experiment_from_serialization(self):
         '''In the situation where bsui needs to be stopped (or crashes) before
@@ -635,7 +638,7 @@ class BMM_User(Borg):
         '''
         if self.user_is_defined:
             return()
-        
+
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
         #jsonfile = os.path.join(self.DATA, '.BMMuser')
         if os.path.isfile(jsonfile):
@@ -651,9 +654,11 @@ class BMM_User(Borg):
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
-        print('DATA  = %s' % self.DATA)
-        print('GUP   = %s' % self.gup)
-        print('SAF   = %s' % self.saf)
+        print('Name   = %s' % self.name)
+        print('Date   = %s' % self.date)
+        print('Folder = %s' % self.folder)
+        print('GUP    = %s' % self.gup)
+        print('SAF    = %s' % self.saf)
         #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
         if user_ns['with_xspress3'] is False:
             print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))

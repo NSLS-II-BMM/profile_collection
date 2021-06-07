@@ -269,7 +269,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print('Moving reference foil...')
         yield from rois.select_plan(el)
         ## Xspress3
-        BMMuser.verify_roi(xs, el, edge)
+        if user_ns['with_xspress3']:
+            BMMuser.verify_roi(xs, el, edge)
         ## feedback
         show_edges()
     
@@ -279,7 +280,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
-    self.to_json(os.path.join(self.DATA, '.BMMuser'))
+    #xBMMuser.to_json(os.path.join(BMMuser.folder, '.BMMuser'))
     yield from dcm.kill_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))

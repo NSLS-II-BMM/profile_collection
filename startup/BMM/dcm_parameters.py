@@ -17,11 +17,11 @@ class dcm_parameters():
     '''
 
     def __init__(self):
-        self.dspacing_111 = 3.1352614  # 26 February 2021
-        self.dspacing_311 = 1.6376060  # 18 February 2021
+        self.dspacing_111 = 3.1352151  # 3 March 2021
+        self.dspacing_311 = 1.6375881  # 3 March 2021
         ## *add* the fit result from these numbers!
-        self.offset_111 = 16.0620552 # 26 February 2021
-        self.offset_311 = 15.9871504  # 18 February 2021
+        self.offset_111 = 16.0644058   # 3 March 2021
+        self.offset_311 = 15.9880882   # 3 March 2021
 
 
         ## old 111: 3.1353655   16.0608256

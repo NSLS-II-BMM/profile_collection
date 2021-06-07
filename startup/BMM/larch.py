@@ -16,9 +16,10 @@
 ##                           Ovid, Metamorphosis
 ##                           Book II:531-565
 
-import numpy
+import numpy, os
 from larch import (Group, Parameter, isParameter, param_value, isNamedClass, Interpreter) 
 from larch.xafs import (find_e0, pre_edge, autobk, xftf, xftr)
+from larch.io import create_athena
 import larch.utils.show as lus
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -180,6 +181,12 @@ class Pandrosus():
         self.title = db.v2[uid].metadata['start']['XDI']['Sample']['name']
         self.make_xmu(uid, mode=mode)
         self.prep()
+        toss = create_athena(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
+        toss.add_group(self.group)
+        toss.save()
+        os.remove(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
+        toss = None
+        self.group.args['label'] = db.v2[uid].metadata['start']['XDI']['_filename']
 
     def put(self, energy, mu, name):
         self.name = name

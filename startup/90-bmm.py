@@ -200,6 +200,11 @@ if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 i
      #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
      show_edges()
 
+xascam._root = os.path.join(BMMuser.folder, 'snapshots')
+xrdcam._root = os.path.join(BMMuser.folder, 'snapshots')
+anacam._root = os.path.join(BMMuser.folder, 'snapshots')
+
+     
 from BMM.edge import all_connected
 if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))

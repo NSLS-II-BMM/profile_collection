@@ -8,6 +8,7 @@ import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
 import matplotlib.pyplot as plt
+from larch.io import create_athena
 
 #from BMM.camera_device import snap
 from BMM.db            import file_resource
@@ -358,15 +359,24 @@ def make_merged_triplot(uidlist, filename, mode):
     #k=Kekropidai()
     #k.put(uidlist)
     #merge=k.merge()
+    BMMuser = user_ns['BMMuser']
     base = Pandrosus()
+    projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
+    proj = create_athena(projname)
     base.fetch(uidlist[0], mode=mode)
     ee = base.group.energy
     mm = base.group.mu
+    save = base.group.args['label']
+    proj.add_group(base.group)
+    base.group.args['label'] = save
     for uid in uidlist[1:]:
         this = Pandrosus()
         this.fetch(uid, mode=mode)
         mu = numpy.interp(ee, this.group.energy, this.group.mu)
         mm = mm + mu
+        save = this.group.args['label']
+        proj.add_group(this.group)
+        this.group.args['label'] = save
     mm = mm / len(uidlist)
     merge = Pandrosus()
     merge.put(ee, mm, 'merge')
@@ -376,7 +386,9 @@ def make_merged_triplot(uidlist, filename, mode):
     plt.savefig(filename)
     print(whisper(f'Wrote triplot to {filename}'))
     matplotlib.use(thisagg) # return to screen display
-
+    proj.save()
+    print(whisper(f'Wrote Athena project to {projname}'))
+    
 
 def scan_sequence_static_html(inifile       = None,
                               filename      = None,
@@ -451,11 +463,11 @@ def scan_sequence_static_html(inifile       = None,
 
     ## generate a png image, preferably of a quadplot of the data, using Demeter
     prjfilename, pngfilename = None, None
-    try:
-          pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=thismode)
-          prjfilename = os.path.join(BMMuser.folder, 'prj', basename+'.prj')
-    except Exception as e:
-          print(e)
+    # try:
+    #       pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=thismode)
+    #       prjfilename = os.path.join(BMMuser.folder, 'prj', basename+'.prj')
+    # except Exception as e:
+    #       print(e)
 
 
     #print(warning_msg(f'{uidlist}  {BMMuser.DATA}   {basename}   {mode}'))
@@ -464,6 +476,7 @@ def scan_sequence_static_html(inifile       = None,
             pngfilename = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
             #print(warning_msg(f'   {pngfilename}'))
             make_merged_triplot(uidlist, pngfilename, mode)
+            prjfilename = os.path.join(BMMuser.DATA, 'prj', f"{basename}.prj")
     except Exception as e:
         print(error_msg('failure to make triplot'))
         print(e)
@@ -787,6 +800,7 @@ def xafs(inifile=None, **kwargs):
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
+            yield from mv(xs.total_points, 1)
             yield from mv(xs.settings.acquire_time, 1)
             xrfuid = yield from count([xs], 1, md = {'XDI':md})
 
@@ -812,9 +826,9 @@ def xafs(inifile=None, **kwargs):
             xrffile  = os.path.join(p['folder'], 'XRF', html_dict['xrffile'])
             xrfimage = os.path.join(p['folder'], 'XRF', html_dict['xrfsnap'])
             gdrive_dict['xrffile']  = {'source': xrffile,
-                                       'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'XRF', html_dict['xrffile'])}
+                                       'target': os.path.join(BMMuser.gdrive, 'XRF', html_dict['xrffile'])}
             gdrive_dict['xrfimage'] = {'source': xrfimage,
-                                       'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'XRF', html_dict['xrfsnap'])}
+                                       'target': os.path.join(BMMuser.gdrive, 'XRF', html_dict['xrfsnap'])}
             
             plt.savefig(xrfimage)
             xs.to_xdi(xrffile)
@@ -832,7 +846,8 @@ def xafs(inifile=None, **kwargs):
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
             xascam_uid = yield from count([xascam], 1, md = {'XDI':md})
-            shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
+            os.symlink(file_resource(db.v2[xascam_uid]), image_web)
+            #shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
             #snap('XAS', filename=image_web, annotation=annotation)
 
             html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
@@ -841,7 +856,8 @@ def xafs(inifile=None, **kwargs):
             print(bold_msg('analog camera snapshot'))
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md})
             try:
-                shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
+                os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
+                #shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
             except:
                 print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
                 pass
@@ -849,9 +865,9 @@ def xafs(inifile=None, **kwargs):
 
             
             gdrive_dict['xascam']  = {'source': image_web,
-                                      'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', html_dict['websnap'])}
+                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['websnap'])}
             gdrive_dict['anacam']  = {'source': image_ana,
-                                      'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', html_dict['anasnap'])}
+                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['anasnap'])}
             
 
         md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
@@ -1190,15 +1206,15 @@ def xafs(inifile=None, **kwargs):
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
                     gdrive_dict['dossier']   = {'source': htmlout,
-                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', os.path.basename(htmlout))}
+                                                'target': os.path.join(BMMuser.gdrive, 'dossier', os.path.basename(htmlout))}
                     gdrive_dict['manifest']  = {'source': os.path.join(os.path.dirname(htmlout), '00INDEX.html'),
-                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'dossier', '00INDEX.html')}
+                                                'target': os.path.join(BMMuser.gdrive, 'dossier', '00INDEX.html')}
                 if prjout is not None:
                     gdrive_dict['prj']       = {'source': prjout,
-                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'prj', os.path.basename(htmlout).replace('html', 'prj'))}
+                                                'target': os.path.join(BMMuser.gdrive, 'prj', os.path.basename(htmlout).replace('html', 'prj'))}
                 if pngout is not None:
                     gdrive_dict['processed'] = {'source': pngout,
-                                                'target': os.path.join(os.environ['HOME'], 'gdrive', 'Data', BMMuser.name, BMMuser.date, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
+                                                'target': os.path.join(BMMuser.gdrive, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
                     
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
                 for k,v in gdrive_dict.items():

@@ -78,26 +78,76 @@ def set_integration_plan(time=0.5):
 
 
 
-def recover_screens():
-    dm2_fs  = user_ns['dm2_fs']
-    dm3_fs  = user_ns['dm3_fs']
-    dm3_bct = user_ns['dm3_bct']
+def recover_slits2():
+    inb  = user_ns['dm2_slits_i']
+    outb = user_ns['dm2_slits_o']
+    top  = user_ns['dm2_slits_t']
+    bot  = user_ns['dm2_slits_b']
+    yield from abs_set(inb.home_signal,  1)
+    yield from abs_set(outb.home_signal, 1)
+    yield from abs_set(top.home_signal,  1)
+    yield from abs_set(bot.home_signal,  1)
+    yield from sleep(1.0)
+    print('Begin homing slits2 inboard/outboard & top/bottom:\n')
+    hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
+    while any(v == 0 for v in hvalues):
+        hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
+        strings = ['dm2_slits_i', 'dm2_slits_o', 'dm2_slits_t', 'dm2_slits_b']
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(slits2.vsize, 1.1, slits2.hsize, 18)
+
+def recover_slits3():
+    inb  = user_ns['dm3_slits_i']
+    outb = user_ns['dm3_slits_o']
+    top  = user_ns['dm3_slits_t']
+    bot  = user_ns['dm3_slits_b']
+    yield from abs_set(inb.home_signal,  1)
+    yield from abs_set(outb.home_signal, 1)
+    yield from abs_set(top.home_signal,  1)
+    yield from abs_set(bot.home_signal,  1)
+    yield from sleep(1.0)
+    print('Begin homing slits3 inboard/outboard & top/bottom:\n')
+    hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
+    while any(v == 0 for v in hvalues):
+        hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
+        strings = ['dm3_slits_i', 'dm3_slits_o', 'dm3_slits_t', 'dm3_slits_b']
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(slits3.vsize, 1, slits3.hsize, 5)
+
+    
+def recover_diagnostics():
+    dm2_fs    = user_ns['dm2_fs']
+    dm3_fs    = user_ns['dm3_fs']
+    dm3_bct   = user_ns['dm3_bct']
+    dm3_bpm   = user_ns['dm3_bpm']
+    dm3_foils = user_ns['dm3_foils']
     yield from abs_set(dm2_fs.home_signal,  1)
     yield from abs_set(dm3_fs.home_signal,  1)
     yield from abs_set(dm3_bct.home_signal, 1)
+    yield from abs_set(dm3_bpm.home_signal, 1)
+    yield from abs_set(dm3_foils.home_signal, 1)
     yield from sleep(1.0)
-    print('Begin homing dm2_fs, dm3_fs, and dm3_bct:\n')
-    hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get())
+    print('Begin homing dm2_fs, dm3_fs, dm3_bct, dm3_bpm, and dm3_foils:\n')
+    hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get(), dm3_bpm.hocpl.get(), dm3_foils.hocpl.get())
     while any(v == 0 for v in hvalues):
-        hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get())
-        strings = ['dm2_fs', 'dm3_fs', 'dm3_bct']
+        hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get(), dm3_bpm.hocpl.get(), dm3_foils.hocpl.get())
+        strings = ['dm2_fs', 'dm3_fs', 'dm3_bct', 'dm3_bpm', 'dm3_foils']
         for i,v in enumerate(hvalues):
             strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
         print('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
-    yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565) # MODEDATA['dm3_bct']['E'])
+    ## take these from Modes.xlsx, mode D -- all out of the beam path
+    yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3.bpm, -3.3635, dm3_foils, 41)
 
     
 def recover_mirror2():

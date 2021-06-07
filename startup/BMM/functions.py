@@ -4,10 +4,6 @@ from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 
-## users find "less" unfamiliar and mistakes are made / confusion is
-## had when doing <function>??  `cat` seems less likely to befuddle
-## the hoi palloi, but it's not a pager.
-##
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
@@ -15,8 +11,9 @@ os.environ['PAGER'] = 'most'
 get_ipython().magic(u"%xmode Plain")
 
 ## some global parameters
-BMM_STAFF = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik')
-HBARC = 1973.27053324
+BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
+HBARC      = 1973.27053324
+LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,

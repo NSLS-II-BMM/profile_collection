@@ -1,7 +1,4 @@
-import os
-import uuid
-import threading
-import itertools
+import os, uuid, threading, itertools, datetime
 import numpy
 
 import requests
@@ -142,7 +139,7 @@ def analog_camera(filename    = None,
 
     if sample is not None and sample != '':
         title = title + ' - ' + sample
-    if user_ns['BMMuser'].host == 'xf06bm-ws1':
+    if 'xf06bm-ws1' in user_ns['BMMuser'].host:
         command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
                '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
     else:
@@ -217,9 +214,16 @@ class BMMSnapshot(Device):
             self._SPEC = "BMM_ANALOG_CAMERA"
             self._url = None
 
+    def current_folder(self):
+        folder = os.path.join(user_ns['BMMuser'].folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+        return folder
+            
     def stage(self):
         #self._rel_path_template = f"path/to/files/{uuid.uuid4()}_%d.ext"
         self._rel_path_template = f"{uuid.uuid4()}_%d.jpg"
+        self._root = self.current_folder()
         resource, self._datum_factory = resource_factory(
             self._SPEC, self._root, self._rel_path_template, {}, "posix")
         self._asset_docs_cache.append(('resource', resource))

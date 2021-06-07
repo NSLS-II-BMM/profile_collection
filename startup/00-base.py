@@ -7,7 +7,7 @@ bec.disable_plots()
 bec.disable_baseline()
 
 import ophyd
-ophyd.EpicsSignal.set_default_timeout(timeout=20, connection_timeout=20)
+ophyd.EpicsSignal.set_defaults(timeout=20, connection_timeout=20)
 
 #from databroker.core import SingleRunCache
 
