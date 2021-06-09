@@ -9,10 +9,11 @@ from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 
 def resting_redis():
-    rkvs = user_ns['rkvs']
-    rkvs.set('BMM:scan:type',      '')
-    rkvs.set('BMM:scan:starttime', '')
-    rkvs.set('BMM:scan:estimated', 0)
+    return()
+    # rkvs = user_ns['rkvs']
+    # rkvs.set('BMM:scan:type',      '')
+    # rkvs.set('BMM:scan:starttime', '')
+    # rkvs.set('BMM:scan:estimated', 0)
 
 def resting_state():
     '''

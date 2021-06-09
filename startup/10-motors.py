@@ -89,6 +89,11 @@ dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
 #dm2_fs.wait_for_connection()
 dm2_fs.hvel_sp.put(0.0005)
+dm2_slits_o.hvel_sp.put(0.2)
+dm2_slits_i.hvel_sp.put(0.2)
+dm2_slits_t.hvel_sp.put(0.2)
+dm2_slits_b.hvel_sp.put(0.2)
+
 
 ## DM3
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
@@ -104,12 +109,29 @@ mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
 
 dm3_slits_i.user_offset.put(-6.9181)
 dm3_slits_o.user_offset.put(7.087)
+dm3_slits_o.hvel_sp.put(0.2)
+dm3_slits_i.hvel_sp.put(0.2)
+dm3_slits_t.user_offset.put(-2.676)
+dm3_slits_b.user_offset.put(-2.9737)
+dm3_slits_t.hvel_sp.put(0.2)
+dm3_slits_b.hvel_sp.put(0.2)
 
 
-dm3_fs.llm.value = -65
+dm3_fs.llm.put(-75)
+dm3_fs.hlm.put(56)
+dm3_fs.hvel_sp.put(0.05)
+
 dm3_bct.velocity.put(0.4)
 dm3_bct.acceleration.put(0.25)
 dm3_bct.hvel_sp.put(0.05)
+dm3_bct.llm.put(-60)
+dm3_bct.hlm.put(60)
+
+dm3_bpm.hvel_sp.put(0.05)
+
+dm3_foils.llm.put(-25)
+dm3_foils.hlm.put(45)
+dm3_foils.hvel_sp.put(0.05)
 
 
 #bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')

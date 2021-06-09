@@ -9,10 +9,18 @@ if not os.environ.get('AZURE_TESTING'):
 else:
     redis_host = '127.0.0.1'
 
+
+class NoRedis():
+    def set(self, thing, otherthing):
+        return None
+    def get(self, thing):
+        return None
+    
 ###################################################################
 # things that are configurable                                    #
 ###################################################################
 rkvs = redis.Redis(host=redis_host, port=6379, db=0)
+#rkvs = NoRedis()
 NAS = '/mnt/nfs/nas1'
 SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')

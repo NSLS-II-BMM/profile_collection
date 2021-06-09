@@ -1,6 +1,7 @@
 from bluesky.plan_stubs import abs_set, sleep, mv, mvr
 import time
 
+from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.modes import MODEDATA
 
 from IPython import get_ipython
@@ -83,10 +84,9 @@ def recover_slits2():
     outb = user_ns['dm2_slits_o']
     top  = user_ns['dm2_slits_t']
     bot  = user_ns['dm2_slits_b']
+    slits2 = user_ns['slits2']
     yield from abs_set(inb.home_signal,  1)
-    yield from abs_set(outb.home_signal, 1)
     yield from abs_set(top.home_signal,  1)
-    yield from abs_set(bot.home_signal,  1)
     yield from sleep(1.0)
     print('Begin homing slits2 inboard/outboard & top/bottom:\n')
     hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
@@ -105,10 +105,9 @@ def recover_slits3():
     outb = user_ns['dm3_slits_o']
     top  = user_ns['dm3_slits_t']
     bot  = user_ns['dm3_slits_b']
+    slits3 = user_ns['slits3']
     yield from abs_set(inb.home_signal,  1)
-    yield from abs_set(outb.home_signal, 1)
     yield from abs_set(top.home_signal,  1)
-    yield from abs_set(bot.home_signal,  1)
     yield from sleep(1.0)
     print('Begin homing slits3 inboard/outboard & top/bottom:\n')
     hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
@@ -146,8 +145,9 @@ def recover_diagnostics():
         yield from sleep(1.0)
     print('\n')
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from abs_set(dm3_foils.kill_cmd, 1, wait=True)
     ## take these from Modes.xlsx, mode D -- all out of the beam path
-    yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3.bpm, -3.3635, dm3_foils, 41)
+    yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3_bpm, 5.511, dm3_foils, 41)
 
     
 def recover_mirror2():
@@ -170,6 +170,27 @@ def recover_mirror2():
                   m2_ydi, MODEDATA['m2_ydi']['E'],
                   m2_xu,  MODEDATA['m2_xu']['E'],
                   m2_xd,  MODEDATA['m2_xd']['E'])
+
+def recover_mirror3():
+    m3_xu, m3_xd, m3_yu, m3_ydo, m3_ydi = user_ns['m3_xu'], user_ns['m3_xd'], user_ns['m3_yu'], user_ns['m3_ydo'], user_ns['m3_ydi']
+    yield from abs_set(m3_xu.home_signal,  1) # xu and xd home together
+    yield from abs_set(m3_ydi.home_signal,  1) # yu, ydi, and ydo home together
+    yield from sleep(1.0)
+    print('Begin homing lateral and vertical motors in M3:\n')
+    hvalues = (m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
+    while any(v == 0 for v in hvalues):
+        hvalues = (m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
+        strings = ['m3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+        for i,v in enumerate(hvalues):
+            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
+        print('  '.join(strings), end='\r')
+        yield from sleep(1.0)
+    print('\n')
+    yield from mv(m3_yu,  MODEDATA['m3_yu']['E'],
+                  m3_ydo, MODEDATA['m3_ydo']['E'],
+                  m3_ydi, MODEDATA['m3_ydi']['E'],
+                  m3_xu,  MODEDATA['m3_xu']['E'],
+                  m3_xd,  MODEDATA['m3_xd']['E'])
 
 
 def recover_mirrors():
