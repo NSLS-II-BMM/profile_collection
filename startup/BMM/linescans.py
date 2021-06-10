@@ -20,6 +20,7 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.purpose       import purpose
 
 def get_mode():
     m2, m3 = user_ns['m2'], user_ns['m3']
@@ -132,7 +133,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from abs_set(motor.velocity, 0.4, wait=True)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
 
-            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps)
+            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md=purpose('alignment'))
 
             RE.msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
@@ -251,7 +252,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, 5)
                 
-            uid = yield from rel_scan(dets, motor, start, stop, nsteps)
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md=purpose('alignment'))
             #yield from rel_adaptive_scan(dets, 'I0', motor,
             #                             start=start,
             #                             stop=stop,
@@ -382,7 +383,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     database and write it to a file.
     '''
 
-    def main_plan(detector, axis, start, stop, nsteps, pluck, force):
+    def main_plan(detector, axis, start, stop, nsteps, pluck, force, md):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
             print(error_msg(text))
@@ -543,7 +544,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         thismd['XDI']['Facility'] = dict()
         thismd['XDI']['Facility']['GUP'] = BMMuser.gup
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
-
+        if 'purpose' not in md:
+            md['purpose'] = 'alignment'
+        
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
@@ -589,7 +592,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         return(yield from null())
     ######################################################################
     RE.msg_hook = None
-    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force), cleanup_plan())
+    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force, md), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
 
 

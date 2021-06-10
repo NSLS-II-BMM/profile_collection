@@ -19,6 +19,7 @@ from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
+from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
@@ -180,7 +181,7 @@ class GlancingAngle(Device):
         result. Move to the peak.'''        
         xafs_pitch = user_ns['xafs_pitch']
         db = user_ns['db']
-        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
+        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force, md=purpose('alignment'))
         close_last_plot()
         table  = db[-1].table()
         pitch  = table['xafs_pitch']
@@ -258,7 +259,7 @@ class GlancingAngle(Device):
         result. Move to the centroid of the error function.'''
         xafs_y = user_ns['xafs_y']
         db = user_ns['db']
-        yield from linescan(xafs_y, 'it', -2.3, 2.3, 51, pluck=False)
+        yield from linescan(xafs_y, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
         close_last_plot()
         table  = db[-1].table()
         yy     = table['xafs_y']
@@ -345,7 +346,7 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(xafs_y, 'xs', -2.3, 2.3, 51, pluck=False)
+        yield from linescan(xafs_y, 'xs', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
         yy = tf['xafs_y']

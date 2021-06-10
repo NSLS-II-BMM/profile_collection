@@ -606,6 +606,8 @@ def xafs(inifile=None, **kwargs):
         supplied_metadata = dict()
         if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
+        if 'purpose' not in supplied_metadata:
+            supplied_metadata['purpose'] = 'xafs'
 
         if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
         if 'force' in kwargs and kwargs['force'] is True:
@@ -802,7 +804,7 @@ def xafs(inifile=None, **kwargs):
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.settings.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md})
+            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
 
             ## capture OCR and target ROI values at Eave to report in dossier
             ocrs = [int(xs.channel1.rois.roi16.value.get()),
@@ -845,7 +847,7 @@ def xafs(inifile=None, **kwargs):
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1, md = {'XDI':md})
+            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
             os.symlink(file_resource(db.v2[xascam_uid]), image_web)
             #shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
             #snap('XAS', filename=image_web, annotation=annotation)
@@ -854,7 +856,7 @@ def xafs(inifile=None, **kwargs):
             image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
             anacam._annotation_string = p['filename']
             print(bold_msg('analog camera snapshot'))
-            anacam_uid = yield from count([anacam], 1, md = {'XDI':md})
+            anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
             try:
                 os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
                 #shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)

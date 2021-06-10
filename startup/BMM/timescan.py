@@ -143,6 +143,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     @subs_decorator(plot)
     #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay):
+        if 'purpose' not in md:
+            md['purpose'] = 'measurement'
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
         return uid
         
@@ -150,7 +152,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
     rkvs.set('BMM:scan:estimated', 0)
 
-    uid = yield from count_scan(dets, readings, delay)
+    uid = yield from count_scan(dets, readings, delay, md)
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))

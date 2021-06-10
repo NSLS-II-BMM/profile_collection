@@ -18,6 +18,7 @@ from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
+from BMM.purpose       import purpose
 
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
@@ -170,7 +171,7 @@ def areascan(detector,
             uid = yield from grid_scan(dets,
                                        slow, startslow, stopslow, nslow,
                                        fast, startfast, stopfast, nfast,
-                                       snake)
+                                       snake, md=purpose('measurement'))
             BMMuser.final_log_entry = True
             return uid
 
