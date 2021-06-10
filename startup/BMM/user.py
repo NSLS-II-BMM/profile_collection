@@ -711,7 +711,8 @@ class BMM_User(Borg):
             try:
                 copy_tree(self.DATA, destination)
                 report('NAS data store: "%s"' % destination, 'bold')
-            except:
+            except Exception as E:
+                print(E)
                 print(error_msg('Unable to write data to NAS server'))
 
         #####################################################################
