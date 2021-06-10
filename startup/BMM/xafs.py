@@ -801,14 +801,14 @@ def xafs(inifile=None, **kwargs):
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)
-            yield from mv(xs.settings.acquire_time, 1)
+            yield from mv(xs.cam.acquire_time, 1)
             xrfuid = yield from count([xs], 1, md = {'XDI':md})
 
             ## capture OCR and target ROI values at Eave to report in dossier
-            ocrs = [int(xs.channel1.rois.roi16.value.get()),
-                    int(xs.channel2.rois.roi16.value.get()),
-                    int(xs.channel3.rois.roi16.value.get()),
-                    int(xs.channel4.rois.roi16.value.get()),]
+            ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
             html_dict['ocrs'] = ", ".join(map(str,ocrs))
             rois = [int(BMMuser.xschannel1.get()),
                     int(BMMuser.xschannel2.get()),
@@ -899,7 +899,7 @@ def xafs(inifile=None, **kwargs):
                                                              doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
             if user_ns['with_xspress3']:
-                yield from mv(xs.settings.acquire_time, 0.5)
+                yield from mv(xs.cam.acquire_time, 0.5)
                 #yield from mv(xs.total_points, len(energy_grid))
                 plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
             else:
@@ -916,7 +916,7 @@ def xafs(inifile=None, **kwargs):
             plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
         elif 'both'  in p['mode']:
             if user_ns['with_xspress3']:
-                yield from mv(xs.settings.acquire_time, 0.5)
+                yield from mv(xs.cam.acquire_time, 0.5)
                 #yield from mv(xs.total_points, len(energy_grid))
                 plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                         DerivedPlot(xspress3,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
@@ -924,7 +924,7 @@ def xafs(inifile=None, **kwargs):
                 plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
                         DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
         elif 'xs'    in p['mode']:
-            yield from mv(xs.settings.acquire_time, 0.5)
+            yield from mv(xs.cam.acquire_time, 0.5)
             #yield from mv(xs.total_points, len(energy_grid))
             plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
         else:

@@ -287,12 +287,12 @@ class BMM_User(Borg):
                     with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
                         js = fl.read()
                     allrois = json.loads(js)
-                    xs.set_rois()
                     xs.slots[14] = el
-                    for ch in range(1,5):
-                        xs.set_roi_channel(channel=ch, index=15, name=f'{el.capitalize()}{ch}',
+                    for channel in xs.iterate_channels():
+                        xs.set_roi_channel(channel, index=15, name=f'{el.capitalize()}',
                                            low =allrois[el.capitalize()][edge.lower()]['low'],
                                            high=allrois[el.capitalize()][edge.lower()]['high'])
+                    xs.set_rois()
 
                 xs.measure_roi()
             else:
