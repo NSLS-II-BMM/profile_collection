@@ -44,10 +44,10 @@ pinwheel = PinWheelMacroBuilder()
 # | |  | || | | | \__/\| |\ \\ \_/ / | |_/ / |_| |_| |_| |___| |/ /| |___| |\ \ /\__/ / #
 # \_|  |_/\_| |_/\____/\_| \_|\___/  \____/ \___/ \___/\_____/___/ \____/\_| \_|\____/  #
 #########################################################################################
-                                                                                     
 
 from BMM.functions import present_options, bold_msg
 from openpyxl import load_workbook
+
 def xlsx():
     '''Prompt for a macro building spreadsheet for any instrument. Use the
     content of cell B1 to direct this spreadsheet to the correct builder.
@@ -58,6 +58,9 @@ def xlsx():
 
     if cell B1 is empty --> build a sample wheel macro
 
+    Then prompt for the sheet, if there are more than 1 sheet in the
+    spreadsheet file.
+    
     '''
     spreadsheet = present_options('xlsx')
     if spreadsheet is None:
@@ -67,14 +70,38 @@ def xlsx():
     wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True);
     ws = wb.active
     instrument = str(ws['B1'].value).lower()
+    sheets = ws.sheetnames
+    if len(sheets) = 1:
+        sheet = sheets[0]
+    elif len(sheets) = w and 'Version history' in sheets:
+        sheet = sheets[0]
+    else:
+        print(f'Select a sheet from {spreadsheet}:\n')
+        actual = [];
+        for i,x in enumerate(sheets):
+            if x == 'Version history':
+                continue
+            print(f' {i+1:2}: {x}')
+            actual.append[x]
+
+        print('\n  r: return')
+        choice = input("\nSelect a sheet > ")
+        try:
+            if int(choice) > 0 and int(choice) <= len(options):
+                sheet = actual[int(choce)-1]
+            else:
+                print('No sheet specified')
+                return
+        except:
+            print('No sheet specified')
+            return
+
     if instrument == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
-        pinwheel.spreadsheet(spreadsheet)
-        rkvs.set('BMM:spreadsheet:type', 'glancing angle')
+        pinwheel.spreadsheet(spreadsheet, sheet)
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet)
-        rkvs.set('BMM:spreadsheet:type', 'sample wheel')
+        wmb.spreadsheet(spreadsheet, sheet)
 
 
 

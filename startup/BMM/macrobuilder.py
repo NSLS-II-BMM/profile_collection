@@ -93,18 +93,23 @@ class BMMMacroBuilder():
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
         
-    def spreadsheet(self, spreadsheet=None, energy=False):
-        '''Convert a wheel macro spreadsheet to a BlueSky plan.
+    def spreadsheet(self, spreadsheet=None, sheet=None):
+        '''Convert an experiment description spreadsheet to a BlueSky plan.
 
-        Examples
-        --------
-        To create a macro from a spreadsheet called "MySamples.xlsx"
+        Usually called with no arguments, in which case the user will
+        be prompted in the bsui shell for a .xlsx file in the data
+        directory.  If the .xlsx file has more that one sheet, the
+        user will also be prompted for the sheet name.
 
-        >>> xlsx('MySamples')
-
-        To specify a change_edge() command at the beginning of the macro:
-
-        >>> xlsx('MySamples', energy=True)
+        Arguments
+        =========
+        spreadsheet : str
+           The fully resolved path to the .xlsx file
+        sheet : int/str/None
+           The sheet to read from the spreadsheet file. If int, 
+           interpret as the index of the sheetnames list, if str 
+           interpret as the name from the sheetnames list, if None 
+           use the active sheet as determined by openpyxl.
 
         '''
         if spreadsheet is None:
@@ -118,14 +123,22 @@ class BMMMacroBuilder():
         self.basename = os.path.splitext(spreadsheet)[0]
         self.basename = re.sub('[ -]+', '_', self.basename)
         self.wb       = load_workbook(self.source, read_only=True);
-        self.ws       = self.wb.active
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
         self.measurements = list()
         #self.do_first_change = False
         #self.close_shutters  = True
-        if energy is True:
-            self.do_first_change = True
+
+        if sheet is None:
+            self.ws = self.wb.active
+        elif type(sheet) is int:
+            this = self.wb.sheetnames[sheet-1]
+            self.ws = self.wb[this]
+        elif sheet in self.wb.sheetnames:
+            self.ws = self.wb[sheet]
+        else:
+            self.ws = self.wb.active
+
 
         if self.ws['H5'].value.lower() == 'e0': # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
@@ -135,7 +148,6 @@ class BMMMacroBuilder():
         self.append_element  = str(self.ws['L2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
-
         
         isok, explanation = self.read_spreadsheet()
         if isok is False:
