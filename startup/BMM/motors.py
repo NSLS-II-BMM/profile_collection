@@ -6,6 +6,7 @@ from ophyd.pseudopos import (pseudo_position_argument,
 
 from bluesky.plan_stubs import abs_set, sleep, mv, null
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.logging   import BMM_log_info
 
 
 import time
@@ -299,6 +300,10 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
                               value=value)
     def kill(self):
         self.kill_cmd.put(1)
+    def stop_and_kill(self):
+        self.stop()
+        self.kill_cmd.put(1)
+        
     def enable(self):
         self.enable_cmd.put(1)
         
@@ -359,17 +364,31 @@ class Mirrors(PseudoPositioner):
         self.xd.kill_cmd.put(1)
         self.xu.kill_cmd.put(1)
 
+    def stop_and_kill(self):
+        self.yu.stop()
+        self.ydo.stop()
+        self.ydi.stop()
+        self.xu.stop()
+        self.xd.stop()
+        yield from mv(self.yu.kill_cmd,  1, self.ydo.kill_cmd,  1, self.ydi.kill_cmd,  1,
+                      self.xu.kill_cmd,  1, self.xd.kill_cmd,  1)
+        self.yu.clear_enc_lss.put(1)
+        self.ydo.clear_enc_lss.put(1)
+        self.ydi.clear_enc_lss.put(1)
+        self.xu.clear_enc_lss.put(1)
+        self.xd.clear_enc_lss.put(1)
+        
     def kill_jacks(self):
-        yield from mv(self.yu.kill_cmd,  1)
-        yield from mv(self.ydo.kill_cmd, 1)
-        yield from mv(self.ydi.kill_cmd, 1)
+        yield from mv(self.yu.kill_cmd,  1,
+                      self.ydo.kill_cmd, 1,
+                      self.ydi.kill_cmd, 1)
 
     def enable(self):
-        yield from mv(self.xu.enable_cmd,  1)
-        yield from mv(self.xd.enable_cmd,  1)
-        yield from mv(self.yu.enable_cmd,  1)
-        yield from mv(self.ydo.enable_cmd, 1)
-        yield from mv(self.ydi.enable_cmd, 1)
+        yield from mv(self.xu.enable_cmd,  1,
+                      self.xd.enable_cmd,  1,
+                      self.yu.enable_cmd,  1,
+                      self.ydo.enable_cmd, 1,
+                      self.ydi.enable_cmd, 1)
 
     def ena(self):
         self.xu.enable_cmd.put(1)

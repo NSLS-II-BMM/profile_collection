@@ -121,7 +121,8 @@ run_report('\t'+'energystep')
 from BMM.energystep import energystep
 
 run_report('\t'+'other plans')
-from BMM.plans import tu, td, recover_mirror2, recover_mirrors, recover_screens, mvbct, mvrbct, mvbender, mvrbender
+from BMM.plans import tu, td, mvbct, mvrbct, mvbender, mvrbender
+from BMM.plans import recover_mirror2, recover_mirror3, recover_mirrors, recover_diagnostics, recover_slits2, recover_slits3
 
 run_report('\t'+'change_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals, pds_motors_ready
