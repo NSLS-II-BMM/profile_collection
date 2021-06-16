@@ -39,15 +39,15 @@ class GlancingAngle(Device):
     home : float
         Position in xafs_garot of spinner 0
     inverted : str
-        A string used to recognize whether the xafs_y scan steps up or down
+        A string used to recognize whether the linear scan steps up or down
     flat : list
-        The xafs_y and xafs_pitch positions of the flat sample on the current spinner
+        The linear and pitch positions of the flat sample on the current spinner
     y_uid : str
-        The DataBroker UID of the most recent xafs_y against It scan
+        The DataBroker UID of the most recent linear against It scan
     pitch_uid : str
         The DataBroker UID of the most recent xafs_pitch against It scan
     f_uid : str
-        The DataBroker UID of the most recent xafs_y against fluorescence scan
+        The DataBroker UID of the most recent linear against fluorescence scan
     alignment_filename : str
         The fully resolved path to the three-panel, auto-alignment png image
 
@@ -197,9 +197,14 @@ class GlancingAngle(Device):
         plt.scatter(yy, out.data)
         plt.plot(yy, out.best_fit, color='red')
         plt.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=160, marker='x', color='green')
-        plt.xlabel('xafs_y (mm)')
+        if self.orientation == 'parallel':
+            plt.xlabel('xafs_y (mm)')
+            direction = 'Y'
+        else:
+            plt.xlabel('xafs_x (mm)')
+            direction = 'X'
         plt.ylabel(f'{self.inverted}data and error function')
-        plt.title(f'fit to Y scan, spinner {self.current()}')
+        plt.title(f'fit to {direction} scan, spinner {self.current()}')
         plt.show()
         plt.pause(0.05)
 
@@ -210,10 +215,14 @@ class GlancingAngle(Device):
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
         gs = gridspec.GridSpec(1,3)
 
+        if self.orientation == 'parallel':
+            motor = 'xafs_y'
+        else:
+            motor =  'xafs_x'
 
         t  = fig.add_subplot(gs[0, 0])
         tt = db[yt].table()
-        yy = tt['xafs_y']
+        yy = tt[motor]
         signal = tt['It']/tt['I0']
         if float(signal[2]) > list(signal)[-2] :
             ss     = -(signal - signal[2])
@@ -227,7 +236,7 @@ class GlancingAngle(Device):
         t.scatter(yy, out.data)
         t.plot(yy, out.best_fit, color='red')
         t.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=120, marker='x', color='green')
-        t.set_xlabel('xafs_y (mm)')
+        t.set_xlabel(f'{motor} (mm)')
         t.set_ylabel(f'{self.inverted}data and error function')
 
         p  = fig.add_subplot(gs[0, 1])
@@ -243,20 +252,20 @@ class GlancingAngle(Device):
 
         f = fig.add_subplot(gs[0, 2])
         tf = db[yf].table()
-        yy = tf['xafs_y']
+        yy = tf[motor]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
         com = int(center_of_mass(signal)[0])+1
         centroid = yy[com]
         f.plot(yy, signal)
         f.scatter(centroid, signal[com], s=120, marker='x', color='green')
-        f.set_xlabel('xafs_y (mm)')
+        f.set_xlabel(f'{motor} (mm)')
         f.set_ylabel('If/I0')
         
         plt.pause(0.05)
 
         
     def align_linear(self, force=False, drop=None):
-        '''Fit an error function to the xafs_y scan against It. Plot the
+        '''Fit an error function to the linear scan against It. Plot the
         result. Move to the centroid of the error function.'''
         if self.orientation == 'parallel':
             motor = user_ns['xafs_y']
@@ -288,21 +297,21 @@ class GlancingAngle(Device):
 
     def auto_align(self, pitch=2, drop=None):
         '''Align a sample on a spinner automatically.  This performs 5 scans.
-        The first four iterate twice between xafs_y and xafs_pitch
+        The first four iterate twice between linear and pitch
         against the signal in It.  This find the flat position.
 
         Then the sample is pitched to the requested angle and a fifth
-        scan is done to optimize the xafs_y position against the
+        scan is done to optimize the linear motor position against the
         fluorescence signal.
 
-        The xafs_y scans against It look like a step-down function.
+        The linear scans against It look like a step-down function.
         The center of this step is found as the centroid of a fitted
         error function.
 
         The xafs_pitch scan should be peaked.  Move to the max of the
         signal.
 
-        The xafs_y scan against fluorescence ideally looks like a
+        The linear scan against fluorescence ideally looks like a
         flat-topped peak.  Move to the center of mass.
 
         At the end, a three-panel figure is drawn showing the last
@@ -315,12 +324,13 @@ class GlancingAngle(Device):
           The angle at which to make the glancing angle measurements.
         drop : int or None
           If not None, then this many points will be dropped from the
-          end of xafs_y scan against transmission when fitting the error
+          end of linear scan against transmission when fitting the error
           function. This is an attempt to deal gracefully with leakage 
           through the adhesive at very high energy.
 
         '''
-        RE, BMMuser, db, xafs_pitch, xafs_y = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['xafs_pitch'], user_ns['xafs_y']
+        RE, BMMuser, db = user_ns['RE'], user_ns['BMMuser'], user_ns['db']
+        xafs_pitch, xafs_x, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_x'], user_ns['xafs_y']
 
         if BMMuser.macro_dryrun:
             report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
@@ -346,18 +356,22 @@ class GlancingAngle(Device):
         self.pitch_uid = db.v2[-1].metadata['start']['uid'] 
 
         ## record the flat position
-        self.flat = [xafs_y.position, xafs_pitch.position]
+        if self.orientation == 'parallel':
+            motor = xafs_y
+        else:
+            motor = xafs_x
+        self.flat = [motor.position, xafs_pitch.position]
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(xafs_y, 'xs', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
+        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
-        yy = tf['xafs_y']
+        yy = tf[motor.name]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
         com = int(center_of_mass(signal)[0])+1
         centroid = yy[com]
-        yield from mv(xafs_y, centroid)
+        yield from mv(motor, centroid)
         
         ## make a pretty picture, post it to slack
         self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
@@ -374,9 +388,13 @@ class GlancingAngle(Device):
         
     def flatten(self):
         '''Return the stage to its nominally flat position.'''
-        xafs_pitch, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_y']
+        xafs_pitch = user_ns['xafs_pitch']
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_y']
+        else:
+            motor = user_ns['xafs_x']
         if self.flat != [0, 0]:
-            yield from mv(xafs_y, self.flat[0], xafs_pitch, self.flat[1])
+            yield from mv(motor, self.flat[0], xafs_pitch, self.flat[1])
         
 
             
@@ -404,7 +422,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
         control parameters, and a line to close plot windows after the
         scan.
         '''
-        BMMuser = user_ns['BMMuser']
+        BMMuser, ga = user_ns['BMMuser'], user_ns['ga']
         element, edge, focus = (None, None, None)
         for m in self.measurements:
 
@@ -453,14 +471,18 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
+            if ga.orientation == "parallel":
+                motor = 'xafs_y'
+            else:
+                motor = 'xafs_x'
 
             #############################################################
             # lower stage and measure reference channel for calibration #
             #############################################################
             self.content += self.tab + 'if ref is True:\n'
-            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, -5)\n'
+            self.content += self.tab + self.tab + f'yield from mvr({motor}, -5)\n'
             self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}foil", nscans=1, sample="{m["element"]} foil", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
-            self.content += self.tab + self.tab + 'yield from mvr(xafs_y, 5)\n'
+            self.content += self.tab + self.tab + f'yield from mvr({motor}, 5)\n'
 
             ####################################
             # move to correct height and pitch #
@@ -469,11 +491,9 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
                 if m['sampley'] is not None:
-                    self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]})\n'
+                    self.content += self.tab + f'yield from mv({motor}, {m["sampley"]})\n'
                 if m['samplep'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
-                #self.content += self.tab + f'ga.flat = [{xafs_y.position}, {xafs_pitch.position}]\n'
-                #self.content += self.tab + f'yield from mvr(xafs_pitch, {m["angle"]})\n'
             
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
