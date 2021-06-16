@@ -611,6 +611,9 @@ class BMM_User(Borg):
             json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
         os.chmod(jsonfile, 0o444)
 
+        user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
+        if not os.path.isdir(user_folder):
+            os.makedirs(user_folder)
         if not os.path.islink(local_folder):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(whisper(f'    Made symbolic link to data folder at {local_folder}'))

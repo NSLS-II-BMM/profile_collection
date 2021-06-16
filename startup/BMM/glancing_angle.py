@@ -528,7 +528,8 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
         arguments
         ---------
         row : contents of a row as read by openpyxl, i.e. ws.rows
-        defaultline : True only if this row contains the default parameters, i.e. green row
+        defaultline : True only if this row contains the default
+        parameters, i.e. the green row
 
         This must return a dictionary.  The dictionary keys are the
         keywords related to the column labels from the spreadsheet,
@@ -536,7 +537,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
         type.
 
         '''
-        this = {'default' :   defaultline,
+        this = {'default':    defaultline,
                 'slot':       row[1].value,      # sample location
                 'measure':    self.truefalse(row[2].value),  # filename and visualization
                 'filename':   row[3].value,
@@ -554,10 +555,10 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
                 'steps':      row[15].value,
                 'times':      row[16].value,
                 'method':     row[17].value,
-                'samplep':    row[18].value,     # other motors 
+                'samplep':    row[18].value,     # other motors
                 'sampley':    row[19].value,
                 'detectorx':  row[20].value,
-                'snapshots':  self.truefalse(row[21].value), # flags
+                'snapshots':  self.truefalse(row[21].value),  # flags
                 'htmlpage':   self.truefalse(row[22].value),
                 'usbstick':   self.truefalse(row[23].value),
                 'bothways':   self.truefalse(row[24].value),

@@ -19,7 +19,7 @@ class BMMMacroBuilder():
     attributes
     ----------
     basename : str
-       basename of the spreadsheet
+       basename of the spreadsheet or name of the sheet
     folder : str
        folder containing spreadsheet, usually same as BMMuser.folder
     joiner : str
@@ -121,26 +121,29 @@ class BMMMacroBuilder():
             spreadsheet = spreadsheet+'.xlsx'
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
-        self.basename = re.sub('[ -]+', '_', self.basename)
         self.wb       = load_workbook(self.source, read_only=True);
-        self.ini      = os.path.join(self.folder, self.basename+'.ini')
-        self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
         self.measurements = list()
-        #self.do_first_change = False
-        #self.close_shutters  = True
+        # self.do_first_change = False
+        # self.close_shutters  = True
 
+
+        print(f'-----{sheet}')
         if sheet is None:
             self.ws = self.wb.active
         elif type(sheet) is int:
             this = self.wb.sheetnames[sheet-1]
             self.ws = self.wb[this]
+            self.basename = this
         elif sheet in self.wb.sheetnames:
             self.ws = self.wb[sheet]
+            self.basename = sheet
         else:
             self.ws = self.wb.active
+        self.basename = re.sub('[ -]+', '_', self.basename)
+        self.ini      = os.path.join(self.folder, self.basename+'.ini')
+        self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
 
-
-        if self.ws['H5'].value.lower() == 'e0': # accommodate older xlsx files which have e0 values in column H
+        if self.ws['H5'].value.lower() == 'e0':  # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
 
         self.do_first_change = self.truefalse(self.ws['G2'].value)
@@ -148,7 +151,7 @@ class BMMMacroBuilder():
         self.append_element  = str(self.ws['L2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
-        
+
         isok, explanation = self.read_spreadsheet()
         if isok is False:
             print(error_msg(explanation))
@@ -160,7 +163,7 @@ class BMMMacroBuilder():
     def truefalse(self, value):
         '''Interpret certain strings from the spreadsheet as True/False'''
         if value is None:
-            return True # self.measurements[0]['measure']
+            return True  # self.measurements[0]['measure']
         if str(value).lower() == '=true()':
             return True
         elif str(value).lower() == 'true':
@@ -169,7 +172,6 @@ class BMMMacroBuilder():
             return True
         else:
             return False
-
 
     def ini_sanity(self, default):
         '''Sanity checks for the default line from the spreadsheet.
@@ -181,7 +183,7 @@ class BMMMacroBuilder():
         5. mode is string (set to 'transmission')
         6. element is an element (bail)
         7. edge is k, l1, l2, or l3 (bail)
-        
+
         To do:
           * booleans are interpretable as booleans
           * focused is focused or unfocused
@@ -202,7 +204,7 @@ class BMMMacroBuilder():
 
         if default['filename'] is None or str(default['filename']).strip() == '':
             default['filename'] = 'filename'
-            
+
         if default['experimenters'] is None or str(default['experimenters']).strip() == '':
             default['experimenters'] = BMMuser.name
 
@@ -211,7 +213,6 @@ class BMMMacroBuilder():
             if default[k] is None or str(default[k]).strip() == '':
                 default[k] = defaultdefaults[k]
 
-            
         for k in ('sample', 'prep', 'comment'):
             if default[k] is None or str(default[k]).strip() == '':
                 default[k] = '...'
@@ -227,8 +228,8 @@ class BMMMacroBuilder():
             default['start'] = int(default['start'])
         except:
             default['start'] = 'next'
-            
-        #if default['mode'] is None or str(default['mode']).strip() == '':
+
+        # if default['mode'] is None or str(default['mode']).strip() == '':
         #    default['mode'] = 'transmission'
 
         if str(default['element']).capitalize() not in re.split('\s+', PERIODIC_TABLE): # see 06-periodic table 
@@ -269,8 +270,8 @@ class BMMMacroBuilder():
             if count > 200:
                 break
             self.measurements.append(self.get_keywords(row, defaultline))
-            
-            ## check that scan parameters make sense
+
+            # check that scan parameters make sense
             if type(self.measurements[-1]['bounds']) is str:
                 b = re.split('[ ,]+', self.measurements[-1]['bounds'])
             else:
@@ -284,12 +285,12 @@ class BMMMacroBuilder():
             else:
                 t = re.split('[ ,]+', self.measurements[0]['times'])
 
-            (problem, text ) = sanitize_step_scan_parameters(b, s, t)
+            (problem, text) = sanitize_step_scan_parameters(b, s, t)
             if problem is True:
                 isok = False
                 explanation += f'row {count}:\n' + text
         return(isok, explanation)
-        #pp.pprint(self.measurements)
+        # pp.pprint(self.measurements)
 
 
     def skip_row(self, m):
@@ -326,7 +327,7 @@ class BMMMacroBuilder():
         elif self.append_element.lower() == 'element at end':
             fname = fname + self.joiner + el
         elif self.append_element.lower() == 'element+edge at beginning':
-            fname = el + self.joiner + ed + self.joiner +  fname
+            fname = el + self.joiner + ed + self.joiner + fname
         elif self.append_element.lower() == 'element+edge at end':
             fname = fname + self.joiner + el + self.joiner + ed
         return fname
@@ -350,7 +351,7 @@ class BMMMacroBuilder():
         s = [float(x) if isfloat(x) else x for x in s]
         t = [float(x) if isfloat(x) else x for x in t]
 
-        (e,t,at,delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(el, ed), element=el, edge=ed, ththth=False)
+        (e, t, at, delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(el, ed), element=el, edge=ed, ththth=False)
 
         if type(m['nscans']) is int:
             nsc = m['nscans']
@@ -358,9 +359,7 @@ class BMMMacroBuilder():
             nsc = self.measurements[0]['nscans']
         self.totaltime += at * nsc
         self.deltatime += delta*delta
-        
-    
-    
+
     def write_ini_and_plan(self):
         #################################
         # write out the master INI file #
@@ -373,12 +372,12 @@ class BMMMacroBuilder():
         default['url'] = '...'
         default['doi'] = '...'
         default['cif'] = '...'
-        default['experimenters'] = self.ws['E1'].value # top line of xlsx file
+        default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
         default = self.ini_sanity(default)
         if default is None:
             print(error_msg(f'Could not interpret {self.source} as a wheel macro.'))
             return
-        ##print(default)
+        # print(default)
         config.read_dict({'scan': default})
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
@@ -397,7 +396,6 @@ class BMMMacroBuilder():
         ipython = get_ipython()
         ipython.magic('run -i \'%s\'' % self.macro)
         print(whisper('Wrote and read macro file: %s' % self.macro))
-        
 
     def finish_macro(self):
         #######################################
@@ -423,6 +421,6 @@ class BMMMacroBuilder():
         self.totaltime, self.deltatime = 0, 0
         self.content = ''
         self._write_macro()     # populate self.content
-        ## write_ini_and_plan uses self.measurements and self.content
+        # write_ini_and_plan uses self.measurements and self.content
         self.write_ini_and_plan()
         self.finish_macro()

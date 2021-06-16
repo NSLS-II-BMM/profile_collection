@@ -66,14 +66,13 @@ def xlsx():
     if spreadsheet is None:
         print(error_msg('No spreadsheet specified!'))
         return None
-    #spreadsheet = os.path.join(BMMuser.folder, spreadsheet)
+
     wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True);
-    ws = wb.active
-    instrument = str(ws['B1'].value).lower()
-    sheets = ws.sheetnames
-    if len(sheets) = 1:
+    #ws = wb.active
+    sheets = wb.sheetnames
+    if len(sheets) == 1:
         sheet = sheets[0]
-    elif len(sheets) = w and 'Version history' in sheets:
+    elif len(sheets) == 2 and 'Version history' in sheets:
         sheet = sheets[0]
     else:
         print(f'Select a sheet from {spreadsheet}:\n')
@@ -82,19 +81,21 @@ def xlsx():
             if x == 'Version history':
                 continue
             print(f' {i+1:2}: {x}')
-            actual.append[x]
+            actual.append(x)
 
         print('\n  r: return')
         choice = input("\nSelect a sheet > ")
         try:
-            if int(choice) > 0 and int(choice) <= len(options):
-                sheet = actual[int(choce)-1]
+            if int(choice) > 0 and int(choice) <= len(actual):
+                sheet = actual[int(choice)-1]
             else:
                 print('No sheet specified')
                 return
-        except:
+        except Exception as E:
+            print(E)
             print('No sheet specified')
             return
+    instrument = str(wb[sheet]['B1'].value).lower()
 
     if instrument == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))

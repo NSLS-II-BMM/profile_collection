@@ -17,7 +17,8 @@ try:
     if user_ns['ring'].filltarget.get() > 20:
         suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10, resume_thresh=0.9 * user_ns['ring'].filltarget.get(), sleep=60)
         all_BMM_suspenders.append(suspender_ring_current)
-except:
+except Exception as e:
+    print(f'failed to create ring current suspender: {e}')
     pass
 
 ## ----------------------------------------------------------------------------------
@@ -25,7 +26,8 @@ except:
 try:
     suspender_bmps = SuspendBoolLow(user_ns['bmps'].state, sleep=60)
     all_BMM_suspenders.append(suspender_bmps)
-except:
+except Exception as e:
+    print(f'failed to create bpms suspender: {e}')
     pass
 
     
@@ -34,7 +36,8 @@ except:
 try:
     suspender_sha = SuspendBoolLow(user_ns['idps'].state, sleep=60)
     all_BMM_suspenders.append(suspender_sha)
-except:
+except Exception as e:
+    print(f'failed to create sha suspender: {e}')
     pass
 
 ## ----------------------------------------------------------------------------------
@@ -42,7 +45,8 @@ except:
 try:
     suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5)
     all_BMM_suspenders.append(suspender_shb)
-except:
+except Exception as e:
+    print(f'failed to create shb suspender: {e}')
     pass
 
     

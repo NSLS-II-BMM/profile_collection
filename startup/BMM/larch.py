@@ -581,7 +581,7 @@ class Pandrosus():
         chir.set_xlim(0,6)
         chir.plot(self.group.r, self.group.chir_mag, label='$|\chi(R)|$', color='C0')
         chir.set_ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw+1}}}$)")
-        chir.set_xlabel('wavenumber ($\AA^{-1}$)')
+        chir.set_xlabel('radial distance ($\AA$)')
 
         fig.align_labels()
         plt.show()
