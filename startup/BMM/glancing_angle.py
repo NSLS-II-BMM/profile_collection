@@ -83,7 +83,8 @@ class GlancingAngle(Device):
     pitch_uid = ''
     f_uid = ''
     alignment_filename = ''
-    
+    orientation = 'parallel'
+
     def current(self):
         '''Return the current spinner number as an integer'''
         pos = self.garot.position
@@ -254,15 +255,18 @@ class GlancingAngle(Device):
         plt.pause(0.05)
 
         
-    def align_y(self, force=False, drop=None):
+    def align_linear(self, force=False, drop=None):
         '''Fit an error function to the xafs_y scan against It. Plot the
         result. Move to the centroid of the error function.'''
-        xafs_y = user_ns['xafs_y']
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_y']
+        else:
+            motor =  user_ns['xafs_x']
         db = user_ns['db']
-        yield from linescan(xafs_y, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
+        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
         close_last_plot()
         table  = db[-1].table()
-        yy     = table['xafs_y']
+        yy     = table[motor.name]
         signal = table['It']/table['I0']
         if drop is not None:
             yy = yy[:-drop]
@@ -279,7 +283,7 @@ class GlancingAngle(Device):
         print(whisper(out.fit_report(min_correl=0)))
         self.y_plot(yy, out)
         target = out.params['center'].value
-        yield from mv(xafs_y, target)
+        yield from mv(motor, target)
 
 
     def auto_align(self, pitch=2, drop=None):
@@ -330,11 +334,11 @@ class GlancingAngle(Device):
         BMM_suspenders()
 
         ## first pass in transmission
-        yield from self.align_y(drop=drop)
+        yield from self.align_linear(drop=drop)
         yield from self.align_pitch()
 
-        ## for realsies Y in transmission
-        yield from self.align_y(drop=drop)
+        ## for realsies X or Y in transmission
+        yield from self.align_linear(drop=drop)
         self.y_uid = db.v2[-1].metadata['start']['uid'] 
 
         ## for realsies Y in pitch
