@@ -119,6 +119,7 @@ class BMMMacroBuilder():
             return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
+        self.folder   = user_ns['BMMuser'].folder
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
         self.wb       = load_workbook(self.source, read_only=True);
@@ -404,9 +405,11 @@ class BMMMacroBuilder():
         print('\nYour new glancing angle plan is called: ' + bold_msg('%s_macro' % self.basename))
         print('\nVerify:  ' + bold_msg('%s_macro??' % self.basename))
         if 'glancing angle' in self.instrument:
+            print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
             print('Add ref: '   + bold_msg('RE(%s_macro(ref=True))' % self.basename))
-        print('Dryrun:  '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
-        print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
+        else:
+            print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
+            #print('Dryrun:  '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
         hours = int(self.totaltime/60)
         minutes = int(self.totaltime - hours*60)
         self.deltatime = numpy.sqrt(self.deltatime)
