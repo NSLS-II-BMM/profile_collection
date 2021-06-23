@@ -429,7 +429,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
         BMMuser.motor = thismotor
 
-        ## sanity checks on detector
+        # sanity checks on detector
         if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Dualio', 'Xs', 'Xs1'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron, dualio, xs, xs1')))
@@ -440,13 +440,17 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         if detector == 'Xs':
             yield from mv(xs.settings.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
-        dets  = [user_ns['quadem1'],]
+        dets  = [user_ns['quadem1'], ]
         if user_ns['with_dualem']:
             dualio = user_ns['dualio']
         denominator = ''
         detname = ''
+
+        # If should be xs when using Xspress3
+        if user_ns['with_xspress3'] and detector == 'If':
+            detector = 'Xs'
         
-        ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
+        # func is an anonymous function, built on the fly, for feeding to DerivedPlot
         if detector == 'It':
             denominator = ' / I0'
             detname = 'transmission'
