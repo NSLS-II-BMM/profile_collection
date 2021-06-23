@@ -273,17 +273,17 @@ class BMMMacroBuilder():
 
             # check that scan parameters make sense
             if type(self.measurements[-1]['bounds']) is str:
-                b = re.split('[ ,]+', self.measurements[-1]['bounds'])
+                b = re.split('[ ,]+', self.measurements[-1]['bounds'].strip())
             else:
-                b = re.split('[ ,]+', self.measurements[0]['bounds'])
+                b = re.split('[ ,]+', self.measurements[0]['bounds'].strip())
             if type(self.measurements[-1]['steps']) is str:
-                s = re.split('[ ,]+', self.measurements[-1]['steps'])
+                s = re.split('[ ,]+', self.measurements[-1]['steps'].strip())
             else:
-                s = re.split('[ ,]+', self.measurements[0]['steps'])
+                s = re.split('[ ,]+', self.measurements[0]['steps'].strip())
             if type(self.measurements[-1]['times']) is str:
-                t = re.split('[ ,]+', self.measurements[-1]['times'])
+                t = re.split('[ ,]+', self.measurements[-1]['times'].strip())
             else:
-                t = re.split('[ ,]+', self.measurements[0]['times'])
+                t = re.split('[ ,]+', self.measurements[0]['times'].strip())
 
             (problem, text) = sanitize_step_scan_parameters(b, s, t)
             if problem is True:
