@@ -1,7 +1,7 @@
 import nslsii
 ip = get_ipython()
 
-nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=False, publish_documents_to_kafka=True)
+nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
 
 bec.disable_plots()
 bec.disable_baseline()
