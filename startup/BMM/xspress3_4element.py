@@ -232,6 +232,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
             plt.legend()
+        plt.show()
             
     def table(self):
         '''Pretty print a table of values for each ROI and for all four channels.

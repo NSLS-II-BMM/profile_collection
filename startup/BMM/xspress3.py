@@ -307,6 +307,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         super().unstage()
         self._datum_counter = None
         self._status = None
+
         
     def set_channels_for_hdf5(self, channels=range(1,9)):
         """
@@ -471,13 +472,14 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
     def measure_xrf(self, exposure=1.0):
         # JOSH: proposed changes for new IOC
-        yield from mv(self.total_points, 1)
-        yield from mv(self.cam.acquire_time, exposure)
-        uid = yield from count([self], 1)
-        #self.total_points.put(1)
-        #self.cam.acquire_time.put(exposure)
-        #self.cam.acquire.put(1)
-        #ttime.sleep(3)
+        #yield from mv(self.total_points, 1)
+        #yield from mv(self.cam.acquire_time, exposure)
+        #uid = yield from count([self], 1)
+        uid = None
+        self.total_points.put(1)
+        self.cam.acquire_time.put(exposure)
+        self.cam.acquire.put(1)
+        ttime.sleep(1.5)
         #cnt=0
         #while self.cam.acquire.get() != 0:
         #    ttime.sleep(0.5)
