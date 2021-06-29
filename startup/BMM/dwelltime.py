@@ -17,8 +17,8 @@ class DualEMDwellTime(PVPositionerPC):
     readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
     
 class Xspress3DwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'AcquireTime')
-    readback = Cpt(EpicsSignalRO, 'AcquireTime_RBV')
+    setpoint = Cpt(EpicsSignal,   'det1:AcquireTime')
+    readback = Cpt(EpicsSignalRO, 'det1:AcquireTime_RBV')
     
 ####################################################################################################
 

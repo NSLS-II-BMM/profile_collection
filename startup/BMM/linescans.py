@@ -438,7 +438,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
         yield from abs_set(user_ns['_locked_dwell_time'], inttime, wait=True)
         if detector == 'Xs':
-            yield from mv(xs.settings.acquire_time, inttime)
+            yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
         dets  = [user_ns['quadem1'], ]
         if user_ns['with_dualem']:

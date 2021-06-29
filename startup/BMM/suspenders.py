@@ -42,8 +42,20 @@ except Exception as e:
 
 ## ----------------------------------------------------------------------------------
 ## suspend if the experimental photon shutter closes, resume 5 seconds after opening
+from bluesky.plan_stubs import null
+from BMM.logging import post_to_slack
+def tell_slack_shb_closed():
+    yield from null()
+    print('triggering closed message')
+    post_to_slack('B shutter closed')
+def tell_slack_shb_opened():
+    yield from null()
+    print('triggering opened message')
+    post_to_slack('B shutter opened')
 try:
-    suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5)
+    suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5,
+                                    pre_plan=tell_slack_shb_closed,
+                                    post_plan=tell_slack_shb_opened)
     all_BMM_suspenders.append(suspender_shb)
 except Exception as e:
     print(f'failed to create shb suspender: {e}')

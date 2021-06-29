@@ -48,6 +48,7 @@ def initialize_workspace():
 
     '''
     print(verbosebold_msg('Checking workspace on this computer ...'))
+    check_profile_branch()
     initialize_data_directories()
     initialize_beamline_configuration()
     initialize_nas()
@@ -57,6 +58,13 @@ def initialize_workspace():
     initialize_ssh()
     
 
+def check_profile_branch():
+    here = os.getcwd()
+    os.chdir(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'))
+    branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
+    print(f'{TAB}Using profile branch {branch}')
+    os.chdir(here)
+    
 def check_directory(dir, desc):
     if os.path.isdir(dir):
         print(f'{TAB}{desc.capitalize()} directory {dir}: {CHECK}')

@@ -2,7 +2,7 @@
 from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 TIFFPlugin, StatsPlugin, HDF5Plugin,
                                 ProcessPlugin, ROIPlugin, TransformPlugin,
-                                OverlayPlugin)
+                                OverlayPlugin, Xspress3Detector)
 from ophyd.areadetector.plugins import PluginBase
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.device import BlueskyInterface, Staged
@@ -22,8 +22,10 @@ from bluesky.plan_stubs import abs_set, sleep, mv, null
 from pathlib import PurePath
 #from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
 #                                         Xspress3Channel, Xspress3FileStore, logger)
-from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
-                                       Xspress3Channel, Xspress3FileStore, logger)
+#from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
+#                                       Xspress3Channel, Xspress3FileStore, logger)
+from nslsii.detectors.xspress3 import Xspress3Channel
+from nslsii.areadetector.xspress3 import Xspress3Trigger, Xspress3FileStore, build_detector_class 
 
 import numpy, h5py, json
 #import pandas as pd
@@ -88,16 +90,27 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         NOTE : this comes from:
             https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
+        JOSH: and then we replaced "settings" with "cam"
         Also modified the stage sigs.
         """
         print(whisper("                warming up the hdf5 plugin..."))
         set_and_wait(self.enable, 1)
-        sigs = OrderedDict([(self.parent.settings.array_callbacks, 1),
-                            (self.parent.settings.trigger_mode, 'Internal'),
+
+        # JOSH: proposed changes for new IOC
+        sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
+                            (self.parent.cam.trigger_mode, 'Internal'),
                             # just in case the acquisition time is set very long...
-                            (self.parent.settings.acquire_time, 1),
-                            # (self.capture, 1),
-                            (self.parent.settings.acquire, 1)])
+                            (self.parent.cam.acquire_time, 0.2),
+                            (self.parent.cam.num_images, 1),
+                            #(self.parent.cam.acquire, 1)
+                        ]
+        )
+        # sigs = OrderedDict([(self.parent.settings.array_callbacks, 1),
+        #                     (self.parent.settings.trigger_mode, 'Internal'),
+        #                     # just in case the acquisition time is set very long...
+        #                     (self.parent.settings.acquire_time, 1),
+        #                     # (self.capture, 1),
+        #                     (self.parent.settings.acquire, 1)])
 
         original_vals = {sig: sig.get() for sig in sigs}
 
@@ -105,10 +118,16 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         # del original_vals[self.capture]
 
         for sig, val in sigs.items():
-            ttime.sleep(0.1)  # abundance of caution
             set_and_wait(sig, val)
+            ttime.sleep(0.1)  # abundance of caution
 
-        ttime.sleep(2)  # wait for acquisition
+        set_and_wait(self.parent.cam.acquire, 1)
+        
+        # JOSH: do we need more than 2 seconds here?
+        #       adding more time here helps!
+        ttime.sleep(10)  # wait for acquisition
+        #print("take a nap")
+        #ttime.sleep(2)  # wait for acquisition
 
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
@@ -151,13 +170,16 @@ class BMMXspress3Channel(Xspress3Channel):
         for r in self.resets.read_attrs:
             getattr(self.resets, r).put(1)
 ################################################################################
-    
-    
-class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
+
+
+# JL: Xspress3Trigger before Xspress3Detector means Xspress3Trigger.trigger() is called
+class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     '''This class captures everything that is in common for the 1-element
     and 4-element detector interfaces.
     '''
-    roi_data = Cpt(PluginBase, 'ROIDATA:')
+    # JOSH: proposed change for new IOC
+    #       this plugin does not exist
+    # roi_data = Cpt(PluginBase, 'ROIDATA:')
 
     # channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
     # channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
@@ -178,7 +200,7 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
     # mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
     # #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
-    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF5:',
+    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
                read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
                root='/mnt/nfs/xspress3/',                     # path to root, as mounted on client (i.e. ws1)
                write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
@@ -188,10 +210,10 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
                  **kwargs):
         if configuration_attrs is None:
             configuration_attrs = ['external_trig', 'total_points',
-                                   'spectra_per_point', 'settings',
+                                   'spectra_per_point', 'cam',
                                    'rewindable']
         if read_attrs is None:
-            read_attrs = ['channel1', 'channel2', 'channel3', 'channel4', 'hdf5'] #, 'channel8'
+            read_attrs = ['channel01', 'channel02', 'channel03', 'channel04', 'hdf5'] #, 'channel8'
             #, 'channel5', 'channel6', 'channel7', 'channel8'
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
@@ -212,7 +234,9 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         # self.set_channels_for_hdf5()
         # self.set_rois()
 
-    def trigger(self):
+    # JL: trying to use Xspress3Trigger.trigger
+    #     which is almost identical to this
+    def trigger_hide(self):
         if self._staged != Staged.yes:
             raise RuntimeError("not staged")
 
@@ -221,7 +245,9 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         #print('tr1 {} '.format(t))
         self._status = DeviceStatus(self)
         #self.settings.erase.put(1)    # this was 
-        self._acquisition_signal.put(1, wait=False)
+        # JOSH: proposed change for new IOC
+        self.cam.acquire.put(1, wait=False)
+        # self._acquisition_signal.put(1, wait=False)
         trigger_time = ttime.time()
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr2 {} '.format(t))
@@ -242,12 +268,17 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         pass
     
     def restart(self):
-        self.settings.num_images.put(1)   # number of frames
-        self.settings.trigger_mode.put(1) # trigger mode internal
-        self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
+        # JOSH: proposed changes for new IOC
+        self.cam.num_images.put(1)
+        self.cam.trigger_mode.put(1)
+        self.cam.ctrl_dtc.put(1)
         self.set_rois()
+        # self.settings.num_images.put(1)   # number of frames
+        # self.settings.trigger_mode.put(1) # trigger mode internal
+        # self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
+        # self.set_rois()
         
-    def _acquire_changed(self, value=None, old_value=None, **kwargs):
+    def _acquire_changed_hide(self, value=None, old_value=None, **kwargs):
         #print(f"!!! HERE I AM !!!   {value}  {old_value}  {id(self._status)}  {self._status}")
         super()._acquire_changed(value=value, old_value=old_value, **kwargs)
         status = self._status
@@ -270,10 +301,13 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         return ret
 
     def unstage(self):
-        self.settings.trigger_mode.put(0)  # 'Software'
+        # JOSH: proposed changes for new IOC
+        self.cam.trigger_mode.put(0)
+        #self.settings.trigger_mode.put(0)  # 'Software'
         super().unstage()
         self._datum_counter = None
         self._status = None
+
         
     def set_channels_for_hdf5(self, channels=range(1,9)):
         """
@@ -284,22 +318,46 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         channels: tuple, optional
             the channels to save the data for
         """
-        # The number of channel
-        for n in channels:
-            getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
+        # JOSH: proposed changes for new IOC
         self.hdf5.num_extra_dims.put(0)
-        self.settings.num_channels.put(len(channels))
-        #self.settings.num_channels.put(8)
+        # does the next line mess up the new IOC?
+        # yes
+        # self.cam.num_channels.put(self.get_channel_count())
+
+        # # The number of channel
+        # for n in channels:
+        #     getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
+        # self.hdf5.num_extra_dims.put(0)
+        # self.settings.num_channels.put(len(channels))
+        # #self.settings.num_channels.put(8)
 
             
-        
-    def set_roi_channel(self, channel=1, index=16, name='OCR', low=1, high=4095):
-        ch = getattr(self, f'channel{channel}')
-        rs = ch.rois
-        this = getattr(rs, 'roi{:02}'.format(index))
-        this.value.name = name
-        this.bin_low.put(low)
-        this.bin_high.put(high)
+    def set_roi(self, mcaroi, name='OCR', min_x=1, size_x=4095):
+        """
+        Combine setting PVs and setting the 'name' field of a mcaroi.
+        """
+        mcaroi.configure_mcaroi(
+            roi_name=name,
+            min_x=min_x,
+            size_x=size_x            
+        )
+        mcaroi.name = name
+        mcaroi.total_rbv.name = name
+
+
+    def set_roi_channel(self, channel, index=16, name='OCR', low=1, high=4095):
+        # JOSH: proposed changes for new IOC
+        mcaroi = channel.get_mcaroi(mcaroi_number=index)
+        mcaroi.total_rbv.name = name
+        mcaroi.min_x.put(low)
+        mcaroi.size_x.put(high - low)
+
+        # ch = getattr(self, f'channel{channel}')
+        # rs = ch.rois
+        # this = getattr(rs, 'roi{:02}'.format(index))
+        # this.value.name = name
+        # this.bin_low.put(low)
+        # this.bin_high.put(high)
         
     def reset_rois(self, el=None):
         BMMuser = user_ns['BMMuser']
@@ -343,14 +401,31 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         print('==========================')
         template = ' %3d  %-4s  %4d  %4d'
         for i, el in enumerate(self.slots):
-            rs = self.channel1.rois
-            this = getattr(rs, 'roi{:02}'.format(i+1))
+            # JOSH: proposed changes for new IOC
+            this = self.get_channel(channel_number=1).get_mcaroi(mcaroi_number=i+1)
             if el is None:
-                print(template % (i+1, 'None', this.bin_low.value, this.bin_high.value))
+                print(template % (i+1, 'None', this.min_x.get(), this.min_x.get() + this.size_x.get()))
             elif el == BMMuser.element:
-                print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
+                print(
+                    go_msg(
+                        template % 
+                        (i+1, el.capitalize(), this.min_x.get(), this.min_x.get() + this.size_x.get())
+                    )
+                )
             else:
-                print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
+                print(
+                    template % 
+                    (i+1, el.capitalize(), this.min_x.get(), this.min_x.get() + this.size_x.get())
+                )
+            
+            # rs = self.channel1.rois
+            # this = getattr(rs, 'roi{:02}'.format(i+1))
+            # if el is None:
+            #     print(template % (i+1, 'None', this.bin_low.value, this.bin_high.value))
+            # elif el == BMMuser.element:
+            #     print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
+            # else:
+            #     print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
                 
 
     def show_rois(self):
@@ -395,20 +470,23 @@ class BMMXspress3DetectorBase(XspressTrigger, Xspress3Detector):
         return True
     
 
-    def measure_xrf_plan(self, exposure=1.0):
-        yield from mv(self.settings.acquire_time, exposure)
-        #yield from count([self], 1)
-        yield from mv(self.settings.acquire,  1)
-        yield from sleep(1.5)
-        self.table()
-        #self.plot(add=True)
-    
     def measure_xrf(self, exposure=1.0):
-        self.settings.acquire_time.put(exposure)
-        #yield from count([self], 1)
-        self.settings.acquire.put(1)
+        # JOSH: proposed changes for new IOC
+        #yield from mv(self.total_points, 1)
+        #yield from mv(self.cam.acquire_time, exposure)
+        #uid = yield from count([self], 1)
+        uid = None
+        self.total_points.put(1)
+        self.cam.acquire_time.put(exposure)
+        self.cam.acquire.put(1)
         ttime.sleep(1.5)
+        #cnt=0
+        #while self.cam.acquire.get() != 0:
+        #    ttime.sleep(0.5)
+        #    cnt += 1
+        #    if cnt > 12:
+        #        break
         self.table()
-        self.plot(add=True)
+        self.plot(add=True, uid=uid)
     
         

@@ -1,7 +1,9 @@
 import nslsii
+import os
 ip = get_ipython()
 
-nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=False, publish_documents_to_kafka=False)
+os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
+nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=False, publish_documents_to_kafka=True)
 
 bec.disable_plots()
 bec.disable_baseline()
