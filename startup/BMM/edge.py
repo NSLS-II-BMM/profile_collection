@@ -35,7 +35,11 @@ def all_connected(with_m2=False):
     ok = True
     for m in motors:
         if user_ns[m].connected is False:
-            print(f'{m} is not connected')
+            print(disconnected_msg(f'{m} is not connected'))
+            for walk in user_ns[m].walk_signals(include_lazy=False):
+                if walk.item.connected is False:
+                    print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
+            print(whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})'))
             ok = False
     return ok
     

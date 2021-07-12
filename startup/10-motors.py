@@ -4,10 +4,12 @@ run_report(__file__, text='most motor definitions')
 
 from BMM.motors import FMBOEpicsMotor, XAFSEpicsMotor, VacuumEpicsMotor, EndStationEpicsMotor
 
+TAB = '\t\t\t'
 
 mcs8_motors = list()
 
 ## front end slits
+print(f'{TAB}Front end slit motor group')
 fe_slits_horizontal1 = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Hrz}Mtr',      name='fe_slits_horizontal1')
 fe_slits_incline1    = EpicsMotor('FE:C06B-OP{Slt:1-Ax:Inc}Mtr',      name='fe_slits_incline1')
 fe_slits_o           = EpicsMotor('FE:C06B-OP{Slt:1-Ax:O}Mtr',        name='fe_slits_o')
@@ -21,23 +23,41 @@ fe_slits_vsize       = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}size',   name='fe_s
 fe_slits_hcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:X}center', name='fe_slits_hcenter')
 fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_slits_vcenter')
 
-    
+
+def check_for_connection(m):
+    if m.connected:
+        return(True)
+    print(disconnected_msg(f'{m.name} is not connected'))
+    for walk in m.walk_signals(include_lazy=False):
+        if walk.item.connected is False:
+            print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
+    return(False)
+
+
+
 ## collimating mirror
+print(f'{TAB}FMBO motor group: m1')
 m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
 m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
 m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
 m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
 m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
-mcs8_motors.extend([m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd])
+m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
+#for m in m1list: check_for_connection(m)
+mcs8_motors.extend(m1list)
 
 ## DM1
+print(f'{TAB}FMBO motor group: dm1')
 dm1_filters1 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y1}Mtr', name='dm1_filters1')
 dm1_filters2 = XAFSEpicsMotor('XF:06BMA-BI{Fltr:01-Ax:Y2}Mtr', name='dm1_filters2')
-mcs8_motors.extend([dm1_filters1, dm1_filters2])
+dm1list = [dm1_filters1, dm1_filters2]
+#for m in dm1list: check_for_connection(m)
+mcs8_motors.extend(dm1list)
 dm1_filters2.llm.put(-52)
 
 
 ## monochromator
+print(f'{TAB}FMBO motor group: dcm')
 dcm_bragg = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
 dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
 dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
@@ -45,8 +65,9 @@ dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp'
 dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
 dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
 dcm_y     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Y}Mtr',     name='dcm_y')
-mcs8_motors.extend([dcm_bragg, dcm_pitch, dcm_roll, dcm_perp,
-                   dcm_para, dcm_x, dcm_y])
+dcmlist = [dcm_bragg, dcm_pitch, dcm_roll, dcm_perp, dcm_para, dcm_x, dcm_y]
+#for m in dcmlist: check_for_connection(m)
+mcs8_motors.extend(dcmlist)
 
 dcm_para.hlm.put(161)        # this is 21200 on the Si(111) mono
 #                            # hard limit is at 162.48
@@ -70,23 +91,32 @@ dcm_perp.velocity.put(0.2)
 dcm_perp.hvel_sp.put(0.2)
 
 ## focusing mirror
+print(f'{TAB}FMBO motor group: m2')
 m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
 m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
 m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
 m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
 m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
 m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
-mcs8_motors.extend([m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender])
+m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
+#for m in m2list:
+    #toss = m.encoder.get()
+    #print(f'{m.name}: {m.connected}')
+    #check_for_connection(m)
+mcs8_motors.extend(m2list)
 m2_xu.velocity.put(0.05)
 m2_xd.velocity.put(0.05)
 
 ## DM2
+print(f'{TAB}FMBO motor group: dm2')
 dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
 dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr',  name='dm2_slits_i')
 dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
 dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
 dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
-mcs8_motors.extend([dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs])
+dm2list = [dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs]
+#for m in dm2list: check_for_connection(m)
+mcs8_motors.extend(dm2list)
 #dm2_fs.wait_for_connection()
 dm2_fs.hvel_sp.put(0.0005)
 
@@ -100,6 +130,7 @@ dm2_slits_b.hvel_sp.put(0.2)
 
 
 ## DM3
+print(f'{TAB}FMBO motor group: dm3')
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
 dm3_foils   = XAFSEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
 dm3_bct     = XAFSEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
@@ -108,8 +139,10 @@ dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
 dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
 dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
 dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
-mcs8_motors.extend([dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
-                    dm3_fs, dm3_foils, dm3_bct, dm3_bpm])
+dm3list = [dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
+           dm3_fs, dm3_foils, dm3_bct, dm3_bpm]
+#for m in dm3list: check_for_connection(m)
+mcs8_motors.extend(dm3list)
 
 dm3_slits_i.user_offset.put(-6.9181)
 dm3_slits_o.user_offset.put(7.087)
@@ -141,6 +174,7 @@ dm3_foils.hvel_sp.put(0.05)
 #bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
 
 ## XAFS table
+print(f'{TAB}XAFS table motor group')
 xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
 xafs_ydo = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDO}Mtr', name='xafs_ydo')
 xafs_ydi = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_ydi')
@@ -150,6 +184,7 @@ xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd
 
 
 ## XAFS stages
+print(f'{TAB}XAFS stages motor group')
 #xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
@@ -206,6 +241,7 @@ faults = amfe
             
 
 
+print(f'{TAB}XRD motor group')
 xrd_delta  = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:VTTH}Mtr',    name='delta')
 xrd_eta    = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:VTH}Mtr',     name='eta')
 xrd_chi    = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:CHI}Mtr',     name='chi')

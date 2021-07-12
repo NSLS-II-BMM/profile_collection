@@ -479,7 +479,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         self.total_points.put(1)
         self.cam.acquire_time.put(exposure)
         self.cam.acquire.put(1)
-        ttime.sleep(1.5)
+        ttime.sleep(exposure + 0.5)
         #cnt=0
         #while self.cam.acquire.get() != 0:
         #    ttime.sleep(0.5)

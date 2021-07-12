@@ -268,9 +268,9 @@ class GlancingAngle(Device):
         '''Fit an error function to the linear scan against It. Plot the
         result. Move to the centroid of the error function.'''
         if self.orientation == 'parallel':
-            motor = user_ns['xafs_y']
+            motor = user_ns['xafs_liny']
         else:
-            motor =  user_ns['xafs_x']
+            motor =  user_ns['xafs_linx']
         db = user_ns['db']
         yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
         close_last_plot()

@@ -103,6 +103,7 @@ def xlsx():
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet)
+    rkvs.set('BMM:automation:type', instrument)
 
 
 

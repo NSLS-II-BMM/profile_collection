@@ -803,13 +803,8 @@ def xafs(inifile=None, **kwargs):
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)
-<<<<<<< HEAD
-            yield from mv(xs.settings.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
-=======
             yield from mv(xs.cam.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md})
->>>>>>> new-xspress3
+            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
 
             ## capture OCR and target ROI values at Eave to report in dossier
             ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),

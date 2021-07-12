@@ -100,7 +100,7 @@ from BMM.wheel import WheelMotor, WheelMacroBuilder, reference, show_reference_w
 
 xafs_wheel = xafs_rotb  = WheelMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.slotone = -30        # the angular position of slot #1
-xafs_wheel.user_offset.put(-2.224)
+xafs_wheel.user_offset.put(-0.7821145500000031)
 slot = xafs_wheel.set_slot
 
 xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')

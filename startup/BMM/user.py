@@ -646,6 +646,7 @@ class BMM_User(Borg):
         #jsonfile = os.path.join(self.DATA, '.BMMuser')
         if os.path.isfile(jsonfile):
             self.from_json(jsonfile)
+            self.suspenders_engaged = False
             self.trigger = True
             #user = json.load(open(jsonfile))
             if self.name is not None:

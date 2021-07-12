@@ -16,87 +16,87 @@ from BMM.functions import boxedtext
 status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'LOOPM' : 1, 'TIACT' : 0, 'INTMO' : 1, 'DWPRO' : 0,
                'DAERR' : 0, 'DVZER' : 0, 'ABDEC' : 0, 'UWPEN' : 0,
-               'UWSEN' : 0, 'ERRTAG': 0, 'SWPOC' : 0, 'ASSCS' : 1,
+               'UWSEN' : 0, 'ERRTG' : 0, 'SWPOC' : 0, 'ASSCS' : 1,
                'FRPOS' : 0, 'HSRCH' : 0, 'SODPL' : 0, 'SOPL'  : 0,
                'HOCPL' : 1, 'PHSRA' : 0, 'PREFE' : 0, 'TRMOV' : 0,
                'IFFE'  : 0, 'AMFAE' : 0, 'AMFE'  : 0, 'FAFOE' : 0,
                'WFOER' : 0, 'INPOS' : 1, 'ENC_LSS' : 0}
 
 class FMBOEpicsMotor(EpicsMotor):
-    resolution = Cpt(EpicsSignal, '.MRES', kind = 'config')
-    encoder = Cpt(EpicsSignal, '.REP', kind = 'config')
+    resolution = Cpt(EpicsSignal, '.MRES', kind = 'normal')
+    encoder = Cpt(EpicsSignal, '.REP', kind = 'omitted')
     
     ###################################################################
     # this is the complete list of status signals defined in the FMBO #
     # IOC for thier MCS8 motor controllers                            #
     ###################################################################
-    mtact      = Cpt(EpicsSignal, '_MTACT_STS',      kind = 'config')
-    mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC', kind = 'config')
-    mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'config')
-    mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC',  kind = 'config')
-    plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'config')
-    plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC',  kind = 'config')
-    ampen      = Cpt(EpicsSignal, '_AMPEN_STS',      kind = 'config')
-    ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC', kind = 'config')
-    loopm      = Cpt(EpicsSignal, '_LOOPM_STS',      kind = 'config')
-    loopm_desc = Cpt(EpicsSignal, '_LOOPM_STS.DESC', kind = 'config')
-    tiact      = Cpt(EpicsSignal, '_TIACT_STS',      kind = 'config')
-    tiact_desc = Cpt(EpicsSignal, '_TIACT_STS.DESC', kind = 'config')
-    intmo      = Cpt(EpicsSignal, '_INTMO_STS',      kind = 'config')
-    intmo_desc = Cpt(EpicsSignal, '_INTMO_STS.DESC', kind = 'config')
-    dwpro      = Cpt(EpicsSignal, '_DWPRO_STS',      kind = 'config')
-    dwpro_desc = Cpt(EpicsSignal, '_DWPRO_STS.DESC', kind = 'config')
-    daerr      = Cpt(EpicsSignal, '_DAERR_STS',      kind = 'config')
-    daerr_desc = Cpt(EpicsSignal, '_DAERR_STS.DESC', kind = 'config')
-    dvzer      = Cpt(EpicsSignal, '_DVZER_STS',      kind = 'config')
-    dvzer_desc = Cpt(EpicsSignal, '_DVZER_STS.DESC', kind = 'config')
-    abdec      = Cpt(EpicsSignal, '_ABDEC_STS',      kind = 'config')
-    abdec_desc = Cpt(EpicsSignal, '_ABDEC_STS.DESC', kind = 'config')
-    uwpen      = Cpt(EpicsSignal, '_UWPEN_STS',      kind = 'config')
-    uwpen_desc = Cpt(EpicsSignal, '_UWPEN_STS.DESC', kind = 'config')
-    uwsen      = Cpt(EpicsSignal, '_UWSEN_STS',      kind = 'config')
-    uwsen_desc = Cpt(EpicsSignal, '_UWSEN_STS.DESC', kind = 'config')
-    errtg      = Cpt(EpicsSignal, '_ERRTG_STS',      kind = 'config')
-    errtg_desc = Cpt(EpicsSignal, '_ERRTG_STS.DESC', kind = 'config')
-    swpoc      = Cpt(EpicsSignal, '_SWPOC_STS',      kind = 'config')
-    swpoc_desc = Cpt(EpicsSignal, '_SWPOC_STS.DESC', kind = 'config')
-    asscs      = Cpt(EpicsSignal, '_ASSCS_STS',      kind = 'config')
-    asscs_desc = Cpt(EpicsSignal, '_ASSCS_STS.DESC', kind = 'config')
-    frpos      = Cpt(EpicsSignal, '_FRPOS_STS',      kind = 'config')
-    frpos_desc = Cpt(EpicsSignal, '_FRPOS_STS.DESC', kind = 'config')
-    hsrch      = Cpt(EpicsSignal, '_HSRCH_STS',      kind = 'config')
-    hsrch_desc = Cpt(EpicsSignal, '_HSRCH_STS.DESC', kind = 'config')
-    sodpl      = Cpt(EpicsSignal, '_SODPL_STS',      kind = 'config')
-    sodpl_desc = Cpt(EpicsSignal, '_SODPL_STS.DESC', kind = 'config')
-    sopl       = Cpt(EpicsSignal, '_SOPL_STS',       kind = 'config')
-    sopl_desc  = Cpt(EpicsSignal, '_SOPL_STS.DESC',  kind = 'config')
-    hocpl      = Cpt(EpicsSignal, '_HOCPL_STS',      kind = 'config')
-    hocpl_desc = Cpt(EpicsSignal, '_HOCPL_STS.DESC', kind = 'config')
-    phsra      = Cpt(EpicsSignal, '_PHSRA_STS',      kind = 'config')
-    phsra_desc = Cpt(EpicsSignal, '_PHSRA_STS.DESC', kind = 'config')
-    prefe      = Cpt(EpicsSignal, '_PREFE_STS',      kind = 'config')
-    prefe_desc = Cpt(EpicsSignal, '_PREFE_STS.DESC', kind = 'config')
-    trmov      = Cpt(EpicsSignal, '_TRMOV_STS',      kind = 'config')
-    trmov_desc = Cpt(EpicsSignal, '_TRMOV_STS.DESC', kind = 'config')
-    iffe       = Cpt(EpicsSignal, '_IFFE_STS',       kind = 'config')
-    iffe_desc  = Cpt(EpicsSignal, '_IFFE_STS.DESC',  kind = 'config')
-    amfae      = Cpt(EpicsSignal, '_AMFAE_STS',      kind = 'config')
-    amfae_desc = Cpt(EpicsSignal, '_AMFAE_STS.DESC', kind = 'config')
-    amfe       = Cpt(EpicsSignal, '_AMFE_STS',       kind = 'config')
-    amfe_desc  = Cpt(EpicsSignal, '_AMFE_STS.DESC',  kind = 'config')
-    fafoe      = Cpt(EpicsSignal, '_FAFOE_STS',      kind = 'config')
-    fafoe_desc = Cpt(EpicsSignal, '_FAFOE_STS.DESC', kind = 'config')
-    wfoer      = Cpt(EpicsSignal, '_WFOER_STS',      kind = 'config')
-    wfoer_desc = Cpt(EpicsSignal, '_WFOER_STS.DESC', kind = 'config')
-    inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'config')
-    inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'config')
+    # mtact      = Cpt(EpicsSignal, '_MTACT_STS',      kind = 'omitted')
+    # mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC', kind = 'omitted')
+    # mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'omitted')
+    # mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC',  kind = 'omitted')
+    # plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'omitted')
+    # plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC',  kind = 'omitted')
+    ampen      = Cpt(EpicsSignal, '_AMPEN_STS',      kind = 'omitted')
+    # ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC', kind = 'omitted')
+    # loopm      = Cpt(EpicsSignal, '_LOOPM_STS',      kind = 'omitted')
+    # loopm_desc = Cpt(EpicsSignal, '_LOOPM_STS.DESC', kind = 'omitted')
+    # tiact      = Cpt(EpicsSignal, '_TIACT_STS',      kind = 'omitted')
+    # tiact_desc = Cpt(EpicsSignal, '_TIACT_STS.DESC', kind = 'omitted')
+    # intmo      = Cpt(EpicsSignal, '_INTMO_STS',      kind = 'omitted')
+    # intmo_desc = Cpt(EpicsSignal, '_INTMO_STS.DESC', kind = 'omitted')
+    # dwpro      = Cpt(EpicsSignal, '_DWPRO_STS',      kind = 'omitted')
+    # dwpro_desc = Cpt(EpicsSignal, '_DWPRO_STS.DESC', kind = 'omitted')
+    # daerr      = Cpt(EpicsSignal, '_DAERR_STS',      kind = 'omitted')
+    # daerr_desc = Cpt(EpicsSignal, '_DAERR_STS.DESC', kind = 'omitted')
+    # dvzer      = Cpt(EpicsSignal, '_DVZER_STS',      kind = 'omitted')
+    # dvzer_desc = Cpt(EpicsSignal, '_DVZER_STS.DESC', kind = 'omitted')
+    # abdec      = Cpt(EpicsSignal, '_ABDEC_STS',      kind = 'omitted')
+    # abdec_desc = Cpt(EpicsSignal, '_ABDEC_STS.DESC', kind = 'omitted')
+    # uwpen      = Cpt(EpicsSignal, '_UWPEN_STS',      kind = 'omitted')
+    # uwpen_desc = Cpt(EpicsSignal, '_UWPEN_STS.DESC', kind = 'omitted')
+    # uwsen      = Cpt(EpicsSignal, '_UWSEN_STS',      kind = 'omitted')
+    # uwsen_desc = Cpt(EpicsSignal, '_UWSEN_STS.DESC', kind = 'omitted')
+    # errtg      = Cpt(EpicsSignal, '_ERRTG_STS',      kind = 'omitted')
+    # errtg_desc = Cpt(EpicsSignal, '_ERRTG_STS.DESC', kind = 'omitted')
+    # swpoc      = Cpt(EpicsSignal, '_SWPOC_STS',      kind = 'omitted')
+    # swpoc_desc = Cpt(EpicsSignal, '_SWPOC_STS.DESC', kind = 'omitted')
+    # asscs      = Cpt(EpicsSignal, '_ASSCS_STS',      kind = 'omitted')
+    # asscs_desc = Cpt(EpicsSignal, '_ASSCS_STS.DESC', kind = 'omitted')
+    # frpos      = Cpt(EpicsSignal, '_FRPOS_STS',      kind = 'omitted')
+    # frpos_desc = Cpt(EpicsSignal, '_FRPOS_STS.DESC', kind = 'omitted')
+    # hsrch      = Cpt(EpicsSignal, '_HSRCH_STS',      kind = 'omitted')
+    # hsrch_desc = Cpt(EpicsSignal, '_HSRCH_STS.DESC', kind = 'omitted')
+    # sodpl      = Cpt(EpicsSignal, '_SODPL_STS',      kind = 'omitted')
+    # sodpl_desc = Cpt(EpicsSignal, '_SODPL_STS.DESC', kind = 'omitted')
+    # sopl       = Cpt(EpicsSignal, '_SOPL_STS',       kind = 'omitted')
+    # sopl_desc  = Cpt(EpicsSignal, '_SOPL_STS.DESC',  kind = 'omitted')
+    hocpl      = Cpt(EpicsSignal, '_HOCPL_STS',      kind = 'omitted')
+    # hocpl_desc = Cpt(EpicsSignal, '_HOCPL_STS.DESC', kind = 'omitted')
+    # phsra      = Cpt(EpicsSignal, '_PHSRA_STS',      kind = 'omitted')
+    # phsra_desc = Cpt(EpicsSignal, '_PHSRA_STS.DESC', kind = 'omitted')
+    # prefe      = Cpt(EpicsSignal, '_PREFE_STS',      kind = 'omitted')
+    # prefe_desc = Cpt(EpicsSignal, '_PREFE_STS.DESC', kind = 'omitted')
+    # trmov      = Cpt(EpicsSignal, '_TRMOV_STS',      kind = 'omitted')
+    # trmov_desc = Cpt(EpicsSignal, '_TRMOV_STS.DESC', kind = 'omitted')
+    # iffe       = Cpt(EpicsSignal, '_IFFE_STS',       kind = 'omitted')
+    # iffe_desc  = Cpt(EpicsSignal, '_IFFE_STS.DESC',  kind = 'omitted')
+    amfae      = Cpt(EpicsSignal, '_AMFAE_STS',      kind = 'omitted')
+    # amfae_desc = Cpt(EpicsSignal, '_AMFAE_STS.DESC', kind = 'omitted')
+    amfe       = Cpt(EpicsSignal, '_AMFE_STS',       kind = 'omitted')
+    # amfe_desc  = Cpt(EpicsSignal, '_AMFE_STS.DESC',  kind = 'omitted')
+    # fafoe      = Cpt(EpicsSignal, '_FAFOE_STS',      kind = 'omitted')
+    # fafoe_desc = Cpt(EpicsSignal, '_FAFOE_STS.DESC', kind = 'omitted')
+    # wfoer      = Cpt(EpicsSignal, '_WFOER_STS',      kind = 'omitted')
+    # wfoer_desc = Cpt(EpicsSignal, '_WFOER_STS.DESC', kind = 'omitted')
+    # inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'omitted')
+    # inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'omitted')
 
-    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'config')
-    enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'config')
-    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'config')
+    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'normal')
+    # enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'normal')
+    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'normal')
     
-    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'config')
-    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'config') # how homing velocity gets set for an FMBO SAI
+    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'normal')
+    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'normal') # how homing velocity gets set for an FMBO SAI
 
     @required_for_connection
     @EpicsMotor.motor_done_move.sub_value
@@ -151,18 +151,23 @@ class FMBOEpicsMotor(EpicsMotor):
     
     def status(self):
         text = '\n  %s is %s\n\n' % (self.name, self.prefix)
-        for signal in list(self.configuration_attrs):
-            if signal.upper() not in status_list.keys():
-                continue
-            suffix = getattr(self, signal).pvname.replace(self.prefix, '')
-            string = getattr(self, signal).enum_strs[getattr(self, signal).get()]
-            if signal != 'asscs':
-                if getattr(self, signal).get() != status_list[signal.upper()]:
-                    string = error_msg('%-19s' % string)
-            text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, signal+'_desc').get(),
-                                                     string,
-                                                     bold_msg(getattr(self, signal).get()),
-                                                     whisper(suffix))
+        for signal in status_list.keys():
+            sig = signal.lower()
+            try:
+                suffix = getattr(self, sig).pvname.replace(self.prefix, '')
+                string = getattr(self, sig).enum_strs[getattr(self, sig).get()]
+                if signal != 'asscs':
+                    if getattr(self, sig).get() != status_list[signal]:
+                        string = error_msg('%-19s' % string)
+                #text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, sig+'_desc').get(),
+                #                                         string,
+                #                                         bold_msg(getattr(self, sig).get()),
+                #                                         whisper(suffix))
+                text += '  %-19s  %s   %s \n' % (string,
+                                                 bold_msg(getattr(self, sig).get()),
+                                                 whisper(suffix))
+            except:
+                pass
         boxedtext('%s status signals' % self.name, text, 'green')
 
     def home(self, force=False):
@@ -243,10 +248,10 @@ class FMBOThinEpicsMotor(EpicsMotor):
         
     
 class XAFSEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
-    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
+    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='normal')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='normal')
 
 
     @required_for_connection
@@ -313,10 +318,10 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
 
     
 class VacuumEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
-    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
+    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='normal')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='normal')
 
     #def wh(self):
     #    return(round(self.user_readback.get(), 3))
@@ -333,9 +338,9 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
         self.kill_cmd.put(1)
 
 class EndStationEpicsMotor(EpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
-    llm = Cpt(EpicsSignal, '.LLM', kind='config')
-    kill_cmd = Cpt(EpicsSignal, ':KILL', kind='config')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
+    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
+    kill_cmd = Cpt(EpicsSignal, ':KILL', kind='normal')
 
     def wh(self):
         return(round(self.user_readback.get(), 3))
