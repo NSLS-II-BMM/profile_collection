@@ -1,6 +1,7 @@
 import sys, os, re, shutil, socket, datetime
 from distutils.dir_util import copy_tree
 import json, pprint, copy
+from subprocess import run
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
@@ -611,13 +612,31 @@ class BMM_User(Borg):
             json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
         os.chmod(jsonfile, 0o444)
 
-        user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
+        if name in BMM_STAFF:
+            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name)
+        else:
+            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
         if not os.path.isdir(user_folder):
             os.makedirs(user_folder)
         if not os.path.islink(local_folder):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
 
+        if 'xf06bm-ws1' in self.host:
+            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws5', f"mkdir -p '{user_folder}'"]
+            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws5', f"ln -s {lustre_root}/{date} '{local_folder}'"]
+            other_machine = 'xf06bm-ws5'
+        elif 'xf06bm-ws5' in self.host:
+            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"mkdir -p '{user_folder}'"]
+            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"ln -s {lustre_root}/{date} '{local_folder}'"]
+            other_machine = 'xf06bm-ws1'
+
+        #print(mkdir_command)
+        #print(symlink_command)
+        run(mkdir_command)
+        run(symlink_command)
+        print(whisper(f'    Made symbolic link to data folder on {other_machine}'))
+        
         try:
             xascam._root = os.path.join(self.folder, 'snapshots')
             xrdcam._root = os.path.join(self.folder, 'snapshots')

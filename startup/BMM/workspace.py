@@ -106,7 +106,7 @@ def initialize_beamline_configuration():
         subprocess.run(['git', 'pull']) 
     else:
         os.chdir(GIT)
-        subprocess.run(['git', 'clone', 'https://github.com/NSLS-II-BMM/BMM-beamline-configuration']) 
+        subprocess.run(['git', 'clone', '-q', 'https://github.com/NSLS-II-BMM/BMM-beamline-configuration']) 
     os.chdir(here)
 
 def initialize_nas():
@@ -157,7 +157,7 @@ def initialize_ssh():
     if 'xf06bm-ws1' in socket.gethostname():
         print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
         return
-    s = subprocess.run(['ssh', '-oBatchMode=yes', 'xf06bm@xf06bm-ws1', 'true'])
+    s = subprocess.run(['ssh', '-q', '-oBatchMode=yes', 'xf06bm@xf06bm-ws1', 'true'])
     if s.returncode == 0:
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws1: {CHECK}')
     else:
