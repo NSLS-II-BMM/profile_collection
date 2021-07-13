@@ -13,13 +13,21 @@
 
 import os, subprocess, shutil
 
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
 from IPython import get_ipython
 user_ns = get_ipython().user_ns
 
 gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
-
+def determine_bin_location():
+    if 'xf06bm-ws1' in user_ns['BMMuser'].host:
+        return('/home/xf06bm/gopath/bin/drive')
+    elif 'xf06bm-ws5' in user_ns['BMMuser'].host:
+        return('/home/xf06bm/git/drive/bin/drive_linux')
+    else:
+        return(None)
         
 def copy_to_gdrive(fname):
     BMMuser = user_ns['BMMuser']
@@ -32,10 +40,14 @@ def synch_gdrive_folder(prefix=''):
     BMMuser = user_ns['BMMuser']
     print(f'{prefix}updating {gdrive_folder}')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
-    here = os.getcwd()
-    os.chdir(user_gdrive_folder)
-    subprocess.run(['/home/xf06bm/gopath/bin/drive', 'push', '-quiet', '.']) 
-    os.chdir(here)
+    location = determine_bin_location()
+    if location is None:
+        print(error_msg('Unable to synch Google drive: could not determine drive program location.'))
+    else:
+        here = os.getcwd()
+        os.chdir(user_gdrive_folder)
+        subprocess.run([location, 'push', '-quiet', '.']) 
+        os.chdir(here)
     return()
 
 def make_gdrive_folder(prefix='', update=True):
