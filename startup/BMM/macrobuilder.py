@@ -10,7 +10,8 @@ from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 class BMMMacroBuilder():
     '''A base class for parsing specially constructed spreadsheets and

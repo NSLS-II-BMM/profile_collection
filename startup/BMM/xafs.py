@@ -30,7 +30,8 @@ from BMM.xdi           import write_XDI
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)

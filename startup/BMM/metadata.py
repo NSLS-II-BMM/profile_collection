@@ -10,7 +10,8 @@ from IPython    import __version__ as ipython_version
 import sys, re
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 class TC(Device):

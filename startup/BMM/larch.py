@@ -27,7 +27,8 @@ import matplotlib.gridspec as gridspec
 from BMM.functions import etok, ktoe
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 LARCH = Interpreter()
 

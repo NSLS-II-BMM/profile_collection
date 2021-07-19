@@ -11,7 +11,8 @@ import time
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start

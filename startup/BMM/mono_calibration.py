@@ -25,7 +25,8 @@ from BMM.derivedplot    import close_all_plots, close_last_plot, interpret_click
 
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 ##  Kraft et al, Review of Scientific Instruments 67, 681 (1996)

@@ -1,7 +1,8 @@
 import os, time, datetime
 from numpy import pi, sin, cos, arcsin, sqrt
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 ## trying "most".  It's a pager, like less, but has helpful hints in

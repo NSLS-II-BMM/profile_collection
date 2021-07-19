@@ -7,7 +7,8 @@ from lmfit.models import StepModel
 import numpy
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper

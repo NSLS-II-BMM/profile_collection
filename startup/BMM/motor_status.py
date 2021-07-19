@@ -1,6 +1,7 @@
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 from BMM.functions import boxedtext
 

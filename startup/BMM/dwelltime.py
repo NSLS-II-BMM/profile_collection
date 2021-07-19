@@ -31,7 +31,8 @@ class Xspress3DwellTime(PVPositionerPC):
 ## RE(test_dwelltimes([quadem_dwell_time,struck_dwell_time]))
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 from ophyd.sim import det

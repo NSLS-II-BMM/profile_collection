@@ -11,7 +11,8 @@ import threading
 from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 ## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:

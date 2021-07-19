@@ -7,7 +7,8 @@ from bluesky.plan_stubs import abs_set, sleep
 from BMM.logging import BMM_log_info
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 _locked_dwell_time = user_ns['_locked_dwell_time']
 

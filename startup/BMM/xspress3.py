@@ -36,7 +36,8 @@ from itertools import product
 
 import matplotlib.pyplot as plt
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 from BMM.db            import file_resource
 from BMM.edge          import show_edges

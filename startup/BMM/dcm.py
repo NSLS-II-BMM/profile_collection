@@ -13,7 +13,8 @@ from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 
 # PV for clearing encoder signal loss

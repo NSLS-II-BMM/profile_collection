@@ -3,7 +3,8 @@ from bluesky.plan_stubs import abs_set, mv
 
 
 from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns
+user_ns = vars(user_ns_module)
 
 from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
