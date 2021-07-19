@@ -12,8 +12,13 @@ from BMM.periodictable import ELEMENTS, Z_number
 from BMM.positioning   import find_slot, align_ga
 from BMM.xafs          import howlong, xafs
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 class WDYWTD():
     '''What Do You Want To Do?
@@ -107,8 +112,9 @@ class WDYWTD():
         print(disconnected_msg(f'yield from change_edge("{el}", focus={focus}, edge="{ed}")'))
         yield from null()
         ##yield from change_edge(el, focus=focus, edge=ed)
-            
-    def do_Spreadsheet(self):
+
+    @set_user_ns
+    def do_Spreadsheet(self, *, user_ns):
         print(go_msg('You would like to import a spreadsheet...\n'))
         ## prompt for type of spreadsheet: wheel or glancing angle
         ret = user_ns['wmb'].spreadsheet()
@@ -127,15 +133,19 @@ class WDYWTD():
         #     yield from null()
         # else:
         #     yield from null()
-            
-    def do_RunMacro(self):
+
+    @set_user_ns
+    def do_RunMacro(self, *, user_ns):
         print(go_msg('You would like to run a measurement macro...\n'))
         macro = present_options('py')
         if macro is None:
             return
-        ipython = get_ipython()
         fullpath = os.path.join(user_ns['BMMuser'].folder, macro)
-        ipython.magic(f'run -i \'{fullpath}\'')
+        try:
+            ipython = get_ipython()
+            ipython.magic(f'run -i \'{fullpath}\'')
+        except Exception as ex:
+            print(f'Failed to execute magic: {ex}')
         print(disconnected_msg(f'yield from {macro[:-3]}()'))
         yield from null()
             
@@ -156,8 +166,9 @@ class WDYWTD():
         print(go_msg('You would like to set the slit height...\n'))
         print(disconnected_msg('yield from slit_height()'))
         yield from null()
-            
-    def do_AdjustSlits(self):
+
+    @set_user_ns
+    def do_AdjustSlits(self, *, user_ns):
         print(go_msg('You would like to adjust the size of the hutch slits...\n'))
         which = input(" Horizontal or vertical? [H/v] ")
         which = which.lower()
@@ -185,13 +196,15 @@ class WDYWTD():
             #print(disconnected_msg(f'yield from mv(slits3.vsize, {size})'))
             #yield from null()
             yield from mv(user_ns['slits3'].vsize, size)
-            
-    def do_XRFSpectrum(self):
+
+    @set_user_ns
+    def do_XRFSpectrum(self, *, user_ns):
         print(go_msg('You would like to see an XRF spectrum...\n'))
         user_ns['xs'].measure_xrf()
         yield from null()
-            
-    def do_ChangeXtals(self):
+
+    @set_user_ns
+    def do_ChangeXtals(self, *, user_ns):
         if user_ns['dcm']._crystal == '111':
             print(go_msg('You would like to change from the ') + whisper('Si(111)') + go_msg(' to the ') + bold_msg('Si(311)') + go_msg(' crystals...\n'))
             print(disconnected_msg('yield from change_xtals("311")'))

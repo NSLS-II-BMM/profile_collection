@@ -1,6 +1,12 @@
 from bluesky.suspenders import SuspendFloor, SuspendBoolHigh, SuspendBoolLow
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 #RE.clear_suspenders()
@@ -8,77 +14,73 @@ all_BMM_suspenders = list()
 
 ## ----------------------------------------------------------------------------------
 ## suspend when I0 drops below 0.1 nA (not in use)
-suspender_I0 = SuspendFloor(user_ns['quadem1'].I0, 0.1, resume_thresh=1, sleep=5)
+
+@set_user_ns
+def get_suspender_I0(user_ns):
+    return SuspendFloor(user_ns['quadem1'].I0, 0.1, resume_thresh=1, sleep=5)
+suspender_I0 = get_suspender_I0()
+
 #all_BMM_suspenders.append(suspender_I0)
 
 ## ----------------------------------------------------------------------------------
 ## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
-try:
-    if user_ns['ring'].filltarget.get() > 20:
-        suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10, resume_thresh=0.9 * user_ns['ring'].filltarget.get(), sleep=60)
-        all_BMM_suspenders.append(suspender_ring_current)
-except Exception as e:
-    print(f'failed to create ring current suspender: {e}')
-    pass
+
+@set_user_ns
+def add_suspender_ring_current(user_ns):
+    try:
+        if user_ns['ring'].filltarget.get() > 20:
+            suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10,
+                                                  resume_thresh=0.9 * user_ns['ring'].filltarget.get(),
+                                                  sleep=60)
+            all_BMM_suspenders.append(suspender_ring_current)
+    except:
+        pass
+
+add_suspender_ring_current()
 
 ## ----------------------------------------------------------------------------------
 ## suspend if the BM photon shutter closes, resume 5 seconds after opening
-try:
-    suspender_bmps = SuspendBoolLow(user_ns['bmps'].state, sleep=60)
-    all_BMM_suspenders.append(suspender_bmps)
-except Exception as e:
-    print(f'failed to create bpms suspender: {e}')
-    pass
+@set_user_ns
+def add_suspender_bmps(user_ns):
+    try:
+        suspender_bmps = SuspendBoolLow(user_ns['bmps'].state, sleep=60)
+        all_BMM_suspenders.append(suspender_bmps)
+    except:
+        pass
 
-    
+add_suspender_bmps()
+
 ## ----------------------------------------------------------------------------------
 ## suspend if the main photon shutter closes, resume 5 seconds after opening
-try:
-    suspender_sha = SuspendBoolLow(user_ns['idps'].state, sleep=60)
-    all_BMM_suspenders.append(suspender_sha)
-except Exception as e:
-    print(f'failed to create sha suspender: {e}')
-    pass
+@set_user_ns
+def add_suspender_sha(user_ns):
+    try:
+        suspender_sha = SuspendBoolLow(user_ns['idps'].state, sleep=60)
+        all_BMM_suspenders.append(suspender_sha)
+    except:
+        pass
+
+add_suspender_sha()
 
 ## ----------------------------------------------------------------------------------
 ## suspend if the experimental photon shutter closes, resume 5 seconds after opening
-from bluesky.plan_stubs import null
-from BMM.logging import post_to_slack
-def tell_slack_shb_closed():
-    print('triggering closed message')
-    post_to_slack('B shutter closed')
-    return(yield from null())
-def tell_slack_shb_opened():
-    print('triggering opened message')
-    post_to_slack('B shutter opened')
-    return(yield from null())
-try:
-    suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5,
-                                    pre_plan=tell_slack_shb_closed(),
-                                    post_plan=tell_slack_shb_opened())
-    all_BMM_suspenders.append(suspender_shb)
-except Exception as e:
-    print(f'failed to create shb suspender: {e}')
-    pass
+@set_user_ns
+def add_suspender_shb(user_ns):
+    try:
+        suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5)
+        all_BMM_suspenders.append(suspender_shb)
+    except:
+        pass
 
-    
-def BMM_suspenders():
-    BMMuser = user_ns['BMMuser']
-    if BMMuser.suspenders_engaged:
-        return
+add_suspender_shb()
+
+@set_user_ns
+def BMM_suspenders(user_ns):
     for s in all_BMM_suspenders:
         user_ns['RE'].install_suspender(s)
-    BMMuser.suspenders_engaged = True
 
-def BMM_clear_suspenders():
-    RE = user_ns['RE']
-    BMMuser = user_ns['BMMuser']
-    if BMMuser.running_macro is False:
-        RE.clear_suspenders()
-        BMMuser.suspenders_engaged = False
-    
-
-def BMM_clear_to_start():
+@set_user_ns
+def BMM_clear_to_start(user_ns):
     ok = True
     text = ''
     # return (ok, text)

@@ -9,8 +9,13 @@ from BMM.gdrive         import copy_to_gdrive
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 class BMMMacroBuilder():
     '''A base class for parsing specially constructed spreadsheets and
@@ -174,7 +179,8 @@ class BMMMacroBuilder():
         else:
             return False
 
-    def ini_sanity(self, default):
+    @set_user_ns
+    def ini_sanity(self, default, *, user_ns):
         '''Sanity checks for the default line from the spreadsheet.
 
         1. experimenters is a string (BMMuser.name)
@@ -393,9 +399,12 @@ class BMMMacroBuilder():
         o = open(self.macro, 'w')
         o.write(fullmacro)
         o.close()
-        from IPython import get_ipython
-        ipython = get_ipython()
-        ipython.magic('run -i \'%s\'' % self.macro)
+        try:
+            from IPython import get_ipython
+            ipython = get_ipython()
+            ipython.magic('run -i \'%s\'' % self.macro)
+        except Exception as ex:
+            print(error_msg(f'Failed to run magic: {ex}'))
         print(whisper('Wrote and read macro file: %s' % self.macro))
 
     def finish_macro(self):

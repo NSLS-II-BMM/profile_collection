@@ -200,10 +200,10 @@ from BMM.telemetry import BMMTelementry
 tele = BMMTelementry()
 
 run_report('\t'+'user interaction')
-from BMM.wdywtd import WDYWTD
-_do = WDYWTD()
-do = _do.wdywtd
-setup_xrd = _do.do_SetupXRD
+# from BMM.wdywtd import WDYWTD
+# _do = WDYWTD()
+# do = _do.wdywtd
+# setup_xrd = _do.do_SetupXRD
 
 
 from BMM.prompt import MyPrompt, BMM_help, BMM_keys

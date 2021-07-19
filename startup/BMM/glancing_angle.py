@@ -23,8 +23,13 @@ from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 class GlancingAngle(Device):
     '''A class capturing the movement and control of the glancing angle
@@ -76,7 +81,6 @@ class GlancingAngle(Device):
 
     spin = True
     home = 0
-    garot = user_ns['xafs_garot']
     inverted = ''
     flat = [0,0]
     y_uid = ''
@@ -84,6 +88,11 @@ class GlancingAngle(Device):
     f_uid = ''
     alignment_filename = ''
     orientation = 'parallel'
+
+    @set_user_ns
+    def __init__(self, *args, user_ns, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.garot = user_ns['xafs_garot']
 
     def current(self):
         '''Return the current spinner number as an integer'''
@@ -135,7 +144,9 @@ class GlancingAngle(Device):
         '''Turn off all spinners'''
         for i in range(1,9):
             self.off(i)
-    def alloff_plan(self):
+
+    @set_user_ns
+    def alloff_plan(self, *, user_ns):
         '''Turn off all spinners as a plan'''
         RE = user_ns['RE']
         save = RE.msg_hook
@@ -176,8 +187,8 @@ class GlancingAngle(Device):
         plt.show()
         plt.pause(0.05)
         
-            
-    def align_pitch(self, force=False):
+    @set_user_ns
+    def align_pitch(self, force=False, *, user_ns):
         '''Find the peak of xafs_pitch scan against It. Plot the
         result. Move to the peak.'''        
         xafs_pitch = user_ns['xafs_pitch']
@@ -208,8 +219,8 @@ class GlancingAngle(Device):
         plt.show()
         plt.pause(0.05)
 
-
-    def alignment_plot(self, yt, pitch, yf):
+    @set_user_ns
+    def alignment_plot(self, yt, pitch, yf, *, user_ns):
         '''Make a pretty, three-panel plot at the end of an auto-alignment'''
         db, BMMuser = user_ns['db'], user_ns['BMMuser']
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
@@ -263,9 +274,9 @@ class GlancingAngle(Device):
         
         plt.pause(0.05)
 
-        
-    def align_linear(self, force=False, drop=None):
-        '''Fit an error function to the linear scan against It. Plot the
+    @set_user_ns
+    def align_y(self, force=False, drop=None, *, user_ns):
+        '''Fit an error function to the xafs_y scan against It. Plot the
         result. Move to the centroid of the error function.'''
         if self.orientation == 'parallel':
             motor = user_ns['xafs_liny']
@@ -295,7 +306,8 @@ class GlancingAngle(Device):
         yield from mv(motor, target)
 
 
-    def auto_align(self, pitch=2, drop=None):
+    @set_user_ns
+    def auto_align(self, pitch=2, drop=None, *, user_ns):
         '''Align a sample on a spinner automatically.  This performs 5 scans.
         The first four iterate twice between linear and pitch
         against the signal in It.  This find the flat position.
@@ -385,8 +397,8 @@ class GlancingAngle(Device):
         BMM_clear_suspenders()
         #RE.clear_suspenders()
 
-        
-    def flatten(self):
+    @set_user_ns
+    def flatten(self, *, user_ns):
         '''Return the stage to its nominally flat position.'''
         xafs_pitch = user_ns['xafs_pitch']
         if self.orientation == 'parallel':
@@ -411,8 +423,8 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
     >>> mb.write_macro()
 
     '''
-        
-    def _write_macro(self):
+    @set_user_ns
+    def _write_macro(self, *, user_ns):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
         correct spinner, lines to find or move to the center-aligned

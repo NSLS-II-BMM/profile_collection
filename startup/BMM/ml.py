@@ -14,8 +14,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from joblib import dump, load
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
 # when pickle changes version number, this error message will happen twice:
 # /opt/conda_envs/collection-2021-1.2/lib/python3.7/site-packages/sklearn/base.py:315:
@@ -47,8 +49,8 @@ class BMMDataEvaluation():
         if os.path.isfile(self.model):
             self.clf = load(self.model)
         
-
-    def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True):
+    @set_user_ns
+    def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True, *, user_ns):
         '''Slurp a record from Databroker, contruct transmission or
         fluorescence XAS, and optionally make a plot.
 
@@ -235,7 +237,8 @@ class BMMDataEvaluation():
         '''Thin wrapper around the classifier object's score method.'''
         return(self.clf.score(self.X, self.y))
 
-    def evaluate(self, uid, mode=None):
+    @set_user_ns
+    def evaluate(self, uid, mode=None, *, user_ns):
         '''Perform an evaluation of a measurement.  The data will be
         interpolated onto the same grid used for the training set,
         then get subjected to the model.  This returns a tuple with

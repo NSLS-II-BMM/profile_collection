@@ -10,8 +10,14 @@ import itertools, os, json
 from nslsii.areadetector.xspress3 import build_detector_class
 
 import matplotlib.pyplot as plt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -146,8 +152,9 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                 )
             # for ch in range(1,5):
             #     self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
-                    
-    def measure_roi(self):
+                   
+    @set_user_ns
+    def measure_roi(self, *, user_ns):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
@@ -168,7 +175,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         # setattr(BMMuser, f'xs{n}', this.value.name) setattr(BMMuser,
         # f'xschannel{n}', this.value) else: this.value.kind = 'omitted'
 
-    def plot(self, uid=None, add=False, only=None): 
+    @set_user_ns
+    def plot(self, uid=None, add=False, only=None, *, user_ns):
         '''Make a plot appropriate for the 4-element detector.
 
         The default is to overplot the four channels.
@@ -234,7 +242,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             plt.legend()
         plt.show()
             
-    def table(self):
+    @set_user_ns
+    def table(self, *, user_ns):
         '''Pretty print a table of values for each ROI and for all four channels.
         '''
         BMMuser = user_ns['BMMuser']
@@ -291,7 +300,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                 print('')
 
 
-    def to_xdi(self, filename=None):
+    @set_user_ns
+    def to_xdi(self, filename=None, *, user_ns):
         '''Write an XDI-style file with bin energy in the first column and the
         waveform of each of the 4 channels in the other columns.
 

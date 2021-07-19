@@ -3,8 +3,13 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
 import numpy
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
 CS_STEPS      = [10, 0.5, '0.05k']
@@ -102,7 +107,9 @@ def sanitize_step_scan_parameters(bounds, steps, times):
     
 
 
-def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112, element=None, edge=None, ththth=False):
+@set_user_ns
+def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
+                      element=None, edge=None, ththth=False, *, user_ns):
     '''
     Parameters
     ----------

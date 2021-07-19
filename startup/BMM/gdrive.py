@@ -12,31 +12,30 @@
 #####################################################################################
 
 import os, subprocess, shutil
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+##from IPython import get_ipython
+##user_ns = get_ipython().user_ns
 
 gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
-def determine_bin_location():
-    if 'xf06bm-ws1' in user_ns['BMMuser'].host:
-        return('/home/xf06bm/gopath/bin/drive')
-    elif 'xf06bm-ws5' in user_ns['BMMuser'].host:
-        return('/home/xf06bm/git/drive/bin/drive_linux')
-    else:
-        return(None)
-        
-def copy_to_gdrive(fname):
+
+@set_user_ns
+def copy_to_gdrive(fname, *, user_ns):
     BMMuser = user_ns['BMMuser']
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     print(f'copying {fname} to {user_gdrive_folder}')
     shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(user_gdrive_folder, fname), follow_symlinks=True)
     return()
 
-def synch_gdrive_folder(prefix=''):
+@set_user_ns
+def synch_gdrive_folder(prefix='', *, user_ns):
     BMMuser = user_ns['BMMuser']
     print(f'{prefix}updating {gdrive_folder}')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
@@ -50,7 +49,8 @@ def synch_gdrive_folder(prefix=''):
         os.chdir(here)
     return()
 
-def make_gdrive_folder(prefix='', update=True):
+@set_user_ns
+def make_gdrive_folder(prefix='', *, user_ns):
     BMMuser = user_ns['BMMuser']
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     BMMuser.gdrive = user_folder

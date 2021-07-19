@@ -1,11 +1,16 @@
 import sys, os, re, shutil, socket, datetime
 from distutils.dir_util import copy_tree
 import json, pprint, copy
-from subprocess import run
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
 
-from BMM.functions import BMM_STAFF, LUSTRE_XAS
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
+
+from BMM.functions import BMM_STAFF
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
@@ -303,7 +308,8 @@ class BMM_User(Borg):
             print(error_msg(E))
 
             
-    def from_json(self, filename):
+    @set_user_ns
+    def from_json(self, filename, *, user_ns):
         rkvs = user_ns['rkvs']
         if os.path.isfile(filename):
             with open(filename, 'r') as jsonfile:
@@ -379,8 +385,8 @@ class BMM_User(Borg):
             print(f'{i:2d}. {verb} {text:28}{pad}   {result:75}')
 
             
-            
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
+    @set_user_ns
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False, *, user_ns):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a data folder and it's subfolders, if needed, and set the DATA variable
@@ -675,7 +681,8 @@ class BMM_User(Borg):
             #if 'rois' in user:
             #    self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
 
-    def show_experiment(self):
+    @set_user_ns
+    def show_experiment(self, *, user_ns):
         '''Show serialized configuration parameters'''
         print('Name   = %s' % self.name)
         print('Date   = %s' % self.date)
@@ -691,7 +698,8 @@ class BMM_User(Borg):
         copy_tree(self.echem_remote, dest)
         report('Copied electrochemistry data from: "%s" to "%s"' % (self.echem_remote, dest), 'bold')
 
-    def end_experiment(self, force=False):
+    @set_user_ns
+    def end_experiment(self, force=False, *, user_ns):
         '''
         Copy data from the experiment that just finished to the NAS, then
         unset the logger and the DATA variable at the end of an experiment.

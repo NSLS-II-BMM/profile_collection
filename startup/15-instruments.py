@@ -83,6 +83,8 @@ slits2.bottom.user_offset.put(0.264)
         
 slitsg = GonioSlits('XF:06BM-ES{SixC-Ax:Slt1_',  name='slitsg')
 
+#DMG# We need to pass this device to plans executed in RE Worker, therefore we need the distinct name for it
+slits3_hsize = slits3.hsize
 
 
 #####################################
@@ -195,6 +197,10 @@ shb = EPS_Shutter('XF:06BM-PPS{Sh:A}', name = 'Photon Shutter')
 shb.shutter_type = 'PH'
 shb.openval  = 0
 shb.closeval = 1
+
+#DMG# Plan names to open and close the shutters from RE Worker (need distinct name)
+shb_open_plan = shb.open_plan
+shb_close_plan = shb.close_plan
 
 fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'FS1')
 fs1.shutter_type = 'FS'

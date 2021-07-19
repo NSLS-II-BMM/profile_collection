@@ -3,10 +3,14 @@ from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 import time
 
 from BMM.logging import report, BMM_msg_hook
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
-RE = user_ns['RE']
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
 
 class EPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
@@ -29,7 +33,9 @@ class EPS_Shutter(Device):
         else:
             return 'open'
 
-    def open_plan(self):
+    @set_user_ns
+    def open_plan(self, *, user_ns):
+        RE = user_ns['RE']
         RE.msg_hook = None
         count = 0
         while self.state.get() != self.openval:
@@ -43,7 +49,9 @@ class EPS_Shutter(Device):
         report('Opened {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
-    def close_plan(self):
+    @set_user_ns
+    def close_plan(self, *, user_ns,):
+        RE = user_ns['RE']
         RE.msg_hook = None
         count = 0
         while self.state.get() != self.closeval:
@@ -57,7 +65,9 @@ class EPS_Shutter(Device):
         report('Closed {}'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
-    def open(self):
+    @set_user_ns
+    def open(self, *, user_ns):
+        RE = user_ns['RE']
         RE.msg_hook = None
         if self.state.get() != self.openval:
             count = 0
@@ -74,7 +84,9 @@ class EPS_Shutter(Device):
             print('{} is open'.format(self.name))
         RE.msg_hook = BMM_msg_hook
 
-    def close(self):
+    @set_user_ns
+    def close(self, *, user_ns):
+        RE = user_ns['RE']
         RE.msg_hook = None
         if self.state.get() != self.closeval:
             count = 0

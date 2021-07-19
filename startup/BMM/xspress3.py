@@ -35,8 +35,14 @@ from collections import deque, OrderedDict
 from itertools import product
 
 import matplotlib.pyplot as plt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 from BMM.db            import file_resource
 from BMM.edge          import show_edges
@@ -359,7 +365,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         # this.bin_low.put(low)
         # this.bin_high.put(high)
         
-    def reset_rois(self, el=None):
+    @set_user_ns
+    def reset_rois(self, el=None, *, user_ns):
         BMMuser = user_ns['BMMuser']
         if el is None:
             el = BMMuser.element
@@ -394,8 +401,9 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     #                       'l1': {'low': 0             , 'high': 0}, }
     #     with open(os.path.join(startup_dir, 'rois.json'), 'w') as fp:
     #         json.dump(rj, fp, indent=4)
-                
-    def roi_details(self):
+            
+    @set_user_ns
+    def roi_details(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
         print('==========================')
@@ -426,9 +434,9 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             #     print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
             # else:
             #     print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
-                
 
-    def show_rois(self):
+    @set_user_ns
+    def show_rois(self, *, user_ns):
         BMMuser = user_ns['BMMuser']
         text = 'Xspress3 ROIs:\n'
         text += bold_msg('    1      2      3      4      5      6      7      8\n')

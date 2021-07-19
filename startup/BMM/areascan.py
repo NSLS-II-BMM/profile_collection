@@ -6,6 +6,11 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
 
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
@@ -20,14 +25,15 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.purpose       import purpose
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+## from IPython import get_ipython
+## user_ns = get_ipython().user_ns
 
 
+@set_user_ns
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, dwell=0.1, md={}):
+             pluck=True, force=False, dwell=0.1, md={}, *, user_ns):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.

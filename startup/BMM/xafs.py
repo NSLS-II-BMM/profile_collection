@@ -29,8 +29,13 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xdi           import write_XDI
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
@@ -56,8 +61,8 @@ def next_index(folder, stub):
 
     
 
-
-def scan_metadata(inifile=None, **kwargs):
+@set_user_ns
+def scan_metadata(inifile=None, *, user_ns, **kwargs):
     """Typical use is to specify an INI file, which contains all the
     metadata relevant to a set of scans.  This function is called with
     one argument:
@@ -282,8 +287,8 @@ def scan_metadata(inifile=None, **kwargs):
     return parameters, found
 
 
-
-def channelcut_energy(e0, bounds, ththth):
+@set_user_ns
+def channelcut_energy(e0, bounds, ththth, *, user_ns):
     '''From the scan parameters, find the energy at the center of the angular range of the scan.'''
     dcm = user_ns['dcm']
     for i,s in enumerate(bounds):
@@ -316,7 +321,8 @@ def ini_sanity(found):
 ##########################################################
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
-def db2xdi(datafile, key):
+@set_user_ns
+def db2xdi(datafile, key, *, user_ns):
     '''
     Export a database entry for an XAFS scan to an XDI file.
 
@@ -398,6 +404,8 @@ def make_merged_triplot(uidlist, filename, mode):
     print(whisper(f'Wrote Athena project to {projname}'))
     
 
+
+@set_user_ns
 def scan_sequence_static_html(inifile       = None,
                               filename      = None,
                               start         = None,
@@ -435,6 +443,7 @@ def scan_sequence_static_html(inifile       = None,
                               url           = None,
                               doi           = None,
                               cif           = None,
+                              user_ns       = None,
                               ):
     '''
     Gather information from various places, including html_dict, a temporary dictionary 
@@ -561,8 +570,8 @@ def scan_sequence_static_html(inifile       = None,
 
 
 
-
-def write_manifest():
+@set_user_ns
+def write_manifest(user_ns):
     '''Update the scan manifest and the corresponding static html file.'''
     BMMuser = user_ns['BMMuser']
     with open(os.path.join(BMMuser.DATA, 'dossier', 'MANIFEST')) as f:
@@ -588,7 +597,8 @@ def write_manifest():
 #########################
 # -- the main XAFS scan #
 #########################
-def xafs(inifile=None, **kwargs):
+@set_user_ns
+def xafs(inifile='/home/xf06bm/5LS/profile_collection_BMM/startup/scan.ini', *, user_ns, **kwargs):
     '''
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
@@ -1291,8 +1301,8 @@ def xafs(inifile=None, **kwargs):
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 
-
-def howlong(inifile=None, interactive=True, **kwargs):
+@set_user_ns
+def howlong(inifile=None, interactive=True, *, user_ns, **kwargs):
     '''
     Estimate how long the scan sequence in an XAFS control file will take.
     Parameters from control file are composable via kwargs.

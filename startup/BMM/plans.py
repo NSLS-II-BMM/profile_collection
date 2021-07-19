@@ -4,15 +4,22 @@ import time
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.modes import MODEDATA
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+try:
+    from bluesky_queueserver.manager.profile_tools import set_user_ns
+except ModuleNotFoundError:
+    from ._set_user_ns import set_user_ns
+
+# from IPython import get_ipython
+# user_ns = get_ipython().user_ns
 
 
 TUNE_STEP = 0.004
-def tune_plan(step=0):
+@set_user_ns
+def tune_plan(step=0, *, user_ns):
     '''
     Tune 2nd crystal pitch from a plan.  Argument is a value for the step, so a relative motion.
     '''
+    dcm_pitch = user_ns['dcm_pitch']
     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
     yield from mvr(dcm_pitch, step)
     yield from sleep(1.0)
@@ -22,7 +29,8 @@ def tune_up():
 def tune_down():
     yield from tune_plan(step=-1*TUNE_STEP)
 
-def tune(step=0):
+@set_user_ns
+def tune(step=0, *, user_ns):
     '''
     Tune 2nd crystal pitch from the command line.  Argument is a value for the step, so a relative motion.
     '''
@@ -36,7 +44,8 @@ def tu():
 def td():
     tune(step=-1*TUNE_STEP)
 
-def tweak_bct(step):
+@set_user_ns
+def tweak_bct(step, *, user_ns):
     dm3_bct = user_ns['dm3_bct']
     if step is None:
         step = 0
@@ -61,7 +70,8 @@ def kmvr(*args):
     yield from mvr(*args)
 
 
-def set_integration_time(time=0.5):
+@set_user_ns
+def set_integration_time(time=0.5, *, user_ns):
     '''
     set integration times for electrometers and Struck from the command line
     '''
@@ -69,7 +79,8 @@ def set_integration_time(time=0.5):
     user_ns['quadem1'].averaging_time.value = time
     user_ns['dualio'].averaging_time.value = time
 
-def set_integration_plan(time=0.5):
+@set_user_ns
+def set_integration_plan(time=0.5, *, user_ns):
     '''
     set integration times for electrometers and Struck from a plan
     '''
@@ -77,9 +88,8 @@ def set_integration_plan(time=0.5):
     yield from abs_set(user_ns['quadem1'].averaging_time, time, wait=True)
     yield from abs_set(user_ns['dualio'].averaging_time, time, wait=True)
 
-
-
-def recover_slits2():
+@set_user_ns
+def recover_slits2(user_ns):
     inb  = user_ns['dm2_slits_i']
     outb = user_ns['dm2_slits_o']
     top  = user_ns['dm2_slits_t']
@@ -100,7 +110,8 @@ def recover_slits2():
     print('\n')
     yield from mv(slits2.vsize, 1.1, slits2.hsize, 18)
 
-def recover_slits3():
+@set_user_ns
+def recover_slits3(user_ns):
     inb  = user_ns['dm3_slits_i']
     outb = user_ns['dm3_slits_o']
     top  = user_ns['dm3_slits_t']
@@ -121,8 +132,8 @@ def recover_slits3():
     print('\n')
     yield from mv(slits3.vsize, 1, slits3.hsize, 5)
 
-    
-def recover_diagnostics():
+@set_user_ns
+def recover_diagnostics(user_ns):
     dm2_fs    = user_ns['dm2_fs']
     dm3_fs    = user_ns['dm3_fs']
     dm3_bct   = user_ns['dm3_bct']
@@ -149,8 +160,8 @@ def recover_diagnostics():
     ## take these from Modes.xlsx, mode D -- all out of the beam path
     yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3_bpm, 5.511, dm3_foils, 41)
 
-    
-def recover_mirror2():
+@set_user_ns
+def recover_mirror2(user_ns):
     m2_xu, m2_xd, m2_yu, m2_ydo, m2_ydi = user_ns['m2_xu'], user_ns['m2_xd'], user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
     yield from abs_set(m2_xu.home_signal,  1) # xu and xd home together
     yield from abs_set(m2_yu.home_signal,  1) # yu, ydi, and ydo home together
@@ -171,7 +182,8 @@ def recover_mirror2():
                   m2_xu,  MODEDATA['m2_xu']['E'],
                   m2_xd,  MODEDATA['m2_xd']['E'])
 
-def recover_mirror3():
+@set_user_ns
+def recover_mirror3(user_ns):
     m3_xu, m3_xd, m3_yu, m3_ydo, m3_ydi = user_ns['m3_xu'], user_ns['m3_xd'], user_ns['m3_yu'], user_ns['m3_ydo'], user_ns['m3_ydi']
     yield from abs_set(m3_xu.home_signal,  1) # xu and xd home together
     yield from abs_set(m3_ydi.home_signal,  1) # yu, ydi, and ydo home together
@@ -193,7 +205,8 @@ def recover_mirror3():
                   m3_xd,  MODEDATA['m3_xd']['E'])
 
 
-def recover_mirrors():
+@set_user_ns
+def recover_mirrors(user_ns):
     m2_xu, m2_xd, m2_yu, m2_ydo, m2_ydi = user_ns['m2_xu'], user_ns['m2_xd'], user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
     m3_xu, m3_xd, m3_yu, m3_ydo, m3_ydi = user_ns['m3_xu'], user_ns['m3_xd'], user_ns['m3_yu'], user_ns['m3_ydo'], user_ns['m3_ydi']
     yield from abs_set(m2_yu.home_signal,  1)
@@ -224,11 +237,8 @@ def recover_mirrors():
                   m3_xu,  MODEDATA['m3_xu']['E'],
                   m3_xd,  MODEDATA['m3_xd']['E'])
 
-
-
-
-
-def mvbct(target=None):
+@set_user_ns
+def mvbct(target=None, *, user_ns):
     '''
     A workaround to kill the BCT motor, then do an absolute movement
     '''
@@ -238,7 +248,8 @@ def mvbct(target=None):
     yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
     yield from mv(dm3_bct, target)
 
-def mvrbct(target=None):
+@set_user_ns
+def mvrbct(target=None, *, user_ns):
     '''
     A workaround to kill the BCT motor, then do a relative movement
     '''
@@ -249,7 +260,8 @@ def mvrbct(target=None):
     yield from mvr(dm3_bct, target)
 
 
-def mvbender(target=None):
+@set_user_ns
+def mvbender(target=None, *, user_ns):
     '''
     A workaround to kill the M2 bender motor, then do an absolute movement
     '''
@@ -259,7 +271,8 @@ def mvbender(target=None):
     yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
     yield from mv(m2_bender, target)
 
-def mvrbender(target=None):
+@set_user_ns
+def mvrbender(target=None, *, user_ns):
     '''
     A workaround to kill the M2 bender motor, then do a relative movement
     '''
