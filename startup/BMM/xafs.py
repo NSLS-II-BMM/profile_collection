@@ -369,15 +369,23 @@ def make_merged_triplot(uidlist, filename, mode):
     save = base.group.args['label']
     proj.add_group(base.group)
     base.group.args['label'] = save
+    count = 0
     for uid in uidlist[1:]:
         this = Pandrosus()
-        this.fetch(uid, mode=mode)
-        mu = numpy.interp(ee, this.group.energy, this.group.mu)
-        mm = mm + mu
-        save = this.group.args['label']
-        proj.add_group(this.group)
-        this.group.args['label'] = save
-    mm = mm / len(uidlist)
+        try:
+            this.fetch(uid, mode=mode)
+            mu = numpy.interp(ee, this.group.energy, this.group.mu)
+            mm = mm + mu
+            save = this.group.args['label']
+            proj.add_group(this.group)
+            this.group.args['label'] = save
+            count += 1
+        except:
+            pass # presumably this is noisy data for which a valid background was not found
+    if count == 0:
+        print(whisper(f'Unable to make triplot'))    
+        return
+    mm = mm / count
     merge = Pandrosus()
     merge.put(ee, mm, 'merge')
     thisagg = matplotlib.get_backend()

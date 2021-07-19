@@ -4,6 +4,7 @@ ip = get_ipython()
 
 os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
 nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
+ip.log.setLevel('ERROR')
 
 bec.disable_plots()
 bec.disable_baseline()
