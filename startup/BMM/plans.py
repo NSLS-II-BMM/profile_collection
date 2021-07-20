@@ -5,7 +5,7 @@ from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg
 from BMM.modes import MODEDATA
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 

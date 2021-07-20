@@ -8,7 +8,7 @@ import itertools, os, json
 
 import matplotlib.pyplot as plt
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.db            import file_resource

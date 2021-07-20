@@ -10,7 +10,7 @@ from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 class BMMMacroBuilder():

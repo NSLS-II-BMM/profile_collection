@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 from joblib import dump, load
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 # when pickle changes version number, this error message will happen twice:

@@ -13,7 +13,7 @@ from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 

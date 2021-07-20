@@ -11,7 +11,7 @@ from BMM.motor_status  import motor_status
 from BMM.suspenders    import BMM_clear_to_start
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 

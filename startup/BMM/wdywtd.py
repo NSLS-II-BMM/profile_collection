@@ -13,7 +13,7 @@ from BMM.positioning   import find_slot, align_ga
 from BMM.xafs          import howlong, xafs
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 class WDYWTD():

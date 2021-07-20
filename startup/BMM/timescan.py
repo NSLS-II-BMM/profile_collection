@@ -21,7 +21,7 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.metadata      import bmm_metadata
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 

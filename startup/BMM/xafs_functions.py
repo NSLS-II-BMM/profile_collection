@@ -4,7 +4,7 @@ from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, 
 import numpy
 
 from IPython import get_ipython
-from BMM import user_ns
+from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 CS_BOUNDS     = [-200, -30, 15.3, '14k']
