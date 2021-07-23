@@ -7,7 +7,7 @@ from .metadata import *
 from .dcm import *
 from .detectors import *
 from .utilities import *
-from .bmm import *
+from .bmm_end import *
 
 from IPython import get_ipython
 

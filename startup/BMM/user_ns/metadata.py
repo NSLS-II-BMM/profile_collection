@@ -1,4 +1,5 @@
 
+from BMM.functions import run_report
 from BMM.metadata import TC, Ring
 
 run_report(__file__, text='miscellaneous metadata and the baseline')
@@ -7,6 +8,10 @@ first_crystal  = TC('XF:06BMA-OP{Mono:DCM-Crys:1}',      name='first_crystal')
 compton_shield = TC('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}', name='compton_shield')
 
 ring = Ring('SR', name='ring')
+
+from BMM.user_ns.motors import *
+from BMM.user_ns.instruments import xafs_wheel, xafs_ref, slits2, slits3, m2, m3, xafs_table
+from __main__ import sd
 
 sd.baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_wheel, xafs_ref, #xafs_roll, xafs_linxs, xafs_roth, xafs_rots,
                dm3_bct, dm3_foils, dm2_fs,

@@ -19,6 +19,12 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.purpose       import purpose
+from BMM.workspace     import rkvs
+
+
+from __main__ import RE, db
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
 
 from IPython import get_ipython
 from BMM import user_ns as user_ns_module
@@ -230,10 +236,6 @@ def areascan(detector,
         BMMuser.fig    = None
         BMMuser.ax     = None
 
-    RE, BMMuser, _locked_dwell_time, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['_locked_dwell_time'], user_ns['rkvs']
-    db, quadem1, vor = user_ns['db'], user_ns['quadem1'], user_ns['vor']
-    if user_ns['with_xspress3']:
-        xs = user_ns['xs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -268,7 +270,6 @@ def as2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
 
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
     if os.path.isfile(datafile):
         print(error_msg('%s already exists!  Bailing out....' % datafile))
         return

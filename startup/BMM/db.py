@@ -4,6 +4,8 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from __main__ import db
+
 def file_resource(record):
     '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device
 
@@ -13,7 +15,7 @@ def file_resource(record):
     '''
     if type(record) is str:
         try:
-            record = user_ns['db'].v2[record]
+            record = db.v2[record]
         except:
             return(None)
     if 'databroker.core.BlueskyRunFromGenerator' in str(type(record)) :

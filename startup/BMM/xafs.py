@@ -17,7 +17,7 @@ from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, clo
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
-from BMM.larch         import Pandrosus, Kekropidai
+from BMM.larch_interface import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment

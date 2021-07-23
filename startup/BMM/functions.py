@@ -4,6 +4,10 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+# from BMM.user_ns.bmm       import BMMuser    
+
+# from BMM.user_ns.dcm       import dcm
+# from BMM.user_ns.detectors import with_xspress3
 
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
@@ -162,9 +166,11 @@ def boxedtext(title, text, tint, width=75):
 
 def clear_dashboard():
     '''Clean up in a way that helps the cadashboard utility'''
-    user_ns['rkvs'].set('BMM:scan:type',      '')
-    user_ns['rkvs'].set('BMM:scan:starttime', '')
-    user_ns['rkvs'].set('BMM:scan:estimated', '')
+    #from BMM.workspace import rkvs
+    rkvs = user_ns['rkvs']
+    rkvs.set('BMM:scan:type',      '')
+    rkvs.set('BMM:scan:starttime', '')
+    rkvs.set('BMM:scan:estimated', '')
     
 
 def countdown(t):
@@ -189,10 +195,9 @@ def elapsed_time(start):
     
 
 def present_options(suffix='xlsx'):
-    BMMuser = user_ns['BMMuser']
-    options = [x for x in os.listdir(BMMuser.folder) if x.endswith(suffix)]
+    options = [x for x in os.listdir(user_ns['BMMuser'].folder) if x.endswith(suffix)]
     options = sorted(options)
-    print(bold_msg(f'Looking in {BMMuser.folder}\n'))
+    print(bold_msg(f'Looking in {user_ns["BMMuser"].folder}\n'))
     
     print(f'Select your {suffix} file:\n')
     for i,x in enumerate(options):

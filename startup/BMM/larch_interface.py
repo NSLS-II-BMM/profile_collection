@@ -30,6 +30,9 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from __main__ import db
+from BMM.user_ns.bmm import BMMuser
+
 LARCH = Interpreter()
 
 
@@ -134,7 +137,6 @@ class Pandrosus():
             'transmission', 'fluorescence', or 'reference'
 
         '''
-        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         header = db[uid]
         table  = header.table()
         self.group.energy = numpy.array(table['dcm_energy'])
@@ -172,7 +174,6 @@ class Pandrosus():
             self.group.signal = numpy.array(table['It'])
             
     def fetch(self, uid, name=None, mode='transmission'):
-        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         self.uid = uid
         if name is not None:
             self.name = name

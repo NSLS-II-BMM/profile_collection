@@ -10,7 +10,9 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-_locked_dwell_time = user_ns['_locked_dwell_time']
+#_locked_dwell_time = user_ns['_locked_dwell_time']
+from BMM.user_ns.detectors   import _locked_dwell_time
+from BMM.user_ns.instruments import shb
 
 class Nanoize(DerivedSignal):
     def forward(self, value):
@@ -161,7 +163,6 @@ class BMMDualEM(QuadEM):
             print('You are ready to measure!\n')
         
 def dark_current():
-    shb = user_ns['shb']
     reopen = shb.state.get() == shb.openval 
     if reopen:
         print('\nClosing photon shutter')

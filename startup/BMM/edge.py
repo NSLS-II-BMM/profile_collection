@@ -12,32 +12,37 @@ from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.workspace     import rkvs
 
 from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-
+from __main__ import RE
+from BMM.user_ns.bmm         import BMMuser, rois
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.detectors   import xs, with_xspress3
+from BMM.user_ns.instruments import kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu
+from BMM.user_ns.motors      import *
 
 def show_edges():
-    rois = user_ns['rois']
-    if user_ns['with_xspress3'] is True:
-        text = show_reference_wheel() + '\n' + user_ns['xs'].show_rois()
+    if with_xspress3 is True:
+        text = show_reference_wheel() + '\n' + xs.show_rois()
     else:
         text = show_reference_wheel() + '\n' + rois.show()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
 
 
 def all_connected(with_m2=False):
-    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
-              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+              m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     if with_m2 is True:
-        motors.extend(['m2_yu', 'm2_ydo', 'm2_ydi'])
+        motors.extend([m2_yu, m2_ydo, m2_ydi])
     ok = True
     for m in motors:
-        if user_ns[m].connected is False:
-            print(disconnected_msg(f'{m} is not connected'))
-            for walk in user_ns[m].walk_signals(include_lazy=False):
+        if m.connected is False:
+            print(disconnected_msg(f'{m.name} is not connected'))
+            for walk in m.walk_signals(include_lazy=False):
                 if walk.item.connected is False:
                     print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
             print(whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})'))
@@ -45,13 +50,13 @@ def all_connected(with_m2=False):
     return ok
     
 def arrived_in_mode(mode=None):
-    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
-              'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
-              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+              m2_yu, m2_ydo, m2_ydi, #m2_xu, m2_xd,
+              m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     ok = True
     for m in motors:
         target = float(MODEDATA[m][mode])
-        achieved = user_ns[m].position
+        achieved = m.position
         diff = abs(target - achieved)
         if diff > 0.5:
             print(f'{m} is out of position, target={target}, current position={achieved}')
@@ -110,13 +115,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     implies focus=True and target=0
 
     '''
-    BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
-    dcm_pitch, dcm_bragg = user_ns['dcm_pitch'], user_ns['dcm_bragg']
-    rkvs = user_ns['rkvs']
-    try:
-        xs = user_ns['xs']
-    except:
-        pass
+    # try:
+    #     xs = user_ns['xs']
+    # except:
+    #     pass
     #BMMuser.prompt = True
     el = el.capitalize()
     
@@ -234,7 +236,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print('If that doesn\'t work, call for help')
         return(yield from null())
         
-    yield from user_ns['kill_mirror_jacks']()
+    yield from kill_mirror_jacks()
     yield from sleep(1)
     if BMMuser.motor_fault is not None:
         print(error_msg('\nSome motors are reporting amplifier faults: %s' % BMMuser.motor_fault))
@@ -270,11 +272,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ##################################
     if not xrd:
         ## reference channel
-        rois = user_ns['rois']
         print('Moving reference foil...')
         yield from rois.select_plan(el)
         ## Xspress3
-        if user_ns['with_xspress3']:
+        if with_xspress3:
             BMMuser.verify_roi(xs, el, edge)
         ## feedback
         show_edges()

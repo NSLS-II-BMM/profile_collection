@@ -13,6 +13,8 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.bmm import BMMuser
+
 class BMMMacroBuilder():
     '''A base class for parsing specially constructed spreadsheets and
     generating the corresponding BlueSky plan.
@@ -120,7 +122,7 @@ class BMMMacroBuilder():
             return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
-        self.folder   = user_ns['BMMuser'].folder
+        self.folder   = BMMuser.folder
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
         self.wb       = load_workbook(self.source, read_only=True);
@@ -196,7 +198,6 @@ class BMMMacroBuilder():
 
         message = ''
         unrecoverable = False
-        BMMuser = user_ns['BMMuser']
 
         if 'mode' not in default:
             if 'glancing angle' in self.instrument:

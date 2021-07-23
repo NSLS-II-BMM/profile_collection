@@ -18,6 +18,9 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from __main__ import db
+from BMM.user_ns.bmm import BMMuser
+
 # when pickle changes version number, this error message will happen twice:
 # /opt/conda_envs/collection-2021-1.2/lib/python3.7/site-packages/sklearn/base.py:315:
 #   UserWarning: Trying to unpickle estimator DecisionTreeClassifier
@@ -80,7 +83,6 @@ class BMMDataEvaluation():
                 signal = numpy.array(primary['It'])
                 mu = numpy.log(abs(i0/signal))
             # elif mode == 'xs':
-            #     BMMuser, db = user_ns['BMMuser'], user_ns['db']
             #     t = db[-1].table()
             #     el = BMMuser.element
             #     dtc1 = numpy.array(t[el+'1'])
@@ -90,7 +92,6 @@ class BMMDataEvaluation():
             #     signal = dtc1+dtc2+dtc3+dtc4
             #     mu = signal/i0
             else:
-                # BMMuser = user_ns['BMMuser']
                 # dtc1 = numpy.array(primary[BMMuser.dtc1])
                 # dtc2 = numpy.array(primary[BMMuser.dtc2])
                 # dtc3 = numpy.array(primary[BMMuser.dtc3])
@@ -252,7 +253,6 @@ class BMMDataEvaluation():
 
         '''
         if mode == 'xs':
-            BMMuser, db = user_ns['BMMuser'], user_ns['db']
             t = db[-1].table()
             el = BMMuser.element
             i0 = numpy.array(t['I0'])
@@ -264,7 +264,6 @@ class BMMDataEvaluation():
             signal = dtc1+dtc2+dtc3+dtc4
             mu = signal/i0
         else:
-            db = user_ns['db']
             this = db.v2[uid]
             if mode is None:
                 mode = this.metadata['start']['XDI']['_mode'][0]

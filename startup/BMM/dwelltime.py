@@ -49,17 +49,17 @@ def test_dwelltimes(dt, md=None):
     args.append(5)              # five steps from 0.5 to 2.5
     yield from scan(*args, md=md)
 
-
+from BMM.user_ns.detectors import with_dualem, with_quadem, with_struck, with_xspress3
 class LockedDwellTimes(PseudoPositioner):
     "Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one pseudo-axis dwell time."
     dwell_time = Cpt(PseudoSingle, kind='hinted')
-    if user_ns['with_quadem'] is True:
+    if with_quadem is True:
         quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
-    if user_ns['with_struck'] is True:
+    if with_struck is True:
         struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
-    if user_ns['with_dualem'] is True:
+    if with_dualem is True:
         dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
-    if user_ns['with_xspress3'] is True:
+    if with_xspress3 is True:
         xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
     
     @property

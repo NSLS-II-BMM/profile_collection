@@ -1,4 +1,6 @@
-
+import os
+from BMM.functions import run_report
+from BMM.workspace import rkvs
 
 run_report(__file__, text='import the rest of the things')
 
@@ -129,6 +131,7 @@ from BMM.plans import recover_mirror2, recover_mirror3, recover_mirrors, recover
 run_report('\t'+'change_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals, pds_motors_ready
 
+from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
 if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 if BMMuser.pds_mode is None:
@@ -179,7 +182,7 @@ run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
 
 run_report('\t'+'Larch')
-from BMM.larch import Pandrosus, Kekropidai
+from BMM.larch_interface import Pandrosus, Kekropidai
 ## examples that only work at BMM...
 # se = Pandrosus()
 # se.fetch('8e293af3-811c-4e96-a4e5-733d0dc77dad', name\='Se metal', mode='transmission')
@@ -225,11 +228,14 @@ if BMMuser.element is None:
           BMMuser.edge    = str(rkvs.get('BMM:pds:edge'), 'utf-8')
      except:
           pass
+
+from BMM.user_ns.detectors import with_xspress3
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
      BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge)
      #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
      show_edges()
 
+from BMM.user_ns.detectors import xascam, xrdcam, anacam
 xascam._root = os.path.join(BMMuser.folder, 'snapshots')
 xrdcam._root = os.path.join(BMMuser.folder, 'snapshots')
 anacam._root = os.path.join(BMMuser.folder, 'snapshots')
@@ -240,12 +246,14 @@ if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
      print(error_msg('You likely have to restart bsui.'))
 
-     
+from BMM.user_ns.instruments import wmb
 wmb.folder = BMMuser.folder
 wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
 pinwheel.folder = BMMuser.folder
 pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
 
+from __main__ import RE
+from BMM.logging import BMM_msg_hook
 RE.msg_hook = BMM_msg_hook
 
 try:

@@ -20,6 +20,10 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
+from BMM.user_ns.bmm   import BMMuser
+from BMM.user_ns.dcm   import dcm
+
+
 
 def energystep(filename = None,
                start    = None,
@@ -55,7 +59,6 @@ def energystep(filename = None,
     >>> energystep(filename='blahblah', start=18936, end=19036, nsteps=101)
     '''
 
-    BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
     BMM_log_info("energystep(filename=%s, start=%.1f, end=%.1f, nsteps=%d, delay=%.1f, dosteps=%s)" % (filename, start, end, nsteps, delay, str(dosteps)))
     datafile = BMMuser.DATA + filename
     handle = open(datafile, 'w')

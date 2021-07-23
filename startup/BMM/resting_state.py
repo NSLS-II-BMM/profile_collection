@@ -8,6 +8,13 @@ user_ns = vars(user_ns_module)
 
 from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
+from BMM.workspace  import rkvs
+
+from __main__ import RE
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor
+from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
     return()
@@ -25,9 +32,6 @@ def resting_state():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     quadem1.on()
@@ -46,9 +50,6 @@ def resting_state_plan():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
 
     #BMMuser.prompt = True
     BMMuser.macro_dryrun = False
@@ -71,9 +72,6 @@ def end_of_macro():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     BMMuser.running_macro, BMMuser.lims = False, True

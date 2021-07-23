@@ -5,13 +5,14 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.motors import xafs_det, xafs_x
 
 class DetectorMount():
     def __init__(self):
-        self.motor = user_ns['xafs_det']
+        self.motor = xafs_det
         self.low   = 10
         self.high  = 205
-        self.sampley = user_ns['xafs_x']
+        self.sampley = xafs_x
         self.margin = 15
 
 

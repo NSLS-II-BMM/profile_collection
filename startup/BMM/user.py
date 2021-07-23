@@ -11,6 +11,7 @@ from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, ver
 from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
+from BMM.workspace import rkvs
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -305,7 +306,6 @@ class BMM_User(Borg):
 
             
     def from_json(self, filename):
-        rkvs = user_ns['rkvs']
         if os.path.isfile(filename):
             with open(filename, 'r') as jsonfile:
                 config = json.load(jsonfile)
@@ -313,11 +313,14 @@ class BMM_User(Borg):
                 if k in ('cycle',):
                     continue
                 setattr(self, k, config[k])
-            user_ns['rois'].trigger = True
-        rkvs.set('BMM:pds:edge',        str(config['edge']))
-        rkvs.set('BMM:pds:element',     str(config['element']))
-        rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
-            
+            #rois.trigger = True
+        from BMM.workspace import rkvs
+        try:
+            rkvs.set('BMM:pds:edge',        str(config['edge']))
+            rkvs.set('BMM:pds:element',     str(config['element']))
+            rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
+        except:
+            pass
             
     def show(self, scan=False):
         '''

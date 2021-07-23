@@ -5,6 +5,8 @@ from BMM.motor_status  import motor_status
 
 #run_report(__file__, text='mirror trigonometry')
 
+from BMM.user_ns.instruments import *
+from BMM.user_ns.motors      import *
 
 def move_m3(target=5):
     alpha = 9002                # distance M3 to Be window

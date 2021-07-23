@@ -40,7 +40,6 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.db            import file_resource
-from BMM.edge          import show_edges
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
         
@@ -365,11 +364,12 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if el is None:
             el = BMMuser.element
         if el in self.slots:
+            #from BMM.edge import show_edges
             print(error_msg(f'Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
-            show_edges()
+            user_ns['show_edges']()
         else:
             print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
             

@@ -34,7 +34,9 @@ if os.path.isfile(BMM_log_master_file):
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+from BMM.user_ns.bmm import nas_mount_point
+#BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+BMM_nas_log_file = os.path.join(nas_mount_point, 'xf06bm', 'data', 'BMM_master.log')
 if os.path.isdir('/mnt/nfs/nas1'):
     if not os.path.isfile(BMM_nas_log_file):
         basedir = os.path.dirname(BMM_nas_log_file)

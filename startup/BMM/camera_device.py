@@ -24,6 +24,7 @@ from BMM.db import file_resource
 from BMM.functions import now
 from BMM.logging import report
 
+from BMM.user_ns.bmm import BMMuser
 
 def annotate_image(imagefile, text):
     bluesky_path_as_list = bluesky.__path__[0].split('/') # crude, but finds current collection folder
@@ -140,7 +141,7 @@ def analog_camera(filename    = None,
 
     if sample is not None and sample != '':
         title = title + ' - ' + sample
-    if 'xf06bm-ws1' in user_ns['BMMuser'].host:
+    if 'xf06bm-ws1' in BMMuser.host:
         command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
                '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
     else:
@@ -172,7 +173,7 @@ class BMM_JPEG_HANDLER:
         filepath = self._template % index
         return numpy.asarray(Image.open(filepath))
 
-db = user_ns['db']
+from __main__ import db
 db.reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
 db.reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
 db.reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
@@ -216,7 +217,7 @@ class BMMSnapshot(Device):
             self._url = None
 
     def current_folder(self):
-        folder = os.path.join(user_ns['BMMuser'].folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
+        folder = os.path.join(BMMuser.folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
         if not os.path.isdir(folder):
             os.makedirs(folder)
         return folder

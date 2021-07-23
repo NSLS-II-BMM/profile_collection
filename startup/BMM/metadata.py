@@ -13,6 +13,10 @@ from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.instruments import m2, m3
+from BMM.user_ns.motors      import m2_bender
 
 class TC(Device):
     temperature = Cpt(EpicsSignal, 'T-I-I')
@@ -28,19 +32,19 @@ class Ring(Device):
 
 ## some heuristics for determining state of M2 and M3
 def mirror_state():
-    if user_ns['m2'].vertical.readback.get() > 0:
+    if m2.vertical.readback.get() > 0:
         m2state = 'not in use'
     else:
-        m2state = 'torroidal mirror, 5 nm Rh on 30 nm Pt, pitch = %.2f mrad, bender = %d counts' % (7.0 - user_ns['m2'].pitch.readback.get(),
-                                                                                                    int(user_ns['m2_bender'].user_readback.get()))
-    if user_ns['m3'].lateral.readback.get() > 0:
+        m2state = 'torroidal mirror, 5 nm Rh on 30 nm Pt, pitch = %.2f mrad, bender = %d counts' % (7.0 - m2.pitch.readback.get(),
+                                                                                                    int(m2_bender.user_readback.get()))
+    if m3.lateral.readback.get() > 0:
         stripe =  'Pt stripe'
     else:
         stripe =  'Si stripe'
-    if abs(user_ns['m3'].vertical.readback.get() + 1.5) < 0.1:
+    if abs(m3.vertical.readback.get() + 1.5) < 0.1:
         m3state = 'not in use'
     else:
-        m3state = 'flat mirror, %s, pitch = %.1f mrad relative to beam' % (stripe, 7.0 - user_ns['m2'].pitch.readback.get())
+        m3state = 'flat mirror, %s, pitch = %.1f mrad relative to beam' % (stripe, 7.0 - m2.pitch.readback.get())
     return(m2state, m3state)
 
 
@@ -133,16 +137,16 @@ def bmm_metadata(measurement   = 'transmission',
     md['Element']['symbol']          = element.capitalize()
     md['Scan']['edge_energy']        = edge_energy
     md['Scan']['experimenters']      = experimenters
-    md['Mono']['name']               = 'Si(%s)' % user_ns['dcm']._crystal
-    md['Mono']['d_spacing']          = '%.7f' % (user_ns['dcm']._twod/2)
-    md['Mono']['encoder_resolution'] = user_ns['dcm'].bragg.resolution.get()
-    md['Mono']['angle_offset']       = user_ns['dcm'].bragg.user_offset.get()
+    md['Mono']['name']               = 'Si(%s)' % dcm._crystal
+    md['Mono']['d_spacing']          = '%.7f' % (dcm._twod/2)
+    md['Mono']['encoder_resolution'] = dcm.bragg.resolution.get()
+    md['Mono']['angle_offset']       = dcm.bragg.user_offset.get()
     md['Detector']['I0']             = '10 cm ' + i0_gas
     md['Detector']['It']             = '25 cm ' + it_gas
     md['Detector']['Ir']             = '25 cm ' + ir_gas
-    md['Facility']['GUP']            = user_ns['BMMuser'].gup
-    md['Facility']['SAF']            = user_ns['BMMuser'].saf
-    md['Facility']['cycle']          = user_ns['BMMuser'].cycle
+    md['Facility']['GUP']            = BMMuser.gup
+    md['Facility']['SAF']            = BMMuser.saf
+    md['Facility']['cycle']          = BMMuser.cycle
     md['Sample']['name']             = sample
     md['Sample']['prep']             = prep
     #md['XDI']['Sample']['x_position']       = xafs_linx.user_readback.get()

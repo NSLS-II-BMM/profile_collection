@@ -1,3 +1,5 @@
+from BMM.functions import run_report
+
 run_report(__file__, text='instrument definitions')
 
 ## http://patorjk.com/software/taag/#p=display&f=Doom&t=MIRRORS
@@ -14,6 +16,7 @@ run_report(__file__, text='instrument definitions')
 
 run_report('\tmirrors')
 from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable
+from BMM.user_ns.motors import mcs8_motors
 
 ## harmonic rejection mirror
 m3_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
@@ -174,7 +177,7 @@ detx = DetectorMount()
 ###########################################################
 
 run_report('\tactuators')
-from BMM.actuators import BMPS_Shutter, IDPS_Shutter, EPS_Shutter, Spinner
+from BMM.actuators import BMPS_Shutter, IDPS_Shutter, EPS_Shutter
 
 try:
     bmps = BMPS_Shutter('SR:C06-EPS{PLC:1}', name='BMPS')
@@ -202,7 +205,8 @@ fs1.openval  = 1
 fs1.closeval = 0
 
 
-fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
+# single spinner is no longer in user
+#fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
 
 
 
@@ -219,7 +223,7 @@ fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
 
 run_report('\tfilters')
 from BMM.attenuators import attenuator, filter_state, set_filters
-
+from BMM.user_ns.motors import dm1_filters1, dm1_filters2
 filter1 = attenuator()
 filter1.motor = dm1_filters1
 filter2 = attenuator()
