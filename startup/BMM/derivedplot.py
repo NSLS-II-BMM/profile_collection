@@ -10,7 +10,6 @@ import threading
 #from bluesky.callbacks import CallbackBase
 from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

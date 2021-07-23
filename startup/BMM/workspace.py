@@ -1,8 +1,7 @@
 
 import os, subprocess, shutil, socket
-from IPython.paths import get_ipython_module_path
 import redis
-from BMM.functions import verbosebold_msg, error_msg
+import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
 
 if not os.environ.get('AZURE_TESTING'):
     redis_host = 'xf06bm-ioc2'
@@ -47,7 +46,7 @@ def initialize_workspace():
     corrective action.
 
     '''
-    print(verbosebold_msg('Checking workspace on this computer ...'))
+    print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
     check_profile_branch()
     initialize_data_directories()
     initialize_beamline_configuration()
@@ -117,7 +116,7 @@ def initialize_nas():
     if os.path.ismount(NAS):
         print(f'{TAB}Found NAS1 mount point: {CHECK}')
     else:
-        print(error_msg(f'{TAB}NAS1 is not mounted!'))
+        print(BMM.functions.error_msg(f'{TAB}NAS1 is not mounted!'))
     
 
 def initialize_secrets():
@@ -125,7 +124,8 @@ def initialize_secrets():
     If not, copy them from the NAS server NFS mounted at /mnt/nfs/nas1.
 
     '''
-    STARTUP = os.path.dirname(get_ipython_module_path('BMM.functions'))
+    #STARTUP = os.path.dirname(get_ipython_module_path('BMM.functions'))
+    STARTUP = os.path.dirname(BMM.functions.__file__)
     for fname in SECRET_FILES:
         if os.path.isfile(os.path.join(STARTUP, fname)):
             print(f'{TAB}Found {fname} file: {CHECK}')
@@ -135,7 +135,7 @@ def initialize_secrets():
                 print(f'{TAB}Copied {fname} file')
             except Exception as e:
                 print(e)
-                print(error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
+                print(BMM.functions.error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
 
                 
 def initialize_redis():
@@ -146,7 +146,7 @@ def initialize_redis():
     if rkvs.get(REDISVAR) is not None:
         print(f'{TAB}Found Redis server: {CHECK}')
     else:
-        print(error_msg(f'{TAB}Did not find redis server'))
+        print(BMM.functions.error_msg(f'{TAB}Did not find redis server'))
 
 
 def initialize_ssh():
@@ -161,5 +161,5 @@ def initialize_ssh():
     if s.returncode == 0:
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws1: {CHECK}')
     else:
-        print(error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
+        print(BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
         

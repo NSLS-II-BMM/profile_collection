@@ -229,7 +229,7 @@ if BMMuser.element is None:
      except:
           pass
 
-from BMM.user_ns.detectors import with_xspress3
+from BMM.user_ns.detectors import with_xspress3, xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
      BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge)
      #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
@@ -255,6 +255,12 @@ pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'
 from __main__ import RE
 from BMM.logging import BMM_msg_hook
 RE.msg_hook = BMM_msg_hook
+
+def measuring(element, edge=None):
+    BMMuser.element = element
+    if edge is not None:
+        BMMuser.edge = edge
+    xs.reset_rois()
 
 try:
     from bluesky_widgets.utils.streaming import stream_documents_into_runs

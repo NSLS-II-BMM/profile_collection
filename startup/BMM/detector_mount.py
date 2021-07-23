@@ -1,7 +1,6 @@
 from bluesky.plan_stubs import sleep, mv, mvr, null
 
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

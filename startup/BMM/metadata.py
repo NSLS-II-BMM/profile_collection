@@ -9,7 +9,6 @@ from databroker import __version__ as databroker_version
 from IPython    import __version__ as ipython_version
 import sys, re
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

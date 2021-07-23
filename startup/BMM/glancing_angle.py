@@ -23,7 +23,6 @@ from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

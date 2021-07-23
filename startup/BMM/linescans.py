@@ -11,7 +11,6 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

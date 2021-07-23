@@ -5,7 +5,6 @@ from numpy import exp
 
 from bluesky.plan_stubs import abs_set
 
-from IPython import get_ipython
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
