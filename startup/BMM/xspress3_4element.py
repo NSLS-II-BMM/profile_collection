@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
@@ -110,7 +111,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.
         '''
-        startup_dir = get_ipython().profile_dir.startup_dir
+        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)

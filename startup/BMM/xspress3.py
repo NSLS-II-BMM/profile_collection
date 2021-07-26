@@ -39,6 +39,7 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
@@ -372,30 +373,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             user_ns['show_edges']()
         else:
             print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
-            
-    # def ini2json(self):
-    #     rj = {'OCR': {'k':  {'low': 1, 'high': 4095}},}
-    #     config = configparser.ConfigParser()
-    #     startup_dir = get_ipython().profile_dir.startup_dir
-    #     config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
-    #     for i in range(20, 93):
-    #         el = element_symbol(i)
-    #         bounds = config.get('rois', el).split(' ')
-    #         if bounds[0] == '0':
-    #             rj[el] = {}
-    #             continue
-    #         if len(bounds) == 2:
-    #             bounds.append(0)
-    #             bounds.append(0)
-    #         if i < 46:
-    #             rj[el] = {'k':  {'low': int(bounds[0]), 'high': int(bounds[1])}}
-    #         else:
-    #             rj[el] = {'l3': {'low': int(bounds[0]), 'high': int(bounds[1])},
-    #                       'l2': {'low': int(bounds[2]), 'high': int(bounds[3])},
-    #                       'l1': {'low': 0             , 'high': 0}, }
-    #     with open(os.path.join(startup_dir, 'rois.json'), 'w') as fp:
-    #         json.dump(rj, fp, indent=4)
-                
+
     def roi_details(self):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
@@ -454,7 +432,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     def check_element(self, element, edge):
         '''Check that the current element and edge is tabulate in rois.json
         '''
-        startup_dir = get_ipython().profile_dir.startup_dir
+        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)

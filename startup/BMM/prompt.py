@@ -1,4 +1,7 @@
 
+# note that this file will never be imported when using queueserver
+# so the explicit calls to IPython functionality should be OK
+
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
 from BMM import user_ns as user_ns_module

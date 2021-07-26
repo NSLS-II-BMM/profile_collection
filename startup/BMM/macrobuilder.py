@@ -394,6 +394,7 @@ class BMMMacroBuilder():
         o = open(self.macro, 'w')
         o.write(fullmacro)
         o.close()
+        ## I think this will never be called by queueserver
         from IPython import get_ipython
         ipython = get_ipython()
         ipython.magic('run -i \'%s\'' % self.macro)

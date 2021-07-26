@@ -124,7 +124,6 @@ def initialize_secrets():
     If not, copy them from the NAS server NFS mounted at /mnt/nfs/nas1.
 
     '''
-    #STARTUP = os.path.dirname(get_ipython_module_path('BMM.functions'))
     STARTUP = os.path.dirname(BMM.functions.__file__)
     for fname in SECRET_FILES:
         if os.path.isfile(os.path.join(STARTUP, fname)):

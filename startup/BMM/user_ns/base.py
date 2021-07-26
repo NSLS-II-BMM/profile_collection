@@ -1,13 +1,24 @@
 import nslsii
 import os
 import __main__
-ip = get_ipython()
+
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
-nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
-ip.log.setLevel('ERROR')
 
-bec = __main__.bec
+if not is_re_worker_active():
+    ip = get_ipython()
+    nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
+    ip.log.setLevel('ERROR')
+else:
+    nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
+
+bec = __main__.bec    
 bec.disable_plots()
 bec.disable_baseline()
 
@@ -16,8 +27,8 @@ ophyd.EpicsSignal.set_defaults(timeout=10, connection_timeout=10)
 
 #from databroker.core import SingleRunCache
 
-from bluesky.utils import ts_msg_hook
 RE = __main__.RE
+from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
 

@@ -1,3 +1,10 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 import os
 from BMM.functions import run_report
 from BMM.workspace import rkvs
@@ -202,16 +209,13 @@ run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelementry
 tele = BMMTelementry()
 
-run_report('\t'+'user interaction')
-from BMM.wdywtd import WDYWTD
-_do = WDYWTD()
-do = _do.wdywtd
-setup_xrd = _do.do_SetupXRD
+if not is_re_worker_active():
+    run_report('\t'+'user interaction')
+    from BMM.wdywtd import WDYWTD
+    _do = WDYWTD()
+    do = _do.wdywtd
+    setup_xrd = _do.do_SetupXRD
 
-
-from BMM.prompt import MyPrompt, BMM_help, BMM_keys
-ip = get_ipython()
-ip.prompts = MyPrompt(ip)
 
 if rois.trigger is True:        # set Struck rois from persistent user information
      if len(BMMuser.rois) == 3:

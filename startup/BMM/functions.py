@@ -12,7 +12,6 @@ user_ns = vars(user_ns_module)
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
 
-get_ipython().magic(u"%xmode Plain")
 
 ## some global parameters
 BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
@@ -28,24 +27,34 @@ LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 # BlinkBlack, BlinkBlue, BlinkCyan, BlinkGreen, BlinkLightGray,
 # BlinkPurple, BlinkRed, BlinkYellow,
 
-from IPython.utils.coloransi import TermColors as color
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 def colored(text, tint='white', attrs=[]):
     '''
     A simple wrapper around IPython's interface to TermColors
     '''
-    tint = tint.lower()
-    if 'dark' in tint:
-        tint = 'Dark' + tint[4:].capitalize()
-    elif 'light' in tint:
-        tint = 'Light' + tint[5:].capitalize()
-    elif 'blink' in tint:
-        tint = 'Blink' + tint[5:].capitalize()
-    elif 'no' in tint:
-        tint = 'Normal'
+    if not is_re_worker_active():
+        from IPython.utils.coloransi import TermColors as color
+        tint = tint.lower()
+        if 'dark' in tint:
+            tint = 'Dark' + tint[4:].capitalize()
+        elif 'light' in tint:
+            tint = 'Light' + tint[5:].capitalize()
+        elif 'blink' in tint:
+            tint = 'Blink' + tint[5:].capitalize()
+        elif 'no' in tint:
+            tint = 'Normal'
+        else:
+            tint = tint.capitalize()
+        return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
     else:
-        tint = tint.capitalize()
-    return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
-
+        return(text)
+        
 def run_report(thisfile, text=None):
     '''
     Noisily proclaim to be importing a file of python code.
