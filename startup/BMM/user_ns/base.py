@@ -19,8 +19,8 @@ if not is_re_worker_active():
     ip.log.setLevel('ERROR')
 else:
     nslsii.configure_base(uns_dict, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
-    RE = uns_dict['RE']
-    db = uns_dict['db']
+    RE  = uns_dict['RE']
+    db  = uns_dict['db']
     bec = uns_dict['bec']
 
 #bec = __main__.bec    

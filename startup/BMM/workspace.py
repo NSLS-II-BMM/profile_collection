@@ -47,7 +47,7 @@ def initialize_workspace():
 
     '''
     print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
-    check_profile_branch()
+    #check_profile_branch()
     initialize_data_directories()
     initialize_beamline_configuration()
     initialize_nas()
