@@ -6,7 +6,7 @@ from BMM.logging import report, BMM_msg_hook
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from __main__ import RE
+#from __main__ import RE
 
 class EPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
@@ -30,7 +30,7 @@ class EPS_Shutter(Device):
             return 'open'
 
     def open_plan(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         count = 0
         while self.state.get() != self.openval:
             count += 1
@@ -41,10 +41,10 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Opened {}'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def close_plan(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         count = 0
         while self.state.get() != self.closeval:
             count += 1
@@ -55,10 +55,10 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Closed {}'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def open(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         if self.state.get() != self.openval:
             count = 0
             while self.state.get() != self.openval:
@@ -72,10 +72,10 @@ class EPS_Shutter(Device):
             report(' Opened {}'.format(self.name))
         else:
             print('{} is open'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def close(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         if self.state.get() != self.closeval:
             count = 0
             while self.state.get() != self.closeval:
@@ -89,7 +89,7 @@ class EPS_Shutter(Device):
             report(' Closed {}'.format(self.name))
         else:
             print('{} is closed'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def _state(self):
         if self.state.get():

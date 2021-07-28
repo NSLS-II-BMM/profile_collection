@@ -17,7 +17,7 @@ from joblib import dump, load
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from __main__ import db
+#from __main__ import db
 from BMM.user_ns.bmm import BMMuser
 
 # when pickle changes version number, this error message will happen twice:
@@ -82,7 +82,7 @@ class BMMDataEvaluation():
                 signal = numpy.array(primary['It'])
                 mu = numpy.log(abs(i0/signal))
             # elif mode == 'xs':
-            #     t = db[-1].table()
+            #     t = user_ns['db'][-1].table()
             #     el = BMMuser.element
             #     dtc1 = numpy.array(t[el+'1'])
             #     dtc2 = numpy.array(t[el+'2'])
@@ -252,7 +252,7 @@ class BMMDataEvaluation():
 
         '''
         if mode == 'xs':
-            t = db[-1].table()
+            t = user_ns['db'][-1].table()
             el = BMMuser.element
             i0 = numpy.array(t['I0'])
             en = numpy.array(t['dcm_energy'])
@@ -263,7 +263,7 @@ class BMMDataEvaluation():
             signal = dtc1+dtc2+dtc3+dtc4
             mu = signal/i0
         else:
-            this = db.v2[uid]
+            this = user_ns['db'].v2[uid]
             if mode is None:
                 mode = this.metadata['start']['XDI']['_mode'][0]
             element = this.metadata['start']['XDI']['Element']['symbol']

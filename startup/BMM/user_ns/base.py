@@ -21,6 +21,7 @@ else:
     nslsii.configure_base(uns_dict, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
     RE  = uns_dict['RE']
     db  = uns_dict['db']
+    sd  = uns_dict['sd']
     bec = uns_dict['bec']
 
 #bec = __main__.bec    

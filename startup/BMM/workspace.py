@@ -59,6 +59,7 @@ def initialize_workspace():
 
 def check_profile_branch():
     here = os.getcwd()
+    STARTUP = os.path.dirname(BMM.functions.__file__)
     os.chdir(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'))
     branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
     print(f'{TAB}Using profile branch {branch}')

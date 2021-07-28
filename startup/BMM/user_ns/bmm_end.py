@@ -9,6 +9,10 @@ import os
 from BMM.functions import run_report
 from BMM.workspace import rkvs
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+
 run_report(__file__, text='import the rest of the things')
 
 run_report('\t'+'resting state')
@@ -256,9 +260,9 @@ wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'st
 pinwheel.folder = BMMuser.folder
 pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
 
-from __main__ import RE
+#from __main__ import RE
 from BMM.logging import BMM_msg_hook
-RE.msg_hook = BMM_msg_hook
+user_ns['RE'].msg_hook = BMM_msg_hook
 
 def measuring(element, edge=None):
     BMMuser.element = element
