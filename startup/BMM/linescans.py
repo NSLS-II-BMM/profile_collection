@@ -139,7 +139,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from abs_set(motor.velocity, 0.4, wait=True)
             yield from abs_set(motor.kill_cmd, 1, wait=True)
 
-            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, 'plan_name' : f'rel_scan linescan {motor.name} I0')
+            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
 
             user_ns['RE'].msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
@@ -258,7 +258,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, 5)
                 
-            uid = yield from rel_scan(dets, motor, start, stop, nsteps, 'plan_name' : f'rel_scan linescan {motor.name} I0')
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             #yield from rel_adaptive_scan(dets, 'I0', motor,
             #                             start=start,
             #                             stop=stop,
