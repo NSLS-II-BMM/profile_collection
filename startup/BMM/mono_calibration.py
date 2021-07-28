@@ -17,7 +17,7 @@ from BMM.edge           import change_edge
 from BMM.functions      import HBARC, boxedtext
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.logging        import BMM_log_info, BMM_msg_hook, report
-from BMM.purpose        import purpose
+#from BMM.purpose        import purpose
 from BMM.xafs           import xafs
 from BMM.resting_state  import resting_state_plan
 from BMM.suspenders     import BMM_clear_to_start
@@ -61,35 +61,35 @@ def calibrate_low_end(mono='111'):
     
         yield from change_edge('Fe', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='fecal', edge='Fe', e0=7112, sample='Fe foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='fecal', edge='Fe', e0=7112, sample='Fe foil')
         close_last_plot()
         handle.write('fe = 11111.11,    7110.75,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Co', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cocal', edge='Co', e0=7709, sample='Co foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cocal', edge='Co', e0=7709, sample='Co foil')
         close_last_plot()
         handle.write('co = 11111.11,    7708.78,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Ni', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nical', edge='Ni', e0=8333, sample='Ni foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nical', edge='Ni', e0=8333, sample='Ni foil')
         close_last_plot()
         handle.write('ni = 11111.11,    8331.49,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Cu', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cucal', edge='Cu', e0=8979, sample='Cu foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cucal', edge='Cu', e0=8979, sample='Cu foil')
         close_last_plot()
         handle.write('cu = 11111.11,    8980.48,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Zn', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='zncal', edge='Zn', e0=9659, sample='Zn foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='zncal', edge='Zn', e0=9659, sample='Zn foil')
         close_last_plot()
         handle.write('zn = 11111.11,    9660.76,    22222.22,   %.5f\n' % pitch)
 
@@ -123,35 +123,35 @@ def calibrate_high_end(mono='111'):
 
         yield from change_edge('Pt', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', edge='Pt', e0=11563, sample='Pt foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', edge='Pt', e0=11563, sample='Pt foil')
         close_last_plot()
         handle.write('pt = 11111.11,    11562.76,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Au', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='aucal', edge='Au', e0=11919, sample='Au foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='aucal', edge='Au', e0=11919, sample='Au foil')
         close_last_plot()
         handle.write('au = 11111.11,    11919.70,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Pb', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='pbcal', edge='Pb', e0=13035, sample='Pb foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='pbcal', edge='Pb', e0=13035, sample='Pb foil')
         close_last_plot()
         handle.write('pb = 11111.11,    13035.07,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Nb', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nbcal', edge='Nb', e0=18986, sample='Nb foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nbcal', edge='Nb', e0=18986, sample='Nb foil')
         close_last_plot()
         handle.write('nb = 11111.11,     18982.97,   22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Mo', target=0)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='mocal', edge='Mo', e0=20000, sample='Mo foil', md=purpose('mono_calibration'))
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='mocal', edge='Mo', e0=20000, sample='Mo foil')
         close_last_plot()
         handle.write('mo = 11111.11,    20000.36,    22222.22,   %.5f\n' % pitch)
 

@@ -19,7 +19,7 @@ from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
-from BMM.purpose        import purpose
+#from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
@@ -182,7 +182,7 @@ class GlancingAngle(Device):
     def align_pitch(self, force=False):
         '''Find the peak of xafs_pitch scan against It. Plot the
         result. Move to the peak.'''        
-        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force, md=purpose('alignment'))
+        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
         close_last_plot()
         table  = db[-1].table()
         pitch  = table['xafs_pitch']
@@ -270,7 +270,7 @@ class GlancingAngle(Device):
             motor = xafs_liny
         else:
             motor = xafs_linx
-        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
+        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False)
         close_last_plot()
         table  = db[-1].table()
         yy     = table[motor.name]
@@ -359,7 +359,7 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
+        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False)
         self.f_uid = db.v2[-1].metadata['start']['uid'] 
         tf = db[-1].table()
         yy = tf[motor.name]

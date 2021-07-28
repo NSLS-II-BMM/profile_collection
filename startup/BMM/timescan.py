@@ -143,9 +143,9 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     @subs_decorator(plot)
     #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay):
-        if 'purpose' not in md:
-            md['purpose'] = 'measurement'
-        uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
+        #if 'purpose' not in md:
+        #    md['purpose'] = 'measurement'
+        uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md, 'plan_name' : f'count measurement {detector}'})
         return uid
         
     rkvs.set('BMM:scan:type',      'time')
