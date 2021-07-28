@@ -856,7 +856,7 @@ def xafs(inifile=None, **kwargs):
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'))
+            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[xascam_uid]), image_web)
             #shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
             #snap('XAS', filename=image_web, annotation=annotation)
