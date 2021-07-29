@@ -29,7 +29,6 @@ from BMM.functions import etok, ktoe
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import db
 from BMM.user_ns.bmm import BMMuser
 
 LARCH = Interpreter()

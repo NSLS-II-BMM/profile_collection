@@ -9,7 +9,6 @@ from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 from BMM.workspace  import rkvs
 
-#from __main__ import RE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor

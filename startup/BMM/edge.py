@@ -17,7 +17,6 @@ from BMM.workspace     import rkvs
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import RE
 from BMM.user_ns.bmm         import BMMuser, rois
 from BMM.user_ns.dcm         import dcm
 from BMM.user_ns.detectors   import xs, with_xspress3

@@ -17,7 +17,6 @@ from joblib import dump, load
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import db
 from BMM.user_ns.bmm import BMMuser
 
 # when pickle changes version number, this error message will happen twice:

@@ -6,8 +6,6 @@ from BMM.logging import report, BMM_msg_hook
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import RE
-
 class EPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
     cls = Cpt(EpicsSignal, 'Cmd:Cls-Cmd')

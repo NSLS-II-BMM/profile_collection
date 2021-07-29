@@ -1,6 +1,5 @@
 import nslsii
 import os
-#import __main__
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -24,7 +23,6 @@ else:
     sd  = uns_dict['sd']
     bec = uns_dict['bec']
 
-#bec = __main__.bec    
 bec.disable_plots()
 bec.disable_baseline()
 
@@ -33,7 +31,6 @@ ophyd.EpicsSignal.set_defaults(timeout=10, connection_timeout=10)
 
 #from databroker.core import SingleRunCache
 
-#RE = __main__.RE
 from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
