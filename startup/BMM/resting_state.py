@@ -37,6 +37,7 @@ def resting_state():
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
     dcm.kill()
+    dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
@@ -57,6 +58,7 @@ def resting_state_plan():
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     dcm.kill()
+    dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
@@ -78,6 +80,7 @@ def end_of_macro():
     yield from mv(_locked_dwell_time, 0.5)
     yield from dcm.kill_plan()
     yield from xafs_wheel.recenter()
+    dcm.mode = 'fixed'
     user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     BMM_clear_suspenders()
