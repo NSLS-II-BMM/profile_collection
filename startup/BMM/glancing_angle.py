@@ -26,7 +26,6 @@ from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import RE, db
 from BMM.user_ns.motors  import xafs_garot, xafs_pitch, xafs_x, xafs_y
 
 class GlancingAngle(Device):

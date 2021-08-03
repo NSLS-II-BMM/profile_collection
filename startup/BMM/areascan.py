@@ -21,8 +21,6 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
 
-
-#from __main__ import RE, db
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
 

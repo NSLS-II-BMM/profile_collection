@@ -1,8 +1,10 @@
 import os, json
+
+from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.logging       import BMM_log_info, report
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)

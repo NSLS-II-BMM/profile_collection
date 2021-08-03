@@ -1,4 +1,4 @@
-import bluesky as bs
+import bluesky
 
 from bluesky.plans import rel_scan
 from bluesky.plan_stubs import abs_set, sleep, mv, null
@@ -23,7 +23,6 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
 
-#from __main__ import RE, db
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
