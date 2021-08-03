@@ -32,6 +32,9 @@ from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from __main__ import db
+
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
@@ -336,7 +339,7 @@ def db2xdi(datafile, key):
     >>> db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
     '''
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
+    BMMuser = user_ns['BMMuser']
     dfile = datafile
     if BMMuser.DATA not in dfile:
         if 'bucket' not in BMMuser.DATA:
@@ -630,7 +633,6 @@ def xafs(inifile=None, **kwargs):
                 return
 
         ## make sure we are ready to scan
-        _locked_dwell_time = user_ns['_locked_dwell_time']
         #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
         #yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
@@ -1197,7 +1199,7 @@ def xafs(inifile=None, **kwargs):
         print('Cleaning up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
-        db = user_ns['db']
+        #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished'
         try:
@@ -1243,16 +1245,16 @@ def xafs(inifile=None, **kwargs):
         yield from mv(dcm_pitch.kill_cmd, 1)
         yield from mv(dcm_roll.kill_cmd, 1)
 
-    RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
+    RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
-    quadem1, vor = user_ns['quadem1'], user_ns['vor']
+    #quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel, ga = user_ns['xafs_wheel'], user_ns['ga']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     rkvs = user_ns['rkvs']
-    try:
-        xs = user_ns['xs']
-    except:
-        pass
+    #try:
+    #    xs = user_ns['xs']
+    #except:
+    #    pass
     try:
         dualio = user_ns['dualio']
     except:
