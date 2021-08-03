@@ -299,6 +299,7 @@ class BMM_User(Borg):
             else:
                 report(f'No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
+            xs.reset_rois()
         except Exception as E:
             print(error_msg(E))
 

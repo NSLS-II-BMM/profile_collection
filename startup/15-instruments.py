@@ -113,7 +113,7 @@ xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 #xafs_ref.content = [None, 'La', 'Ce', 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', 'Tm',
-#                    'Eu', 'Gd', None, None, None, None, None, None, None, None, None, None]
+#                    'Eu', 'Gd', None, None, 'Au', 'Cu', 'Mo', None, 'Zr', None, 'Fe', 'Ti']
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
         

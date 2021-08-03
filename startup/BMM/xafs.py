@@ -360,28 +360,32 @@ def make_merged_triplot(uidlist, filename, mode):
     #k.put(uidlist)
     #merge=k.merge()
     BMMuser = user_ns['BMMuser']
-    base = Pandrosus()
-    projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
-    proj = create_athena(projname)
-    base.fetch(uidlist[0], mode=mode)
-    ee = base.group.energy
-    mm = base.group.mu
-    save = base.group.args['label']
-    proj.add_group(base.group)
-    base.group.args['label'] = save
     count = 0
-    for uid in uidlist[1:]:
-        this = Pandrosus()
-        try:
-            this.fetch(uid, mode=mode)
-            mu = numpy.interp(ee, this.group.energy, this.group.mu)
-            mm = mm + mu
-            save = this.group.args['label']
-            proj.add_group(this.group)
-            this.group.args['label'] = save
-            count += 1
-        except:
-            pass # presumably this is noisy data for which a valid background was not found
+    try:
+        base = Pandrosus()
+        projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
+        proj = create_athena(projname)
+        base.fetch(uidlist[0], mode=mode)
+        ee = base.group.energy
+        mm = base.group.mu
+        save = base.group.args['label']
+        proj.add_group(base.group)
+        base.group.args['label'] = save
+        count = 1
+        for uid in uidlist[1:]:
+            this = Pandrosus()
+            try:
+                this.fetch(uid, mode=mode)
+                mu = numpy.interp(ee, this.group.energy, this.group.mu)
+                mm = mm + mu
+                save = this.group.args['label']
+                proj.add_group(this.group)
+                this.group.args['label'] = save
+                count += 1
+            except:
+                pass # presumably this is noisy data for which a valid background was not found
+    except:
+        pass # presumably this is noisy data for which a valid background was not found
     if count == 0:
         print(whisper(f'Unable to make triplot'))    
         return
