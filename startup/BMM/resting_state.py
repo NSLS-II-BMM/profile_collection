@@ -9,7 +9,6 @@ from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 from BMM.workspace  import rkvs
 
-from __main__ import RE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor
@@ -38,7 +37,8 @@ def resting_state():
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
     dcm.kill()
-    #RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
 def resting_state_plan():
@@ -58,7 +58,8 @@ def resting_state_plan():
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     dcm.kill()
-    #RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
 
@@ -79,7 +80,8 @@ def end_of_macro():
     yield from mv(_locked_dwell_time, 0.5)
     yield from dcm.kill_plan()
     yield from xafs_wheel.recenter()
-    RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     BMM_clear_suspenders()
 

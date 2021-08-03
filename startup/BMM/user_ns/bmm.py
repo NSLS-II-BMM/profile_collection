@@ -28,10 +28,6 @@ from bluesky.preprocessors   import finalize_wrapper
 run_report('\t'+'user')
 from BMM.user import BMM_User
 
-## old xafs_linxs sample holder
-#run_report('\t'+'reference foils')
-#from BMM.referencefoils import ReferenceFoils
-#foils = ReferenceFoils()
 
 run_report('\t'+'detector ROIs')
 from BMM.rois import ROI, XSROI

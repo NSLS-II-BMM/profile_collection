@@ -1,12 +1,9 @@
 import os, time, datetime
+import inflection, textwrap, ansiwrap
 from numpy import pi, sin, cos, arcsin, sqrt
+
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
-
-# from BMM.user_ns.bmm       import BMMuser    
-
-# from BMM.user_ns.dcm       import dcm
-# from BMM.user_ns.detectors import with_xspress3
 
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
@@ -138,16 +135,12 @@ def isfloat(value):
 def now(fmt="%Y-%m-%dT%H-%M-%S"):
     return datetime.datetime.now().strftime(fmt)
 
-## CRUDE HACK ALERT! inflection.py is in ~/.ipython (https://pypi.org/project/inflection/)
-import inflection
 def inflect(word, number):
     if abs(number) == 1:
         return('%d %s' % (number, inflection.singularize(word)))
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
-import textwrap
-import ansiwrap
 def boxedtext(title, text, tint, width=75):
     '''
     Put text in a lovely unicode block element box.  The top
