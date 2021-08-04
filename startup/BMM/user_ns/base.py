@@ -16,6 +16,10 @@ if not is_re_worker_active():
     ip = get_ipython()
     nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
     ip.log.setLevel('ERROR')
+    RE  = ip.user_ns['RE']
+    db  = ip.user_ns['db']
+    sd  = ip.user_ns['sd']
+    bec = ip.user_ns['bec']
 else:
     nslsii.configure_base(uns_dict, 'bmm', configure_logging=True, publish_documents_to_kafka=True)
     RE  = uns_dict['RE']

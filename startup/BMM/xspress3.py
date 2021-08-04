@@ -202,9 +202,9 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     # #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-               read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
-               root='/mnt/nfs/xspress3/',                     # path to root, as mounted on client (i.e. ws1)
-               write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
+               read_path_template='/nsls2/data/bmm/assets/',  # path to data folder, as mounted on client (i.e. ws1) 
+               root='/nsls2/data/bmm/',                     # path to root, as mounted on client (i.e. ws1)
+               write_path_template='/nsls2/data/bmm/assets/', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,

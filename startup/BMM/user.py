@@ -14,6 +14,7 @@ from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
 from BMM.workspace import rkvs
 
+
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
 ## sort of a singleton, see http://code.activestate.com/recipes/66531/
@@ -495,8 +496,10 @@ class BMM_User(Borg):
         ## XRF & HDF5folders
         xrffolder = os.path.join(data_folder, 'XRF')
         self.establish_folder(step, 'XRF spectra folder', xrffolder)
-        hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
-        self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
+        #hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
+        #hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *self.date.split('-'))
+        #self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
+        #xs.hdf5.file_path.put(hdf5folder)
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Pilatus folder

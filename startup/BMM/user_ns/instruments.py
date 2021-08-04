@@ -199,6 +199,13 @@ shb.shutter_type = 'PH'
 shb.openval  = 0
 shb.closeval = 1
 
+# Plan names to open and close the shutters from RE Worker (need distinct name)
+shb_open_plan = shb.open_plan
+shb_close_plan = shb.close_plan
+
+
+
+
 fs1 = EPS_Shutter('XF:06BMA-OP{FS:1}', name = 'FS1')
 fs1.shutter_type = 'FS'
 fs1.openval  = 1

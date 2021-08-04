@@ -367,7 +367,11 @@ if with_xspress3 is True:
 
         xs.set_rois()
         #xrf = xs.measure_xrf
-
+        #hdf5folder = os.path.join(BMMuser.folder, 'raw', 'HDF5')
+        hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *BMMuser.date.split('-'))
+        xs.hdf5.read_path_template = hdf5folder
+        xs.hdf5.write_path_template = hdf5folder
+        xs.hdf5.file_path.put(hdf5folder)
     # else:
     #     run_report('\t'+'1-element SDD with Xspress3')
     #     xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
