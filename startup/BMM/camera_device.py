@@ -81,7 +81,7 @@ def analog_camera(filename    = None,
     """A function for interacting with fswebcam in a way that meets the
     needs of 06BM.
 
-    Parameters
+   Parameters
     ----------
     folder : str
         location to drop jpg image [$HOME]
@@ -161,6 +161,12 @@ def analog_camera(filename    = None,
     #    camera.crosshairs()
 
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 
 class BMM_JPEG_HANDLER:
@@ -172,9 +178,10 @@ class BMM_JPEG_HANDLER:
         filepath = self._template % index
         return numpy.asarray(Image.open(filepath))
 
-user_ns['db'].reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
-user_ns['db'].reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
-user_ns['db'].reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
+if not is_re_worker_active():
+    user_ns['db'].reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
+    user_ns['db'].reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
+    user_ns['db'].reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
 
 class ExternalFileReference(Signal):
     """

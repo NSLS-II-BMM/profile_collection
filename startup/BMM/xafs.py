@@ -32,9 +32,19 @@ from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from __main__ import db
+#from __main__ import db
+from BMM.user_ns.base import db
 
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
+
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
 # (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
@@ -620,6 +630,10 @@ def xafs(inifile=None, **kwargs):
         #if 'purpose' not in supplied_metadata:
         #    this_purpose = purpose('xafs', 'scan_nd', )
         #    supplied_metadata['purpose'] = 'xafs'
+
+        if is_re_worker_active():
+            BMMuser.prompt = False
+            kwargs['force'] = True
 
         if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
         if 'force' in kwargs and kwargs['force'] is True:
@@ -1287,6 +1301,8 @@ def xafs(inifile=None, **kwargs):
         BMMuser.snapshot = False
         BMMuser.htmlout  = False
 
+    if is_re_worker_active():
+        inifile = '/home/xf06bm/Data/bucket/scan.ini'
     if inifile is None:
         inifile = present_options('ini')
     if inifile is None:
@@ -1318,6 +1334,8 @@ def howlong(inifile=None, interactive=True, **kwargs):
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
+    if is_re_worker_active():
+        inifile = '/home/xf06bm/Data/bucket/scan.ini'
     BMMuser = user_ns['BMMuser']
     if inifile is None:
         inifile = present_options('ini')

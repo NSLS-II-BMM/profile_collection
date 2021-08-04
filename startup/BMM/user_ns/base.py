@@ -1,6 +1,8 @@
 import nslsii
 import os
 
+from bluesky.plan_stubs import mv, mvr
+
 try:
     from bluesky_queueserver import is_re_worker_active
 except ImportError:
