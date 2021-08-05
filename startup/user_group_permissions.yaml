@@ -16,6 +16,8 @@ user_groups:
       - "^reference$"
       - "^shb_open_plan$"
       - "^shb_close_plan$"
+      - "^mv$"
+      - "^mvr$"  
     forbidden_plans:
       - "^_"  # All plans with names starting with '_'
     allowed_devices:

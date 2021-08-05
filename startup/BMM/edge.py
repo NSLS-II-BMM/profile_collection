@@ -53,7 +53,7 @@ def arrived_in_mode(mode=None):
               m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     ok = True
     for m in motors:
-        target = float(MODEDATA[m][mode])
+        target = float(MODEDATA[m.name][mode])
         achieved = m.position
         diff = abs(target - achieved)
         if diff > 0.5:
