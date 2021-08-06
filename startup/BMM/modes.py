@@ -104,10 +104,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     RE.msg_hook = None
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from dcm.kill_plan()
-    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True) # need to explicitly kill this before
-                                                       # starting a move, it is one of the
-                                                       # motors that reports MOVN=1 even when
-                                                       # still
+    yield from abs_mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
+                                           # starting a move, it is one of the
+                                           # motors that reports MOVN=1 even when
+                                           # still
                                                        
     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
                         
@@ -126,10 +126,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     if edge is not None:
          #dcm_bragg.clear_encoder_loss()
          base.extend([dcm.energy, edge])
-    if mode in ('D', 'E', 'F'):
-         base.extend([slits3.hcenter, 2])
-    else:
-         base.extend([slits3.hcenter, 0])
+    # if mode in ('D', 'E', 'F'):
+    #      base.extend([slits3.hcenter, 2])
+    # else:
+    #      base.extend([slits3.hcenter, 0])
           
 
     ###################################################################
@@ -152,7 +152,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     ##########################
     # do the motor movements #
     ##########################
-    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from mv(dm3_bct.kill_cmd, 1)
     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
         yield from mv(*base)
     elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
@@ -173,8 +173,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
         yield from mv(*base)
 
     yield from sleep(2.0)
-    yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
-    yield from abs_set(dm3_bct.kill_cmd, 1, wait=True)
+    yield from mv(m2_bender.kill_cmd, 1)
+    yield from mv(dm3_bct.kill_cmd, 1)
     yield from m2.kill_jacks()
     yield from m3.kill_jacks()
      
