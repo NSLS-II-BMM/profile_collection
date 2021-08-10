@@ -2,7 +2,7 @@ from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal, DerivedS
 from ophyd.quadem import QuadEMPort
 
 from numpy import log, exp
-from bluesky.plan_stubs import abs_set, sleep
+from bluesky.plan_stubs import mv, sleep
 
 from BMM.logging import BMM_log_info
 
@@ -58,12 +58,12 @@ class BMMQuadEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.acquire, 1, wait=True)
-        yield from abs_set(self.acquire_mode, 0, wait=True)
+        yield from mv(self.acquire, 1)
+        yield from mv(self.acquire_mode, 0)
 
     def off_plan(self):
-        yield from abs_set(self.acquire, 0, wait=True)
-        yield from abs_set(self.acquire_mode, 2, wait=True)
+        yield from mv(self.acquire, 0)
+        yield from mv(self.acquire_mode, 2)
 
 
 
@@ -114,15 +114,15 @@ class BMMDualEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.acquire, 1, wait=True)
-        yield from abs_set(self.acquire_mode, 0, wait=True)
+        yield from mv(self.acquire, 1)
+        yield from mv(self.acquire_mode, 0)
 
     def off_plan(self):
-        yield from abs_set(self.acquire, 0, wait=True)
-        yield from abs_set(self.acquire_mode, 2, wait=True)
+        yield from mv(self.acquire, 0)
+        yield from mv(self.acquire_mode, 2)
 
     def dark_current(self):
-        reopen = shb.state.get() == shb.openval 
+        reopen = shb.state.get() == shb.openval
         if reopen:
             print('\nClosing photon shutter')
             yield from shb.close_plan()

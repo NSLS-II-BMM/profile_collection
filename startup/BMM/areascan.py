@@ -1,7 +1,7 @@
 
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
@@ -98,7 +98,7 @@ def areascan(detector,
             fast = motor_nicknames[fast]
 
         detector = detector.capitalize()
-        yield from abs_set(_locked_dwell_time, dwell, wait=True)
+        yield from mv(_locked_dwell_time, dwell)
         dets = [quadem1,]
         if detector == 'If':
             dets.append(vor)

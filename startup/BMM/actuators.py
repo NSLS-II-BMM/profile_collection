@@ -1,5 +1,5 @@
 from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsSignal)
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 import time
 
 from BMM.logging import report, BMM_msg_hook
@@ -123,9 +123,9 @@ class Spinner(Device):
 
     def on_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 1, wait=True)
+        yield from mv(self.state, 1)
 
     def off_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 0, wait=True)
+        yield from mv(self.state, 0)
 

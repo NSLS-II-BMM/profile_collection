@@ -1,5 +1,5 @@
 
-from bluesky.plan_stubs import abs_set, mv
+from bluesky.plan_stubs import mv
 
 
 from BMM import user_ns as user_ns_module

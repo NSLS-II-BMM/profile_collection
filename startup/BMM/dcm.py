@@ -2,7 +2,7 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 
 from numpy import pi, sin, cos, arcsin
 
@@ -102,12 +102,12 @@ class DCM(PseudoPositioner):
         dcm_perp.hvel_sp.put(0.2)
         dcm_x.velocity.put(0.6)
         ## initiate homing for Bragg, pitch, roll, para, perp, and x
-        yield from abs_set(dcm_bragg.home_signal, 1)
-        yield from abs_set(dcm_pitch.home_signal, 1)
-        yield from abs_set(dcm_roll.home_signal,  1)
-        yield from abs_set(dcm_para.home_signal,  1)
-        yield from abs_set(dcm_perp.home_signal,  1)
-        yield from abs_set(dcm_x.home_signal,     1)
+        yield from mv(dcm_bragg.home_signal, 1)
+        yield from mv(dcm_pitch.home_signal, 1)
+        yield from mv(dcm_roll.home_signal,  1)
+        yield from mv(dcm_para.home_signal,  1)
+        yield from mv(dcm_perp.home_signal,  1)
+        yield from mv(dcm_x.home_signal,     1)
         yield from sleep(1.0)
         ## wait for them to be homed
         print('Begin homing DCM motors:\n')

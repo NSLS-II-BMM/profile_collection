@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 import configparser
 import numpy
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import isfloat, present_options

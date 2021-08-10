@@ -1,6 +1,6 @@
 import os, json
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.logging       import BMM_log_info, report

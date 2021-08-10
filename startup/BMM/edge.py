@@ -1,12 +1,12 @@
 
 import time, json, os
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.functions     import boxedtext, countdown, approximate_pitch
-from BMM.suspenders    import BMM_clear_to_start
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
@@ -159,6 +159,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
         return(yield from null())
 
+    BMM_suspenders()
+
+    
     BMMuser.edge        = edge
     BMMuser.element     = el
     BMMuser.edge_energy = energy
@@ -249,10 +252,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     # run a rocking curve scan #
     ############################
     print('Optimizing rocking curve...')
-    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+    yield from mv(dcm_pitch.kill_cmd, 1)
     yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from sleep(1)
-    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+    yield from mv(dcm_pitch.kill_cmd, 1)
     yield from rocking_curve()
     close_last_plot()
     
@@ -285,6 +288,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     #xBMMuser.to_json(os.path.join(BMMuser.folder, '.BMMuser'))
+    BMM_clear_suspenders()
     yield from dcm.kill_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))

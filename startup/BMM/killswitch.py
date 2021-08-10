@@ -1,5 +1,5 @@
 from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO, Device)
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 
 import time
 

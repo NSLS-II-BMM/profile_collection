@@ -1,6 +1,6 @@
 
 from bluesky.preprocessors import finalize_wrapper
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 import matplotlib.pyplot as plt
 from lmfit.models import LinearModel
 

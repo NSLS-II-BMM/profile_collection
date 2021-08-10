@@ -17,7 +17,7 @@ from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defi
 from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
 from bluesky.plans import count
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 
 from pathlib import PurePath
 #from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,

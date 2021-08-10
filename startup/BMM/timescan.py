@@ -1,7 +1,7 @@
 
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
 
 import numpy
@@ -86,7 +86,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         yield from null()
         return
 
-    yield from abs_set(_locked_dwell_time, dwell, wait=True)
+    yield from mv(_locked_dwell_time, dwell)
     dets  = [quadem1,]
     denominator = ''
 
@@ -157,7 +157,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))
 
-    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+    yield from mv(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     return(uid)
 

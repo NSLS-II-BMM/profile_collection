@@ -1,7 +1,7 @@
 import bluesky
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel
@@ -134,9 +134,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             #if slit_height < 0.5:
             #    yield from mv(slits3.vsize, 0.5)
             
-            yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
-            yield from abs_set(motor.velocity, 0.4, wait=True)
-            yield from abs_set(motor.kill_cmd, 1, wait=True)
+            yield from mv(quadem1.averaging_time, 0.1)
+            yield from mv(motor.velocity, 0.4)
+            yield from mv(motor.kill_cmd, 1)
 
             uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
 
@@ -153,7 +153,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 top = t[motor.name][position]
                 
                 yield from sleep(slp)
-                yield from abs_set(motor.kill_cmd, 1, wait=True)
+                yield from mv(motor.kill_cmd, 1)
                 yield from mv(motor, top)
 
             else:
@@ -161,16 +161,16 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from sleep(slp)
-                yield from abs_set(motor.kill_cmd, 1, wait=True)
+                yield from mv(motor.kill_cmd, 1)
                 yield from move_after_scan(motor)
-            yield from abs_set(quadem1.averaging_time, 0.5, wait=True)
+            yield from mv(quadem1.averaging_time, 0.5)
         yield from scan_slit(slp)
 
     def cleanup_plan(slp):
         yield from mv(slits3.vsize, slit_height)
-        yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+        yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(slp)
-        yield from abs_set(motor.kill_cmd, 1, wait=True)
+        yield from mv(motor.kill_cmd, 1)
         yield from resting_state_plan()
 
     #RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
@@ -250,7 +250,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
-            yield from abs_set(_locked_dwell_time, 0.1, wait=True)
+            yield from mv(_locked_dwell_time, 0.1)
             yield from dcm.kill_plan()
 
             yield from mv(slits3.vsize, 3)
@@ -283,7 +283,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                 top      = t[motor.name][position]
 
             yield from sleep(3.0)
-            yield from abs_set(motor.kill_cmd, 1, wait=True)
+            yield from mv(motor.kill_cmd, 1)
             user_ns['RE'].msg_hook = BMM_msg_hook
 
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
@@ -295,9 +295,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 
     def cleanup_plan():
         yield from mv(slits3.vsize, slit_height)
-        yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+        yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(1.0)
-        yield from abs_set(motor.kill_cmd, 1, wait=True)
+        yield from mv(motor.kill_cmd, 1)
         yield from sleep(1.0)
         yield from dcm.kill_plan()
         yield from resting_state_plan()
@@ -441,7 +441,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             yield from null()
             return
 
-        yield from abs_set(_locked_dwell_time, inttime, wait=True)
+        yield from mv(_locked_dwell_time, inttime)
         if detector == 'Xs':
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
@@ -526,7 +526,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                    doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
 
-        #abs_set(_locked_dwell_time, 0.5)
+        #mv(_locked_dwell_time, 0.5)
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]

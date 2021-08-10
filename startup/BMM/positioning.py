@@ -1,6 +1,6 @@
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 
 import matplotlib.pyplot as plt
 from lmfit.models import StepModel

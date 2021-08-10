@@ -1,6 +1,6 @@
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
 import numpy
 import os
