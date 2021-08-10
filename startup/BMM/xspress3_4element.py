@@ -135,6 +135,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             edge = 'k'
             if Z_number(el) > 45:
                 edge = 'l3'
+            if el == user_ns['BMMuser'].element:
+                edge = user_ns['BMMuser'].edge.lower()
             # JOSH: proposed change for new IOC
             #print("getting ready to rename mcarois")
             for channel in self.iterate_channels():

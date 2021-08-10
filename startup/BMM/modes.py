@@ -133,10 +133,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     if edge is not None:
          #dcm_bragg.clear_encoder_loss()
          base.extend([dcm.energy, edge])
-    if mode in ('D', 'E', 'F'):
-         base.extend([slits3.hcenter, 2])
-    else:
-         base.extend([slits3.hcenter, 0])
+    # if mode in ('D', 'E', 'F'):
+    #      base.extend([slits3.hcenter, 2])
+    # else:
+    #      base.extend([slits3.hcenter, 0])
           
 
     ###################################################################
