@@ -1,14 +1,14 @@
 import os, time, datetime
+import inflection, textwrap, ansiwrap
 from numpy import pi, sin, cos, arcsin, sqrt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
 
-get_ipython().magic(u"%xmode Plain")
 
 ## some global parameters
 BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
@@ -24,24 +24,34 @@ LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 # BlinkBlack, BlinkBlue, BlinkCyan, BlinkGreen, BlinkLightGray,
 # BlinkPurple, BlinkRed, BlinkYellow,
 
-from IPython.utils.coloransi import TermColors as color
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 def colored(text, tint='white', attrs=[]):
     '''
     A simple wrapper around IPython's interface to TermColors
     '''
-    tint = tint.lower()
-    if 'dark' in tint:
-        tint = 'Dark' + tint[4:].capitalize()
-    elif 'light' in tint:
-        tint = 'Light' + tint[5:].capitalize()
-    elif 'blink' in tint:
-        tint = 'Blink' + tint[5:].capitalize()
-    elif 'no' in tint:
-        tint = 'Normal'
+    if not is_re_worker_active():
+        from IPython.utils.coloransi import TermColors as color
+        tint = tint.lower()
+        if 'dark' in tint:
+            tint = 'Dark' + tint[4:].capitalize()
+        elif 'light' in tint:
+            tint = 'Light' + tint[5:].capitalize()
+        elif 'blink' in tint:
+            tint = 'Blink' + tint[5:].capitalize()
+        elif 'no' in tint:
+            tint = 'Normal'
+        else:
+            tint = tint.capitalize()
+        return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
     else:
-        tint = tint.capitalize()
-    return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
-
+        return(text)
+        
 def run_report(thisfile, text=None):
     '''
     Noisily proclaim to be importing a file of python code.
@@ -125,16 +135,12 @@ def isfloat(value):
 def now(fmt="%Y-%m-%dT%H-%M-%S"):
     return datetime.datetime.now().strftime(fmt)
 
-## CRUDE HACK ALERT! inflection.py is in ~/.ipython (https://pypi.org/project/inflection/)
-import inflection
 def inflect(word, number):
     if abs(number) == 1:
         return('%d %s' % (number, inflection.singularize(word)))
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
-import textwrap
-import ansiwrap
 def boxedtext(title, text, tint, width=75):
     '''
     Put text in a lovely unicode block element box.  The top
@@ -161,9 +167,11 @@ def boxedtext(title, text, tint, width=75):
 
 def clear_dashboard():
     '''Clean up in a way that helps the cadashboard utility'''
-    user_ns['rkvs'].set('BMM:scan:type',      '')
-    user_ns['rkvs'].set('BMM:scan:starttime', '')
-    user_ns['rkvs'].set('BMM:scan:estimated', '')
+    #from BMM.workspace import rkvs
+    rkvs = user_ns['rkvs']
+    rkvs.set('BMM:scan:type',      '')
+    rkvs.set('BMM:scan:starttime', '')
+    rkvs.set('BMM:scan:estimated', '')
     
 
 def countdown(t):
@@ -188,10 +196,9 @@ def elapsed_time(start):
     
 
 def present_options(suffix='xlsx'):
-    BMMuser = user_ns['BMMuser']
-    options = [x for x in os.listdir(BMMuser.folder) if x.endswith(suffix)]
+    options = [x for x in os.listdir(user_ns['BMMuser'].folder) if x.endswith(suffix)]
     options = sorted(options)
-    print(bold_msg(f'Looking in {BMMuser.folder}\n'))
+    print(bold_msg(f'Looking in {user_ns["BMMuser"].folder}\n'))
     
     print(f'Select your {suffix} file:\n')
     for i,x in enumerate(options):

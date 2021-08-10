@@ -5,10 +5,10 @@ logger.setLevel('WARNING')
 logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
 
-from BMM.workspace import initialize_workspace, rkvs
+from BMM.workspace import initialize_workspace
 initialize_workspace()
 
-import json, time
+import json, time, os
 
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
@@ -28,10 +28,6 @@ from bluesky.preprocessors   import finalize_wrapper
 run_report('\t'+'user')
 from BMM.user import BMM_User
 
-## old xafs_linxs sample holder
-#run_report('\t'+'reference foils')
-#from BMM.referencefoils import ReferenceFoils
-#foils = ReferenceFoils()
 
 run_report('\t'+'detector ROIs')
 from BMM.rois import ROI, XSROI

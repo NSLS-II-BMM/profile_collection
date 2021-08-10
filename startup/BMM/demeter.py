@@ -3,8 +3,11 @@ import os
 
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.bmm import BMMuser
+
 
 def athena():
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
@@ -23,7 +26,6 @@ def toprj(folder=None, name=None, base=None, start=None, end=None, bounds=None, 
     # no less!  Are you having an aneurysm?  If so, please get someone to film it.  I'm      #
     # going to want to see that!  XOXO, Bruce                                                #
     ##########################################################################################
-    BMMuser = user_ns["BMMuser"]
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1'
     bail = 0
     if folder is None:

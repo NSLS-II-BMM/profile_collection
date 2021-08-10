@@ -1,14 +1,17 @@
 from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO, Device)
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 
 import time
 
 from BMM.functions import countdown
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
+from BMM.user_ns.dcm import dcm
+from BMM.user_ns.instruments import m2, m3, slits2, slits3
+from BMM.user_ns.motors import dm3_bct, dm3_bpm, dm3_foils, dm3_fs
 
 class KillSwitch(Device):
     '''A simple interface to the DIODE kill switches for the Phytron
@@ -128,19 +131,19 @@ class KillSwitch(Device):
         self.enable(mc)
         print(whisper('enabling motors'))
         if mc == 'm2':
-            user_ns['m2'].ena()
+            m2.ena()
         elif mc == 'm3':
-            user_ns['m3'].ena()
+            m3.ena()
         elif mc == 'slits2':
-            user_ns['slits2'].enable()
+            slits2.enable()
         elif mc == 'dm3':
-            user_ns['slits3'].enable()
-            for axis in ('dm3_bct', 'dm3_bpm', 'dm3_foils', 'dm3_fs'):
-                user_ns[axis].enable()
+            slits3.enable()
+            for axis in (dm3_bct, dm3_bpm, dm3_foils, dm3_fs):
+                axis.enable()
                 time.sleep(0.5)
-                user_ns[axis].kill()
-        elif mc == 'dcm':
-            user_ns['dcm'].ena()
+                axis.kill()
+        elif mc == dcm:
+            dcm.ena()
             time.sleep(0.5)
-            user_ns['dcm'].kill()
+            dcm.kill()
             

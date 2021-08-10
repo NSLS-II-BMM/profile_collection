@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 import configparser
 import numpy
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import isfloat, present_options
@@ -15,8 +15,8 @@ from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.logging        import report
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 class WheelMotor(EndStationEpicsMotor):
     '''Motor class for BMM sample wheels.

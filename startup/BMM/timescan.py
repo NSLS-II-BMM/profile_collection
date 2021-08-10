@@ -1,7 +1,7 @@
 
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
 
 import numpy
@@ -20,8 +20,8 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.metadata      import bmm_metadata
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 
 ####################################
@@ -86,7 +86,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         yield from null()
         return
 
-    yield from abs_set(_locked_dwell_time, dwell, wait=True)
+    yield from mv(_locked_dwell_time, dwell)
     dets  = [quadem1,]
     denominator = ''
 
@@ -143,9 +143,9 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     @subs_decorator(plot)
     #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay):
-        if 'purpose' not in md:
-            md['purpose'] = 'measurement'
-        uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md})
+        #if 'purpose' not in md:
+        #    md['purpose'] = 'measurement'
+        uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md, 'plan_name' : f'count measurement {detector}'})
         return uid
         
     rkvs.set('BMM:scan:type',      'time')
@@ -157,7 +157,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))
 
-    yield from abs_set(_locked_dwell_time, 0.5, wait=True)
+    yield from mv(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     return(uid)
 

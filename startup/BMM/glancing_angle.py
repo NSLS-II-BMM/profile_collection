@@ -19,12 +19,14 @@ from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
-from BMM.purpose        import purpose
+#from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.motors  import xafs_garot, xafs_pitch, xafs_x, xafs_y
 
 class GlancingAngle(Device):
     '''A class capturing the movement and control of the glancing angle
@@ -76,7 +78,7 @@ class GlancingAngle(Device):
 
     spin = True
     home = 0
-    garot = user_ns['xafs_garot']
+    garot = xafs_garot
     inverted = ''
     flat = [0,0]
     y_uid = ''
@@ -137,13 +139,12 @@ class GlancingAngle(Device):
             self.off(i)
     def alloff_plan(self):
         '''Turn off all spinners as a plan'''
-        RE = user_ns['RE']
-        save = RE.msg_hook
-        RE.msg_hook = None
+        save = user_ns['RE'].msg_hook
+        user_ns['RE'].msg_hook = None
         for i in range(1,9):
             this = getattr(self, f'spinner{i}')
             yield from mv(this, 0)
-        RE.msg_hook = save
+        user_ns['RE'].msg_hook = save
             
     def to(self, number):
         '''Rotate to the specified spinner. Turn off all other spinners.  Turn
@@ -180,11 +181,9 @@ class GlancingAngle(Device):
     def align_pitch(self, force=False):
         '''Find the peak of xafs_pitch scan against It. Plot the
         result. Move to the peak.'''        
-        xafs_pitch = user_ns['xafs_pitch']
-        db = user_ns['db']
-        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force, md=purpose('alignment'))
+        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
         close_last_plot()
-        table  = db[-1].table()
+        table  = user_ns['db'][-1].table()
         pitch  = table['xafs_pitch']
         signal = table['It']/table['I0']
         target = signal.idxmax()
@@ -211,7 +210,6 @@ class GlancingAngle(Device):
 
     def alignment_plot(self, yt, pitch, yf):
         '''Make a pretty, three-panel plot at the end of an auto-alignment'''
-        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
         gs = gridspec.GridSpec(1,3)
 
@@ -221,7 +219,7 @@ class GlancingAngle(Device):
             motor =  'xafs_x'
 
         t  = fig.add_subplot(gs[0, 0])
-        tt = db[yt].table()
+        tt = user_ns['db'][yt].table()
         yy = tt[motor]
         signal = tt['It']/tt['I0']
         if float(signal[2]) > list(signal)[-2] :
@@ -240,7 +238,7 @@ class GlancingAngle(Device):
         t.set_ylabel(f'{self.inverted}data and error function')
 
         p  = fig.add_subplot(gs[0, 1])
-        tp = db[pitch].table()
+        tp = user_ns['db'][pitch].table()
         xp = tp['xafs_pitch']
         signal = tp['It']/tp['I0']
         target = signal.idxmax()
@@ -251,7 +249,7 @@ class GlancingAngle(Device):
         p.set_title(f'alignment of spinner {self.current()}')
 
         f = fig.add_subplot(gs[0, 2])
-        tf = db[yf].table()
+        tf = user_ns['db'][yf].table()
         yy = tf[motor]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
         com = int(center_of_mass(signal)[0])+1
@@ -268,13 +266,12 @@ class GlancingAngle(Device):
         '''Fit an error function to the linear scan against It. Plot the
         result. Move to the centroid of the error function.'''
         if self.orientation == 'parallel':
-            motor = user_ns['xafs_liny']
+            motor = xafs_liny
         else:
-            motor =  user_ns['xafs_linx']
-        db = user_ns['db']
-        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
+            motor = xafs_linx
+        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False)
         close_last_plot()
-        table  = db[-1].table()
+        table  = user_ns['db'][-1].table()
         yy     = table[motor.name]
         signal = table['It']/table['I0']
         if drop is not None:
@@ -329,9 +326,6 @@ class GlancingAngle(Device):
           through the adhesive at very high energy.
 
         '''
-        RE, BMMuser, db = user_ns['RE'], user_ns['BMMuser'], user_ns['db']
-        xafs_pitch, xafs_x, xafs_y = user_ns['xafs_pitch'], user_ns['xafs_x'], user_ns['xafs_y']
-
         if BMMuser.macro_dryrun:
             report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
             print(info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
@@ -349,11 +343,11 @@ class GlancingAngle(Device):
 
         ## for realsies X or Y in transmission
         yield from self.align_linear(drop=drop)
-        self.y_uid = db.v2[-1].metadata['start']['uid'] 
+        self.y_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
 
         ## for realsies Y in pitch
         yield from self.align_pitch()
-        self.pitch_uid = db.v2[-1].metadata['start']['uid'] 
+        self.pitch_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
 
         ## record the flat position
         if self.orientation == 'parallel':
@@ -364,9 +358,9 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(xafs_pitch, pitch)
-        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, md=purpose('alignment'))
-        self.f_uid = db.v2[-1].metadata['start']['uid'] 
-        tf = db[-1].table()
+        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False)
+        self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
         com = int(center_of_mass(signal)[0])+1
@@ -383,16 +377,16 @@ class GlancingAngle(Device):
             post_to_slack('failed to post image: {self.alignment_filename}')
             pass
         BMM_clear_suspenders()
-        #RE.clear_suspenders()
+        #user_ns['RE'].clear_suspenders()
 
         
     def flatten(self):
         '''Return the stage to its nominally flat position.'''
-        xafs_pitch = user_ns['xafs_pitch']
+        xafs_pitch = xafs_pitch
         if self.orientation == 'parallel':
-            motor = user_ns['xafs_y']
+            motor = xafs_y
         else:
-            motor = user_ns['xafs_x']
+            motor = xafs_x
         if self.flat != [0, 0]:
             yield from mv(motor, self.flat[0], xafs_pitch, self.flat[1])
         
@@ -422,7 +416,6 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
         control parameters, and a line to close plot windows after the
         scan.
         '''
-        BMMuser, ga = user_ns['BMMuser'], user_ns['ga']
         element, edge, focus = (None, None, None)
         for m in self.measurements:
 
@@ -471,7 +464,7 @@ class PinWheelMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
-            if ga.orientation == "parallel":
+            if self.orientation == "parallel":
                 motor = 'xafs_y'
             else:
                 motor = 'xafs_x'

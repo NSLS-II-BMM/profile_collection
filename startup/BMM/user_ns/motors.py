@@ -1,4 +1,5 @@
 from ophyd import EpicsMotor, EpicsSignalRO
+from BMM.functions import run_report
 
 run_report(__file__, text='most motor definitions')
 
@@ -76,6 +77,7 @@ dcm_bragg.encoder.kind = 'hinted'
 dcm_bragg.user_readback.kind = 'hinted'
 dcm_bragg.user_setpoint.kind = 'normal'
 dcm_bragg.velocity.put(0.3)
+from BMM.user_ns.bmm import BMMuser
 dcm_bragg.acceleration.put(BMMuser.acc_fast)
 
 ## for some reason, this needs to be set explicitly

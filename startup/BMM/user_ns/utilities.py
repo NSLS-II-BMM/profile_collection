@@ -1,6 +1,6 @@
 from ophyd import EpicsSignalRO
 
-from BMM.functions import boxedtext
+from BMM.functions import run_report, boxedtext
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.utilities import Vacuum, TCG, FEVac, GateValve, Thermocouple, OneWireTC, BMM_DIWater
 
@@ -19,6 +19,7 @@ except:
 # state of shutters #
 #####################
 
+from BMM.user_ns.instruments import shb, bmps, idps
 def show_shutters():
 
     ena_text = '  Beamline: '
@@ -107,7 +108,7 @@ def show_vacuum():
 # state of gate valves     #
 ############################
 
-
+from BMM.user_ns.instruments import fs1
 gv = [GateValve('FE:C06B-VA{GV:1}',        name='FEGV1'),
       GateValve('FE:C06B-VA{GV:3}',        name='FEGV3'),
       GateValve('FE:C06B-VA{GV:2}',        name='FEGV2'),

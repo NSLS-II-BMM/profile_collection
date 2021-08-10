@@ -15,8 +15,10 @@ import os, subprocess, shutil
 
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+#from BMM.user_ns.bmm import BMMuser
 
 gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
@@ -30,16 +32,14 @@ def determine_bin_location():
         return(None)
         
 def copy_to_gdrive(fname):
-    BMMuser = user_ns['BMMuser']
-    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
+    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     print(f'copying {fname} to {user_gdrive_folder}')
-    shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(user_gdrive_folder, fname), follow_symlinks=True)
+    shutil.copyfile(os.path.join(user_ns['BMMuser'].folder, fname), os.path.join(user_gdrive_folder, fname), follow_symlinks=True)
     return()
 
 def synch_gdrive_folder(prefix=''):
-    BMMuser = user_ns['BMMuser']
     print(f'{prefix}updating {gdrive_folder}')
-    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
+    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     location = determine_bin_location()
     if location is None:
         print(error_msg('Unable to synch Google drive: could not determine drive program location.'))
@@ -51,7 +51,7 @@ def synch_gdrive_folder(prefix=''):
     return()
 
 def make_gdrive_folder(prefix='', update=True):
-    BMMuser = user_ns['BMMuser']
+    from BMM.user_ns.bmm import BMMuser
     user_folder = os.path.join(gdrive_folder, 'Data', BMMuser.name, BMMuser.date)
     BMMuser.gdrive = user_folder
     os.makedirs(user_folder, exist_ok=True)

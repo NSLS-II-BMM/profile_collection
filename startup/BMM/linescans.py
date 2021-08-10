@@ -1,7 +1,7 @@
-import bluesky as bs
+import bluesky
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel
@@ -11,8 +11,8 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
@@ -20,10 +20,17 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
-from BMM.purpose       import purpose
+#from BMM.purpose       import purpose
+from BMM.workspace     import rkvs
+
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+from BMM.user_ns.detectors   import with_dualem, with_xspress3, with_quadem, with_struck
+from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
+from BMM.user_ns.motors      import *
 
 def get_mode():
-    m2, m3 = user_ns['m2'], user_ns['m3']
     if m2.vertical.readback.get() < 0: # this is a focused mode
         if m2.pitch.readback.get() > 3:
             return 'XRD'
@@ -46,7 +53,6 @@ def move_after_scan(thismotor):
     '''
     Call this to pluck a point from a plot and move the plotted motor to that x-value.
     '''
-    BMMuser = user_ns['BMMuser']
     if BMMuser.motor is None:
         print(error_msg('\nThere\'s not a current plot on screen.\n'))
         return(yield from null())
@@ -69,7 +75,6 @@ def pluck():
     '''
     Call this to pluck a point from the most recent plot and move the motor to that point.
     '''
-    BMMuser = user_ns['BMMuser']    
     yield from move_after_scan(BMMuser.motor)
 
 from scipy.ndimage import center_of_mass
@@ -112,8 +117,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from null()
             return
 
-        RE.msg_hook = None
-        BMMuser.motor = user_ns['dm3_bct']
+        user_ns['RE'].msg_hook = None
+        BMMuser.motor = dm3_bct
         func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
         plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
@@ -129,17 +134,17 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             #if slit_height < 0.5:
             #    yield from mv(slits3.vsize, 0.5)
             
-            yield from abs_set(quadem1.averaging_time, 0.1, wait=True)
-            yield from abs_set(motor.velocity, 0.4, wait=True)
-            yield from abs_set(motor.kill_cmd, 1, wait=True)
+            yield from mv(quadem1.averaging_time, 0.1)
+            yield from mv(motor.velocity, 0.4)
+            yield from mv(motor.kill_cmd, 1)
 
-            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md=purpose('alignment'))
+            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
 
-            RE.msg_hook = BMM_msg_hook
+            user_ns['RE'].msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                          (line1, uid, user_ns['db'][-1].start['scan_id']))
             if move:
-                t  = db[-1].table()
+                t  = user_ns['db'][-1].table()
                 signal = t['I0']
                 #if get_mode() in ('A', 'B', 'C'):
                 #    position = com(signal)
@@ -148,7 +153,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 top = t[motor.name][position]
                 
                 yield from sleep(slp)
-                yield from abs_set(motor.kill_cmd, 1, wait=True)
+                yield from mv(motor.kill_cmd, 1)
                 yield from mv(motor, top)
 
             else:
@@ -156,20 +161,20 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from sleep(slp)
-                yield from abs_set(motor.kill_cmd, 1, wait=True)
+                yield from mv(motor.kill_cmd, 1)
                 yield from move_after_scan(motor)
-            yield from abs_set(quadem1.averaging_time, 0.5, wait=True)
+            yield from mv(quadem1.averaging_time, 0.5)
         yield from scan_slit(slp)
 
     def cleanup_plan(slp):
         yield from mv(slits3.vsize, slit_height)
-        yield from abs_set(user_ns['_locked_dwell_time'], 0.5, wait=True)
+        yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(slp)
-        yield from abs_set(motor.kill_cmd, 1, wait=True)
+        yield from mv(motor.kill_cmd, 1)
         yield from resting_state_plan()
 
-    RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
-    rkvs = user_ns['rkvs']
+    #RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
+    #rkvs = user_ns['rkvs']
     #######################################################################
     # this is a tool for verifying a macro.  this replaces this slit      #
     # height scan with a sleep, allowing the user to easily map out motor #
@@ -180,11 +185,11 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     #######################################################################
-    motor = user_ns['dm3_bct']
+    motor = dm3_bct
     slit_height = slits3.vsize.readback.get()
-    RE.msg_hook = None
+    user_ns['RE'].msg_hook = None
     yield from finalize_wrapper(main_plan(start, stop, nsteps, move, slp, force), cleanup_plan(slp))
-    RE.msg_hook = BMM_msg_hook
+    user_ns['RE'].msg_hook = BMM_msg_hook
 
 
 def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak'):
@@ -219,7 +224,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             yield from null()
             return
 
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
     
         if detector.lower() == 'bicron':
@@ -245,14 +250,14 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
-            yield from abs_set(user_ns['_locked_dwell_time'], 0.1, wait=True)
+            yield from mv(_locked_dwell_time, 0.1)
             yield from dcm.kill_plan()
 
             yield from mv(slits3.vsize, 3)
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, 5)
                 
-            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md=purpose('alignment'))
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             #yield from rel_adaptive_scan(dets, 'I0', motor,
             #                             start=start,
             #                             stop=stop,
@@ -260,7 +265,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             #                             max_step=0.03,
             #                             target_delta=.15,
             #                             backstep=True)
-            t  = db[-1].table()
+            t  = user_ns['db'][-1].table()
             signal = t[sgnl]
             if choice.lower() == 'com':
                 position = com(signal)
@@ -278,8 +283,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                 top      = t[motor.name][position]
 
             yield from sleep(3.0)
-            yield from abs_set(motor.kill_cmd, 1, wait=True)
-            RE.msg_hook = BMM_msg_hook
+            yield from mv(motor.kill_cmd, 1)
+            user_ns['RE'].msg_hook = BMM_msg_hook
 
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
                          (line1, uid, user_ns['db'][-1].start['scan_id']))
@@ -289,17 +294,17 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         yield from scan_dcmpitch(sgnl)
 
     def cleanup_plan():
-        yield from mv(user_ns['slits3'].vsize, slit_height)
-        yield from abs_set(user_ns['_locked_dwell_time'], 0.5, wait=True)
+        yield from mv(slits3.vsize, slit_height)
+        yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(1.0)
-        yield from abs_set(motor.kill_cmd, 1, wait=True)
+        yield from mv(motor.kill_cmd, 1)
         yield from sleep(1.0)
-        yield from user_ns['dcm'].kill_plan()
+        yield from dcm.kill_plan()
         yield from resting_state_plan()
 
     
-    RE, BMMuser, db, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['rkvs']
-    dcm, slits3, slitsg, quadem1 = user_ns['dcm'], user_ns['slits3'], user_ns['slitsg'], user_ns['quadem1']
+    #RE, BMMuser, db, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['rkvs']
+    #dcm, slits3, slitsg, quadem1 = user_ns['dcm'], user_ns['slits3'], user_ns['slitsg'], user_ns['quadem1']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces this rocking  #
     # curve scan with a sleep, allowing the user to easily map out motor #
@@ -310,22 +315,22 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    motor = user_ns['dcm_pitch']
-    slit_height = user_ns['slits3'].vsize.readback.get()
+    motor = dcm_pitch
+    slit_height = slits3.vsize.readback.get()
     try:
         gonio_slit_height = slitsg.vsize.readback.get()
     except:
         gonio_slit_height = 1
-    RE.msg_hook = None
+    user_ns['RE'].msg_hook = None
     yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
-    RE.msg_hook = BMM_msg_hook
+    user_ns['RE'].msg_hook = BMM_msg_hook
 
 
 ##                     linear stages        tilt stage           rotation stages
-motor_nicknames = {'x'    : user_ns['xafs_x'],     'roll' : user_ns['xafs_roll'],  'rh' : user_ns['xafs_roth'],
-                   'y'    : user_ns['xafs_y'],     'pitch': user_ns['xafs_pitch'], 'wh' : user_ns['xafs_wheel'],
-                   's'    : user_ns['xafs_lins'],  'p'    : user_ns['xafs_pitch'], 'rs' : user_ns['xafs_rots'],
-                   'xs'   : user_ns['xafs_linxs'], 'r'    : user_ns['xafs_roll'],
+motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
+                   'y'    : xafs_y,     'pitch': xafs_pitch, 'wh' : xafs_wheel,
+                   's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
+                   'xs'   : xafs_linxs, 'r'    : xafs_roll,
                }
 
 ## before 29 August 2018, the order of arguments for linescan() was
@@ -395,7 +400,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         # print('axis is: ' + str(axis))
         # return(yield from null())
 
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         ## sanitize input and set thismotor to an actual motor
         if type(axis) is str: axis = axis.lower()
         detector = detector.capitalize()
@@ -436,18 +441,16 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             yield from null()
             return
 
-        yield from abs_set(user_ns['_locked_dwell_time'], inttime, wait=True)
+        yield from mv(_locked_dwell_time, inttime)
         if detector == 'Xs':
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
-        dets  = [user_ns['quadem1'], ]
-        if user_ns['with_dualem']:
-            dualio = user_ns['dualio']
+        dets  = [quadem1, ]
         denominator = ''
         detname = ''
 
         # If should be xs when using Xspress3
-        if user_ns['with_xspress3'] and detector == 'If':
+        if with_xspress3 and detector == 'If':
             detector = 'Xs'
         
         # func is an anonymous function, built on the fly, for feeding to DerivedPlot
@@ -472,7 +475,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             detname = 'I0'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
         elif detector == 'Bicron':
-            dets.append(user_ns['vor'])
+            dets.append(vor)
             detname = 'Bicron'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Bicron'])
         elif detector == 'Iy':
@@ -480,7 +483,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             detname = 'electron yield'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
         elif detector == 'If':
-            dets.append(user_ns['vor'])
+            dets.append(vor)
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
@@ -489,7 +492,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                  doc['data'][BMMuser.dtc3] +
                                  doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         elif detector == 'Xs':
-            dets.append(user_ns['xs'])
+            dets.append(xs)
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
@@ -500,7 +503,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
 
         elif detector == 'Xs1':
-            dets.append(user_ns['xs'])
+            dets.append(xs)
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],
@@ -514,7 +517,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
         ## need a "Both" for trans + xs !!!!!!!!!!
         elif detector == 'Both':
-            dets.append(user_ns['vor'])
+            dets.append(vor)
             functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
             funcfl = lambda doc: (doc['data'][thismotor.name],
                                   (doc['data'][BMMuser.dtc1] +
@@ -523,7 +526,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                    doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         ## and this is the appropriate way to plot this linescan
 
-        #abs_set(_locked_dwell_time, 0.5)
+        #mv(_locked_dwell_time, 0.5)
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
@@ -548,8 +551,8 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         thismd['XDI']['Facility'] = dict()
         thismd['XDI']['Facility']['GUP'] = BMMuser.gup
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
-        if 'purpose' not in md:
-            md['purpose'] = 'alignment'
+        #if 'purpose' not in md:
+        #    md['purpose'] = 'alignment'
         
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
@@ -558,9 +561,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
-            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md})
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md, 'plan_name' : f'rel_scan linescan {motor.name} {detector}'})
             return uid
-            
+
         uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
         #global mytable
         #run = src.retrieve()
@@ -576,15 +579,15 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     
     def cleanup_plan():
         ## BMM_clear_suspenders()
-        ##RE.clear_suspenders()       # disable suspenders
+        ##user_ns['RE'].clear_suspenders()       # disable suspenders
         yield from resting_state_plan()
 
 
-    RE, BMMuser, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['rkvs']
-    try:
-        xs = user_ns['xs']
-    except:
-        pass
+    #RE, BMMuser, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['rkvs']
+    #try:
+    #    xs = user_ns['xs']
+    #except:
+    #    pass
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -595,9 +598,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    RE.msg_hook = None
+    user_ns['RE'].msg_hook = None
     yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force, md), cleanup_plan())
-    RE.msg_hook = BMM_msg_hook
+    user_ns['RE'].msg_hook = BMM_msg_hook
 
 
 
@@ -616,12 +619,12 @@ def ls2dat(datafile, key):
 
     The arguments are a data file name and the database key.
     '''
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
+    #BMMuser, db = user_ns['BMMuser'], user_ns['db']
     if os.path.isfile(datafile):
         print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
     handle = open(datafile, 'w')
-    dataframe = db[key]
+    dataframe = user_ns['db'][key]
     devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
     if 'vor' in devices:
         abscissa = dataframe['start']['motors'][0]
@@ -669,7 +672,7 @@ def ls2dat(datafile, key):
     
 def center_sample_y():
     yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
-    table = db[-1].table()
+    table = user_ns['db'][-1].table()
     diff = -1 * table['It'].diff()
     inflection = table['xafs_liny'][diff.idxmax()]
     yield from mv(xafs_liny, inflection)
@@ -677,7 +680,7 @@ def center_sample_y():
 
 def center_sample_roll():
     yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
-    table = db[-1].table()
+    table = user_ns['db'][-1].table()
     peak = table['xafs_roll'][table['It'].idxmax()]
     yield from mv(xafs_roll, peak)
     print(bold_msg('Optimal position in roll at %.3f' % peak))

@@ -1,6 +1,6 @@
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
 import numpy
 import os
@@ -10,14 +10,18 @@ import time
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
+from BMM.user_ns.bmm   import BMMuser
+from BMM.user_ns.dcm   import dcm
+
 
 
 def energystep(filename = None,
@@ -54,7 +58,6 @@ def energystep(filename = None,
     >>> energystep(filename='blahblah', start=18936, end=19036, nsteps=101)
     '''
 
-    BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
     BMM_log_info("energystep(filename=%s, start=%.1f, end=%.1f, nsteps=%d, delay=%.1f, dosteps=%s)" % (filename, start, end, nsteps, delay, str(dosteps)))
     datafile = BMMuser.DATA + filename
     handle = open(datafile, 'w')

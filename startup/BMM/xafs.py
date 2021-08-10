@@ -1,5 +1,5 @@
 from bluesky.plans import rel_scan, scan_nd, count
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 from databroker.core import SingleRunCache
 
@@ -17,7 +17,7 @@ from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, clo
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
-from BMM.larch         import Pandrosus, Kekropidai
+from BMM.larch_interface import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -29,8 +29,21 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xdi           import write_XDI
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+#from __main__ import db
+from BMM.user_ns.base import db
+
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 
 
 # p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
@@ -336,7 +349,7 @@ def db2xdi(datafile, key):
     >>> db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
     '''
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
+    BMMuser = user_ns['BMMuser']
     dfile = datafile
     if BMMuser.DATA not in dfile:
         if 'bucket' not in BMMuser.DATA:
@@ -372,6 +385,22 @@ def make_merged_triplot(uidlist, filename, mode):
         proj.add_group(base.group)
         base.group.args['label'] = save
         count = 1
+<<<<<<< HEAD
+        for uid in uidlist[1:]:
+            this = Pandrosus()
+            try:
+                this.fetch(uid, mode=mode)
+                mu = numpy.interp(ee, this.group.energy, this.group.mu)
+                mm = mm + mu
+                save = this.group.args['label']
+                proj.add_group(this.group)
+                this.group.args['label'] = save
+                count += 1
+            except:
+                pass # presumably this is noisy data for which a valid background was not found
+    except:
+        pass
+=======
         if len(uidlist) > 1:
             for uid in uidlist[1:]:
                 this = Pandrosus()
@@ -387,8 +416,9 @@ def make_merged_triplot(uidlist, filename, mode):
                     pass # presumably this is noisy data for which a valid background was not found
     except:
         pass # presumably this is noisy data for which a valid background was not found
+>>>>>>> origin/master
     if count == 0:
-        print(whisper(f'Unable to make triplot'))    
+        print(whisper(f'Unable to make triplot'))
         return
     mm = mm / count
     merge = Pandrosus()
@@ -619,8 +649,13 @@ def xafs(inifile=None, **kwargs):
         supplied_metadata = dict()
         if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
-        if 'purpose' not in supplied_metadata:
-            supplied_metadata['purpose'] = 'xafs'
+        #if 'purpose' not in supplied_metadata:
+        #    this_purpose = purpose('xafs', 'scan_nd', )
+        #    supplied_metadata['purpose'] = 'xafs'
+
+        if is_re_worker_active():
+            BMMuser.prompt = False
+            kwargs['force'] = True
 
         if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
         if 'force' in kwargs and kwargs['force'] is True:
@@ -635,9 +670,8 @@ def xafs(inifile=None, **kwargs):
                 return
 
         ## make sure we are ready to scan
-        _locked_dwell_time = user_ns['_locked_dwell_time']
-        #yield from abs_set(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
-        #yield from abs_set(_locked_dwell_time.struck_dwell_time.settle_time, 0)
+        #yield from mv(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
+        #yield from mv(_locked_dwell_time.struck_dwell_time.settle_time, 0)
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
         _locked_dwell_time.struck_dwell_time.settle_time = 0
 
@@ -817,7 +851,7 @@ def xafs(inifile=None, **kwargs):
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
+            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
 
             ## capture OCR and target ROI values at Eave to report in dossier
             ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
@@ -860,7 +894,7 @@ def xafs(inifile=None, **kwargs):
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
+            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[xascam_uid]), image_web)
             #shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
             #snap('XAS', filename=image_web, annotation=annotation)
@@ -869,7 +903,7 @@ def xafs(inifile=None, **kwargs):
             image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
             anacam._annotation_string = p['filename']
             print(bold_msg('analog camera snapshot'))
-            anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'purpose': 'xafs_metadata'})
+            anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             try:
                 os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
                 #shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
@@ -1123,13 +1157,15 @@ def xafs(inifile=None, **kwargs):
                 uid = None
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}'})
+
+                                          
                 elif user_ns['with_xspress3'] is True:
-                    uid= yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
-                                            md={**xdi, **supplied_metadata})
+                    uid = yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
                 else:
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
@@ -1202,7 +1238,7 @@ def xafs(inifile=None, **kwargs):
         print('Cleaning up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
-        db = user_ns['db']
+        #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished'
         try:
@@ -1248,16 +1284,16 @@ def xafs(inifile=None, **kwargs):
         yield from mv(dcm_pitch.kill_cmd, 1)
         yield from mv(dcm_roll.kill_cmd, 1)
 
-    RE, BMMuser, dcm, dwell_time, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time'], user_ns['db']
+    RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
-    quadem1, vor = user_ns['quadem1'], user_ns['vor']
+    #quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel, ga = user_ns['xafs_wheel'], user_ns['ga']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     rkvs = user_ns['rkvs']
-    try:
-        xs = user_ns['xs']
-    except:
-        pass
+    #try:
+    #    xs = user_ns['xs']
+    #except:
+    #    pass
     try:
         dualio = user_ns['dualio']
     except:
@@ -1287,6 +1323,8 @@ def xafs(inifile=None, **kwargs):
         BMMuser.snapshot = False
         BMMuser.htmlout  = False
 
+    if is_re_worker_active():
+        inifile = '/home/xf06bm/Data/bucket/scan.ini'
     if inifile is None:
         inifile = present_options('ini')
     if inifile is None:
@@ -1318,6 +1356,8 @@ def howlong(inifile=None, interactive=True, **kwargs):
     ## user input, find and parse the INI file
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
+    if is_re_worker_active():
+        inifile = '/home/xf06bm/Data/bucket/scan.ini'
     BMMuser = user_ns['BMMuser']
     if inifile is None:
         inifile = present_options('ini')

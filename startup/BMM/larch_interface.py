@@ -26,8 +26,10 @@ import matplotlib.gridspec as gridspec
 
 from BMM.functions import etok, ktoe
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.bmm import BMMuser
 
 LARCH = Interpreter()
 
@@ -133,8 +135,7 @@ class Pandrosus():
             'transmission', 'fluorescence', or 'reference'
 
         '''
-        db, BMMuser = user_ns['db'], user_ns['BMMuser']
-        header = db[uid]
+        header = user_ns['db'][uid]
         table  = header.table()
         self.group.energy = numpy.array(table['dcm_energy'])
         self.group.i0 = numpy.array(table['I0'])
@@ -171,14 +172,13 @@ class Pandrosus():
             self.group.signal = numpy.array(table['It'])
             
     def fetch(self, uid, name=None, mode='transmission'):
-        db, BMMuser = user_ns['db'], user_ns['BMMuser']
         self.uid = uid
         if name is not None:
             self.name = name
         else:
             self.name = uid[-6:]
         self.group = Group(__name__=self.name)
-        self.title = db.v2[uid].metadata['start']['XDI']['Sample']['name']
+        self.title = user_ns['db'].v2[uid].metadata['start']['XDI']['Sample']['name']
         self.make_xmu(uid, mode=mode)
         self.prep()
         toss = create_athena(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
@@ -186,7 +186,7 @@ class Pandrosus():
         toss.save()
         os.remove(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
         toss = None
-        self.group.args['label'] = db.v2[uid].metadata['start']['XDI']['_filename']
+        self.group.args['label'] = user_ns['db'].v2[uid].metadata['start']['XDI']['_filename']
 
     def put(self, energy, mu, name):
         self.name = name

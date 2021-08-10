@@ -1,21 +1,25 @@
 from bluesky.suspenders import SuspendFloor, SuspendBoolHigh, SuspendBoolLow
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.detectors   import quadem1
+from BMM.user_ns.metadata    import ring
+from BMM.user_ns.instruments import bmps, idps
 
 #RE.clear_suspenders()
 all_BMM_suspenders = list()
 
 ## ----------------------------------------------------------------------------------
 ## suspend when I0 drops below 0.1 nA (not in use)
-suspender_I0 = SuspendFloor(user_ns['quadem1'].I0, 0.1, resume_thresh=1, sleep=5)
+suspender_I0 = SuspendFloor(quadem1.I0, 0.1, resume_thresh=1, sleep=5)
 #all_BMM_suspenders.append(suspender_I0)
 
 ## ----------------------------------------------------------------------------------
 ## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
 try:
-    if user_ns['ring'].filltarget.get() > 20:
-        suspender_ring_current = SuspendFloor(user_ns['ring'].current, 10, resume_thresh=0.9 * user_ns['ring'].filltarget.get(), sleep=60)
+    if ring.filltarget.get() > 20:
+        suspender_ring_current = SuspendFloor(ring.current, 10, resume_thresh=0.9 * ring.filltarget.get(), sleep=60)
         all_BMM_suspenders.append(suspender_ring_current)
 except Exception as e:
     print(f'failed to create ring current suspender: {e}')
@@ -24,7 +28,7 @@ except Exception as e:
 ## ----------------------------------------------------------------------------------
 ## suspend if the BM photon shutter closes, resume 5 seconds after opening
 try:
-    suspender_bmps = SuspendBoolLow(user_ns['bmps'].state, sleep=60)
+    suspender_bmps = SuspendBoolLow(bmps.state, sleep=60)
     all_BMM_suspenders.append(suspender_bmps)
 except Exception as e:
     print(f'failed to create bpms suspender: {e}')
@@ -34,7 +38,7 @@ except Exception as e:
 ## ----------------------------------------------------------------------------------
 ## suspend if the main photon shutter closes, resume 5 seconds after opening
 try:
-    suspender_sha = SuspendBoolLow(user_ns['idps'].state, sleep=60)
+    suspender_sha = SuspendBoolLow(idps.state, sleep=60)
     all_BMM_suspenders.append(suspender_sha)
 except Exception as e:
     print(f'failed to create sha suspender: {e}')

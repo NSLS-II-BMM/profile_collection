@@ -2,14 +2,18 @@ import sys, os, re, shutil, socket, datetime
 from distutils.dir_util import copy_tree
 import json, pprint, copy
 from subprocess import run
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive    import make_gdrive_folder
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
+from BMM.workspace import rkvs
+
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -284,7 +288,7 @@ class BMM_User(Borg):
                 if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
                     forceit = True # Pb and Pt L3 edges are "standard" ROIs
                 if el not in xs.slots or forceit:
-                    startup_dir = get_ipython().profile_dir.startup_dir
+                    startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
                     with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
                         js = fl.read()
                     allrois = json.loads(js)
@@ -305,7 +309,6 @@ class BMM_User(Borg):
 
             
     def from_json(self, filename):
-        rkvs = user_ns['rkvs']
         if os.path.isfile(filename):
             with open(filename, 'r') as jsonfile:
                 config = json.load(jsonfile)
@@ -313,11 +316,14 @@ class BMM_User(Borg):
                 if k in ('cycle',):
                     continue
                 setattr(self, k, config[k])
-            user_ns['rois'].trigger = True
-        rkvs.set('BMM:pds:edge',        str(config['edge']))
-        rkvs.set('BMM:pds:element',     str(config['element']))
-        rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
-            
+            #rois.trigger = True
+        from BMM.workspace import rkvs
+        try:
+            rkvs.set('BMM:pds:edge',        str(config['edge']))
+            rkvs.set('BMM:pds:element',     str(config['element']))
+            rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
+        except:
+            pass
             
     def show(self, scan=False):
         '''
@@ -491,8 +497,10 @@ class BMM_User(Borg):
         ## XRF & HDF5folders
         xrffolder = os.path.join(data_folder, 'XRF')
         self.establish_folder(step, 'XRF spectra folder', xrffolder)
-        hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
-        self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
+        #hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
+        #hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *self.date.split('-'))
+        #self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
+        #xs.hdf5.file_path.put(hdf5folder)
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Pilatus folder

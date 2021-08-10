@@ -1,7 +1,7 @@
 
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
@@ -18,10 +18,14 @@ from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.purpose       import purpose
+#from BMM.purpose       import purpose
+from BMM.workspace     import rkvs
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 
 def areascan(detector,
@@ -69,7 +73,7 @@ def areascan(detector,
             yield from null()
             return
 
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
 
         ## sanity checks on slow axis
         if type(slow) is str: slow = slow.lower()
@@ -94,7 +98,7 @@ def areascan(detector,
             fast = motor_nicknames[fast]
 
         detector = detector.capitalize()
-        yield from abs_set(_locked_dwell_time, dwell, wait=True)
+        yield from mv(_locked_dwell_time, dwell)
         dets = [quadem1,]
         if detector == 'If':
             dets.append(vor)
@@ -171,7 +175,7 @@ def areascan(detector,
             uid = yield from grid_scan(dets,
                                        slow, startslow, stopslow, nslow,
                                        fast, startfast, stopfast, nfast,
-                                       snake, md=purpose('measurement'))
+                                       snake, md={'plan_name' : f'grid_scan measurement {slow.name} {fast.name} {detector}'})
             BMMuser.final_log_entry = True
             return uid
 
@@ -210,12 +214,13 @@ def areascan(detector,
         
     def cleanup_plan():
         print('Cleaning up after an area scan')
+        db = user_ns['db']
         BMM_clear_suspenders()
-        #RE.clear_suspenders()
+        #user_ns['RE'].clear_suspenders()
         if BMMuser.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from resting_state_plan()
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
         print('Disabling plot for re-plucking.')
         try:
@@ -229,10 +234,6 @@ def areascan(detector,
         BMMuser.fig    = None
         BMMuser.ax     = None
 
-    RE, BMMuser, _locked_dwell_time, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['_locked_dwell_time'], user_ns['rkvs']
-    db, quadem1, vor = user_ns['db'], user_ns['quadem1'], user_ns['vor']
-    if user_ns['with_xspress3']:
-        xs = user_ns['xs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -244,14 +245,14 @@ def areascan(detector,
         return(yield from null())
     ######################################################################
     BMMuser.final_log_entry = True
-    RE.msg_hook = None
+    user_ns['RE'].msg_hook = None
     ## encapsulation!
     yield from finalize_wrapper(main_plan(detector,
                                           slow, startslow, stopslow, nslow,
                                           fast, startfast, stopfast, nfast,
                                           pluck, force, dwell, md),
                                 cleanup_plan())
-    RE.msg_hook = BMM_msg_hook
+    user_ns['RE'].msg_hook = BMM_msg_hook
 
         
 def as2dat(datafile, key):
@@ -267,11 +268,10 @@ def as2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
 
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
     if os.path.isfile(datafile):
         print(error_msg('%s already exists!  Bailing out....' % datafile))
         return
-    dataframe = db[key]
+    dataframe = user_ns['db'][key]
     if 'slow_motor' not in dataframe['start']:
         print(error_msg('That database entry does not seem to be a an areascan (missing slow_motor)'))
         return

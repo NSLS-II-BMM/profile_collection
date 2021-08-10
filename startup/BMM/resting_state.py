@@ -1,12 +1,18 @@
 
-from bluesky.plan_stubs import abs_set, mv
+from bluesky.plan_stubs import mv
 
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
+from BMM.workspace  import rkvs
+
+from BMM.user_ns.bmm         import BMMuser
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor
+from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
     return()
@@ -24,9 +30,6 @@ def resting_state():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     quadem1.on()
@@ -34,7 +37,8 @@ def resting_state():
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
     dcm.kill()
-    #RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
 def resting_state_plan():
@@ -45,9 +49,6 @@ def resting_state_plan():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
 
     #BMMuser.prompt = True
     BMMuser.macro_dryrun = False
@@ -57,7 +58,8 @@ def resting_state_plan():
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     dcm.kill()
-    #RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    #user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     
 
@@ -70,9 +72,6 @@ def end_of_macro():
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
     - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
-    BMMuser, quadem1, vor = user_ns['BMMuser'], user_ns['quadem1'], user_ns['vor']
-    _locked_dwell_time, dcm = user_ns['_locked_dwell_time'], user_ns['dcm']
-    xafs_wheel, RE = user_ns['xafs_wheel'], user_ns['RE']
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     BMMuser.running_macro, BMMuser.lims = False, True
@@ -81,7 +80,8 @@ def end_of_macro():
     yield from mv(_locked_dwell_time, 0.5)
     yield from dcm.kill_plan()
     yield from xafs_wheel.recenter()
-    RE.msg_hook = BMM_msg_hook
+    dcm.mode = 'fixed'
+    user_ns['RE'].msg_hook = BMM_msg_hook
     resting_redis()
     BMM_clear_suspenders()
 

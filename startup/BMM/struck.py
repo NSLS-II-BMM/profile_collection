@@ -3,10 +3,10 @@ from ophyd.scaler import EpicsScaler
 
 from numpy import exp
 
-from bluesky.plan_stubs import abs_set
+from bluesky.plan_stubs import mv
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 
 class toss():
@@ -272,10 +272,10 @@ class BMMVortex(EpicsScaler):
         self.state.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.state, 1, wait=True)
+        yield from mv(self.state, 1)
 
     def off_plan(self):
-        yield from abs_set(self.state, 0, wait=True)
+        yield from mv(self.state, 0)
 
     def channel_names(self, one, two, three):
         self.names.name3.put('ROI1' + ' - %s'%one )
@@ -303,29 +303,29 @@ class BMMVortex(EpicsScaler):
         self.names.name31.put('eyield')
 
     def channel_names_plan(self, one, two, three):
-        yield from abs_set(self.names.name3,  'ROI1' + ' - %s'%one)
-        yield from abs_set(self.names.name4,  'ROI2' + ' - %s'%one)
-        yield from abs_set(self.names.name5,  'ROI3' + ' - %s'%one)
-        yield from abs_set(self.names.name6,  'ROI4' + ' - %s'%one)
-        yield from abs_set(self.names.name7,  'ICR1')
-        yield from abs_set(self.names.name8,  'ICR2')
-        yield from abs_set(self.names.name9,  'ICR3')
-        yield from abs_set(self.names.name10, 'ICR4')
-        yield from abs_set(self.names.name11, 'OCR1')
-        yield from abs_set(self.names.name12, 'OCR2')
-        yield from abs_set(self.names.name13, 'OCR3')
-        yield from abs_set(self.names.name14, 'OCR4')
-        yield from abs_set(self.names.name15, 'ROI2_1' + ' - %s'%two)
-        yield from abs_set(self.names.name16, 'ROI2_2' + ' - %s'%two)
-        yield from abs_set(self.names.name17, 'ROI2_3' + ' - %s'%two)
-        yield from abs_set(self.names.name18, 'ROI2_4' + ' - %s'%two)
-        yield from abs_set(self.names.name19, 'ROI3_1' + ' - %s'%three)
-        yield from abs_set(self.names.name20, 'ROI3_2' + ' - %s'%three)
-        yield from abs_set(self.names.name21, 'ROI3_3' + ' - %s'%three)
-        yield from abs_set(self.names.name22, 'ROI3_4' + ' - %s'%three)
-        yield from abs_set(self.names.name25, 'Bicron')
-        yield from abs_set(self.names.name26, 'APD')
-        yield from abs_set(self.names.name31, 'eyield')
+        yield from mv(self.names.name3,  'ROI1' + ' - %s'%one)
+        yield from mv(self.names.name4,  'ROI2' + ' - %s'%one)
+        yield from mv(self.names.name5,  'ROI3' + ' - %s'%one)
+        yield from mv(self.names.name6,  'ROI4' + ' - %s'%one)
+        yield from mv(self.names.name7,  'ICR1')
+        yield from mv(self.names.name8,  'ICR2')
+        yield from mv(self.names.name9,  'ICR3')
+        yield from mv(self.names.name10, 'ICR4')
+        yield from mv(self.names.name11, 'OCR1')
+        yield from mv(self.names.name12, 'OCR2')
+        yield from mv(self.names.name13, 'OCR3')
+        yield from mv(self.names.name14, 'OCR4')
+        yield from mv(self.names.name15, 'ROI2_1' + ' - %s'%two)
+        yield from mv(self.names.name16, 'ROI2_2' + ' - %s'%two)
+        yield from mv(self.names.name17, 'ROI2_3' + ' - %s'%two)
+        yield from mv(self.names.name18, 'ROI2_4' + ' - %s'%two)
+        yield from mv(self.names.name19, 'ROI3_1' + ' - %s'%three)
+        yield from mv(self.names.name20, 'ROI3_2' + ' - %s'%three)
+        yield from mv(self.names.name21, 'ROI3_3' + ' - %s'%three)
+        yield from mv(self.names.name22, 'ROI3_4' + ' - %s'%three)
+        yield from mv(self.names.name25, 'Bicron')
+        yield from mv(self.names.name26, 'APD')
+        yield from mv(self.names.name31, 'eyield')
 
     ## see Woicik et al, https://doi.org/10.1107/S0909049510009064
     def dtcorrect(self, roi, icr, ocr, inttime, dt=280.0, off=False):
@@ -430,10 +430,10 @@ class GonioStruck(EpicsScaler):
         self.state.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.state, 1, wait=True)
+        yield from mv(self.state, 1)
 
     def off_plan(self):
-        yield from abs_set(self.state, 0, wait=True)
+        yield from mv(self.state, 0)
 
 
 

@@ -1,12 +1,10 @@
 from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsSignal)
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 import time
 
 from BMM.logging import report, BMM_msg_hook
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
-
-RE = user_ns['RE']
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 class EPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Pos-Sts')
@@ -30,7 +28,7 @@ class EPS_Shutter(Device):
             return 'open'
 
     def open_plan(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         count = 0
         while self.state.get() != self.openval:
             count += 1
@@ -41,10 +39,10 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Opened {}'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def close_plan(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         count = 0
         while self.state.get() != self.closeval:
             count += 1
@@ -55,10 +53,10 @@ class EPS_Shutter(Device):
                 return(yield from null())
             time.sleep(1.5)
         report('Closed {}'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def open(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         if self.state.get() != self.openval:
             count = 0
             while self.state.get() != self.openval:
@@ -72,10 +70,10 @@ class EPS_Shutter(Device):
             report(' Opened {}'.format(self.name))
         else:
             print('{} is open'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def close(self):
-        RE.msg_hook = None
+        user_ns['RE'].msg_hook = None
         if self.state.get() != self.closeval:
             count = 0
             while self.state.get() != self.closeval:
@@ -89,7 +87,7 @@ class EPS_Shutter(Device):
             report(' Closed {}'.format(self.name))
         else:
             print('{} is closed'.format(self.name))
-        RE.msg_hook = BMM_msg_hook
+        user_ns['RE'].msg_hook = BMM_msg_hook
 
     def _state(self):
         if self.state.get():
@@ -125,9 +123,9 @@ class Spinner(Device):
 
     def on_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 1, wait=True)
+        yield from mv(self.state, 1)
 
     def off_plan(self):
         report('Turning {} off'.format(self.name))
-        yield from abs_set(self.state, 0, wait=True)
+        yield from mv(self.state, 0)
 

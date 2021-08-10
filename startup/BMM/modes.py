@@ -1,6 +1,6 @@
 import json, time, os
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 from BMM.functions     import approximate_pitch, countdown
@@ -10,8 +10,8 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.motor_status  import motor_status
 from BMM.suspenders    import BMM_clear_to_start
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 
 MODEDATA = None
@@ -60,6 +60,13 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
         return(yield from null())
     current_mode = get_mode()
 
+
+    # crude hack around a problem I don't understand
+    if dm3_bct.hlm.get() < 55 or dm3_bct.llm.get() > -55:
+         dm3_bct.llm.put(-60)
+         dm3_bct.hlm.put(60)
+
+    
     if pds_motors_ready() is False:
         print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
         return(yield from null())
@@ -104,10 +111,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
     RE.msg_hook = None
     BMM_log_info('Changing photon delivery system to mode %s' % mode)
     yield from dcm.kill_plan()
-    yield from abs_mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
-                                           # starting a move, it is one of the
-                                           # motors that reports MOVN=1 even when
-                                           # still
+    yield from mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
+                                       # starting a move, it is one of the
+                                       # motors that reports MOVN=1 even when
+                                       # still
                                                        
     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
                         
@@ -159,7 +166,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
         yield from mv(*base)
     else:
         if bender is True:
-            yield from abs_set(m2_bender.kill_cmd, 1, wait=True)
+            yield from mv(m2_bender.kill_cmd, 1)
             if mode == 'XRD':
                 if abs(m2_bender.user_readback.get() - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
                     base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
@@ -301,8 +308,8 @@ def change_xtals(xtal=None):
 
      RE.msg_hook = None
      BMM_log_info('Moving to the %s crystals' % xtal)
-     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
-     yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
+     yield from mv(dcm_pitch.kill_cmd, 1)
+     yield from mv(dcm_roll.kill_cmd, 1)
      if xtal is 'Si(111)':
           yield from mv(dcm_pitch, 3.8698,
                         dcm_roll, -6.26,
@@ -317,19 +324,19 @@ def change_xtals(xtal=None):
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
      yield from sleep(2.0)
-     yield from abs_set(dcm_roll.kill_cmd, 1, wait=True)
+     yield from mv(dcm_roll.kill_cmd, 1)
 
      print('Returning to %.1f eV' % current_energy)
      yield from mv(dcm.energy, current_energy)
 
      print('Performing a rocking curve scan')
-     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+     yield from mv(dcm_pitch.kill_cmd, 1)
      yield from mv(dcm_pitch, approximate_pitch(current_energy))
      yield from sleep(1)
-     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+     yield from mv(dcm_pitch.kill_cmd, 1)
      yield from rocking_curve()
      yield from sleep(2.0)
-     yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+     yield from mv(dcm_pitch.kill_cmd, 1)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      close_last_plot()

@@ -10,8 +10,10 @@ import threading
 #from bluesky.callbacks import CallbackBase
 from bluesky.callbacks.mpl_plotting import QtAwareCallback, initialize_qt_teleporter
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.bmm import BMMuser
 
 
 ## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:
@@ -23,14 +25,12 @@ user_ns = get_ipython().user_ns
 # this is the callback that gets assigned to mouse clicks on theplot window #
 #############################################################################
 def interpret_click(ev):
-    BMMuser = user_ns['BMMuser']
     print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
     BMMuser.x = ev.xdata
     BMMuser.y = ev.ydata
 
 def handle_close(ev):
     ## if closing a stale plot, take care to preserve current plot in BMMuser object
-    BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:
         return
     recent  = str(BMMuser.fig.canvas.__repr__).split()[-1]
@@ -43,7 +43,6 @@ def handle_close(ev):
 
 def close_last_plot():
     '''Close the most recent plot on screen'''
-    BMMuser = user_ns['BMMuser']    
     if BMMuser.fig is None:
         #print('Oops... No last plot.')
         return
@@ -57,7 +56,6 @@ def close_last_plot():
 
 def close_all_plots():
     '''Close all plots on screen'''
-    BMMuser = user_ns['BMMuser']    
     plt.close('all')
     #for fig in BMMuser.all_figs:
     #    plt.close(fig)
@@ -87,7 +85,6 @@ class DerivedPlot(QtAwareCallback):
         self.__setup_event = threading.Event()
         def setup():
             nonlocal func, ax, xlabel, ylabel, title, legend_keys, stream_name, kwargs
-            BMMuser = user_ns['BMMuser']    
             with self.__setup_lock:
                 if self.__setup_event.is_set():
                     return

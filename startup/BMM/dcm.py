@@ -2,7 +2,7 @@ from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt,
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
-from bluesky.plan_stubs import abs_set, sleep, mv, mvr, null
+from bluesky.plan_stubs import sleep, mv, mvr, null
 
 from numpy import pi, sin, cos, arcsin
 
@@ -12,9 +12,12 @@ from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
+from BMM.user_ns.bmm    import BMMuser
+from BMM.user_ns.dcm    import dcm
+from BMM.user_ns.motors import dcm_bragg, dcm_para, dcm_perp, dcm_pitch, dcm_roll, dcm_x
 
 # PV for clearing encoder signal loss
 # XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr_ENC_LSS_CLR_CMD.PROC
@@ -62,8 +65,8 @@ class DCM(PseudoPositioner):
              '2nd Xtal Perp',  self.perp.user_readback.get(),
              'Para',  self.para.user_readback.get())
         text += "                                      %s = %7.4f   %s = %8.4f" %\
-            ('Pitch', user_ns['dcm_pitch'].user_readback.get(),
-             'Roll',  user_ns['dcm_roll'].user_readback.get())
+            ('Pitch', dcm_pitch.user_readback.get(),
+             'Roll',  dcm_roll.user_readback.get())
         #text += "                             %s = %7.4f   %s = %8.4f" %\
         #    ('2nd Xtal pitch', self.pitch.user_readback.get(),
         #     '2nd Xtal roll',  self.roll.user_readback.get())
@@ -92,9 +95,6 @@ class DCM(PseudoPositioner):
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
         '''
-        dcm_bragg, dcm_para, dcm_perp = user_ns['dcm_bragg'], user_ns['dcm_para'], user_ns['dcm_perp']
-        dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
-        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         dcm_bragg.acceleration.put(BMMuser.acc_fast)
         dcm_para.velocity.put(0.6)
         dcm_para.hvel_sp.put(0.4)
@@ -102,12 +102,12 @@ class DCM(PseudoPositioner):
         dcm_perp.hvel_sp.put(0.2)
         dcm_x.velocity.put(0.6)
         ## initiate homing for Bragg, pitch, roll, para, perp, and x
-        yield from abs_set(dcm_bragg.home_signal, 1)
-        yield from abs_set(dcm_pitch.home_signal, 1)
-        yield from abs_set(dcm_roll.home_signal,  1)
-        yield from abs_set(dcm_para.home_signal,  1)
-        yield from abs_set(dcm_perp.home_signal,  1)
-        yield from abs_set(dcm_x.home_signal,     1)
+        yield from mv(dcm_bragg.home_signal, 1)
+        yield from mv(dcm_pitch.home_signal, 1)
+        yield from mv(dcm_roll.home_signal,  1)
+        yield from mv(dcm_para.home_signal,  1)
+        yield from mv(dcm_perp.home_signal,  1)
+        yield from mv(dcm_x.home_signal,     1)
         yield from sleep(1.0)
         ## wait for them to be homed
         print('Begin homing DCM motors:\n')
@@ -137,29 +137,29 @@ class DCM(PseudoPositioner):
         yield from dcm.kill_plan()
 
     def enable(self):
-        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
-        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
-        yield from mv(user_ns['dcm_para'].enable_cmd,  1)
-        yield from mv(user_ns['dcm_para'].enable_cmd, 1)
-        yield from mv(user_ns['dcm_para'].enable_cmd, 1)
+        yield from mv(dcm_para.enable_cmd,  1)
+        yield from mv(dcm_para.enable_cmd,  1)
+        yield from mv(dcm_para.enable_cmd,  1)
+        yield from mv(dcm_para.enable_cmd, 1)
+        yield from mv(dcm_para.enable_cmd, 1)
         
     def ena(self):
-        user_ns['dcm_para'].enable()
-        user_ns['dcm_perp'].enable()
-        user_ns['dcm_pitch'].enable()
-        user_ns['dcm_roll'].enable()
+        dcm_para.enable()
+        dcm_perp.enable()
+        dcm_pitch.enable()
+        dcm_roll.enable()
 
     def kill(self):
-        user_ns['dcm_para'].kill_cmd.put(1)
-        user_ns['dcm_perp'].kill_cmd.put(1)
-        user_ns['dcm_pitch'].kill_cmd.put(1)
-        user_ns['dcm_roll'].kill_cmd.put(1)
+        dcm_para.kill_cmd.put(1)
+        dcm_perp.kill_cmd.put(1)
+        dcm_pitch.kill_cmd.put(1)
+        dcm_roll.kill_cmd.put(1)
 
     def kill_plan(self):
-        yield from mv(user_ns['dcm_para'].kill_cmd,  1)
-        yield from mv(user_ns['dcm_perp'].kill_cmd,  1)
-        yield from mv(user_ns['dcm_pitch'].kill_cmd, 1)
-        yield from mv(user_ns['dcm_roll'].kill_cmd,  1)
+        yield from mv(dcm_para.kill_cmd,  1)
+        yield from mv(dcm_perp.kill_cmd,  1)
+        yield from mv(dcm_pitch.kill_cmd, 1)
+        yield from mv(dcm_roll.kill_cmd,  1)
 
 
     def set_crystal(self, crystal=None):

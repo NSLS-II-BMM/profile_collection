@@ -9,8 +9,10 @@ from BMM.gdrive         import copy_to_gdrive
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.bmm import BMMuser
 
 class BMMMacroBuilder():
     '''A base class for parsing specially constructed spreadsheets and
@@ -119,7 +121,7 @@ class BMMMacroBuilder():
             return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
-        self.folder   = user_ns['BMMuser'].folder
+        self.folder   = BMMuser.folder
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
         self.wb       = load_workbook(self.source, read_only=True);
@@ -195,7 +197,6 @@ class BMMMacroBuilder():
 
         message = ''
         unrecoverable = False
-        BMMuser = user_ns['BMMuser']
 
         if 'mode' not in default:
             if 'glancing angle' in self.instrument:
@@ -393,6 +394,7 @@ class BMMMacroBuilder():
         o = open(self.macro, 'w')
         o.write(fullmacro)
         o.close()
+        ## I think this will never be called by queueserver
         from IPython import get_ipython
         ipython = get_ipython()
         ipython.magic('run -i \'%s\'' % self.macro)

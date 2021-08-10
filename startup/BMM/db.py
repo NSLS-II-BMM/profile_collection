@@ -1,7 +1,7 @@
 import os
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 def file_resource(record):
     '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device

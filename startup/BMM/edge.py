@@ -1,42 +1,46 @@
 
 import time, json, os
 
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.functions     import boxedtext, countdown, approximate_pitch
-from BMM.suspenders    import BMM_clear_to_start
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.workspace     import rkvs
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
-
+from BMM.user_ns.bmm         import BMMuser, rois
+from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.detectors   import xs, with_xspress3
+from BMM.user_ns.instruments import kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu
+from BMM.user_ns.motors      import *
 
 def show_edges():
-    rois = user_ns['rois']
-    if user_ns['with_xspress3'] is True:
-        text = show_reference_wheel() + '\n' + user_ns['xs'].show_rois()
+    if with_xspress3 is True:
+        text = show_reference_wheel() + '\n' + xs.show_rois()
     else:
         text = show_reference_wheel() + '\n' + rois.show()
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
 
 
 def all_connected(with_m2=False):
-    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
-              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+              m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     if with_m2 is True:
-        motors.extend(['m2_yu', 'm2_ydo', 'm2_ydi'])
+        motors.extend([m2_yu, m2_ydo, m2_ydi])
     ok = True
     for m in motors:
-        if user_ns[m].connected is False:
-            print(disconnected_msg(f'{m} is not connected'))
-            for walk in user_ns[m].walk_signals(include_lazy=False):
+        if m.connected is False:
+            print(disconnected_msg(f'{m.name} is not connected'))
+            for walk in m.walk_signals(include_lazy=False):
                 if walk.item.connected is False:
                     print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
             print(whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})'))
@@ -44,13 +48,13 @@ def all_connected(with_m2=False):
     return ok
     
 def arrived_in_mode(mode=None):
-    motors = ['dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi',
-              'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
-              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+              m2_yu, m2_ydo, m2_ydi, #m2_xu, m2_xd,
+              m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     ok = True
     for m in motors:
-        target = float(MODEDATA[m][mode])
-        achieved = user_ns[m].position
+        target = float(MODEDATA[m.name][mode])
+        achieved = m.position
         diff = abs(target - achieved)
         if diff > 0.5:
             print(f'{m} is out of position, target={target}, current position={achieved}')
@@ -109,13 +113,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     implies focus=True and target=0
 
     '''
-    BMMuser, RE, dcm, dm3_bct = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct']
-    dcm_pitch, dcm_bragg = user_ns['dcm_pitch'], user_ns['dcm_bragg']
-    rkvs = user_ns['rkvs']
-    try:
-        xs = user_ns['xs']
-    except:
-        pass
+    # try:
+    #     xs = user_ns['xs']
+    # except:
+    #     pass
     #BMMuser.prompt = True
     el = el.capitalize()
     
@@ -158,6 +159,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
         return(yield from null())
 
+    BMM_suspenders()
+
+    
     BMMuser.edge        = edge
     BMMuser.element     = el
     BMMuser.edge_energy = energy
@@ -233,7 +237,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         print('If that doesn\'t work, call for help')
         return(yield from null())
         
-    yield from user_ns['kill_mirror_jacks']()
+    yield from kill_mirror_jacks()
     yield from sleep(1)
     if BMMuser.motor_fault is not None:
         print(error_msg('\nSome motors are reporting amplifier faults: %s' % BMMuser.motor_fault))
@@ -248,10 +252,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     # run a rocking curve scan #
     ############################
     print('Optimizing rocking curve...')
-    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+    yield from mv(dcm_pitch.kill_cmd, 1)
     yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from sleep(1)
-    yield from abs_set(dcm_pitch.kill_cmd, 1, wait=True)
+    yield from mv(dcm_pitch.kill_cmd, 1)
     yield from rocking_curve()
     close_last_plot()
     
@@ -269,11 +273,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ##################################
     if not xrd:
         ## reference channel
-        rois = user_ns['rois']
         print('Moving reference foil...')
         yield from rois.select_plan(el)
         ## Xspress3
-        if user_ns['with_xspress3']:
+        if with_xspress3:
             BMMuser.verify_roi(xs, el, edge)
         ## feedback
         show_edges()
@@ -285,6 +288,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     #xBMMuser.to_json(os.path.join(BMMuser.folder, '.BMMuser'))
+    BMM_clear_suspenders()
     yield from dcm.kill_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))

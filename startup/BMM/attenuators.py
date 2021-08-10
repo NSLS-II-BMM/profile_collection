@@ -1,7 +1,10 @@
-from bluesky.plan_stubs import null, abs_set, sleep, mv, mvr
+from bluesky.plan_stubs import null, sleep, mv, mvr
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+from BMM.user_ns.bmm    import BMMuser
+from BMM.user_ns.motors import dm1_filters1, dm1_filters2
 
 
 class attenuator():
@@ -25,7 +28,6 @@ class attenuator():
 
 
 def filter_state():
-    BMMuser = user_ns['BMMuser']
     states = ['Both filters are out of the beam',
               'Filter 1: 100 μm, Filter 2: out, total: 100  μm',
               'Filter 1: 200 μm, Filter 2: out, total: 200  μm',
@@ -46,7 +48,6 @@ def filter_state():
 def set_filters(thickness=None, state=None):
     positions = [55, -46.5, -20.5, 5.5, 31]
 
-    BMMuser = user_ns['BMMuser']
     if thickness == 0 or state == 0:
         yield from mv(dm1_filters1, positions[0], dm1_filters2, positions[0])
         BMMuser.filter_state = 0

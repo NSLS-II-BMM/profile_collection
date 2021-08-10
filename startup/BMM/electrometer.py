@@ -2,14 +2,16 @@ from ophyd import QuadEM, Component as Cpt, EpicsSignalWithRBV, Signal, DerivedS
 from ophyd.quadem import QuadEMPort
 
 from numpy import log, exp
-from bluesky.plan_stubs import abs_set, sleep
+from bluesky.plan_stubs import mv, sleep
 
 from BMM.logging import BMM_log_info
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
-_locked_dwell_time = user_ns['_locked_dwell_time']
+#_locked_dwell_time = user_ns['_locked_dwell_time']
+from BMM.user_ns.detectors   import _locked_dwell_time
+from BMM.user_ns.instruments import shb
 
 class Nanoize(DerivedSignal):
     def forward(self, value):
@@ -56,12 +58,12 @@ class BMMQuadEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.acquire, 1, wait=True)
-        yield from abs_set(self.acquire_mode, 0, wait=True)
+        yield from mv(self.acquire, 1)
+        yield from mv(self.acquire_mode, 0)
 
     def off_plan(self):
-        yield from abs_set(self.acquire, 0, wait=True)
-        yield from abs_set(self.acquire_mode, 2, wait=True)
+        yield from mv(self.acquire, 0)
+        yield from mv(self.acquire_mode, 2)
 
 
 
@@ -112,15 +114,15 @@ class BMMDualEM(QuadEM):
         self.acquire.put(0)
 
     def on_plan(self):
-        yield from abs_set(self.acquire, 1, wait=True)
-        yield from abs_set(self.acquire_mode, 0, wait=True)
+        yield from mv(self.acquire, 1)
+        yield from mv(self.acquire_mode, 0)
 
     def off_plan(self):
-        yield from abs_set(self.acquire, 0, wait=True)
-        yield from abs_set(self.acquire_mode, 2, wait=True)
+        yield from mv(self.acquire, 0)
+        yield from mv(self.acquire_mode, 2)
 
     def dark_current(self):
-        reopen = shb.state.get() == shb.openval 
+        reopen = shb.state.get() == shb.openval
         if reopen:
             print('\nClosing photon shutter')
             yield from shb.close_plan()
@@ -160,7 +162,6 @@ class BMMDualEM(QuadEM):
             print('You are ready to measure!\n')
         
 def dark_current():
-    shb = user_ns['shb']
     reopen = shb.state.get() == shb.openval 
     if reopen:
         print('\nClosing photon shutter')

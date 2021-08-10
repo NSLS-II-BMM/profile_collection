@@ -12,8 +12,8 @@ from BMM.periodictable import ELEMENTS, Z_number
 from BMM.positioning   import find_slot, align_ga
 from BMM.xafs          import howlong, xafs
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 class WDYWTD():
     '''What Do You Want To Do?

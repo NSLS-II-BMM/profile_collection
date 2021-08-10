@@ -5,12 +5,12 @@ import json
 from os import chmod
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from IPython.paths           import get_ipython_module_path
 from IPython.utils.coloransi import TermColors as color
+import BMM.functions
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
 
 #run_report(__file__, text='BMM-specific logging')
 
@@ -33,7 +33,9 @@ if os.path.isfile(BMM_log_master_file):
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+from BMM.user_ns.bmm import nas_mount_point
+#BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
+BMM_nas_log_file = os.path.join(nas_mount_point, 'xf06bm', 'data', 'BMM_master.log')
 if os.path.isdir('/mnt/nfs/nas1'):
     if not os.path.isfile(BMM_nas_log_file):
         basedir = os.path.dirname(BMM_nas_log_file)
@@ -79,7 +81,7 @@ def BMM_log_info(message):
 ## small effort to obfuscate the web hook URL, which is secret-ish.  See:
 ##   https://api.slack.com/messaging/webhooks#create_a_webhook
 ## in the future, this could be an ini with per-user channel URLs...
-slack_secret = os.path.join(os.path.dirname(get_ipython_module_path('BMM.functions')), 'slack_secret')
+slack_secret = os.path.join(os.path.dirname(BMM.functions.__file__), 'slack_secret')
 try:
     with open(slack_secret, "r") as f:
         default_slack_channel = f.read().replace('\n','')
@@ -108,7 +110,7 @@ def post_to_slack(text):
 ## Simple but useful guide to configuring a slack app:        
 ## https://hamzaafridi.com/2019/11/03/sending-a-file-to-a-slack-channel-using-api/
 def img_to_slack(imagefile):
-    token_file = os.path.join(os.path.dirname(get_ipython_module_path('BMM.functions')), 'image_uploader_token')
+    token_file = os.path.join(os.path.dirname(BMM.functions.__file__), 'image_uploader_token')
     try:
         with open(token_file, "r") as f:
             token = f.read().replace('\n','')

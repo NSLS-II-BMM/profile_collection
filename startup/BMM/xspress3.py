@@ -17,7 +17,7 @@ from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defi
 from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
 from bluesky.plans import count
-from bluesky.plan_stubs import abs_set, sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null
 
 from pathlib import PurePath
 #from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
@@ -35,11 +35,12 @@ from collections import deque, OrderedDict
 from itertools import product
 
 import matplotlib.pyplot as plt
-from IPython import get_ipython
-user_ns = get_ipython().user_ns
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+import BMM.functions
 from BMM.db            import file_resource
-from BMM.edge          import show_edges
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
         
@@ -201,9 +202,9 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     # #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-               read_path_template='/mnt/nfs/xspress3/BMM/',   # path to data folder, as mounted on client (i.e. ws1) 
-               root='/mnt/nfs/xspress3/',                     # path to root, as mounted on client (i.e. ws1)
-               write_path_template='/home/xspress3/data/BMM', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
+               read_path_template='/nsls2/data/bmm/assets/',  # path to data folder, as mounted on client (i.e. ws1) 
+               root='/nsls2/data/bmm/',                     # path to root, as mounted on client (i.e. ws1)
+               write_path_template='/nsls2/data/bmm/assets/', # full path on IOC server (i.e. xf06bm-ioc-xspress3)
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
@@ -364,37 +365,15 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if el is None:
             el = BMMuser.element
         if el in self.slots:
+            #from BMM.edge import show_edges
             print(error_msg(f'Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
-            show_edges()
+            user_ns['show_edges']()
         else:
             print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
-            
-    # def ini2json(self):
-    #     rj = {'OCR': {'k':  {'low': 1, 'high': 4095}},}
-    #     config = configparser.ConfigParser()
-    #     startup_dir = get_ipython().profile_dir.startup_dir
-    #     config.read_file(open(os.path.join(startup_dir, 'rois.ini')))
-    #     for i in range(20, 93):
-    #         el = element_symbol(i)
-    #         bounds = config.get('rois', el).split(' ')
-    #         if bounds[0] == '0':
-    #             rj[el] = {}
-    #             continue
-    #         if len(bounds) == 2:
-    #             bounds.append(0)
-    #             bounds.append(0)
-    #         if i < 46:
-    #             rj[el] = {'k':  {'low': int(bounds[0]), 'high': int(bounds[1])}}
-    #         else:
-    #             rj[el] = {'l3': {'low': int(bounds[0]), 'high': int(bounds[1])},
-    #                       'l2': {'low': int(bounds[2]), 'high': int(bounds[3])},
-    #                       'l1': {'low': 0             , 'high': 0}, }
-    #     with open(os.path.join(startup_dir, 'rois.json'), 'w') as fp:
-    #         json.dump(rj, fp, indent=4)
-                
+
     def roi_details(self):
         BMMuser = user_ns['BMMuser']
         print(' ROI  Elem   low   high')
@@ -453,7 +432,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     def check_element(self, element, edge):
         '''Check that the current element and edge is tabulate in rois.json
         '''
-        startup_dir = get_ipython().profile_dir.startup_dir
+        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)
