@@ -278,3 +278,19 @@ def read_bpms():
 run_report('\tamplifier kill switches')
 from BMM.killswitch import KillSwitch
 ks = KillSwitch('XF:06BMB-CT{DIODE-Local:4}', name='amplifier kill switches')
+
+
+#############################################
+#  _     _____ _   _  _   __  ___  ___  ___ #
+# | |   |_   _| \ | || | / / / _ \ |  \/  | #
+# | |     | | |  \| || |/ / / /_\ \| .  . | #
+# | |     | | | . ` ||    \ |  _  || |\/| | #
+# | |_____| |_| |\  || |\  \| | | || |  | | #
+# \_____/\___/\_| \_/\_| \_/\_| |_/\_|  |_/ #
+#############################################
+
+
+run_report('\tLinkam controller')
+from BMM.linkam import Linkam
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam')
+

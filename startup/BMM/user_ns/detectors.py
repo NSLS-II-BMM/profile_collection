@@ -17,7 +17,8 @@ run_report(__file__, text='detectors and cameras')
 
 
 run_report('\t'+'dwelltime')
-with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
+with_pilatus = False
+with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, False
 if with_xspress3 is True:
     BMMuser.readout_mode = 'xspress3'
 from BMM.dwelltime import LockedDwellTimes
@@ -263,13 +264,14 @@ econcam.brightness = 50
 ###############################################
                                            
 
-run_report('\t'+'Pilatus & prosilica')
-from BMM.pilatus import MyDetector, PilatusGrabber
+if with_pilatus is True:
+    run_report('\t'+'Pilatus & prosilica')
+    from BMM.pilatus import MyDetector, PilatusGrabber
 
-## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
-## p3         = ImageGrabber(prosilica3)
-pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
-pil     = PilatusGrabber(pilatus)
+    ## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
+    ## p3         = ImageGrabber(prosilica3)
+    pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
+    pil     = PilatusGrabber(pilatus)
 
 
 
@@ -286,14 +288,14 @@ pil     = PilatusGrabber(pilatus)
 from ophyd.log import config_ophyd_logging
 #config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
-from BMM.xspress3_4element import BMMXspress3Detector_4Element
-from BMM.xspress3_1element import BMMXspress3Detector_1Element
-from nslsii.areadetector.xspress3 import build_detector_class 
 
 xs = False
 use_4element = True
 if with_xspress3 is True:
     run_report('\t'+'4-element SDD with Xspress3')
+    from BMM.xspress3_4element import BMMXspress3Detector_4Element
+    from BMM.xspress3_1element import BMMXspress3Detector_1Element
+    from nslsii.areadetector.xspress3 import build_detector_class 
 
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',
