@@ -144,10 +144,12 @@ xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
 def setup_wheel():
     yield from mv(xafs_x, -119.7, xafs_y, 112.1, xafs_wheel, 0)
     
-        
+
 wmb = WheelMacroBuilder()
 #xlsx = wmb.spreadsheet
 
+from BMM.linkam import LinkamMacroBuilder
+lmb = LinkamMacroBuilder()    
 
 
 
@@ -264,6 +266,21 @@ def read_bpms():
 
 
 
+#############################################
+#  _     _____ _   _  _   __  ___  ___  ___ #
+# | |   |_   _| \ | || | / / / _ \ |  \/  | #
+# | |     | | |  \| || |/ / / /_\ \| .  . | #
+# | |     | | | . ` ||    \ |  _  || |\/| | #
+# | |_____| |_| |\  || |\  \| | | || |  | | #
+# \_____/\___/\_| \_/\_| \_/\_| |_/\_|  |_/ #
+#############################################
+
+
+run_report('\tLinkam controller')
+from BMM.linkam import Linkam
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam')
+
+
 
 ####################################################################################
 #  _   _______ _      _       _____  _    _ _____ _____ _____  _   _  _____ _____  #
@@ -278,19 +295,4 @@ def read_bpms():
 run_report('\tamplifier kill switches')
 from BMM.killswitch import KillSwitch
 ks = KillSwitch('XF:06BMB-CT{DIODE-Local:4}', name='amplifier kill switches')
-
-
-#############################################
-#  _     _____ _   _  _   __  ___  ___  ___ #
-# | |   |_   _| \ | || | / / / _ \ |  \/  | #
-# | |     | | |  \| || |/ / / /_\ \| .  . | #
-# | |     | | | . ` ||    \ |  _  || |\/| | #
-# | |_____| |_| |\  || |\  \| | | || |  | | #
-# \_____/\___/\_| \_/\_| \_/\_| |_/\_|  |_/ #
-#############################################
-
-
-run_report('\tLinkam controller')
-from BMM.linkam import Linkam
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam')
 

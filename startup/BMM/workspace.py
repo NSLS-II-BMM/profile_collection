@@ -39,7 +39,7 @@ def initialize_workspace():
       * a redis server is available
       * certain git repositories are cloned onto this computer
       * authentication files for Slack are available.
-      * the public key for xf06bm@xf06bm-ws1 is available or that this is xf06bm-ws1
+      * the public key for xf06bm@xf06bm-ws3 is available or that this is xf06bm-ws3
 
     For most checks, a failure triggers a corrective action, if
     possible.  Some failures print a warning to screen, with no
@@ -150,16 +150,16 @@ def initialize_redis():
 
 
 def initialize_ssh():
-    '''Check to see if xf06bm-ws1 has an authorized ssh key from this
+    '''Check to see if xf06bm-ws3 has an authorized ssh key from this
     computer.  If not, complain on screen.
 
     '''
-    if 'xf06bm-ws1' in socket.gethostname():
+    if 'xf06bm-ws3' in socket.gethostname():
         print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
         return
     s = subprocess.run(['ssh', '-q', '-oBatchMode=yes', 'xf06bm@xf06bm-ws1', 'true'])
     if s.returncode == 0:
-        print(f'{TAB}Key exists for xf06bm@xf06bm-ws1: {CHECK}')
+        print(f'{TAB}Key exists for xf06bm@xf06bm-ws3: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
         

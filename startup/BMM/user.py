@@ -490,7 +490,9 @@ class BMM_User(Borg):
         self.print_verb_message(0, verb, 'macro template', pad, macropy)
 
         self.find_or_copy_file(0, 'wheel macro spreadsheet', 'wheel_template.xlsx')
-        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'pinwheel_template.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle_template.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'doublewheel_template.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'linkam_template.xlsx')
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -632,10 +634,10 @@ class BMM_User(Borg):
         print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
 
         if 'xf06bm-ws1' in self.host:
-            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws5', f"mkdir -p '{user_folder}'"]
-            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws5', f"ln -s {lustre_root}/{date} '{local_folder}'"]
-            other_machine = 'xf06bm-ws5'
-        elif 'xf06bm-ws5' in self.host:
+            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
+            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"ln -s {lustre_root}/{date} '{local_folder}'"]
+            other_machine = 'xf06bm-ws3'
+        elif 'xf06bm-ws3' in self.host:
             mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"mkdir -p '{user_folder}'"]
             symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"ln -s {lustre_root}/{date} '{local_folder}'"]
             other_machine = 'xf06bm-ws1'

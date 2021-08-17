@@ -6,7 +6,7 @@ except ImportError:
         return False
 
 import os
-from BMM.functions import run_report
+from BMM.functions import run_report, error_msg
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -113,9 +113,15 @@ def xlsx():
     if instrument == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
         pinwheel.spreadsheet(spreadsheet, sheet)
+    elif instrument == 'double wheel':
+        print(bold_msg('This is a double sample wheel spreadsheet'))
+        wmb.spreadsheet(spreadsheet, sheet, double=True)
+    elif instrument == 'linkam':
+        print(bold_msg('This is a Linkam spreadsheet'))
+        lmb.spreadsheet(spreadsheet, sheet)
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet, sheet)
+        wmb.spreadsheet(spreadsheet, sheet, double=False)
     rkvs.set('BMM:automation:type', instrument)
 
 
@@ -254,8 +260,10 @@ if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
      print(error_msg('You likely have to restart bsui.'))
 
-from BMM.user_ns.instruments import wmb
+from BMM.user_ns.instruments import wmb, lmb
 wmb.folder = BMMuser.folder
+lmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+lmb.folder = BMMuser.folder
 wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
 pinwheel.folder = BMMuser.folder
 pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')

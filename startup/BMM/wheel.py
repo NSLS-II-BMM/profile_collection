@@ -97,6 +97,9 @@ class WheelMotor(EndStationEpicsMotor):
         yield from mv(self, center)
         print(whisper('recentered %s to %.1f' % (self.name, center)))
 
+    def in_place(self):
+        wmb.outer_position = xafs_x.position
+        wmb.inner_position = wmb.outer_position + 26
 
 
 
@@ -187,6 +190,11 @@ class WheelMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################
             self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
+            if 'ring' in m:
+                if m['ring'].lower() == 'inner':
+                    self.content += self.tab + f'yield from mv(xafs_x, {self.inner_position:.3f}) # inner ring\n'
+                else:
+                    self.content += self.tab + f'yield from mv(xafs_x, {self.outer_position:.3f}) # outer ring\n'
             if m['samplex'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_x, %.3f)\n' % m['samplex']
             if m['sampley'] is not None:
@@ -264,36 +272,41 @@ class WheelMacroBuilder(BMMMacroBuilder):
 
 
     def get_keywords(self, row, defaultline):
+        plus = 0
+        if self.double is True:
+            plus = 1
         this = {'default' :   defaultline,
                 'slot':       row[1].value,      # sample location
-                'measure':    self.truefalse(row[2].value),  # filename and visualization
-                'filename':   row[3].value,
-                'nscans':     row[4].value,
-                'start':      row[5].value,
-                'mode':       row[6].value,
+                'measure':    self.truefalse(row[2+plus].value),  # filename and visualization
+                'filename':   row[3+plus].value,
+                'nscans':     row[4+plus].value,
+                'start':      row[5+plus].value,
+                'mode':       row[6+plus].value,
                 #'e0':         row[7].value,      
-                'element':    row[7+self.offset].value,      # energy range
-                'edge':       row[8+self.offset].value,
-                'focus':      row[9+self.offset].value,
-                'sample':     row[10+self.offset].value,     # scan metadata
-                'prep':       row[11+self.offset].value,
-                'comment':    row[12+self.offset].value,
-                'bounds':     row[13+self.offset].value,     # scan parameters
-                'steps':      row[14+self.offset].value,
-                'times':      row[15+self.offset].value,
-                'samplex':    row[16+self.offset].value,     # other motors 
-                'sampley':    row[17+self.offset].value,
-                'slitwidth':  row[18+self.offset].value,
-                'detectorx':  row[19+self.offset].value,
-                'snapshots':  self.truefalse(row[20+self.offset].value), # flags
-                'htmlpage':   self.truefalse(row[21+self.offset].value),
-                'usbstick':   self.truefalse(row[22+self.offset].value),
-                'bothways':   self.truefalse(row[23+self.offset].value),
-                'channelcut': self.truefalse(row[24+self.offset].value),
-                'ththth':     self.truefalse(row[25+self.offset].value),
-                'url':        row[26+self.offset].value,
-                'doi':        row[27+self.offset].value,
-                'cif':        row[28+self.offset].value, }
+                'element':    row[7+plus+self.offset].value,      # energy range
+                'edge':       row[8+plus+self.offset].value,
+                'focus':      row[9+plus+self.offset].value,
+                'sample':     row[10+plus+self.offset].value,     # scan metadata
+                'prep':       row[11+plus+self.offset].value,
+                'comment':    row[12+plus+self.offset].value,
+                'bounds':     row[13+plus+self.offset].value,     # scan parameters
+                'steps':      row[14+plus+self.offset].value,
+                'times':      row[15+plus+self.offset].value,
+                'samplex':    row[16+plus+self.offset].value,     # other motors 
+                'sampley':    row[17+plus+self.offset].value,
+                'slitwidth':  row[18+plus+self.offset].value,
+                'detectorx':  row[19+plus+self.offset].value,
+                'snapshots':  self.truefalse(row[20+plus+self.offset].value), # flags
+                'htmlpage':   self.truefalse(row[21+plus+self.offset].value),
+                'usbstick':   self.truefalse(row[22+plus+self.offset].value),
+                'bothways':   self.truefalse(row[23+plus+self.offset].value),
+                'channelcut': self.truefalse(row[24+plus+self.offset].value),
+                'ththth':     self.truefalse(row[25+plus+self.offset].value),
+                'url':        row[26+plus+self.offset].value,
+                'doi':        row[27+plus+self.offset].value,
+                'cif':        row[28+plus+self.offset].value, }
+        if self.double is True:
+            this['ring'] = row[2].value
         return this
                          
             

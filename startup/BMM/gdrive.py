@@ -24,7 +24,9 @@ gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
 def determine_bin_location():
-    if 'xf06bm-ws1' in user_ns['BMMuser'].host:
+    if 'xf06bm-ws3' in user_ns['BMMuser'].host:
+        return('/home/xf06bm/go/bin/drive')
+    elif 'xf06bm-ws1' in user_ns['BMMuser'].host:
         return('/home/xf06bm/gopath/bin/drive')
     elif 'xf06bm-ws5' in user_ns['BMMuser'].host:
         return('/home/xf06bm/git/drive/bin/drive_linux')

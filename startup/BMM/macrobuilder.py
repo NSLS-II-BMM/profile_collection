@@ -84,18 +84,22 @@ class BMMMacroBuilder():
         self.offset           = 0
         self.verbose          = False
 
+        self.double           = False
+        self.inner_position   = 130.324
+        self.outer_position   = 104.324
+        
         self.totaltime        = 0
         self.deltatime        = 0
 
         self.tmpl             = None
         self.instrument       = None
 
-        self.experiment       = ('default', 'slot', 'focus', 'measure', 'spin', 'angle', 'method')
+        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
         
-    def spreadsheet(self, spreadsheet=None, sheet=None):
+    def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.
 
         Usually called with no arguments, in which case the user will
@@ -129,6 +133,7 @@ class BMMMacroBuilder():
         # self.do_first_change = False
         # self.close_shutters  = True
 
+        self.double = double
 
         #print(f'-----{sheet}')
         if sheet is None:
@@ -299,7 +304,9 @@ class BMMMacroBuilder():
         #####################################################
         # all the reasons to skip a line in the spreadsheet #
         #####################################################
-        if type(m['slot']) is not int:
+        if 'slot' in m and type(m['slot']) is not int:
+            return True
+        if 'temperature' in m and type(m['temperature']) is not float:
             return True
         if m['filename'] is None or re.search('^\s*$', m['filename']) is not None:
             return True

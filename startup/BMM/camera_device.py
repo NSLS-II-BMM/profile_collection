@@ -63,7 +63,7 @@ def xrd_webcam(filename=None, **kwargs):
 def analog_camera(filename    = None,
            sample      = None,
            folder      = os.environ['HOME'],
-           device      = '/dev/video0',
+           device      = '/dev/video2',
            camera      = 0,
            skip        = 30,
            frames      = 5,
@@ -140,18 +140,18 @@ def analog_camera(filename    = None,
 
     if sample is not None and sample != '':
         title = title + ' - ' + sample
-    if 'xf06bm-ws1' in BMMuser.host:
+    if 'xf06bm-ws3' in BMMuser.host:
         command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
                '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
     else:
-        command = ['ssh', 'xf06bm@xf06bm-ws1', f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"]
+        command = ['ssh', 'xf06bm@xf06bm-ws3', f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"]
     run(command)
 
 
         #command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
         #system(command)
         #command = f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"
-        #system(f'ssh xf06bm@xf06bm-ws1 "{command}"')
+        #system(f'ssh xf06bm@xf06bm-ws3 "{command}"')
 
     
     report('Analog camera image written to %s' % filename)
