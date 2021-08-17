@@ -154,11 +154,17 @@ class BMMMacroBuilder():
         if self.ws['H5'].value.lower() == 'e0':  # accommodate older xlsx files which have e0 values in column H
             self.has_e0_column = True
 
-        self.do_first_change = self.truefalse(self.ws['G2'].value)
-        self.close_shutters  = self.truefalse(self.ws['J2'].value)
-        self.append_element  = str(self.ws['L2'].value)
+        if double is True:
+            self.do_first_change = self.truefalse(self.ws['H2'].value)
+            self.close_shutters  = self.truefalse(self.ws['K2'].value)
+            self.append_element  = str(self.ws['M2'].value)
+        else:
+            self.do_first_change = self.truefalse(self.ws['G2'].value)
+            self.close_shutters  = self.truefalse(self.ws['J2'].value)
+            self.append_element  = str(self.ws['L2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
+        self.version = str(self.ws['B2'].value).lower()
 
         isok, explanation = self.read_spreadsheet()
         if isok is False:
@@ -327,10 +333,15 @@ class BMMMacroBuilder():
         fname = m['filename']
         el = self.measurements[0]['element']
         ed = self.measurements[0]['edge']
+        t = ''
+        if 'temperature' in self.measurements[0]:
+            t  = str(self.measurements[0]['temperature'])
         if 'element' in m:
             el = m['element']
         if 'edge' in m:
             ed = m['edge']
+        if 'temperature' in m:
+            t = str(m['temperature'])
         if self.append_element.lower() == 'element at beginning':
             fname = el + self.joiner + fname
         elif self.append_element.lower() == 'element at end':
@@ -339,6 +350,19 @@ class BMMMacroBuilder():
             fname = el + self.joiner + ed + self.joiner + fname
         elif self.append_element.lower() == 'element+edge at end':
             fname = fname + self.joiner + el + self.joiner + ed
+        elif self.append_element.lower() == 'temperature at beginning':
+            fname = t + self.joiner + fname
+        elif self.append_element.lower() == 'temperature at end':
+            fname = fname + self.joiner + t
+        elif self.append_element.lower() == 'temperature+element at beginning':
+            fname = el + self.joiner + t + self.joiner + fname
+        elif self.append_element.lower() == 'temperature+element at end':
+            fname = fname + self.joiner + el + self.joiner + t
+        elif self.append_element.lower() == 'temperature+element+edge at beginning':
+            fname = el + self.joiner + ed + self.joiner + t + self.joiner + fname
+        elif self.append_element.lower() == 'temperature+element+edge at end':
+            fname = fname + self.joiner + el + self.joiner + ed + self.joiner + t
+            
         return fname
 
     def estimate_time(self, m, el, ed):
