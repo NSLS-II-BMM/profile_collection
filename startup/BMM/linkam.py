@@ -6,8 +6,6 @@ from ophyd.signal import DerivedSignal
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import boxedtext
 
-#from BMM import user_ns as user_ns_module
-#user_ns = vars(user_ns_module)
 
 class AtSetpoint(DerivedSignal):
     '''A signal that bit-wise arithmetic on the Linkam's status code'''
@@ -29,8 +27,6 @@ class AtSetpoint(DerivedSignal):
     #     desc[self.name]['units'] = 'eV'
     #     return desc
 
-
-    
     
 class Linkam(PVPositioner):
     '''An ophyd wrapper around the Linkam T96 controller
@@ -38,8 +34,6 @@ class Linkam(PVPositioner):
 
     ## following https://blueskyproject.io/ophyd/positioners.html#pvpositioner
     readback = Cpt(EpicsSignalRO, 'TEMP')
-    #SP = Cpt(EpicsSignal, 'SETPOINT')
-    #SP_set = Cpt(EpicsSignal, 'SETPOINT:SET')
     setpoint = Cpt(EpicsSignal, 'SETPOINT:SET')
     status_code = Cpt(EpicsSignal, 'STATUS')
     done = Cpt(AtSetpoint, parent_attr = 'status_code')
@@ -69,13 +63,6 @@ class Linkam(PVPositioner):
     lnp_speed_set = Cpt(EpicsSignal, 'LNP_SPEED:SET')
 
             
-    # @property
-    # def ramprate(self):
-    #     return(self.RR.get())
-    # @ramprate.setter
-    # def ramprate(self, rate):
-    #     self.RR_set.put(float(rate))
-        
     def on(self):
         self.startheat.put(1)
 
@@ -94,21 +81,27 @@ class Linkam(PVPositioner):
             word += chr(l)
         return word
         
+    @property
     def serial(self):
         return self.arr2word(self.serial_array.get())
-    
+
+    @property
     def model(self):
         return self.arr2word(self.model_array.get())
     
+    @property
     def stage_model(self):
         return self.arr2word(self.stage_model_array.get())
     
+    @property
     def stage_serial(self):
         return self.arr2word(self.stage_serial_array.get())
 
+    @property
     def firmware_version(self):
         return self.arr2word(self.firm_ver.get())
 
+    @property
     def hardware_version(self):
         return self.arr2word(self.hard_ver.get())
 
@@ -136,7 +129,7 @@ class Linkam(PVPositioner):
         else:
             text += 'Pump Auto    : no\n'
             
-        boxedtext(f'Linkam {self.model()}, stage {self.stage_model()}', text, 'brown', width = 45)
+        boxedtext(f'Linkam {self.model}, stage {self.stage_model}', text, 'brown', width = 45)
 
         
         
