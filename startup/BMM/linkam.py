@@ -1,8 +1,7 @@
 
-
-
 from bluesky.plan_stubs import null, sleep, mv, mvr
-from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
+from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device, PVPositioner
+from ophyd.signal import DerivedSignal
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import boxedtext
@@ -10,10 +9,42 @@ from BMM.functions      import boxedtext
 #from BMM import user_ns as user_ns_module
 #user_ns = vars(user_ns_module)
 
+class AtSetpoint(DerivedSignal):
+    '''A signal that bit-wise arithmetic on the Linkam's status code'''
+    def __init__(self, parent_attr, *, parent=None, **kwargs):
+        code_signal = getattr(parent, parent_attr)
+        super().__init__(derived_from=code_signal, parent=parent, **kwargs)
 
-class Linkam(Device):
+    def inverse(self, value):
+        if int(value) & 2 == 2:
+            return 1
+        else:
+            return 0
+
+    def forward(self, value):
+        return value
+
+    # def describe(self):
+    #     desc = super().describe()
+    #     desc[self.name]['units'] = 'eV'
+    #     return desc
+
+
+    
+    
+class Linkam(PVPositioner):
     '''An ophyd wrapper around the Linkam T96 controller
     '''
+
+    ## following https://blueskyproject.io/ophyd/positioners.html#pvpositioner
+    readback = Cpt(EpicsSignalRO, 'TEMP')
+    #SP = Cpt(EpicsSignal, 'SETPOINT')
+    #SP_set = Cpt(EpicsSignal, 'SETPOINT:SET')
+    setpoint = Cpt(EpicsSignal, 'SETPOINT:SET')
+    status_code = Cpt(EpicsSignal, 'STATUS')
+    done = Cpt(AtSetpoint, parent_attr = 'status_code')
+
+    ## all the rest of the Linkam signals
     init = Cpt(EpicsSignal, 'INIT')
     model_array = Cpt(EpicsSignal, 'MODEL')
     serial_array = Cpt(EpicsSignal, 'SERIAL')
@@ -23,38 +54,27 @@ class Linkam(Device):
     hard_ver = Cpt(EpicsSignal, 'HARD:VER')
     ctrllr_err = Cpt(EpicsSignal, 'CTRLLR:ERR')
     config = Cpt(EpicsSignal, 'CONFIG')
-    status_code = Cpt(EpicsSignal, 'STATUS')
     stage_config = Cpt(EpicsSignal, 'STAGE:CONFIG')
-    temp = Cpt(EpicsSignal, 'TEMP')
     disable = Cpt(EpicsSignal, 'DISABLE')
     dsc = Cpt(EpicsSignal, 'DSC')
-    startheat = Cpt(EpicsSignal, 'STARTHEAT')
     RR_set = Cpt(EpicsSignal, 'RAMPRATE:SET')
     RR = Cpt(EpicsSignal, 'RAMPRATE')
     ramptime = Cpt(EpicsSignal, 'RAMPTIME')
+    startheat = Cpt(EpicsSignal, 'STARTHEAT')
     holdtime_set = Cpt(EpicsSignal, 'HOLDTIME:SET')
     holdtime = Cpt(EpicsSignal, 'HOLDTIME')
-    SP_set = Cpt(EpicsSignal, 'SETPOINT:SET')
-    SP = Cpt(EpicsSignal, 'SETPOINT')
     power = Cpt(EpicsSignal, 'POWER')
     lnp_speed = Cpt(EpicsSignal, 'LNP_SPEED')
     lnp_mode_set = Cpt(EpicsSignal, 'LNP_MODE:SET')
     lnp_speed_set = Cpt(EpicsSignal, 'LNP_SPEED:SET')
 
-    
-    @property
-    def setpoint(self):
-        return(self.SP.get())
-    @setpoint.setter
-    def setpoint(self, temperature):
-        self.SP_set.put(float(temperature))
-        
-    @property
-    def ramprate(self):
-        return(self.RR.get())
-    @ramprate.setter
-    def ramprate(self, rate):
-        self.RR_set.put(float(rate))
+            
+    # @property
+    # def ramprate(self):
+    #     return(self.RR.get())
+    # @ramprate.setter
+    # def ramprate(self, rate):
+    #     self.RR_set.put(float(rate))
         
     def on(self):
         self.startheat.put(1)
@@ -93,7 +113,7 @@ class Linkam(Device):
         return self.arr2word(self.hard_ver.get())
 
     def status(self):
-        text = f'\nCurrent temperature = {self.temp.get():.1f}, setpoint = {self.SP.get():.1f}\n\n'
+        text = f'\nCurrent temperature = {self.readback.get():.1f}, setpoint = {self.setpoint.get():.1f}\n\n'
         code = int(self.status_code.get())
         if code & 1:
             text += error_msg('Error        : yes') + '\n'
@@ -118,6 +138,8 @@ class Linkam(Device):
             
         boxedtext(f'Linkam {self.model()}, stage {self.stage_model()}', text, 'brown', width = 45)
 
+        
+        
 from BMM.macrobuilder import BMMMacroBuilder
 
 class LinkamMacroBuilder(BMMMacroBuilder):

@@ -148,8 +148,6 @@ def setup_wheel():
 wmb = WheelMacroBuilder()
 #xlsx = wmb.spreadsheet
 
-from BMM.linkam import LinkamMacroBuilder
-lmb = LinkamMacroBuilder()    
 
 
 
@@ -277,9 +275,10 @@ def read_bpms():
 
 
 run_report('\tLinkam controller')
-from BMM.linkam import Linkam
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam')
+from BMM.linkam import Linkam, LinkamMacroBuilder
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-77.0,450.0))
 
+lmb = LinkamMacroBuilder()    
 
 
 ####################################################################################

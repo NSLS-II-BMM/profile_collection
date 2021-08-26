@@ -694,8 +694,8 @@ class BMM_User(Borg):
         print('GUP    = %s' % self.gup)
         print('SAF    = %s' % self.saf)
         #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
-        if user_ns['with_xspress3'] is False:
-            print('ROIs  = %s' % ' '.join(map(str, user_ns['rois'].slots)))
+        #if user_ns['with_xspress3'] is False:
+        #    print('ROIs   = %s' % ' '.join(map(str, user_ns['rois'].slots)))
 
     def fetch_echem(self):
         dest = os.path.join(self.folder, 'electrochemistry')
