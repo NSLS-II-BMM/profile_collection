@@ -61,7 +61,10 @@ def check_profile_branch():
     here = os.getcwd()
     STARTUP = os.path.dirname(BMM.functions.__file__)
     os.chdir(get_ipython().profile_dir.location)
-    branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
+    try:
+        branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
+    except subprocess.CalledProcessError:
+        branch = "not a git repository"
     print(f'{TAB}Using profile branch {branch}')
     os.chdir(here)
     
