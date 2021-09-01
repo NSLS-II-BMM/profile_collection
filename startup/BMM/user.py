@@ -369,7 +369,7 @@ class BMM_User(Borg):
         return(verb)
 
     def find_or_copy_file(self, i, text, fname):
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
+        startup = get_ipython().profile_dir.startup_dir
         src     = os.path.join(startup, fname)
         dst     = os.path.join(self.folder, fname)
         if not os.path.isfile(dst):
@@ -412,7 +412,7 @@ class BMM_User(Borg):
             true if this experiment uses the BioLogic potentiostat
         '''
 
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
+        startup = get_ipython().profile_dir.startup_dir
         step = 1
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Main folders, point BMMuser and wmb objects at data folder

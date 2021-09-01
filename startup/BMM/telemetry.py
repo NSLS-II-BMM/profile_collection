@@ -12,7 +12,7 @@ user_ns = vars(user_ns_module)
         
 
 
-class BMMTelementry():
+class BMMTelemetry():
     '''A class for figuring out the historical average overhead for an
     XAS scan at BMM
 
@@ -23,7 +23,7 @@ class BMMTelementry():
 
     '''
     def __init__(self):
-        self.folder      = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'telemetry')
+        self.folder      = os.path.join(get_ipython().profile_dir.startup_dir, 'telemetry')
         self.json        = os.path.join(self.folder, 'telemetry.json')
         self.bc          = catalog['bmm']
         self.start_date  = '2019-09-01'

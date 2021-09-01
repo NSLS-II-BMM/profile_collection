@@ -474,7 +474,7 @@ def scan_sequence_static_html(inifile       = None,
             tmpl = 'sample_ga.tmpl'
         else:
             tmpl = 'sample_xs.tmpl'
-    with open(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', tmpl)) as f:
+    with open(os.path.join(get_ipython().profile_dir.startup_dir, tmpl)) as f:
         content = f.readlines()
     basename     = filename
     htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')

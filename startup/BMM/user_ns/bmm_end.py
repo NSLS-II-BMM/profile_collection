@@ -216,8 +216,8 @@ run_report('\t'+'Demeter')
 from BMM.demeter import athena, hephaestus, toprj
 
 run_report('\t'+'telemetry')
-from BMM.telemetry import BMMTelementry
-tele = BMMTelementry()
+from BMM.telemetry import BMMTelemetry
+tele = BMMTelemetry()
 
 if not is_re_worker_active():
     run_report('\t'+'user interaction')
@@ -260,13 +260,14 @@ if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
      print(error_msg('You likely have to restart bsui.'))
 
+profile_startup_path = get_ipython().profile_dir.startup_dir
 from BMM.user_ns.instruments import wmb, lmb
 wmb.folder = BMMuser.folder
-lmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+lmb.tmpl = os.path.join(profile_startup_path, 'wheelmacro.tmpl')
 lmb.folder = BMMuser.folder
-wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+wmb.tmpl = os.path.join(profile_startup_path, 'wheelmacro.tmpl')
 pinwheel.folder = BMMuser.folder
-pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
+pinwheel.tmpl = os.path.join(profile_startup_path, 'gamacro.tmpl')
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook

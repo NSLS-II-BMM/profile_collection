@@ -39,7 +39,7 @@ class BMMDataEvaluation():
         self.clf      = None
         self.X        = None
         self.y        = None
-        self.folder   = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'ML')
+        self.folder   = os.path.join(get_ipython().profile_dir.startup_dir, 'ML')
         self.model    = os.path.join(self.folder, 'data_evaluation.joblib')
         self.hdf5     = [os.path.join(self.folder, 'fluorescence_training_set.hdf5'),
                          os.path.join(self.folder, 'transmission_training_set.hdf5'),
