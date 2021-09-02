@@ -187,6 +187,16 @@ class BMMMacroBuilder():
         else:
             return False
 
+    def nonezero(self, value):
+        '''Interpret None as being 0 valued'''
+        if value is None:
+            return(0)
+        elif type(value) == str:
+            return(0)
+        else:
+            return(float(value))
+
+        
     def ini_sanity(self, default):
         '''Sanity checks for the default line from the spreadsheet.
 
@@ -335,13 +345,13 @@ class BMMMacroBuilder():
         ed = self.measurements[0]['edge']
         t = ''
         if 'temperature' in self.measurements[0]:
-            t  = str(self.measurements[0]['temperature'])
+            t  = str(int(self.measurements[0]['temperature']))
         if 'element' in m:
             el = m['element']
         if 'edge' in m:
             ed = m['edge']
         if 'temperature' in m:
-            t = str(m['temperature'])
+            t = str(int(m['temperature']))
         if self.append_element.lower() == 'element at beginning':
             fname = el + self.joiner + fname
         elif self.append_element.lower() == 'element at end':

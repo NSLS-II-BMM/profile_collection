@@ -98,8 +98,8 @@ class WheelMotor(EndStationEpicsMotor):
         print(whisper('recentered %s to %.1f' % (self.name, center)))
 
     def in_place(self):
-        wmb.outer_position = xafs_x.position
-        wmb.inner_position = wmb.outer_position + 26
+        user_ns['wmb'].outer_position = user_ns['xafs_x'].position
+        user_ns['wmb'].inner_position = user_ns['wmb'].outer_position + 26
 
 
 

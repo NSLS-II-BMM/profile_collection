@@ -179,6 +179,7 @@ class BMM_JPEG_HANDLER:
         return numpy.asarray(Image.open(filepath))
 
 if not is_re_worker_active():
+    user_ns['db'].reg.register_handler("BMM_USBCAM",        BMM_JPEG_HANDLER)
     user_ns['db'].reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
     user_ns['db'].reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
     user_ns['db'].reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
@@ -217,6 +218,9 @@ class BMMSnapshot(Device):
         elif which.lower() == 'xas':
             self._SPEC = "BMM_XAS_WEBCAM"
             self._url = 'http://xf06bm-cam6/axis-cgi/jpg/image.cgi'
+        elif 'usb' in which.lower():
+            self._SPEC = "BMM_USBCAM"
+            self._url = None
         else:
             self._SPEC = "BMM_ANALOG_CAMERA"
             self._url = None
@@ -264,6 +268,16 @@ class BMMSnapshot(Device):
                 #print(f'w: {im.width}    h: {im.height}')
                 self.image.shape = (im.height, im.width, 3)
 
+                annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
+                annotate_image(filename, annotation)
+            elif self._SPEC == "BMM_USBCAM":
+                if self.name == 'usbcam1':
+                    u=user_ns['usb1'].image.shaped_image.get()
+                else: 
+                    u=user_ns['usb2'].image.shaped_image.get()
+                im = Image.fromarray(u)
+                im.save(filename, 'JPEG')
+                self.image.shape = (im.height, im.width, 3)
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
                 annotate_image(filename, annotation)
             else:
