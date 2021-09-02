@@ -140,7 +140,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             #print("getting ready to rename mcarois")
             for channel in self.iterate_channels():
                 mcaroi = channel.get_mcaroi(mcaroi_number=i+1)
-                #print(f"element: {el} edge: {edge} mcaroi number: {mcaroi.mcaroi_number} ")
+                print(f"element: {el} edge: {edge} mcaroi number: {mcaroi.mcaroi_number} ")
+                print(f'{el.capitalize()}{channel.channel_number}')
                 self.set_roi(
                     mcaroi,
                     name=f'{el.capitalize()}{channel.channel_number}',
