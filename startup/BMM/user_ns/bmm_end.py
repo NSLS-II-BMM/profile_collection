@@ -192,6 +192,9 @@ run_report('\t'+'machine learning and data evaluation')
 from BMM.ml import BMMDataEvaluation
 clf = BMMDataEvaluation()
 
+## suppress some uninteresting messages from lib/python3.7/site-packages/hdf5plugin/__init__.py
+import logging
+logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 

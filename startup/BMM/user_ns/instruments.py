@@ -276,7 +276,7 @@ def read_bpms():
 
 run_report('\tLinkam controller')
 from BMM.linkam import Linkam, LinkamMacroBuilder
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-77.0,450.0))
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,500.0))
 
 lmb = LinkamMacroBuilder()    
 

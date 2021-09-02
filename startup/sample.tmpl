@@ -103,6 +103,18 @@
 		  <a href="javascript:void(0)" onclick="toggle_visibility('anacam');" title="Click to show/hide the UID of this analog cam image">(uid)</a><div id="anacam" style="display:none;"><small>{anauid}</small></div>
 		</li>
 		<li>
+		  <a href="{usb1snap}">
+		    <img class="left" src="{usb1snap}" width="80" height="45" alt="" /></a>
+		  <span>Image from USB camera #1</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('usb1cam');" title="Click to show/hide the UID of this USB cam image">(uid)</a><div id="usb1cam" style="display:none;"><small>{usb1uid}</small></div>
+		</li>
+		<li>
+		  <a href="{usb2snap}">
+		    <img class="left" src="{usb2snap}" width="80" height="45" alt="" /></a>
+		  <span>Image from USB camera #2</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('usb2cam');" title="Click to show/hide the UID of this USB cam image">(uid)</a><div id="usb2cam" style="display:none;"><small>{usb2uid}</small></div>
+		</li>
+		<li>
 		  <a href="../snapshots/{basename}.png">
 		    <img class="left" src="../snapshots/{basename}.png" width="80" height="80" alt="" /></a>
 		  <span>Rough, automated data reduction</span>

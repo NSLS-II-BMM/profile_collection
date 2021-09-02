@@ -259,7 +259,14 @@ econcam.brightness = 50
 # this gives a 3D array, [480,640,3], where the 3 are RGB values 0-to-255
 # how to export this as a jpg image???
 
-    
+
+from BMM.usb_camera import CAMERA
+usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
+usbcam1 = BMMSnapshot(root=nas_path, which='usb', name='usbcam1')
+#usb1.image.shaped_image.kind = 'normal'
+
+usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
+usbcam2 = BMMSnapshot(root=nas_path, which='usb', name='usbcam2')
 
 ###############################################
 # ______ _____ _       ___ _____ _   _ _____  #

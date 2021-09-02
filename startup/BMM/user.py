@@ -632,20 +632,20 @@ class BMM_User(Borg):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
 
-        if 'xf06bm-ws1' in self.host:
-            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
-            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"ln -s {lustre_root}/{date} '{local_folder}'"]
-            other_machine = 'xf06bm-ws3'
-        elif 'xf06bm-ws3' in self.host:
-            mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"mkdir -p '{user_folder}'"]
-            symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"ln -s {lustre_root}/{date} '{local_folder}'"]
-            other_machine = 'xf06bm-ws1'
+        # if 'xf06bm-ws1' in self.host:
+        #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
+        #     symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"ln -s {lustre_root}/{date} '{local_folder}'"]
+        #     other_machine = 'xf06bm-ws3'
+        # elif 'xf06bm-ws3' in self.host:
+        #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"mkdir -p '{user_folder}'"]
+        #     symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"ln -s {lustre_root}/{date} '{local_folder}'"]
+        #     other_machine = 'xf06bm-ws1'
 
-        #print(mkdir_command)
-        #print(symlink_command)
-        run(mkdir_command)
-        run(symlink_command)
-        print(whisper(f'    Made symbolic link to data folder on {other_machine}'))
+        # #print(mkdir_command)
+        # #print(symlink_command)
+        # run(mkdir_command)
+        # run(symlink_command)
+        # print(whisper(f'    Made symbolic link to data folder on {other_machine}'))
         
         try:
             xascam._root = os.path.join(self.folder, 'snapshots')
