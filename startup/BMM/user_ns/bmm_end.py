@@ -235,11 +235,11 @@ if rois.trigger is True:        # set Struck rois from persistent user informati
 
 if BMMuser.element is None:
      try:
-          BMMuser.element = str(rkvs.get('BMM:pds:element'), 'utf-8')
+          BMMuser.element = rkvs.get('BMM:pds:element').decode('utf-8')
      except:
           pass
      try:
-          BMMuser.edge    = str(rkvs.get('BMM:pds:edge'), 'utf-8')
+          BMMuser.edge    = rkvs.get('BMM:pds:edge').decode('utf-8')
      except:
           pass
 

@@ -13,7 +13,8 @@ except ImportError:
 os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
 
 ## the intent here is to return $HOME/.profile_collection/startup
-startup_dir = os.path.split(os.path.split(os.path.split(__file__)[0])[0])[0]
+#startup_dir = os.path.split(os.path.split(os.path.split(__file__)[0])[0])[0]
+startup_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 uns_dict = dict()
 

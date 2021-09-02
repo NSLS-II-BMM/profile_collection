@@ -681,7 +681,7 @@ def xafs(inifile=None, **kwargs):
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3'))
                 print(error_msg('Likely solution:'))
-                print(error_msg('Set element symbol:  BMMuser.element = Xx'))
+                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
                 print(error_msg('then do:             xs.measure_roi()'))
                 return(yield from null())
 

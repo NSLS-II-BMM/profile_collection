@@ -181,28 +181,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     '''This class captures everything that is in common for the 1-element
     and 4-element detector interfaces.
     '''
-    # JOSH: proposed change for new IOC
     #       this plugin does not exist
     # roi_data = Cpt(PluginBase, 'ROIDATA:')
-
-    # channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    # channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    # channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    # channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    # #channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    # #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
-
-    # mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    # mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    # mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    # mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    # #mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
-    
-    # mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
-    # mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
-    # mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
-    # mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    # #mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
     
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
                read_path_template='/nsls2/data/bmm/assets/',  # path to data folder, as mounted on client (i.e. Lustre) 

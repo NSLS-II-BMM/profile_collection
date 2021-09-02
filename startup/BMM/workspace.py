@@ -60,7 +60,7 @@ def initialize_workspace():
 
 def check_profile_branch():
     here = os.getcwd()
-    os.chdir(os.path.split(startup_dir)[0])
+    os.chdir(os.path.dirname(startup_dir))
     try:
         branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
     except subprocess.CalledProcessError:

@@ -301,7 +301,7 @@ def write_XDI(datafile, dataframe):
             column_list[0] = '333_energy'
         #             en    en    dwti  xmu   io    it    ir    dtc1  dtc2  dtc3  dtc4  |----- 1 ------|  |----- 2 ------|  |----- 3 ------|  |----- 4 ------|  
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
-        if BMMuser.element == 1:
+        if BMMuser.detector == 1:
             #             en    en    dwti  xmu   io    it    ir    dtc1  |----- 1 ------|
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f\n"
             column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir',

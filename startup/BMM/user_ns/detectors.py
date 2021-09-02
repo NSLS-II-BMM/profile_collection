@@ -294,7 +294,7 @@ use_4element = True
 if with_xspress3 is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element
-    from BMM.xspress3_1element import BMMXspress3Detector_1Element
+    #from BMM.xspress3_1element import BMMXspress3Detector_1Element
     from nslsii.areadetector.xspress3 import build_detector_class 
 
     xs = BMMXspress3Detector_4Element(
@@ -309,8 +309,6 @@ if with_xspress3 is True:
     # DEBUGGING: commented this out
     xs.hdf5.warmup()
 
-    # JOSH: proposed changes for new IOC
-    #       as far as I can tell we need 'hinted' all the way down
     # Hints:
     xs.channels.kind = 'hinted'
     for channel in xs.iterate_channels():
@@ -318,16 +316,6 @@ if with_xspress3 is True:
         channel.mcarois.kind = 'hinted'
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'hinted'
-    # # Hints:
-    # for n in range(1,5):
-    #     for m in range(1,17):
-    #         r = getattr(xs, f'channel{n}').rois
-    #         thisroi = getattr(r, 'roi{:02}'.format(m))
-    #         thisroi.value.kind = 'hinted'
-    #         #getattr(xs, f'channel{n}').rois.roi01.value.kind = 'hinted'
-    #         #getattr(xs, f'channel{n}').rois.roi02.value.kind = 'hinted'
-    #         #getattr(xs, f'channel{n}').rois.roi03.value.kind = 'hinted'
-    #         #getattr(xs, f'channel{n}').rois.roi04.value.kind = 'hinted'
 
     xs.cam.configuration_attrs = ['acquire_period',
                                        'acquire_time',
@@ -352,7 +340,6 @@ if with_xspress3 is True:
                                        'run_flags',
                                        'trigger_signal']
 
-    # JOSH: proposed changes for new IOC
     for channel in xs.iterate_channels():
         mcaroi_names = list(channel.iterate_mcaroi_attr_names())
         channel.mcarois.read_attrs = mcaroi_names
@@ -360,70 +347,12 @@ if with_xspress3 is True:
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'omitted'
 
-    # for n, d in xs.channels.items():
-    #     roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
-    #     d.rois.read_attrs = roi_names
-    #     d.rois.configuration_attrs = roi_names
-    #     for roi_n in roi_names:
-    #         getattr(d.rois, roi_n).value_sum.kind = 'omitted'
-
         xs.set_rois()
-        #xrf = xs.measure_xrf
-        #hdf5folder = os.path.join(BMMuser.folder, 'raw', 'HDF5')
         hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *BMMuser.date.split('-'))
         xs.hdf5.read_path_template = hdf5folder
         xs.hdf5.write_path_template = hdf5folder
         xs.hdf5.file_path.put(hdf5folder)
-    # else:
-    #     run_report('\t'+'1-element SDD with Xspress3')
-    #     xs1 = BMMXspress3Detector_1Element('XF:06BM-ES{Xsp:1}:', name='xs1')
-    #     xs1.hdf5.warmup()
 
-    #     # JOSH: proposed changes for new IOC
-    #     for mcaroi in xs1.channels.channel08.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'hinted'
-
-    #     # for m in range(1,17):
-    #     #     r = xs1.channel8.rois
-    #     #     thisroi = getattr(r, 'roi{:02}'.format(m))
-    #     #     thisroi.value.kind = 'hinted'
-    #     xs1.settings.configuration_attrs = ['acquire_period',
-    #                                         'acquire_time',
-    #                                         'gain',
-    #                                         'image_mode',
-    #                                         'manufacturer',
-    #                                         'model',
-    #                                         'num_exposures',
-    #                                         'num_images',
-    #                                         'temperature',
-    #                                         'temperature_actual',
-    #                                         'trigger_mode',
-    #                                         'config_path',
-    #                                         'config_save_path',
-    #                                         'invert_f0',
-    #                                         'invert_veto',
-    #                                         'xsp_name',
-    #                                         'num_channels',
-    #                                         'num_frames_config',
-    #                                         'run_flags',
-    #                                         'trigger_signal']
-
-    #     # JOSH: proposed changes for new IOC
-    #     mcaroi_names = list(xs1.channels.channel08.iterate_mcaroi_attr_names())
-    #     xs1.channels.channel08.mcarois.read_attrs = mcaroi_names
-    #     xs1.channels.channel08.mcarois.configuration_attrs = mcaroi_names
-    #     for mcaroi in xs1.channels.channel08.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'omitted'
-    #     xs1.set_rois()
-
-    #     # #for n, d in xs1.channels.items():
-    #     # roi_names = ['roi{:02}'.format(j) for j in range(1,17)]
-    #     # xs1.channel8.rois.read_attrs = roi_names
-    #     # xs1.channel8.rois.configuration_attrs = roi_names
-    #     # for roi_n in roi_names:
-    #     #    getattr(xs1.channel8.rois, roi_n).value_sum.kind = 'omitted'
-    #     # xs1.set_rois()
-    #     #xrf1 = xs1.measure_xrf
 
 # JL turn off ophyd logging
 import logging
