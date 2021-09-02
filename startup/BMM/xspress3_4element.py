@@ -44,22 +44,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
     '''
 
-    #channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    #channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    #channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    #channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
-
-    #mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    #mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    #mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    #mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    
-    #mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
-    #mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
-    #mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
-    #mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    
     
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -87,10 +71,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         # maybe this is how to erase the mca_sum arrays
         self.erase.put(1)
 
-        # for i in range(1,5):
-            # getattr(self.channels, f'channel_{i}').reset()
-            ## this doesn't work, not seeing how those arrays get cleared in the IOC....
-            # getattr(self, f'mca{i}_sum').put(numpy.zeros)
         
     def restart(self):
         # JOSH: proposed change for new xspress3 IOC
@@ -140,7 +120,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             #print("getting ready to rename mcarois")
             for channel in self.iterate_channels():
                 mcaroi = channel.get_mcaroi(mcaroi_number=i+1)
-                #print(f"element: {el} edge: {edge} mcaroi number: {mcaroi.mcaroi_number} ")
+                print(f"element: {el} edge: {edge} mcaroi number: {mcaroi.mcaroi_number} ")
                 self.set_roi(
                     mcaroi,
                     name=f'{el.capitalize()}{channel.channel_number}',
