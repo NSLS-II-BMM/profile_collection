@@ -10,7 +10,7 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-use_kafka = True
+use_kafka = False
 os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
 
 ## the intent here is to return $HOME/.profile_collection/startup

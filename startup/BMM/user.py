@@ -281,8 +281,8 @@ class BMM_User(Borg):
             print(f'{prefix}wrote BMMuser state to {filename}')
 
 
-    def verify_roi(self, xs, el, edge):
-        print(bold_msg(f'Attempting to set ROIs for {el} {edge} edge'))
+    def verify_roi(self, xs, el, edge, tab=''):
+        print(bold_msg(f'{tab}Attempting to set ROIs for {el} {edge} edge'))
         try:
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):
@@ -302,9 +302,9 @@ class BMM_User(Borg):
 
                 xs.measure_roi()
             else:
-                report(f'No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
+                report(f'{tab}No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
-            xs.reset_rois()
+            xs.reset_rois(tab=tab)
         except Exception as E:
             print(error_msg(E))
 

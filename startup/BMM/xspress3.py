@@ -71,7 +71,7 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
             https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
         """
-        print(whisper("                warming up the hdf5 plugin..."))
+        print(whisper("                        warming up the hdf5 plugin..."))
         set_and_wait(self.enable, 1)
 
         # JOSH: proposed changes for new IOC
@@ -104,7 +104,7 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
             set_and_wait(sig, val)
-        print(whisper("                done"))
+        print(whisper("                        done"))
 
     def unstage(self):
         """A custom unstage method is needed to avoid these messages:
@@ -292,20 +292,20 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         mcaroi.size_x.put(high - low)
 
         
-    def reset_rois(self, el=None):
+    def reset_rois(self, el=None, tab=''):
         BMMuser = user_ns['BMMuser']
         if el is None:
             el = BMMuser.element
         if el in self.slots:
             #from BMM.edge import show_edges
-            print(whisper(f'Resetting rois with {el} as the active ROI'))
+            print(whisper(f'{tab}Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
             #show_edges()
             #user_ns['show_edges']()
         else:
-            print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
+            print(error_msg(f'{tab}Cannot reset rois, {el} is not in {self.name}.slots'))
 
     def roi_details(self):
         BMMuser = user_ns['BMMuser']

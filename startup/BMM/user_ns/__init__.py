@@ -18,6 +18,7 @@ from .utilities import *
 from .bmm_end import *
 
 if not is_re_worker_active():
+    print('\t\t', end='')
     get_ipython().magic(u"%xmode Plain")
     from .prompt import *
     from .magic import *

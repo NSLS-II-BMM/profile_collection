@@ -248,9 +248,9 @@ if BMMuser.element is None:
 
 from BMM.user_ns.detectors import with_xspress3, xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
-     BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge)
-     #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
-     show_edges()
+    BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge, tab='\t\t\t')
+    #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
+    show_edges()
 
 from BMM.user_ns.detectors import xascam, xrdcam, anacam
 xascam._root = os.path.join(BMMuser.folder, 'snapshots')
