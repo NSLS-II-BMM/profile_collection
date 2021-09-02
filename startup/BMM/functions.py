@@ -172,7 +172,6 @@ def clear_dashboard():
     rkvs.set('BMM:scan:type',      '')
     rkvs.set('BMM:scan:starttime', '')
     rkvs.set('BMM:scan:estimated', '')
-    return()
     
 
 def countdown(t):
