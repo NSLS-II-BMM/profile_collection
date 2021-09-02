@@ -19,6 +19,10 @@ run_report(__file__, text='detectors and cameras')
 run_report('\t'+'dwelltime')
 with_pilatus = False
 with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
+
+# An error gets triggered during Azure CI testing that does not get triggered when
+# running under IPython. This disables the Xspress3 during testing.
+# This is a crude stopgap.  See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
 if os.environ.get('AZURE_TESTING'):
     with_xspress3 = False
 

@@ -105,8 +105,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                         min_x=allrois['OCR']['low'],
                         size_x=allrois['OCR']['high'] - allrois['OCR']['low']
                     )
-                # for ch in range(1,5):
-                #     self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
                 
                 continue
             elif el is None:
@@ -127,15 +125,12 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                     min_x=allrois[el][edge]['low'],
                     size_x=allrois[el][edge]['high'] - allrois[el][edge]['low']
                 )
-            # for ch in range(1,5):
-            #     self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
+                # Azure testing error happens at this line ^
                     
     def measure_roi(self):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
-        
-        # JOSH: proposed change for new IOC
         for channel in self.iterate_channels():
             for mcaroi in channel.iterate_mcarois():
                 if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:
@@ -144,12 +139,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                     setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv) 
                 else:
                     mcaroi.total_rbv.kind = 'omitted'
-
-        # for i in range(16): for n in range(1,5): ch = getattr(self,
-        # f'channel{n}') this = getattr(ch.rois, 'roi{:02}'.format(i+1)) if
-        # self.slots[i] == BMMuser.element: this.value.kind = 'hinted'
-        # setattr(BMMuser, f'xs{n}', this.value.name) setattr(BMMuser,
-        # f'xschannel{n}', this.value) else: this.value.kind = 'omitted'
 
     def plot(self, uid=None, add=False, only=None): 
         '''Make a plot appropriate for the 4-element detector.

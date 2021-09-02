@@ -61,30 +61,6 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 # This means that Xspress3 will require its own count plan
 # also that a linescan or xafs scan must set total_points up front
 
-
-
-# class BMMXspress3HDF5Handler(Xspress3HDF5Handler):
-#     def __call__(self, *args, frame=None, **kwargs):
-#         self._get_dataset()
-#         shape = self.dataset.shape
-#         if len(shape) != 3:
-#             raise RuntimeError(f'The ndim of the dataset is not 3, but {len(shape)}')
-#         num_channels = shape[1]
-#         print(num_channels)
-#         chanrois = [f'CHAN{c}ROI{r}' for c, r in product([1, 2, 3, 4], [1, 2, 3, 4])]
-#         attrsdf = pd.DataFrame.from_dict(
-#             {chanroi: self._file['/entry/instrument/detector/']['NDAttributes'][chanroi] for chanroi in chanrois}
-#         )
-#         ##print(attrsdf)
-#         df = pd.DataFrame(data=self._dataset[frame, :, :].T,
-#                           columns=[f'ch_{n+1}' for n in range(num_channels)])
-#         #return pd.concat([df]+[attrsdf])
-#         return df
-
-# db = user_ns['db']
-# db.reg.register_handler(BMMXspress3HDF5Handler.HANDLER_NAME,
-#                         BMMXspress3HDF5Handler, overwrite=True)    
-
 class Xspress3FileStoreFlyable(Xspress3FileStore):
     def warmup(self):
         """
@@ -94,8 +70,6 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         NOTE : this comes from:
             https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
-        JOSH: and then we replaced "settings" with "cam"
-        Also modified the stage sigs.
         """
         print(whisper("                warming up the hdf5 plugin..."))
         set_and_wait(self.enable, 1)
@@ -109,12 +83,6 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
                             #(self.parent.cam.acquire, 1)
                         ]
         )
-        # sigs = OrderedDict([(self.parent.settings.array_callbacks, 1),
-        #                     (self.parent.settings.trigger_mode, 'Internal'),
-        #                     # just in case the acquisition time is set very long...
-        #                     (self.parent.settings.acquire_time, 1),
-        #                     # (self.capture, 1),
-        #                     (self.parent.settings.acquire, 1)])
 
         original_vals = {sig: sig.get() for sig in sigs}
 
@@ -212,11 +180,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                       'Zn', 'Ge', 'As', 'Br',
                       'Nb', 'Mo', None, 'OCR']
         self.restart()
-        # self.settings.num_images.put(1)   # number of frames
-        # self.settings.trigger_mode.put(1) # trigger mode internal
-        # self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
-        # self.set_channels_for_hdf5()
-        # self.set_rois()
 
     # JL: trying to use Xspress3Trigger.trigger
     #     which is almost identical to this
@@ -257,10 +220,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         self.cam.trigger_mode.put(1)
         self.cam.ctrl_dtc.put(1)
         self.set_rois()
-        # self.settings.num_images.put(1)   # number of frames
-        # self.settings.trigger_mode.put(1) # trigger mode internal
-        # self.settings.ctrl_dtc.put(1)     # dead time corrections enabled
-        # self.set_rois()
         
     def _acquire_changed_hide(self, value=None, old_value=None, **kwargs):
         #print(f"!!! HERE I AM !!!   {value}  {old_value}  {id(self._status)}  {self._status}")
@@ -308,12 +267,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         # yes
         # self.cam.num_channels.put(self.get_channel_count())
 
-        # # The number of channel
-        # for n in channels:
-        #     getattr(self, f'channel{n}').rois.read_attrs = ['roi{:02}'.format(j) for j in range(1,17)]
-        # self.hdf5.num_extra_dims.put(0)
-        # self.settings.num_channels.put(len(channels))
-        # #self.settings.num_channels.put(8)
 
             
     def set_roi(self, mcaroi, name='OCR', min_x=1, size_x=4095):
@@ -338,12 +291,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         mcaroi.min_x.put(low)
         mcaroi.size_x.put(high - low)
 
-        # ch = getattr(self, f'channel{channel}')
-        # rs = ch.rois
-        # this = getattr(rs, 'roi{:02}'.format(index))
-        # this.value.name = name
-        # this.bin_low.put(low)
-        # this.bin_high.put(high)
         
     def reset_rois(self, el=None):
         BMMuser = user_ns['BMMuser']
@@ -381,16 +328,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                     template % 
                     (i+1, el.capitalize(), this.min_x.get(), this.min_x.get() + this.size_x.get())
                 )
-            
-            # rs = self.channel1.rois
-            # this = getattr(rs, 'roi{:02}'.format(i+1))
-            # if el is None:
-            #     print(template % (i+1, 'None', this.bin_low.value, this.bin_high.value))
-            # elif el == BMMuser.element:
-            #     print(go_msg(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value)))
-            # else:
-            #     print(template % (i+1, el.capitalize(), this.bin_low.value, this.bin_high.value))
-                
+                            
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
