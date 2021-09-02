@@ -297,11 +297,13 @@ if with_xspress3 is True:
     #from BMM.xspress3_1element import BMMXspress3Detector_1Element
     from nslsii.areadetector.xspress3 import build_detector_class 
 
+    run_report('\t'+'\t'+'Building 4-element')
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',
         name='xs',
         read_attrs=['hdf5']
     )
+    run_report('\t'+'\t'+'Done building 4-element')
 
     # This is necessary for when the ioc restarts
     # we have to trigger one image for the hdf5 plugin to work correctly
