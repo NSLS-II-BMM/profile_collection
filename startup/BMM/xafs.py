@@ -33,7 +33,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #from __main__ import db
-from BMM.user_ns.base import db
+from BMM.user_ns.base import db, startup_dir
 
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
 
@@ -474,7 +474,7 @@ def scan_sequence_static_html(inifile       = None,
             tmpl = 'sample_ga.tmpl'
         else:
             tmpl = 'sample_xs.tmpl'
-    with open(os.path.join(get_ipython().profile_dir.startup_dir, tmpl)) as f:
+    with open(os.path.join(startup_dir, tmpl)) as f:
         content = f.readlines()
     basename     = filename
     htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')

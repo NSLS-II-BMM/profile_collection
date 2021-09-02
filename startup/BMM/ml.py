@@ -29,6 +29,8 @@ from BMM.user_ns.bmm import BMMuser
 # would be nice to add a check at self.clf = load(self.model) (line 48)
 # or simply rerun clf.train() at the bsui command line.
 
+from BMM.user_ns.base import startup_dir
+
 class BMMDataEvaluation():
     '''A very simple machine learning model for recognizing when an XAS
     scan goes horribly awry.
@@ -39,7 +41,7 @@ class BMMDataEvaluation():
         self.clf      = None
         self.X        = None
         self.y        = None
-        self.folder   = os.path.join(get_ipython().profile_dir.startup_dir, 'ML')
+        self.folder   = os.path.join(startup_dir, 'ML')
         self.model    = os.path.join(self.folder, 'data_evaluation.joblib')
         self.hdf5     = [os.path.join(self.folder, 'fluorescence_training_set.hdf5'),
                          os.path.join(self.folder, 'transmission_training_set.hdf5'),

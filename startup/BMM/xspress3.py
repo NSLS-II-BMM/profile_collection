@@ -43,6 +43,9 @@ import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
+
+from BMM.user_ns.base import startup_dir
+
         
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
@@ -430,9 +433,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
 
     def check_element(self, element, edge):
-        '''Check that the current element and edge is tabulate in rois.json
+        '''Check that the current element and edge is tabulated in rois.json
         '''
-        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)

@@ -11,13 +11,14 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
+
+from BMM.user_ns.base import startup_dir
         
 
 
@@ -62,7 +63,6 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channel8.
         '''
-        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)
