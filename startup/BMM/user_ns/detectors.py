@@ -19,6 +19,9 @@ run_report(__file__, text='detectors and cameras')
 run_report('\t'+'dwelltime')
 with_pilatus = False
 with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
+if os.environ.get('AZURE_TESTING'):
+    with_xspress3 = False
+
 if with_xspress3 is True:
     BMMuser.readout_mode = 'xspress3'
 from BMM.dwelltime import LockedDwellTimes

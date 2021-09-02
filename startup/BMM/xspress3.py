@@ -320,8 +320,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         """
         Combine setting PVs and setting the 'name' field of a mcaroi.
         """
-        if type(name) is bytes:
-            name.decode('utf8')
+        # if type(name) is bytes:
+        #     name.decode('utf8')
         mcaroi.configure_mcaroi(
             roi_name=name,
             min_x=min_x,
