@@ -441,6 +441,10 @@ def scan_sequence_static_html(inifile       = None,
                               webuid        = '',
                               anasnap       = '',
                               anauid        = '',
+                              usb1snap      = '',
+                              usb1uid       = '',
+                              usb2snap      = '',
+                              usb2uid       = '',
                               xrfsnap       = '',
                               xrffile       = '',
                               xrfuid        = '',
@@ -545,6 +549,10 @@ def scan_sequence_static_html(inifile       = None,
                                     webuid        = webuid,
                                     anasnap       = quote('../snapshots/'+anasnap),
                                     anauid        = anauid,
+                                    usb1snap      = quote('../snapshots/'+usb1snap),
+                                    usb1uid       = usb1uid,
+                                    usb2snap      = quote('../snapshots/'+usb2snap),
+                                    usb2uid       = usb2uid,
                                     xrffile       = quote('../XRF/'+str(xrffile)),
                                     xrfuid        = xrfuid,
                                     xrfsnap       = quote('../XRF/'+str(xrfsnap)),
@@ -828,6 +836,7 @@ def xafs(inifile=None, **kwargs):
         ## measure XRF spectrum at Eave
         xrfuid, xrffile, xrfimage = None, None, None
         image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
+        usbcam1_uid, usbcam2_uid = None, none
 
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
@@ -871,7 +880,7 @@ def xafs(inifile=None, **kwargs):
         if p['snapshots']:
             ahora = now()
 
-            #annotation = 'NIST BMM (NSLS-II 06BM)      ' + p['filename'] + '      ' + ahora
+            ### --- XAS webcam ---------------------------------------------------------------
             annotation = p['filename']
             html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
             image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
@@ -879,9 +888,8 @@ def xafs(inifile=None, **kwargs):
             print(bold_msg('XAS webcam snapshot'))
             xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[xascam_uid]), image_web)
-            #shutil.copyfile(file_resource(db.v2[xascam_uid]), image_web)
-            #snap('XAS', filename=image_web, annotation=annotation)
 
+            ### --- analog camera using redgo dongle ------------------------------------------
             html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
             image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
             anacam._annotation_string = p['filename']
@@ -889,22 +897,44 @@ def xafs(inifile=None, **kwargs):
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             try:
                 os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
-                #shutil.copyfile(file_resource(db.v2[anacam_uid]), image_ana)
             except:
                 print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
                 pass
-            #snap('analog', filename=image_ana, sample=p['filename'])
+
+            ### --- USB camera #1 --------------------------------------------------------------
+            html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
+            image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
+            usb1cam._annotation_string = p['filename']
+            print(bold_msg('USB camera #1 snapshot'))
+            usb1cam_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
+            os.symlink(file_resource(db.v2[usb1cam_uid]), image_web)
+
+            ### --- USB camera #2 --------------------------------------------------------------
+            html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
+            image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
+            usb2cam._annotation_string = p['filename']
+            print(bold_msg('USB camera #2 snapshot'))
+            usb2cam_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
+            os.symlink(file_resource(db.v2[usb2cam_uid]), image_web)
 
             
             gdrive_dict['xascam']  = {'source': image_web,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['websnap'])}
             gdrive_dict['anacam']  = {'source': image_ana,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['anasnap'])}
+            gdrive_dict['usb1cam'] = {'source': image_usb1,
+                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb1snap'])}
+            gdrive_dict['usb2cam'] = {'source': image_usb2,
+                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb2snap'])}
             
 
-        md['_snapshots'] = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,
-                            'webcam_file': image_web, 'webcam_uid': xascam_uid,
-                            'analog_file': image_ana, 'anacam_uid': anacam_uid, }
+        md['_snapshots'] = {'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
+                            'webcam_file': image_web,  'webcam_uid': xascam_uid,
+                            'analog_file': image_ana,  'anacam_uid': anacam_uid,
+                            'usb1_file':   image_usb1, 'usb1cam_uid': usb1cam_uid,
+                            'usb2_file':   image_usb1, 'usb2cam_uid': usb1cam_uid, }
             
 
         #legends = []

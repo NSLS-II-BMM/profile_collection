@@ -12,7 +12,7 @@ user_ns = vars(user_ns_module)
         
 
 
-class BMMTelementry():
+class BMMTelemetry():
     '''A class for figuring out the historical average overhead for an
     XAS scan at BMM
 

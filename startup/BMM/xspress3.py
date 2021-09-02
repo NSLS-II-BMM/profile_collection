@@ -366,11 +366,12 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             el = BMMuser.element
         if el in self.slots:
             #from BMM.edge import show_edges
-            print(error_msg(f'Resetting rois with {el} as the active ROI'))
+            print(whisper(f'Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
-            user_ns['show_edges']()
+            #show_edges()
+            #user_ns['show_edges']()
         else:
             print(error_msg(f'Cannot reset rois, {el} is not in {self.name}.slots'))
 

@@ -192,6 +192,9 @@ run_report('\t'+'machine learning and data evaluation')
 from BMM.ml import BMMDataEvaluation
 clf = BMMDataEvaluation()
 
+## suppress some uninteresting messages from lib/python3.7/site-packages/hdf5plugin/__init__.py
+import logging
+logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
@@ -216,8 +219,8 @@ run_report('\t'+'Demeter')
 from BMM.demeter import athena, hephaestus, toprj
 
 run_report('\t'+'telemetry')
-from BMM.telemetry import BMMTelementry
-tele = BMMTelementry()
+from BMM.telemetry import BMMTelemetry
+tele = BMMTelemetry()
 
 if not is_re_worker_active():
     run_report('\t'+'user interaction')

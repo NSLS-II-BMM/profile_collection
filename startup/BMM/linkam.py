@@ -8,7 +8,7 @@ from BMM.functions      import boxedtext
 
 
 class AtSetpoint(DerivedSignal):
-    '''A signal that bit-wise arithmetic on the Linkam's status code'''
+    '''A signal that does bit-wise arithmetic on the Linkam's status code'''
     def __init__(self, parent_attr, *, parent=None, **kwargs):
         code_signal = getattr(parent, parent_attr)
         super().__init__(derived_from=code_signal, parent=parent, **kwargs)
@@ -57,7 +57,7 @@ class Linkam(PVPositioner):
     startheat = Cpt(EpicsSignal, 'STARTHEAT')
     holdtime_set = Cpt(EpicsSignal, 'HOLDTIME:SET')
     holdtime = Cpt(EpicsSignal, 'HOLDTIME')
-    power = Cpt(EpicsSignal, 'POWER')
+    power = Cpt(EpicsSignalRO, 'POWER')
     lnp_speed = Cpt(EpicsSignal, 'LNP_SPEED')
     lnp_mode_set = Cpt(EpicsSignal, 'LNP_MODE:SET')
     lnp_speed_set = Cpt(EpicsSignal, 'LNP_SPEED:SET')
@@ -159,6 +159,10 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         scan.
         '''
         element, edge, focus = (None, None, None)
+
+        self.content += self.tab + 'yield from linkam.on_plan()\n'
+        self.content += self.tab + 'yield from mv(linkam.setpoint, 23)\n\n'
+
         for m in self.measurements:
 
             if m['default'] is True:
@@ -174,12 +178,14 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             for k in ('element', 'edge'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
+            if m['settle'] == 0:
+                m['settle'] = self.measurements[0]['settle']
 
             ############################
             # sample and slit movement #
-            ############################
-            self.content += self.tab + 'yield from linkam.on_plan()\n'
-            self.content += self.tab + f'yield from mv(linkam.SP_set, {m["temperature"]:.1f})\n'
+            ############################           
+            self.content += self.tab + f'linkam.settle_time = {m["settle"]:.1f}\n'
+            self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
             if m['samplex'] is not None:
                 self.content += self.tab + f'yield from mv(xafs_x, {m["samplex"]:%.3f})\n'
             if m['sampley'] is not None:
@@ -269,33 +275,34 @@ class LinkamMacroBuilder(BMMMacroBuilder):
 
         '''
         this = {'default':     defaultline,
-                'temperature': float(row[1].value),      # sample location
-                'measure':     self.truefalse(row[2].value),  # filename and visualization
-                'filename':    row[3].value,
-                'nscans':      row[4].value,
-                'start':       row[5].value,
-                'mode':        row[6].value,
-                'element':     row[7].value,      # energy range
-                'edge':        row[8].value,
-                'focus':       row[9].value,
-                'sample':      row[10].value,     # scan metadata
-                'prep':        row[11].value,
-                'comment':     row[12].value,
-                'bounds':      row[13].value,     # scan parameters
-                'steps':       row[14].value,
-                'times':       row[15].value,
-                'samplex':     row[16].value,     # other motors
-                'sampley':     row[17].value,
-                'detectorx':   row[18].value,
-                'snapshots':   self.truefalse(row[19].value),  # flags
-                'htmlpage':    self.truefalse(row[20].value),
-                'usbstick':    self.truefalse(row[21].value),
-                'bothways':    self.truefalse(row[22].value),
-                'channelcut':  self.truefalse(row[23].value),
-                'ththth':      self.truefalse(row[24].value),
-                'url':         row[25].value,
-                'doi':         row[26].value,
-                'cif':         row[27].value, }
+                'temperature': float(row[1].value),          # measurement temperature
+                'settle':      self.nonezero(row[2].value),  # temperature settling time
+                'measure':     self.truefalse(row[3].value), # filename and visualization
+                'filename':    row[4].value,
+                'nscans':      row[5].value,
+                'start':       row[6].value,
+                'mode':        row[7].value,
+                'element':     row[8].value,      # energy range
+                'edge':        row[9].value,
+                'focus':       row[10].value,
+                'sample':      row[11].value,     # scan metadata
+                'prep':        row[12].value,
+                'comment':     row[13].value,
+                'bounds':      row[14].value,     # scan parameters
+                'steps':       row[15].value,
+                'times':       row[16].value,
+                'samplex':     row[17].value,     # other motors
+                'sampley':     row[18].value,
+                'detectorx':   row[19].value,
+                'snapshots':   self.truefalse(row[20].value),  # flags
+                'htmlpage':    self.truefalse(row[21].value),
+                'usbstick':    self.truefalse(row[22].value),
+                'bothways':    self.truefalse(row[23].value),
+                'channelcut':  self.truefalse(row[24].value),
+                'ththth':      self.truefalse(row[25].value),
+                'url':         row[26].value,
+                'doi':         row[27].value,
+                'cif':         row[28].value, }
         return this
 
         
