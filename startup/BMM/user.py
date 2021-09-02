@@ -14,6 +14,8 @@ from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
 from BMM.workspace import rkvs
 
+from BMM.user_ns.base import startup_dir
+
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -288,7 +290,6 @@ class BMM_User(Borg):
                 if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
                     forceit = True # Pb and Pt L3 edges are "standard" ROIs
                 if el not in xs.slots or forceit:
-                    startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
                     with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
                         js = fl.read()
                     allrois = json.loads(js)
@@ -369,8 +370,7 @@ class BMM_User(Borg):
         return(verb)
 
     def find_or_copy_file(self, i, text, fname):
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
-        src     = os.path.join(startup, fname)
+        src     = os.path.join(startup_dir, fname)
         dst     = os.path.join(self.folder, fname)
         if not os.path.isfile(dst):
             shutil.copyfile(src,  dst)
@@ -412,7 +412,6 @@ class BMM_User(Borg):
             true if this experiment uses the BioLogic potentiostat
         '''
 
-        startup = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup')
         step = 1
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Main folders, point BMMuser and wmb objects at data folder
@@ -432,7 +431,7 @@ class BMM_User(Borg):
         self.establish_folder(0,    'Athena prj folder', prjfolder)
         if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
             for f in ('sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
-                shutil.copyfile(os.path.join(startup, f),  os.path.join(htmlfolder, f))
+                shutil.copyfile(os.path.join(startup_dir, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
             print('    copied html generation files, touched MANIFEST')
@@ -447,7 +446,7 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
-        initmpl = os.path.join(startup, 'scan.tmpl')
+        initmpl = os.path.join(startup_dir, 'scan.tmpl')
         scanini = os.path.join(data_folder, 'scan.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
@@ -460,7 +459,7 @@ class BMM_User(Borg):
             verb, pad = 'Found', '  '
         self.print_verb_message(step, verb, 'INI file', pad, scanini)
 
-        macrotmpl = os.path.join(startup, 'wheelmacro.tmpl')
+        macrotmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
         macropy = os.path.join(data_folder, 'sample_macro.py')
         commands = '''
         ## sample 1
@@ -529,7 +528,7 @@ class BMM_User(Borg):
         ## GDrive folder
         user_folder = make_gdrive_folder(prefix='    ', update=False)
         for f in ('logo.png', 'style.css', 'trac.css'):
-            shutil.copyfile(os.path.join(startup, f),  os.path.join(user_folder, 'dossier', f))
+            shutil.copyfile(os.path.join(startup_dir, f),  os.path.join(user_folder, 'dossier', f))
         print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
         print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
         step += 1

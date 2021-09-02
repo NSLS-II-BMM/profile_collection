@@ -33,7 +33,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #from __main__ import db
-from BMM.user_ns.base import db
+from BMM.user_ns.base import db, startup_dir
 
 from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
 
@@ -478,7 +478,7 @@ def scan_sequence_static_html(inifile       = None,
             tmpl = 'sample_ga.tmpl'
         else:
             tmpl = 'sample_xs.tmpl'
-    with open(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', tmpl)) as f:
+    with open(os.path.join(startup_dir, tmpl)) as f:
         content = f.readlines()
     basename     = filename
     htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')
@@ -684,12 +684,12 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if plotting_mode(p['mode']) is 'xs':
+        if plotting_mode(p['mode']) == 'xs':
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3'))
                 print(error_msg('Likely solution:'))
-                print(error_msg('Set element symbol:  BMMuser.element = Xx'))
+                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
                 print(error_msg('then do:             xs.measure_roi()'))
                 return(yield from null())
 

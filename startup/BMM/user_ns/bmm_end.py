@@ -238,11 +238,11 @@ if rois.trigger is True:        # set Struck rois from persistent user informati
 
 if BMMuser.element is None:
      try:
-          BMMuser.element = str(rkvs.get('BMM:pds:element'), 'utf-8')
+          BMMuser.element = rkvs.get('BMM:pds:element').decode('utf-8')
      except:
           pass
      try:
-          BMMuser.edge    = str(rkvs.get('BMM:pds:edge'), 'utf-8')
+          BMMuser.edge    = rkvs.get('BMM:pds:edge').decode('utf-8')
      except:
           pass
 
@@ -263,13 +263,14 @@ if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
      print(error_msg('You likely have to restart bsui.'))
 
+from BMM.user_ns.base import startup_dir
 from BMM.user_ns.instruments import wmb, lmb
 wmb.folder = BMMuser.folder
-lmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+lmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
 lmb.folder = BMMuser.folder
-wmb.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'wheelmacro.tmpl')
+wmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
 pinwheel.folder = BMMuser.folder
-pinwheel.tmpl = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'gamacro.tmpl')
+pinwheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook

@@ -8,6 +8,7 @@ from BMM.periodictable import element_symbol, edge_energy, Z_number
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.base import startup_dir
 
         
 
@@ -23,7 +24,7 @@ class BMMTelemetry():
 
     '''
     def __init__(self):
-        self.folder      = os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection', 'startup', 'telemetry')
+        self.folder      = os.path.join(startup_dir, 'telemetry')
         self.json        = os.path.join(self.folder, 'telemetry.json')
         self.bc          = catalog['bmm']
         self.start_date  = '2019-09-01'

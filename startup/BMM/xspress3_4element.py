@@ -14,7 +14,6 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
@@ -22,6 +21,7 @@ from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
+from BMM.user_ns.base import startup_dir
 
 
 
@@ -44,22 +44,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
     '''
 
-    #channel1 = Cpt(BMMXspress3Channel, 'C1_', channel_num=1, read_attrs=['rois'])
-    #channel2 = Cpt(BMMXspress3Channel, 'C2_', channel_num=2, read_attrs=['rois'])
-    #channel3 = Cpt(BMMXspress3Channel, 'C3_', channel_num=3, read_attrs=['rois'])
-    #channel4 = Cpt(BMMXspress3Channel, 'C4_', channel_num=4, read_attrs=['rois'])
-    #create_dir = Cpt(EpicsSignal, 'HDF5:FileCreateDir')
-
-    #mca1_sum = Cpt(EpicsSignal, 'ARRSUM1:ArrayData')
-    #mca2_sum = Cpt(EpicsSignal, 'ARRSUM2:ArrayData')
-    #mca3_sum = Cpt(EpicsSignal, 'ARRSUM3:ArrayData')
-    #mca4_sum = Cpt(EpicsSignal, 'ARRSUM4:ArrayData')
-    
-    #mca1 = Cpt(EpicsSignal, 'ARR1:ArrayData')
-    #mca2 = Cpt(EpicsSignal, 'ARR2:ArrayData')
-    #mca3 = Cpt(EpicsSignal, 'ARR3:ArrayData')
-    #mca4 = Cpt(EpicsSignal, 'ARR4:ArrayData')
-    
     
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -87,10 +71,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         # maybe this is how to erase the mca_sum arrays
         self.erase.put(1)
 
-        # for i in range(1,5):
-            # getattr(self.channels, f'channel_{i}').reset()
-            ## this doesn't work, not seeing how those arrays get cleared in the IOC....
-            # getattr(self, f'mca{i}_sum').put(numpy.zeros)
         
     def restart(self):
         # JOSH: proposed change for new xspress3 IOC
@@ -111,7 +91,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.
         '''
-        startup_dir = os.path.split(os.path.dirname(BMM.functions.__file__))[0]
         with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
             js = fl.read()
         allrois = json.loads(js)
@@ -126,8 +105,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                         min_x=allrois['OCR']['low'],
                         size_x=allrois['OCR']['high'] - allrois['OCR']['low']
                     )
-                # for ch in range(1,5):
-                #     self.set_roi_channel(channel=ch, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
                 
                 continue
             elif el is None:
@@ -148,15 +125,12 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                     min_x=allrois[el][edge]['low'],
                     size_x=allrois[el][edge]['high'] - allrois[el][edge]['low']
                 )
-            # for ch in range(1,5):
-            #     self.set_roi_channel(channel=ch, index=i+1, name=f'{el.capitalize()}{ch}', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
+                # Azure testing error happens at this line ^
                     
     def measure_roi(self):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
-        
-        # JOSH: proposed change for new IOC
         for channel in self.iterate_channels():
             for mcaroi in channel.iterate_mcarois():
                 if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:
@@ -165,12 +139,6 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                     setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv) 
                 else:
                     mcaroi.total_rbv.kind = 'omitted'
-
-        # for i in range(16): for n in range(1,5): ch = getattr(self,
-        # f'channel{n}') this = getattr(ch.rois, 'roi{:02}'.format(i+1)) if
-        # self.slots[i] == BMMuser.element: this.value.kind = 'hinted'
-        # setattr(BMMuser, f'xs{n}', this.value.name) setattr(BMMuser,
-        # f'xschannel{n}', this.value) else: this.value.kind = 'omitted'
 
     def plot(self, uid=None, add=False, only=None): 
         '''Make a plot appropriate for the 4-element detector.

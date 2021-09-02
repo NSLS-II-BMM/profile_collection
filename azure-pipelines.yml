@@ -7,10 +7,13 @@ resources:
       endpoint: github
 
 jobs:
-  - template: collection-2021-1.0.yml@templates
+  - template: collection-2021-1.2.yml@templates
     parameters:
       beamline_acronym: BMM
-  - template: collection-2021-1.2.yml@templates
+  - template: nsls2-collection-2021-2.2.yml@templates
+    parameters:
+      beamline_acronym: BMM
+  - template: nsls2-collection-2021-2.2-py39.yml@templates
     parameters:
       beamline_acronym: BMM
 

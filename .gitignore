@@ -7,11 +7,12 @@ db/
 log/
 pid/
 *.directory
+*.save__
 
 
+# secrets that should not be commited to an on-line repo
 slack_secret
 image_uploader_token
-*.save__
 
 
 # from https://github.com/github/gitignore/blob/master/Python.gitignore

@@ -6,7 +6,6 @@ import copy
 from bluesky    import __version__ as bluesky_version
 from ophyd      import __version__ as ophyd_version
 from databroker import __version__ as databroker_version
-#from IPython    import __version__ as ipython_version
 import sys, re
 
 from BMM import user_ns as user_ns_module
@@ -163,7 +162,7 @@ def bmm_metadata(measurement   = 'transmission',
     (md['Beamline']['focusing'], md['Beamline']['harmonic_rejection']) = mirror_state()
     collection = re.findall('collection[^/]*', sys.executable)[0]
     python_version = sys.version.split(' ')[0]
-    md['Beamline']['software'] = f'Bluesky {bluesky_version}, Ophyd {ophyd_version}, DataBroker {databroker_version}, Python {python_version}, {collection}' # , IPython {ipython_version}
+    md['Beamline']['software'] = f'Bluesky {bluesky_version}, Ophyd {ophyd_version}, DataBroker {databroker_version}, Python {python_version}, {collection}'
 
     if direction > 0:
         md['Mono']['direction'] = 'increasing in energy'

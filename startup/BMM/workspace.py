@@ -2,6 +2,7 @@
 import os, subprocess, shutil, socket
 import redis
 import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
+from BMM.user_ns.base import startup_dir
 
 if not os.environ.get('AZURE_TESTING'):
     redis_host = 'xf06bm-ioc2'
@@ -59,9 +60,11 @@ def initialize_workspace():
 
 def check_profile_branch():
     here = os.getcwd()
-    STARTUP = os.path.dirname(BMM.functions.__file__)
-    os.chdir(os.path.join(os.getenv('HOME'), '.ipython', 'profile_collection'))
-    branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
+    os.chdir(os.path.dirname(startup_dir))
+    try:
+        branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
+    except subprocess.CalledProcessError:
+        branch = "not a git repository"
     print(f'{TAB}Using profile branch {branch}')
     os.chdir(here)
     
@@ -125,7 +128,7 @@ def initialize_secrets():
     If not, copy them from the NAS server NFS mounted at /mnt/nfs/nas1.
 
     '''
-    STARTUP = os.path.dirname(BMM.functions.__file__)
+    STARTUP = os.path.join(startup_dir, 'BMM')
     for fname in SECRET_FILES:
         if os.path.isfile(os.path.join(STARTUP, fname)):
             print(f'{TAB}Found {fname} file: {CHECK}')
