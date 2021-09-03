@@ -137,13 +137,12 @@ from BMM.macrobuilder import BMMMacroBuilder
 
 class LinkamMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and
-    generating macros for measuring XAS on the BMM glancing angle
-    stage.
+    generating macros for measuring XAS using the Linkam stage.
 
     Examples
     --------
     >>> lmb = LinkamMacroBuilder()
-    >>> lmb.spreadsheet('wheel1.xlsx')
+    >>> lmb.spreadsheet('linkam.xlsx')
     >>> lmb.write_macro()
 
     '''
@@ -270,7 +269,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
 
         This must return a dictionary.  The dictionary keys are the
         keywords related to the column labels from the spreadsheet,
-        the values are cell contents, possibly reduced to a specific
+        the values are cell contents, possibly coerced to a specific
         type.
 
         '''
