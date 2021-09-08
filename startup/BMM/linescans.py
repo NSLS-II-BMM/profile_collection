@@ -154,6 +154,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 
                 yield from sleep(slp)
                 yield from mv(motor.kill_cmd, 1)
+                yield from sleep(slp)
                 yield from mv(motor, top)
 
             else:
@@ -162,6 +163,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                     return(yield from null())
                 yield from sleep(slp)
                 yield from mv(motor.kill_cmd, 1)
+                yield from sleep(slp)
                 yield from move_after_scan(motor)
             yield from mv(quadem1.averaging_time, 0.5)
         yield from scan_slit(slp)

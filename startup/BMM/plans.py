@@ -100,6 +100,7 @@ def recover_slits2():
     print('\n')
     yield from mv(slits2.vsize, 1.1, slits2.hsize, 18)
 
+
 def recover_slits3():
     inb  = user_ns['dm3_slits_i']
     outb = user_ns['dm3_slits_o']

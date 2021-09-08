@@ -128,13 +128,13 @@ class DCM(PseudoPositioner):
         yield from mv(dcm_x, 1)
         yield from mv(dcm_x, 0.3)
         ## move pitch and roll to the Si(111) positions
-        this_energy = dcm.energy.readback.get()
-        yield from dcm.kill_plan()
+        this_energy = self.energy.readback.get()
+        yield from self.kill_plan()
         yield from mv(dcm_pitch, approximate_pitch(this_energy), dcm_roll, -6.26)
-        yield from mv(dcm.energy, this_energy)
+        yield from mv(self.energy, this_energy)
         print('DCM is at %.1f eV.  There should be signal in I0.' % dcm.energy.readback.get())
         yield from sleep(2.0)
-        yield from dcm.kill_plan()
+        yield from self.kill_plan()
 
     def enable(self):
         yield from mv(dcm_para.enable_cmd,  1)

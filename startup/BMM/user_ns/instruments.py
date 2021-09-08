@@ -74,7 +74,7 @@ from BMM.mirror_trigonometry import move_m2, move_m3
                                
 
 run_report('\tslits')
-from BMM.slits import Slits, GonioSlits, recover_slits2, recover_slits3
+from BMM.slits import Slits, GonioSlits #, recover_slits2, recover_slits3
 
 sl = slits3 = Slits('XF:06BM-BI{Slt:02-Ax:',  name='slits3')
 slits3.nominal = [7.0, 1.0, 0.0, 0.0]

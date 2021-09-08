@@ -20,7 +20,7 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.bmm         import BMMuser, rois
 from BMM.user_ns.dcm         import dcm
 from BMM.user_ns.detectors   import xs, with_xspress3
-from BMM.user_ns.instruments import kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu
+from BMM.user_ns.instruments import kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks
 from BMM.user_ns.motors      import *
 
 def show_edges():
@@ -256,6 +256,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     yield from mv(dcm_pitch, approximate_pitch(energy+target))
     yield from sleep(1)
     yield from mv(dcm_pitch.kill_cmd, 1)
+    yield from sleep(1)
     yield from rocking_curve()
     close_last_plot()
     

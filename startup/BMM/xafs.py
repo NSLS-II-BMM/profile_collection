@@ -836,8 +836,10 @@ def xafs(inifile=None, **kwargs):
         ## measure XRF spectrum at Eave
         xrfuid, xrffile, xrfimage = None, None, None
         image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
-        usbcam1_uid, usbcam2_uid = None, none
-
+        usbcam1_uid, usbcam2_uid = None, None
+        usb1cam_uid, usb2cam_uid = None, None
+        image_usb1, image_usb2 = None, None
+        
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
@@ -904,20 +906,20 @@ def xafs(inifile=None, **kwargs):
             ### --- USB camera #1 --------------------------------------------------------------
             html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
             image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
-            usb1cam._annotation_string = p['filename']
-            print(bold_msg('USB camera #1 snapshot'))
-            usb1cam_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            usbcam1._annotation_string = p['filename']
+            print(bold_msg('skipping USB camera #1 snapshot'))
+            #usb1cam_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
-            os.symlink(file_resource(db.v2[usb1cam_uid]), image_web)
+            #os.symlink(file_resource(db.v2[usb1cam_uid]), image_usb1)
 
             ### --- USB camera #2 --------------------------------------------------------------
             html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
             image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
-            usb2cam._annotation_string = p['filename']
-            print(bold_msg('USB camera #2 snapshot'))
-            usb2cam_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            usbcam2._annotation_string = p['filename']
+            print(bold_msg('skipping USB camera #2 snapshot'))
+            #usb2cam_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
-            os.symlink(file_resource(db.v2[usb2cam_uid]), image_web)
+            #os.symlink(file_resource(db.v2[usb2cam_uid]), image_usb2)
 
             
             gdrive_dict['xascam']  = {'source': image_web,
@@ -1087,8 +1089,8 @@ def xafs(inifile=None, **kwargs):
             rkvs.set('BMM:scan:type',      'xafs')
             rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
             rkvs.set('BMM:scan:estimated', (approx_time * int(p['nscans']) * 60))
-            print(str(datetime.datetime.timestamp(datetime.datetime.now())))
-            print((approx_time * int(p['nscans']) * 60))
+            #print(str(datetime.datetime.timestamp(datetime.datetime.now())))
+            #print((approx_time * int(p['nscans']) * 60))
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -1266,7 +1268,10 @@ def xafs(inifile=None, **kwargs):
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
             ## FYI: db.v2[-1].metadata['start']['scan_id']
             if 'htmlpage' in html_dict and html_dict['htmlpage']:
-                (htmlout, prjout, pngout) = scan_sequence_static_html(inifile=inifile, **html_dict)
+                try:
+                    (htmlout, prjout, pngout) = scan_sequence_static_html(inifile=inifile, **html_dict)
+                except:
+                    htmlout, prjout, pngout = None, None, None
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
                     gdrive_dict['dossier']   = {'source': htmlout,
@@ -1289,7 +1294,8 @@ def xafs(inifile=None, **kwargs):
                         try:
                             shutil.copyfile(v['source'], v['target'])
                         except Exception as e:
-                            print(e)
+                            pass
+                            #print(e)
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
@@ -1302,6 +1308,7 @@ def xafs(inifile=None, **kwargs):
     #quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel, ga = user_ns['xafs_wheel'], user_ns['ga']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
+    usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']
     #try:
     #    xs = user_ns['xs']

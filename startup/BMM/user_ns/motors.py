@@ -60,8 +60,8 @@ dm1_filters2.llm.put(-52)
 ## monochromator
 print(f'{TAB}FMBO motor group: dcm')
 dcm_bragg = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
-dcm_pitch = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
-dcm_roll  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
+dcm_pitch = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
+dcm_roll  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
 dcm_perp  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Per2}Mtr',  name='dcm_perp')
 dcm_para  = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Par2}Mtr',  name='dcm_para')
 dcm_x     = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:X}Mtr',     name='dcm_x')
@@ -91,6 +91,10 @@ dcm_para.velocity.put(0.6)
 dcm_para.hvel_sp.put(0.4)
 dcm_perp.velocity.put(0.2)
 dcm_perp.hvel_sp.put(0.2)
+dcm_para.llm.put(12.3)
+dcm_para.hlm.put(158.5)
+dcm_perp.llm.put(1.39)
+dcm_perp.hlm.put(26.5)
 
 ## focusing mirror
 print(f'{TAB}FMBO motor group: m2')
@@ -135,7 +139,7 @@ dm2_slits_b.hvel_sp.put(0.2)
 print(f'{TAB}FMBO motor group: dm3')
 dm3_fs      = XAFSEpicsMotor('XF:06BM-BI{FS:03-Ax:Y}Mtr',   name='dm3_fs')
 dm3_foils   = XAFSEpicsMotor('XF:06BM-BI{Fltr:01-Ax:Y}Mtr', name='dm3_foils')
-dm3_bct     = XAFSEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
+dm3_bct     = VacuumEpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr',     name='dm3_bct')
 dm3_bpm     = XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
 dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
 dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
@@ -183,6 +187,9 @@ xafs_ydi = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_yd
 xafs_xu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
 xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
 
+xafs_yu.user_offset.put(-64)
+xafs_ydo.user_offset.put(-17)
+xafs_ydi.user_offset.put(9.9)
 
 
 ## XAFS stages

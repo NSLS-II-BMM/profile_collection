@@ -169,11 +169,15 @@ def calibrate_high_end(mono='111'):
 
 ## there is a historical reason this is split into two halves -- the original referene holder had 5 slots
 def calibrate():
-    dcm = user_ns['dcm']
-    report(f'Calibrating the {dcm._crystal} monochrmoator', 'bold')
-    yield from calibrate_low_end(mono=dcm._crystal)
-    yield from calibrate_high_end(mono=dcm._crystal)
-    yield from resting_state_plan()
+    def main_plan():
+        dcm = user_ns['dcm']
+        report(f'Calibrating the {dcm._crystal} monochrmoator', 'bold')
+        yield from calibrate_low_end(mono=dcm._crystal)
+        yield from calibrate_high_end(mono=dcm._crystal)
+        yield from resting_state_plan()
+    def cleanup_plan():
+        yield from resting_state_plan()
+    yield from finalize_wrapper(main_plan(), cleanup_plan())    
 
 
 def calibrate_pitch(mono='111'):
