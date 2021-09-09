@@ -159,14 +159,15 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
 
-        self.content += self.tab + 'yield from linkam.on_plan()\n'
         self.content += self.tab + 'yield from mv(linkam.setpoint, 23)\n\n'
+        self.content += self.tab + 'yield from linkam.on_plan()\n'
 
         for m in self.measurements:
 
             if m['default'] is True:
-                element = m['element']
-                edge    = m['edge']
+                element     = m['element']
+                edge        = m['edge']
+                temperature = m['temperature']
                 continue
             if self.skip_row(m) is True:
                 continue
@@ -180,11 +181,17 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             if m['settle'] == 0:
                 m['settle'] = self.measurements[0]['settle']
 
+            ################################
+            # change temperature is needed #
+            ################################
+            if m['temperature'] != temperature:
+                self.content += self.tab + f'linkam.settle_time = {m["settle"]:.1f}\n'
+                self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
+                temperature = m['temperature']
+
             ############################
             # sample and slit movement #
             ############################           
-            self.content += self.tab + f'linkam.settle_time = {m["settle"]:.1f}\n'
-            self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
             if m['samplex'] is not None:
                 self.content += self.tab + f'yield from mv(xafs_x, {m["samplex"]:%.3f})\n'
             if m['sampley'] is not None:
