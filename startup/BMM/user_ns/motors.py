@@ -204,8 +204,8 @@ xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped. 
-xafs_garot.user_offset.put(136.47471875)
+xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped.
+#xafs_garot.user_offset.put(136.47471875)
 
 xafs_linxs._limits = (-95, 95)
 xafs_linxs.user_offset.put(102)
@@ -280,3 +280,11 @@ faults = amfe
 # xrd_slit1b = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_B}Mtr',  name='slit 1 bottom')
 # xrd_slit1i = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_I}Mtr',  name='slit 1 inboard')
 # xrd_slit1o = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_O}Mtr',  name='slit 1 outboard')
+
+
+def reset_offset(motor=None, newpos=0):
+    current_offset  = motor.user_offset.get()
+    current_position = motor.position
+    new_offset = -1 * current_position + current_offset + newpos
+    motor.user_offset.put(new_offset)
+    

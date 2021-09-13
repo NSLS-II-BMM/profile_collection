@@ -1115,6 +1115,8 @@ def xafs(inifile=None, **kwargs):
                     slotno = f', slot {xafs_wheel.current_slot()}'
                 elif 'glancing angle' in BMMuser.instrument:
                     slotno = f', spinner {ga.current()}'
+                elif 'linkam' in BMMuser.instrument:
+                    slotno = f', temperature {linkam.readback.get():.1f}'
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
                 md['_filename'] = fname
 
@@ -1306,7 +1308,7 @@ def xafs(inifile=None, **kwargs):
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     #quadem1, vor = user_ns['quadem1'], user_ns['vor']
-    xafs_wheel, ga = user_ns['xafs_wheel'], user_ns['ga']
+    xafs_wheel, ga, linkam = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']

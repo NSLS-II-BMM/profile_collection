@@ -94,7 +94,7 @@ class BMMMacroBuilder():
         self.tmpl             = None
         self.instrument       = None
 
-        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method')
+        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
@@ -322,8 +322,8 @@ class BMMMacroBuilder():
         #####################################################
         if 'slot' in m and type(m['slot']) is not int:
             return True
-        if 'temperature' in m and type(m['temperature']) is not float:
-            return True
+        #if 'temperature' in m and type(m['temperature']) is not float:
+        #    return True
         if m['filename'] is None or re.search('^\s*$', m['filename']) is not None:
             return True
         if  self.truefalse(m['measure']) is False:
@@ -445,7 +445,7 @@ class BMMMacroBuilder():
         #######################################
         # explain to the user what to do next #
         #######################################
-        print('\nYour new glancing angle plan is called: ' + bold_msg('%s_macro' % self.basename))
+        print(f'\nYour new {BMMuser.instrument} plan is called: ' + bold_msg('%s_macro' % self.basename))
         print('\nVerify:  ' + bold_msg('%s_macro??' % self.basename))
         if 'glancing angle' in self.instrument:
             print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))

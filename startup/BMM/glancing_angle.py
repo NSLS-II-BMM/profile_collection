@@ -393,14 +393,14 @@ class GlancingAngle(Device):
 
             
 
-class PinWheelMacroBuilder(BMMMacroBuilder):
+class GlancingAngleMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and
     generating macros for measuring XAS on the BMM glancing angle
     stage.
 
     Examples
     --------
-    >>> mb = PinWheelMacroBuilder()
+    >>> mb = GlancingAngleMacroBuilder()
     >>> mb.spreadsheet('wheel1.xlsx')
     >>> mb.write_macro()
 

@@ -284,8 +284,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                 position = peak(signal)
                 top      = t[motor.name][position]
 
-            yield from sleep(3.0)
             yield from mv(motor.kill_cmd, 1)
+            yield from sleep(1.0)
             user_ns['RE'].msg_hook = BMM_msg_hook
 
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %

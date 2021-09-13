@@ -103,7 +103,7 @@ from BMM.wheel import WheelMotor, WheelMacroBuilder, reference, show_reference_w
 
 xafs_wheel = xafs_rotb  = WheelMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.slotone = -30        # the angular position of slot #1
-xafs_wheel.user_offset.put(-0.7821145500000031)
+#xafs_wheel.user_offset.put(-0.7821145500000031)
 slot = xafs_wheel.set_slot
 
 xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
@@ -139,6 +139,13 @@ xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 
 #      yield from reference_slot(sl)
 #   except:
 #      # don't move reference wheel
+
+from BMM.workspace import rkvs
+def ref2redis():
+    for i in range(0, rkvs.llen('BMM:reference:list')):
+        rkvs.rpop('BMM:reference:list')
+    for el in xafs_ref.content:
+        rkvs.rpush('BMM:reference:list', el)
 
 
 def setup_wheel():
@@ -278,7 +285,7 @@ run_report('\tLinkam controller')
 from BMM.linkam import Linkam, LinkamMacroBuilder
 linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,500.0))
 
-lmb = LinkamMacroBuilder()    
+lmb = LinkamMacroBuilder()
 
 
 ####################################################################################

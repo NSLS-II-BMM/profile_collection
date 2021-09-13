@@ -264,15 +264,15 @@ class BMM_User(Borg):
         self.filter_state  = 0
 
     def to_json(self, filename=None, prefix=''):
-        ## avoid this: TypeError: can't pickle _thread.RLock objects
-        save = [self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor]
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = [None, ] * 8
-        d = copy.deepcopy(self.__dict__)
-        self.xschannel1, self.xschannel2, self.xschannel3, self.xschannel4, self.xschannel8, self.ax, self.fig, self.motor = save
-        for k in ('prev_fig', 'prev_ax', 'user_is_defined',
-                  'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4', 'xschannel8',
-                  'motor', 'motor2', 'cycle'):
-            del d[k]
+
+        all_keys = list(self.__dict__.keys())
+        almost_all_keys = [n for n in all_keys
+                           if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'motor', 'cycle', 'user_is_defined') and
+                           'xschannel' not in n]
+        d = dict()
+        for k in almost_all_keys:
+            d[k] = getattr(self, k)
+        
         if filename is None:
             print(json.dumps(d, indent=4))
         else:
@@ -320,9 +320,11 @@ class BMM_User(Borg):
             #rois.trigger = True
         from BMM.workspace import rkvs
         try:
-            rkvs.set('BMM:pds:edge',        str(config['edge']))
-            rkvs.set('BMM:pds:element',     str(config['element']))
+            #rkvs.set('BMM:pds:edge',        str(config['edge']))
+            #rkvs.set('BMM:pds:element',     str(config['element']))
             rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
+            BMMuser.element = rkvs.get('BMM:pds:element').decode('utf-8')
+            BMMuser.edge    = rkvs.get('BMM:pds:edge').decode('utf-8')
         except:
             pass
             

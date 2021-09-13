@@ -44,10 +44,10 @@ from BMM.positioning import find_slot
 
 
 run_report('\tglancing angle stage')
-from BMM.glancing_angle import GlancingAngle, PinWheelMacroBuilder
+from BMM.glancing_angle import GlancingAngle, GlancingAngleMacroBuilder
 ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 
-pinwheel = PinWheelMacroBuilder()
+gawheel = GlancingAngleMacroBuilder()
 
 #########################################################################################
 # ___  ___  ___  _____ ______ _____  ______ _   _ _____ _    ______ ___________  _____  #
@@ -112,7 +112,7 @@ def xlsx():
 
     if instrument == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
-        pinwheel.spreadsheet(spreadsheet, sheet)
+        gawheel.spreadsheet(spreadsheet, sheet)
     elif instrument == 'double wheel':
         print(bold_msg('This is a double sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet, double=True)
@@ -269,17 +269,22 @@ wmb.folder = BMMuser.folder
 lmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
 lmb.folder = BMMuser.folder
 wmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
-pinwheel.folder = BMMuser.folder
-pinwheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
+gawheel.folder = BMMuser.folder
+gawheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
+gawheel.folder = BMMuser.folder
+lmb.tmpl = os.path.join(startup_dir, 'linkam.tmpl')
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook
 
 def measuring(element, edge=None):
     BMMuser.element = element
+    rkvs.set('BMM:pds:element', element)
     if edge is not None:
         BMMuser.edge = edge
+        rkvs.set('BMM:pds:edge', edge)
     xs.reset_rois()
+    show_edges()
 
 try:
     from bluesky_widgets.utils.streaming import stream_documents_into_runs
