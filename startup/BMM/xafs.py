@@ -841,6 +841,8 @@ def xafs(inifile=None, **kwargs):
         image_usb1, image_usb2 = None, None
         
         html_dict['xrffile'], html_dict['xrfsnap'] = None, None
+        html_dict['ocrs'] = ''
+        html_dict['rois'] = ''
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)

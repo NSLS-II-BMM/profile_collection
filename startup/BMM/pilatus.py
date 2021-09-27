@@ -3,7 +3,9 @@
 # this script has not had .value changed to .get() #
 ####################################################
 
-from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, AreaDetector, SingleTrigger, ImagePlugin
+from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, AreaDetector, SingleTrigger
+
+from ophyd.areadetector.plugins import ImagePlugin_V33, TIFFPlugin
 
 import time, os
 import numpy
@@ -12,9 +14,103 @@ import matplotlib.pyplot  as plt
 from scipy import ndimage
 
 class MyDetector(SingleTrigger, AreaDetector):
-    image = Cpt(ImagePlugin, 'image1:')
-    #pass
+    image         = Cpt(ImagePlugin_V33, 'image1:')
+    _path         = Cpt(EpicsSignal,   'cam1:FilePath')
+    _fname        = Cpt(EpicsSignal,   'cam1:FileName')
+    _number       = Cpt(EpicsSignal,   'cam1:FileNumber')
+    _template     = Cpt(EpicsSignal,   'cam1:FileTemplate')
+    _threshold    = Cpt(EpicsSignal,   'cam1:ThresholdEnergy')
+    _fullname     = Cpt(EpicsSignalRO, 'cam1:FullFileName_RBV')
+    _statusmsg    = Cpt(EpicsSignalRO, 'cam1:StatusMessage_RBV')
+    _busy         = Cpt(EpicsSignalRO, 'cam1:AcquireBusy')
+    autoincrement = Cpt(EpicsSignal,   'cam1:AutoIncrement')
+    _energy       = Cpt(EpicsSignalRO, 'cam1:Energy')
+    threshold_apply = Cpt(EpicsSignalRO, 'cam1:ThresholdAutoApply')
+    tiff1           = Cpt(TIFFPlugin, 'TIFF1:')
 
+    @property
+    def path(self):
+        return(''.join([chr(x) for x in self._path.get()[self._path.get().nonzero()]]) )
+    @path.setter
+    def path(self, path):
+        a = numpy.pad(numpy.array([ord(x) for x in path]), (0,256-len(path)), mode='constant')
+        self._path.put(a)
+        self.tiff1.file_path.put(a)
+
+    @property
+    def fname(self):
+        return(''.join([chr(x) for x in self._fname.get()[self._fname.get().nonzero()]]) )
+    @fname.setter
+    def fname(self, fname):
+        a = numpy.pad(numpy.array([ord(x) for x in fname]), (0,256-len(fname)), mode='constant')
+        self._fname.put(a)
+        self.tiff1.file_name.put(a)
+    
+    @property
+    def template(self):
+        return(''.join([chr(x) for x in self._template.get()[self._template.get().nonzero()]]) )
+    @template.setter
+    def template(self, template):
+        a = numpy.pad(numpy.array([ord(x) for x in template]), (0,256-len(template)), mode='constant')
+        self._template.put(a)
+        self.tiff1.file_template.put(a)
+
+    @property
+    def fullname(self):
+        return(''.join([chr(x) for x in self._fullname.get()[self._fullname.get().nonzero()]]) )
+
+    @property
+    def statusmsg(self):
+        return(''.join([chr(x) for x in self._statusmsg.get()[self._statusmsg.get().nonzero()]]) )
+
+    @property
+    def number(self):
+        return(self._number.get())
+    @number.setter
+    def number(self, number):
+        self._number.put(number)
+        self.tiff1.file_number.put(number)
+    
+    @property
+    def threshold(self):
+        return(self._threshold.get())
+    @threshold.setter
+    def threshold(self, threshold_value):
+        self._threshold.put(threshold_value)
+
+    @property
+    def energy(self):
+        return(self._energy.get())
+    @energy.setter
+    def energy(self, energy_value):
+        self._energy.put(energy_value)
+
+    @property
+    def time(self):
+        return(self.cam.acquire_time.get())
+    @time.setter
+    def time(self, exposure_time):
+        self.cam.acquire_time.put(exposure_time)
+        self.cam.acquire_period.put(exposure_time + 0.004)
+
+    @property
+    def numimages(self):
+        return(self.cam.num_images.get())
+    @time.setter
+    def numimages(self, numimages):
+        self.cam.num_images.put(numimages)
+
+    @property
+    def ready(self):
+        if self._busy.get() == 1:
+            return False
+        elif 'Error' in self.statusmsg:
+            return False
+        else:
+            return True
+
+
+    
 
 class PilatusGrabber():
     '''Crude tool for grabbing images from the Pilatus.  Largely following

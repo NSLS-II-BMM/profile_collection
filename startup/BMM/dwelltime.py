@@ -53,7 +53,7 @@ class LockedDwellTimes(PseudoPositioner):
     "Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one pseudo-axis dwell time."
     dwell_time = Cpt(PseudoSingle, kind='hinted')
     if with_quadem is True:
-        quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
+        quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:2}EM180:', egu='seconds') # main ion chambers
     if with_struck is True:
         struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
     if with_dualem is True:

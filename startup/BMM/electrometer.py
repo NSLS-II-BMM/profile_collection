@@ -35,6 +35,20 @@ class BMMQuadEM(QuadEM):
     Iy = Cpt(Nanoize, derived_from='current4.mean_value')
     #state  = Cpt(EpicsSignal, 'Acquire')
 
+    # XF:06BM-BI{EM:1}EM180:Current1:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:Current2:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:Current3:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:Current4:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:SumX:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:SumY:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:SumAll:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:DiffX:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:DiffY:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:PosX:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:PosY:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:image1:EnableCallbacks
+    # XF:06BM-BI{EM:1}EM180:netCDF1:EnableCallbacks
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._acquisition_signal = self.acquire
@@ -160,17 +174,17 @@ class BMMDualEM(QuadEM):
             print('Opening photon shutter')
             yield from shb.open_plan()
             print('You are ready to measure!\n')
-        
+
 def dark_current():
     reopen = shb.state.get() == shb.openval 
     if reopen:
         print('\nClosing photon shutter')
         yield from shb.close_plan()
     print('Measuring current offsets, this will take several seconds')
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset3.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:1}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset3.PROC", name='').put(1)
+    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
     yield from sleep(3)
     BMM_log_info('Measured dark current on quadem1')
     if reopen:

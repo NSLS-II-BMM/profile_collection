@@ -126,9 +126,6 @@ mcs8_motors.extend(dm2list)
 #dm2_fs.wait_for_connection()
 dm2_fs.hvel_sp.put(0.0005)
 
-dm2_slits_t.user_offset.put(-1.196)
-dm2_slits_b.user_offset.put(-0.882)
-
 dm2_slits_o.hvel_sp.put(0.2)
 dm2_slits_i.hvel_sp.put(0.2)
 dm2_slits_t.hvel_sp.put(0.2)
@@ -150,12 +147,8 @@ dm3list = [dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b,
 #for m in dm3list: check_for_connection(m)
 mcs8_motors.extend(dm3list)
 
-dm3_slits_i.user_offset.put(-6.9181)
-dm3_slits_o.user_offset.put(7.087)
 dm3_slits_o.hvel_sp.put(0.2)
 dm3_slits_i.hvel_sp.put(0.2)
-dm3_slits_t.user_offset.put(-2.676)
-dm3_slits_b.user_offset.put(-2.9737)
 dm3_slits_t.hvel_sp.put(0.2)
 dm3_slits_b.hvel_sp.put(0.2)
 
@@ -187,9 +180,6 @@ xafs_ydi = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_yd
 xafs_xu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
 xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
 
-xafs_yu.user_offset.put(-64)
-xafs_ydo.user_offset.put(-17)
-xafs_ydi.user_offset.put(9.9)
 
 
 ## XAFS stages
@@ -205,10 +195,9 @@ xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_ro
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
 xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped.
-#xafs_garot.user_offset.put(136.47471875)
 
-xafs_linxs._limits = (-95, 95)
-xafs_linxs.user_offset.put(102)
+#xafs_linxs.hlm.put(30)
+#xafs_linxs.llm.put(10)
 xafs_linx.kill_cmd.kind = 'config'
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
@@ -280,6 +269,19 @@ faults = amfe
 # xrd_slit1b = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_B}Mtr',  name='slit 1 bottom')
 # xrd_slit1i = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_I}Mtr',  name='slit 1 inboard')
 # xrd_slit1o = EndStationEpicsMotor('XF:06BM-ES{SixC-Ax:Slt1_O}Mtr',  name='slit 1 outboard')
+
+
+#dm2_slits_t.user_offset.put(-1.196)
+#dm2_slits_b.user_offset.put(-0.882)
+dm3_slits_i.user_offset.put(-6.9181)
+dm3_slits_o.user_offset.put(7.087)
+dm3_slits_t.user_offset.put(-2.676)
+dm3_slits_b.user_offset.put(-2.9737)
+#xafs_yu.user_offset.put(-64)
+#xafs_ydo.user_offset.put(-17)
+#xafs_ydi.user_offset.put(9.9)
+#xafs_garot.user_offset.put(136.47471875)
+#xafs_linxs.user_offset.put(102)
 
 
 def reset_offset(motor=None, newpos=0):

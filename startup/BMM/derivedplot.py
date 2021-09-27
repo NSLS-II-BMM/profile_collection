@@ -16,10 +16,6 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.bmm import BMMuser
 
 
-## ---- need to do this in the bluesky way -- gives a sensible (non-integer) display of I0/It/Ir in LiveTable:
-# caput XF:06BM-BI{EM:1}EM180:Current1:MeanValue_RBV.PREC 5
-# caput XF:06BM-BI{EM:1}EM180:Current2:MeanValue_RBV.PREC 5
-# caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 5
 
 #############################################################################
 # this is the callback that gets assigned to mouse clicks on theplot window #

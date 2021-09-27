@@ -39,160 +39,163 @@ def pds_motors_ready():
 
      
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
-    '''Move the photon delivery system to a new mode. 
-    A: focused at XAS end station, energy > 8000
-    B: focused at XAS end station, energy < 6000
-    C: focused at XAS end station, 6000 < energy < 8000
-    D: unfocused, energy > 8000
-    E: unfocused, 6000 < energy < 8000
-    F: unfocused, energy < 8000
-    XRD: focused at XRD end station, energy > 8000
-    '''
-    BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
-    xafs_table, m3, m2, m2_bender, xafs_ref = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['xafs_ref']
-    if mode is None:
-        print('No mode specified')
-        return(yield from null())
+     '''Move the photon delivery system to a new mode. 
+     A: focused at XAS end station, energy > 8000
+     B: focused at XAS end station, energy < 6000
+     C: focused at XAS end station, 6000 < energy < 8000
+     D: unfocused, energy > 8000
+     E: unfocused, 6000 < energy < 8000
+     F: unfocused, energy < 8000
+     XRD: focused at XRD end station, energy > 8000
+     '''
+     BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
+     xafs_table, m3, m2, m2_bender, xafs_ref = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['xafs_ref']
+     if mode is None:
+          print('No mode specified')
+          return(yield from null())
 
-    mode = mode.upper()
-    if mode not in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
-        print('%s is not a mode' % mode)
-        return(yield from null())
-    current_mode = get_mode()
+     mode = mode.upper()
+     if mode not in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
+          print('%s is not a mode' % mode)
+          return(yield from null())
+     current_mode = get_mode()
 
 
-    # crude hack around a problem I don't understand
-    if dm3_bct.hlm.get() < 55 or dm3_bct.llm.get() > -55:
-         dm3_bct.llm.put(-60)
-         dm3_bct.hlm.put(60)
+     # crude hack around a problem I don't understand
+     if dm3_bct.hlm.get() < 55 or dm3_bct.llm.get() > -55:
+          dm3_bct.llm.put(-60)
+          dm3_bct.hlm.put(60)
 
-    
-    if pds_motors_ready() is False:
-        print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
-        return(yield from null())
-    
-    ######################################################################
-    # this is a tool for verifying a macro.  this replaces an xafs scan  #
-    # with a sleep, allowing the user to easily map out motor motions in #
-    # a macro                                                            #
-    if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to mode %s.\n' %
-                       (BMMuser.macro_sleep, mode)))
-        countdown(BMMuser.macro_sleep)
-        return(yield from null())
-    ######################################################################
 
-    if mode == 'B':
-        action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? [y/N then Enter] ")
-        if action.lower() != 'y':
-            return(yield from null())
+     if pds_motors_ready() is False:
+          print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
+          return(yield from null())
 
-    if mode == 'A':
-        description = 'focused, >8 keV'
-    elif mode == 'B':
-        description = 'focused, <6 keV'
-    elif mode == 'C':
-        description = 'focused, 6 to 8 keV'
-    elif mode == 'D':
-        description = 'unfocused, >8 keV'
-    elif mode == 'E':
-        description = 'unfocused, 6 to 8 keV'
-    elif mode == 'F':
-        description = 'unfocused, <6 keV'
-    elif mode == 'XRD':
-        description = 'focused at goniometer, >8 keV'
-    print('Moving to mode %s (%s)' % (mode, description))
-    if prompt:
-        action = input("Begin moving motors? [Y/n then Enter] ")
-        if action.lower() == 'q' or action.lower() == 'n':
-            return(yield from null())
-          
-          
-    RE.msg_hook = None
-    BMM_log_info('Changing photon delivery system to mode %s' % mode)
-    yield from dcm.kill_plan()
-    yield from mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
-                                       # starting a move, it is one of the
-                                       # motors that reports MOVN=1 even when
-                                       # still
-                                                       
-    base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
-                        
-            xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-            xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-            xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
+     ######################################################################
+     # this is a tool for verifying a macro.  this replaces an xafs scan  #
+     # with a sleep, allowing the user to easily map out motor motions in #
+     # a macro                                                            #
+     if BMMuser.macro_dryrun:
+          print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to mode %s.\n' %
+                         (BMMuser.macro_sleep, mode)))
+          countdown(BMMuser.macro_sleep)
+          return(yield from null())
+     ######################################################################
 
-            m3.yu,           float(MODEDATA['m3_yu'][mode]),
-            m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
-            m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
-            m3.xu,           float(MODEDATA['m3_xu'][mode]),
-            m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
-    if reference is not None:
-         #base.extend([xafs_linxs, foils.position(reference.capitalize())])
-         base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
-    if edge is not None:
-         #dcm_bragg.clear_encoder_loss()
-         base.extend([dcm.energy, edge])
-    # if mode in ('D', 'E', 'F'):
-    #      base.extend([slits3.hcenter, 2])
-    # else:
-    #      base.extend([slits3.hcenter, 0])
-          
+     if mode == 'B':
+          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? [y/N then Enter] ")
+          if action.lower() != 'y':
+               return(yield from null())
 
-    ###################################################################
-    # check for amplifier faults on the motors, return without moving #
-    # anything if any are found                                       #
-    ###################################################################
-    motors_ready = True
-    problem_motors = list()
-    for m in base[::2]:
-        try:        # skip non-FMBO motors, which do not have the amfe or amfae attributes
-            if m.amfe.get() == 1 or m.amfae.get() == 1:
-                motors_ready = False
-                problem_motors.append(m.name)
-        except:
-            continue
-    if motors_ready is False:
-        BMMuser.motor_fault = ', '.join(problem_motors)
-        return (yield from null())
+     if mode == 'A':
+          description = 'focused, >8 keV'
+     elif mode == 'B':
+          description = 'focused, <6 keV'
+     elif mode == 'C':
+          description = 'focused, 6 to 8 keV'
+     elif mode == 'D':
+          description = 'unfocused, >8 keV'
+     elif mode == 'E':
+          description = 'unfocused, 6 to 8 keV'
+     elif mode == 'F':
+          description = 'unfocused, <6 keV'
+     elif mode == 'XRD':
+          description = 'focused at goniometer, >8 keV'
+          print('Moving to mode %s (%s)' % (mode, description))
+     if prompt:
+          action = input("Begin moving motors? [Y/n then Enter] ")
+          if action.lower() == 'q' or action.lower() == 'n':
+               return(yield from null())
 
-    ##########################
-    # do the motor movements #
-    ##########################
-    yield from mv(dm3_bct.kill_cmd, 1)
-    if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
-        yield from mv(*base)
-    elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
-        yield from mv(*base)
-    else:
-        if bender is True:
-            yield from mv(m2_bender.kill_cmd, 1)
-            if mode == 'XRD':
-                if abs(m2_bender.user_readback.get() - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
-                    base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
-            elif mode in ('A', 'B', 'C'):
-                if abs(m2_bender.user_readback.get() - BMMuser.bender_xas) > BMMuser.bender_margin:
-                    base.extend([m2_bender, BMMuser.bender_xas])
 
-        base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
-        base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
-        base.extend([m2.ydi, float(MODEDATA['m2_ydi'][mode])])
-        yield from mv(*base)
+     RE.msg_hook = None
+     BMM_log_info('Changing photon delivery system to mode %s' % mode)
 
-    yield from sleep(2.0)
-    yield from mv(m2_bender.kill_cmd, 1)
-    yield from mv(dm3_bct.kill_cmd, 1)
-    yield from m2.kill_jacks()
-    yield from m3.kill_jacks()
+     base = [dm3_bct,         float(MODEDATA['dm3_bct'][mode]),
+
+             xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+             xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+             xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]),
+
+             m3.yu,           float(MODEDATA['m3_yu'][mode]),
+             m3.ydo,          float(MODEDATA['m3_ydo'][mode]),
+             m3.ydi,          float(MODEDATA['m3_ydi'][mode]),
+             m3.xu,           float(MODEDATA['m3_xu'][mode]),
+             m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
+     if reference is not None:
+          #base.extend([xafs_linxs, foils.position(reference.capitalize())])
+          base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
+     if edge is not None:
+          #dcm_bragg.clear_encoder_loss()
+          base.extend([dcm.energy, edge])
+     # if mode in ('D', 'E', 'F'):
+     #      base.extend([slits3.hcenter, 2])
+     # else:
+     #      base.extend([slits3.hcenter, 0])
+
      
-    BMMuser.pds_mode = mode
-    RE.msg_hook = BMM_msg_hook
-    BMM_log_info(motor_status())
+     ###################################################################
+     # check for amplifier faults on the motors, return without moving #
+     # anything if any are found                                       #
+     ###################################################################
+     motors_ready = True
+     problem_motors = list()
+     for m in base[::2]:
+          try:        # skip non-FMBO motors, which do not have the amfe or amfae attributes
+               if m.amfe.get() == 1 or m.amfae.get() == 1:
+                    motors_ready = False
+                    problem_motors.append(m.name)
+          except:
+               continue
+     if motors_ready is False:
+          BMMuser.motor_fault = ', '.join(problem_motors)
+          return (yield from null())
+
+     ##########################
+     # do the motor movements #
+     ##########################
+     yield from dcm.kill_plan()
+     yield from mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
+                                        # starting a move, it is one of the
+                                        # motors that reports MOVN=1 even when
+                                        # still
+     yield from sleep(0.2)
+
+     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
+          yield from mv(*base)
+     elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
+          yield from mv(*base)
+     else:
+          if bender is True:
+               yield from mv(m2_bender.kill_cmd, 1)
+               if mode == 'XRD':
+                    if abs(m2_bender.user_readback.get() - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
+                         base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
+               elif mode in ('A', 'B', 'C'):
+                    if abs(m2_bender.user_readback.get() - BMMuser.bender_xas) > BMMuser.bender_margin:
+                         base.extend([m2_bender, BMMuser.bender_xas])
+
+          base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
+          base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
+          base.extend([m2.ydi, float(MODEDATA['m2_ydi'][mode])])
+          yield from mv(*base)
+
+     yield from sleep(2.0)
+     yield from mv(m2_bender.kill_cmd, 1)
+     yield from mv(dm3_bct.kill_cmd, 1)
+     yield from m2.kill_jacks()
+     yield from m3.kill_jacks()
+
+     BMMuser.pds_mode = mode
+     RE.msg_hook = BMM_msg_hook
+     BMM_log_info(motor_status())
 
 
 def mode():
     print('Motor positions:')
-    for m in ('dm3_bct', 'xafs_yu', 'xafs_ydo', 'xafs_ydi', 'm2_yu', 'm2_ydo',
+    for m in ('dm3_bct',
+              'xafs_yu', 'xafs_ydo', 'xafs_ydi',
+              'm2_yu', 'm2_ydo',
               'm2_ydi', 'm2_bender', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',
               'dm3_slits_t', 'dm3_slits_b', 'dm3_slits_i', 'dm3_slits_o'):
         mot = user_ns[m]

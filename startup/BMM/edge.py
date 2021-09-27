@@ -32,7 +32,8 @@ def show_edges():
 
 
 def all_connected(with_m2=False):
-    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+    motors = [dm3_bct,
+              xafs_yu, xafs_ydo, xafs_ydi,
               m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     if with_m2 is True:
         motors.extend([m2_yu, m2_ydo, m2_ydi])
@@ -48,7 +49,8 @@ def all_connected(with_m2=False):
     return ok
     
 def arrived_in_mode(mode=None):
-    motors = [dm3_bct, xafs_yu, xafs_ydo, xafs_ydi,
+    motors = [dm3_bct,
+              xafs_yu, xafs_ydo, xafs_ydi,
               m2_yu, m2_ydo, m2_ydi, #m2_xu, m2_xd,
               m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd,]
     ok = True
@@ -162,14 +164,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     BMM_suspenders()
 
     
-    BMMuser.edge        = edge
-    BMMuser.element     = el
-    BMMuser.edge_energy = energy
-    rkvs.set('BMM:pds:edge',        edge)
-    rkvs.set('BMM:pds:element',     el)
-    rkvs.set('BMM:pds:edge_energy', energy)
-
-    
     if energy > 8000:
         mode = 'A' if focus else 'D'
     elif energy < 6000:
@@ -212,7 +206,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
             action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
             if action.lower() == 'q' or action.lower() == 'n':
                 return(yield from null())
-        
+
+    BMMuser.edge        = edge
+    BMMuser.element     = el
+    BMMuser.edge_energy = energy
+    rkvs.set('BMM:pds:edge',        edge)
+    rkvs.set('BMM:pds:element',     el)
+    rkvs.set('BMM:pds:edge_energy', energy)
+
+    
     start = time.time()
     if mode == 'XRD':
         report('Configuring beamline for XRD', level='bold', slack=True)

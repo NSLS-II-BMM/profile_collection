@@ -263,6 +263,8 @@ class BMM_User(Borg):
 
         self.filter_state  = 0
 
+        self.extra_metadata = None
+
     def to_json(self, filename=None, prefix=''):
 
         all_keys = list(self.__dict__.keys())

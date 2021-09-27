@@ -17,7 +17,7 @@ run_report(__file__, text='detectors and cameras')
 
 
 run_report('\t'+'dwelltime')
-with_pilatus = False
+with_pilatus = True
 with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
 
 # An error gets triggered during Azure CI testing that does not get triggered when
@@ -176,7 +176,7 @@ run_report('\t'+'electrometers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
 
         
-quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
+quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
 
 quadem1.I0.kind = 'hinted'
 quadem1.It.kind = 'hinted'
@@ -215,7 +215,7 @@ except:
     dualio = None
 
 
-quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
+#quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
 
 ####################################################
@@ -280,13 +280,13 @@ usbcam2 = BMMSnapshot(root=nas_path, which='usb', name='usbcam2')
 
 if with_pilatus is True:
     run_report('\t'+'Pilatus & prosilica')
-    from BMM.pilatus import MyDetector, PilatusGrabber
+    from BMM.pilatus import MyDetector #, PilatusGrabber
 
     ## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
     ## p3         = ImageGrabber(prosilica3)
     pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
-    pil     = PilatusGrabber(pilatus)
-
+    #pil     = PilatusGrabber(pilatus)
+    pilatus.autoincrement.put(1)
 
 
 #######################################################
