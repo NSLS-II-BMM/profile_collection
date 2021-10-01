@@ -222,10 +222,10 @@ def metadata_at_this_moment():
     elif BMMuser.instrument == 'linkam':
         rightnow['Sample']['temperature'] = user_ns['linkam'].readback.get()
     elif BMMuser.instrument == 'sample wheel':
-        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number
+        rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number
     elif 'double' in BMMuser.instrument:
-        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number
-        rightnow['Sample']['wheel_ring'] = '*outer*'
+        rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number
+        rightnow['Sample']['wheel_ring'] = user_ns['wmb'].slot_ring
     elif 'glancing' in BMMuser.instrument:
         rightnow['Sample']['spinner'] = user_ns['ga'].current()
 

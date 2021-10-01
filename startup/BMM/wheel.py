@@ -82,7 +82,8 @@ class WheelMotor(EndStationEpicsMotor):
             return slot
         except:
             return self.current_slot()
-                
+
+        
     def position_of_slot(self, target):
         if type(target) is int:
             angle = self.angle_from_current(target)
@@ -158,6 +159,15 @@ class WheelMacroBuilder(BMMMacroBuilder):
     >>> mb.spreadsheet('wheel1.xlsx')
     >>> mb.write_macro()
     '''
+
+    def slot_ring(self):
+        if 'double' in user_ns['BMMuser'].instrument:
+            if abs(user_ns['xafs_x'].position - self.inner_position) < 1.0:
+                return 'inner'
+            else:
+                return 'outer'
+        else:
+            return 'outer'
     
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
@@ -191,10 +201,15 @@ class WheelMacroBuilder(BMMMacroBuilder):
             ############################
             self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
             if 'ring' in m:
+                #here = user_ns['xafs_det'].position
+                #if here < 150:
+                #    self.content += self.tab + 'yield from mvr(xafs_det, 20)\n'
                 if m['ring'].lower() == 'inner':
                     self.content += self.tab + f'yield from mv(xafs_x, {self.inner_position:.3f}) # inner ring\n'
                 else:
                     self.content += self.tab + f'yield from mv(xafs_x, {self.outer_position:.3f}) # outer ring\n'
+                #if here < 150:
+                #    self.content += self.tab + f'yield from mv(xafs_det, {here:.3f})\n'
             if m['samplex'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_x, %.3f)\n' % m['samplex']
             if m['sampley'] is not None:
@@ -273,7 +288,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
 
     def get_keywords(self, row, defaultline):
         plus = 0
-        if self.double is True:
+        if self.double is True:  # make room for column denoting inner and outer ring
             plus = 1
         this = {'default' :   defaultline,
                 'slot':       row[1].value,      # sample location
