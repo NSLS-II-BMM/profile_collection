@@ -113,15 +113,19 @@ def xlsx():
     if instrument == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
         gawheel.spreadsheet(spreadsheet, sheet)
+        BMMuser.instrument = 'glancing angle stage'
     elif instrument == 'double wheel':
         print(bold_msg('This is a double sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet, double=True)
+        BMMuser.instrument = 'double wheel'
     elif instrument == 'linkam':
         print(bold_msg('This is a Linkam spreadsheet'))
         lmb.spreadsheet(spreadsheet, sheet)
+        BMMuser.instrument = 'Linkam stage'
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet, double=False)
+        BMMuser.instrument = 'sample wheel'
     rkvs.set('BMM:automation:type', instrument)
 
 

@@ -218,15 +218,20 @@ def metadata_at_this_moment():
         rightnow['Facility']['mode'] = 'top-off'
 
     if BMMuser.extra_metadata is not None:
+        rightnow['Sample'] = dict()
         rightnow['Sample']['extra_metadata'] = BMMuser.extra_metadata
     elif BMMuser.instrument == 'linkam':
+        rightnow['Sample'] = dict()
         rightnow['Sample']['temperature'] = user_ns['linkam'].readback.get()
     elif BMMuser.instrument == 'sample wheel':
-        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number
+        rightnow['Sample'] = dict()
+        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number()
     elif 'double' in BMMuser.instrument:
-        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number
+        rightnow['Sample'] = dict()
+        rightnow['Sample']['slot'] = user_ns['xafs_wheel'].slot_number()
         rightnow['Sample']['wheel_ring'] = '*outer*'
     elif 'glancing' in BMMuser.instrument:
+        rightnow['Sample'] = dict()
         rightnow['Sample']['spinner'] = user_ns['ga'].current()
 
     return rightnow

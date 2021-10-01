@@ -17,7 +17,7 @@ run_report(__file__, text='detectors and cameras')
 
 
 run_report('\t'+'dwelltime')
-with_pilatus = True
+with_pilatus = False
 with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
 
 # An error gets triggered during Azure CI testing that does not get triggered when
