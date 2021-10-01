@@ -1153,7 +1153,7 @@ def xafs(inifile=None, **kwargs):
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
                     
-                rightnow = metadata_at_this_moment() # see 62-metadata.py
+                rightnow = metadata_at_this_moment() # see metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
                     if type(rightnow[family]) is dict:
                         if family not in md:
