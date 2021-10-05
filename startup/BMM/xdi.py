@@ -197,10 +197,12 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Sample.prep: %s',                      'XDI.Sample.prep')
 
     if BMMuser.instrument == 'sample wheel':
-        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} slot {xafs_wheel.current_slot()}')
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} slot {xafs_wheel.current_slot()} {user_ns["wmb"].slot_ring()}')
     elif BMMuser.instrument == 'glancing angle stage':
         metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} spinner {ga.current()}')
-        
+    elif 'linkam' in BMMuser.instrument.lower():
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} temperature {user_ns["linkam"].readback.get()}')
+      
     ## record selected baseline measurements as XDI metadata
     XDI_record = user_ns['XDI_record']
     for r in XDI_record.keys():

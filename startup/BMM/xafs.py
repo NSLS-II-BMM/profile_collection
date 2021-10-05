@@ -373,7 +373,7 @@ def make_merged_triplot(uidlist, filename, mode):
     #k.put(uidlist)
     #merge=k.merge()
     BMMuser = user_ns['BMMuser']
-    count = 0
+    cnt = 0
     try:
         base = Pandrosus()
         projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
@@ -384,7 +384,7 @@ def make_merged_triplot(uidlist, filename, mode):
         save = base.group.args['label']
         proj.add_group(base.group)
         base.group.args['label'] = save
-        count = 1
+        cnt = 1
         if len(uidlist) > 1:
             for uid in uidlist[1:]:
                 this = Pandrosus()
@@ -395,15 +395,15 @@ def make_merged_triplot(uidlist, filename, mode):
                     save = this.group.args['label']
                     proj.add_group(this.group)
                     this.group.args['label'] = save
-                    count += 1
+                    cnt += 1
                 except:
                     pass # presumably this is noisy data for which a valid background was not found
     except:
         pass # presumably this is noisy data for which a valid background was not found
-    if count == 0:
+    if cnt == 0:
         print(whisper(f'Unable to make triplot'))
         return
-    mm = mm / count
+    mm = mm / cnt
     merge = Pandrosus()
     merge.put(ee, mm, 'merge')
     thisagg = matplotlib.get_backend()
@@ -909,18 +909,28 @@ def xafs(inifile=None, **kwargs):
             html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
             image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
             usbcam1._annotation_string = p['filename']
-            print(bold_msg('skipping USB camera #1 snapshot'))
-            #usb1cam_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
+            usb1.snap(image_usb1, p['filename'])
+            
+            
+            # print(bold_msg('skipping USB camera #1 snapshot'))
+            # usb1cam_uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            # u=user_ns['usb1'].image.shaped_image.get()
+            # im = Image.fromarray(u)
+            # im.save(filename, 'JPEG')
+            # self.image.shape = (im.height, im.width, 3)
+            # annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
+            # annotate_image(filename, annotation)
             #os.symlink(file_resource(db.v2[usb1cam_uid]), image_usb1)
 
             ### --- USB camera #2 --------------------------------------------------------------
             html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
             image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
             usbcam2._annotation_string = p['filename']
-            print(bold_msg('skipping USB camera #2 snapshot'))
-            #usb2cam_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
+            usb2.snap(image_usb2, p['filename'])
+
+            #print(bold_msg('skipping USB camera #2 snapshot'))
+            #usb2cam_uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            #image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
             #os.symlink(file_resource(db.v2[usb2cam_uid]), image_usb2)
 
             
@@ -1112,14 +1122,15 @@ def xafs(inifile=None, **kwargs):
                     yield from null()
                     return
 
-                slotno = ''
+                slotno, ring = '', ''
                 if 'sample wheel' in BMMuser.instrument:
                     slotno = f', slot {xafs_wheel.current_slot()}'
+                    ring = f' {user_ns["wmb"].slot_ring()} ring'
                 elif 'glancing angle' in BMMuser.instrument:
                     slotno = f', spinner {ga.current()}'
                 elif 'linkam' in BMMuser.instrument:
                     slotno = f', temperature {linkam.readback.get():.1f}'
-                report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}', level='bold', slack=True)
+                report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
 
                 if plotting_mode(p['mode']) == 'xs':

@@ -655,6 +655,8 @@ class BMM_User(Borg):
             xascam._root = os.path.join(self.folder, 'snapshots')
             xrdcam._root = os.path.join(self.folder, 'snapshots')
             anacam._root = os.path.join(self.folder, 'snapshots')
+            usb1.tiff1.file_path.put(self.folder, 'snapshots')
+            usb2.tiff1.file_path.put(self.folder, 'snapshots')
         except:
             pass
 
