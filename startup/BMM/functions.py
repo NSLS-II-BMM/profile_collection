@@ -221,5 +221,7 @@ def plotting_mode(mode):
         return 'fluo'
     elif mode == 'ref':
         return 'ref'
+    elif mode == 'yield':
+        return 'yield'
     else:
         return 'trans'

@@ -6,35 +6,7 @@ from ophyd import EpicsSignal
 
 run_report(__file__, text='detectors and cameras')
 
-##############################################################
-# ______ _    _ _____ _      _    _____ ________  ___ _____  #
-# |  _  \ |  | |  ___| |    | |  |_   _|_   _|  \/  ||  ___| #
-# | | | | |  | | |__ | |    | |    | |   | | | .  . || |__   #
-# | | | | |/\| |  __|| |    | |    | |   | | | |\/| ||  __|  #
-# | |/ /\  /\  / |___| |____| |____| |  _| |_| |  | || |___  #
-# |___/  \/  \/\____/\_____/\_____/\_/  \___/\_|  |_/\____/  #
-##############################################################
-
-
-run_report('\t'+'dwelltime')
 with_pilatus = False
-with_quadem, with_struck, with_dualem, with_xspress3 = True, True, False, True
-
-# An error gets triggered during Azure CI testing that does not get triggered when
-# running under IPython. This disables the Xspress3 during testing.
-# This is a crude stopgap.  See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
-if os.environ.get('AZURE_TESTING'):
-    with_xspress3 = False
-
-if with_xspress3 is True:
-    BMMuser.readout_mode = 'xspress3'
-from BMM.dwelltime import LockedDwellTimes
-
-_locked_dwell_time = LockedDwellTimes('', name='dwti')
-dwell_time = _locked_dwell_time.dwell_time
-dwell_time.name = 'inttime'
-
-#mv(_locked_dwell_time, 0.5)
 
 
 ##########################################
@@ -240,6 +212,12 @@ anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
 
+from BMM.webcam_device import AxisWebcam
+base = os.path.join(BMMuser.folder, 'raw')
+testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
+testcam.beamline_id = 'BMM (NSLS-II 06BM)'
+testcam.annotation_string = 'Welcome to BMM'
+
 # econcam = BMMSnapshot(root=nas_path, which='econ', name='econcam')
 # econcam.device = '/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU55_1CD90500-video-index0'
 # econcam.x, econcam.y = 1280, 720 # width, height
@@ -305,6 +283,7 @@ from ophyd.log import config_ophyd_logging
 
 xs = False
 use_4element = True
+from BMM.user_ns.dwelltime import with_xspress3
 if with_xspress3 is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element

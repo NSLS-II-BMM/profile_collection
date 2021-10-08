@@ -164,13 +164,14 @@ from BMM.edge import show_edges, change_edge
 from BMM.functions import approximate_pitch
 
 
-XDI_record = {'xafs_linx'                        : (True,  'BMM.sample_x_position'),
-              'xafs_x'                           : (True,  'BMM.sample_x_position'),
-              'xafs_liny'                        : (True,  'BMM.sample_y_position'),
-              'xafs_y'                           : (True,  'BMM.sample_y_position'),
-              'xafs_lins'                        : (False, 'BMM.sample_s_position'),
+XDI_record = {'xafs_linx'                        : (True,  'Sample.x'),
+              'xafs_x'                           : (True,  'Sample.x'),
+              'xafs_liny'                        : (True,  'Sample.y'),
+              'xafs_y'                           : (True,  'Sample.y'),
+              'xafs_lins'                        : (True,  'Sample.SDD_position'),
+              'xafs_det'                         : (True,  'Sample.SDD_position'),
               'xafs_linxs'                       : (False, 'BMM.sample_ref_position'),
-              'xafs_pitch'                       : (False, 'BMM.sample_pitch_position'),
+              'xafs_pitch'                       : (False, 'Sample.pitch'),
               'xafs_roll'                        : (False, 'BMM.sample_roll_position'),
               'xafs_roth'                        : (False, 'BMM.sample_roth_position'),
               'xafs_wheel'                       : (False, 'BMM.sample_wheel_position'),
@@ -250,7 +251,8 @@ if BMMuser.element is None:
      except:
           pass
 
-from BMM.user_ns.detectors import with_xspress3, xs
+from BMM.user_ns.dwelltime import with_xspress3
+from BMM.user_ns.detectors import xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
     BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge, tab='\t\t\t')
     #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)

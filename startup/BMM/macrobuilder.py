@@ -85,8 +85,6 @@ class BMMMacroBuilder():
         self.verbose          = False
 
         self.double           = False
-        self.inner_position   = 130.324
-        self.outer_position   = 104.324
         
         self.totaltime        = 0
         self.deltatime        = 0

@@ -15,7 +15,7 @@ ring = Ring('SR', name='ring')
 from BMM.user_ns.motors import *
 from BMM.user_ns.instruments import xafs_wheel, xafs_ref, slits2, slits3, m2, m3, xafs_table
 
-user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_wheel, xafs_ref, #xafs_roll, xafs_linxs, xafs_roth, xafs_rots,
+user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_wheel, xafs_ref, xafs_det, #xafs_roll, xafs_linxs, xafs_roth, xafs_rots,
                           dm3_bct, dm3_foils, dm2_fs,
                           dcm_x, dcm_pitch, dcm_roll,
                           slits3.top, slits3.bottom, slits3.outboard, slits3.inboard, slits3.vsize, slits3.vcenter, slits3.hsize, slits3.hcenter, 

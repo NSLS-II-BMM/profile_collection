@@ -11,7 +11,8 @@ from BMM.workspace  import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
-from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor
+from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.detectors   import quadem1, vor
 from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():

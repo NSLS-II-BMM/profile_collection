@@ -30,6 +30,8 @@ class WheelMotor(EndStationEpicsMotor):
     set_slot(n) :
         move to the given slot number, taking care to go the shorter way
     '''
+    inner_position   = 130.324
+    outer_position   = 104.324
     def current_slot(self, value=None):
         '''Return the current slot number for a sample wheel.'''
         if value is not None:
@@ -99,10 +101,26 @@ class WheelMotor(EndStationEpicsMotor):
         print(whisper('recentered %s to %.1f' % (self.name, center)))
 
     def in_place(self):
-        user_ns['wmb'].outer_position = user_ns['xafs_x'].position
-        user_ns['wmb'].inner_position = user_ns['wmb'].outer_position + 26
+        #user_ns['wmb'].outer_position = user_ns['xafs_x'].position
+        #user_ns['wmb'].inner_position = user_ns['wmb'].outer_position + 26
+        self.outer_position = user_ns['xafs_x'].position
+        self.inner_position = self.outer_position + 26
 
+    def inner(self):
+        yield from mv(self, self.inner_position)
 
+    def outer(self):
+        yield from mv(self, self.outer_position)
+
+    def slot_ring(self):
+        if 'double' in user_ns['BMMuser'].instrument:
+            if abs(user_ns['xafs_x'].position - self.inner_position) < 1.0:
+                return 'inner'
+            else:
+                return 'outer'
+        else:
+            return 'outer'
+    
 
 
 def reference(target=None):
@@ -160,15 +178,6 @@ class WheelMacroBuilder(BMMMacroBuilder):
     >>> mb.write_macro()
     '''
 
-    def slot_ring(self):
-        if 'double' in user_ns['BMMuser'].instrument:
-            if abs(user_ns['xafs_x'].position - self.inner_position) < 1.0:
-                return 'inner'
-            else:
-                return 'outer'
-        else:
-            return 'outer'
-    
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
@@ -205,9 +214,9 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 #if here < 150:
                 #    self.content += self.tab + 'yield from mvr(xafs_det, 20)\n'
                 if m['ring'].lower() == 'inner':
-                    self.content += self.tab + f'yield from mv(xafs_x, {self.inner_position:.3f}) # inner ring\n'
+                    self.content += self.tab + f'yield from xafs_wheel.inner() # inner ring\n'
                 else:
-                    self.content += self.tab + f'yield from mv(xafs_x, {self.outer_position:.3f}) # outer ring\n'
+                    self.content += self.tab + f'yield from xafs_wheel.outer() # outer ring\n'
                 #if here < 150:
                 #    self.content += self.tab + f'yield from mv(xafs_det, {here:.3f})\n'
             if m['samplex'] is not None:

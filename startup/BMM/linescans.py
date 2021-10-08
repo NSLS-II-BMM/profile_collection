@@ -25,8 +25,9 @@ from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
-from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
-from BMM.user_ns.detectors   import with_dualem, with_xspress3, with_quadem, with_struck
+from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.detectors   import quadem1, vor, xs
+from BMM.user_ns.dwelltime   import with_dualem, with_xspress3, with_quadem, with_struck
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *
 

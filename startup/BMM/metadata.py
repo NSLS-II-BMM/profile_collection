@@ -47,7 +47,7 @@ def mirror_state():
 
 
 
-bmm_metadata_stub = {'Beamline': {'name'        : 'BMM (06BM) -- Beamline for Materials Measurement',
+bmm_metadata_stub = {'Beamline': {'name'        : 'BMM (06BM) -- Beamline for Materials Measurement (NIST)',
                                   'collimation' : 'paraboloid mirror, 5 nm Rh on 30 nm Pt',
                                   'xray_source' : 'NSLS-II three-pole wiggler',
                               },
@@ -178,18 +178,18 @@ def bmm_metadata(measurement   = 'transmission',
     else:
         md['Mono']['scan_type'] = 'slew'
 
-    if channelcut is True:
-        md['Mono']['scan_mode'] = 'pseudo channel cut'
-    else:
-        md['Mono']['scan_mode'] = 'fixed exit'
+    # if channelcut is True:
+    md['Mono']['scan_mode'] = 'pseudo channel cut'
+    # else:
+    #     md['Mono']['scan_mode'] = 'fixed exit'
 
-    if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement:
+    if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement or 'xs' in measurement:
         md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
-        md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
-
-    if 'xs' in measurement:
-        md['Detector']['fluorescence'] = 'SII Vortex (4-element silicon drift)'
         md['Detector']['deadtime_correction'] = 'Xspress3'
+
+    #     md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
+    # if 'xs' in measurement:
+    #     md['Detector']['fluorescence'] = 'SII Vortex (4-element silicon drift)'
         
     if 'yield' in measurement:
         md['Detector']['yield'] = 'in-vacuum electron yield detector'
@@ -205,12 +205,12 @@ def metadata_at_this_moment():
     rightnow['Facility'] = dict()
     #rightnow['Mono']['first_crystal_temperature']  = float(first_crystal.temperature.get())
     #rightnow['Mono']['compton_shield_temperature'] = float(compton_shield.temperature.get())
-    #rightnow['Facility']['current']  = str(ring.current.get()) + ' mA'
     try:
-        rightnow['Facility']['current']  = str(round(ring.current.get(), 1))
-        rightnow['Facility']['energy']   = str(round(ring.energy.get()/1000., 1))
-        rightnow['Facility']['mode']     = ring.mode.get()
-    except:
+        rightnow['Facility']['current']  = str(round(user_ns['ring'].current.get(), 1))
+        rightnow['Facility']['energy']   = str(round(user_ns['ring'].energy.get()/1000., 1))
+        rightnow['Facility']['mode']     = user_ns['ring'].mode.get()
+    except Exception as E:
+        print(E)
         rightnow['Facility']['current']  = '0'
         rightnow['Facility']['energy']   = '0'
         rightnow['Facility']['mode']     = 'Maintenance'
@@ -220,17 +220,17 @@ def metadata_at_this_moment():
     if BMMuser.extra_metadata is not None:
         rightnow['Sample'] = dict()
         rightnow['Sample']['extra_metadata'] = BMMuser.extra_metadata
-    elif BMMuser.instrument == 'linkam':
+    elif 'linkam' in BMMuser.instrument.lower():
         rightnow['Sample'] = dict()
         rightnow['Sample']['temperature'] = user_ns['linkam'].readback.get()
-    elif BMMuser.instrument == 'sample wheel':
+    elif BMMuser.instrument.lower() == 'sample wheel':
         rightnow['Sample'] = dict()
         rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number()
-    elif 'double' in BMMuser.instrument:
+    elif 'double' in BMMuser.instrument.lower():
         rightnow['Sample'] = dict()
         rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number()
-        rightnow['Sample']['wheel_ring'] = user_ns['wmb'].slot_ring()
-    elif 'glancing' in BMMuser.instrument:
+        rightnow['Sample']['wheel_ring'] = user_ns['xafs_wheel'].slot_ring()
+    elif 'glancing' in BMMuser.instrument.lower():
         rightnow['Sample'] = dict()
         rightnow['Sample']['spinner'] = user_ns['ga'].current()
 

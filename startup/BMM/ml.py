@@ -17,6 +17,7 @@ from joblib import dump, load
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+#from BMM.functions import plotting_mode
 from BMM.user_ns.bmm import BMMuser
 
 # when pickle changes version number, this error message will happen twice:
@@ -270,14 +271,14 @@ class BMMDataEvaluation():
             element = this.metadata['start']['XDI']['Element']['symbol']
             i0 = this.primary.read()['I0']
             en = this.primary.read()['dcm_energy']
-            if mode == 'transmission':
+            if 'trans' in mode:
                 it = this.primary.read()['It']
                 mu = numpy.log(abs(i0/it))
-            elif mode == 'reference':
+            elif 'ref' in mode:
                 it = this.primary.read()['It']
                 ir = this.primary.read()['Ir']
                 mu = numpy.log(abs(it/ir))
-            else:
+            else:               # fluorescence and NOT Xspress3
                 if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
                     signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']
                 elif element in str(this.primary.read()['vor:vor_names_name15'][0].values):

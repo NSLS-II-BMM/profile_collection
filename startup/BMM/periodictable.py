@@ -76,4 +76,4 @@ def edge_energy(element, edge):
     if element is None: return None
     edge = edge_number(edge)
     if edge is None: return None
-    return xraylib.EdgeEnergy(int(element), int(edge))*1000
+    return round(xraylib.EdgeEnergy(int(element), int(edge))*1000, 1)

@@ -197,11 +197,11 @@ def write_XDI(datafile, dataframe):
     metadata.start_doc('# Sample.prep: %s',                      'XDI.Sample.prep')
 
     if BMMuser.instrument == 'sample wheel':
-        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} slot {xafs_wheel.current_slot()} {user_ns["wmb"].slot_ring()}')
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, slot {xafs_wheel.current_slot()}, {xafs_wheel.slot_ring()} ring')
     elif BMMuser.instrument == 'glancing angle stage':
-        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} spinner {ga.current()}')
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, spinner {ga.current()}')
     elif 'linkam' in BMMuser.instrument.lower():
-        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument} temperature {user_ns["linkam"].readback.get()}')
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, temperature {user_ns["linkam"].readback.get():.1f}K')
       
     ## record selected baseline measurements as XDI metadata
     XDI_record = user_ns['XDI_record']
@@ -236,12 +236,14 @@ def write_XDI(datafile, dataframe):
     ###############################
     plot_hint = 'ln(I0/It)  --  ln($5/$6)'
     if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($3/$4)'
-    if 'fluo' in mode or 'flou' in mode or 'both' in mode:
+    mm = plotting_mode(mode)
+    if mm == 'xs':
+        plot_hint = f'({BMMuser.xs1}+{BMMuser.xs2}+{BMMuser.xs3}+{BMMuser.xs4})/I0  --  ($8+$9+$10+$11)/$5'
+        # 1-element detector?
+    elif 'fluo' in mode or 'flou' in mode or 'both' in mode:
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
         if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
         if BMMuser.detector == 1: plot_hint = '%s / I0  --  ($8+$9+$10+$11) / $5' % BMMuser.dtc1
-    elif 'xs' in mode:
-        plot_hint = '(ROI1+ROI2+ROI3+ROI4)/I0  --  ($8+$9+$10+$11)/$5'
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:

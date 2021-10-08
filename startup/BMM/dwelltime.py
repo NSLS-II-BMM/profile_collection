@@ -2,7 +2,7 @@ from ophyd import PVPositionerPC, EpicsSignal, EpicsSignalRO, PseudoPositioner, 
 from ophyd import Component as Cpt
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
-from BMM.metadata import bmm_metadata
+#from BMM.metadata import bmm_metadata
 
 class QuadEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'AveragingTime')
@@ -37,18 +37,18 @@ user_ns = vars(user_ns_module)
 from ophyd.sim import det
 from bluesky.plans import scan
 import bluesky.plan_stubs as bps
-def test_dwelltimes(dt, md=None):
-    md = bmm_metadata(measurement='fluorescence')
-    dets  = [det]
-    args  = [dets,]
-    start = list(0.5*numpy.ones(len(dt)))
-    stop  = list(2.5*numpy.ones(len(dt)))
-    for q in zip(dt, start, stop):
-        args.extend(q)
-    args.append(5)              # five steps from 0.5 to 2.5
-    yield from scan(*args, md=md)
+# def test_dwelltimes(dt, md=None):
+#     md = bmm_metadata(measurement='fluorescence')
+#     dets  = [det]
+#     args  = [dets,]
+#     start = list(0.5*numpy.ones(len(dt)))
+#     stop  = list(2.5*numpy.ones(len(dt)))
+#     for q in zip(dt, start, stop):
+#         args.extend(q)
+#     args.append(5)              # five steps from 0.5 to 2.5
+#     yield from scan(*args, md=md)
 
-from BMM.user_ns.detectors import with_dualem, with_quadem, with_struck, with_xspress3
+from BMM.user_ns.dwelltime import with_dualem, with_quadem, with_struck, with_xspress3
 class LockedDwellTimes(PseudoPositioner):
     "Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one pseudo-axis dwell time."
     dwell_time = Cpt(PseudoSingle, kind='hinted')

@@ -22,7 +22,8 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
-from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.detectors   import quadem1, vor, xs
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)

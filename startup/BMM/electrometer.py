@@ -10,7 +10,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #_locked_dwell_time = user_ns['_locked_dwell_time']
-from BMM.user_ns.detectors   import _locked_dwell_time
+from BMM.user_ns.dwelltime   import _locked_dwell_time
 from BMM.user_ns.instruments import shb
 
 class Nanoize(DerivedSignal):

@@ -35,7 +35,8 @@ user_ns = vars(user_ns_module)
 #from __main__ import db
 from BMM.user_ns.base import db, startup_dir
 
-from BMM.user_ns.detectors   import _locked_dwell_time, quadem1, vor, xs
+from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.detectors   import quadem1, vor, xs
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -818,7 +819,7 @@ def xafs(inifile=None, **kwargs):
                           edge_energy   = p['e0'],
                           direction     = 1,
                           scantype      = 'step',
-                          channelcut    = p['channelcut'],
+                          channelcut    = True, # p['channelcut'],
                           mono          = 'Si(%s)' % dcm._crystal,
                           i0_gas        = 'N2', #\
                           it_gas        = 'N2', # > these three need to go into INI file
@@ -909,10 +910,9 @@ def xafs(inifile=None, **kwargs):
             html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
             image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
             usbcam1._annotation_string = p['filename']
-            usb1.snap(image_usb1, p['filename'])
+            #usb1.snap(image_usb1, p['filename'])
             
-            
-            # print(bold_msg('skipping USB camera #1 snapshot'))
+            print(bold_msg('skipping USB camera #1 snapshot'))
             # usb1cam_uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             # u=user_ns['usb1'].image.shaped_image.get()
             # im = Image.fromarray(u)
@@ -926,9 +926,9 @@ def xafs(inifile=None, **kwargs):
             html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
             image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
             usbcam2._annotation_string = p['filename']
-            usb2.snap(image_usb2, p['filename'])
+            #usb2.snap(image_usb2, p['filename'])
 
-            #print(bold_msg('skipping USB camera #2 snapshot'))
+            print(bold_msg('skipping USB camera #2 snapshot'))
             #usb2cam_uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             #image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
             #os.symlink(file_resource(db.v2[usb2cam_uid]), image_usb2)
@@ -1125,7 +1125,7 @@ def xafs(inifile=None, **kwargs):
                 slotno, ring = '', ''
                 if 'sample wheel' in BMMuser.instrument:
                     slotno = f', slot {xafs_wheel.current_slot()}'
-                    ring = f' {user_ns["wmb"].slot_ring()} ring'
+                    ring = f' {xafs_wheel.slot_ring()} ring'
                 elif 'glancing angle' in BMMuser.instrument:
                     slotno = f', spinner {ga.current()}'
                 elif 'linkam' in BMMuser.instrument:

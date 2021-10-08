@@ -12,6 +12,7 @@ from .bw import *
 from .motors import *
 from .instruments import *
 from .metadata import *
+from .dwelltime import *
 from .dcm import *
 from .detectors import *
 from .utilities import *
