@@ -271,16 +271,15 @@ class BMMSnapshot(Device):
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
                 annotate_image(filename, annotation)
             elif self._SPEC == "BMM_USBCAM":
-                pass
-                # if self.name == 'usbcam1':
-                #     u=user_ns['usb1'].image.shaped_image.get()
-                # else: 
-                #     u=user_ns['usb2'].image.shaped_image.get()
-                # im = Image.fromarray(u)
-                # im.save(filename, 'JPEG')
-                # self.image.shape = (im.height, im.width, 3)
-                # annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
-                # annotate_image(filename, annotation)
+                if self.name == 'usbcam1':
+                    u=user_ns['usb1'].image.array_data.get().reshape((1080,1920,3))
+                else: 
+                    u=user_ns['usb2'].image.array_data.get().reshape((1080,1920,3))
+                im = Image.fromarray(u)
+                im.save(filename, 'JPEG')
+                self.image.shape = (im.height, im.width, 3)
+                annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
+                annotate_image(filename, annotation)
             else:
                 analog_camera(device=self.device, x=self.x, y=self.y, brightness=self.brightness,
                               filename=filename, sample=self._annotation_string, folder=self._root, quiet=True)

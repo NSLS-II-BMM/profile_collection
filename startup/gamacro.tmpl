@@ -42,7 +42,7 @@ def {base}_macro(ref=False, dryrun=False):
         ### BOILERPLATE BELOW THIS LINE -----------------------------------------------------------
         ### ---------------------------------------------------------------------------------------
 
-        yield from detx.far()
+        yield from mv(xafs_det, 205)
         yield from mv(xafs_x, samx, xafs_pitch, samp)
         yield from ga.reset()
 

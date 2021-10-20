@@ -5,6 +5,7 @@ from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
+import matplotlib.pyplot as plt
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
@@ -16,7 +17,7 @@ from BMM.linescans     import motor_nicknames
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
@@ -113,15 +114,15 @@ def areascan(detector,
             valueslow = slow.readback.get()
         else:
             valueslow = slow.user_readback.get()
-            line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                    (slow.name, startslow, stopslow, nslow, valueslow)
+        line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+            (slow.name, startslow, stopslow, nslow, valueslow)
 
         if 'PseudoSingle' in str(type(fast)):
             valuefast = fast.readback.get()
         else:
             valuefast = fast.user_readback.get()
         line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-                (fast.name, startfast, stopfast, nfast, valuefast)
+            (fast.name, startfast, stopfast, nfast, valuefast)
 
         npoints = nfast * nslow
         estimate = int(npoints*(dwell+0.7))
@@ -144,6 +145,8 @@ def areascan(detector,
 
         # areaplot = LiveScatter(fast.name, slow.name, detector,
         #                        xlim=(startfast, stopfast), ylim=(startslow, stopslow))
+
+        close_all_plots()
     
         areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
                             xlabel='fast motor: %s' % fast.name,
@@ -188,14 +191,17 @@ def areascan(detector,
         uid = yield from make_areascan(dets,
                                        slow, valueslow+startslow, valueslow+stopslow, nslow,
                                        fast, valuefast+startfast, valuefast+stopfast, nfast,
-                                       False)
+                                       snake=False)
 
         if pluck is True:
+            BMMuser.x = None
+            figs = list(map(plt.figure, plt.get_fignums()))
+            canvas = figs[0].canvas
             action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             print('Single click the left mouse button on the plot to pluck a point...')
-            cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+            cid = canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
             while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
                 yield from sleep(0.5)
 

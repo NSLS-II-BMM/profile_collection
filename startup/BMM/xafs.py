@@ -460,8 +460,8 @@ def scan_sequence_static_html(inifile       = None,
                               cif           = None,
                               ):
     '''
-    Gather information from various places, including html_dict, a temporary dictionary 
-    filled up during an XAFS scan, then write a static html file as a dossier for a scan
+    Gather information from various places, including html_dict (a temporary dictionary 
+    filled up during an XAFS scan) then write a static html file as a dossier for a scan
     sequence using a bespoke html template file
     '''
     BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
@@ -519,6 +519,9 @@ def scan_sequence_static_html(inifile       = None,
         
     o = open(htmlfilename, 'w')
     pdstext = '%s (%s)' % (get_mode(), describe_mode())
+    mono = 'Si(%s)' % dcm._crystal
+    if ththth:
+        mono = 'Si(333)'
     o.write(''.join(content).format(filename      = filename,
                                     basename      = basename,
                                     encoded_basename = quote(basename),
@@ -528,7 +531,7 @@ def scan_sequence_static_html(inifile       = None,
                                     seqnumber     = seqnumber,
                                     seqstart      = seqstart,
                                     seqend        = seqend,
-                                    mono          = 'Si(%s)' % dcm._crystal,
+                                    mono          = mono,
                                     pdsmode       = pdstext,
                                     symbol        = element,
                                     e0            = '%.1f' % e0,
@@ -910,45 +913,34 @@ def xafs(inifile=None, **kwargs):
             html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
             image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
             usbcam1._annotation_string = p['filename']
-            #usb1.snap(image_usb1, p['filename'])
-            
-            print(bold_msg('skipping USB camera #1 snapshot'))
-            # usb1cam_uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            # u=user_ns['usb1'].image.shaped_image.get()
-            # im = Image.fromarray(u)
-            # im.save(filename, 'JPEG')
-            # self.image.shape = (im.height, im.width, 3)
-            # annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
-            # annotate_image(filename, annotation)
-            #os.symlink(file_resource(db.v2[usb1cam_uid]), image_usb1)
+            print(bold_msg('USB camera #1 snapshot'))
+            usbcam1_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
 
             ### --- USB camera #2 --------------------------------------------------------------
             html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
             image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
             usbcam2._annotation_string = p['filename']
-            #usb2.snap(image_usb2, p['filename'])
-
-            print(bold_msg('skipping USB camera #2 snapshot'))
-            #usb2cam_uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
-            #os.symlink(file_resource(db.v2[usb2cam_uid]), image_usb2)
+            print(bold_msg('USB camera #2 snapshot'))
+            usbcam2_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
 
             
             gdrive_dict['xascam']  = {'source': image_web,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['websnap'])}
             gdrive_dict['anacam']  = {'source': image_ana,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['anasnap'])}
-            gdrive_dict['usb1cam'] = {'source': image_usb1,
+            gdrive_dict['usbcam1'] = {'source': image_usb1,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb1snap'])}
-            gdrive_dict['usb2cam'] = {'source': image_usb2,
+            gdrive_dict['usbcam2'] = {'source': image_usb2,
                                       'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb2snap'])}
             
 
         md['_snapshots'] = {'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
                             'webcam_file': image_web,  'webcam_uid': xascam_uid,
                             'analog_file': image_ana,  'anacam_uid': anacam_uid,
-                            'usb1_file':   image_usb1, 'usb1cam_uid': usb1cam_uid,
-                            'usb2_file':   image_usb1, 'usb2cam_uid': usb1cam_uid, }
+                            'usb1_file':   image_usb1, 'usbcam1_uid': usbcam1_uid,
+                            'usb2_file':   image_usb1, 'usbcam2_uid': usbcam2_uid, }
             
 
         #legends = []
@@ -960,7 +952,7 @@ def xafs(inifile=None, **kwargs):
         test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
-        Yield = lambda doc: (doc['data']['dcm_energy'], 1000*doc['data']['Iy'] / doc['data']['I0'])
+        Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data']['I0'])
         if user_ns['with_xspress3']:
             xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
                                                                 doc['data'][BMMuser.xs2] +
@@ -1088,6 +1080,8 @@ def xafs(inifile=None, **kwargs):
             html_dict['xrfuid']        = xrfuid
             html_dict['webuid']        = xascam_uid
             html_dict['anauid']        = anacam_uid
+            html_dict['usb1uid']       = usbcam1_uid
+            html_dict['usb2uid']       = usbcam2_uid
             ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
             html_dict['url']           = p['url']
             html_dict['doi']           = p['doi']
@@ -1210,7 +1204,7 @@ def xafs(inifile=None, **kwargs):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation
-                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs')):
+                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'yield')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"Data evaluation: {emoji}", level='bold', slack=True)

@@ -192,7 +192,7 @@ def bmm_metadata(measurement   = 'transmission',
     #     md['Detector']['fluorescence'] = 'SII Vortex (4-element silicon drift)'
         
     if 'yield' in measurement:
-        md['Detector']['yield'] = 'in-vacuum electron yield detector'
+        md['Detector']['yield'] = 'Leeds multi-sample electron yield detector'
 
     return md
 

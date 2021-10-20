@@ -168,8 +168,8 @@ wmb = WheelMacroBuilder()
 ######################################################################################
                                                                                   
 run_report('\tdetector mount')
-from BMM.detector_mount import DetectorMount
-detx = DetectorMount()
+from BMM.detector_mount import find_detector_position #, DetectorMount
+#detx = DetectorMount()
 
 
 

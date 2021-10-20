@@ -139,9 +139,12 @@ class KillSwitch(Device):
         elif mc == 'dm3':
             slits3.enable()
             for axis in (dm3_bct, dm3_bpm, dm3_foils, dm3_fs):
-                axis.enable()
-                time.sleep(0.5)
-                axis.kill()
+                try:
+                    axis.enable()
+                    time.sleep(0.5)
+                    axis.kill()
+                except:
+                    pass
         elif mc == dcm:
             dcm.ena()
             time.sleep(0.5)

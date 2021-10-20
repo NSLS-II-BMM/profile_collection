@@ -6,7 +6,6 @@ from ophyd.signal import DerivedSignal
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import boxedtext
 
-
 class AtSetpoint(DerivedSignal):
     '''A signal that does bit-wise arithmetic on the Linkam's status code'''
     def __init__(self, parent_attr, *, parent=None, **kwargs):
@@ -159,8 +158,9 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
 
-        self.content += self.tab + 'yield from mv(linkam.setpoint, 23)\n\n'
+        self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
+        self.content += self.tab + 'yield from sleep(15)\n'
         self.content += self.tab + 'BMMuser.instrument = "linkam"\n'
 
         for m in self.measurements:

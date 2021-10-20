@@ -96,6 +96,8 @@ class BMMMacroBuilder():
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
+
+        self.orientation      = 'parallel'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.

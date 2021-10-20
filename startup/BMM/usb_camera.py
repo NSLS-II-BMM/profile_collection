@@ -37,16 +37,19 @@ class MyImage(ImagePlugin_V33):
                        num_dimensions='ndimensions',
                        kind='omitted', lazy=True)
 
+class ParsimoniousImage(ImagePlugin_V33):
+    shaped_image = None 
+
 class CAMERA(SingleTrigger, AreaDetector):
     # image = Cpt(ImagePlugin_V33, 'image1:')
-    image = Cpt(MyImage, 'image1:')    
+    image = Cpt(ParsimoniousImage, 'image1:')    
     #tiff1 = Cpt(TIFFPlugin, 'TIFF1:')
 
     def snap(self, filename, annotation_string=''):
         if self.cam.detector_state.get() == 0:
             self.cam.acquire.put(1)
             time.sleep(0.5)
-        u=self.image.shaped_image.get()
+        u=self.image.array_data.get().reshape((1080,1920,3))
         im = Image.fromarray(u)
         im.save(filename, 'JPEG')
         self.image.shape = (im.height, im.width, 3)

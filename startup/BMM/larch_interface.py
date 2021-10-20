@@ -166,6 +166,11 @@ class Pandrosus():
             self.group.i0 = numpy.array(table['It'])
             self.group.signal = numpy.array(table['Ir'])
 
+        elif mode == 'yield':
+            self.group.mu = numpy.array(table['Iy']/table['I0'])
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table['Iy'])
+
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
             self.group.i0 = numpy.array(table['I0'])

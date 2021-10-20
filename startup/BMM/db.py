@@ -30,4 +30,17 @@ def file_resource(record):
     else:
         return(None)
 
-        
+import matplotlib.pyplot as plt
+def show_image(uid):
+    '''Quickly plot a snapshot image from DataBroker given its UID.
+    '''
+    this = db.v2[uid].primary.read()
+    if 'usbcam1_image' in this:
+        key = 'usbcam1_image'
+    elif 'usbcam2_image' in this:
+        key = 'usbcam2_image'
+    elif 'xascam_image' in this:
+        key = 'xascam_image'
+    elif 'anacam_image' in this:
+        key = 'anacam_image'
+    plt.imshow(numpy.array(this[key])[0])

@@ -107,10 +107,10 @@ class WheelMotor(EndStationEpicsMotor):
         self.inner_position = self.outer_position + 26
 
     def inner(self):
-        yield from mv(self, self.inner_position)
+        yield from mv(user_ns['xafs_x'], self.inner_position)
 
     def outer(self):
-        yield from mv(self, self.outer_position)
+        yield from mv(user_ns['xafs_x'], self.outer_position)
 
     def slot_ring(self):
         if 'double' in user_ns['BMMuser'].instrument:

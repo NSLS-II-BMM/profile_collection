@@ -201,7 +201,7 @@ except:
 
 run_report('\t'+'cameras')
 from BMM.camera_device import BMMSnapshot, snap
-from BMM.db import file_resource
+from BMM.db import file_resource, show_image
 
 
 ## see 01-bmm.py for definition of nas_path
@@ -213,6 +213,9 @@ anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
 
 from BMM.webcam_device import AxisWebcam
+from BMM.handler import WEBCAM_JPEG_HANDLER
+from BMM.user_ns.base import db
+db.reg.register_handler("BEAMLINE_WEBCAM", WEBCAM_JPEG_HANDLER)
 base = os.path.join(BMMuser.folder, 'raw')
 testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
 testcam.beamline_id = 'BMM (NSLS-II 06BM)'
