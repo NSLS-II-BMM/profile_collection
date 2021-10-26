@@ -1,0 +1,54 @@
+	    <h3>Athena project</h3>
+	    <p>
+	      <a href="../prj/{basename}.prj">{basename}.prj</a>
+	    </p>
+	    <h3>XAS scans</h3>
+	    <ul class="linkedList">
+	      {scanlist}
+	    </ul>
+	  </div>
+	  <div id="sidebar2">
+	    <h3>Motor positions</h3>
+	    <span style="font-size:0.6em;"><tt>{motors}</tt></span>
+	  </div>
+	  <div id="content">
+	    <div id="box1">
+	      <h3>Sample details</h3>
+	      <ul>
+		<li><b>Sample composition:</b> {sample}</li>
+		<li><b>Sample preparation:</b> {prep}</li>
+		<li><b>Comment:</b> {comment}</li>
+	      </ul>
+	    </div>
+	    <div id="box2">
+	      <h3>Snapshots</h3>
+	      <ul class="imageList">
+		<li class="first">
+		  <a href="{websnap}">
+		    <img class="left" src="{websnap}" width="80" height="45" alt="" /></a>
+		  <span>Image from XAS web camera</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('webcam');" title="Click to show/hide the UID of this webcam image">(uid)</a><div id="webcam" style="display:none;"><small>{webuid}</small></div>
+		</li>
+		<li>
+		  <a href="{anasnap}">
+		    <img class="left" src="{anasnap}" width="80" height="60" alt="" /></a>
+		  <span>Image from analog pinhole camera</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('anacam');" title="Click to show/hide the UID of this analog camera image">(uid)</a><div id="anacam" style="display:none;"><small>{anauid}</small></div>
+		</li>
+		<li>
+		  <a href="{usb1snap}">
+		    <img class="left" src="{usb1snap}" width="80" height="45" alt="" /></a>
+		  <span>Image from USB camera #1</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('usb1cam');" title="Click to show/hide the UID of this USB cam image">(uid)</a><div id="usb1cam" style="display:none;"><small>{usb1uid}</small></div>
+		</li>
+		<li>
+		  <a href="{usb2snap}">
+		    <img class="left" src="{usb2snap}" width="80" height="45" alt="" /></a>
+		  <span>Image from USB camera #2</span>&nbsp;&nbsp;&nbsp;&nbsp;
+		  <a href="javascript:void(0)" onclick="toggle_visibility('usb2cam');" title="Click to show/hide the UID of this USB cam image">(uid)</a><div id="usb2cam" style="display:none;"><small>{usb2uid}</small></div>
+		</li>
+		<li>
+		  <a href="../snapshots/{basename}.png">
+		    <img class="left" src="../snapshots/{basename}.png" width="80" height="60" alt="" /></a>
+		  <span>Rough, automated data reduction</span>
+		</li>

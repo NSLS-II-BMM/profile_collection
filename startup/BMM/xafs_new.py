@@ -1007,6 +1007,8 @@ def xafs(inifile=None, **kwargs):
                     htmlout, prjout, pngout = None, None, None
                 if htmlout is not None:
                     report('wrote dossier %s' % htmlout, 'bold')
+        rsync_to_gdrive()
+        synch_gdrive_folder()
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()

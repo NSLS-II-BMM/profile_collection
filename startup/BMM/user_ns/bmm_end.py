@@ -28,7 +28,7 @@ run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
-from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, rectangle_scan
+from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
 #run_report('\t'+'positioning of instruments')
 #from BMM.positioning import find_slot

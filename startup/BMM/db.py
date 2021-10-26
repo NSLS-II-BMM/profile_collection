@@ -33,7 +33,7 @@ def file_resource(record):
         return(None)
 
 import matplotlib.pyplot as plt
-def show_image(uid):
+def show_shapshot(uid):
     '''Quickly plot a snapshot image from DataBroker given its UID.
     '''
     this = user_ns['db'].v2[uid].primary.read()

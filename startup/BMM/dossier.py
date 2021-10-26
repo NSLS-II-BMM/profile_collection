@@ -3,6 +3,7 @@ from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 from urllib.parse import quote
+import numpy
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -249,7 +250,7 @@ class BMMDossier():
 
         # middle part, XRF and glancing angle alignment images
         if thismode == 'xs':
-            with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
+            with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                 content = f.readlines()
             o.write(''.join(content).format(xrfsnap       = quote('../XRF/'+str(self.xrfsnap)),
                                             pccenergy     = '%.1f' % self.pccenergy,
@@ -359,6 +360,7 @@ class BMMDossier():
             pass # presumably this is noisy data for which a valid background was not found
         if cnt == 0:
             print(whisper(f'Unable to make triplot'))
+            self.simple_plot(uidlist, filename, mode)
             return
         mm = mm / cnt
         merge = Pandrosus()
@@ -371,3 +373,35 @@ class BMMDossier():
         matplotlib.use(thisagg) # return to screen display
         proj.save()
         print(whisper(f'Wrote Athena project to {projname}'))
+
+
+    def simple_plot(self, uidlist, filename, mode):
+        BMMuser = user_ns['BMMuser']
+        this = db.v2[uidlist[0]].primary.read()
+        if mode == 'test':
+            title, ylab = 'XAS test scan', 'I0 (nA)'
+            signal = this['I0']
+        elif mode == 'transmission':
+            title, ylab = '', 'transmission'
+            signal = numpy.log(numpy.abs(this['I0']/this['It']))
+        elif mode == 'reference':
+            title, ylab = '', 'reference'
+            signal = numpy.log(numpy.abs(this['It']/this['Ir']))
+        elif mode == 'yield':
+            title, ylab = '', 'yield'
+            signal = this['Iy']/this['I0']
+        else:
+            title, ylab = '', 'fluorescence'
+            signal = (this[BMMuser.xs1]+this[BMMuser.xs2]+this[BMMuser.xs3]+this[BMMuser.xs4]+0.001)/(this['I0']+1)
+            
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
+        plt.cla()
+        plt.title(title)
+        plt.xlabel('energy (eV)')
+        plt.ylabel(ylab)
+        plt.plot(this['dcm_energy'], signal)
+        plt.savefig(filename)
+        matplotlib.use(thisagg) # return to screen display
+        print(whisper(f'Wrote simple plot to {filename}'))
+            
