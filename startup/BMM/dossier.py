@@ -25,6 +25,14 @@ class BMMDossier():
     '''A class for generating a static HTML file for documenting an XAS
     measurement at BMM.
 
+    The concept is that the (many, many) attributes of this class will
+    be accumulated as the scan plan is executed.  At the end of the
+    scan sequence, the static HTML file will be generated.
+
+    That static HTML file is made using a set of simple text templates
+    which are filled in, the concatenated in a way that suitable for
+    the current XAS measurement.
+
     attributes
     ==========
     inifile : str
@@ -121,6 +129,9 @@ class BMMDossier():
     make_merged_triplot
        merge the scans and generate a triplot
 
+    simple_plot
+       simple, fallback plot
+
     '''
     inifile       = None
     filename      = None
@@ -160,6 +171,7 @@ class BMMDossier():
     url           = None
     doi           = None
     cif           = None
+    temperature   = ''
 
     initext       = None
 
@@ -246,7 +258,8 @@ class BMMDossier():
                                         usb1snap      = quote('../snapshots/'+self.usb1snap),
                                         usb1uid       = self.usb1uid,
                                         usb2snap      = quote('../snapshots/'+self.usb2snap),
-                                        usb2uid       = self.usb2uid, ))
+                                        usb2uid       = self.usb2uid,
+                                        temperature   = self.temperature, ))
 
         # middle part, XRF and glancing angle alignment images
         if thismode == 'xs':
@@ -330,6 +343,10 @@ class BMMDossier():
 
 
     def make_merged_triplot(self, uidlist, filename, mode):
+        '''Make a pretty, three panel plot of the data from the scan sequence
+        just finished.
+
+        '''
         BMMuser = user_ns['BMMuser']
         cnt = 0
         try:
@@ -360,7 +377,10 @@ class BMMDossier():
             pass # presumably this is noisy data for which a valid background was not found
         if cnt == 0:
             print(whisper(f'Unable to make triplot'))
-            self.simple_plot(uidlist, filename, mode)
+            try:
+                self.simple_plot(uidlist, filename, mode)
+            except:
+                print(whisper(f'Also unable to make simple plot'))
             return
         mm = mm / cnt
         merge = Pandrosus()
@@ -376,6 +396,11 @@ class BMMDossier():
 
 
     def simple_plot(self, uidlist, filename, mode):
+        '''If the triplot cannot be made for some reason, make a fallback,
+        much simpler plot so that something is available for Slack and
+        the dossier.
+
+        '''
         BMMuser = user_ns['BMMuser']
         this = db.v2[uidlist[0]].primary.read()
         if mode == 'test':

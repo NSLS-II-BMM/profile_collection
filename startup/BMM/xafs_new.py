@@ -8,37 +8,34 @@ import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
 import matplotlib.pyplot as plt
-from larch.io import create_athena
+
 from urllib.parse import quote
 
-#from BMM.camera_device import snap
-from BMM.db            import file_resource
-from BMM.demeter       import toprj
-from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
-from BMM.dossier       import BMMDossier
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
-from BMM.larch_interface import Pandrosus, Kekropidai
-from BMM.linescans     import rocking_curve
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
-from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
-from BMM.modes         import get_mode, describe_mode
-from BMM.motor_status  import motor_sidebar, motor_status
-from BMM.periodictable import edge_energy, Z_number, element_name
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.xdi           import write_XDI
-from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
+from BMM.db              import file_resource
+from BMM.demeter         import toprj
+from BMM.derivedplot     import DerivedPlot, interpret_click, close_all_plots, close_last_plot
+from BMM.dossier         import BMMDossier
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
+from BMM.linescans       import rocking_curve
+from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.modes           import get_mode, describe_mode
+from BMM.motor_status    import motor_sidebar, motor_status
+from BMM.periodictable   import edge_energy, Z_number, element_name
+from BMM.resting_state   import resting_state_plan
+from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
+from BMM.xdi             import write_XDI
+from BMM.xafs_functions  import conventional_grid, sanitize_step_scan_parameters
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #from __main__ import db
-from BMM.user_ns.base import db, startup_dir
-
-from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs
+from BMM.user_ns.base      import db, startup_dir
+from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.detectors import quadem1, vor, xs
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -823,6 +820,7 @@ def xafs(inifile=None, **kwargs):
             dossier.url           = p['url']
             dossier.doi           = p['doi']
             dossier.cif           = p['cif']
+            dossier.temperature   = ''
             with open(os.path.join(BMMuser.DATA, inifile)) as f:
                 dossier.initext = ''.join(f.readlines())
 
@@ -832,8 +830,6 @@ def xafs(inifile=None, **kwargs):
             rkvs.set('BMM:scan:type',      'xafs')
             rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
             rkvs.set('BMM:scan:estimated', (approx_time * int(p['nscans']) * 60))
-            #print(str(datetime.datetime.timestamp(datetime.datetime.now())))
-            #print((approx_time * int(p['nscans']) * 60))
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -861,6 +857,7 @@ def xafs(inifile=None, **kwargs):
                     slotno = f', spinner {ga.current()}'
                 elif 'linkam' in BMMuser.instrument:
                     slotno = f', temperature {linkam.readback.get():.1f}'
+                    dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
 
