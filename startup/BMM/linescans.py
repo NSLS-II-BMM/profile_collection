@@ -329,7 +329,15 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def pellet_scan(motor=None, start=-20, stop=20, nsteps=41, detector='I0'):
+def find_slot(close=False):
+    yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
+    yield from rectangle_scan(motor=xafs_x, start=-12, stop=12, nsteps=31, detector='It')
+    print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
+    if close:
+        close_all_plots()
+
+    
+def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
 
     def main_plan(motor, start, stop, nsteps, detector):
         (ok, text) = BMM_clear_to_start()
@@ -346,15 +354,19 @@ def pellet_scan(motor=None, start=-20, stop=20, nsteps=41, detector='I0'):
         sgnl = 'fluorescence (Xspress3)'
         titl = f'Fluorescence signal vs. {motor.name}'
 
-        dets.append(xs)
-        denominator = ' / I0'
-        detname = 'fluorescence'
-        func = lambda doc: (doc['data'][motor.name],
-                            (doc['data'][BMMuser.xs1] +
-                             doc['data'][BMMuser.xs2] +
-                             doc['data'][BMMuser.xs3] +
-                             doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
-        yield from mv(xs.total_points, nsteps)
+        if detector.lower() == 'if':
+            dets.append(xs)
+            denominator = ' / I0'
+            detname = 'fluorescence'
+            func = lambda doc: (doc['data'][motor.name],
+                                (doc['data'][BMMuser.xs1] +
+                                 doc['data'][BMMuser.xs2] +
+                                 doc['data'][BMMuser.xs3] +
+                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            yield from mv(xs.total_points, nsteps)
+        elif detector.lower() == 'it':
+            detname = 'transmission'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
 
         plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 

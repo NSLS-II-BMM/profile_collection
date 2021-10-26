@@ -1,4 +1,6 @@
 import os
+import numpy
+import matplotlib.pyplot as plt
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -34,7 +36,7 @@ import matplotlib.pyplot as plt
 def show_image(uid):
     '''Quickly plot a snapshot image from DataBroker given its UID.
     '''
-    this = db.v2[uid].primary.read()
+    this = user_ns['db'].v2[uid].primary.read()
     if 'usbcam1_image' in this:
         key = 'usbcam1_image'
     elif 'usbcam2_image' in this:

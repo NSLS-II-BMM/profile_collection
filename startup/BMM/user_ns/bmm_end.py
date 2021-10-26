@@ -28,10 +28,10 @@ run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
-from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, pellet_scan
+from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, rectangle_scan
 
-run_report('\t'+'positioning of instruments')
-from BMM.positioning import find_slot
+#run_report('\t'+'positioning of instruments')
+#from BMM.positioning import find_slot
 
 ###########################################################################################
 #  _____  _       ___   _   _ _____ _____ _   _ _____    ___   _   _ _____  _      _____  #
@@ -201,7 +201,7 @@ clf = BMMDataEvaluation()
 import logging
 logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
-from BMM.xafs import howlong, xafs, db2xdi
+from BMM.xafs_new import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
