@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import isfloat, present_options
-from BMM.gdrive         import copy_to_gdrive
+from BMM.gdrive         import copy_to_gdrive, rsync_to_gdrive
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 
@@ -128,7 +128,7 @@ class BMMMacroBuilder():
         self.folder   = BMMuser.folder
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
-        self.wb       = load_workbook(self.source, read_only=True);
+        self.wb       = load_workbook(self.source, data_only=True, read_only=True);
         self.measurements = list()
         # self.do_first_change = False
         # self.close_shutters  = True
@@ -171,7 +171,8 @@ class BMMMacroBuilder():
             print(error_msg(explanation))
             return None
         self.write_macro()
-        copy_to_gdrive(spreadsheet)
+        rsync_to_gdrive()
+        #copy_to_gdrive(spreadsheet)
         return 0
 
     def truefalse(self, value):
@@ -183,6 +184,8 @@ class BMMMacroBuilder():
         elif str(value).lower() == 'true':
             return True
         elif str(value).lower() == 'yes':
+            return True
+        elif value == 1:
             return True
         else:
             return False

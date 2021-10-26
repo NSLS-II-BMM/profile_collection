@@ -4,7 +4,7 @@ from bluesky.plans import rel_scan
 from bluesky.plan_stubs import sleep, mv, null
 from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
-from lmfit.models import SkewedGaussianModel
+from lmfit.models import SkewedGaussianModel, RectangleModel
 from databroker.core import SingleRunCache
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
@@ -328,6 +328,69 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
+
+def pellet_scan(motor=None, start=-20, stop=20, nsteps=41, detector='I0'):
+
+    def main_plan(motor, start, stop, nsteps, detector):
+        (ok, text) = BMM_clear_to_start()
+        if ok is False:
+            print(error_msg(text))
+            yield from null()
+            return
+
+        user_ns['RE'].msg_hook = None
+        BMMuser.motor = motor
+
+        dets = [quadem1,]
+
+        sgnl = 'fluorescence (Xspress3)'
+        titl = f'Fluorescence signal vs. {motor.name}'
+
+        dets.append(xs)
+        denominator = ' / I0'
+        detname = 'fluorescence'
+        func = lambda doc: (doc['data'][motor.name],
+                            (doc['data'][BMMuser.xs1] +
+                             doc['data'][BMMuser.xs2] +
+                             doc['data'][BMMuser.xs3] +
+                             doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+        yield from mv(xs.total_points, nsteps)
+
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
+
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
+        
+        @subs_decorator(plot)
+        #@subs_decorator(src.callback)
+        def doscan():
+            line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
+
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            t  = user_ns['db'][-1].table()
+            signal   = numpy.array(t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])
+            pos      = numpy.array(t[motor.name])
+            mod      = RectangleModel(form='arctan')
+            pars     = mod.guess(signal, x=pos)
+            out      = mod.fit(signal, pars, x=pos)
+            print(whisper(out.fit_report(min_correl=0)))
+            out.plot()
+            middle   = out.params['center1'].value + (out.params['center2'].value - out.params['center1'].value)/2
+            yield from mv(motor, middle)
+            print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
+        
+        yield from doscan()
+        
+    def cleanup_plan():
+        yield from resting_state_plan()
+    
+    user_ns['RE'].msg_hook = None
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector), cleanup_plan())
+    user_ns['RE'].msg_hook = BMM_msg_hook
+
+    
 
 ##                     linear stages        tilt stage           rotation stages
 motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,

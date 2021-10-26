@@ -11,11 +11,12 @@ from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
+from BMM.user_ns.dwelltime   import with_xspress3
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.linescans     import motor_nicknames
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown
+from BMM.functions     import countdown, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
@@ -102,12 +103,17 @@ def areascan(detector,
         detector = detector.capitalize()
         yield from mv(_locked_dwell_time, dwell)
         dets = [quadem1,]
+
+        if with_xspress3 and detector == 'If':
+            detector = 'Xs'
+
         if detector == 'If':
             dets.append(vor)
             detector = 'ROI1'
         if detector.lower() == 'xs':
             dets.append(xs)
             detector = BMMuser.xs1
+            yield from mv(xs.total_points, nslow*nfast)
 
         
         if 'PseudoSingle' in str(type(slow)):

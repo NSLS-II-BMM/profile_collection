@@ -16,7 +16,7 @@ from BMM.demeter       import toprj
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder
+from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.larch_interface import Pandrosus, Kekropidai
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
@@ -1213,7 +1213,8 @@ def xafs(inifile=None, **kwargs):
                         pass
                     if p['lims'] is True:
                         try:
-                            copy_to_gdrive(fname)
+                            #copy_to_gdrive(fname)
+                            rsync_to_gdrive()
                             synch_gdrive_folder()
                             # here = os.getcwd()
                             # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
@@ -1294,17 +1295,17 @@ def xafs(inifile=None, **kwargs):
                     gdrive_dict['processed'] = {'source': pngout,
                                                 'target': os.path.join(BMMuser.gdrive, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
                     
-            if 'htmlpage' in html_dict and html_dict['htmlpage']:
-                for k,v in gdrive_dict.items():
-                    #print(f'\n{k}')
-                    #print(f'   source: {v["source"]}')
-                    #print(f'   target: {v["target"]}')
-                    if v['source'] is not None:
-                        try:
-                            shutil.copyfile(v['source'], v['target'])
-                        except Exception as e:
-                            pass
-                            #print(e)
+            # if 'htmlpage' in html_dict and html_dict['htmlpage']:
+            #     for k,v in gdrive_dict.items():
+            #         #print(f'\n{k}')
+            #         #print(f'   source: {v["source"]}')
+            #         #print(f'   target: {v["target"]}')
+            #         if v['source'] is not None:
+            #             try:
+            #                 shutil.copyfile(v['source'], v['target'])
+            #             except Exception as e:
+            #                 pass
+            #                 #print(e)
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()

@@ -188,12 +188,13 @@ class WheelMacroBuilder(BMMMacroBuilder):
 
         Finally, write out the master INI and macro python files.
         '''
-        element, edge, focus = (None, None, None)
+        element, edge, focus, slot = (None, None, None, None)
         for m in self.measurements:
 
             if m['default'] is True:
                 element = m['element']
                 edge    = m['edge']
+                slot    = 0
                 continue
             if self.skip_row(m) is True:
                 continue
@@ -208,7 +209,9 @@ class WheelMacroBuilder(BMMMacroBuilder):
             ############################
             # sample and slit movement #
             ############################
-            self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
+            if m['slot'] != slot:
+                self.content += self.tab + 'yield from slot(%d)\n' % m['slot']
+                slot = m['slot']
             if 'ring' in m:
                 #here = user_ns['xafs_det'].position
                 #if here < 150:

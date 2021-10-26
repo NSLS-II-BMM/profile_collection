@@ -39,8 +39,13 @@ def copy_to_gdrive(fname):
     shutil.copyfile(os.path.join(user_ns['BMMuser'].folder, fname), os.path.join(user_gdrive_folder, fname), follow_symlinks=True)
     return()
 
+def rsync_to_gdrive():
+    user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
+    print(f'syncing user folder to {user_gdrive_folder}')
+    subprocess.run(['rsync', '-aq', user_ns['BMMuser'].folder, user_gdrive_folder]) 
+    
 def synch_gdrive_folder(prefix=''):
-    print(f'{prefix}updating {gdrive_folder}')
+    print(f'{prefix}syncing {gdrive_folder}')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     location = determine_bin_location()
     if location is None:
