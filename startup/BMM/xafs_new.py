@@ -850,12 +850,12 @@ def xafs(inifile=None, **kwargs):
                     return
 
                 slotno, ring = '', ''
-                if 'sample wheel' in BMMuser.instrument:
+                if 'sample wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
                     ring = f' {xafs_wheel.slot_ring()} ring'
-                elif 'glancing angle' in BMMuser.instrument:
+                elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
-                elif 'linkam' in BMMuser.instrument:
+                elif 'linkam' in BMMuser.instrument.lower():
                     slotno = f', temperature {linkam.readback.get():.1f}'
                     dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
@@ -997,13 +997,13 @@ def xafs(inifile=None, **kwargs):
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
             ## FYI: db.v2[-1].metadata['start']['scan_id']
-            if dossier.htmlpage:
-                try:
-                    htmlout = dossier.write_dossier()
-                except:
-                    htmlout, prjout, pngout = None, None, None
-                if htmlout is not None:
-                    report('wrote dossier %s' % htmlout, 'bold')
+            #if dossier.htmlpage:
+            try:
+                htmlout = dossier.write_dossier()
+            except:
+                htmlout, prjout, pngout = None, None, None
+            if htmlout is not None:
+                report('wrote dossier %s' % htmlout, 'bold')
         rsync_to_gdrive()
         synch_gdrive_folder()
                     

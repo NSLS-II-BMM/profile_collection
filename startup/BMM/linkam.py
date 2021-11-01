@@ -6,6 +6,10 @@ from ophyd.signal import DerivedSignal
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import boxedtext
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+
 class AtSetpoint(DerivedSignal):
     '''A signal that does bit-wise arithmetic on the Linkam's status code'''
     def __init__(self, parent_attr, *, parent=None, **kwargs):
@@ -148,16 +152,18 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
-        spreadsheet.  A paragraph consists of line to move to the
-        correct spinner, lines to find or move to the center-aligned
-        location in pitch and Y, lines to move to and from the correct
-        glancing angle value, a line to change the edge energy (if
+        spreadsheet.  A paragraph consists of lines to change the
+        temperature, lines to move sample and detector to the correct
+        positions (if needed), a line to change the edge energy (if
         needed), a line to measure the XAFS using the correct set of
         control parameters, and a line to close plot windows after the
         scan.
+
         '''
         element, edge, focus = (None, None, None)
-
+        settle_time, ramp_time = 0,0
+        previous = 25
+        
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
         self.content += self.tab + 'yield from sleep(15)\n'
@@ -192,6 +198,9 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'linkam.settle_time = {m["settle"]:.1f}\n'
                 self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
                 temperature = m['temperature']
+                settle_time += m["settle"]
+                ramp_time += (temperature - previous) / user_ns['linkam'].RR.get()
+                previous = temperature
 
             ############################
             # sample and slit movement #
@@ -263,6 +272,10 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             self.estimate_time(m, element, edge)
             
 
+        print(whisper(f'XAS time:      about {self.totaltime/60:.1f} hours'))
+        print(whisper(f'ramp time:     about {ramp_time:.1f} minutes'))
+        print(whisper(f'settling time: about {settle_time/60:.1f} minutes'))
+        self.totaltime = self.totaltime + (settle_time / 60) + ramp_time
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
             self.content += self.tab + '    BMMuser.running_macro = False\n'

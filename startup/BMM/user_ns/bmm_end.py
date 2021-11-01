@@ -205,7 +205,7 @@ clf = BMMDataEvaluation()
 import logging
 logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
-from BMM.xafs_new import howlong, xafs, db2xdi
+from BMM.xafs import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono

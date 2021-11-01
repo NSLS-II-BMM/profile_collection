@@ -229,28 +229,36 @@ class BMMDossier():
         # dossier header
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
             content = f.readlines()
+        print('---', self.filename, BMMuser.date, seqnumber)
+        print(content)
         o.write(''.join(content).format(filename      = self.filename,
                                         date          = BMMuser.date,
                                         seqnumber     = seqnumber, ))
+        o.flush()
 
         # left sidebar, entry for XRF file in the case of fluorescence data
         thismode = plotting_mode(self.mode)
+        print('---', thismode, basename, quote('../XRF/'+str(self.xrffile)), self.xrfuid)
         if thismode == 'xs':
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                 content = f.readlines()
+            print(content)
             o.write(''.join(content).format(basename      = basename,
                                             xrffile       = quote('../XRF/'+str(self.xrffile)),
                                             xrfuid        = self.xrfuid, ))
+            o.flush()
 
         # middle part of dossier
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
             content = f.readlines()
+        print(content)
         o.write(''.join(content).format(basename      = basename,
                                         scanlist      = self.scanlist,
                                         motors        = self.motors,
                                         sample        = self.sample,
                                         prep          = self.prep,
                                         comment       = self.comment,
+                                        temperature   = self.temperature, 
                                         websnap       = quote('../snapshots/'+self.websnap),
                                         webuid        = self.webuid,
                                         anasnap       = quote('../snapshots/'+self.anasnap),
@@ -258,18 +266,20 @@ class BMMDossier():
                                         usb1snap      = quote('../snapshots/'+self.usb1snap),
                                         usb1uid       = self.usb1uid,
                                         usb2snap      = quote('../snapshots/'+self.usb2snap),
-                                        usb2uid       = self.usb2uid,
-                                        temperature   = self.temperature, ))
+                                        usb2uid       = self.usb2uid, ))
+        o.flush()
 
         # middle part, XRF and glancing angle alignment images
         if thismode == 'xs':
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                 content = f.readlines()
+            print(content)
             o.write(''.join(content).format(xrfsnap       = quote('../XRF/'+str(self.xrfsnap)),
                                             pccenergy     = '%.1f' % self.pccenergy,
                                             ocrs          = self.ocrs,
                                             rois          = self.rois,
                                             symbol        = self.element,))
+            o.flush()
             if BMMuser.instrument == 'glancing angle stage':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_ga.tmpl')) as f:
                     content = f.readlines()
@@ -277,13 +287,15 @@ class BMMDossier():
                                                 ga_yuid       = ga.y_uid,
                                                 ga_puid       = ga.pitch_uid,
                                                 ga_fuid       = ga.f_uid, ))
+                o.flush()
             
         # end of dossier
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_bottom.tmpl')) as f:
             content = f.readlines()
+        print(content)
         o.write(''.join(content).format(e0            = '%.1f' % self.e0,
                                         edge          = self.edge,
-                                        element       = f'{self.element} (<a href="https://en.wikipedia.org/wiki/{element_name(self.element)}">{element_name(self.element)}</a>, {Z_number(self.element)})',
+                                        element       = self.element_text(),
                                         mode          = self.mode,
                                         bounds        = self.bounds,
                                         steps         = self.steps,
@@ -302,7 +314,9 @@ class BMMDossier():
                                         initext       = highlight(self.initext, IniLexer(), HtmlFormatter()),
                                         clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
                                         filename      = self.filename,))
+        o.flush()
             
+        print(f'closing {htmlfilename}')
         o.close()
 
 
@@ -320,6 +334,7 @@ class BMMDossier():
 
         return htmlfilename
 
+    
     def write_manifest(self):
         '''Update the scan manifest and the corresponding static html file.'''
         BMMuser = user_ns['BMMuser']
@@ -341,6 +356,17 @@ class BMMDossier():
                                         experimentlist = experimentlist,))
         o.close()
 
+
+    def element_text(self):
+        if Z_number(self.element) is None:
+            return ''
+        else:
+            thistext  = f'{self.element} '
+            thistext += f'(<a href="https://en.wikipedia.org/wiki/{element_name(self.element)}">'
+            thistext += f'{element_name(self.element)}</a>, '
+            thistext += f'{Z_number(self.element)})'
+            return thistext
+        
 
     def make_merged_triplot(self, uidlist, filename, mode):
         '''Make a pretty, three panel plot of the data from the scan sequence
