@@ -336,6 +336,10 @@ def find_slot(close=False):
     if close:
         close_all_plots()
 
+def find_reference():
+    yield from rectangle_scan(motor=xafs_lilnxs, start=-4,  stop=4,  nsteps=31, detector='Ir')
+    print(bold_msg(f'Found reference at xafs_linxs = {xafs_linxs.position}'))
+
     
 def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
 
@@ -349,13 +353,13 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = [quadem1,]
+        dets = [user_ns['quadem1'],]
 
         sgnl = 'fluorescence (Xspress3)'
         titl = f'Fluorescence signal vs. {motor.name}'
 
         if detector.lower() == 'if':
-            dets.append(xs)
+            dets.append(user_ns['xs'])
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][motor.name],
@@ -367,6 +371,9 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
         elif detector.lower() == 'it':
             detname = 'transmission'
             func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
+        elif detector.lower() == 'ir':
+            detname = 'reference'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
 
         plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
@@ -382,7 +389,12 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
 
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             t  = user_ns['db'][-1].table()
-            signal   = numpy.array(t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])
+            if detector.lower() == 'if':
+                signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
+            elif detector.lower() == 'it':
+                signal   = numpy.array(t['It']/t['I0'])
+            elif detector.lower() == 'ir':
+                signal   = numpy.array(t['Ir']/t['It'])
             pos      = numpy.array(t[motor.name])
             mod      = RectangleModel(form='arctan')
             pars     = mod.guess(signal, x=pos)

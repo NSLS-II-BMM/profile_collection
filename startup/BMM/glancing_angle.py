@@ -261,8 +261,12 @@ class GlancingAngle(Device):
         tf = user_ns['db'][yf].table()
         yy = tf[motor]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        com = int(center_of_mass(signal)[0])+1
-        centroid = yy[com]
+        if BMMuser.element == 'Zr':
+            com = signal.idxmax()
+            centroid = yy[com]
+        else:
+            com = int(center_of_mass(signal)[0])+1
+            centroid = yy[com]
         f.plot(yy, signal)
         f.scatter(centroid, signal[com], s=120, marker='x', color='green')
         f.set_xlabel(f'{motor} (mm)')
@@ -377,8 +381,11 @@ class GlancingAngle(Device):
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        com = int(center_of_mass(signal)[0])+1
-        centroid = yy[com]
+        if BMMuser.element == 'Zr':
+            centroid = yy[signal.idxmax()]
+        else:
+            com = int(center_of_mass(signal)[0])+1
+            centroid = yy[com]
         yield from mv(motor, centroid)
         
         ## make a pretty picture, post it to slack
