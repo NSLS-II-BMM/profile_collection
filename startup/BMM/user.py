@@ -376,6 +376,8 @@ class BMM_User(Borg):
     def find_or_copy_file(self, i, text, fname):
         src     = os.path.join(startup_dir, fname)
         dst     = os.path.join(self.folder, fname)
+        if 'xlsx' in fname:
+            dst = os.path.join(self.folder, 'xlsx', fname)
         if not os.path.isfile(dst):
             shutil.copyfile(src,  dst)
             verb, pad = 'Copied', ' '
@@ -389,8 +391,7 @@ class BMM_User(Borg):
         else:
             print(f'{i:2d}. {verb} {text:28}{pad}   {result:75}')
 
-            
-            
+
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
         '''
         Do the work of prepping for a new experiment.  This will:
@@ -492,10 +493,11 @@ class BMM_User(Borg):
             verb, pad = 'Found', '  '
         self.print_verb_message(0, verb, 'macro template', pad, macropy)
 
-        self.find_or_copy_file(0, 'wheel macro spreadsheet', 'wheel_template.xlsx')
-        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle_template.xlsx')
-        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'doublewheel_template.xlsx')
-        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'linkam_template.xlsx')
+        self.find_or_copy_file(0, 'wheel macro spreadsheet',    'wheel.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle.xlsx')
+        self.find_or_copy_file(0, 'double wheel spreadsheet',   'doublewheel.xlsx')
+        self.find_or_copy_file(0, 'Linkam stage spreadsheet',   'linkam.xlsx')
+        self.find_or_copy_file(0, 'motor grid spreadsheet',     'grid.xlsx')
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
