@@ -110,17 +110,21 @@ def xlsx():
             return
     instrument = str(wb[sheet]['B1'].value).lower()
 
-    if instrument == 'glancing angle':
+    if instrument.lower() == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
         gawheel.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'glancing angle stage'
-    elif instrument == 'double wheel':
+    elif instrument.lower() == 'double wheel':
         print(bold_msg('This is a double sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet, double=True)
         BMMuser.instrument = 'double wheel'
-    elif instrument == 'linkam':
+    elif instrument.lower() == 'linkam':
         print(bold_msg('This is a Linkam spreadsheet'))
         lmb.spreadsheet(spreadsheet, sheet)
+        BMMuser.instrument = 'Linkam stage'
+    elif instrument.lower() == 'grid':
+        print(bold_msg('This is a motor grid spreadsheet'))
+        gmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'Linkam stage'
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
@@ -270,7 +274,7 @@ if all_connected(True) is False:
      print(error_msg('You likely have to restart bsui.'))
 
 from BMM.user_ns.base import startup_dir
-from BMM.user_ns.instruments import wmb, lmb
+from BMM.user_ns.instruments import wmb, lmb, gmb
 wmb.folder = BMMuser.folder
 lmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
 lmb.folder = BMMuser.folder
