@@ -980,19 +980,19 @@ def xafs(inifile=None, **kwargs):
         yield from scan_sequence(clargs) #, noreturn)
 
     def cleanup_plan(inifile):
-        print('Cleaning up after an XAFS scan sequence')
+        print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
         #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
-        how = 'finished'
+        how = 'finished  :tada:'
         try:
             if 'primary' not in db[-1].stop['num_events']:
-                how = 'stopped'
+                how = '*stopped*'
             elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
-                how = 'stopped'
+                how = '*stopped*'
         except:
-            how = 'stopped'
+            how = '*stopped*'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')

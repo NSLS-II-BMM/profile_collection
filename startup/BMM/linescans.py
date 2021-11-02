@@ -331,7 +331,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 
 def find_slot(close=False):
     yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
-    yield from rectangle_scan(motor=xafs_x, start=-12, stop=12, nsteps=31, detector='It')
+    yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
     if close:
         close_all_plots()
@@ -356,12 +356,11 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
         dets = [user_ns['quadem1'],]
 
         sgnl = 'fluorescence (Xspress3)'
-        titl = f'Fluorescence signal vs. {motor.name}'
 
         if detector.lower() == 'if':
             dets.append(user_ns['xs'])
             denominator = ' / I0'
-            detname = 'fluorescence'
+            sgnl = 'fluorescence'
             func = lambda doc: (doc['data'][motor.name],
                                 (doc['data'][BMMuser.xs1] +
                                  doc['data'][BMMuser.xs2] +
@@ -369,12 +368,13 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps)
         elif detector.lower() == 'it':
-            detname = 'transmission'
+            sgnl = 'transmission'
             func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
         elif detector.lower() == 'ir':
-            detname = 'reference'
+            sgnl = 'reference'
             func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
 
+        titl = f'{sgnl} vs. {motor.name}'
         plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         rkvs.set('BMM:scan:type',      'line')

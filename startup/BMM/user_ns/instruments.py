@@ -16,6 +16,7 @@ run_report(__file__, text='instrument definitions')
 
 run_report('\tmirrors')
 from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable
+from BMM.user_ns.bmm import BMMuser
 from BMM.user_ns.motors import mcs8_motors
 
 ## harmonic rejection mirror
@@ -153,8 +154,10 @@ def setup_wheel():
     
 
 wmb = WheelMacroBuilder()
-#xlsx = wmb.spreadsheet
-
+wmb.description = 'a standard sample wheel'
+wmb.instrument  = 'sample wheel'
+wmb.folder      = BMMuser.folder
+wmb.cleanup     = 'yield from xafs_wheel.reset()' 
 
 
 
@@ -286,7 +289,9 @@ from BMM.linkam import Linkam, LinkamMacroBuilder
 linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,500.0))
 
 lmb = LinkamMacroBuilder()
-
+lmb.description = 'the Linkam stage'
+lmb.instrument='Linkam'
+lmb.folder = BMMuser.folder
 
 
 ###############################################################
@@ -300,7 +305,9 @@ lmb = LinkamMacroBuilder()
 
 from BMM.grid import GridMacroBuilder
 gmb = GridMacroBuilder()
-
+gmb.description = 'a motor grid'
+gmb.instrument = 'grid'
+gmb.folder = BMMuser.folder
 
 
 ####################################################################################

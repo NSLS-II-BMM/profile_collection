@@ -167,7 +167,6 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
         self.content += self.tab + 'yield from sleep(15)\n'
-        self.content += self.tab + 'BMMuser.instrument = "linkam"\n'
 
         for m in self.measurements:
 

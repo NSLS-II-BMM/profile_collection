@@ -12,6 +12,7 @@ from BMM.workspace import rkvs
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
 
 run_report(__file__, text='import the rest of the things')
 
@@ -48,6 +49,12 @@ from BMM.glancing_angle import GlancingAngle, GlancingAngleMacroBuilder
 ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 
 gawheel = GlancingAngleMacroBuilder()
+gawheel.description = 'the glancing angle stage'
+gawheel.instrument  = 'glancing angle'
+gawheel.folder = BMMuser.folder
+gawheel.cleanup = 'yield from mv(xafs_x, samx, xafs_pitch, samp, xafs_det, 205)\n        ga.reset()'
+gawheel.initialize = 'samx, samp = xafs_x.position, xafs_pitch.position'
+
 
 #########################################################################################
 # ___  ___  ___  _____ ______ _____  ______ _   _ _____ _    ______ ___________  _____  #
@@ -125,7 +132,7 @@ def xlsx():
     elif instrument.lower() == 'grid':
         print(bold_msg('This is a motor grid spreadsheet'))
         gmb.spreadsheet(spreadsheet, sheet)
-        BMMuser.instrument = 'Linkam stage'
+        BMMuser.instrument = 'motor grid'
     else:
         print(bold_msg('This is a sample wheel spreadsheet'))
         wmb.spreadsheet(spreadsheet, sheet, double=False)
@@ -156,7 +163,6 @@ from BMM.plans import recover_mirror2, recover_mirror3, recover_mirrors, recover
 run_report('\t'+'change_mode, change_xtals')
 from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, change_xtals, pds_motors_ready
 
-from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
 if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()
 if BMMuser.pds_mode is None:
@@ -205,7 +211,7 @@ clf = BMMDataEvaluation()
 import logging
 logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
-from BMM.xafs import howlong, xafs, db2xdi
+from BMM.xafs_new import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
@@ -276,13 +282,14 @@ if all_connected(True) is False:
 from BMM.user_ns.base import startup_dir
 from BMM.user_ns.instruments import wmb, lmb, gmb
 wmb.folder = BMMuser.folder
-lmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
+#wmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
+gawheel.folder = BMMuser.folder
+#gawheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
 lmb.folder = BMMuser.folder
-wmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
-gawheel.folder = BMMuser.folder
-gawheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
-gawheel.folder = BMMuser.folder
-lmb.tmpl = os.path.join(startup_dir, 'linkam.tmpl')
+#lmb.tmpl = os.path.join(startup_dir, 'linkam.tmpl')
+gmb.folder = BMMuser.folder
+#gmb.tmpl = os.path.join(startup_dir, 'grid.tmpl')
+gawheel.description = 'the glancing angle stage'
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook

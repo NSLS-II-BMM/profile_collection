@@ -377,7 +377,7 @@ class BMM_User(Borg):
         src     = os.path.join(startup_dir, fname)
         dst     = os.path.join(self.folder, fname)
         if 'xlsx' in fname:
-            dst = os.path.join(self.folder, 'xlsx', fname)
+            src = os.path.join(startup_dir, 'xlsx', fname)
         if not os.path.isfile(dst):
             shutil.copyfile(src,  dst)
             verb, pad = 'Copied', ' '
@@ -397,7 +397,7 @@ class BMM_User(Borg):
         Do the work of prepping for a new experiment.  This will:
           * Create a data folder and it's subfolders, if needed, and set the DATA variable
           * Set up the experimental log, creating an experiment.log file, if needed
-          * Write templates for scan.ini and macro.py, if needed
+          * Write templates for scan.ini and macro.py + xlsx templates, if needed
           * Make folders for XRF, HDF5, Pilatus, and electrochemistry
           * Set the GUP and SAF numbers as metadata
 
@@ -435,7 +435,8 @@ class BMM_User(Borg):
         self.establish_folder(0,    'snapshot folder', imagefolder)
         self.establish_folder(0,    'Athena prj folder', prjfolder)
         if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
-            for f in ('sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl', 'manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
+            # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
+            for f in ('manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
                 shutil.copyfile(os.path.join(startup_dir, f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()

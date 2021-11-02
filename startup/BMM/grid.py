@@ -24,8 +24,6 @@ class GridMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
 
-        self.content += self.tab + 'BMMuser.instrument = "grid"\n'
-
         for m in self.measurements:
 
             if m['default'] is True:
@@ -38,17 +36,20 @@ class GridMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge'):
+            for k in ('element', 'edge', 'motor1', 'motor2'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 
             ############################
             # sample and slit movement #
             ############################
-            if m['position1'] is not None:
-                self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
-            if m['position2'] is not None:
-                self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
+            if m['position1'] is not None and m['position2'] is not None:
+                self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
+            else:
+                if m['position1'] is not None:
+                    self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
+                if m['position2'] is not None:
+                    self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
             if m['detectorx'] is not None:
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 

@@ -12,7 +12,8 @@ from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.bmm import BMMuser
+from BMM.user_ns.base import startup_dir
+from BMM.user_ns.bmm  import BMMuser
 
 class BMMMacroBuilder():
     '''A base class for parsing specially constructed spreadsheets and
@@ -89,8 +90,12 @@ class BMMMacroBuilder():
         self.totaltime        = 0
         self.deltatime        = 0
 
-        self.tmpl             = None
+        self.description      = ''
+        self.ref              = ''
+        self.tmpl             = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
         self.instrument       = None
+        self.cleanup          = ''
+        self.initialize       = ''
 
         self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'motor1', 'position1', 'motor2', 'position2')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
@@ -434,7 +439,13 @@ class BMMMacroBuilder():
         ########################################################
         with open(self.tmpl) as f:
             text = f.readlines()
-        fullmacro = ''.join(text).format(folder=self.folder, base=self.basename, content=self.content)
+        fullmacro = ''.join(text).format(folder      = self.folder,
+                                         base        = self.basename,
+                                         content     = self.content,
+                                         description = self.description,
+                                         instrument  = self.instrument,
+                                         cleanup     = self.cleanup,
+                                         initialize  = self.initialize)
         o = open(self.macro, 'w')
         o.write(fullmacro)
         o.close()

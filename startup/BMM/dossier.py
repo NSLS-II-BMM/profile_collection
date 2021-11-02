@@ -223,97 +223,104 @@ class BMMDossier():
         if self.ththth:
             mono = 'Si(333)'
 
-        print(f'writing {htmlfilename}')
+        print(f'writing ... {htmlfilename}', flush=True)
         o = open(htmlfilename, 'w')
 
         # dossier header
+        print(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl'), flush=True)
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
             content = f.readlines()
-        print('---', self.filename, BMMuser.date, seqnumber)
-        print(content)
-        o.write(''.join(content).format(filename      = self.filename,
-                                        date          = BMMuser.date,
-                                        seqnumber     = seqnumber, ))
+        #print('---', self.filename, BMMuser.date, seqnumber, flush=True)
+        #print(content, flush=True)
+        thiscontent = ''.join(content).format(filename      = self.filename,
+                                              date          = BMMuser.date,
+                                              seqnumber     = seqnumber, )
+        o.write(thiscontent)
         o.flush()
 
         # left sidebar, entry for XRF file in the case of fluorescence data
         thismode = plotting_mode(self.mode)
-        print('---', thismode, basename, quote('../XRF/'+str(self.xrffile)), self.xrfuid)
+        #print('---', thismode, basename, quote('../XRF/'+str(self.xrffile)), self.xrfuid, flush=True)
         if thismode == 'xs':
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                 content = f.readlines()
-            print(content)
-            o.write(''.join(content).format(basename      = basename,
-                                            xrffile       = quote('../XRF/'+str(self.xrffile)),
-                                            xrfuid        = self.xrfuid, ))
+            #print(content)
+            thiscontent = ''.join(content).format(basename      = basename,
+                                                  xrffile       = quote('../XRF/'+str(self.xrffile)),
+                                                  xrfuid        = self.xrfuid, )
+            o.write(thiscontent)
             o.flush()
 
         # middle part of dossier
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
             content = f.readlines()
-        print(content)
-        o.write(''.join(content).format(basename      = basename,
-                                        scanlist      = self.scanlist,
-                                        motors        = self.motors,
-                                        sample        = self.sample,
-                                        prep          = self.prep,
-                                        comment       = self.comment,
-                                        temperature   = self.temperature, 
-                                        websnap       = quote('../snapshots/'+self.websnap),
-                                        webuid        = self.webuid,
-                                        anasnap       = quote('../snapshots/'+self.anasnap),
-                                        anauid        = self.anauid,
-                                        usb1snap      = quote('../snapshots/'+self.usb1snap),
-                                        usb1uid       = self.usb1uid,
-                                        usb2snap      = quote('../snapshots/'+self.usb2snap),
-                                        usb2uid       = self.usb2uid, ))
+        #print(content, flush=True)
+        thiscontent = ''.join(content).format(basename      = basename,
+                                              scanlist      = self.scanlist,
+                                              motors        = self.motors,
+                                              sample        = self.sample,
+                                              prep          = self.prep,
+                                              comment       = self.comment,
+                                              temperature   = self.temperature, 
+                                              websnap       = quote('../snapshots/'+self.websnap),
+                                              webuid        = self.webuid,
+                                              anasnap       = quote('../snapshots/'+self.anasnap),
+                                              anauid        = self.anauid,
+                                              usb1snap      = quote('../snapshots/'+self.usb1snap),
+                                              usb1uid       = self.usb1uid,
+                                              usb2snap      = quote('../snapshots/'+self.usb2snap),
+                                              usb2uid       = self.usb2uid, )
+        o.write(thiscontent)
         o.flush()
 
         # middle part, XRF and glancing angle alignment images
         if thismode == 'xs':
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                 content = f.readlines()
-            print(content)
-            o.write(''.join(content).format(xrfsnap       = quote('../XRF/'+str(self.xrfsnap)),
-                                            pccenergy     = '%.1f' % self.pccenergy,
-                                            ocrs          = self.ocrs,
-                                            rois          = self.rois,
-                                            symbol        = self.element,))
+            #print(content, flush=True)
+            thiscontent = ''.join(content).format(xrfsnap       = quote('../XRF/'+str(self.xrfsnap)),
+                                                  pccenergy     = '%.1f' % self.pccenergy,
+                                                  ocrs          = self.ocrs,
+                                                  rois          = self.rois,
+                                                  symbol        = self.element,)
+            o.write(thiscontent)
             o.flush()
             if BMMuser.instrument == 'glancing angle stage':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_ga.tmpl')) as f:
                     content = f.readlines()
-                o.write(''.join(content).format(ga_align      = ga.alignment_filename,
-                                                ga_yuid       = ga.y_uid,
-                                                ga_puid       = ga.pitch_uid,
-                                                ga_fuid       = ga.f_uid, ))
+                thiscontent = ''.join(content).format(ga_align      = ga.alignment_filename,
+                                                      ga_yuid       = ga.y_uid,
+                                                      ga_puid       = ga.pitch_uid,
+                                                      ga_fuid       = ga.f_uid, )
+                o.write(thiscontent)
                 o.flush()
             
         # end of dossier
         with open(os.path.join(startup_dir, 'tmpl', 'dossier_bottom.tmpl')) as f:
             content = f.readlines()
-        print(content)
-        o.write(''.join(content).format(e0            = '%.1f' % self.e0,
-                                        edge          = self.edge,
-                                        element       = self.element_text(),
-                                        mode          = self.mode,
-                                        bounds        = self.bounds,
-                                        steps         = self.steps,
-                                        times         = self.times,
-                                        seqstart      = self.seqstart,
-                                        seqend        = self.seqend,
-                                        mono          = mono,
-                                        pdsmode       = pdstext,
-                                        pccenergy     = '%.1f' % self.pccenergy,
-                                        experimenters = self.experimenters,
-                                        gup           = BMMuser.gup,
-                                        saf           = BMMuser.saf,
-                                        url           = self.url,
-                                        doi           = self.doi,
-                                        cif           = self.cif,
-                                        initext       = highlight(self.initext, IniLexer(), HtmlFormatter()),
-                                        clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
-                                        filename      = self.filename,))
+        #print(content, flush=True)
+        thiscontent = ''.join(content).format(e0            = '%.1f' % self.e0,
+                                              edge          = self.edge,
+                                              element       = self.element_text(),
+                                              mode          = self.mode,
+                                              bounds        = self.bounds,
+                                              steps         = self.steps,
+                                              times         = self.times,
+                                              seqstart      = self.seqstart,
+                                              seqend        = self.seqend,
+                                              mono          = mono,
+                                              pdsmode       = pdstext,
+                                              pccenergy     = '%.1f' % self.pccenergy,
+                                              experimenters = self.experimenters,
+                                              gup           = BMMuser.gup,
+                                              saf           = BMMuser.saf,
+                                              url           = self.url,
+                                              doi           = self.doi,
+                                              cif           = self.cif,
+                                              initext       = highlight(self.initext, IniLexer(), HtmlFormatter()),
+                                              clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
+                                              filename      = self.filename,)
+        o.write(thiscontent)
         o.flush()
             
         print(f'closing {htmlfilename}')

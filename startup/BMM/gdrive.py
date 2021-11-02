@@ -45,15 +45,15 @@ def rsync_to_gdrive():
     subprocess.run(['rsync', '-aq', user_ns['BMMuser'].folder, user_gdrive_folder]) 
     
 def synch_gdrive_folder(prefix=''):
-    print(f'{prefix}syncing {gdrive_folder}')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     location = determine_bin_location()
     if location is None:
         print(error_msg('Unable to synch Google drive: could not determine drive program location.'))
     else:
+        print(f'{prefix}syncing {user_gdrive_folder} to Google drive')
         here = os.getcwd()
         os.chdir(user_gdrive_folder)
-        subprocess.run([location, 'push', '-quiet', '.']) 
+        subprocess.run([location, 'push', '-quiet', '-no-prompt', '-ignore-name-clashes', '.']) 
         os.chdir(here)
     return()
 
