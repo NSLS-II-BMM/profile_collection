@@ -396,7 +396,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
             elif detector.lower() == 'ir':
                 signal   = numpy.array(t['Ir']/t['It'])
             pos      = numpy.array(t[motor.name])
-            mod      = RectangleModel(form='arctan')
+            mod      = RectangleModel(form='erf')
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
