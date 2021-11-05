@@ -6,6 +6,7 @@ from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel, RectangleModel
 from databroker.core import SingleRunCache
+import matplotlib.pyplot as plt
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
@@ -341,9 +342,9 @@ def find_reference():
     print(bold_msg(f'Found reference at xafs_linxs = {xafs_linxs.position}'))
 
     
-def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
+def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None):
 
-    def main_plan(motor, start, stop, nsteps, detector):
+    def main_plan(motor, start, stop, nsteps, detector, negate):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(error_msg(text))
@@ -395,23 +396,35 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It'):
                 signal   = numpy.array(t['It']/t['I0'])
             elif detector.lower() == 'ir':
                 signal   = numpy.array(t['Ir']/t['It'])
+
+            signal = signal - signal[0]
+            if negate is True:
+                signal = -1 * signal
             pos      = numpy.array(t[motor.name])
             mod      = RectangleModel(form='erf')
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
             out.plot()
-            middle   = out.params['center1'].value + (out.params['center2'].value - out.params['center1'].value)/2
-            yield from mv(motor, middle)
+            if filename is not None:
+                plt.savefig(filename)
+            #middle   = out.params['center1'].value + (out.params['center2'].value - out.params['center1'].value)/2
+            yield from mv(motor, out.params['midpoint'].value)
             print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
-        
+            rkvs.set('BMM:lmfit:center1',   out.params['center1'].value)
+            rkvs.set('BMM:lmfit:center2',   out.params['center2'].value)
+            rkvs.set('BMM:lmfit:sigma1',    out.params['sigma1'].value)
+            rkvs.set('BMM:lmfit:sigma2',    out.params['sigma2'].value)
+            rkvs.set('BMM:lmfit:amplitude', out.params['amplitude'].value)
+            rkvs.set('BMM:lmfit:midpoint',  out.params['midpoint'].value)
+
         yield from doscan()
         
     def cleanup_plan():
         yield from resting_state_plan()
     
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector), cleanup_plan())
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
     
