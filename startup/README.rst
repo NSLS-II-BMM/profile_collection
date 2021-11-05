@@ -10,44 +10,45 @@ with a prefix, e.g.::
     50-middle.py
     99-last.ipy
 
-That said, there is only one such file in use at BMM, 00-populate-namespace.py.  This file has
-one line, `from BMM.user_ns import *`.  All subsequent python code is imported in the order
-specified in BMM/user_ns/__init__.py.
+That said, there is only one such file in use at BMM,
+00-populate-namespace.py.  This file has one line:
+
+.. sourcecode:: python
+
+		from BMM.user_ns import *
+
+
+All subsequent python code is imported in the order specified in
+``BMM/user_ns/__init__.py``.
 
 Folders
 =======
 
-BMM/
-
++ BMM/ ::
   All of BMM's bsui code
 
-ML/
-
++ ML/ ::
   Files and data related to BMM's machine learning routines
 
-dossier/
-
++ dossier/ ::
   Files used to create BMM dossiers
 
-telemetry/
-
++ telemetry/ ::
   Files and data related to BMM's telemetry routines
 
-tmpl/
-
++ tmpl/ ::
   Template files used to generate dossier and other content
 
-xlsx/
-
++ xlsx/ ::
   Automation spreadsheet templates in .xlsx format
 
 
 Files
 =====
 
-.yaml files are used to configure the bluesky queueserver
+#. ``.yaml`` files are used to configure the bluesky queueserver
 
-rois.json: ROI configuration for the Xspress3
+#. ``rois.json``: ROI configuration for the Xspress3
 
 
 
