@@ -37,7 +37,7 @@ Folders
   Files and data related to BMM's telemetry routines
 
 ``tmpl/``
-  Template files used to generate dossier and other content
+  Template files used to generate dossier and other static text content
 
 ``xlsx/``
   Automation spreadsheet templates in .xlsx format

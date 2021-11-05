@@ -92,7 +92,9 @@ class BMM_User(Borg):
     times : list of float or str
         list of integration times
     folder : str
-        data folder
+        data folder on Lustre
+    folder_link : str
+        local link to Lustre data folder
     filename : str
         output data file stub
     experimenters : str
@@ -224,6 +226,7 @@ class BMM_User(Borg):
         self.steps         = [10, 0.5, '0.05k']
         self.times         = [0.5, 0.5, '0.25k']
         self.folder        = os.path.join(os.getenv('HOME'), 'Data', 'bucket')
+        self.folder_link   = None
         self.filename      = 'data.dat'
         self.experimenters = ''
         self.e0            = None
@@ -387,9 +390,9 @@ class BMM_User(Borg):
         
     def print_verb_message(self, i, verb, text, pad, result):
         if i == 0:
-            print(f'    {verb} {text:28}{pad}   {result:75}')
+            print(f'    {verb} {text:28}{pad}   {result:65}')
         else:
-            print(f'{i:2d}. {verb} {text:28}{pad}   {result:75}')
+            print(f'{i:2d}. {verb} {text:28}{pad}   {result:65}')
 
 
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
@@ -644,7 +647,8 @@ class BMM_User(Borg):
         if not os.path.islink(local_folder):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
-
+        self.folder_link = local_folder
+        
         # if 'xf06bm-ws1' in self.host:
         #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
         #     symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"ln -s {lustre_root}/{date} '{local_folder}'"]
@@ -702,11 +706,12 @@ class BMM_User(Borg):
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
-        print('Name   = %s' % self.name)
-        print('Date   = %s' % self.date)
-        print('Folder = %s' % self.folder)
-        print('GUP    = %s' % self.gup)
-        print('SAF    = %s' % self.saf)
+        print('Name          = %s' % self.name)
+        print('Date          = %s' % self.date)
+        print('Lustre folder = %s' % self.folder)
+        print('Local folder  = %s' % self.folder_link)
+        print('GUP           = %s' % self.gup)
+        print('SAF           = %s' % self.saf)
         #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
         #if user_ns['with_xspress3'] is False:
         #    print('ROIs   = %s' % ' '.join(map(str, user_ns['rois'].slots)))

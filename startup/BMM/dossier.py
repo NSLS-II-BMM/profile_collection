@@ -224,21 +224,16 @@ class BMMDossier():
         if self.ththth:
             mono = 'Si(333)'
 
-        print(f'writing ... {htmlfilename}', flush=True)
-
         try:
             # dossier header
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
                 content = f.readlines()
-            #print('---', self.filename, BMMuser.date, seqnumber, flush=True)
-            #print(content, flush=True)
             thiscontent = ''.join(content).format(filename      = self.filename,
                                                   date          = BMMuser.date,
                                                   seqnumber     = seqnumber, )
 
             # left sidebar, entry for XRF file in the case of fluorescence data
             thismode = plotting_mode(self.mode)
-            #print('---', thismode, basename, quote('../XRF/'+str(self.xrffile)), self.xrfuid, flush=True)
             if thismode == 'xs':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
@@ -249,7 +244,6 @@ class BMMDossier():
             # middle part of dossier
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
-            #print(content, flush=True)
             thiscontent += ''.join(content).format(basename      = basename,
                                                    scanlist      = self.scanlist,
                                                    motors        = self.motors,
@@ -312,7 +306,7 @@ class BMMDossier():
             with open(htmlfilename, 'a') as o:
                 o.write(thiscontent)
 
-            print(f'finished writing {htmlfilename}')
+            print(f'wrote {htmlfilename}')
         except Exception as E:
             print(E)
 
