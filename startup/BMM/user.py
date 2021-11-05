@@ -437,7 +437,7 @@ class BMM_User(Borg):
         if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
             # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
             for f in ('manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
-                shutil.copyfile(os.path.join(startup_dir, f),  os.path.join(htmlfolder, f))
+                shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
             print('    copied html generation files, touched MANIFEST')
@@ -452,7 +452,7 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
-        initmpl = os.path.join(startup_dir, 'scan.tmpl')
+        initmpl = os.path.join(startup_dir, 'tmpl', 'scan.tmpl')
         scanini = os.path.join(data_folder, 'scan.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
@@ -465,7 +465,7 @@ class BMM_User(Borg):
             verb, pad = 'Found', '  '
         self.print_verb_message(step, verb, 'INI file', pad, scanini)
 
-        macrotmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
+        macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
         macropy = os.path.join(data_folder, 'sample_macro.py')
         commands = '''
         ## sample 1
@@ -487,7 +487,13 @@ class BMM_User(Borg):
             with open(macrotmpl) as f:
                 content = f.readlines()
             o = open(macropy, 'w')
-            o.write(''.join(content).format(folder=data_folder, base='sample', content=commands))
+            o.write(''.join(content).format(folder=data_folder,
+                                            base='sample',
+                                            content=commands,
+                                            description='(example...)',
+                                            instrument='',
+                                            cleanup='',
+                                            initialize='' ))
             o.close()
             verb, pad = 'Copied', ' '
         else:
@@ -535,7 +541,7 @@ class BMM_User(Borg):
         ## GDrive folder
         user_folder = make_gdrive_folder(prefix='    ', update=False)
         for f in ('logo.png', 'style.css', 'trac.css'):
-            shutil.copyfile(os.path.join(startup_dir, f),  os.path.join(user_folder, 'dossier', f))
+            shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(user_folder, 'dossier', f))
         print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
         print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
         step += 1

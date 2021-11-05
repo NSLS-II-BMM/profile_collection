@@ -8,35 +8,34 @@ import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
 import matplotlib.pyplot as plt
-from larch.io import create_athena
 
-#from BMM.camera_device import snap
-from BMM.db            import file_resource
-from BMM.demeter       import toprj
-from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots, close_last_plot
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive        import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
-from BMM.larch_interface import Pandrosus, Kekropidai
-from BMM.linescans     import rocking_curve
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
-from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
-from BMM.modes         import get_mode, describe_mode
-from BMM.motor_status  import motor_sidebar, motor_status
-from BMM.periodictable import edge_energy, Z_number, element_name
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.xdi           import write_XDI
-from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
+from urllib.parse import quote
+
+from BMM.db              import file_resource
+from BMM.demeter         import toprj
+from BMM.derivedplot     import DerivedPlot, interpret_click, close_all_plots, close_last_plot
+from BMM.dossier         import BMMDossier
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
+from BMM.linescans       import rocking_curve
+from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.modes           import get_mode, describe_mode
+from BMM.motor_status    import motor_sidebar, motor_status
+from BMM.periodictable   import edge_energy, Z_number, element_name
+from BMM.resting_state   import resting_state_plan
+from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
+from BMM.xdi             import write_XDI
+from BMM.xafs_functions  import conventional_grid, sanitize_step_scan_parameters
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #from __main__ import db
-from BMM.user_ns.base import db, startup_dir
-
-from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs
+from BMM.user_ns.base      import db, startup_dir
+from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.detectors import quadem1, vor, xs
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -363,256 +362,6 @@ def db2xdi(datafile, key):
     write_XDI(dfile, header)
     print(bold_msg('wrote %s' % dfile))
 
-from pygments import highlight
-from pygments.lexers import PythonLexer, IniLexer
-from pygments.formatters import HtmlFormatter
-
-from urllib.parse import quote
-
-def make_merged_triplot(uidlist, filename, mode):
-    #k=Kekropidai()
-    #k.put(uidlist)
-    #merge=k.merge()
-    BMMuser = user_ns['BMMuser']
-    cnt = 0
-    try:
-        base = Pandrosus()
-        projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
-        proj = create_athena(projname)
-        base.fetch(uidlist[0], mode=mode)
-        ee = base.group.energy
-        mm = base.group.mu
-        save = base.group.args['label']
-        proj.add_group(base.group)
-        base.group.args['label'] = save
-        cnt = 1
-        if len(uidlist) > 1:
-            for uid in uidlist[1:]:
-                this = Pandrosus()
-                try:
-                    this.fetch(uid, mode=mode)
-                    mu = numpy.interp(ee, this.group.energy, this.group.mu)
-                    mm = mm + mu
-                    save = this.group.args['label']
-                    proj.add_group(this.group)
-                    this.group.args['label'] = save
-                    cnt += 1
-                except:
-                    pass # presumably this is noisy data for which a valid background was not found
-    except:
-        pass # presumably this is noisy data for which a valid background was not found
-    if cnt == 0:
-        print(whisper(f'Unable to make triplot'))
-        return
-    mm = mm / cnt
-    merge = Pandrosus()
-    merge.put(ee, mm, 'merge')
-    thisagg = matplotlib.get_backend()
-    matplotlib.use('Agg') # produce a plot without screen display
-    merge.triplot()
-    plt.savefig(filename)
-    print(whisper(f'Wrote triplot to {filename}'))
-    matplotlib.use(thisagg) # return to screen display
-    proj.save()
-    print(whisper(f'Wrote Athena project to {projname}'))
-    
-
-def scan_sequence_static_html(inifile       = None,
-                              filename      = None,
-                              start         = None,
-                              end           = None,
-                              experimenters = None,
-                              seqstart      = None,
-                              seqend        = None,
-                              e0            = None,
-                              edge          = None,
-                              element       = None,
-                              scanlist      = None,
-                              motors        = None,
-                              sample        = None,
-                              prep          = None,
-                              comment       = None,
-                              mode          = None,
-                              pccenergy     = None,
-                              bounds        = None,
-                              steps         = None,
-                              times         = None,
-                              clargs        = '',
-                              websnap       = '',
-                              webuid        = '',
-                              anasnap       = '',
-                              anauid        = '',
-                              usb1snap      = '',
-                              usb1uid       = '',
-                              usb2snap      = '',
-                              usb2uid       = '',
-                              xrfsnap       = '',
-                              xrffile       = '',
-                              xrfuid        = '',
-                              ocrs          = '',
-                              rois          = '',
-                              htmlpage      = None,
-                              ththth        = None,
-                              initext       = None,
-                              uidlist       = None,
-                              url           = None,
-                              doi           = None,
-                              cif           = None,
-                              ):
-    '''
-    Gather information from various places, including html_dict (a temporary dictionary 
-    filled up during an XAFS scan) then write a static html file as a dossier for a scan
-    sequence using a bespoke html template file
-    '''
-    BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
-    if filename is None or start is None:
-        return None
-    firstfile = "%s.%3.3d" % (filename, start)
-    if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):
-        return None
-
-    thismode = plotting_mode(mode)
-    
-    tmpl = 'sample.tmpl'
-    if thismode == 'xs':
-        if BMMuser.instrument == 'glancing angle stage':
-            tmpl = 'sample_ga.tmpl'
-        else:
-            tmpl = 'sample_xs.tmpl'
-    with open(os.path.join(startup_dir, tmpl)) as f:
-        content = f.readlines()
-    basename     = filename
-    htmlfilename = os.path.join(BMMuser.DATA, 'dossier/',   filename+'-01.html')
-    seqnumber = 1
-    if os.path.isfile(htmlfilename):
-        seqnumber = 2
-        while os.path.isfile(os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (filename,seqnumber))):
-            seqnumber += 1
-        basename     = "%s-%2.2d" % (filename,seqnumber)
-        htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (filename,seqnumber))
-
-
-    ## generate a png image, preferably of a quadplot of the data, using Demeter
-    prjfilename, pngfilename = None, None
-    # try:
-    #       pngfile = toprj(folder=BMMuser.DATA, name=filename, base=basename, start=start, end=end, bounds=bounds, mode=thismode)
-    #       prjfilename = os.path.join(BMMuser.folder, 'prj', basename+'.prj')
-    # except Exception as e:
-    #       print(e)
-
-
-    #print(warning_msg(f'{uidlist}  {BMMuser.DATA}   {basename}   {mode}'))
-    try:
-        if uidlist is not None:
-            pngfilename = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
-            #print(warning_msg(f'   {pngfilename}'))
-            make_merged_triplot(uidlist, pngfilename, mode)
-            prjfilename = os.path.join(BMMuser.DATA, 'prj', f"{basename}.prj")
-    except Exception as e:
-        print(error_msg('failure to make triplot'))
-        print(e)
-        pass
-        
-    if initext is None:
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
-            initext = ''.join(f.readlines())
-        
-    o = open(htmlfilename, 'w')
-    pdstext = '%s (%s)' % (get_mode(), describe_mode())
-    mono = 'Si(%s)' % dcm._crystal
-    if ththth:
-        mono = 'Si(333)'
-    o.write(''.join(content).format(filename      = filename,
-                                    basename      = basename,
-                                    encoded_basename = quote(basename),
-                                    experimenters = experimenters,
-                                    gup           = BMMuser.gup,
-                                    saf           = BMMuser.saf,
-                                    seqnumber     = seqnumber,
-                                    seqstart      = seqstart,
-                                    seqend        = seqend,
-                                    mono          = mono,
-                                    pdsmode       = pdstext,
-                                    symbol        = element,
-                                    e0            = '%.1f' % e0,
-                                    edge          = edge,
-                                    element       = '%s (<a href="https://en.wikipedia.org/wiki/%s">%s</a>, %d)' % (element, element_name(element), element_name(element), Z_number(element)),
-                                    date          = BMMuser.date,
-                                    scanlist      = scanlist,
-                                    motors        = motors,
-                                    sample        = sample,
-                                    prep          = prep,
-                                    comment       = comment,
-                                    mode          = mode,
-                                    pccenergy     = '%.1f' % pccenergy,
-                                    bounds        = bounds,
-                                    steps         = steps,
-                                    times         = times,
-                                    clargs        = highlight(clargs, PythonLexer(), HtmlFormatter()),
-                                    websnap       = quote('../snapshots/'+websnap),
-                                    webuid        = webuid,
-                                    anasnap       = quote('../snapshots/'+anasnap),
-                                    anauid        = anauid,
-                                    usb1snap      = quote('../snapshots/'+usb1snap),
-                                    usb1uid       = usb1uid,
-                                    usb2snap      = quote('../snapshots/'+usb2snap),
-                                    usb2uid       = usb2uid,
-                                    xrffile       = quote('../XRF/'+str(xrffile)),
-                                    xrfuid        = xrfuid,
-                                    xrfsnap       = quote('../XRF/'+str(xrfsnap)),
-                                    ga_align      = ga.alignment_filename,
-                                    ga_yuid       = ga.y_uid,
-                                    ga_puid       = ga.pitch_uid,
-                                    ga_fuid       = ga.f_uid,
-                                    ocrs          = ocrs,
-                                    rois          = rois,
-                                    initext       = highlight(initext, IniLexer(), HtmlFormatter()),
-                                    url           = url,
-                                    doi           = doi,
-                                    cif           = cif,
-                                ))
-    o.close()
-
-    manifest = open(os.path.join(BMMuser.DATA, 'dossier', 'MANIFEST'), 'a')
-    manifest.write(htmlfilename + '\n')
-    manifest.close()
-
-    write_manifest()
-
-    pngfile = os.path.join(BMMuser.DATA, 'snapshots', f"{basename}.png")
-    if os.path.isfile(pngfile):
-        try:
-            img_to_slack(pngfile)
-        except:
-            post_to_slack('failed to post image: {pngfile}')
-            pass
-            
-    return(htmlfilename, prjfilename, pngfilename)
-
-
-
-
-def write_manifest():
-    '''Update the scan manifest and the corresponding static html file.'''
-    BMMuser = user_ns['BMMuser']
-    with open(os.path.join(BMMuser.DATA, 'dossier', 'MANIFEST')) as f:
-        lines = [line.rstrip('\n') for line in f]
-
-    experimentlist = ''
-    for l in lines:
-        if not os.path.isfile(l):
-            continue
-        this = os.path.basename(l)
-        experimentlist += '<li><a href="./%s">%s</a></li>\n' % (this, this)
-        
-    with open(os.path.join(BMMuser.DATA, 'dossier', 'manifest.tmpl')) as f:
-        content = f.readlines()
-    indexfile = os.path.join(BMMuser.DATA, 'dossier', '00INDEX.html')
-    o = open(indexfile, 'w')
-    o.write(''.join(content).format(date           = BMMuser.date,
-                                    experimentlist = experimentlist,))
-    o.close()
-    
 
 
 #########################
@@ -710,7 +459,6 @@ def xafs(inifile=None, **kwargs):
                 }
         vfatify = lambda m: sub_dict[m.group()]
         if p['usbstick']:
-
             new_filename = re.sub(r'[*:?"<>|/\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
@@ -843,10 +591,10 @@ def xafs(inifile=None, **kwargs):
         usbcam1_uid, usbcam2_uid = None, None
         usb1cam_uid, usb2cam_uid = None, None
         image_usb1, image_usb2 = None, None
-        
-        html_dict['xrffile'], html_dict['xrfsnap'] = None, None
-        html_dict['ocrs'] = ''
-        html_dict['rois'] = ''
+
+        dossier.xrffile, dossier.xrfsnap = None, None
+        dossier.ocrs = ''
+        dossier.rois = ''
         if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
             report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
             yield from mv(xs.total_points, 1)
@@ -858,26 +606,22 @@ def xafs(inifile=None, **kwargs):
                     int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                     int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                     int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            html_dict['ocrs'] = ", ".join(map(str,ocrs))
+            dossier.ocrs = ", ".join(map(str,ocrs))
             rois = [int(BMMuser.xschannel1.get()),
                     int(BMMuser.xschannel2.get()),
                     int(BMMuser.xschannel3.get()),
                     int(BMMuser.xschannel4.get()),]
-            html_dict['rois'] = ", ".join(map(str,rois))
+            dossier.rois = ", ".join(map(str,rois))
 
             ## make and save XRF plot
             thisagg = matplotlib.get_backend()
             matplotlib.use('Agg') # produce a plot without screen display
             xs.plot(uid=xrfuid)
             ahora = now()
-            html_dict['xrffile'] = "%s_%s.xrf" % (p['filename'], ahora)
-            html_dict['xrfsnap'] = "%s_XRF_%s.png" % (p['filename'], ahora)
-            xrffile  = os.path.join(p['folder'], 'XRF', html_dict['xrffile'])
-            xrfimage = os.path.join(p['folder'], 'XRF', html_dict['xrfsnap'])
-            gdrive_dict['xrffile']  = {'source': xrffile,
-                                       'target': os.path.join(BMMuser.gdrive, 'XRF', html_dict['xrffile'])}
-            gdrive_dict['xrfimage'] = {'source': xrfimage,
-                                       'target': os.path.join(BMMuser.gdrive, 'XRF', html_dict['xrfsnap'])}
+            dossier.xrffile = "%s_%s.xrf" % (p['filename'], ahora)
+            dossier.xrfsnap = "%s_XRF_%s.png" % (p['filename'], ahora)
+            xrffile  = os.path.join(p['folder'], 'XRF', dossier.xrffile)
+            xrfimage = os.path.join(p['folder'], 'XRF', dossier.xrfsnap)
             
             plt.savefig(xrfimage)
             xs.to_xdi(xrffile)
@@ -890,16 +634,16 @@ def xafs(inifile=None, **kwargs):
 
             ### --- XAS webcam ---------------------------------------------------------------
             annotation = p['filename']
-            html_dict['websnap'] = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
-            image_web = os.path.join(p['folder'], 'snapshots', html_dict['websnap'])
+            dossier.websnap = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
+            image_web = os.path.join(p['folder'], 'snapshots', dossier.websnap)
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
             xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[xascam_uid]), image_web)
 
             ### --- analog camera using redgo dongle ------------------------------------------
-            html_dict['anasnap'] = "%s_analog_%s.jpg" % (p['filename'], ahora)
-            image_ana = os.path.join(p['folder'], 'snapshots', html_dict['anasnap'])
+            dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
+            image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)
             anacam._annotation_string = p['filename']
             print(bold_msg('analog camera snapshot'))
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -910,32 +654,22 @@ def xafs(inifile=None, **kwargs):
                 pass
 
             ### --- USB camera #1 --------------------------------------------------------------
-            html_dict['usb1snap'] = "%s_usb1_%s.jpg" % (p['filename'], ahora)
-            image_usb1 = os.path.join(p['folder'], 'snapshots', html_dict['usb1snap'])
+            dossier.usb1snap = "%s_usb1_%s.jpg" % (p['filename'], ahora)
+            image_usb1 = os.path.join(p['folder'], 'snapshots', dossier.usb1snap)
             usbcam1._annotation_string = p['filename']
             print(bold_msg('USB camera #1 snapshot'))
             usbcam1_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
 
             ### --- USB camera #2 --------------------------------------------------------------
-            html_dict['usb2snap'] = "%s_usb2_%s.jpg" % (p['filename'], ahora)
-            image_usb2 = os.path.join(p['folder'], 'snapshots', html_dict['usb2snap'])
+            dossier.usb2snap = "%s_usb2_%s.jpg" % (p['filename'], ahora)
+            image_usb2 = os.path.join(p['folder'], 'snapshots', dossier.usb2snap)
             usbcam2._annotation_string = p['filename']
             print(bold_msg('USB camera #2 snapshot'))
             usbcam2_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
 
             
-            gdrive_dict['xascam']  = {'source': image_web,
-                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['websnap'])}
-            gdrive_dict['anacam']  = {'source': image_ana,
-                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['anasnap'])}
-            gdrive_dict['usbcam1'] = {'source': image_usb1,
-                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb1snap'])}
-            gdrive_dict['usbcam2'] = {'source': image_usb2,
-                                      'target': os.path.join(BMMuser.gdrive, 'snapshots', html_dict['usb2snap'])}
-            
-
         md['_snapshots'] = {'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
                             'webcam_file': image_web,  'webcam_uid': xascam_uid,
                             'analog_file': image_ana,  'anacam_uid': anacam_uid,
@@ -1056,38 +790,39 @@ def xafs(inifile=None, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## this dictionary is used to populate the static html page for this scan sequence
-            html_scan_list = ''
-            html_dict['filename']      = p['filename']
-            html_dict['experimenters'] = p['experimenters']
-            html_dict['start']         = p['start']
-            html_dict['end']           = p['start']+p['nscans']-1
-            html_dict['seqstart']      = now('%A, %B %d, %Y %I:%M %p')
-            html_dict['e0']            = p['e0']
-            html_dict['element']       = p['element']
-            html_dict['edge']          = p['edge']
-            html_dict['motors']        = motor_sidebar() # this could be motor_sidebar(uid=uid)
-            html_dict['sample']        = p['sample']
-            html_dict['prep']          = p['prep']
-            html_dict['comment']       = p['comment']
-            html_dict['mode']          = p['mode']
-            html_dict['pccenergy']     = eave
-            html_dict['bounds']        = ' '.join(map(str, p['bounds_given'])) # see https://stackoverflow.com/a/5445983
-            html_dict['steps']         = ' '.join(map(str, p['steps']))
-            html_dict['times']         = ' '.join(map(str, p['times']))
-            html_dict['clargs']        = clargs
-            html_dict['htmlpage']      = p['htmlpage']
-            html_dict['ththth']        = p['ththth']
-            html_dict['xrfuid']        = xrfuid
-            html_dict['webuid']        = xascam_uid
-            html_dict['anauid']        = anacam_uid
-            html_dict['usb1uid']       = usbcam1_uid
-            html_dict['usb2uid']       = usbcam2_uid
+            dossier.filename      = p['filename']
+            dossier.experimenters = p['experimenters']
+            dossier.start         = p['start']
+            dossier.end           = p['start']+p['nscans']-1
+            dossier.seqstart      = now('%A, %B %d, %Y %I:%M %p')
+            dossier.e0            = p['e0']
+            dossier.element       = p['element']
+            dossier.edge          = p['edge']
+            dossier.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
+            dossier.sample        = p['sample']
+            dossier.prep          = p['prep']
+            dossier.comment       = p['comment']
+            dossier.mode          = p['mode']
+            dossier.pccenergy     = eave
+            # see https://stackoverflow.com/a/5445983 for list o string idiom
+            dossier.bounds        = ' '.join(map(str, p['bounds_given'])) 
+            dossier.steps         = ' '.join(map(str, p['steps']))
+            dossier.times         = ' '.join(map(str, p['times']))
+            dossier.clargs        = clargs
+            dossier.htmlpage      = p['htmlpage']
+            dossier.ththth        = p['ththth']
+            dossier.xrfuid        = xrfuid
+            dossier.webuid        = xascam_uid
+            dossier.anauid        = anacam_uid
+            dossier.usb1uid       = usbcam1_uid
+            dossier.usb2uid       = usbcam2_uid
             ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
-            html_dict['url']           = p['url']
-            html_dict['doi']           = p['doi']
-            html_dict['cif']           = p['cif']
+            dossier.url           = p['url']
+            dossier.doi           = p['doi']
+            dossier.cif           = p['cif']
+            dossier.temperature   = ''
             with open(os.path.join(BMMuser.DATA, inifile)) as f:
-                html_dict['initext'] = ''.join(f.readlines())
+                dossier.initext = ''.join(f.readlines())
 
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1095,8 +830,6 @@ def xafs(inifile=None, **kwargs):
             rkvs.set('BMM:scan:type',      'xafs')
             rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
             rkvs.set('BMM:scan:estimated', (approx_time * int(p['nscans']) * 60))
-            #print(str(datetime.datetime.timestamp(datetime.datetime.now())))
-            #print((approx_time * int(p['nscans']) * 60))
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
@@ -1117,13 +850,14 @@ def xafs(inifile=None, **kwargs):
                     return
 
                 slotno, ring = '', ''
-                if 'sample wheel' in BMMuser.instrument:
+                if 'sample wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
                     ring = f' {xafs_wheel.slot_ring()} ring'
-                elif 'glancing angle' in BMMuser.instrument:
+                elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
-                elif 'linkam' in BMMuser.instrument:
+                elif 'linkam' in BMMuser.instrument.lower():
                     slotno = f', temperature {linkam.readback.get():.1f}'
+                    dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
 
@@ -1213,17 +947,8 @@ def xafs(inifile=None, **kwargs):
                         pass
                     if p['lims'] is True:
                         try:
-                            #copy_to_gdrive(fname)
                             rsync_to_gdrive()
                             synch_gdrive_folder()
-                            # here = os.getcwd()
-                            # gdrive = os.path.join(os.environ['HOME'], 'gdrive')
-                            # os.chdir(gdrive)
-                            # print(f'copying {fname} to {gdrive}')
-                            # shutil.copyfile(os.path.join(BMMuser.folder, fname), os.path.join(gdrive, 'Data', BMMuser.name, BMMuser.date, fname))
-                            # print(f'updating {gdrive}')
-                            # subprocess.run(['/home/xf06bm/go/bin/drive', 'push', '-quiet']) 
-                            # os.chdir(here)
                         except Exception as e:
                             print(error_msg(e))
                             report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
@@ -1235,16 +960,14 @@ def xafs(inifile=None, **kwargs):
                 printedname = fname
                 if len(p['filename']) > 11:
                     printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
-                html_scan_list += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
+                dossier.scanlist += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
                 #                  % (quote(fname), fname, printedname, js_text)
-                html_dict['scanlist'] = html_scan_list
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## finish up, close out
-            html_dict['uidlist'] = uidlist
-            html_dict['seqend'] = now('%A, %B %d, %Y %I:%M %p')
-            #if 'noreturn' is True:
+            dossier.uidlist = uidlist
+            dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
             print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
@@ -1254,58 +977,35 @@ def xafs(inifile=None, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan
-        #noreturn = False
-        #if 'noreturn' in kwargs and kwargs['noreturn'] is True:
-        #    noreturn=True
         yield from scan_sequence(clargs) #, noreturn)
 
     def cleanup_plan(inifile):
-        print('Cleaning up after an XAFS scan sequence')
+        print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
         #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
-        how = 'finished'
+        how = 'finished  :tada:'
         try:
             if 'primary' not in db[-1].stop['num_events']:
-                how = 'stopped'
+                how = '*stopped*'
             elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
-                how = 'stopped'
+                how = '*stopped*'
         except:
-            how = 'stopped'
+            how = '*stopped*'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
             ## FYI: db.v2[-1].metadata['start']['scan_id']
-            if 'htmlpage' in html_dict and html_dict['htmlpage']:
-                try:
-                    (htmlout, prjout, pngout) = scan_sequence_static_html(inifile=inifile, **html_dict)
-                except:
-                    htmlout, prjout, pngout = None, None, None
-                if htmlout is not None:
-                    report('wrote dossier %s' % htmlout, 'bold')
-                    gdrive_dict['dossier']   = {'source': htmlout,
-                                                'target': os.path.join(BMMuser.gdrive, 'dossier', os.path.basename(htmlout))}
-                    gdrive_dict['manifest']  = {'source': os.path.join(os.path.dirname(htmlout), '00INDEX.html'),
-                                                'target': os.path.join(BMMuser.gdrive, 'dossier', '00INDEX.html')}
-                if prjout is not None:
-                    gdrive_dict['prj']       = {'source': prjout,
-                                                'target': os.path.join(BMMuser.gdrive, 'prj', os.path.basename(htmlout).replace('html', 'prj'))}
-                if pngout is not None:
-                    gdrive_dict['processed'] = {'source': pngout,
-                                                'target': os.path.join(BMMuser.gdrive, 'snapshots', os.path.basename(htmlout).replace('html', 'png'))}
-                    
-            # if 'htmlpage' in html_dict and html_dict['htmlpage']:
-            #     for k,v in gdrive_dict.items():
-            #         #print(f'\n{k}')
-            #         #print(f'   source: {v["source"]}')
-            #         #print(f'   target: {v["target"]}')
-            #         if v['source'] is not None:
-            #             try:
-            #                 shutil.copyfile(v['source'], v['target'])
-            #             except Exception as e:
-            #                 pass
-            #                 #print(e)
+            #if dossier.htmlpage:
+            try:
+                htmlout = dossier.write_dossier()
+            except:
+                htmlout, prjout, pngout = None, None, None
+            if htmlout is not None:
+                report('wrote dossier %s' % htmlout, 'bold')
+        rsync_to_gdrive()
+        synch_gdrive_folder()
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
@@ -1344,9 +1044,7 @@ def xafs(inifile=None, **kwargs):
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    html_scan_list = ''
-    html_dict = {}
-    gdrive_dict = {}
+    dossier = BMMDossier()
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:
