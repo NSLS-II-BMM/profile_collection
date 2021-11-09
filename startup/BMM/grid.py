@@ -143,9 +143,9 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'element':     row[7].value,      # energy range
                 'edge':        row[8].value,
                 'focus':       row[9].value,
-                'sample':      row[10].value,     # scan metadata
-                'prep':        row[11].value,
-                'comment':     row[12].value,
+                'sample':      self.escape_quotes(row[10].value),     # scan metadata
+                'prep':        self.escape_quotes(row[11].value),
+                'comment':     self.escape_quotes(row[12].value),
                 'bounds':      row[13].value,     # scan parameters
                 'steps':       row[14].value,
                 'times':       row[15].value,

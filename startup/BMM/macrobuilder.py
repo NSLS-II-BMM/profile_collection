@@ -204,6 +204,12 @@ class BMMMacroBuilder():
         else:
             return(float(value))
 
+    def escape_quotes(self, value):
+        if value is None:
+            return ''
+        value = value.replace('\'', "\\'")
+        return value
+
         
     def ini_sanity(self, default):
         '''Sanity checks for the default line from the spreadsheet.

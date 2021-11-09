@@ -313,9 +313,9 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 'element':    row[7+plus+self.offset].value,      # energy range
                 'edge':       row[8+plus+self.offset].value,
                 'focus':      row[9+plus+self.offset].value,
-                'sample':     row[10+plus+self.offset].value,     # scan metadata
-                'prep':       row[11+plus+self.offset].value,
-                'comment':    row[12+plus+self.offset].value,
+                'sample':     self.escape_quotes(row[10+plus+self.offset].value),     # scan metadata
+                'prep':       self.escape_quotes(row[11+plus+self.offset].value),
+                'comment':    self.escape_quotes(row[12+plus+self.offset].value),
                 'bounds':     row[13+plus+self.offset].value,     # scan parameters
                 'steps':      row[14+plus+self.offset].value,
                 'times':      row[15+plus+self.offset].value,
