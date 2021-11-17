@@ -372,23 +372,14 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         return True
     
 
-    def measure_xrf(self, exposure=1.0):
-        # JOSH: proposed changes for new IOC
-        #yield from mv(self.total_points, 1)
-        #yield from mv(self.cam.acquire_time, exposure)
-        #uid = yield from count([self], 1)
+    def measure_xrf(self, exposure=1.0, doplot=True):
         uid = None
         self.total_points.put(1)
         self.cam.acquire_time.put(exposure)
         self.cam.acquire.put(1)
         ttime.sleep(exposure + 0.5)
-        #cnt=0
-        #while self.cam.acquire.get() != 0:
-        #    ttime.sleep(0.5)
-        #    cnt += 1
-        #    if cnt > 12:
-        #        break
         self.table()
-        self.plot(add=True, uid=uid)
-    
+        if doplot:
+            self.plot(add=True, uid=uid)
+
         

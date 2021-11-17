@@ -15,8 +15,8 @@ from BMM.user_ns.dwelltime   import with_xspress3
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.linescans     import motor_nicknames
-from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown, plotting_mode
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.functions     import countdown, plotting_mode, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
@@ -171,6 +171,7 @@ def areascan(detector,
         thismd['slow_motor'] = slow.name
         thismd['fast_motor'] = fast.name
 
+        report(f'Starting areascan at x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=True)
 
         ## engage suspenders right before starting scan sequence
         if force is False: BMM_suspenders()
@@ -200,6 +201,37 @@ def areascan(detector,
                                        snake=False)
 
         if pluck is True:
+
+            close_all_plots()
+            thismap = user_ns['db'].v2[uid]
+            x=numpy.array(thismap.primary.read()[fast.name])
+            y=numpy.array(thismap.primary.read()[slow.name])
+            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs4])
+            z=z.reshape(nfast, nslow)
+
+            # grabbing the first nfast elements of x and every
+            # nslow-th element of y is more reliable than 
+            # numpy.unique due to float &/or motor precision issues
+
+            #plt.title(f'Energy = {energies["below"]}')
+            plt.xlabel(f'fast axis ({fast.name}) position (mm)')
+            plt.ylabel(f'slow axis ({slow.name}) position (mm)')
+            plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
+            plt.contourf(x[:nfast], y[::nslow], z, cmap=plt.cm.viridis)
+            plt.colorbar()
+            plt.show()
+            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+            plt.savefig(fname)
+            try:
+                img_to_slack(fname)
+            except:
+                post_to_slack('failed to post image: {fname}')
+                pass
+
+            
             BMMuser.x = None
             figs = list(map(plt.figure, plt.get_fignums()))
             canvas = figs[0].canvas
@@ -211,19 +243,22 @@ def areascan(detector,
             while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
                 yield from sleep(0.5)
 
-            print('Converting plot coordinates to real coordinates...')
-            begin = valuefast + startfast
-            stepsize = (stopfast - startfast) / (nfast - 1)
-            pointfast = begin + stepsize * BMMuser.x
-            #print(BMMuser.x, pointfast)
+            # print('Converting plot coordinates to real coordinates...')
+            # begin = valuefast + startfast
+            # stepsize = (stopfast - startfast) / (nfast - 1)
+            # pointfast = begin + stepsize * BMMuser.x
+            # #print(BMMuser.x, pointfast)
         
-            begin = valueslow + startslow
-            stepsize = (stopslow - startslow) / (nslow - 1)
-            pointslow = begin + stepsize * BMMuser.y
-            #print(BMMuser.y, pointslow)
+            # begin = valueslow + startslow
+            # stepsize = (stopslow - startslow) / (nslow - 1)
+            # pointslow = begin + stepsize * BMMuser.y
+            # #print(BMMuser.y, pointslow)
 
-            print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
-            yield from mv(fast, pointfast, slow, pointslow)
+            # print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
+            yield from mv(fast, BMMuser.x, slow, BMMuser.y)
+            report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=True)
+            
+            
         
     def cleanup_plan():
         print('Cleaning up after an area scan')
@@ -267,7 +302,30 @@ def areascan(detector,
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
-        
+
+def fetch_areaplot(uid=None):
+    if uid is None:
+        print('No uid provided.')
+        return
+    df = user_ns['db'].v2[uid]
+    slow = df.metadata['start']['motors'][0]
+    fast = df.metadata['start']['motors'][1]
+    x = numpy.array(df.primary.read()[fast])
+    y = numpy.array(df.primary.read()[slow])
+    el = df.metadata['start']['plan_name'].split(" ")[-1][:-1]
+    z = numpy.array(df.primary.read()[el+'1']) + numpy.array(df.primary.read()[el+'2']) + numpy.array(df.primary.read()[el+'3']) + numpy.array(df.primary.read()[el+'4'])
+    (nslow, nfast) = df.metadata['start']['shape']
+
+    
+    plt.xlabel(f'fast axis ({fast}) position (mm)')
+    plt.ylabel(f'slow axis ({slow}) position (mm)')
+    plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
+    plt.contourf(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
+    plt.colorbar()
+    plt.show()
+
+
+    
 def as2dat(datafile, key):
     '''
     Export an areascan database entry to a simple column data file.

@@ -193,18 +193,21 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             this = channel.mca.array_data
 
             # this = getattr(self, f'mca{only}')
+            plt.ion()
             plt.plot(e, this.get(), label=f'channel {only}')
             plt.legend()
         elif add is True:
+            plt.ion()
             plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
             plt.legend()
         else:
+            plt.ion()
             plt.plot(e, s1, label='channel 1')
             plt.plot(e, s2, label='channel 2')
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
             plt.legend()
-        plt.show()
+        #plt.show()
             
     def table(self):
         '''Pretty print a table of values for each ROI and for all four channels.
