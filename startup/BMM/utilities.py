@@ -12,6 +12,8 @@ class Vacuum(Device):
         if self.pressure.get() == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
+        if type(self.pressure.get()) is str and self.pressure.get() == 'LO<E-11':
+            return whisper('1.00e-11')
         if float(self.pressure.get()) > 1e-6:
             return error_msg(self.pressure.get())
         if float(self.pressure.get()) > 1e-8:

@@ -171,7 +171,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         yield from scan_slit(slp)
 
     def cleanup_plan(slp):
-        yield from mv(slits3.vsize, slit_height)
+        #yield from mv(slits3.vsize, slit_height)
         yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(slp)
         yield from mv(motor.kill_cmd, 1)
@@ -333,6 +333,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 def find_slot(close=False):
     yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
+    user_ns['xafs_wheel'].in_place()
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
     if close:
         close_all_plots()
@@ -361,7 +362,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         if detector.lower() == 'if':
             dets.append(user_ns['xs'])
             denominator = ' / I0'
-            sgnl = 'fluorescence'
+            sgnl = 'fluorescence (Xspress3)'
             func = lambda doc: (doc['data'][motor.name],
                                 (doc['data'][BMMuser.xs1] +
                                  doc['data'][BMMuser.xs2] +

@@ -21,7 +21,7 @@ from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 #from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
+from BMM.xafs_functions import conventional_grid
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -261,12 +261,12 @@ class GlancingAngle(Device):
         tf = user_ns['db'][yf].table()
         yy = tf[motor]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        if BMMuser.element == 'Zr':
-            com = signal.idxmax()
-            centroid = yy[com]
-        else:
-            com = int(center_of_mass(signal)[0])+1
-            centroid = yy[com]
+        #if BMMuser.element in ('Zr', 'Sc', 'Nb'):
+        #    com = signal.idxmax()
+        #    centroid = yy[com]
+        #else:
+        com = int(center_of_mass(signal)[0])+1
+        centroid = yy[com]
         f.plot(yy, signal)
         f.scatter(centroid, signal[com], s=120, marker='x', color='green')
         f.set_xlabel(f'{motor} (mm)')

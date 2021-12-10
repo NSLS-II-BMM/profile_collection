@@ -1,5 +1,5 @@
 
-from bluesky.plan_stubs import mv
+from bluesky.plan_stubs import mv, sleep
 
 
 from BMM import user_ns as user_ns_module
@@ -34,7 +34,7 @@ def resting_state():
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     quadem1.on()
-    vor.on()
+    #vor.on()
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
     dcm.kill()
@@ -58,6 +58,8 @@ def resting_state_plan():
     quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
+    yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
+    yield from sleep(0.2)
     dcm.kill()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
@@ -77,8 +79,10 @@ def end_of_macro():
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     BMMuser.running_macro, BMMuser.lims = False, True
     yield from quadem1.on_plan()
-    yield from vor.on_plan()
+    #yield from vor.on_plan()
     yield from mv(_locked_dwell_time, 0.5)
+    yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
+    yield from sleep(0.2)
     yield from dcm.kill_plan()
     yield from xafs_wheel.recenter()
     dcm.mode = 'fixed'

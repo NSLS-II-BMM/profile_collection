@@ -184,8 +184,9 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
         parameters['bounds_given'] = parameters['bounds'].copy()
 
-    (problem, text) = sanitize_step_scan_parameters(parameters['bounds'], parameters['steps'], parameters['times'])
+    (problem, text, reference) = sanitize_step_scan_parameters(parameters['bounds'], parameters['steps'], parameters['times'])
     print(text)
+    print(f'\nsee: {reference}')
     if problem:
         return {}, {}
 
@@ -417,7 +418,7 @@ def xafs(inifile=None, **kwargs):
         #yield from mv(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
         #yield from mv(_locked_dwell_time.struck_dwell_time.settle_time, 0)
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
-        _locked_dwell_time.struck_dwell_time.settle_time = 0
+        #_locked_dwell_time.struck_dwell_time.settle_time = 0
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -546,7 +547,8 @@ def xafs(inifile=None, **kwargs):
         ## need to do this define defining the plotting lambda otherwise
         ## BlueSky gets confused about the plotting window
         #if not dcm.suppress_channel_cut:
-        report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
+        if p['channelcut'] is True:
+            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
         dcm.mode = 'fixed'
         #dcm_bragg.clear_encoder_loss()
         #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
@@ -556,7 +558,8 @@ def xafs(inifile=None, **kwargs):
             yield from rocking_curve()
             #RE.msg_hook = None
             close_last_plot()
-        dcm.mode = 'channelcut'
+        if p['channelcut'] is True:
+            dcm.mode = 'channelcut'
 
 
 
@@ -850,7 +853,7 @@ def xafs(inifile=None, **kwargs):
                     return
 
                 slotno, ring = '', ''
-                if 'sample wheel' in BMMuser.instrument.lower():
+                if 'wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
                     ring = f' {xafs_wheel.slot_ring()} ring'
                 elif 'glancing angle' in BMMuser.instrument.lower():

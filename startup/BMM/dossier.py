@@ -184,7 +184,7 @@ class BMMDossier():
     def write_dossier(self):
         BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
         if self.filename is None or self.start is None:
-            print(error_msg('Filename and/or start number no given.'))
+            print(error_msg('Filename and/or start number not given.'))
             return None
         firstfile = f'{self.filename}.{self.start:03d}'
         if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):

@@ -94,11 +94,10 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         elif not isfloat(t) and t[-1:].lower() == 'k' and isfloat(t[-1:]) and float(t[:-1]) < 0.05:
             text += warning_msg('\n%s is a very short integration time!\n' % t)
 
-    if text:
-        text += error_msg('\nsee ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n')
 
-            
-    return problem, text
+    reference = 'https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n'
+
+    return problem, text, reference
     
 
 

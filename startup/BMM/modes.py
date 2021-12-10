@@ -162,8 +162,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      yield from sleep(0.2)
 
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
+          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
      elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
+          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
      else:
           if bender is True:
@@ -178,6 +180,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
           base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
           base.extend([m2.ydi, float(MODEDATA['m2_ydi'][mode])])
+          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
 
      yield from sleep(2.0)

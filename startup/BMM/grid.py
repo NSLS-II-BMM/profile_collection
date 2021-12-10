@@ -36,7 +36,7 @@ class GridMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge', 'motor1', 'motor2'):
+            for k in ('element', 'edge', 'focus', 'motor1', 'motor2'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 

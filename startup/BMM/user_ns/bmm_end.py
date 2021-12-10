@@ -31,6 +31,9 @@ from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspend
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
+run_report('\t'+'wafers!')
+from BMM.wafer import wafer_edge
+
 #run_report('\t'+'positioning of instruments')
 #from BMM.positioning import find_slot
 
@@ -52,7 +55,7 @@ gawheel = GlancingAngleMacroBuilder()
 gawheel.description = 'the glancing angle stage'
 gawheel.instrument  = 'glancing angle'
 gawheel.folder = BMMuser.folder
-gawheel.cleanup = 'yield from mv(xafs_x, samx, xafs_pitch, samp, xafs_det, 205)\n        ga.reset()'
+gawheel.cleanup = 'yield from mv(xafs_x, samx, xafs_pitch, samp, xafs_det, 205)\n        yield from ga.reset()'
 gawheel.initialize = 'samx, samp = xafs_x.position, xafs_pitch.position'
 
 
@@ -140,7 +143,25 @@ def xlsx():
     rkvs.set('BMM:automation:type', instrument)
 
 
-
+def set_instrument(instrument=None):
+    if instrument.lower() == 'glancing angle':
+        print(bold_msg('Setting instrument as glancing angle stage'))
+        BMMuser.instrument = 'glancing angle stage'
+    elif instrument.lower() == 'double wheel':
+        print(bold_msg('Setting instrument as double sample wheel'))
+        BMMuser.instrument = 'double wheel'
+    elif instrument.lower() == 'linkam':
+        print(bold_msg('Setting instrument as Linkam stage'))
+        BMMuser.instrument = 'Linkam stage'
+    elif instrument.lower() == 'grid':
+        print(bold_msg('Setting instrument as sample grid'))
+        BMMuser.instrument = 'motor grid'
+    else:
+        print(bold_msg('Default instrument choice: sample wheel'))
+        BMMuser.instrument = 'sample wheel'
+    rkvs.set('BMM:automation:type', instrument)
+    
+    
 
 
 

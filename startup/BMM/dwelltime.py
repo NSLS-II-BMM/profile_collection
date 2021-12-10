@@ -84,26 +84,26 @@ class LockedDwellTimes(PseudoPositioner):
         if 'xspress3_dwell_time' in self.read_attrs and 'dualem_dwell_time' in self.read_attrs:
             return self.RealPosition(
                 quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
+                #struck_dwell_time=pseudo_pos.dwell_time,
                 dualem_dwell_time=pseudo_pos.dwell_time,
                 xspress3_dwell_time=pseudo_pos.dwell_time,
             )
         elif 'xspress3_dwell_time' in self.read_attrs:
             return self.RealPosition(
                 quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
+                #struck_dwell_time=pseudo_pos.dwell_time,
                 xspress3_dwell_time=pseudo_pos.dwell_time,
             )
         elif 'dualem_dwell_time' in self.read_attrs:
             return self.RealPosition(
                 quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
+                #struck_dwell_time=pseudo_pos.dwell_time,
                 dualem_dwell_time=pseudo_pos.dwell_time,
             )
         else:
             return self.RealPosition(
                 quadem_dwell_time=pseudo_pos.dwell_time,
-                struck_dwell_time=pseudo_pos.dwell_time,
+                #struck_dwell_time=pseudo_pos.dwell_time,
             )
             
 

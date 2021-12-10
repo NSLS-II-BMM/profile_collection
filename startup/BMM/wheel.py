@@ -13,7 +13,8 @@ from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.motors         import EndStationEpicsMotor
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.logging        import report
-from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
+from BMM.xafs_functions import conventional_grid
+from BMM.workspace      import rkvs
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -30,8 +31,11 @@ class WheelMotor(EndStationEpicsMotor):
     set_slot(n) :
         move to the given slot number, taking care to go the shorter way
     '''
-    inner_position   = 130.324
-    outer_position   = 104.324
+    if rkvs.get('BMM:wheel:outer') is None:
+        outer_position = 0
+    else:
+        outer_position   = float(rkvs.get('BMM:wheel:outer'))
+    inner_position   = outer_position + 26.0
     def current_slot(self, value=None):
         '''Return the current slot number for a sample wheel.'''
         if value is not None:
@@ -105,6 +109,7 @@ class WheelMotor(EndStationEpicsMotor):
         #user_ns['wmb'].inner_position = user_ns['wmb'].outer_position + 26
         self.outer_position = user_ns['xafs_x'].position
         self.inner_position = self.outer_position + 26
+        rkvs.set('BMM:wheel:outer', self.outer_position)
 
     def inner(self):
         yield from mv(user_ns['xafs_x'], self.inner_position)

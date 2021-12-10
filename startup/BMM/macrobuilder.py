@@ -171,9 +171,10 @@ class BMMMacroBuilder():
         self.instrument = str(self.ws['B1'].value).lower()
         self.version = str(self.ws['B2'].value).lower()
 
-        isok, explanation = self.read_spreadsheet()
+        isok, explanation, reference = self.read_spreadsheet()
         if isok is False:
-            print(error_msg(explanation))
+            print('\n' + error_msg(explanation))
+            print(f'See: {reference}')
             return None
         self.write_macro()
         rsync_to_gdrive()
@@ -322,11 +323,11 @@ class BMMMacroBuilder():
             else:
                 t = re.split('[ ,]+', self.measurements[0]['times'].strip())
 
-            (problem, text) = sanitize_step_scan_parameters(b, s, t)
+            (problem, text, reference) = sanitize_step_scan_parameters(b, s, t)
             if problem is True:
                 isok = False
-                explanation += f'row {count}:\n' + text
-        return(isok, explanation)
+                explanation += bold_msg(f'\nrow {count}, sample {self.measurements[-1]["filename"]}:\n') + text
+        return(isok, explanation, reference)
         # pp.pprint(self.measurements)
 
 
