@@ -7,6 +7,7 @@ from lmfit.models import ExponentialModel
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+#from BMM.resting_state  import resting_state_plan
 from BMM.user_ns.motors import xafs_det, xafs_x
 
 class DetectorMount():
@@ -135,4 +136,5 @@ def find_detector_position(start=205, inttime=0.1, verbose=True):
     yield from mv(dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
     print(f'\nfound {description} detector position at ' + go_msg(f'{xafs_det.position:5.1f}'))
+    #yield from resting_state_plan()
     return xafs_det.position

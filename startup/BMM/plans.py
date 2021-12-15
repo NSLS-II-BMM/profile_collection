@@ -40,11 +40,13 @@ def tweak_bct(step):
     dm3_bct = user_ns['dm3_bct']
     if step is None:
         step = 0
+    if dm3_bct.ampen.get() == 0:
+        yield from mv(dm3_bct.enable_cmd, 1)     
     yield from mv(dm3_bct.kill_cmd, 1)
     print('Moving from %.4f to %.4f' % (dm3_bct.user_readback.get(), dm3_bct.user_readback.get() + step))
     yield from mvr(dm3_bct, step)
-    time.sleep(3.0)
-    yield from mv(dm3_bct.kill_cmd, 1)
+    #time.sleep(3.0)
+    #yield from mv(dm3_bct.kill_cmd, 1)
 
 
 
@@ -145,7 +147,7 @@ def recover_diagnostics():
         print('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
-    yield from mv(dm3_bct.kill_cmd, 1)
+    #yield from mv(dm3_bct.kill_cmd, 1)
     yield from mv(dm3_foils.kill_cmd, 1)
     ## take these from Modes.xlsx, mode D -- all out of the beam path
     yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3_bpm, 5.511, dm3_foils, 41)
@@ -236,6 +238,8 @@ def mvbct(target=None):
     dm3_bct = user_ns['dm3_bct']
     if target is None:
         target = dm3_bct.user_readback.get()
+    if dm3_bct.ampen.get() == 0:
+        yield from mv(dm3_bct.enable_cmd, 1)
     yield from mv(dm3_bct.kill_cmd, 1)
     yield from mv(dm3_bct, target)
 
@@ -246,6 +250,8 @@ def mvrbct(target=None):
     dm3_bct = user_ns['dm3_bct']
     if target is None:
         target = 0
+    if dm3_bct.ampen.get() == 0:
+        yield from mv(dm3_bct.enable_cmd, 1)     
     yield from mv(dm3_bct.kill_cmd, 1)
     yield from mvr(dm3_bct, target)
 

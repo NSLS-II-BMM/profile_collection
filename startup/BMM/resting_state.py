@@ -58,7 +58,7 @@ def resting_state_plan():
     quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
-    yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
+    #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     dcm.kill()
     dcm.mode = 'fixed'
@@ -81,7 +81,7 @@ def end_of_macro():
     yield from quadem1.on_plan()
     #yield from vor.on_plan()
     yield from mv(_locked_dwell_time, 0.5)
-    yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
+    #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     yield from dcm.kill_plan()
     yield from xafs_wheel.recenter()

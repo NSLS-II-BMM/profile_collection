@@ -87,12 +87,12 @@ dcm_x.velocity.put(0.6)
 dcm_x._limits = (0, 71)
 
 ## this is about as fast as this motor can go, 1.25 results in a following error
-dcm_para.velocity.put(0.6)
+dcm_para.velocity.put(0.4)
 dcm_para.hvel_sp.put(0.4)
 dcm_perp.velocity.put(0.2)
 dcm_perp.hvel_sp.put(0.2)
-dcm_para.llm.put(12.3)
-dcm_para.hlm.put(158.5)
+#dcm_para.llm.put(12.3)
+#dcm_para.hlm.put(158.5)
 dcm_perp.llm.put(1.39)
 dcm_perp.hlm.put(26.5)
 

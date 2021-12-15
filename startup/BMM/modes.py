@@ -155,17 +155,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      # do the motor movements #
      ##########################
      yield from dcm.kill_plan()
-     yield from mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
+     if dm3_bct.ampen.get() == 0:
+          yield from mv(dm3_bct.enable_cmd, 1)
+     #yield from mv(dm3_bct.kill_cmd, 1) # need to explicitly kill this before
                                         # starting a move, it is one of the
                                         # motors that reports MOVN=1 even when
                                         # still
      yield from sleep(0.2)
+     yield from mv(dm3_bct.kill_cmd, 1)
 
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
-          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
      elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
-          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
      else:
           if bender is True:
@@ -180,12 +181,11 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
           base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
           base.extend([m2.ydi, float(MODEDATA['m2_ydi'][mode])])
-          yield from mv(dm3_bct.kill_cmd, 1)
           yield from mv(*base)
 
      yield from sleep(2.0)
      yield from mv(m2_bender.kill_cmd, 1)
-     yield from mv(dm3_bct.kill_cmd, 1)
+     #yield from mv(dm3_bct.kill_cmd, 1)
      yield from m2.kill_jacks()
      yield from m3.kill_jacks()
 
@@ -317,7 +317,7 @@ def change_xtals(xtal=None):
      yield from mv(dcm_pitch.kill_cmd, 1)
      yield from mv(dcm_roll.kill_cmd, 1)
      if xtal is 'Si(111)':
-          yield from mv(dcm_pitch, 3.8698,
+          yield from mv(dcm_pitch, 4.1,
                         dcm_roll, -6.26,
                         dcm_x,     0.3    )
           #dcm._crystal = '111'

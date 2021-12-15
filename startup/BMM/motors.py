@@ -32,9 +32,9 @@ class FMBOEpicsMotor(EpicsMotor):
     ###################################################################
     # mtact      = Cpt(EpicsSignal, '_MTACT_STS',      kind = 'omitted')
     # mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC', kind = 'omitted')
-    # mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'omitted')
+    mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'omitted')
     # mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC',  kind = 'omitted')
-    # plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'omitted')
+    plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'omitted')
     # plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC',  kind = 'omitted')
     ampen      = Cpt(EpicsSignal, '_AMPEN_STS',      kind = 'omitted')
     # ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC', kind = 'omitted')
@@ -84,11 +84,11 @@ class FMBOEpicsMotor(EpicsMotor):
     # amfae_desc = Cpt(EpicsSignal, '_AMFAE_STS.DESC', kind = 'omitted')
     amfe       = Cpt(EpicsSignal, '_AMFE_STS',       kind = 'omitted')
     # amfe_desc  = Cpt(EpicsSignal, '_AMFE_STS.DESC',  kind = 'omitted')
-    # fafoe      = Cpt(EpicsSignal, '_FAFOE_STS',      kind = 'omitted')
+    fafoe      = Cpt(EpicsSignal, '_FAFOE_STS',      kind = 'omitted')
     # fafoe_desc = Cpt(EpicsSignal, '_FAFOE_STS.DESC', kind = 'omitted')
-    # wfoer      = Cpt(EpicsSignal, '_WFOER_STS',      kind = 'omitted')
+    wfoer      = Cpt(EpicsSignal, '_WFOER_STS',      kind = 'omitted')
     # wfoer_desc = Cpt(EpicsSignal, '_WFOER_STS.DESC', kind = 'omitted')
-    # inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'omitted')
+    inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'omitted')
     # inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'omitted')
 
     enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'normal')
@@ -158,7 +158,7 @@ class FMBOEpicsMotor(EpicsMotor):
                 string = getattr(self, sig).enum_strs[getattr(self, sig).get()]
                 if signal != 'asscs':
                     if getattr(self, sig).get() != status_list[signal]:
-                        string = error_msg('%-19s' % string)
+                        string = verbosebold_msg('%-19s' % string)
                 #text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, sig+'_desc').get(),
                 #                                         string,
                 #                                         bold_msg(getattr(self, sig).get()),
