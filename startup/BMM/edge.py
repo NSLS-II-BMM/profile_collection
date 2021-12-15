@@ -235,7 +235,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     if arrived_in_mode(mode=mode) is False:
         print(error_msg(f'\nFailed to arrive in Mode {mode}'))
         print('Fixing this is often as simple as re-running the change_mode() command.')
-        print('Or try dm3_bct.kill() the re-run the change_mode() command.')
+        print('Or try dm3_bct.kill_cmd() then dm3_bct.enable_cmd() then re-run the change_mode() command.')
         print('If that doesn\'t work, call for help')
         return(yield from null())
         
