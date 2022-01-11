@@ -79,8 +79,29 @@ class BMMQuadEM(QuadEM):
         yield from mv(self.acquire, 0)
         yield from mv(self.acquire_mode, 2)
 
+    def enable_electrometer(self):
+        '''Set various quadEM parameters to the values used at BMM.  This is
+        particularly useful after power cycling or some other
+        disruptive event.  And it is harmless when stopping and
+        restarting bsui under normal circumstances.
 
-
+        '''
+        stats_pvs = ('XF:06BM-BI{EM:2}EM180:Current1:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:Current2:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:Current3:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:Current4:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:SumX:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:SumY:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:SumAll:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:DiffX:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:DiffY:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:PosX:EnableCallbacks',
+                     'XF:06BM-BI{EM:2}EM180:PosY:EnableCallbacks')
+        for pv in stats_pvs:
+            EpicsSignal(pv, name='').put(1)
+        EpicsSignal('XF:06BM-BI{EM:2}EM180:Range', name='').put(7)
+        EpicsSignal('XF:06BM-BI{EM:2}EM180:AveragingTime', name='').put(0.5)
+        EpicsSignal('XF:06BM-BI{EM:2}EM180:Acquire', name='').put(1)
 
 class BMMDualEM(QuadEM):
     _default_read_attrs = ['Ia',

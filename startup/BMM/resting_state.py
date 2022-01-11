@@ -1,10 +1,11 @@
 
 from bluesky.plan_stubs import mv, sleep
-
+import datetime
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.functions  import now
 from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 from BMM.workspace  import rkvs
@@ -16,11 +17,10 @@ from BMM.user_ns.detectors   import quadem1, vor
 from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
-    return()
-    # rkvs = user_ns['rkvs']
-    # rkvs.set('BMM:scan:type',      '')
-    # rkvs.set('BMM:scan:starttime', '')
-    # rkvs.set('BMM:scan:estimated', 0)
+    user_ns['rkvs'].set('BMM:scan:type', 'idle')
+    user_ns['rkvs'].set('BMM:scan:starttime', datetime.datetime.timestamp(datetime.datetime.now()))
+    user_ns['rkvs'].set('BMM:scan:estimated', 0)
+    return
 
 def resting_state():
     '''

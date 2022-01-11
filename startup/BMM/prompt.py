@@ -22,6 +22,10 @@ class MyPrompt(Prompts):
         # else:
         #     shbtoken = (Token.Tilde, 'B')
 
+        synstoken = (Token.Text, '')
+        if BMMuser.syns is True:
+            synstoken = (Token.OutPromptNum, '!!! ')
+            
         if BMMuser.user_is_defined:
             bmmtoken = (Token.Prompt, 'BMM ')
         else:
@@ -34,7 +38,8 @@ class MyPrompt(Prompts):
         #     rcv = None
         # if rcv is None:
         #     rcv = 0
-        return [bmmtoken,
+        return [synstoken,
+                bmmtoken,
                 (Token.CursorLine, '%s.%s' % (BMMuser.pds_mode, dcm._crystal)),
                 #shatoken,
                 #(Token.Prompt, u'\u2022'),

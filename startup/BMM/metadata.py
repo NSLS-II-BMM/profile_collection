@@ -13,8 +13,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import dcm
-from BMM.user_ns.instruments import m2, m3
-from BMM.user_ns.motors      import m2_bender
+from BMM.user_ns.instruments import m2, m3, m2_bender
 
 class TC(Device):
     temperature = Cpt(EpicsSignal, 'T-I-I')

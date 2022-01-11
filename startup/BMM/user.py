@@ -64,6 +64,9 @@ class BMM_User(Borg):
         mounted path to cifs share on ws3
     instrument : str
         name of sample instrument, e.g. "sample wheel" or "glancing angle stage"
+    syns : bool 
+        True is any MCS8 axes are disconnected and defined as SynAxis
+
 
     Current plot attributes
     -----------------------
@@ -160,6 +163,7 @@ class BMM_User(Borg):
         self.date            = ''
         self.gup             = 0
         self.saf             = 0
+        # e.g. self.cycle = '2022-2'
         cnum = (0,1,1,1,1,2,2,2,2,3,3,3,3)[int(datetime.datetime.now().strftime("%m"))]
         self.cycle           = f'{datetime.datetime.now().strftime("%Y")}-{cnum}'
         self.host            = socket.gethostname()
@@ -267,6 +271,7 @@ class BMM_User(Borg):
         self.filter_state  = 0
 
         self.extra_metadata = None
+        self.syns           = False
 
     def to_json(self, filename=None, prefix=''):
 
@@ -283,7 +288,7 @@ class BMM_User(Borg):
         else:
             with open(filename, 'w') as outfile:
                 json.dump(d, outfile, indent=4)
-            print(f'{prefix}wrote BMMuser state to {filename}')
+            print(f'\n{prefix}wrote BMMuser state to {filename}')
 
 
     def verify_roi(self, xs, el, edge, tab=''):
@@ -554,6 +559,8 @@ class BMM_User(Borg):
         self.gup = gup
         self.saf = saf
         print(f'{step:2d}. Set GUP and SAF numbers as metadata    GUP: {gup}   SAF: {saf}')
+        shipping_folder = os.path.join(os.getenv('HOME'), 'SDS', self.cycle, f'{saf}')
+        self.establish_folder(0, 'shipping docs folder', shipping_folder)
         step += 1
 
         self.user_is_defined = True
@@ -646,7 +653,7 @@ class BMM_User(Borg):
             os.makedirs(user_folder)
         if not os.path.islink(local_folder):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
-        print(whisper(f'    Made symbolic link to data folder at {local_folder}'))
+        print(f'    Made symbolic link to data folder at {local_folder}')
         self.folder_link = local_folder
         
         # if 'xf06bm-ws1' in self.host:

@@ -20,52 +20,28 @@ except:
 #####################
 
 from BMM.user_ns.instruments import shb, bmps, idps
+
+def ocd(text, signal):
+    '''Indicated open/close/disconnected state with suitable text coloring.
+    '''
+    outtext = text
+    try:
+        if signal.connected is False:
+            outtext += disconnected_msg('disconnected ')
+        elif signal.get() == 1:
+            outtext += 'enabled      '
+        else:
+            outtext += error_msg('disabled      ')
+    except:
+        outtext += whisper('unavailable   ')
+    return outtext
+
+    
 def show_shutters():
-
-    ena_text = '  Beamline: '
-    try:
-        if bl_enabled.get() == 1:
-            ena_text += 'enabled      '
-        else:
-            ena_text += error_msg('disabled      ')
-    except:
-        ena_text += whisper('unavailable   ')
-        
-    bmps_text = '  BMPS: '
-    try:
-        bmps_state = bool(bmps.state.get())
-        if bmps_state is True:
-            bmps_text += 'open'
-        else:
-            bmps_text += error_msg('closed')
-    except:
-        bmps_text += whisper('unavailable   ')
-
-        
-    idps_text = '            IDPS: '
-    try:
-        idps_state = bool(idps.state.get())
-        if idps_state is True:
-            idps_text += 'open'
-        else:
-            idps_text += error_msg('closed')
-    except:
-        idps_text += whisper('unavailable   ')
-        
-    # sha_state = bool(sha.enabled.get()) and bool(sha.state.get())
-    # sha_text = '            FOE Shutter: '
-    # if sha_state is True:
-    #     sha_text += 'open'
-    # else:
-    #     sha_text += error_msg('closed')
-
-    shb_state = bool(shb.state.get())
-    shb_text = '            Photon Shutter: '
-    if shb_state is False:
-        shb_text += 'open'
-    else:
-        shb_text += error_msg('closed')
-
+    ena_text  = ocd('  Beamline: ', bl_enabled)
+    bmps_text = ocd('  BMPS: ', bmps)
+    idps_text = ocd('            IDPS: ', idps)
+    shb_text  = ocd('            Photon Shutter: ', shb)
     return(ena_text + bmps_text + idps_text + shb_text)
 
 

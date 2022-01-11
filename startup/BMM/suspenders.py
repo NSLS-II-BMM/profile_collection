@@ -18,7 +18,7 @@ suspender_I0 = SuspendFloor(quadem1.I0, 0.1, resume_thresh=1, sleep=5)
 ## ----------------------------------------------------------------------------------
 ## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
 try:
-    if ring.filltarget.get() > 20:
+    if ring.filltarget.connected is True and ring.filltarget.get() > 20:
         suspender_ring_current = SuspendFloor(ring.current, 10, resume_thresh=0.9 * ring.filltarget.get(), sleep=60)
         all_BMM_suspenders.append(suspender_ring_current)
 except Exception as e:

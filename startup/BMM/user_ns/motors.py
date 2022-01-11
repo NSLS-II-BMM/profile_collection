@@ -1,3 +1,4 @@
+from ophyd.sim import SynAxis
 from ophyd import EpicsMotor, EpicsSignalRO
 from BMM.functions import run_report
 
@@ -36,16 +37,16 @@ def check_for_connection(m):
 
 
 
-## collimating mirror
-print(f'{TAB}FMBO motor group: m1')
-m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
-m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
-m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
-m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
-m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
-m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
-#for m in m1list: check_for_connection(m)
-mcs8_motors.extend(m1list)
+# ## collimating mirror
+# print(f'{TAB}FMBO motor group: m1')
+# m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
+# m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
+# m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
+# m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
+# m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
+# m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
+# #for m in m1list: check_for_connection(m)
+# mcs8_motors.extend(m1list)
 
 ## DM1
 print(f'{TAB}FMBO motor group: dm1')
@@ -97,21 +98,21 @@ dcm_perp.llm.put(1.39)
 dcm_perp.hlm.put(26.5)
 
 ## focusing mirror
-print(f'{TAB}FMBO motor group: m2')
-m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
-m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
-m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
-m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
-m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
-m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
-m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
-#for m in m2list:
-    #toss = m.encoder.get()
-    #print(f'{m.name}: {m.connected}')
-    #check_for_connection(m)
-mcs8_motors.extend(m2list)
-m2_xu.velocity.put(0.05)
-m2_xd.velocity.put(0.05)
+# print(f'{TAB}FMBO motor group: m2')
+# m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
+# m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
+# m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
+# m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
+# m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
+# m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
+# m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
+# #for m in m2list:
+#     #toss = m.encoder.get()
+#     #print(f'{m.name}: {m.connected}')
+#     #check_for_connection(m)
+# mcs8_motors.extend(m2list)
+# m2_xu.velocity.put(0.05)
+# m2_xd.velocity.put(0.05)
 
 ## DM2
 print(f'{TAB}FMBO motor group: dm2')
@@ -119,12 +120,15 @@ dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
 dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr',  name='dm2_slits_i')
 dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
 dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
-dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
+try:
+    dm2_fs      = XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
+    dm2_fs.hvel_sp.put(0.0005)
+except:
+    dm2_fs = SynAxis(name='dm2_fs')
 dm2list = [dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b, dm2_fs]
 #for m in dm2list: check_for_connection(m)
 mcs8_motors.extend(dm2list)
 #dm2_fs.wait_for_connection()
-dm2_fs.hvel_sp.put(0.0005)
 
 dm2_slits_o.hvel_sp.put(0.2)
 dm2_slits_i.hvel_sp.put(0.2)

@@ -9,6 +9,8 @@ class Vacuum(Device):
     def _pressure(self):
         #print(self.pressure.get())
         #print(type(self.pressure.get()))
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         if self.pressure.get() == 'OFF':
             return(disconnected_msg(-1.1E-15))
 
@@ -21,6 +23,8 @@ class Vacuum(Device):
         return(self.pressure.get())
 
     def _current(self):
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         curr = float(self.current.get())
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
@@ -35,6 +39,8 @@ class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
 
     def _pressure(self):
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         if self.pressure.get() == 'OFF':
             return(disconnected_msg(-1.1e-15))
         if float(self.pressure.get()) > 1e-1:
@@ -63,6 +69,8 @@ class FEVac(Device):
     c6 = Cpt(EpicsSignal, 'IP:6}P-I')
                
     def _pressure(self, num=None):
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         if num is None:
             num = 1
         if num < 1:
@@ -82,6 +90,8 @@ class FEVac(Device):
         return(sgnl.get())
 
     def _current(self, num=None):
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         if num is None:
             num = 1
         if num < 1:
@@ -124,6 +134,8 @@ class GateValve(Device):
         self.cls.put(1)
 
     def _state(self):
+        if self.connected is False:
+            return disconnected_msg('?????')
         if self.state.get() == 0:
             return error_msg('closed')
         return('open  ')
@@ -136,6 +148,8 @@ class Thermocouple(Device):
 
     def _state(self, info=False):
         t = "%.1f" % self.temperature.get()
+        if self.connected is False:
+            return(disconnected_msg('?????'))
         if self.temperature.get() > self.alarm.get():
             return(error_msg(t))
         if self.temperature.get() > self.warning.get():

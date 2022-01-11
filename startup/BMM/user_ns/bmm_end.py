@@ -13,6 +13,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
+from BMM.user_ns.motors import mcs8_motors
 
 run_report(__file__, text='import the rest of the things')
 
@@ -282,6 +283,7 @@ if BMMuser.element is None:
      except:
           pass
 
+run_report('\t'+'final setup: Xspress3')
 from BMM.user_ns.dwelltime import with_xspress3
 from BMM.user_ns.detectors import xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
@@ -289,17 +291,20 @@ if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 i
     #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
     show_edges()
 
+run_report('\t'+'final setup: cameras')
 from BMM.user_ns.detectors import xascam, xrdcam, anacam
 xascam._root = os.path.join(BMMuser.folder, 'snapshots')
 xrdcam._root = os.path.join(BMMuser.folder, 'snapshots')
 anacam._root = os.path.join(BMMuser.folder, 'snapshots')
 
      
+run_report('\t'+'checking motor connections')
 from BMM.edge import all_connected
 if all_connected(True) is False:
      print(error_msg('Ophyd connection failure (testing main PDS motors)'))
      print(error_msg('You likely have to restart bsui.'))
 
+run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
 from BMM.user_ns.instruments import wmb, lmb, gmb
 wmb.folder = BMMuser.folder
@@ -324,6 +329,17 @@ def measuring(element, edge=None):
     xs.reset_rois()
     show_edges()
 
+def check_for_synaxis():
+    syns = []
+    for m in mcs8_motors:
+        if 'SynAxis' in f'{m}':
+            syns.append(m.name)
+    if len(syns) > 0:
+        BMMuser.syns = True
+        text = ', '.join(syns)
+        print(error_msg(f'The following are disconnected & defined as simulated motors:\n\t{text}'))
+check_for_synaxis()
+    
 try:
     from bluesky_widgets.utils.streaming import stream_documents_into_runs
     from bluesky_widgets.models.plot_builders import Lines

@@ -1,6 +1,10 @@
+from ophyd.sim import SynAxis
+import time
 from BMM.functions import run_report
 
 run_report(__file__, text='instrument definitions')
+
+TAB = '\t\t\t'
 
 ## http://patorjk.com/software/taag/#p=display&f=Doom&t=MIRRORS
 
@@ -19,16 +23,9 @@ from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable
 from BMM.user_ns.bmm import BMMuser
 from BMM.user_ns.motors import mcs8_motors
 
-## harmonic rejection mirror
-m3_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
-m3_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDO}Mtr',  name='m3_ydo')
-m3_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDI}Mtr',  name='m3_ydi')
-m3_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
-m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
-mcs8_motors.extend([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
 
-
-
+## collimating mirror
+print(f'{TAB}FMBO motor group: m1')
 m1 = Mirrors('XF:06BM-OP{Mir:M1-Ax:',  name='m1', mirror_length=556,  mirror_width=240)
 m1.vertical._limits = (-5.0, 5.0)
 m1.lateral._limits  = (-5.0, 5.0)
@@ -36,6 +33,18 @@ m1.pitch._limits    = (-5.0, 5.0)
 m1.roll._limits     = (-5.0, 5.0)
 m1.yaw._limits      = (-5.0, 5.0)
 
+m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
+m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
+m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
+m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
+m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
+m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
+#for m in m1list: check_for_connection(m)
+mcs8_motors.extend(m1list)
+
+
+## focusing mirror
+print(f'{TAB}FMBO motor group: m2')
 m2 = Mirrors('XF:06BMA-OP{Mir:M2-Ax:', name='m2', mirror_length=1288, mirror_width=240)
 m2.vertical._limits = (-6.0, 8.0)
 m2.lateral._limits  = (-2, 2)
@@ -43,12 +52,68 @@ m2.pitch._limits    = (-0.5, 5.0)
 m2.roll._limits     = (-2, 2)
 m2.yaw._limits      = (-1, 2)
 
+# give it a moment
+count = 0
+while m2.connected is False:
+    count += 1
+    time.sleep(0.5)
+    if count > 10:
+        break
+
+
+#m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender = None, None, None, None, None, None
+if m2.connected is True:
+    m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
+    m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
+    m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
+    m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
+    m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
+    m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
+    m2_xu.velocity.put(0.05)
+    m2_xd.velocity.put(0.05)
+else:
+    m2_yu     = SynAxis(name='m2_yu')
+    m2_ydo    = SynAxis(name='m2_ydo')
+    m2_ydi    = SynAxis(name='m2_ydi')
+    m2_xu     = SynAxis(name='m2_xu')
+    m2_xd     = SynAxis(name='m2_xd')
+    m2_bender = SynAxis(name='m2_bender')
+m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
+mcs8_motors.extend(m2list)
+
+
+## harmonic rejection mirror
+print(f'{TAB}FMBO motor group: m3')
 m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
 m3.vertical._limits = (-11, 1)
 m3.lateral._limits  = (-16, 16)
 m3.pitch._limits    = (-6, 6)
 m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
+
+# give it a moment
+count = 0
+while m3.connected is False:
+    count += 1
+    time.sleep(0.5)
+    if count > 10:
+        break
+
+#m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd = None, None, None, None, None
+if m3.connected is True:
+    m3_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
+    m3_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDO}Mtr',  name='m3_ydo')
+    m3_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDI}Mtr',  name='m3_ydi')
+    m3_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
+    m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
+else:
+    m3_yu     = SynAxis(name='m3_yu')
+    m3_ydo    = SynAxis(name='m3_ydo')
+    m3_ydi    = SynAxis(name='m3_ydi')
+    m3_xu     = SynAxis(name='m3_xu')
+    m3_xd     = SynAxis(name='m3_xd')
+mcs8_motors.extend([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
+
 
 
 def kill_mirror_jacks():

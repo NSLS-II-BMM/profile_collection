@@ -22,12 +22,28 @@ class NoRedis():
 rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 #rkvs = NoRedis()
 NAS = '/mnt/nfs/nas1'
+LUSTRE_ROOT = '/nsls2/data'
 SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')
 REDISVAR="BMM:scan:type"
 ###################################################################
 
+rkvs.set('BMM:scan:type', 'idle')
 
+def rkvs_keys(printed=True):
+    keys = sorted(list(x.decode('UTF-8') for x in rkvs.keys()))
+    if printed is True:
+        for k in keys:
+            if rkvs.type(k) == b'string':
+                print(f'{k:25} {rkvs.get(k).decode("UTF-8")}')
+            elif rkvs.type(k) == b'list':
+                this = ' '.join(x.decode('UTF-8') for x in rkvs.lrange(k, 0, -1))
+                print(f'{k:25} {this}')
+            else:
+                #print(f'{k:25} {rkvs.get(k)}')
+                pass
+    return(keys)
+    
 CHECK = '\u2714'
 TAB = '\t\t\t'
 
@@ -51,6 +67,7 @@ def initialize_workspace():
     check_profile_branch()
     initialize_data_directories()
     initialize_beamline_configuration()
+    initialize_lustre()
     initialize_nas()
     initialize_secrets()
     initialize_redis()
@@ -121,7 +138,17 @@ def initialize_nas():
         print(f'{TAB}Found NAS1 mount point: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}NAS1 is not mounted!'))
-    
+
+def initialize_lustre():
+    '''Check if a the Lustre mount point for data directories is mounted.
+    If not, complain on screen.
+
+    '''
+    if os.path.ismount(LUSTRE_ROOT):
+        print(f'{TAB}Found Lustre mount point: {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}Lustre is not mounted!'))
+        
 
 def initialize_secrets():
     '''Check that the Slack secret files are in their expected locations.

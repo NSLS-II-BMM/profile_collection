@@ -20,7 +20,8 @@ with_quadem, with_struck, with_dualem, with_xspress3 = True, False, False, True
 
 # An error gets triggered during Azure CI testing that does not get triggered when
 # running under IPython. This disables the Xspress3 during testing.
-# This is a crude stopgap.  See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
+# This is a crude stopgap.
+# See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
 if os.environ.get('AZURE_TESTING'):
     with_xspress3 = False
 
@@ -31,5 +32,3 @@ from BMM.dwelltime import LockedDwellTimes
 _locked_dwell_time = LockedDwellTimes('', name='dwti')
 dwell_time = _locked_dwell_time.dwell_time
 dwell_time.name = 'inttime'
-
-#mv(_locked_dwell_time, 0.5)

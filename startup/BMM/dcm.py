@@ -186,7 +186,7 @@ class DCM(PseudoPositioner):
         bragg = 180 * arcsin(wavelength/self._twod) / pi
         para  = self.offset / (2*sin(angle))
         perp  = self.offset / (2*cos(angle))
-        print(f'for {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
+        print(f'Si({dcm._crystal}), {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
     
 
     @pseudo_position_argument

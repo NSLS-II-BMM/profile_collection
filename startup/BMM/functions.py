@@ -88,7 +88,7 @@ def list_msg(text):
     return colored(text, 'cyan')
 def disconnected_msg(text):
     '''Purple text'''
-    return colored(text, 'purple')
+    return colored(text, 'lightpurple')
 def info_msg(text):
     '''Brown text'''
     return colored(text, 'brown')
