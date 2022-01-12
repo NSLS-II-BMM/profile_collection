@@ -407,6 +407,10 @@ class Mirrors(PseudoPositioner):
         self.ydi.enable_cmd.put(1)
 
     def where(self):
+        if any(x.connected is False for x in (self.yu, self.ydi, self.ydo, self.xu, self.xd)):
+            print(f'Some {self.name.capitalize()} motors are disconnected')
+            print('Do check_for_synaxis() for more information.')
+            return()
         stripe = ''
         if self.name.lower() == 'm3':
             if self.xu.user_readback.get() > 0:
@@ -423,6 +427,10 @@ class Mirrors(PseudoPositioner):
         #    text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
         return text
     def wh(self):
+        if any(x.connected is False for x in (self.yu, self.ydi, self.ydo, self.xu, self.xd)):
+            print(f'Some {self.name.capitalize()} motors are disconnected')
+            print('Do check_for_synaxis() for more information.')
+            return()
         stripe = ''
         if self.name.lower() == 'm3':
             if self.xu.user_readback.get() > 0:

@@ -1,10 +1,35 @@
-from ophyd.sim import SynAxis
 import time
 from BMM.functions import run_report
 
 run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
+
+# Note: the use of SynAxis in this file is so that every motor-related
+# symbol gets set to `something' at startup.  This allows bsui to
+# fully start and places the user at a fully-functional-for-BMM
+# command line.
+#
+# LOTS of things won't work correctly in this situation. For example,
+# if M2 is disconnected, then anything that wants to touch M2 will not
+# work, e.g. `%w m2' or any kind of coordinated or non-coordinated
+# motion.  But this allows one to use and develop BMM's bsui profile
+# even with multiple motors disconnected.
+#
+# The most common causes of a disconnected motor are an IOC that is
+# not running or a controller that is powered down (or both).
+
+from ophyd.sim import SynAxis
+def wait_for_connection(thing):
+    # give it a moment
+    count = 0
+    while thing.connected is False:
+        count += 1
+        time.sleep(0.5)
+        if count > 10:
+            break
+
+
 
 ## http://patorjk.com/software/taag/#p=display&f=Doom&t=MIRRORS
 
@@ -18,8 +43,8 @@ TAB = '\t\t\t'
 #################################################
 
 
-run_report('\tmirrors')
-from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable
+run_report('\tmirrors and tables')
+from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable, EndStationEpicsMotor
 from BMM.user_ns.bmm import BMMuser
 from BMM.user_ns.motors import mcs8_motors
 
@@ -33,13 +58,22 @@ m1.pitch._limits    = (-5.0, 5.0)
 m1.roll._limits     = (-5.0, 5.0)
 m1.yaw._limits      = (-5.0, 5.0)
 
-m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
-m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
-m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
-m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
-m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
+wait_for_connection(m1)
+
+if m1.connected is True:
+    m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
+    m1_ydo    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDO}Mtr',  name='m1_ydo')
+    m1_ydi    = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YDI}Mtr',  name='m1_ydi')
+    m1_xu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XU}Mtr',   name='m1_xu')
+    m1_xd     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:XD}Mtr',   name='m1_xd')
+else:
+    m1_yu     = SynAxis(name='m1_yu')
+    m1_ydo    = SynAxis(name='m1_ydo')
+    m1_ydi    = SynAxis(name='m1_ydi')
+    m1_xu     = SynAxis(name='m1_xu')
+    m1_xd     = SynAxis(name='m1_xd')
+    
 m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
-#for m in m1list: check_for_connection(m)
 mcs8_motors.extend(m1list)
 
 
@@ -52,13 +86,7 @@ m2.pitch._limits    = (-0.5, 5.0)
 m2.roll._limits     = (-2, 2)
 m2.yaw._limits      = (-1, 2)
 
-# give it a moment
-count = 0
-while m2.connected is False:
-    count += 1
-    time.sleep(0.5)
-    if count > 10:
-        break
+wait_for_connection(m2)
 
 
 #m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender = None, None, None, None, None, None
@@ -91,13 +119,7 @@ m3.pitch._limits    = (-6, 6)
 m3.roll._limits     = (-2, 2)
 m3.yaw._limits      = (-1, 1)
 
-# give it a moment
-count = 0
-while m3.connected is False:
-    count += 1
-    time.sleep(0.5)
-    if count > 10:
-        break
+wait_for_connection(m3)
 
 #m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd = None, None, None, None, None
 if m3.connected is True:
@@ -117,13 +139,30 @@ mcs8_motors.extend([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
 
 
 def kill_mirror_jacks():
-    yield from m2.kill_jacks()
-    yield from m3.kill_jacks()
+    if m2.connected is True:
+        yield from m2.kill_jacks()
+    if m3.connected is True:
+        yield from m3.kill_jacks()
 
 
+## XAFS table
+print(f'{TAB}XAFS table motor group')
 xt = xafs_table = XAFSTable('XF:06BMA-BI{XAFS-Ax:Tbl_', name='xafs_table', mirror_length=1160,  mirror_width=558)
+wait_for_connection(xafs_table)
 
-gonio_table = GonioTable('XF:06BM-ES{SixC-Ax:Tbl_', name='gonio_table', mirror_length=1117.6,  mirror_width=711.12)
+if xafs_table.connected is True:
+    xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
+    xafs_ydo = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDO}Mtr', name='xafs_ydo')
+    xafs_ydi = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_ydi')
+    xafs_xu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
+    xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
+else:
+    xafs_yu     = SynAxis(name='xafs_yu')
+    xafs_ydo    = SynAxis(name='xafs_ydo')
+    xafs_ydi    = SynAxis(name='xafs_ydi')
+    xafs_xu     = SynAxis(name='xafs_xu')
+    xafs_xd     = SynAxis(name='xafs_xd')
+    
 
 run_report('\tmirror trigonometry')
 from BMM.mirror_trigonometry import move_m2, move_m3
@@ -140,17 +179,73 @@ from BMM.mirror_trigonometry import move_m2, move_m3
                                
 
 run_report('\tslits')
-from BMM.slits import Slits, GonioSlits #, recover_slits2, recover_slits3
+from BMM.slits import Slits #, recover_slits2, recover_slits3
 
+## DM3
+print(f'{TAB}FMBO motor group: slits3')
 sl = slits3 = Slits('XF:06BM-BI{Slt:02-Ax:',  name='slits3')
 slits3.nominal = [7.0, 1.0, 0.0, 0.0]
+wait_for_connection(slits3)
+
+if slits3.connected is True:
+    dm3_slits_o = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:O}Mtr',  name='dm3_slits_o')
+    dm3_slits_i = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:I}Mtr',  name='dm3_slits_i')
+    dm3_slits_t = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:T}Mtr',  name='dm3_slits_t')
+    dm3_slits_b = XAFSEpicsMotor('XF:06BM-BI{Slt:02-Ax:B}Mtr',  name='dm3_slits_b')
+    dm3_slits_o.hvel_sp.put(0.2)
+    dm3_slits_i.hvel_sp.put(0.2)
+    dm3_slits_t.hvel_sp.put(0.2)
+    dm3_slits_b.hvel_sp.put(0.2)
+    dm3_slits_i.user_offset.put(-6.9181)
+    dm3_slits_o.user_offset.put(7.087)
+    dm3_slits_t.user_offset.put(-2.676)
+    dm3_slits_b.user_offset.put(-2.9737)
+else:
+    dm3_slits_o = SynAxis(name='dm3_slits_o')
+    dm3_slits_i = SynAxis(name='dm3_slits_i')
+    dm3_slits_t = SynAxis(name='dm3_slits_t')
+    dm3_slits_b = SynAxis(name='dm3_slits_b')
+    
+slits3list = [dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b]
+mcs8_motors.extend(slits3list)
+
+
+
+
+## DM2
+print(f'{TAB}FMBO motor group: slits2')
+
 slits2 = Slits('XF:06BMA-OP{Slt:01-Ax:',  name='slits2')
 slits2.nominal = [18.0, 1.1, 0.0, 0.6]
 slits2.top.user_offset.put(-0.038)
 slits2.bottom.user_offset.put(0.264)
 
-        
-slitsg = GonioSlits('XF:06BM-ES{SixC-Ax:Slt1_',  name='slitsg')
+wait_for_connection(slits2)
+
+if slits2.connected is True:
+    dm2_slits_o = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:O}Mtr',  name='dm2_slits_o')
+    dm2_slits_i = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:I}Mtr',  name='dm2_slits_i')
+    dm2_slits_t = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:T}Mtr',  name='dm2_slits_o')
+    dm2_slits_b = XAFSEpicsMotor('XF:06BMA-OP{Slt:01-Ax:B}Mtr',  name='dm2_slits_b')
+    dm2_slits_o.hvel_sp.put(0.2)
+    dm2_slits_i.hvel_sp.put(0.2)
+    dm2_slits_t.hvel_sp.put(0.2)
+    dm2_slits_b.hvel_sp.put(0.2)
+else:
+    dm2_slits_o = SynAxis(name='dm2_slits_o')
+    dm2_slits_i = SynAxis(name='dm2_slits_i')
+    dm2_slits_t = SynAxis(name='dm2_slits_t')
+    dm2_slits_b = SynAxis(name='dm2_slits_b')
+    
+    
+dm2list = [dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b]
+mcs8_motors.extend(dm2list)
+
+
+
+
+
+
 
 
 

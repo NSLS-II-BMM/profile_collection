@@ -114,6 +114,10 @@ def motor_status():
     # return line + text + line
 
 def ms():
+    if user_ns['BMMuser'].syns is True:
+        print('Some motors are disconnected and represented as a SynAxis.')
+        print('Do check_for_synaxis() for more information.')
+        return
     boxedtext('BMM motor status', motor_status(), 'cyan', width=84)
 
 

@@ -11,6 +11,7 @@ from .bmm import *
 from .bw import *
 from .motors import *
 from .instruments import *
+from .gonio import *
 from .metadata import *
 from .dwelltime import *
 from .dcm import *
