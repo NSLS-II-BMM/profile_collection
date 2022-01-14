@@ -5,8 +5,8 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-import os
-from BMM.functions import run_report, error_msg
+import os, textwrap
+from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -330,14 +330,23 @@ def measuring(element, edge=None):
     show_edges()
 
 def check_for_synaxis():
+    '''A disconnected motor (due to IOC or controller not running) will be
+    defined as a SynAxis. This does a test for that situation and
+    reports about it at startup.  It also sets BMMuser.syns to True so
+    things like motor_status() behave non-disastrously.
+    '''
     syns = []
     for m in mcs8_motors:
         if 'SynAxis' in f'{m}':
             syns.append(m.name)
     if len(syns) > 0:
         BMMuser.syns = True
-        text = ', '.join(syns)
-        print(error_msg(f'The following are disconnected & defined as simulated motors:\n\t{text}'))
+        text = 'The following are disconnected & defined as simulated motors:\n\n'
+        text += '\n'.join(disconnected_msg(x) for x in textwrap.wrap(', '.join(syns))) + '\n\n'
+        text += 'This allows bsui to operate normally, but do not expect anything\n'
+        text += 'involving those motors to work correctly.\n'
+        text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)')
+        boxedtext('Disconnected motors', text, 'red', width=74)
 check_for_synaxis()
     
 try:

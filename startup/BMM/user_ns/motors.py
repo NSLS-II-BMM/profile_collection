@@ -43,7 +43,7 @@ def define_XAFSEpicsMotor(prefix, name='unnamed'):
     '''
     this = XAFSEpicsMotor(prefix, name=name)
     count = 0
-    while this.connected is False:
+    while this.connected is False:  #  try for no more than 3 seconds
         count += 1
         time.sleep(0.5)
         if count > 6:
@@ -104,10 +104,6 @@ if 'XAFSEpicsMotor' in str(type(dm3_foils)):
     dm3_foils.llm.put(-25)
     dm3_foils.hlm.put(45)
     dm3_foils.hvel_sp.put(0.05)
-
-
-#bct = EpicsMotor('XF:06BM-BI{BCT-Ax:Y}Mtr', name='dm3bct')
-
 
 
 

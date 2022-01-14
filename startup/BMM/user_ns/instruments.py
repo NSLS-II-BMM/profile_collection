@@ -5,20 +5,21 @@ run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
-# Note: the use of SynAxis in this file is so that every motor-related
-# symbol gets set to `something' at startup.  This allows bsui to
-# fully start and places the user at a fully-functional-for-BMM
-# command line.
-#
-# LOTS of things won't work correctly in this situation. For example,
-# if M2 is disconnected, then anything that wants to touch M2 will not
-# work, e.g. `%w m2' or any kind of coordinated or non-coordinated
-# motion.  But this allows one to use and develop BMM's bsui profile
-# even with multiple motors disconnected.
-#
-# The most common causes of a disconnected motor are an IOC that is
-# not running or a controller that is powered down (or both).
-
+########################################################################
+# Note: the use of SynAxis in this file is so that every motor-related #
+# symbol gets set to `something' at startup.  This allows bsui to      #
+# fully start and places the user at a fully-functional-for-BMM        #
+# command line.                                                        #
+#                                                                      #
+# LOTS of things won't work correctly in this situation. For example,  #
+# if M2 is disconnected, then anything that wants to touch M2 will not #
+# work, e.g. `%w m2' or any kind of coordinated or non-coordinated     #
+# motion.  But this allows one to use and develop BMM's bsui profile   #
+# even with multiple motors disconnected.                              #
+#                                                                      #
+# The most common causes of a disconnected motor are an IOC that is    #
+# not running or a controller that is powered down (or both).          #
+########################################################################
 from ophyd.sim import SynAxis
 def wait_for_connection(thing):
     # give it a moment

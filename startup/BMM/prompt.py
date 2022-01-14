@@ -9,7 +9,7 @@ user_ns = vars(user_ns_module)
 
 
 from IPython.terminal.prompts import Prompts, Token
-class MyPrompt(Prompts):
+class BMMPrompt(Prompts):
     def in_prompt_tokens(self, cli=None):
         BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
         # if idps.state.get() == 0:
@@ -72,7 +72,7 @@ class MyPrompt(Prompts):
 
 ## from Tom on Gitter: https://gitter.im/NSLS-II/DAMA?at=5cdf02ab7c363c75a7f983e1
 import types
-get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose that command in RE()'))
+get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose bsui commands in RE()'))
 
 
 def BMM_help():
