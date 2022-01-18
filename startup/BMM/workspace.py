@@ -1,4 +1,4 @@
-
+from ophyd import EpicsSignalRO
 import os, subprocess, shutil, socket
 import redis
 import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
@@ -64,6 +64,7 @@ def initialize_workspace():
 
     '''
     print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
+    check_workstation_access()
     check_profile_branch()
     initialize_data_directories()
     initialize_beamline_configuration()
@@ -74,7 +75,16 @@ def initialize_workspace():
     #initialize_gdrive()
     initialize_ssh()
     
-
+def check_workstation_access():
+    wa = EpicsSignalRO('XF:06BM-CT{}Prmt:RemoteExp-Sel',   name='write_access')
+    if wa.get() == 0:
+        print(f'{TAB}*** Uh oh!  The beamline is not enabled for write access to PVs!')
+        print(f'{TAB}    You need to get a beamline staff person to do:')
+        print(f'{TAB}       caput XF:06BM-CT{{}}Prmt:RemoteExp-Sel 1')
+        print(f'{TAB}    then restart bsui')
+        ## the next line is intended to trigger an immediate error and return to the IPython command line
+        wa.put(1)
+        
 def check_profile_branch():
     here = os.getcwd()
     os.chdir(os.path.dirname(startup_dir))

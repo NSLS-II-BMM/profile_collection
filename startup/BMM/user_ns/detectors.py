@@ -167,7 +167,7 @@ set_precision(quadem1.current4.mean_value, 3)
 toss = quadem1.Iy.describe()
 
 
-try:                            # not 100% guaranteed to be in place
+try:                            # might not be in use
     dualio = BMMDualEM('XF:06BM-BI{EM:3}EM180:', name='DualI0')
     dualio.Ia.kind = 'hinted'
     dualio.Ib.kind = 'hinted'

@@ -10,7 +10,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #_locked_dwell_time = user_ns['_locked_dwell_time']
-from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_dualem, with_quadem
 from BMM.user_ns.instruments import shb
 
 class Nanoize(DerivedSignal):
@@ -33,6 +33,13 @@ class BMMQuadEM(QuadEM):
     It = Cpt(Nanoize, derived_from='current2.mean_value')
     Ir = Cpt(Nanoize, derived_from='current3.mean_value')
     Iy = Cpt(Nanoize, derived_from='current4.mean_value')
+
+    compute_current_offset1 = Cpt(EpicsSignal, 'ComputeCurrentOffset1.PROC')
+    compute_current_offset2 = Cpt(EpicsSignal, 'ComputeCurrentOffset2.PROC')
+    compute_current_offset3 = Cpt(EpicsSignal, 'ComputeCurrentOffset3.PROC')
+    compute_current_offset4 = Cpt(EpicsSignal, 'ComputeCurrentOffset4.PROC')
+    
+    
     #state  = Cpt(EpicsSignal, 'Acquire')
 
     # XF:06BM-BI{EM:1}EM180:Current1:EnableCallbacks
@@ -102,6 +109,16 @@ class BMMQuadEM(QuadEM):
         EpicsSignal('XF:06BM-BI{EM:2}EM180:Range', name='').put(7)
         EpicsSignal('XF:06BM-BI{EM:2}EM180:AveragingTime', name='').put(0.5)
         EpicsSignal('XF:06BM-BI{EM:2}EM180:Acquire', name='').put(1)
+
+    def dark_current(self):
+        print(f'Measuring current offsets for {self.name}, this will take several seconds')
+        yield from mv(self.compute_current_offset1,1)
+        yield from mv(self.compute_current_offset2,1)
+        yield from mv(self.compute_current_offset3,1)
+        yield from mv(self.compute_current_offset4,1)
+        BMM_log_info('Measured dark current on quadem1')
+
+        
 
 class BMMDualEM(QuadEM):
     _default_read_attrs = ['Ia',
@@ -182,7 +199,7 @@ class BMMDualEM(QuadEM):
         self.calibration_mode.put(0)
         yield from sleep(0.5)
         self.compute_current_offset1.put(1)
-        self.compute_current_offset1.put(2)
+        self.compute_current_offset2.put(1)
         # EpicsSignal("XF:06BM-BI{EM:3}EM180:CalibrationMode", name='').put(1)
         # EpicsSignal("XF:06BM-BI{EM:3}EM180:CopyADCOffsets.PROC", name='').put(1)
         # EpicsSignal("XF:06BM-BI{EM:3}EM180:CalibrationMode", name='').put(0)
@@ -201,13 +218,10 @@ def dark_current():
     if reopen:
         print('\nClosing photon shutter')
         yield from shb.close_plan()
-    print('Measuring current offsets, this will take several seconds')
-    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset1.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset2.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset3.PROC", name='').put(1)
-    EpicsSignal("XF:06BM-BI{EM:2}EM180:ComputeCurrentOffset4.PROC", name='').put(1)
-    yield from sleep(3)
-    BMM_log_info('Measured dark current on quadem1')
+    if with_quadem:
+        yield from quadem1.dark_current()
+    if with_dualem:
+        yield from dualio.dark_current()
     if reopen:
         print('Opening photon shutter')
         yield from shb.open_plan()
