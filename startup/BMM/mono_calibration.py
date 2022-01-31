@@ -167,8 +167,9 @@ def calibrate_high_end(mono='111', focus=False):
     BMM_log_info('High end calibration macro finished!')
 
 
-## there is a historical reason this is split into two halves -- the original referene holder had 5 slots
+## there is a historical reason this is split into two halves -- the original reference holder had 5 slots
 def calibrate(focus=False):
+    "Run a sequence of 10 foil XANES scans, Fe to Mo, to calibrate the DCM."
     def main_plan():
         dcm = user_ns['dcm']
         report(f'Calibrating the {dcm._crystal} monochrmoator', 'bold')

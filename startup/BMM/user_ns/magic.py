@@ -81,6 +81,12 @@ def xrf(arg):
     xs.measure_xrf()
     return None
 
+from BMM.user_ns.detectors import xs1
+@register_line_magic
+def xrf1(arg):
+    xs1.measure_xrf()
+    return None
+
 from BMM.user_ns.bmm import whoami
 if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
     print('')

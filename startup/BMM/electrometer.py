@@ -178,7 +178,7 @@ class BMMDualEM(QuadEM):
         if reopen:
             print('\nClosing photon shutter')
             yield from shb.close_plan()
-        print('Measuring current offsets, this will take several seconds')
+        print(f'Measuring current offsets on {self.name}, this will take several seconds')
 
         ######################################################################
         # from Pete (email Feb 7, 2020):                                     #

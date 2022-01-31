@@ -35,7 +35,7 @@ user_ns = vars(user_ns_module)
 #from __main__ import db
 from BMM.user_ns.base      import db, startup_dir
 from BMM.user_ns.dwelltime import _locked_dwell_time
-from BMM.user_ns.detectors import quadem1, vor, xs
+from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -438,10 +438,17 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if plotting_mode(p['mode']) == 'xs':
+        if plotting_mode(p['mode']) == 'xs' and use_4element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
-                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3'))
+                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
+                print(error_msg('Likely solution:'))
+                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
+                print(error_msg('then do:             xs.measure_roi()'))
+                return(yield from null())
+        if plotting_mode(p['mode']) == 'xs1' and use_1element is True:
+            if (any(getattr(BMMuser, x) is None for x in ('element', 'xs8', 'xschannel8'))):
+                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 1-element detector'))
                 print(error_msg('Likely solution:'))
                 print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
                 print(error_msg('then do:             xs.measure_roi()'))
@@ -598,36 +605,45 @@ def xafs(inifile=None, **kwargs):
         dossier.xrffile, dossier.xrfsnap = None, None
         dossier.ocrs = ''
         dossier.rois = ''
-        if plotting_mode(p['mode']) == 'xs' and BMMuser.lims is True:
-            report('measuring an XRF spectrum at %.1f eV' % eave, 'bold')
-            yield from mv(xs.total_points, 1)
-            yield from mv(xs.cam.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
-
-            ## capture OCR and target ROI values at Eave to report in dossier
-            ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            dossier.ocrs = ", ".join(map(str,ocrs))
-            rois = [int(BMMuser.xschannel1.get()),
-                    int(BMMuser.xschannel2.get()),
-                    int(BMMuser.xschannel3.get()),
-                    int(BMMuser.xschannel4.get()),]
-            dossier.rois = ", ".join(map(str,rois))
-
-            ## make and save XRF plot
+        if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
             thisagg = matplotlib.get_backend()
             matplotlib.use('Agg') # produce a plot without screen display
-            xs.plot(uid=xrfuid)
             ahora = now()
             dossier.xrffile = "%s_%s.xrf" % (p['filename'], ahora)
             dossier.xrfsnap = "%s_XRF_%s.png" % (p['filename'], ahora)
             xrffile  = os.path.join(p['folder'], 'XRF', dossier.xrffile)
             xrfimage = os.path.join(p['folder'], 'XRF', dossier.xrfsnap)
-            
+            if use_4element and plotting_mode(p['mode']) == 'xs':
+                report(f'measuring an XRF spectrum at {eave:.1f} (4-element detector)', 'bold')
+                yield from mv(xs.total_points, 1)
+                yield from mv(xs.cam.acquire_time, 1)
+                xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
+                ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                        int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                        int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                        int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+                rois = [int(BMMuser.xschannel1.get()),
+                        int(BMMuser.xschannel2.get()),
+                        int(BMMuser.xschannel3.get()),
+                        int(BMMuser.xschannel4.get()),]
+                xs.plot(uid=xrfuid)
+                xs.to_xdi(xrffile)
+            if use_1element and plotting_mode(p['mode']) == 'xs1':
+                report(f'measuring an XRF spectrum at {eave:.1f} (1-element detector)', 'bold')
+                yield from mv(xs1.total_points, 1)
+                yield from mv(xs1.cam.acquire_time, 1)
+                xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
+                ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+                rois = [int(BMMuser.xschannel1.get()),]
+                xs1.plot(uid=xrfuid)
+                xs1.to_xdi(xrffile)
+
+            ## capture OCR and target ROI values at Eave to report in dossier
+            dossier.ocrs = ", ".join(map(str,ocrs))
+            dossier.rois = ", ".join(map(str,rois))
+
+            ## save XRF plot
             plt.savefig(xrfimage)
-            xs.to_xdi(xrffile)
             matplotlib.use(thisagg) # return to screen display
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -690,11 +706,13 @@ def xafs(inifile=None, **kwargs):
         trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
         ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
         Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data']['I0'])
-        if user_ns['with_xspress3']:
-            xspress3 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
-                                                                doc['data'][BMMuser.xs2] +
-                                                                doc['data'][BMMuser.xs3] +
-                                                                doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+        if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs':
+            xspress3_4 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
+                                                                  doc['data'][BMMuser.xs2] +
+                                                                  doc['data'][BMMuser.xs3] +
+                                                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+        if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs1':
+            xspress3_1 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs8] / doc['data']['I0'])
             
         if BMMuser.detector == 1:
             fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
@@ -705,8 +723,7 @@ def xafs(inifile=None, **kwargs):
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
             if user_ns['with_xspress3']:
                 yield from mv(xs.cam.acquire_time, 0.5)
-                #yield from mv(xs.total_points, len(energy_grid))
-                plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
+                plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
             else:
                 plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
         elif 'trans' in p['mode']:
@@ -722,19 +739,20 @@ def xafs(inifile=None, **kwargs):
         elif 'both'  in p['mode']:
             if user_ns['with_xspress3']:
                 yield from mv(xs.cam.acquire_time, 0.5)
-                #yield from mv(xs.total_points, len(energy_grid))
-                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
-                        DerivedPlot(xspress3,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
+                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',      title=p['filename']),
+                        DerivedPlot(xspress3_4,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
             else:
-                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename']),
-                        DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])]
+                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',      title=p['filename']),
+                        DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',      title=p['filename'])]
+        elif 'xs1'   in p['mode']:
+            yield from mv(xs1.cam.acquire_time, 0.5)
+            plot =  DerivedPlot(xspress3_1, xlabel='energy (eV)', ylabel='If / I0 (Xspress3, 1-element)', title=p['filename'])
         elif 'xs'    in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
-            #yield from mv(xs.total_points, len(energy_grid))
-            plot =  DerivedPlot(xspress3, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
+            plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3, 4-element)', title=p['filename'])
         else:
             print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',          title=p['filename'])
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -759,6 +777,8 @@ def xafs(inifile=None, **kwargs):
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
             if plotting_mode(p['mode']) == 'xs':
                 yield from mv(xs.total_points, len(energy_grid))
+            if plotting_mode(p['mode']) == 'xs1':
+                yield from mv(xs1.total_points, len(energy_grid))
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
                 BMMuser.final_log_entry = False
@@ -868,6 +888,10 @@ def xafs(inifile=None, **kwargs):
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
                     hdf5_uid = xs.hdf5.file_name.value
+                if plotting_mode(p['mode']) == 'xs1':
+                    yield from mv(xs1.spectra_per_point, 1) 
+                    yield from mv(xs1.total_points, len(energy_grid))
+                    hdf5_uid = xs1.hdf5.file_name.value
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
@@ -905,7 +929,9 @@ def xafs(inifile=None, **kwargs):
                 
                 md['_kind'] = 'xafs'
                 if p['ththth']: md['_kind'] = '333'
-                if plotting_mode(p['mode']) == 'xs':
+                if plotting_mode(p['mode']) == 'xs1':
+                    md['_dtc'] = (BMMuser.xs8,)
+                elif plotting_mode(p['mode']) == 'xs':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
@@ -919,10 +945,11 @@ def xafs(inifile=None, **kwargs):
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}'})
-
-                                          
-                elif user_ns['with_xspress3'] is True:
+                elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':
                     uid = yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
+                elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs1':
+                    uid = yield from scan_nd([quadem1, xs1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
                 else:
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
@@ -930,7 +957,7 @@ def xafs(inifile=None, **kwargs):
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
-                if plotting_mode(p['mode']) == 'xs':
+                if 'xs' in plotting_mode(p['mode']):
                     hdf5_uid = xs.hdf5.file_name.value
                 
                 uidlist.append(uid)
@@ -941,7 +968,7 @@ def xafs(inifile=None, **kwargs):
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation
-                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'yield')):
+                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'xs1', 'yield')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"Data evaluation: {emoji}", level='bold', slack=True)
@@ -1023,10 +1050,7 @@ def xafs(inifile=None, **kwargs):
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']
-    #try:
-    #    xs = user_ns['xs']
-    #except:
-    #    pass
+
     try:
         dualio = user_ns['dualio']
     except:

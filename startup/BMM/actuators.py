@@ -105,27 +105,32 @@ class BMPS_Shutter(Device):
 class IDPS_Shutter(Device):
     state = Cpt(EpicsSignal, 'Sts:BM_PS_OpnA3-Sts')
 
-class Spinner(Device):
-    state = Cpt(EpicsSignal, 'On_Off')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    
 
-    def on(self):
-        report('Turning {} on'.format(self.name))
-        self.state.put(1)
-    start = on
-
-    def off(self):
-        report('Turning {} off'.format(self.name))
-        self.state.put(0)
-    stop = off
-
-    def on_plan(self):
-        report('Turning {} off'.format(self.name))
-        yield from mv(self.state, 1)
-
-    def off_plan(self):
-        report('Turning {} off'.format(self.name))
-        yield from mv(self.state, 0)
+# single spinner is no longer in user
+# class Spinner(Device):
+#     state = Cpt(EpicsSignal, 'On_Off')
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#
+#     def on(self):
+#         report('Turning {} on'.format(self.name))
+#         self.state.put(1)
+#     start = on
+#
+#     def off(self):
+#         report('Turning {} off'.format(self.name))
+#         self.state.put(0)
+#     stop = off
+#
+#     def on_plan(self):
+#         report('Turning {} off'.format(self.name))
+#         yield from mv(self.state, 1)
+#
+#     def off_plan(self):
+#         report('Turning {} off'.format(self.name))
+#         yield from mv(self.state, 0)
+# fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
 

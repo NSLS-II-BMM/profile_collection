@@ -236,7 +236,7 @@ run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
 
 run_report('\t'+'mono calibration')
-from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono
+from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono, calibrate_pitch
 
 run_report('\t'+'Larch')
 from BMM.larch_interface import Pandrosus, Kekropidai
@@ -285,10 +285,12 @@ if BMMuser.element is None:
 
 run_report('\t'+'final setup: Xspress3')
 from BMM.user_ns.dwelltime import with_xspress3
-from BMM.user_ns.detectors import xs
+from BMM.user_ns.detectors import xs, xs1, use_4element, use_1element
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
-    BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    #BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
+    if use_4element:
+        BMMuser.verify_roi(xs, BMMuser.element, BMMuser.edge, tab='\t\t\t')
+    if use_1element:
+        BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge)
     show_edges()
 
 run_report('\t'+'final setup: cameras')
@@ -326,7 +328,10 @@ def measuring(element, edge=None):
     if edge is not None:
         BMMuser.edge = edge
         rkvs.set('BMM:pds:edge', edge)
-    xs.reset_rois()
+    if use_4element:
+        xs.reset_rois()
+    if use_1element:
+        xs1.reset_rois()
     show_edges()
 
 def check_for_synaxis():
@@ -335,6 +340,7 @@ def check_for_synaxis():
     reports about it at startup.  It also sets BMMuser.syns to True so
     things like motor_status() behave non-disastrously.
     '''
+    BMMuser.syns = False
     syns = []
     for m in mcs8_motors:
         if 'SynAxis' in f'{m}':

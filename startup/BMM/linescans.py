@@ -25,9 +25,9 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
-from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs
+from BMM.user_ns.detectors   import quadem1, vor, xs, xs1, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_dualem, with_xspress3, with_quadem, with_struck
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *
@@ -165,6 +165,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                     return(yield from null())
                 yield from sleep(slp)
                 yield from mv(motor.kill_cmd, 1)
+                #yield from mv(motor.inpos, 1)
                 yield from sleep(slp)
                 yield from move_after_scan(motor)
             yield from mv(quadem1.averaging_time, 0.5)
@@ -444,7 +445,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Dualio', 'Xs'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Dualio', 'Xs', 'Xs1'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -607,7 +608,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
 
         elif detector == 'Xs1':
-            dets.append(xs)
+            dets.append(xs1)
             denominator = ' / I0'
             detname = 'fluorescence'
             func = lambda doc: (doc['data'][thismotor.name],

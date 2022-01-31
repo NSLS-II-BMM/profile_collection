@@ -63,21 +63,21 @@ def kmvr(*args):
     yield from mvr(*args)
 
 
-def set_integration_time(time=0.5):
-    '''
-    set integration times for electrometers and Struck from the command line
-    '''
-    user_ns['vor'].auto_count_time.value = time
-    user_ns['quadem1'].averaging_time.value = time
-    user_ns['dualio'].averaging_time.value = time
+# def set_integration_time(time=0.5):
+#     '''
+#     set integration times for electrometers and Struck from the command line
+#     '''
+#     user_ns['vor'].auto_count_time.value = time
+#     user_ns['quadem1'].averaging_time.value = time
+#     user_ns['dualio'].averaging_time.value = time
 
-def set_integration_plan(time=0.5):
-    '''
-    set integration times for electrometers and Struck from a plan
-    '''
-    yield from mv(user_ns['vor'].auto_count_time, time)
-    yield from mv(user_ns['quadem1'].averaging_time, time)
-    yield from mv(user_ns['dualio'].averaging_time, time)
+# def set_integration_plan(time=0.5):
+#     '''
+#     set integration times for electrometers and Struck from a plan
+#     '''
+#     yield from mv(user_ns['vor'].auto_count_time, time)
+#     yield from mv(user_ns['quadem1'].averaging_time, time)
+#     yield from mv(user_ns['dualio'].averaging_time, time)
 
 
 
@@ -122,7 +122,8 @@ def recover_slits3():
         print('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
-    yield from mv(slits3.vsize, 1, slits3.hsize, 5)
+    yield from mv(slits3.vsize,   1, slits3.hsize,   5)
+    yield from mv(slits3.vcenter, 0, slits3.hcenter, 0)
 
     
 def recover_diagnostics():
@@ -246,6 +247,8 @@ def mvbct(target=None):
 def mvrbct(target=None):
     '''
     A workaround to kill the BCT motor, then do a relative movement
+
+    Since Jan 27 2022, this should not be necessary.
     '''
     dm3_bct = user_ns['dm3_bct']
     if target is None:
@@ -259,6 +262,8 @@ def mvrbct(target=None):
 def mvbender(target=None):
     '''
     A workaround to kill the M2 bender motor, then do an absolute movement
+
+    Since Jan 27 2022, this should not be necessary.
     '''
     m2_bender = user_ns['m2_bender']
     if target is None:

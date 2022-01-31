@@ -1,10 +1,13 @@
 from bluesky import __version__ as bluesky_version
 from ophyd import Component as Cpt
 from ophyd import EpicsSignal
+from ophyd.areadetector import Xspress3Detector
 
-import numpy, h5py
+import numpy, h5py, math
 import pandas as pd
 import itertools, os, json
+
+from nslsii.areadetector.xspress3 import build_detector_class
 
 import matplotlib.pyplot as plt
 
@@ -32,74 +35,30 @@ from BMM.user_ns.base import startup_dir
 # This means that Xspress3 will require its own count plan
 # also that a linescan or xafs scan must set total_points up front
 
-class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
-    '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
+
+class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
+    '''Subclass of BMMXspress3DetectorBase with things specific to the 1-element interface.
     '''
-    channel8 = Cpt(BMMXspress3Channel, 'C8_', channel_num=8, read_attrs=['rois'])
-    mca8_sum = Cpt(EpicsSignal, 'ARRSUM8:ArrayData')
-    mca8 = Cpt(EpicsSignal, 'ARR8:ArrayData')
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if read_attrs is None:
-            read_attrs = ['channel8', 'hdf5']
+            read_attrs = ['hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
-        self.set_channels_for_hdf5(channels=(8,))
-
-    def reset(self):
-        '''call the signals to clear ROIs.  Would like to clear array sums as well....
-        '''
-        self.channel8.reset()
-        ## this doesn't work, not seeing how those arrays get cleared in the IOC....
-        # self.mca8_sum.put(numpy.zeros())
-        
-    def restart(self):
-        self.channel8.vis_enabled.put(1)
-        self.channel8.extra_rois_enabled.put(1)
-        #XF:06BM-ES{Xsp:1}:C1_PluginControlValExtraROI
-        super().restart()
-        
-    def set_rois(self):
-        '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channel8.
-        '''
-        with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
-            js = fl.read()
-        allrois = json.loads(js)
-        for i, el in enumerate(self.slots):
-            if el == 'OCR':
-                self.set_roi_channel(channel=8, index=i+1, name='OCR', low=allrois['OCR']['low'], high=allrois['OCR']['high'])
-                continue
-            elif el is None:
-                continue
-            edge = 'k'
-            if Z_number(el) > 46:
-                edge = 'l3'
-            self.set_roi_channel(channel=8, index=i+1, name=f'{el.capitalize()}8', low=allrois[el][edge]['low'], high=allrois[el][edge]['high'])
-                    
-                
-                
-    def measure_roi(self):
-        '''Hint the ROI currently in use for XAS
-        '''
-        BMMuser = user_ns['BMMuser']
-        for i in range(16):
-            this = getattr(self.channel8.rois, 'roi{:02}'.format(i+1))
-            if self.slots[i] == BMMuser.element:
-                this.value.kind = 'hinted'
-                BMMuser.xs8 = this.value.name
-                BMMuser.xschannel8 = this.value
-            else:
-                this.value.kind = 'omitted'
-                
+        self.hdf5.num_extra_dims.put(0)
     
-    def plot(self, uid=None, add=False):
+    def plot(self, uid=None, add=False, only=None):
         '''Make a plot appropriate for the 4-element detector.
 
         Parameters
         ----------
         uid : str
             DataBroker UID. If None, use the current values in the IOC
+        add : bool
+            ignored, included for consistency with 4-element interface
+        only : int
+            ignored, included for consistency with 4-element interface
         
         '''
         dcm = user_ns['dcm']
@@ -120,32 +79,50 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
         except Exception as e:
             if uid is not None: print(e)
             plt.title('XRF Spectrum')
-            s1 = self.mca8.value
+            s1 = self.channels.channel08.mca.array_data.get()
         e = numpy.arange(0, len(s1)) * 10
+        plt.ion()
         plt.plot(e, s1, label='channel 8')
         plt.legend()
+        #plt.show()
 
     def table(self):
         '''Pretty print a table of values for each ROI.
         '''
         BMMuser = user_ns['BMMuser']
-        print(' ROI    Chan1 ')
+        print(' ROI    Chan8 ')
         print('================')
-        for r in range(1,17):
-            el = getattr(self.channel8.rois, f'roi{r:02}').value.name
+        first_channel_number = self.channel_numbers[0]
+        first_channel = self.get_channel(channel_number=first_channel_number)
+        for r in first_channel.mcaroi_numbers:
+            el = self.channels.channel08.get_mcaroi(mcaroi_number=r).name
             if len(el) > 3:
                 continue
             if el != 'OCR':
                 el = el[:-1]
-            if el == BMMuser.element or el == 'OCR':
+            if '_value' in el:
+                print(' None', end='')
+                for channel_number in self.channel_numbers:
+                    print(f"  {0:7}  ", end='')
+                print('')
+            elif el == BMMuser.element or el == 'OCR':
                 print(go_msg(f' {el:3} '), end='')
-                for c in (8,):
-                    print(go_msg(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  "), end='')
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=r)
+                    val = mcaroi.total_rbv.get()
+                    if math.isnan(val):
+                        val = 0
+                    print(go_msg(f"  {int(val):7}  "), end='')
                 print('')
             else:                
                 print(f' {el:3} ', end='')
-                for c in (8,):
-                    print(f"  {int(getattr(getattr(self, f'channel{c}').rois, f'roi{r:02}').value.get()):7}  ", end='')
+
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=r)
+                    val = mcaroi.total_rbv.get()
+                    if math.isnan(val):
+                        val = 0
+                    print(f"  {int(val):7}  ", end='')
                 print('')
 
     def to_xdi(self, filename=None):
@@ -172,7 +149,7 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
         handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
         handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
         handle.write('# Scan.end_time: %s\n'                 % now())
-        handle.write('# Scan.dwell_time: %.2f\n'             % self.settings.acquire_time.value)
+        handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
         handle.write('# Facility.name: NSLS-II\n')
         handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
         handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
@@ -185,12 +162,21 @@ class BMMXspress3Detector_1Element(BMMXspress3DetectorBase):
         handle.write('# energy ')
 
         ## data table
-        e=numpy.arange(0, len(self.mca1.value)) * 10
-        a=numpy.vstack([self.mca1.value, self.mca2.value, self.mca3.value, self.mca4.value])
+        e=numpy.arange(0, len(self.channels.channel08.mca.array_data.get())) * 10
+        mca_data_array_list = [channel.mca.array_data.get() for channel in self.iterate_channels()]
+        a=numpy.vstack(mca_data_array_list)
         b=pd.DataFrame(a.transpose(), index=e, columns=column_list)
         handle.write(b.to_csv(sep=' '))
 
         handle.flush()
         handle.close()
         print(bold_msg('wrote XRF spectra to %s' % filename))
+        
+
+
+BMMXspress3Detector_1Element = build_detector_class(
+    channel_numbers=(8,),
+    mcaroi_numbers=range(1, 17),
+    detector_parent_classes=(BMMXspress3Detector_1Element_Base, )
+)
         

@@ -100,6 +100,8 @@ if m2.connected is True:
     m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
     m2_xu.velocity.put(0.05)
     m2_xd.velocity.put(0.05)
+    m2.xu.user_offset.put(-0.2679)
+    m2.xd.user_offset.put(1.0199)
 else:
     m2_yu     = SynAxis(name='m2_yu')
     m2_ydo    = SynAxis(name='m2_ydo')
@@ -129,6 +131,8 @@ if m3.connected is True:
     m3_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDI}Mtr',  name='m3_ydi')
     m3_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XU}Mtr',   name='m3_xu')
     m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
+    m3_xd.velocity.put(0.15)
+    m3_xu.velocity.put(0.15)
 else:
     m3_yu     = SynAxis(name='m3_yu')
     m3_ydo    = SynAxis(name='m3_ydo')
@@ -197,8 +201,8 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    dm3_slits_i.user_offset.put(-6.9181)
-    dm3_slits_o.user_offset.put(7.087)
+    dm3_slits_i.user_offset.put(-6.5659)
+    dm3_slits_o.user_offset.put(7.4396)
     dm3_slits_t.user_offset.put(-2.676)
     dm3_slits_b.user_offset.put(-2.9737)
 else:
@@ -384,9 +388,6 @@ fs1.openval  = 1
 fs1.closeval = 0
 
 
-# single spinner is no longer in user
-#fan = Spinner('XF:06BM-EPS{Fan}', name = 'spinner')
-
 
 
 
@@ -400,13 +401,13 @@ fs1.closeval = 0
 ###############################################
 
 
-run_report('\tfilters')
-from BMM.attenuators import attenuator, filter_state, set_filters
-from BMM.user_ns.motors import dm1_filters1, dm1_filters2
-filter1 = attenuator()
-filter1.motor = dm1_filters1
-filter2 = attenuator()
-filter2.motor = dm1_filters2
+# run_report('\tfilters')
+# from BMM.attenuators import attenuator, filter_state, set_filters
+# from BMM.user_ns.motors import dm1_filters1, dm1_filters2
+# filter1 = attenuator()
+# filter1.motor = dm1_filters1
+# filter2 = attenuator()
+# filter2.motor = dm1_filters2
 
 
 

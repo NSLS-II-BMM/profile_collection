@@ -134,8 +134,8 @@ class GateValve(Device):
         self.cls.put(1)
 
     def _state(self):
-        if self.connected is False:
-            return disconnected_msg('?????')
+        #if self.connected is False:
+        #    return disconnected_msg('?????')
         if self.state.get() == 0:
             return error_msg('closed')
         return('open  ')

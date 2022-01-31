@@ -16,7 +16,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm    import BMMuser
-from BMM.user_ns.dcm    import dcm
+from BMM.user_ns.dcm    import *
 
 # PV for clearing encoder signal loss
 # XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr_ENC_LSS_CLR_CMD.PROC

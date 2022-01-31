@@ -18,7 +18,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm         import BMMuser, rois
-from BMM.user_ns.dcm         import dcm
+from BMM.user_ns.dcm         import *
 from BMM.user_ns.detectors   import xs, with_xspress3
 from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks, m2_ydi, m2_ydo, m2_yu
 from BMM.user_ns.motors      import *
@@ -293,6 +293,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     #xBMMuser.to_json(os.path.join(BMMuser.folder, '.BMMuser'))
     BMM_clear_suspenders()
     yield from dcm.kill_plan()
+    yield from mv(m2_bender.kill_cmd, 1)
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))
     return()

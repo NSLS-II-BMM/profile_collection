@@ -1,6 +1,6 @@
 from ophyd.sim import SynAxis
 from ophyd import EpicsMotor, EpicsSignalRO
-from BMM.functions import run_report
+from BMM.functions import run_report, error_msg, warning_msg, bold_msg
 import time
 
 run_report(__file__, text='individual motor definitions')

@@ -137,6 +137,8 @@ def write_XDI(datafile, dataframe):
         detectors = transmission
     elif 'yield' in mm:
         detectors = eyield
+    elif 'xs1' in mm:
+        detectors = _ionchambers + [BMMuser.xschannel8,]
     elif 'xs' in mm:
         detectors = _ionchambers + [BMMuser.xschannel1, BMMuser.xschannel2, BMMuser.xschannel3, BMMuser.xschannel4]
     else:
@@ -237,9 +239,10 @@ def write_XDI(datafile, dataframe):
     plot_hint = 'ln(I0/It)  --  ln($5/$6)'
     if kind == 'sead': plot_hint = 'ln(I0/It)  --  ln($3/$4)'
     mm = plotting_mode(mode)
-    if mm == 'xs':
+    if mm == 'xs1':
+        plot_hint = f'{BMMuser.xs8}/I0  --  $8/$5'
+    elif mm == 'xs':
         plot_hint = f'({BMMuser.xs1}+{BMMuser.xs2}+{BMMuser.xs3}+{BMMuser.xs4})/I0  --  ($8+$9+$10+$11)/$5'
-        # 1-element detector?
     elif 'fluo' in mode or 'flou' in mode or 'both' in mode:
         plot_hint = '(%s + %s + %s + %s) / I0  --  ($8+$9+$10+$11) / $5' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
         if kind == 'sead': plot_hint = '(%s + %s + %s) / I0  --  ($6+$7+$9) / $3' % (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc4)
@@ -285,7 +288,12 @@ def write_XDI(datafile, dataframe):
     handle.write('# -----------' + eol)
     handle.write('# ' + '  '.join(labels) + eol)
     table = dataframe.table()
-    if plotting_mode(mode) == 'xs':
+    if plotting_mode(mode) == 'xs1':
+        table['xmu'] = table[BMMuser.xs8] / table['I0']
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
+        column_list.extend([BMMuser.xs8,])
+        template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+    elif plotting_mode(mode) == 'xs':
         table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
         column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
@@ -316,6 +324,8 @@ def write_XDI(datafile, dataframe):
             table['xmu'] = table['Iy'] / table['I0']
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
+        elif 'xs1' in mode:     # reference is the primary measurement
+            table['xmu'] = table[BMMuser.xs8] / table['I0']
         elif 'xs' in mode:     # reference is the primary measurement
             table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
         elif 'test' in mode:    # test scan, no log!
@@ -330,7 +340,10 @@ def write_XDI(datafile, dataframe):
         if 'yield' in mode:
             column_list.append('Iy')
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
-        if 'xs' in mode:
+        elif 'xs1' in mode:
+            column_list.extend([BMMuser.xs8,])
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+        elif 'xs' in mode:
             column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':

@@ -116,9 +116,9 @@ l2e = e2l
 ## see calibrate_pitch in BMM/mono_calibration.py
 def approximate_pitch(energy):
     if user_ns['dcm']._crystal is '111':
-        m = -3.9241e-06 
-        b = 4.15159473
-        return(m*energy + b + 0.03)
+        m = -4.6897e-06 
+        b = 4.21066993
+        return(m*energy + b)
     else:
         m = -2.5276e-06
         b = 2.36374402
@@ -215,7 +215,9 @@ def present_options(suffix='xlsx'):
         return None
 
 def plotting_mode(mode):
-    if user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+    if user_ns['with_xspress3'] and mode.lower() == 'xs1':
+        return 'xs1'
+    elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
         return 'xs'
     elif not user_ns['with_xspress3'] and any(x in mode for x in ('fluo', 'flou', 'both')):
         return 'fluo'

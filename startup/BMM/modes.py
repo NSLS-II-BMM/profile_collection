@@ -185,7 +185,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
 
      yield from sleep(2.0)
      yield from mv(m2_bender.kill_cmd, 1)
-     #yield from mv(dm3_bct.kill_cmd, 1)
+     yield from mv(dm3_bct.kill_cmd, 1)
      yield from m2.kill_jacks()
      yield from m3.kill_jacks()
 
@@ -319,13 +319,13 @@ def change_xtals(xtal=None):
      if xtal is 'Si(111)':
           yield from mv(dcm_pitch, 4.1,
                         dcm_roll, -6.26,
-                        dcm_x,     0.3    )
+                        dcm_x,     0.5    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset
      elif xtal is 'Si(311)':
           yield from mv(dcm_pitch, 2.28,
                         dcm_roll, -23.86,
-                        dcm_x,     67.3    )
+                        dcm_x,     65.3    )
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           

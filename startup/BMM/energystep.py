@@ -20,7 +20,7 @@ from BMM.functions     import countdown, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
 from BMM.user_ns.bmm   import BMMuser
-from BMM.user_ns.dcm   import dcm
+from BMM.user_ns.dcm   import *
 
 
 

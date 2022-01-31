@@ -155,6 +155,12 @@ class Pandrosus():
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
+        elif mode == 'xs1':
+            columns = header.start['XDI']['_dtc']
+            self.group.mu = numpy.array(table[columns[0]]/table['I0'])
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table[columns[0]])
+
         elif mode == 'xs':
             columns = header.start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])

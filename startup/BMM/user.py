@@ -431,6 +431,16 @@ class BMM_User(Borg):
         data_folder = os.path.join(folder, self.date)
         user_ns['DATA'] = self.DATA = self.folder = data_folder + '/'
         try:
+            hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *self.date.split('-'))
+            user_ns['xs'].hdf5.read_path_template = hdf5folder
+            user_ns['xs'].hdf5.write_path_template = hdf5folder
+            user_ns['xs'].hdf5.file_path.put(hdf5folder)
+        except:
+            # if we are starting up bsui, the xs folder will get set
+            # later.  the try block is needed when running
+            # start_experiment from a running bsui instance.
+            pass
+        try:
             user_ns['wmb'].folder = data_folder + '/'
         except:
             pass
@@ -520,7 +530,7 @@ class BMM_User(Borg):
         xrffolder = os.path.join(data_folder, 'XRF')
         self.establish_folder(step, 'XRF spectra folder', xrffolder)
         #hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
-        #hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *self.date.split('-'))
+        #hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *self.date.split('-'))
         #self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
         #xs.hdf5.file_path.put(hdf5folder)
         

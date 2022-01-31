@@ -43,6 +43,7 @@ import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 #import json
+from BMM.periodictable import Z_number
 
 from BMM.user_ns.base import startup_dir
 
@@ -98,8 +99,6 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         # JOSH: do we need more than 2 seconds here?
         #       adding more time here helps!
         ttime.sleep(10)  # wait for acquisition
-        #print("take a nap")
-        #ttime.sleep(2)  # wait for acquisition
 
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
@@ -137,7 +136,6 @@ class BMMXspress3Channel(Xspress3Channel):
     '''
     extra_rois_enabled = Cpt(EpicsSignal, 'PluginControlValExtraROI')
     resets = DDCpt(_reset_fields('reset', 'Reset', range(1, 17)))
-    # reset1  = Cpt(EpicsSignal, 'ROI1:Reset')  # set this for 1 to 16, replaced by DDCpt line :)
     def reset(self):
         for r in self.resets.read_attrs:
             getattr(self.resets, r).put(1)
@@ -149,13 +147,10 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     '''This class captures everything that is in common for the 1-element
     and 4-element detector interfaces.
     '''
-    #       this plugin does not exist
-    # roi_data = Cpt(PluginBase, 'ROIDATA:')
-    
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-               read_path_template='/nsls2/data/bmm/assets/',  # path to data folder, as mounted on client (i.e. Lustre) 
-               root='/nsls2/data/bmm/',                       # path to root, as mounted on client (i.e. Lustre)
-               write_path_template='/nsls2/data/bmm/assets/', # full path on IOC server (i.e. xf06bm-xspress3)
+               read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
+               root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
+               write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
@@ -169,8 +164,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             #, 'channel5', 'channel6', 'channel7', 'channel8'
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
-
-        #self.set_channels_for_hdf5()
 
         self._asset_docs_cache = deque()
         self._datum_counter = None
@@ -191,10 +184,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr1 {} '.format(t))
         self._status = DeviceStatus(self)
-        #self.settings.erase.put(1)    # this was 
-        # JOSH: proposed change for new IOC
         self.cam.acquire.put(1, wait=False)
-        # self._acquisition_signal.put(1, wait=False)
         trigger_time = ttime.time()
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr2 {} '.format(t))
@@ -208,14 +198,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
         self._abs_trigger_count += 1
         return self._status
-
-    def set_rois():
-        '''Must be implemented by the subclass.
-        '''
-        pass
     
     def restart(self):
-        # JOSH: proposed changes for new IOC
         self.cam.num_images.put(1)
         self.cam.trigger_mode.put(1)
         self.cam.ctrl_dtc.put(1)
@@ -244,30 +228,69 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         return ret
 
     def unstage(self):
-        # JOSH: proposed changes for new IOC
         self.cam.trigger_mode.put(0)
-        #self.settings.trigger_mode.put(0)  # 'Software'
         super().unstage()
         self._datum_counter = None
         self._status = None
 
+    def reset(self):
+        '''call the signals to clear ROIs.  Would like to clear array sums as well....
+        '''
+        for channel in self.iterate_channels():
+            # this probably still doesn't work
+            channel.mca_sum.array_data.put(numpy.zeros)
+        self.erase.put(1)
+
+
+    def set_rois(self):
+        '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.
+        '''
+        with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
+            js = fl.read()
+        allrois = json.loads(js)
+        for i, el in enumerate(self.slots):
+            if el == 'OCR':
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=i+1)
+                    self.set_roi(
+                        mcaroi,
+                        name='OCR',
+                        min_x=allrois['OCR']['low'],
+                        size_x=allrois['OCR']['high'] - allrois['OCR']['low']
+                    )
+                
+                continue
+            elif el is None:
+                continue
+            edge = 'k'
+            if Z_number(el) > 45:
+                edge = 'l3'
+            if el == user_ns['BMMuser'].element:
+                edge = user_ns['BMMuser'].edge.lower()
+            for channel in self.iterate_channels():
+                mcaroi = channel.get_mcaroi(mcaroi_number=i+1)
+                #print(f"element: {el} edge: {edge} mcaroi number: {mcaroi.mcaroi_number} ")
+                self.set_roi(
+                    mcaroi,
+                    name=f'{el.capitalize()}{channel.channel_number}',
+                    min_x=allrois[el][edge]['low'],
+                    size_x=allrois[el][edge]['high'] - allrois[el][edge]['low']
+                )
+                # Azure testing error happens at this line ^
+
+    def measure_roi(self):
+        '''Hint the ROI currently in use for XAS
+        '''
+        BMMuser = user_ns['BMMuser']
+        for channel in self.iterate_channels():
+            for mcaroi in channel.iterate_mcarois():
+                if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:
+                    mcaroi.total_rbv.kind = 'hinted'
+                    setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
+                    setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv) 
+                else:
+                    mcaroi.total_rbv.kind = 'omitted'
         
-    def set_channels_for_hdf5(self, channels=range(1,9)):
-        """
-        Configure which channels' data should be saved in the resulted hdf5 file.
-
-        Parameters
-        ----------
-        channels: tuple, optional
-            the channels to save the data for
-        """
-        # JOSH: proposed changes for new IOC
-        self.hdf5.num_extra_dims.put(0)
-        # does the next line mess up the new IOC?
-        # yes
-        # self.cam.num_channels.put(self.get_channel_count())
-
-
             
     def set_roi(self, mcaroi, name='OCR', min_x=1, size_x=4095):
         """
@@ -297,13 +320,10 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if el is None:
             el = BMMuser.element
         if el in self.slots:
-            #from BMM.edge import show_edges
             print(whisper(f'{tab}Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
-            #show_edges()
-            #user_ns['show_edges']()
         else:
             print(error_msg(f'{tab}Cannot reset rois, {el} is not in {self.name}.slots'))
 
@@ -313,7 +333,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         print('==========================')
         template = ' %3d  %-4s  %4d  %4d'
         for i, el in enumerate(self.slots):
-            # JOSH: proposed changes for new IOC
             this = self.get_channel(channel_number=1).get_mcaroi(mcaroi_number=i+1)
             if el is None:
                 print(template % (i+1, 'None', this.min_x.get(), this.min_x.get() + this.size_x.get()))

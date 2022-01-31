@@ -275,9 +275,9 @@ from ophyd.log import config_ophyd_logging
 
 
 xs = False
-use_4element = True
+use_4element, use_1element = True, True
 from BMM.user_ns.dwelltime import with_xspress3
-if with_xspress3 is True:
+if with_xspress3 is True and use_4element is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element
     #from BMM.xspress3_1element import BMMXspress3Detector_1Element
@@ -333,11 +333,80 @@ if with_xspress3 is True:
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'omitted'
 
-        xs.set_rois()
-        hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', *BMMuser.date.split('-'))
-        xs.hdf5.read_path_template = hdf5folder
-        xs.hdf5.write_path_template = hdf5folder
-        xs.hdf5.file_path.put(hdf5folder)
+    xs.set_rois()
+    hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *BMMuser.date.split('-'))
+    xs.hdf5.read_path_template = hdf5folder
+    xs.hdf5.write_path_template = hdf5folder
+    xs.hdf5.file_path.put(hdf5folder)
+
+
+if with_xspress3 is True and use_1element is True:
+    run_report('\t'+'1-element SDD with Xspress3')
+    from BMM.xspress3_1element import BMMXspress3Detector_1Element
+    from nslsii.areadetector.xspress3 import build_detector_class 
+
+    xs1 = BMMXspress3Detector_1Element(
+        prefix='XF:06BM-ES{Xsp:1}:',
+        name='xs1',
+        read_attrs=['hdf5']
+    )
+
+    # This is necessary for when the ioc restarts
+    # we have to trigger one image for the hdf5 plugin to work correctly
+    # else, we get file writing errors
+    # DEBUGGING: commented this out
+    #xs1.hdf5.warmup()
+
+    # Hints:
+    xs1.channels.kind = 'hinted'
+    for channel in xs1.iterate_channels():
+        channel.kind = 'hinted'
+        channel.mcarois.kind = 'hinted'
+        for mcaroi in channel.iterate_mcarois():
+            mcaroi.total_rbv.kind = 'hinted'
+
+    xs1.cam.configuration_attrs = ['acquire_period',
+                                   'acquire_time',
+                                   'image_mode',
+                                   'manufacturer',
+                                   'model',
+                                   'num_exposures',
+                                   'num_images',
+                                   'temperature',
+                                   'temperature_actual',
+                                   'trigger_mode',
+                                   'config_path',
+                                   'config_save_path',
+                                   'invert_f0',
+                                   'invert_veto',
+                                   'xsp_name',
+                                   'num_channels',
+                                   'num_frames_config',
+                                   'run_flags',
+                                   'trigger_signal']
+
+    for channel in xs1.iterate_channels():
+        mcaroi_names = list(channel.iterate_mcaroi_attr_names())
+        channel.mcarois.read_attrs = mcaroi_names
+        channel.mcarois.configuration_attrs = mcaroi_names
+        for mcaroi in channel.iterate_mcarois():
+            mcaroi.total_rbv.kind = 'omitted'
+
+    xs1.set_rois()
+    hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *BMMuser.date.split('-'))
+    xs1.hdf5.read_path_template = hdf5folder
+    xs1.hdf5.write_path_template = hdf5folder
+    xs1.hdf5.file_path.put(hdf5folder)
+
+
+
+
+        
+def set_xs_folder():
+    hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *BMMuser.date.split('-'))
+    xs.hdf5.read_path_template = hdf5folder
+    xs.hdf5.write_path_template = hdf5folder
+    xs.hdf5.file_path.put(hdf5folder)
 
 
 # JL turn off ophyd logging
