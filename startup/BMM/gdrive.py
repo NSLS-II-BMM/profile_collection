@@ -53,7 +53,8 @@ def synch_gdrive_folder(prefix=''):
         print(f'{prefix}syncing {user_gdrive_folder} to Google drive')
         here = os.getcwd()
         os.chdir(user_gdrive_folder)
-        subprocess.run([location, 'push', '-quiet', '-no-prompt', '-ignore-name-clashes', '.']) 
+        #subprocess.run([location, 'push', '-quiet', '-no-prompt', '-ignore-name-clashes', '.']) 
+        subprocess.Popen([location, 'push', '-quiet', '-no-prompt', '-ignore-name-clashes', '.']) 
         os.chdir(here)
     return()
 

@@ -1,4 +1,4 @@
-from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
+from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Signal, Device, PositionerBase, Component as Cpt, EpicsSignal, EpicsSignalRO)
 from ophyd.epics_motor import EpicsMotor, required_for_connection, AlarmSeverity
 from ophyd.utils.epics_pvs import fmt_time
 from ophyd.pseudopos import (pseudo_position_argument,
@@ -22,7 +22,62 @@ status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'IFFE'  : 0, 'AMFAE' : 0, 'AMFE'  : 0, 'FAFOE' : 0,
                'WFOER' : 0, 'INPOS' : 1, 'ENC_LSS' : 0}
 
-class FMBOEpicsMotor(EpicsMotor):
+
+
+# see https://github.com/NSLS-II-SST/sst_base/blob/master/sst_base/motors.py
+class DeadbandMixin(Device, PositionerBase):
+    """
+    Should be the leftmost class in the inheritance list so that it grabs move first!
+    Must be combined with either EpicsMotor or PVPositioner, or some other class
+    that has a done_value attribute
+    An EpicsMotor subclass that has an absolute tolerance for moves.
+    If the readback is within tolerance of the setpoint, the MoveStatus
+    is marked as finished, even if the motor is still settling.
+    This prevents motors with long, but irrelevant, settling times from
+    adding overhead to scans.
+    """
+    tolerance = Cpt(Signal, value=-1, kind='config')
+
+    def move(self, position, wait=True, **kwargs):
+        tolerance = self.tolerance.get()
+        if tolerance < 0:
+            return super().move(position, wait=wait, **kwargs)
+        else:
+            status = super().move(position, wait=False, **kwargs)
+            setpoint = position
+            done_value = getattr(self, "done_value", 1)
+            def check_deadband(value, timestamp, **kwargs):
+                if abs(value - setpoint) < tolerance:                    
+                    self._move_changed(timestamp=timestamp, value=done_value)
+
+            def clear_deadband(*args, **kwargs):
+                self.clear_sub(check_deadband, event_type=self.SUB_READBACK)
+
+            self.subscribe(check_deadband, event_type=self.SUB_READBACK, run=False)
+            self.subscribe(clear_deadband, event_type=self._SUB_REQ_DONE, run=False)
+            try:
+                if wait:
+                    status_wait(status)
+            except KeyboardInterrupt:
+                self.stop()
+                raise
+
+            return status
+
+
+class DeadbandEpicsMotor(DeadbandMixin, EpicsMotor):
+    """
+    An EpicsMotor subclass that has an absolute tolerance for moves.
+    If the readback is within tolerance of the setpoint, the MoveStatus
+    is marked as finished, even if the motor is still settling.
+    This prevents motors with long, but irrelevant, settling times from
+    adding overhead to scans.
+    This class is designed to be subclassed.
+    """
+    pass
+
+#class FMBOEpicsMotor(EpicsMotor):
+class FMBOEpicsMotor(DeadbandEpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES', kind = 'normal')
     encoder = Cpt(EpicsSignal, '.REP', kind = 'omitted')
     

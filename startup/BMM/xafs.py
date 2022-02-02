@@ -617,7 +617,7 @@ def xafs(inifile=None, **kwargs):
                 report(f'measuring an XRF spectrum at {eave:.1f} (4-element detector)', 'bold')
                 yield from mv(xs.total_points, 1)
                 yield from mv(xs.cam.acquire_time, 1)
-                xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
+                xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
                 ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                         int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                         int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
@@ -632,7 +632,7 @@ def xafs(inifile=None, **kwargs):
                 report(f'measuring an XRF spectrum at {eave:.1f} (1-element detector)', 'bold')
                 yield from mv(xs1.total_points, 1)
                 yield from mv(xs1.cam.acquire_time, 1)
-                xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'xafs_metadata count XRF'})
+                xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
                 ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
                 rois = [int(BMMuser.xschannel1.get()),]
                 xs1.plot(uid=xrfuid)

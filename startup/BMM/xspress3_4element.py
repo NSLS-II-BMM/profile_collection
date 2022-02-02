@@ -4,7 +4,7 @@ from ophyd import EpicsSignal
 from ophyd.areadetector import Xspress3Detector
 
 import numpy, h5py, math
-import pandas as pd
+import pandas
 import itertools, os, json
 
 from nslsii.areadetector.xspress3 import build_detector_class
@@ -191,7 +191,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         e=numpy.arange(0, len(self.channels.channel01.mca.array_data.get())) * 10
         mca_data_array_list = [channel.mca.array_data.get() for channel in self.iterate_channels()]
         a=numpy.vstack(mca_data_array_list)
-        b=pd.DataFrame(a.transpose(), index=e, columns=column_list)
+        b=pandas.DataFrame(a.transpose(), index=e, columns=column_list)
         handle.write(b.to_csv(sep=' '))
 
         handle.flush()

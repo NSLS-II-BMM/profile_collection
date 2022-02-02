@@ -2,7 +2,7 @@ from BMM.functions import run_report
 run_report(__file__, text='Monochromator definitions')
 
 from BMM.user_ns.instruments import wait_for_connection
-from BMM.motors              import FMBOEpicsMotor, VacuumEpicsMotor, XAFSEpicsMotor
+from BMM.motors              import FMBOEpicsMotor, VacuumEpicsMotor, XAFSEpicsMotor, DeadbandEpicsMotor
 from BMM.user_ns.motors      import mcs8_motors
 
 # see comment at top of BMM/user_ns/instruments.py
@@ -19,6 +19,9 @@ wait_for_connection(dcm)
 
 print(f'{TAB}FMBO motor group: dcm')
 if dcm.connected is True:
+    if hasattr(dcm.bragg, 'tolerance'):  # relevant to Jamie's DeadbandEpicsMotor
+        dcm.bragg.tolerance.put(0.0001)
+
     dcm_bragg = XAFSEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr', name='dcm_bragg')
     dcm_pitch = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:P2}Mtr',    name='dcm_pitch')
     dcm_roll  = VacuumEpicsMotor('XF:06BMA-OP{Mono:DCM1-Ax:R2}Mtr',    name='dcm_roll')
@@ -30,10 +33,12 @@ if dcm.connected is True:
     dcm_para.hlm.put(161)        # this is 21200 on the Si(111) mono
     #                            # hard limit is at 162.48
 
+    if hasattr(dcm_bragg, 'tolerance'):  # relevant to Jamie's DeadbandEpicsMotor
+        dcm_bragg.tolerance.put(0.0001)
     dcm_bragg.encoder.kind = 'hinted'
     dcm_bragg.user_readback.kind = 'hinted'
     dcm_bragg.user_setpoint.kind = 'normal'
-    dcm_bragg.velocity.put(0.3)
+    dcm_bragg.velocity.put(0.4)
     from BMM.user_ns.bmm import BMMuser
     dcm_bragg.acceleration.put(BMMuser.acc_fast)
 

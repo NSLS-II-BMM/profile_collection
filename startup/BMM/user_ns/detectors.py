@@ -409,7 +409,3 @@ def set_xs_folder():
     xs.hdf5.file_path.put(hdf5folder)
 
 
-# JL turn off ophyd logging
-import logging
-config_ophyd_logging(level=logging.WARNING)
-

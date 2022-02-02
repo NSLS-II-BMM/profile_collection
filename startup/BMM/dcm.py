@@ -6,7 +6,7 @@ from bluesky.plan_stubs import sleep, mv, mvr, null
 
 from numpy import pi, sin, cos, arcsin
 
-from BMM.motors         import FMBOEpicsMotor, VacuumEpicsMotor
+from BMM.motors         import FMBOEpicsMotor, VacuumEpicsMotor, DeadbandEpicsMotor
 from BMM.functions      import HBARC, boxedtext, approximate_pitch
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.dcm_parameters import dcm_parameters
@@ -85,7 +85,7 @@ class DCM(PseudoPositioner):
 
 
     # The real (or physical) positioners:
-    bragg  = Cpt(FMBOEpicsMotor, 'Bragg}Mtr')
+    bragg  = Cpt(XAFSEpicsMotor, 'Bragg}Mtr')
     para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
     perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
     #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')

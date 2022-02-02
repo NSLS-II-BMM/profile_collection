@@ -13,22 +13,16 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreTIFF)
 from ophyd import Signal, EpicsSignal, EpicsSignalRO, DynamicDeviceComponent as DDCpt
 from ophyd.status import SubscriptionStatus, DeviceStatus
-from ophyd.sim import NullStatus  # TODO: remove after complete/collect are defined
 from ophyd import Component as Cpt, set_and_wait
 from bluesky import __version__ as bluesky_version
 from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
 
 from pathlib import PurePath
-#from hxntools.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
-#                                         Xspress3Channel, Xspress3FileStore, logger)
-#from nslsii.detectors.xspress3 import (XspressTrigger, Xspress3Detector,
-#                                       Xspress3Channel, Xspress3FileStore, logger)
 from nslsii.detectors.xspress3 import Xspress3Channel
 from nslsii.areadetector.xspress3 import Xspress3Trigger, Xspress3FileStore, build_detector_class 
 
 import numpy, h5py, json
-#import pandas as pd
 import itertools, os
 import time as ttime
 from collections import deque, OrderedDict
@@ -39,10 +33,9 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-import BMM.functions
 from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-#import json
+
 from BMM.periodictable import Z_number
 
 from BMM.user_ns.base import startup_dir
@@ -308,7 +301,6 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
 
     def set_roi_channel(self, channel, index=16, name='OCR', low=1, high=4095):
-        # JOSH: proposed changes for new IOC
         mcaroi = channel.get_mcaroi(mcaroi_number=index)
         mcaroi.total_rbv.name = name
         mcaroi.min_x.put(low)
@@ -400,5 +392,4 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         self.table()
         if doplot:
             self.plot(add=True, uid=uid)
-
         

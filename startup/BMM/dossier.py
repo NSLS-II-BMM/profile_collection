@@ -234,7 +234,7 @@ class BMMDossier():
 
             # left sidebar, entry for XRF file in the case of fluorescence data
             thismode = plotting_mode(self.mode)
-            if thismode == 'xs':
+            if thismode == 'xs' or thismode == 'xs1':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
@@ -261,7 +261,7 @@ class BMMDossier():
                                                    usb2uid       = self.usb2uid, )
             
             # middle part, XRF and glancing angle alignment images
-            if thismode == 'xs':
+            if thismode == 'xs' or thismode == 'xs1':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(xrfsnap       = quote('../XRF/'+str(self.xrfsnap)),
@@ -431,6 +431,9 @@ class BMMDossier():
         elif mode == 'yield':
             title, ylab = '', 'yield'
             signal = this['Iy']/this['I0']
+        elif mode == 'xs1':
+            title, ylab = '', 'fluorescence'
+            signal = (this[BMMuser.xs8]+0.001)/(this['I0']+1)
         else:
             title, ylab = '', 'fluorescence'
             signal = (this[BMMuser.xs1]+this[BMMuser.xs2]+this[BMMuser.xs3]+this[BMMuser.xs4]+0.001)/(this['I0']+1)

@@ -147,7 +147,7 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
         handle.write('# Beamline.focusing: %s\n'             % m2state)
         handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
         handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
-        handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
+        handle.write('# Detector.fluorescence: SII Vortex (1-element silicon drift)\n')
         handle.write('# Scan.end_time: %s\n'                 % now())
         handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
         handle.write('# Facility.name: NSLS-II\n')
