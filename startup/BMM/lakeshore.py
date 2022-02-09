@@ -43,7 +43,11 @@ class LSatSetPoint(DerivedSignal):
 
 
 class LakeShore(PVPositioner):
-    '''An ophyd wrapper around the LakeShore 331 controller
+    '''An ophyd wrapper around the LakeShore 331 controller.
+
+    At BMM, communication to the LakeShore is through Moxa 7
+    (xf06bm-tsrv7, 10.68.42.77) where port 2 is connected to the RS232
+    port on the LakeShore.
     '''
 
     ## following https://blueskyproject.io/ophyd/positioners.html#pvpositioner
@@ -76,9 +80,6 @@ class LakeShore(PVPositioner):
     sample_b = Cpt(EpicsSignalRO, 'SAMPLE_B')
 
 
-    # Serial Connection (for debugging)
-    serial = Cpt(EpicsSignal, 'SERIAL')
-
     # Heater Power (%)
     heater_pwr = Cpt(EpicsSignalRO, 'HEATER_PWR')
 
@@ -87,48 +88,52 @@ class LakeShore(PVPositioner):
     ctrl_scan_rate = Cpt(EpicsSignal, 'READ_RDAT_SCALC.SCAN')
 
 
+    # Serial Connection (for debugging)
+    serial = Cpt(EpicsSignal, 'SERIAL')
+
+    
     # Utility signals/PVs
-    read_pid = Cpt(EpicsSignal, 'READ_PID')
-    read_read = Cpt(EpicsSignal, 'READ')
-    read_p = Cpt(EpicsSignal, 'READ_P')
-    read_i = Cpt(EpicsSignal, 'READ_I')
-    read_d = Cpt(EpicsSignal, 'READ_D')
-    read_ramp = Cpt(EpicsSignal, 'READ_RAMP')
-    read_sp_str = Cpt(EpicsSignal, 'READ_SP_STR')
-    write_read_p = Cpt(EpicsSignal, 'WRITE_READ_P')
-    write_read_i = Cpt(EpicsSignal, 'WRITE_READ_I')
-    write_read_d = Cpt(EpicsSignal, 'WRITE_READ_D')
-    read_ctrl = Cpt(EpicsSignal, 'READ_CTRL')
-    read_ctrl_params = Cpt(EpicsSignal, 'READ_CTRL_PARAMS')
-    read_heater_pwr = Cpt(EpicsSignal, 'READ_HEATER_PWR')
-    write_sp = Cpt(EpicsSignal, 'WRITE_SP')
-    read_sp = Cpt(EpicsSignal, 'READ_SP')
-    read_sample_a = Cpt(EpicsSignal, 'READ_SAMPLE_A')
-    read_sample_b = Cpt(EpicsSignal, 'READ_SAMPLE_B')
-    write_read_htr = Cpt(EpicsSignal, 'WRITE_READ_HTR')
-    write_read_ramp = Cpt(EpicsSignal, 'WRITE_READ_RAMP')
-    set_p = Cpt(EpicsSignal, 'SET_P')
-    set_i = Cpt(EpicsSignal, 'SET_I')
-    set_d = Cpt(EpicsSignal, 'SET_D')
-    ramp_scalc = Cpt(EpicsSignal, 'RAMP_SCALC')
-    htr_range = Cpt(EpicsSignal, 'RANGE')
-    sp_scalc = Cpt(EpicsSignal, 'SP_SCALC')
-    ctrl_input = Cpt(EpicsSignal, 'CTRL_INPUT')
-    ctrl_units = Cpt(EpicsSignal, 'CTRL_UNITS')
-    ctrl_units_str = Cpt(EpicsSignal, 'CTRL_UNITS_STR')
-    set_ctrl = Cpt(EpicsSignal, 'SET_CTRL')
-    read_ctrl_scalc = Cpt(EpicsSignal, 'READ_CTRL_SCALC')
-    set_heat = Cpt(EpicsSignal, 'SET_HEAT')
-    read_spla_scalc = Cpt(EpicsSignal, 'READ_SPLA_SCALC')
-    read_splb_scalc = Cpt(EpicsSignal, 'READ_SPLB_SCALC')
-    read_rdat_scalc = Cpt(EpicsSignal, 'READ_RDAT_SCALC')
-    set_ramp = Cpt(EpicsSignal, 'SET_RAMP')
+    # read_pid = Cpt(EpicsSignal, 'READ_PID')
+    # read_read = Cpt(EpicsSignal, 'READ')
+    # read_p = Cpt(EpicsSignal, 'READ_P')
+    # read_i = Cpt(EpicsSignal, 'READ_I')
+    # read_d = Cpt(EpicsSignal, 'READ_D')
+    # read_ramp = Cpt(EpicsSignal, 'READ_RAMP')
+    # read_sp_str = Cpt(EpicsSignal, 'READ_SP_STR')
+    # write_read_p = Cpt(EpicsSignal, 'WRITE_READ_P')
+    # write_read_i = Cpt(EpicsSignal, 'WRITE_READ_I')
+    # write_read_d = Cpt(EpicsSignal, 'WRITE_READ_D')
+    # read_ctrl = Cpt(EpicsSignal, 'READ_CTRL')
+    # read_ctrl_params = Cpt(EpicsSignal, 'READ_CTRL_PARAMS')
+    # read_heater_pwr = Cpt(EpicsSignal, 'READ_HEATER_PWR')
+    # write_sp = Cpt(EpicsSignal, 'WRITE_SP')
+    # read_sp = Cpt(EpicsSignal, 'READ_SP')
+    # read_sample_a = Cpt(EpicsSignal, 'READ_SAMPLE_A')
+    # read_sample_b = Cpt(EpicsSignal, 'READ_SAMPLE_B')
+    # write_read_htr = Cpt(EpicsSignal, 'WRITE_READ_HTR')
+    # write_read_ramp = Cpt(EpicsSignal, 'WRITE_READ_RAMP')
+    # set_p = Cpt(EpicsSignal, 'SET_P')
+    # set_i = Cpt(EpicsSignal, 'SET_I')
+    # set_d = Cpt(EpicsSignal, 'SET_D')
+    # ramp_scalc = Cpt(EpicsSignal, 'RAMP_SCALC')
+    # htr_range = Cpt(EpicsSignal, 'RANGE')
+    # sp_scalc = Cpt(EpicsSignal, 'SP_SCALC')
+    # ctrl_input = Cpt(EpicsSignal, 'CTRL_INPUT')
+    # ctrl_units = Cpt(EpicsSignal, 'CTRL_UNITS')
+    # ctrl_units_str = Cpt(EpicsSignal, 'CTRL_UNITS_STR')
+    # set_ctrl = Cpt(EpicsSignal, 'SET_CTRL')
+    # read_ctrl_scalc = Cpt(EpicsSignal, 'READ_CTRL_SCALC')
+    # set_heat = Cpt(EpicsSignal, 'SET_HEAT')
+    # read_spla_scalc = Cpt(EpicsSignal, 'READ_SPLA_SCALC')
+    # read_splb_scalc = Cpt(EpicsSignal, 'READ_SPLB_SCALC')
+    # read_rdat_scalc = Cpt(EpicsSignal, 'READ_RDAT_SCALC')
+    # set_ramp = Cpt(EpicsSignal, 'SET_RAMP')
 
     def level(self, value):
-        '''Return the proper integer for the requested power level:
-        1: "low" or "100 mA"
-        2: "medium" or "300 mA"
-        3: "high" or "1 A"
+        '''Return the proper integer (0 - 3) for the requested power level:
+        1 = "low" or "100 mA"
+        2 = "medium" or "300 mA"
+        3 = "high" or "1 A"
         
         Any other string will resolve to 0, which is off.
 
@@ -173,8 +178,8 @@ class LakeShore(PVPositioner):
         setpoint.
 
         '''
-        yield from mv(self.power, self.level(heater))
         yield from mv(self.setpoint, target)
+        yield from mv(self.power, self.level(heater))
         yield from mv(self, target)
         
 
@@ -185,7 +190,7 @@ class LakeShore(PVPositioner):
         if unit.lower()[0] == 'k':
             self.units_sel.put('K')
             return
-        print(warning_msg('LakeShore 331 units not changed.  Valid units are Kelvin and Celcius."'))
+        print(warning_msg('LakeShore 331 units not changed.  Valid units are Kelvin and Celsius (as strings)."'))
 
 
     def status(self):
@@ -196,9 +201,12 @@ class LakeShore(PVPositioner):
         text += f'Sample temperature A = {self.sample_a.get()} {controlA}\n'
         text += f'Sample temperature B = {self.sample_b.get()} {controlB}\n\n'
         text += f'Power = {self.heater_pwr.get()}%   Range = {("Off", "100 mA", "300 mA", "1 A")[self.power.get()]}\n\n'
-        text += f'Settling time: {self.settle_time}\n'
+        text += f'Settling time: {self.settle_time} seconds\n\n'
+        yesno = 'yes' if lakeshore_done_flag.get() == 1 else 'no'
+        text += f'Resting at setpoint: {yesno}\n\n'
+        text += f'(scan rate = {self.temp_scan_rate.describe()["LakeShore 331_temp_scan_rate"]["enum_strs"][self.temp_scan_rate.get()]})\n'
         
-        boxedtext('LakeShore 331', text, 'brown', width = 45)
+        boxedtext('LakeShore 331', text, 'cyan', width = 45)
 
 
         
@@ -232,9 +240,6 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
         previous = 25
         
         self.content += self.tab + 'yield from mv(lakeshore.setpoint, lakeshore.readback.get())\n\n'
-        self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
-        #self.content += self.tab + 'yield from lakeshore.on_plan()\n'
-        #self.content += self.tab + 'yield from sleep(15)\n'
 
         for m in self.measurements:
 
@@ -251,7 +256,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge'):
+            for k in ('element', 'edge', 'focus', 'power'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
             if m['settle'] == 0:
@@ -260,10 +265,10 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             ################################
             # change temperature is needed #
             ################################
+            self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
             if m['temperature'] != temperature:
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
-                self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
-                self.content += self.tab + f'yield from lakeshore.to({m["temperature"]:.1f}, heater={m["power"]})\n'
+                self.content += self.tab + f'yield from lakeshore.to({m["temperature"]:.1f}, heater=\'{m["power"]}\')\n'
                 temperature = m['temperature']
                 settle_time += m["settle"]
                 ramp_time += (temperature - previous) / user_ns['lakeshore'].ramp_rate.get()
@@ -340,7 +345,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             
 
         print(whisper(f'XAS time:      about {self.totaltime/60:.1f} hours'))
-        print(whisper(f'ramp time:     about {ramp_time:.1f} minutes'))
+        print(whisper(f'ramp time:     about {ramp_time:.1f} minutes (this estimate is probably unreliable)'))
         print(whisper(f'settling time: about {settle_time/60:.1f} minutes'))
         self.totaltime = self.totaltime + (settle_time / 60) + ramp_time
         if self.close_shutters:
@@ -368,7 +373,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
         this = {'default':     defaultline,
                 'temperature': row[1].value,          # measurement temperature
                 'settle':      self.nonezero(row[2].value),  # temperature settling time
-                'power':       self.nonezero(row[3].value),  # temperature settling time
+                'power':       row[3].value,                 # heater power level
                 'measure':     self.truefalse(row[4].value), # filename and visualization
                 'filename':    row[5].value,
                 'nscans':      row[6].value,

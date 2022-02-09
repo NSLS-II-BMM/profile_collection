@@ -207,7 +207,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge'):
+            for k in ('element', 'edge', 'focus'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 

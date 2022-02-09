@@ -33,6 +33,10 @@ class AtSetpoint(DerivedSignal):
     
 class Linkam(PVPositioner):
     '''An ophyd wrapper around the Linkam T96 controller
+
+    At BMM, communication to the Linkam is through Moxa 7
+    (xf06bm-tsrv7, 10.68.42.77) where port 1 is connected to the RS232
+    port on the Linkam T96 controller.
     '''
 
     ## following https://blueskyproject.io/ophyd/positioners.html#pvpositioner
@@ -183,7 +187,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge'):
+            for k in ('element', 'edge', 'focus'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
             if m['settle'] == 0:
