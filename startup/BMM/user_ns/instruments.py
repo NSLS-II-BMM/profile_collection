@@ -483,7 +483,7 @@ run_report('\tLakeShore 331 controller')
 from BMM.lakeshore import LakeShore, LakeShoreMacroBuilder
 lakeshore = LakeShore('XF:06BM-BI{LS:331-1}:', name='LakeShore 331', egu='K', settle_time=10, limits=(5,400.0))
 
-lsmb = LinkamMacroBuilder()
+lsmb = LakeShoreMacroBuilder()
 lsmb.description = 'the LakeShore 331 temperature controller'
 lsmb.instrument='LakeShore'
 lsmb.folder = BMMuser.folder

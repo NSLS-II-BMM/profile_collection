@@ -232,6 +232,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
         previous = 25
         
         self.content += self.tab + 'yield from mv(lakeshore.setpoint, lakeshore.readback.get())\n\n'
+        self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
         #self.content += self.tab + 'yield from lakeshore.on_plan()\n'
         #self.content += self.tab + 'yield from sleep(15)\n'
 
@@ -262,11 +263,10 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             if m['temperature'] != temperature:
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
                 self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
-                self.content += self.tab + f'yield from lakeshore.on_plan({m["power"]})\n'
-                self.content += self.tab + f'yield from mv(lakeshore, {m["temperature"]:.1f})\n'
+                self.content += self.tab + f'yield from lakeshore.to({m["temperature"]:.1f}, heater={m["power"]})\n'
                 temperature = m['temperature']
                 settle_time += m["settle"]
-                ramp_time += (temperature - previous) / user_ns['lakeshore'].RR.get()
+                ramp_time += (temperature - previous) / user_ns['lakeshore'].ramp_rate.get()
                 previous = temperature
 
             ############################
