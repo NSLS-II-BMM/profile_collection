@@ -222,6 +222,9 @@ def metadata_at_this_moment():
     elif 'linkam' in BMMuser.instrument.lower():
         rightnow['Sample'] = dict()
         rightnow['Sample']['temperature'] = user_ns['linkam'].readback.get()
+    elif 'lakeshore' in BMMuser.instrument.lower():
+        rightnow['Sample'] = dict()
+        rightnow['Sample']['temperature'] = user_ns['lakeshore'].readback.get()
     elif BMMuser.instrument.lower() == 'sample wheel':
         rightnow['Sample'] = dict()
         rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number()

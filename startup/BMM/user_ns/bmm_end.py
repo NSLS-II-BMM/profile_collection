@@ -133,6 +133,10 @@ def xlsx():
         print(bold_msg('This is a Linkam spreadsheet'))
         lmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'Linkam stage'
+    elif instrument.lower() == 'lakeshore':
+        print(bold_msg('This is a LakeShore spreadsheet'))
+        lsmb.spreadsheet(spreadsheet, sheet)
+        BMMuser.instrument = 'LakeShore 331'
     elif instrument.lower() == 'grid':
         print(bold_msg('This is a motor grid spreadsheet'))
         gmb.spreadsheet(spreadsheet, sheet)
@@ -154,6 +158,9 @@ def set_instrument(instrument=None):
     elif instrument.lower() == 'linkam':
         print(bold_msg('Setting instrument as Linkam stage'))
         BMMuser.instrument = 'Linkam stage'
+    elif instrument.lower() == 'lakeshore':
+        print(bold_msg('Setting instrument as LakeShore 331'))
+        BMMuser.instrument = 'LakeShore'
     elif instrument.lower() == 'grid':
         print(bold_msg('Setting instrument as sample grid'))
         BMMuser.instrument = 'motor grid'
@@ -308,15 +315,12 @@ if all_connected(True) is False:
 
 run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
-from BMM.user_ns.instruments import wmb, lmb, gmb
-wmb.folder = BMMuser.folder
-#wmb.tmpl = os.path.join(startup_dir, 'wheelmacro.tmpl')
-gawheel.folder = BMMuser.folder
-#gawheel.tmpl = os.path.join(startup_dir, 'gamacro.tmpl')
-lmb.folder = BMMuser.folder
-#lmb.tmpl = os.path.join(startup_dir, 'linkam.tmpl')
-gmb.folder = BMMuser.folder
-#gmb.tmpl = os.path.join(startup_dir, 'grid.tmpl')
+from BMM.user_ns.instruments import wmb, lmb, gmb, lsmb
+wmb.folder = BMMuser.folder      # single or double wheel
+gawheel.folder = BMMuser.folder  # glancing angle stage
+lmb.folder = BMMuser.folder      # Linkam stage
+lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
+gmb.folder = BMMuser.folder      # generic motor grid
 gawheel.description = 'the glancing angle stage'
 
 from BMM.logging import BMM_msg_hook

@@ -204,6 +204,8 @@ def write_XDI(datafile, dataframe):
         metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, spinner {ga.current()}')
     elif 'linkam' in BMMuser.instrument.lower():
         metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, temperature {user_ns["linkam"].readback.get():.1f}K')
+    elif 'lakeshore' in BMMuser.instrument.lower():
+        metadata.insert_line(f'# Sample.stage: {BMMuser.instrument}, temperature {user_ns["lakeshore"].readback.get():.1f}K')
       
     ## record selected baseline measurements as XDI metadata
     XDI_record = user_ns['XDI_record']

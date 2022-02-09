@@ -13,6 +13,8 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_dualem, with_quadem
 from BMM.user_ns.instruments import shb
 
+
+
 class Nanoize(DerivedSignal):
     def forward(self, value):
         return value * 1e-9 / _locked_dwell_time.dwell_time.readback.get()

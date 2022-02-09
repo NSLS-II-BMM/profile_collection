@@ -97,7 +97,7 @@ class BMMMacroBuilder():
         self.cleanup          = ''
         self.initialize       = ''
 
-        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'motor1', 'position1', 'motor2', 'position2')
+        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
@@ -425,7 +425,7 @@ class BMMMacroBuilder():
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
         #          things in the spreadsheet but not in the INI file
-        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth', 'detectorx', 'settle', 'temperature', 'motor1', 'position1', 'motor2', 'position2'):
+        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth', 'detectorx', 'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2'):
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'

@@ -265,7 +265,7 @@ class BMM_User(Borg):
                                    ###########################################################################
         
         self.bender_xas    = 212225  #####################################################################
-        self.bender_xrd    = 112239  # approximate values for M2 bender for focusing at XAS & XRD tables #
+        self.bender_xrd    = 107240  # approximate values for M2 bender for focusing at XAS & XRD tables #
         self.bender_margin = 30000   #####################################################################
 
         self.filter_state  = 0
