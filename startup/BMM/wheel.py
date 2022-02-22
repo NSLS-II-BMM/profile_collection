@@ -309,7 +309,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
             plus = 1
         this = {'default' :   defaultline,
                 'slot':       row[1].value,      # sample location
-                'measure':    self.truefalse(row[2+plus].value),  # filename and visualization
+                'measure':    self.truefalse(row[2+plus].value, 'measure'),  # filename and visualization
                 'filename':   row[3+plus].value,
                 'nscans':     row[4+plus].value,
                 'start':      row[5+plus].value,
@@ -328,12 +328,12 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 'sampley':    row[17+plus+self.offset].value,
                 'slitwidth':  row[18+plus+self.offset].value,
                 'detectorx':  row[19+plus+self.offset].value,
-                'snapshots':  self.truefalse(row[20+plus+self.offset].value), # flags
-                'htmlpage':   self.truefalse(row[21+plus+self.offset].value),
-                'usbstick':   self.truefalse(row[22+plus+self.offset].value),
-                'bothways':   self.truefalse(row[23+plus+self.offset].value),
-                'channelcut': self.truefalse(row[24+plus+self.offset].value),
-                'ththth':     self.truefalse(row[25+plus+self.offset].value),
+                'snapshots':  self.truefalse(row[20+plus+self.offset].value, 'snapshots' ), # flags
+                'htmlpage':   self.truefalse(row[21+plus+self.offset].value, 'htmlpage'  ),
+                'usbstick':   self.truefalse(row[22+plus+self.offset].value, 'usbstick'  ),
+                'bothways':   self.truefalse(row[23+plus+self.offset].value, 'bothways'  ),
+                'channelcut': self.truefalse(row[24+plus+self.offset].value, 'channelcut'),
+                'ththth':     self.truefalse(row[25+plus+self.offset].value, 'ththth'    ),
                 'url':        row[26+plus+self.offset].value,
                 'doi':        row[27+plus+self.offset].value,
                 'cif':        row[28+plus+self.offset].value, }

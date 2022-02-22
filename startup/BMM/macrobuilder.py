@@ -181,10 +181,13 @@ class BMMMacroBuilder():
         #copy_to_gdrive(spreadsheet)
         return 0
 
-    def truefalse(self, value):
+    def truefalse(self, value, keyword):
         '''Interpret certain strings from the spreadsheet as True/False'''
         if value is None:
-            return True  # self.measurements[0]['measure']
+            if keyword.lower() in ('bothways', 'ththth'):
+                return False:
+            else:
+                return True  # self.measurements[0]['measure']
         if str(value).lower() == '=true()':
             return True
         elif str(value).lower() == 'true':

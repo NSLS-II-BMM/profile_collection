@@ -444,7 +444,7 @@ def read_bpms():
 # \____/ \___/\____/  \_/   |___/ \____/ \___/ \___/ \____/\____/  #
 ####################################################################
                                                                 
-run_report('\tBusy device')
+run_report('\tbusy device')
 from BMM.busy import Busy
 busy = Busy(name='busy')
 
@@ -501,6 +501,7 @@ lsmb.folder = BMMuser.folder
 # \_|  |_/\___/  \_/  \___/\_| \_|  \____/\_| \_|\___/|___/   #
 ###############################################################
 
+run_report('\tmotor grid automation')
 from BMM.grid import GridMacroBuilder
 gmb = GridMacroBuilder()
 gmb.description = 'a motor grid'

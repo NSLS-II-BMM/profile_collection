@@ -135,7 +135,7 @@ class GridMacroBuilder(BMMMacroBuilder):
 
         '''
         this = {'default':     defaultline,
-                'measure':     self.truefalse(row[2].value), # filename and visualization
+                'measure':     self.truefalse(row[2].value, 'measure'), # filename and visualization
                 'filename':    row[3].value,
                 'nscans':      row[4].value,
                 'start':       row[5].value,
@@ -154,12 +154,12 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'motor2':      row[18].value,
                 'position2':   row[19].value,
                 'detectorx':   row[20].value,
-                'snapshots':   self.truefalse(row[21].value),  # flags
-                'htmlpage':    self.truefalse(row[22].value),
-                'usbstick':    self.truefalse(row[23].value),
-                'bothways':    self.truefalse(row[24].value),
-                'channelcut':  self.truefalse(row[25].value),
-                'ththth':      self.truefalse(row[26].value),
+                'snapshots':   self.truefalse(row[21].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[22].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[23].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[24].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[25].value, 'channelcut'),
+                'ththth':      self.truefalse(row[26].value, 'ththth'    ),
                 'url':         row[27].value,
                 'doi':         row[28].value,
                 'cif':         row[29].value, }

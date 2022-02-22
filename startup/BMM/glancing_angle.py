@@ -262,11 +262,11 @@ class GlancingAngle(Device):
         yy = tf[motor]
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
         #if BMMuser.element in ('Zr', 'Sc', 'Nb'):
-        #    com = signal.idxmax()
-        #    centroid = yy[com]
-        #else:
-        com = int(center_of_mass(signal)[0])+1
+        com = signal.idxmax()
         centroid = yy[com]
+        #else:
+        #com = int(center_of_mass(signal)[0])+1
+        #centroid = yy[com]
         f.plot(yy, signal)
         f.scatter(centroid, signal[com], s=120, marker='x', color='green')
         f.set_xlabel(f'{motor} (mm)')
@@ -309,6 +309,25 @@ class GlancingAngle(Device):
         self.y_plot(yy, out)
 
 
+    def align_fluo(self, force=False):
+        BMMuser = user_ns['BMMuser']
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_liny']
+        else:
+            motor = user_ns['xafs_linx']
+        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, force=force)
+        self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        tf = user_ns['db'][-1].table()
+        yy = tf[motor.name]
+        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        #if BMMuser.element in ('Cr', 'Zr'):
+        centroid = yy[signal.idxmax()]
+        #else:
+        #    com = int(center_of_mass(signal)[0])+1
+        #    centroid = yy[com]
+        yield from mv(motor, centroid)
+
+        
     def auto_align(self, pitch=2, drop=None):
         '''Align a sample on a spinner automatically.  This performs 5 scans.
         The first four iterate twice between linear and pitch
@@ -376,17 +395,19 @@ class GlancingAngle(Device):
 
         ## move to measurement angle and align
         yield from mvr(user_ns['xafs_pitch'], pitch)
-        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False)
-        self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
-        tf = user_ns['db'][-1].table()
-        yy = tf[motor.name]
-        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        if BMMuser.element == 'Zr':
-            centroid = yy[signal.idxmax()]
-        else:
-            com = int(center_of_mass(signal)[0])+1
-            centroid = yy[com]
-        yield from mv(motor, centroid)
+        yield from self.align_fluo()
+        # yield from mvr(user_ns['xafs_pitch'], pitch)
+        # yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False)
+        # self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        # tf = user_ns['db'][-1].table()
+        # yy = tf[motor.name]
+        # signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        # #if BMMuser.element in ('Cr', 'Zr'):
+        # centroid = yy[signal.idxmax()]
+        # #else:
+        # #    com = int(center_of_mass(signal)[0])+1
+        # #    centroid = yy[com]
+        # yield from mv(motor, centroid)
         
         ## make a pretty picture, post it to slack
         self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
@@ -577,11 +598,11 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
         '''
         this = {'default':    defaultline,
                 'slot':       row[1].value,      # sample location
-                'measure':    self.truefalse(row[2].value),  # filename and visualization
+                'measure':    self.truefalse(row[2].value, 'measure'),  # filename and visualization
                 'filename':   row[3].value,
                 'nscans':     row[4].value,
                 'start':      row[5].value,
-                'spin':       self.truefalse(row[6].value),
+                'spin':       self.truefalse(row[6].value, 'spin'),
                 'element':    row[7].value,      # energy range
                 'edge':       row[8].value,
                 'focus':      row[9].value,
@@ -596,12 +617,12 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 'samplep':    row[18].value,     # other motors
                 'sampley':    row[19].value,
                 'detectorx':  row[20].value,
-                'snapshots':  self.truefalse(row[21].value),  # flags
-                'htmlpage':   self.truefalse(row[22].value),
-                'usbstick':   self.truefalse(row[23].value),
-                'bothways':   self.truefalse(row[24].value),
-                'channelcut': self.truefalse(row[25].value),
-                'ththth':     self.truefalse(row[26].value),
+                'snapshots':  self.truefalse(row[21].value, 'snapshots' ),  # flags
+                'htmlpage':   self.truefalse(row[22].value, 'htmlpage'  ),
+                'usbstick':   self.truefalse(row[23].value, 'usbstick'  ),
+                'bothways':   self.truefalse(row[24].value, 'bothways'  ),
+                'channelcut': self.truefalse(row[25].value, 'channelcut'),
+                'ththth':     self.truefalse(row[26].value, 'ththth'    ),
                 'url':        row[27].value,
                 'doi':        row[28].value,
                 'cif':        row[29].value, }

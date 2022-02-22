@@ -374,7 +374,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                 'temperature': row[1].value,          # measurement temperature
                 'settle':      self.nonezero(row[2].value),  # temperature settling time
                 'power':       row[3].value,                 # heater power level
-                'measure':     self.truefalse(row[4].value), # filename and visualization
+                'measure':     self.truefalse(row[4].value, 'measure'), # filename and visualization
                 'filename':    row[5].value,
                 'nscans':      row[6].value,
                 'start':       row[7].value,
@@ -391,12 +391,12 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                 'samplex':     row[18].value,     # other motors
                 'sampley':     row[19].value,
                 'detectorx':   row[20].value,
-                'snapshots':   self.truefalse(row[21].value),  # flags
-                'htmlpage':    self.truefalse(row[22].value),
-                'usbstick':    self.truefalse(row[23].value),
-                'bothways':    self.truefalse(row[24].value),
-                'channelcut':  self.truefalse(row[25].value),
-                'ththth':      self.truefalse(row[26].value),
+                'snapshots':   self.truefalse(row[21].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[22].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[23].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[24].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[25].value, 'channelcut'),
+                'ththth':      self.truefalse(row[26].value, 'ththth'    ),
                 'url':         row[27].value,
                 'doi':         row[28].value,
                 'cif':         row[29].value, }

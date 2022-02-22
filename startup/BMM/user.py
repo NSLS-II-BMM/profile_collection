@@ -522,6 +522,7 @@ class BMM_User(Borg):
         self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle.xlsx')
         self.find_or_copy_file(0, 'double wheel spreadsheet',   'doublewheel.xlsx')
         self.find_or_copy_file(0, 'Linkam stage spreadsheet',   'linkam.xlsx')
+        self.find_or_copy_file(0, 'Lakeshore spreadsheet',      'lakeshore.xlsx')
         self.find_or_copy_file(0, 'motor grid spreadsheet',     'grid.xlsx')
         step += 1            
         
@@ -815,3 +816,28 @@ class BMM_User(Borg):
         self.echem_remote = None
         
         return None
+
+    def set_instrument(self):
+        instruments = ('Single wheel', 'Double wheel', 'Linkam stage', 'Displex + LakeShore', 'Glancing angle stage', 'Motor grid')
+        print('Select an instrument:\n')
+        for i, inst in enumerate(instruments):
+            print(f'  {i+1}: {inst}')
+        
+        print('  u: unset')
+        print('\n  r: return')
+        choice = input("\nSelect a file > ")
+        try:
+            if int(choice) > 0 and int(choice) <= len(instruments):
+                this = instruments[int(choice)-1]
+                print(f'You selected "{this}"')
+                self.instrument = this
+            elif choice.lower() == 'u':
+                print('Unsetting instrument')
+                self.instrument = ''
+            else:
+                print('No instrument selected')
+                return None
+        except:
+            print('No instrument selected')
+            return None
+        

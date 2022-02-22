@@ -430,7 +430,8 @@ def xafs(inifile=None, **kwargs):
             yield from null()
             return
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
-        if p['lims']is False:
+        p['channelcut'] = True
+        if p['lims'] is False:
             BMMuser.lims = False
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
@@ -504,7 +505,8 @@ def xafs(inifile=None, **kwargs):
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMMuser.prompt)
-        if verbose: print(verbosebold_msg('computing pseudo-channelcut energy')) 
+        if verbose: print(verbosebold_msg('computing pseudo-channelcut energy'))
+        print(p['e0'], p['bounds'], p['ththth'])
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMMuser.prompt:
@@ -1030,7 +1032,9 @@ def xafs(inifile=None, **kwargs):
             #if dossier.htmlpage:
             try:
                 htmlout = dossier.write_dossier()
-            except:
+            except Exception as E:
+                print(error_msg('Failed to write dossier.  Here is the exception message:'))
+                print(E)
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 report('wrote dossier %s' % htmlout, 'bold')

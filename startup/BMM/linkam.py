@@ -304,7 +304,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         this = {'default':     defaultline,
                 'temperature': row[1].value,          # measurement temperature
                 'settle':      self.nonezero(row[2].value),  # temperature settling time
-                'measure':     self.truefalse(row[3].value), # filename and visualization
+                'measure':     self.truefalse(row[3].value, 'measure'), # filename and visualization
                 'filename':    row[4].value,
                 'nscans':      row[5].value,
                 'start':       row[6].value,
@@ -321,12 +321,12 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 'samplex':     row[17].value,     # other motors
                 'sampley':     row[18].value,
                 'detectorx':   row[19].value,
-                'snapshots':   self.truefalse(row[20].value),  # flags
-                'htmlpage':    self.truefalse(row[21].value),
-                'usbstick':    self.truefalse(row[22].value),
-                'bothways':    self.truefalse(row[23].value),
-                'channelcut':  self.truefalse(row[24].value),
-                'ththth':      self.truefalse(row[25].value),
+                'snapshots':   self.truefalse(row[20].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[21].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[22].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[23].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[24].value, 'channelcut'),
+                'ththth':      self.truefalse(row[25].value, 'ththth'    ),
                 'url':         row[26].value,
                 'doi':         row[27].value,
                 'cif':         row[28].value, }
