@@ -170,7 +170,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
-        self.content += self.tab + 'yield from sleep(15)\n'
+        self.content += self.tab + 'yield from mv(busy, 15)\n'
 
         for m in self.measurements:
 
@@ -198,8 +198,10 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             ################################
             if m['temperature'] != temperature:
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
-                self.content += self.tab + f'linkam.settle_time = {m["settle"]:.1f}\n'
+                self.content += self.tab +  'linkam.settle_time = 10\n'
                 self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
+                self.content += self.tab + f"report('== Holding at temperature {m['temperature']:.1f}C for {m['settle']} seconds', slack=True)\n"
+                self.content += self.tab + f'yield from mv(busy, {m["settle"]:.1f})\n'
                 temperature = m['temperature']
                 settle_time += m["settle"]
                 ramp_time += (temperature - previous) / user_ns['linkam'].RR.get()

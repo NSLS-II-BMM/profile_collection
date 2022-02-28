@@ -1000,12 +1000,12 @@ def xafs(inifile=None, **kwargs):
             ## finish up, close out
             dossier.uidlist = uidlist
             dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
-            print('Returning to fixed exit mode and returning DCM to %1.f' % eave)
+            print('Returning to fixed exit mode') #  and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
-            yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
+            #yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
             #dcm_bragg.clear_encoder_loss()
-            yield from mv(dcm.energy, eave)
-            yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
+            #yield from mv(dcm.energy, eave)
+            #yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## execute this scan sequence plan

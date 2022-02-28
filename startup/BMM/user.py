@@ -333,8 +333,9 @@ class BMM_User(Borg):
             #rkvs.set('BMM:pds:edge',        str(config['edge']))
             #rkvs.set('BMM:pds:element',     str(config['element']))
             rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
-            BMMuser.element = rkvs.get('BMM:pds:element').decode('utf-8')
-            BMMuser.edge    = rkvs.get('BMM:pds:edge').decode('utf-8')
+            BMMuser.element    = rkvs.get('BMM:pds:element').decode('utf-8')
+            BMMuser.edge       = rkvs.get('BMM:pds:edge').decode('utf-8')
+            BMMuser.instrument = rkvs.get('BMM:automation:type').decode('utf-8')
         except:
             pass
             

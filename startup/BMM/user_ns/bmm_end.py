@@ -369,3 +369,8 @@ try:
 except:
     pass
 
+
+#import logging
+#debug_monitor_log = logging.getLogger('ophyd.event_dispatcher')
+#debug_monitor_log.addHandler(logging.StreamHandler(stream=sys.stdout))
+

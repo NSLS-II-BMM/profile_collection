@@ -160,12 +160,12 @@ class BMMMacroBuilder():
             self.has_e0_column = True
 
         if double is True:
-            self.do_first_change = self.truefalse(self.ws['H2'].value)
-            self.close_shutters  = self.truefalse(self.ws['K2'].value)
+            self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
+            self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
             self.append_element  = str(self.ws['M2'].value)
         else:
-            self.do_first_change = self.truefalse(self.ws['G2'].value)
-            self.close_shutters  = self.truefalse(self.ws['J2'].value)
+            self.do_first_change = self.truefalse(self.ws['G2'].value, 'firstchange')
+            self.close_shutters  = self.truefalse(self.ws['J2'].value, 'closeshutters')
             self.append_element  = str(self.ws['L2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
@@ -185,7 +185,7 @@ class BMMMacroBuilder():
         '''Interpret certain strings from the spreadsheet as True/False'''
         if value is None:
             if keyword.lower() in ('bothways', 'ththth'):
-                return False:
+                return False
             else:
                 return True  # self.measurements[0]['measure']
         if str(value).lower() == '=true()':
@@ -344,7 +344,7 @@ class BMMMacroBuilder():
         #    return True
         if m['filename'] is None or re.search('^\s*$', m['filename']) is not None:
             return True
-        if  self.truefalse(m['measure']) is False:
+        if  self.truefalse(m['measure'], 'measure') is False:
             return True
         if m['nscans'] is not None and m['nscans'] < 1:
             return True

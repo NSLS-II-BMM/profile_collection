@@ -20,7 +20,7 @@ class dcm_parameters():
         self.dspacing_111 = 3.1354714  # 24 January 2022
         self.dspacing_311 = 1.6376409  # 25 January 2022
         ## *add* the fit result from these numbers!
-        self.offset_111 = 16.0820184   # 24 January 2022
+        self.offset_111 = 16.0720184   # 24 February 2022 *approximate*
         self.offset_311 = 16.0031263   # 25 January 2022
 
 

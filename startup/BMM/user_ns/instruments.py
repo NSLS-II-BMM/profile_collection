@@ -201,8 +201,8 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    dm3_slits_i.user_offset.put(-6.5659)
-    dm3_slits_o.user_offset.put(7.4396)
+    dm3_slits_i.user_offset.put(-6.3535)
+    dm3_slits_o.user_offset.put(7.6535)
     dm3_slits_t.user_offset.put(-2.676)
     dm3_slits_b.user_offset.put(-2.9737)
 else:
