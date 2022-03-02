@@ -878,11 +878,22 @@ def xafs(inifile=None, **kwargs):
                 if 'wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
                     ring = f' {xafs_wheel.slot_ring()} ring'
+                    dossier.instrument = xafs_wheel.dossier_entry();
                 elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
+                    dossier.instrument = ga.dossier_entry();
+                elif 'lakeshore' in BMMuser.instrument.lower():
+                    slotno = f', temperature {lakeshore.readback.get():.1f}'
+                    dossier.instrument = lakeshore.dossier_entry();
                 elif 'linkam' in BMMuser.instrument.lower():
                     slotno = f', temperature {linkam.readback.get():.1f}'
-                    dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
+                    #dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
+                    dossier.instrument = linkam.dossier_entry();
+                # need to capture grid motors in some manner....
+                #elif 'grid' in BMMuser.instrument.lower():
+                    #dossier.instrument = grid.dossier_entry();
+
+                    
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
 

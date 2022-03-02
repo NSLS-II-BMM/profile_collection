@@ -433,6 +433,16 @@ class GlancingAngle(Device):
             yield from mv(motor, self.flat[0], xafs_pitch, self.flat[1])
         
 
+    def dossier_entry(self):
+        thistext  =  '	    <div id="boxinst">\n'
+        thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
+        thistext +=  '	      <ul>\n'
+        thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
+        thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'
+        thistext += f'               <li><b>Spinning:</b> {"yes" if self.spin else "no"}</li>\n'
+        thistext +=  '	      </ul>\n'
+        thistext +=  '	    </div>\n'
+        return thistext
             
 
 class GlancingAngleMacroBuilder(BMMMacroBuilder):

@@ -125,7 +125,18 @@ class WheelMotor(EndStationEpicsMotor):
                 return 'outer'
         else:
             return 'outer'
-    
+
+    def dossier_entry(self):
+        thistext  =  '	    <div id="boxinst">\n'
+        thistext +=  '	      <h3>Instrument: Ex situ sample wheel</h3>\n'
+        thistext +=  '	      <ul>\n'
+        thistext += f'               <li><b>Slot number:</b> {self.current_slot()}</li>\n'
+        thistext += f'               <li><b>Ring:</b> {self.slot_ring()}</li>\n'
+        thistext +=  '	      </ul>\n'
+        thistext +=  '	    </div>\n'
+        return thistext
+
+        
 
 
 def reference(target=None):

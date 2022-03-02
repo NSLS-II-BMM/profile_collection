@@ -172,6 +172,7 @@ class BMMDossier():
     doi           = None
     cif           = None
     temperature   = ''
+    instrument    = ''
 
     initext       = None
 
@@ -242,6 +243,8 @@ class BMMDossier():
                                                        xrfuid        = self.xrfuid, )
 
             # middle part of dossier
+            if self.instrument == '':
+                self.instrument = '<div id=boxinst><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
             thiscontent += ''.join(content).format(basename      = basename,
@@ -250,7 +253,8 @@ class BMMDossier():
                                                    sample        = self.sample,
                                                    prep          = self.prep,
                                                    comment       = self.comment,
-                                                   temperature   = self.temperature, 
+                                                   temperature   = self.temperature,
+                                                   instrument    = self.instrument,
                                                    websnap       = quote('../snapshots/'+self.websnap),
                                                    webuid        = self.webuid,
                                                    anasnap       = quote('../snapshots/'+self.anasnap),
