@@ -11,7 +11,12 @@ class GridMacroBuilder(BMMMacroBuilder):
     >>> gmb.write_macro()
 
     '''
-        
+    self.motor1    = None
+    self.motor2    = None
+    self.position1 = None
+    self.position2 = None
+
+    
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
@@ -44,11 +49,22 @@ class GridMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################
             if m['position1'] is not None and m['position2'] is not None:
+                self.content += self.tab + f'gmb.motor1, gmb.motor2, gmb.position1, gmb.position2 = {m["motor1"]}, {m["motor2"]}, {m["position1"]}, {m["position2"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
+                self.motor1    = m["motor1"]
+                self.position1 = m["position1"]
+                self.motor2    = m["motor1"]
+                self.position2 = m["position1"]
             else:
                 if m['position1'] is not None:
+                    self.motor1    = m["motor1"]
+                    self.position1 = m["position1"]
+                    self.content += self.tab + f'gmb.motor1, gmb.position1 = {m["motor1"]}, {m["position1"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
                 if m['position2'] is not None:
+                    self.motor2    = m["motor1"]
+                    self.position2 = m["position1"]
+                    self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
             if m['detectorx'] is not None:
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
@@ -118,6 +134,15 @@ class GridMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
 
+    def dossier_entry(self):
+        thistext  =  '	    <div id="boxinst">\n'
+        thistext +=  '	      <h3>Instrument: Motor grid</h3>\n'
+        thistext +=  '	      <ul>\n'
+        thistext += f'               <li><b>Motor 1:</b> {self.motor1} = self.position1:.3f</li>\n'
+        thistext += f'               <li><b>Motor 2:</b> {self.motor2} = self.position2:.3f</li>\n'
+        thistext +=  '	      </ul>\n'
+        thistext +=  '	    </div>\n'
+        return thistext
 
     def get_keywords(self, row, defaultline):
         '''Instructions for parsing spreadsheet columns into keywords.

@@ -118,6 +118,9 @@ class BMMDossier():
     cif : str
       user-supplied link to a CIF file
 
+    instrument : str
+      description of instrument state, see below
+
     methods
     =======
     write_dossier
@@ -131,6 +134,38 @@ class BMMDossier():
 
     simple_plot
        simple, fallback plot
+
+    instrument state
+    ================
+
+    If using one of the automated instruments (sample wheel, Linkam
+    stage, LakeShore temperature controller, glancing angle stage,
+    motor grid), the class implementing the instrument is responsible
+    for supplying a method called dossier_entry.  Here is an example
+    from the glancing angle stage class:
+
+           def dossier_entry(self):
+              thistext  =  '	    <div id="boxinst">\n'
+              thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
+              thistext +=  '	      <ul>\n'
+              thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
+              thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'      
+              thistext += f'               <li><b>Spinning:</b> {"yes" if self.spin else "no"}</li>\n'
+              thistext +=  '	      </ul>\n'
+              thistext +=  '	    </div>\n'
+              return thistext
+
+    This returns a <div> block for the HTML dossier file with
+    id="boxinst", which identifies the div for the CSS formatting.
+    The contents of this text include a header3 description of the
+    instrument and an unordered list of the most salient aspects of
+    the current state of the instrument.
+
+    Admittedly, requiring a method that generates suitable HTML is a
+    bit unwieldy, but is allows much flexibility in how the instrument
+    gets described in the dossier.
+
+    The dossier_entry methods get used in BMM/xafs.py around line 880.
 
     '''
     inifile       = None
@@ -171,7 +206,6 @@ class BMMDossier():
     url           = None
     doi           = None
     cif           = None
-    temperature   = ''
     instrument    = ''
 
     initext       = None
@@ -253,7 +287,6 @@ class BMMDossier():
                                                    sample        = self.sample,
                                                    prep          = self.prep,
                                                    comment       = self.comment,
-                                                   temperature   = self.temperature,
                                                    instrument    = self.instrument,
                                                    websnap       = quote('../snapshots/'+self.websnap),
                                                    webuid        = self.webuid,

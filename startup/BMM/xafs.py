@@ -887,11 +887,12 @@ def xafs(inifile=None, **kwargs):
                     dossier.instrument = lakeshore.dossier_entry();
                 elif 'linkam' in BMMuser.instrument.lower():
                     slotno = f', temperature {linkam.readback.get():.1f}'
-                    #dossier.temperature = f'<li><b>Temperature:</b> {linkam.readback.get():.1f} (Linkam stage)</li>'
                     dossier.instrument = linkam.dossier_entry();
-                # need to capture grid motors in some manner....
-                #elif 'grid' in BMMuser.instrument.lower():
-                    #dossier.instrument = grid.dossier_entry();
+                # this one is a bit different, get dossier entry from gmb object,
+                # there is no grid object....
+                elif 'grid' in BMMuser.instrument.lower():
+                    slotno = f', motor grid {gmb.motor1}, {gmb.motor2} = {gmb.position1:.1f}, {gmb.position1:.1f}{gmb.position2:.1f}'
+                    dossier.instrument = gmb.dossier_entry();
 
                     
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
@@ -1061,7 +1062,7 @@ def xafs(inifile=None, **kwargs):
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     #quadem1, vor = user_ns['quadem1'], user_ns['vor']
-    xafs_wheel, ga, linkam = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam']
+    xafs_wheel, ga, linkam, gmb = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']
