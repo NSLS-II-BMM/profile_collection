@@ -375,7 +375,8 @@ class BMMDossier():
             this = os.path.basename(l)
             experimentlist += '<li><a href="./%s">%s</a></li>\n' % (this, this)
 
-        with open(os.path.join(BMMuser.DATA, 'dossier', 'manifest.tmpl')) as f:
+        #with open(os.path.join(BMMuser.DATA, 'dossier', 'manifest.tmpl')) as f:
+        with open(os.path.join(startup_dir, 'tmpl', 'manifest.tmpl')) as f:
             content = f.readlines()
         indexfile = os.path.join(BMMuser.DATA, 'dossier', '00INDEX.html')
         o = open(indexfile, 'w')
