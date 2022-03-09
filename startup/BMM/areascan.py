@@ -228,7 +228,7 @@ def areascan(detector,
             try:
                 img_to_slack(fname)
             except:
-                post_to_slack('failed to post image: {fname}')
+                post_to_slack(f'failed to post image: {fname}')
                 pass
 
             
