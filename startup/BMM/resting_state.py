@@ -1,3 +1,9 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 from bluesky.plan_stubs import mv, sleep
 import datetime
@@ -33,6 +39,9 @@ def resting_state():
     '''
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
+    ## NEVER prompt when using queue server
+    if is_re_worker_active() is True:
+        BMMuser.prompt = False
     quadem1.on()
     #vor.on()
     _locked_dwell_time.move(0.3)
@@ -77,6 +86,9 @@ def end_of_macro():
     '''
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
+    ## NEVER prompt when using queue server
+    if is_re_worker_active() is True:
+        BMMuser.prompt = False
     BMMuser.running_macro, BMMuser.lims = False, True
     yield from quadem1.on_plan()
     #yield from vor.on_plan()

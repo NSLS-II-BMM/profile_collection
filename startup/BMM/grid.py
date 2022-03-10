@@ -11,10 +11,10 @@ class GridMacroBuilder(BMMMacroBuilder):
     >>> gmb.write_macro()
 
     '''
-    self.motor1    = None
-    self.motor2    = None
-    self.position1 = None
-    self.position2 = None
+    motor1    = None
+    motor2    = None
+    position1 = None
+    position2 = None
 
     
     def _write_macro(self):

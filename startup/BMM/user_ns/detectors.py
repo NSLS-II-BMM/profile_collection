@@ -293,7 +293,8 @@ if with_xspress3 is True and use_4element is True:
     # we have to trigger one image for the hdf5 plugin to work correctly
     # else, we get file writing errors
     # DEBUGGING: commented this out
-    xs.hdf5.warmup()
+    if xs.hdf5.run_time.get() == 0:
+        xs.hdf5.warmup()
 
     # Hints:
     xs.channels.kind = 'hinted'

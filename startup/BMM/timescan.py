@@ -1,3 +1,9 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 from bluesky.plans import grid_scan
 from bluesky.callbacks import LiveGrid
@@ -299,6 +305,9 @@ def sead(inifile, force=False, **kwargs):
         for k in ('folder', 'filename', 'experimenters', 'e0', 'npoints', 'dwell', 'delay',
                   'sample', 'prep', 'comment', 'mode', 'snapshots'):
             text = text + '      %-13s : %-50s\n' % (k,p[k])
+        ## NEVER prompt when using queue server
+        if is_re_worker_active() is True:
+            BMMuser.prompt = False
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
             action = input("\nBegin time scan? [Y/n then Enter] ")

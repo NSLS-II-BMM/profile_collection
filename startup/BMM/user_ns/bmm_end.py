@@ -33,7 +33,9 @@ run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
 run_report('\t'+'wafers!')
-from BMM.wafer import wafer_edge
+from BMM.wafer import Wafer
+wafer = Wafer()
+
 
 #run_report('\t'+'positioning of instruments')
 #from BMM.positioning import find_slot

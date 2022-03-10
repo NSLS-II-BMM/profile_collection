@@ -1,3 +1,9 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 import time, json, os
 
@@ -119,7 +125,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     #     xs = user_ns['xs']
     # except:
     #     pass
-    #BMMuser.prompt = True
+
     el = el.capitalize()
     
     ######################################################################
@@ -197,6 +203,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
     print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
     print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
+
+    ## NEVER prompt when using queue server
+    if is_re_worker_active() is True:
+        BMMuser.prompt = False
     if BMMuser.prompt:
         action = input("\nBegin energy change? [Y/n then Enter] ")
         if action.lower() == 'q' or action.lower() == 'n':
