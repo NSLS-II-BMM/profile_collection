@@ -416,7 +416,7 @@ class GlancingAngle(Device):
         try:
             img_to_slack(self.alignment_filename)
         except:
-            post_to_slack('failed to post image: {self.alignment_filename}')
+            post_to_slack(f'failed to post image: {self.alignment_filename}')
             pass
         BMM_clear_suspenders()
         #user_ns['RE'].clear_suspenders()

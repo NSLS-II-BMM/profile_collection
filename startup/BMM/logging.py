@@ -126,7 +126,7 @@ def img_to_slack(imagefile):
         response = client.files_upload(channels='#beamtime', file=imagefile)
         assert response["file"]  # the uploaded file
     except SlackApiError as e:
-        post_to_slack('failed to post image: {imagefile}')
+        post_to_slack(f'failed to post image: {imagefile}')
         # You will get a SlackApiError if "ok" is False
         assert e.response["ok"] is False
         assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
