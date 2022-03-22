@@ -985,7 +985,7 @@ def xafs(inifile=None, **kwargs):
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'xs1', 'yield')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
-                        report(f"Data evaluation: {emoji}", level='bold', slack=True)
+                        report(f"ML data evaluation model: {emoji}", level='bold', slack=False)
                         ## FYI: db.v2[-1].metadata['start']['scan_id']
                     except:
                         pass
@@ -995,7 +995,7 @@ def xafs(inifile=None, **kwargs):
                             synch_gdrive_folder()
                         except Exception as e:
                             print(error_msg(e))
-                            report(f"Failed to push {fname} to Google drive...", level='bold', slack=True)
+                            report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
                         
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence

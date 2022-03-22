@@ -356,7 +356,7 @@ class BMMDossier():
             try:
                 img_to_slack(pngfilename)
             except:
-                post_to_slack('failed to post image: {pngfilename}')
+                post_to_slack(f'failed to post image: {pngfilename}')
                 pass
 
         return htmlfilename

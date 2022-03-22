@@ -133,6 +133,8 @@ if m3.connected is True:
     m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
     m3_xd.velocity.put(0.15)
     m3_xu.velocity.put(0.15)
+    m3.ydo.user_offset.put(-2.1705)
+    m3.ydi.user_offset.put(1.5599)
 else:
     m3_yu     = SynAxis(name='m3_yu')
     m3_ydo    = SynAxis(name='m3_ydo')
