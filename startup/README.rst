@@ -19,7 +19,7 @@ That said, there is only one such file in use at BMM,
 
 
 All subsequent python code is imported in the order specified in
-:download:`BMM/user_ns/__init__.py <BMM/user_ns/__init__.py>`.
+`BMM/user_ns/__init__.py <BMM/user_ns/__init__.py>`_.
 
 Folders
 =======
