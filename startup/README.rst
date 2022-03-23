@@ -15,11 +15,11 @@ That said, there is only one such file in use at BMM,
 
 .. sourcecode:: python
 
-		from BMM.user_ns import *
+   from BMM.user_ns import *
 
 
 All subsequent python code is imported in the order specified in
-``BMM/user_ns/__init__.py``.
+:download:`BMM/user_ns/__init__.py <BMM/user_ns/__init__.py>`.
 
 Folders
 =======
@@ -46,7 +46,7 @@ Folders
 Files
 =====
 
-#. ``.yaml`` files are used to configure the bluesky queueserver
+#. ``*.yaml`` files are used to configure the bluesky queueserver
 
 #. ``rois.json``: ROI configuration for the Xspress3
 
