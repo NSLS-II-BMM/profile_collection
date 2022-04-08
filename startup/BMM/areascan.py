@@ -8,8 +8,6 @@ import os
 import matplotlib.pyplot as plt
 
 from bluesky.preprocessors import subs_decorator
-## see 65-derivedplot.py for DerivedPlot class
-## see 10-motors.py and 20-dcm.py for motor definitions
 
 from BMM.user_ns.dwelltime   import with_xspress3
 from BMM.resting_state import resting_state_plan
@@ -199,39 +197,42 @@ def areascan(detector,
                                        slow, valueslow+startslow, valueslow+stopslow, nslow,
                                        fast, valuefast+startfast, valuefast+stopfast, nfast,
                                        snake=False)
+        report(f'map uid = {uid}', level='bold', slack=True)
+        
 
-        if pluck is True:
+        close_all_plots()
+        print('Fetching map data from database...')
+        thismap = user_ns['db'].v2[uid]
+        x=numpy.array(thismap.primary.read()[fast.name])
+        y=numpy.array(thismap.primary.read()[slow.name])
+        z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
+            numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
+            numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
+            numpy.array(thismap.primary.read()[BMMuser.xs4])
+        z=z.reshape(nfast, nslow)
 
-            close_all_plots()
-            thismap = user_ns['db'].v2[uid]
-            x=numpy.array(thismap.primary.read()[fast.name])
-            y=numpy.array(thismap.primary.read()[slow.name])
-            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs4])
-            z=z.reshape(nfast, nslow)
+        # grabbing the first nfast elements of x and every
+        # nslow-th element of y is more reliable than 
+        # numpy.unique due to float &/or motor precision issues
 
-            # grabbing the first nfast elements of x and every
-            # nslow-th element of y is more reliable than 
-            # numpy.unique due to float &/or motor precision issues
-
-            #plt.title(f'Energy = {energies["below"]}')
-            plt.xlabel(f'fast axis ({fast.name}) position (mm)')
-            plt.ylabel(f'slow axis ({slow.name}) position (mm)')
-            plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
-            plt.contourf(x[:nfast], y[::nslow], z, cmap=plt.cm.viridis)
-            plt.colorbar()
-            plt.show()
-            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
-            plt.savefig(fname)
-            try:
-                img_to_slack(fname)
-            except:
-                post_to_slack(f'failed to post image: {fname}')
-                pass
+        #plt.title(f'Energy = {energies["below"]}')
+        plt.xlabel(f'fast axis ({fast.name}) position (mm)')
+        plt.ylabel(f'slow axis ({slow.name}) position (mm)')
+        plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
+        plt.contourf(x[:nfast], y[::nslow], z, cmap=plt.cm.viridis)
+        plt.colorbar()
+        plt.show()
+        fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+        plt.savefig(fname)
+        try:
+            img_to_slack(fname)
+        except:
+            post_to_slack(f'failed to post image: {fname}')
+            pass
 
             
+        if pluck is True:
+
             BMMuser.x = None
             figs = list(map(plt.figure, plt.get_fignums()))
             canvas = figs[0].canvas

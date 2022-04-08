@@ -77,6 +77,7 @@ class GlancingAngle(Device):
     #rotation
 
     spin = True
+    automatic = True
     home = 0
     garot = xafs_garot
     inverted = ''
@@ -438,7 +439,12 @@ class GlancingAngle(Device):
         thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
-        thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'
+        if self.automatic is True:
+            thistext +=  '               <li><b>Alignment:</b> automatic</li>\n'
+            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'
+        else:
+            thistext +=  '               <li><b>Alignment:</b> manual</li>\n'
+            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position:.1f}</li>\n'
         thistext += f'               <li><b>Spinning:</b> {"yes" if self.spin else "no"}</li>\n'
         thistext +=  '	      </ul>\n'
         thistext +=  '	    </div>\n'
@@ -533,12 +539,14 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             # move to correct height and pitch #
             ####################################
             if m['method'].lower() == 'automatic':
+                user_ns['ga'].automatic = True
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
                 if m['sampley'] is not None:
                     self.content += self.tab + f'yield from mv({motor}, {m["sampley"]})\n'
                 if m['samplep'] is not None:
                     self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
+                user_ns['ga'].automatic = False
             
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #

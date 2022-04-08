@@ -107,7 +107,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           if action.lower() == 'q' or action.lower() == 'n':
                return(yield from null())
 
+     if mode == 'B' or mode == 'C':
+          ## original offsets for these, this works for focus
+          m3.ydo.user_offset.put(-0.37)
+          m3.ydi.user_offset.put(-0.24)
+     else:
+          ## offsets after mirror intervention January 2022
+          ## this introduces roll relative to offsets above
+          ## to correct a slant of the unfocused beam 
+          m3.ydo.user_offset.put(-2.1705)
+          m3.ydi.user_offset.put(1.5599)
 
+          
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
 

@@ -133,8 +133,8 @@ if m3.connected is True:
     m3_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:XD}Mtr',   name='m3_xd')
     m3_xd.velocity.put(0.15)
     m3_xu.velocity.put(0.15)
-    m3.ydo.user_offset.put(-2.1705)
-    m3.ydi.user_offset.put(1.5599)
+    m3.ydo.user_offset.put(-2.1705) #-0.37
+    m3.ydi.user_offset.put(1.5599)  #-0.24
 else:
     m3_yu     = SynAxis(name='m3_yu')
     m3_ydo    = SynAxis(name='m3_ydo')
@@ -278,8 +278,8 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
-xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
+xafs_ref.content = ['Yb', 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', 'Ho']
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
 
