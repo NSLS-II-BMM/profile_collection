@@ -1,3 +1,10 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 import bluesky
 
 from bluesky.plans import rel_scan
@@ -332,6 +339,16 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 
 
 def find_slot(close=False):
+    yield from mv(user_ns['xafs_wheel'], rkvs.get('BMM:wheel:outer'))
+
+    ## NEVER prompt when using queue server
+    if is_re_worker_active() is True:
+        BMMuser.prompt = False
+    if BMMuser.prompt:
+        action = input("\nIs the beam currently on a slot in the outer ring? [Y/n then Enter] ")
+        if action.lower() == 'q' or action.lower() == 'n':
+            return(yield from null())
+    
     yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
     user_ns['xafs_wheel'].in_place()
