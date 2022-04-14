@@ -278,10 +278,12 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         for channel in self.iterate_channels():
             for mcaroi in channel.iterate_mcarois():
                 if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:
+                    mcaroi.kind = 'hinted'
                     mcaroi.total_rbv.kind = 'hinted'
                     setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
                     setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv) 
                 else:
+                    mcaroi.kind = 'omitted'
                     mcaroi.total_rbv.kind = 'omitted'
         
             

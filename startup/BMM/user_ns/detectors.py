@@ -297,40 +297,40 @@ if with_xspress3 is True and use_4element is True:
         xs.hdf5.warmup()
 
     # Hints:
-    xs.channels.kind = 'hinted'
+    #xs.channels.kind = 'hinted'
     for channel in xs.iterate_channels():
         channel.kind = 'hinted'
-        channel.mcarois.kind = 'hinted'
+        #channel.mcarois.kind = 'hinted'
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'hinted'
 
     xs.cam.configuration_attrs = ['acquire_period',
-                                       'acquire_time',
-                                       # JOSH: change for new IOC
-                                       #       gain is no longer a PV?
-                                       # 'gain',
-                                       'image_mode',
-                                       'manufacturer',
-                                       'model',
-                                       'num_exposures',
-                                       'num_images',
-                                       'temperature',
-                                       'temperature_actual',
-                                       'trigger_mode',
-                                       'config_path',
-                                       'config_save_path',
-                                       'invert_f0',
-                                       'invert_veto',
-                                       'xsp_name',
-                                       'num_channels',
-                                       'num_frames_config',
-                                       'run_flags',
-                                       'trigger_signal']
+                                  'acquire_time',
+                                  # JOSH: change for new IOC
+                                   #       gain is no longer a PV?
+                                   # 'gain',
+                                   'image_mode',
+                                   'manufacturer',
+                                   'model',
+                                   'num_exposures',
+                                   'num_images',
+                                   'temperature',
+                                   'temperature_actual',
+                                   'trigger_mode',
+                                   'config_path',
+                                   'config_save_path',
+                                   'invert_f0',
+                                   'invert_veto',
+                                   'xsp_name',
+                                   'num_channels',
+                                   'num_frames_config',
+                                   'run_flags',
+                                   'trigger_signal']
 
     for channel in xs.iterate_channels():
         mcaroi_names = list(channel.iterate_mcaroi_attr_names())
-        channel.mcarois.read_attrs = mcaroi_names
-        channel.mcarois.configuration_attrs = mcaroi_names
+        #channel.mcarois.read_attrs = mcaroi_names
+        #channel.mcarois.configuration_attrs = mcaroi_names
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'omitted'
 
@@ -359,10 +359,10 @@ if with_xspress3 is True and use_1element is True:
     #xs1.hdf5.warmup()
 
     # Hints:
-    xs1.channels.kind = 'hinted'
+    #xs1.channels.kind = 'hinted'
     for channel in xs1.iterate_channels():
         channel.kind = 'hinted'
-        channel.mcarois.kind = 'hinted'
+        #channel.mcarois.kind = 'hinted'
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'hinted'
 
@@ -388,8 +388,8 @@ if with_xspress3 is True and use_1element is True:
 
     for channel in xs1.iterate_channels():
         mcaroi_names = list(channel.iterate_mcaroi_attr_names())
-        channel.mcarois.read_attrs = mcaroi_names
-        channel.mcarois.configuration_attrs = mcaroi_names
+        #channel.mcarois.read_attrs = mcaroi_names
+        #channel.mcarois.configuration_attrs = mcaroi_names
         for mcaroi in channel.iterate_mcarois():
             mcaroi.total_rbv.kind = 'omitted'
 

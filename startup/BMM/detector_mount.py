@@ -81,10 +81,10 @@ def find_detector_position(start=205, inttime=0.1, verbose=True):
 
     yield from mv(xs.cam.acquire, 1)
     time.sleep(0.25)
-    ocrs = [float(xs.channels.channel01.mcarois.mcaroi16.total_rbv.get()),
-            float(xs.channels.channel02.mcarois.mcaroi16.total_rbv.get()),
-            float(xs.channels.channel03.mcarois.mcaroi16.total_rbv.get()),
-            float(xs.channels.channel04.mcarois.mcaroi16.total_rbv.get())]
+    ocrs = [float(xs.channel01.mcaroi16.total_rbv.get()),
+            float(xs.channel02.mcaroi16.total_rbv.get()),
+            float(xs.channel03.mcaroi16.total_rbv.get()),
+            float(xs.channel04.mcaroi16.total_rbv.get())]
     datatable.append([xafs_det.position, *ocrs])
     if verbose:
         print(' xafs_det  OCR 1     OCR 2     OCR 3     OCR 4   target      predictions')
@@ -109,10 +109,10 @@ def find_detector_position(start=205, inttime=0.1, verbose=True):
 
         yield from mv(xs.cam.acquire, 1)
         time.sleep(1.5*inttime)
-        ocrs = [float(xs.channels.channel01.mcarois.mcaroi16.total_rbv.get()),
-                float(xs.channels.channel02.mcarois.mcaroi16.total_rbv.get()),
-                float(xs.channels.channel03.mcarois.mcaroi16.total_rbv.get()),
-                float(xs.channels.channel04.mcarois.mcaroi16.total_rbv.get())]
+        ocrs = [float(xs.channel01.mcaroi16.total_rbv.get()),
+                float(xs.channel02.mcaroi16.total_rbv.get()),
+                float(xs.channel03.mcaroi16.total_rbv.get()),
+                float(xs.channel04.mcaroi16.total_rbv.get())]
         datatable.append([xafs_det.position, *ocrs])
         if verbose:
             if len(datatable) > 5:

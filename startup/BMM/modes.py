@@ -328,13 +328,13 @@ def change_xtals(xtal=None):
      BMM_log_info('Moving to the %s crystals' % xtal)
      yield from mv(dcm_pitch.kill_cmd, 1)
      yield from mv(dcm_roll.kill_cmd, 1)
-     if xtal is 'Si(111)':
+     if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.1,
                         dcm_roll, -5.863,
                         dcm_x,     0.5    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset
-     elif xtal is 'Si(311)':
+     elif xtal == 'Si(311)':
           yield from mv(dcm_pitch, 2.28,
                         dcm_roll, -23.86,
                         dcm_x,     65.3    )

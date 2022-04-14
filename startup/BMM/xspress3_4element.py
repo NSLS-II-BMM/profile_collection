@@ -84,10 +84,10 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         except Exception as e:
             if uid is not None: print(e)
             plt.title('XRF Spectrum')
-            s1 = self.channels.channel01.mca.array_data.get()
-            s2 = self.channels.channel02.mca.array_data.get()
-            s3 = self.channels.channel03.mca.array_data.get()
-            s4 = self.channels.channel04.mca.array_data.get()
+            s1 = self.channel01.mca.array_data.get()
+            s2 = self.channel02.mca.array_data.get()
+            s3 = self.channel03.mca.array_data.get()
+            s4 = self.channel04.mca.array_data.get()
         e = numpy.arange(0, len(s1)) * 10
         if only is not None and only in (1, 2, 3, 4):
             channel = self.get_channel(number=only)
@@ -119,7 +119,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         first_channel_number = self.channel_numbers[0]
         first_channel = self.get_channel(channel_number=first_channel_number)
         for r in first_channel.mcaroi_numbers:
-            el = self.channels.channel01.get_mcaroi(mcaroi_number=r).name
+            el = self.channel01.get_mcaroi(mcaroi_number=r).name
             if len(el) > 3:
                 continue
             if el != 'OCR':
@@ -188,7 +188,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         handle.write('# energy ')
 
         ## data table
-        e=numpy.arange(0, len(self.channels.channel01.mca.array_data.get())) * 10
+        e=numpy.arange(0, len(self.channel01.mca.array_data.get())) * 10
         mca_data_array_list = [channel.mca.array_data.get() for channel in self.iterate_channels()]
         a=numpy.vstack(mca_data_array_list)
         b=pandas.DataFrame(a.transpose(), index=e, columns=column_list)
