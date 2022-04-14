@@ -1,3 +1,3 @@
-def test_slot():
-    RE(slot(1))
-    print(f'xafs_wheel position is {xafs_wheel.position}, it should be -30')
+# This should set xafs_wheel.position to -30
+
+RE(slot(1))
