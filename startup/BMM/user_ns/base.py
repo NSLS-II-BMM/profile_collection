@@ -21,14 +21,14 @@ uns_dict = dict()
 
 if not is_re_worker_active():
     ip = get_ipython()
-    nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_to_kafka=use_kafka)
+    nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True) #, publish_documents_to_kafka=use_kafka)
     ip.log.setLevel('ERROR')
     RE  = ip.user_ns['RE']
     db  = ip.user_ns['db']
     sd  = ip.user_ns['sd']
     bec = ip.user_ns['bec']
 else:
-    nslsii.configure_base(uns_dict, 'bmm', configure_logging=True, publish_documents_to_kafka=use_kafka)
+    nslsii.configure_base(uns_dict, 'bmm', configure_logging=True) #, publish_documents_to_kafka=use_kafka)
     RE  = uns_dict['RE']
     db  = uns_dict['db']
     sd  = uns_dict['sd']

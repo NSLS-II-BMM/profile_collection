@@ -265,7 +265,6 @@ def areascan(detector,
         print('Cleaning up after an area scan')
         db = user_ns['db']
         BMM_clear_suspenders()
-        #user_ns['RE'].clear_suspenders()
         if BMMuser.final_log_entry is True:
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from resting_state_plan()
