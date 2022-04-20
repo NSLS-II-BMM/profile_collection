@@ -23,6 +23,7 @@ rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 #rkvs = NoRedis()
 NAS = '/mnt/nfs/nas1'
 LUSTRE_ROOT = '/nsls2/data'
+LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
 SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')
 REDISVAR="BMM:scan:type"
@@ -154,7 +155,7 @@ def initialize_lustre():
     If not, complain on screen.
 
     '''
-    if os.path.ismount(LUSTRE_ROOT):
+    if os.path.ismount(LUSTRE_ROOT_BMM):
         print(f'{TAB}Found Lustre mount point: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}Lustre is not mounted!'))
