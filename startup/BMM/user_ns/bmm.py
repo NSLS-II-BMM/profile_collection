@@ -5,6 +5,7 @@ logger.setLevel('WARNING')
 logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
 
+from BMM.user_ns.base import startup_dir
 from BMM.workspace import initialize_workspace, rkvs_keys
 initialize_workspace()
 
@@ -12,7 +13,8 @@ import json, time, os
 
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
-BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
+#BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
+BMM_CONFIGURATION_LOCATION = os.path.join(startup_dir, 'lookup_table')
 
 nas_mount_point = '/mnt/nfs/nas1'
 nas_path = os.path.join(nas_mount_point, 'xf06bm', 'experiments', 'XAS', 'snapshots')

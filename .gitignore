@@ -8,7 +8,7 @@ log/
 pid/
 *.directory
 *.save__
-
+.~lock*
 
 # secrets that should not be commited to an on-line repo
 slack_secret
