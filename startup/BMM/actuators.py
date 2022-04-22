@@ -2,6 +2,7 @@ from ophyd import (SingleTrigger, Component as Cpt, Device, DeviceStatus, EpicsS
 from bluesky.plan_stubs import null, sleep, mv, mvr
 import time
 
+from BMM.functions import error_msg
 from BMM.logging import report, BMM_msg_hook
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -93,7 +94,7 @@ class EPS_Shutter(Device):
         if self.state.get():
             state = 'closed'
             if self.name == 'FS1': state = 'in place'
-            return error(state)
+            return error_msg(state)
         state = 'open'
         if self.name == 'FS1': state = 'retracted'
         return(state + '  ')

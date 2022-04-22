@@ -482,8 +482,22 @@ class BMM_User(Borg):
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
-        self.print_verb_message(step, verb, 'INI file', pad, scanini)
+        self.print_verb_message(step, verb, 'XAFS INI file', pad, scanini)
 
+        initmpl = os.path.join(startup_dir, 'tmpl', 'rasterscan.tmpl')
+        scanini = os.path.join(data_folder, 'raster.ini')
+        if not os.path.isfile(scanini):
+            with open(initmpl) as f:
+                content = f.readlines()
+            o = open(scanini, 'w')
+            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.close()
+            verb, pad = 'Copied', ' '
+        else:
+            verb, pad = 'Found', '  '
+        self.print_verb_message(step, verb, 'raster INI file', pad, scanini)
+
+        
         macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
         macropy = os.path.join(data_folder, 'sample_macro.py')
         commands = '''

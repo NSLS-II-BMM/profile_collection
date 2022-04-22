@@ -191,7 +191,7 @@ except:
 
 run_report('\t'+'cameras')
 from BMM.camera_device import BMMSnapshot, snap
-from BMM.db import file_resource, show_shapshot
+from BMM.db import file_resource, show_snapshot
 
 
 ## see 01-bmm.py for definition of nas_path

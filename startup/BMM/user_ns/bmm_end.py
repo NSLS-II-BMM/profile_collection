@@ -32,7 +32,7 @@ from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspend
 run_report('\t'+'linescan, rocking curve, slit_height, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
-run_report('\t'+'wafers!')
+run_report('\t'+'wafers')
 from BMM.wafer import Wafer
 wafer = Wafer()
 
@@ -243,6 +243,11 @@ import logging
 logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
+
+run_report('\t'+'raster scans')
+from BMM.raster import raster, difference_data
+
+
 
 run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono, calibrate_pitch

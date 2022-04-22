@@ -350,7 +350,7 @@ class BMMDossier():
         manifest = open(self.manifest_file, 'a')
         manifest.write(htmlfilename + '\n')
         manifest.close()
-        self.write_manifest()
+        self.write_manifest('XAFS')
 
         if pngfilename is not None and os.path.isfile(pngfilename):
             try:
@@ -362,7 +362,7 @@ class BMMDossier():
         return htmlfilename
 
     
-    def write_manifest(self):
+    def write_manifest(self, scantype='XAFS'):
         '''Update the scan manifest and the corresponding static html file.'''
         BMMuser = user_ns['BMMuser']
         with open(self.manifest_file) as f:
@@ -373,7 +373,7 @@ class BMMDossier():
             if not os.path.isfile(l):
                 continue
             this = os.path.basename(l)
-            experimentlist += '<li><a href="./%s">%s</a></li>\n' % (this, this)
+            experimentlist += f'<li>{scantype}: <a href="./{this}">{this}</a></li>\n'
 
         #with open(os.path.join(BMMuser.DATA, 'dossier', 'manifest.tmpl')) as f:
         with open(os.path.join(startup_dir, 'tmpl', 'manifest.tmpl')) as f:
@@ -487,3 +487,99 @@ class BMMDossier():
         matplotlib.use(thisagg) # return to screen display
         print(whisper(f'Wrote simple plot to {filename}'))
             
+
+    def raster_instrument_entry(self):
+        thistext  =  '      <div id="boxinst">\n'
+        thistext +=  '        <h3>Instrument: Raster scan</h3>\n'
+        thistext += f'          <a href="../maps/{self.pngout}">\n'
+        thistext += f'                        <img src="../maps/{self.pngout}" width="300" alt="" /></a>\n'
+        thistext +=  '          <br>'
+        thistext += f'          <a href="javascript:void(0)" onclick="toggle_visibility(\'areascan\');" title="Click to show/hide the UID of this areascan">(uid)</a><div id="areascan" style="display:none;"><small>{self.scanuid}</small></div>\n'
+        thistext +=  '      </div>\n'
+        return thistext
+
+
+    def raster_dossier(self):
+        print(whisper('writing raster dossier'))
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+        if self.filename is None:
+            print(error_msg('Filename not given.'))
+            return None
+
+        # figure out various filenames
+        self.basename = self.filename
+        htmlfilename = os.path.join(BMMuser.DATA, 'dossier/', self.filename+'-01.html')
+        seqnumber = 1
+        if os.path.isfile(htmlfilename):
+            seqnumber = 2
+            while os.path.isfile(os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))):
+                seqnumber += 1
+            self.basename = "%s-%2.2d" % (self.filename,seqnumber)
+            htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))
+
+        # slurp in the INI file contents
+        if self.initext is None:
+            with open(os.path.join(BMMuser.DATA, self.inifile)) as f:
+                self.initext = ''.join(f.readlines())
+
+        # gather some information about the photon delivery system
+        pdstext = f'{get_mode()} ({describe_mode()})'
+        mono = 'Si(%s)' % dcm._crystal
+        if self.ththth:
+            mono = 'Si(333)'
+
+        with open(os.path.join(startup_dir, 'tmpl', 'raster.tmpl')) as f:
+                content = f.readlines()
+        thiscontent = ''.join(content).format(filename      = self.filename,
+                                              basename      = self.basename,
+                                              date          = BMMuser.date,
+                                              seqnumber     = seqnumber,
+                                              e0            = '%.1f' % self.e0,
+                                              edge          = self.edge,
+                                              element       = self.element_text(),
+                                              sample        = self.sample,
+                                              prep          = self.prep,
+                                              comment       = self.comment,
+                                              instrument    = self.raster_instrument_entry(),
+                                              fast_motor    = self.fast_motor,
+                                              slow_motor    = self.slow_motor,
+                                              fast_init     = self.fast_init,
+                                              slow_init     = self.slow_init,
+                                              websnap       = quote('../snapshots/'+self.websnap),
+                                              webuid        = self.webuid,
+                                              anasnap       = quote('../snapshots/'+self.anasnap),
+                                              anauid        = self.anauid,
+                                              usb1snap      = quote('../snapshots/'+self.usb1snap),
+                                              usb1uid       = self.usb1uid,
+                                              usb2snap      = quote('../snapshots/'+self.usb2snap),
+                                              usb2uid       = self.usb2uid,
+                                              pngout        = self.pngout,
+                                              xlsxout       = self.xlsxout,
+                                              matout        = self.matout,
+                                              mode          = self.mode,
+                                              motors        = self.motors,
+                                              bounds        = self.bounds,
+                                              steps         = self.steps,
+                                              times         = self.times,
+                                              seqstart      = self.seqstart,
+                                              seqend        = self.seqend,
+                                              mono          = mono,
+                                              pdsmode       = pdstext,
+                                              experimenters = self.experimenters,
+                                              gup           = BMMuser.gup,
+                                              saf           = BMMuser.saf,
+                                              url           = self.url,
+                                              doi           = self.doi,
+                                              cif           = self.cif,
+                                              initext       = highlight(self.initext, IniLexer(), HtmlFormatter()),
+                                              clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
+        )
+        with open(htmlfilename, 'a') as o:
+            o.write(thiscontent)
+
+        print(f'wrote {htmlfilename}')
+
+        manifest = open(self.manifest_file, 'a')
+        manifest.write(htmlfilename + '\n')
+        manifest.close()
+        self.write_manifest('Raster')

@@ -68,7 +68,7 @@ def initialize_workspace():
     check_workstation_access()
     check_profile_branch()
     initialize_data_directories()
-    initialize_beamline_configuration()
+    #initialize_beamline_configuration()
     initialize_lustre()
     initialize_nas()
     initialize_secrets()

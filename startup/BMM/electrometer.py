@@ -219,12 +219,12 @@ def dark_current():
     reopen = shb.state.get() == shb.openval 
     if reopen:
         print('\nClosing photon shutter')
-        yield from shb.close_plan()
+        yield from user_ns['shb'].close_plan()
     if with_quadem:
-        yield from quadem1.dark_current()
+        yield from user_ns['quadem1'].dark_current()
     if with_dualem:
-        yield from dualio.dark_current()
+        yield from user_ns['dualio'].dark_current()
     if reopen:
         print('Opening photon shutter')
-        yield from shb.open_plan()
+        yield from user_ns['shb'].open_plan()
         print('You are ready to measure!\n')
