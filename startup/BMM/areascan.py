@@ -6,6 +6,7 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 import numpy, datetime
 import os
 import matplotlib.pyplot as plt
+from ophyd.sim import noisy_det
 
 from bluesky.preprocessors import subs_decorator
 
@@ -32,7 +33,7 @@ user_ns = vars(user_ns_module)
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, dwell=0.1, md={}):
+             pluck=True, force=False, dwell=0.1, fname=None, md={}):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -66,7 +67,9 @@ def areascan(detector,
     def main_plan(detector,
                   slow, startslow, stopslow, nslow,
                   fast, startfast, stopfast, nfast,
-                  pluck, force, dwell, md):
+                  pluck, force, dwell, fname, md):
+
+        
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
             print(error_msg(text))
@@ -112,24 +115,15 @@ def areascan(detector,
             dets.append(xs)
             detector = BMMuser.xs1
             yield from mv(xs.total_points, nslow*nfast)
-
+        if detector == 'Random':
+            dets.append(noisy_det)
+            detector = 'noisy_det'
         
-        if 'PseudoSingle' in str(type(slow)):
-            valueslow = slow.readback.get()
-        else:
-            valueslow = slow.user_readback.get()
-        line1 = 'slow motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (slow.name, startslow, stopslow, nslow, valueslow)
-
-        if 'PseudoSingle' in str(type(fast)):
-            valuefast = fast.readback.get()
-        else:
-            valuefast = fast.user_readback.get()
-        line2 = 'fast motor: %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
-            (fast.name, startfast, stopfast, nfast, valuefast)
+        line1 = f'slow motor: {slow.name}, {startslow}, {stopslow}, {nslow} -- starting at {slow.position:.3f}\n'
+        line2 = f'fast motor: {fast.name}, {startfast}, {stopfast}, {nfast} -- starting at {fast.position:.3f}\n'
 
         npoints = nfast * nslow
-        estimate = int(npoints*(dwell+0.7))
+        estimate = int(npoints*(dwell+0.43))
     
         # extent = (
         #     valuefast + startfast,
@@ -194,8 +188,8 @@ def areascan(detector,
         
         BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
         uid = yield from make_areascan(dets,
-                                       slow, valueslow+startslow, valueslow+stopslow, nslow,
-                                       fast, valuefast+startfast, valuefast+stopfast, nfast,
+                                       slow, slow.position+startslow, slow.position+stopslow, nslow,
+                                       fast, fast.position+startfast, fast.position+stopfast, nfast,
                                        snake=False)
         report(f'map uid = {uid}', level='bold', slack=True)
         
@@ -205,12 +199,17 @@ def areascan(detector,
         thismap = user_ns['db'].v2[uid]
         x=numpy.array(thismap.primary.read()[fast.name])
         y=numpy.array(thismap.primary.read()[slow.name])
-        z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
-            numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
-            numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
-            numpy.array(thismap.primary.read()[BMMuser.xs4])
-        z=z.reshape(nfast, nslow)
+        if detector.lower() == 'xs':
+            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs4])
+        elif detector.lower() == 'noisy_det':
+            z=numpy.array(thismap.primary.read()['noisy_det'])
+        elif detector.lower() == 'it':
+            z=numpy.array(thismap.primary.read()['It'])
 
+        z=z.reshape(nfast, nslow)
         # grabbing the first nfast elements of x and every
         # nslow-th element of y is more reliable than 
         # numpy.unique due to float &/or motor precision issues
@@ -221,9 +220,10 @@ def areascan(detector,
         plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
         plt.contourf(x[:nfast], y[::nslow], z, cmap=plt.cm.viridis)
         plt.colorbar()
-        plt.show()
-        fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+        if fname is None:
+            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
         plt.savefig(fname)
+        plt.show()
         try:
             img_to_slack(fname)
         except:
@@ -257,7 +257,7 @@ def areascan(detector,
 
             # print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
             yield from mv(fast, BMMuser.x, slow, BMMuser.y)
-            report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=True)
+            report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=False)
             
             
         
@@ -294,11 +294,11 @@ def areascan(detector,
     ######################################################################
     BMMuser.final_log_entry = True
     user_ns['RE'].msg_hook = None
-    ## encapsulation!
+
     yield from finalize_wrapper(main_plan(detector,
                                           slow, startslow, stopslow, nslow,
                                           fast, startfast, stopfast, nfast,
-                                          pluck, force, dwell, md),
+                                          pluck, force, dwell, fname, md),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
