@@ -147,6 +147,11 @@ def read_ini(inifile, **kwargs):
 
 
 def preserve_data(uid, label, xlsxout, matout):
+    '''Save the data from an areascan as a .xlsx file (a simple spreadsheet
+    which can be ingested by many plotting programs) and as a .mat
+    file (which can be ingested by Matlab).
+
+    '''
     motors = db.v2[uid].metadata['start']['motors']
     print('Reading data set...')
     datatable = db.v2[uid].primary.read()
@@ -192,6 +197,12 @@ def difference_data(uid1, uid2, tag):
     Ce3+), and one map around 5738 eV (near a XANES peak associated
     with Ce4+).  To get the Ce3+ map, uid1 would be the UID of the
     5726 eV map and uid2 would be the map from below the edge.
+
+    This function will write 3 files to the "maps/" folder in the
+    user's data folder:
+    * <tag>.xlsx : The data as a simple spreadsheet that many plotting programs can ingest
+    * <tag>.mat  : The data in a form that Matlab can ingest
+    * <tag>.png  : A matplotlib image of the processed difference map
 
     parameters
     ==========
@@ -556,7 +567,7 @@ def raster(inifile=None, **kwargs):
     dossier = BMMDossier()
 
     if is_re_worker_active():
-        inifile = '/home/xf06bm/Data/bucket/scan.ini'
+        inifile = '/home/xf06bm/Data/bucket/raster.ini'
     if inifile is None:
         inifile = present_options('ini')
     if inifile is None:

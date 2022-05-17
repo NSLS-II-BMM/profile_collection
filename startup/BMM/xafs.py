@@ -981,12 +981,16 @@ def xafs(inifile=None, **kwargs):
                 BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {header.start["scan_id"]}\ndata file written to {datafile}')
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-                ## data evaluation
+                ## data evaluation + message to Slack
+                ## also sync data with Google Drive
                 if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'xs1', 'yield')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
-                        report(f"ML data evaluation model: {emoji}", level='bold', slack=False)
-                        ## FYI: db.v2[-1].metadata['start']['scan_id']
+                        report(f"ML data evaluation model: {emoji}", level='bold', slack=True)
+                        if score == 0:
+                            report('A failed data evaluation does not necessarily mean that there is anything wrong with your data. These data will be investigated and used to refine the data evaluation model.', level='whisper', slack=True)
+                            with open('/home/xf06bm/Data/bucket/failed_data_evaluation.txt', 'a') as f:
+                                f.write(now() + '\n\t' + uid + '\n\n')
                     except:
                         pass
                     if p['lims'] is True:

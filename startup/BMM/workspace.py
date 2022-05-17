@@ -24,7 +24,7 @@ rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 NAS = '/mnt/nfs/nas1'
 LUSTRE_ROOT = '/nsls2/data'
 LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
-SECRETS = os.path.join(NAS, 'xf06bm', 'secrets')
+SECRETS = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'secrets')
 SECRET_FILES = ('slack_secret', 'image_uploader_token')
 REDISVAR="BMM:scan:type"
 ###################################################################
@@ -70,7 +70,7 @@ def initialize_workspace():
     initialize_data_directories()
     #initialize_beamline_configuration()
     initialize_lustre()
-    initialize_nas()
+    #initialize_nas()
     initialize_secrets()
     initialize_redis()
     #initialize_gdrive()
@@ -163,7 +163,7 @@ def initialize_lustre():
 
 def initialize_secrets():
     '''Check that the Slack secret files are in their expected locations.
-    If not, copy them from the NAS server NFS mounted at /mnt/nfs/nas1.
+    If not, copy them from Lustre at /nsls2/data/bmm/XAS/secrets.
 
     '''
     STARTUP = os.path.join(startup_dir, 'BMM')

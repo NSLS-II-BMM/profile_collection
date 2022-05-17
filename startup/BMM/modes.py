@@ -1,5 +1,7 @@
 import json, time, os
 
+from openpyxl import load_workbook
+
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
@@ -14,10 +16,11 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 
-from openpyxl import load_workbook
-
 MODEDATA = None
 def read_mode_data():
+     '''Read the lookup table Modes.xlsx and return position and encoder
+     readings as a dict.
+     '''
      wb = load_workbook(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.xlsx'), read_only=True);
      ws = wb['Modes A-F']
      bl = dict()
@@ -257,18 +260,19 @@ def mode():
             print('This appears to be mode XRD')
         else:
             if m3.vertical.readback.get() > -2:
-                print('This appears to be mode A')
+                print(f'This appears to be mode A ({describe_mode()})')
             elif m3.vertical.readback.get() > -7:
-                print('This appears to be mode B')
+                print(f'This appears to be mode B ({describe_mode()})')
             else:
-                print('This appears to be mode C')
+                print(f'This appears to be mode C ({describe_mode()})')
     else:
         if m3.pitch.readback.get() < 3:
-            print('This appears to be mode F')
+            print(f'This appears to be mode F ({describe_mode()})')
         elif m3.lateral.readback.get() > 0:
-            print('This appears to be mode D')
+            print(f'This appears to be mode D ({describe_mode()})')
         else:
-            print('This appears to be mode E')
+            print(f'This appears to be mode E ({describe_mode()})')
+
 
 def get_mode():
     m2, m3 = user_ns['m2'], user_ns['m3']
