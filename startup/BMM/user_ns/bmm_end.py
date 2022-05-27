@@ -23,6 +23,9 @@ from BMM.resting_state import resting_state, resting_state_plan, end_of_macro
 run_report('\t'+'motor status reporting')
 from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xrd_motors, xrdm
 
+run_report('\t'+'FMBO motor tools')
+from BMM.fmbo import FMBO_status
+
 run_report('\t'+'derived plot')
 from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 
