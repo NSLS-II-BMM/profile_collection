@@ -76,8 +76,8 @@ class DeadbandEpicsMotor(DeadbandMixin, EpicsMotor):
     """
     pass
 
-#class FMBOEpicsMotor(EpicsMotor):
-class FMBOEpicsMotor(DeadbandEpicsMotor):
+class FMBOEpicsMotor(EpicsMotor):
+#class FMBOEpicsMotor(DeadbandEpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES', kind = 'normal')
     encoder = Cpt(EpicsSignal, '.REP', kind = 'omitted')
     

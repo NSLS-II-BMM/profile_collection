@@ -339,7 +339,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
 
 
 def find_slot(close=False):
-    yield from mv(user_ns['xafs_wheel'], rkvs.get('BMM:wheel:outer'))
+    yield from mv(user_ns['xafs_x'], float(rkvs.get('BMM:wheel:outer')))
 
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:

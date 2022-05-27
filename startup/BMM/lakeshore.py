@@ -91,6 +91,10 @@ class LakeShore(PVPositioner):
     # Serial Connection (for debugging)
     serial = Cpt(EpicsSignal, 'SERIAL')
 
+    # a sort of temperature deadband, don't even try to change
+    # temperature if already within this amount.
+    deadband = 5.0
+    
     
     # Utility signals/PVs
     # read_pid = Cpt(EpicsSignal, 'READ_PID')
@@ -178,9 +182,16 @@ class LakeShore(PVPositioner):
         setpoint.
 
         '''
-        yield from mv(self.setpoint, target)
-        yield from mv(self.power, self.level(heater))
-        yield from mv(self, target)
+        if abs(self.readback.get() - target) < self.deadband:
+            print(warning_msg(f'Requested temperature target is within the temperature deadband, {self.deadband}K'))
+            print(warning_msg('Not attempting to change temperature.'))
+            yield from mv(user_ns['busy'], 10)
+        else:
+            yield from mv(self.setpoint, target)
+            yield from mv(self.power, self.level(heater))
+            #yield from mv(self, target)
+            print('Waiting two minutes to arrive at temperature.')
+            yield from mv(user_ns['busy'], 120)
         
 
     def units(self, unit):
@@ -279,10 +290,11 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             ################################
             # change temperature is needed #
             ################################
-            self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
+            #self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
             if m['temperature'] != temperature:
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
                 self.content += self.tab + f'yield from lakeshore.to({m["temperature"]:.1f}, heater=\'{m["power"]}\')\n'
+                self.content += self.tab + f'yield from mv(busy, {m["settle"]:.1f})\n'
                 temperature = m['temperature']
                 settle_time += m["settle"]
                 ramp_time += (temperature - previous) / user_ns['lakeshore'].ramp_rate.get()

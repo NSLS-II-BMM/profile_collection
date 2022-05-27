@@ -650,6 +650,7 @@ def xafs(inifile=None, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
+        #print(disconnected_msg(f"snapshots = {p['snapshots']}"))
         if p['snapshots']:
             ahora = now()
 
@@ -1066,7 +1067,7 @@ def xafs(inifile=None, **kwargs):
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     #quadem1, vor = user_ns['quadem1'], user_ns['vor']
-    xafs_wheel, ga, linkam, gmb = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb']
+    xafs_wheel, ga, linkam, gmb, lakeshore = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb'], user_ns['lakeshore']
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']

@@ -63,7 +63,7 @@ class DCM(PseudoPositioner):
              'Bragg', self.bragg.user_readback.get(),
              '2nd Xtal Perp',  self.perp.user_readback.get(),
              'Para',  self.para.user_readback.get())
-        text += "         ()                             %s = %7.4f   %s = %8.4f" %\
+        text += "                                      %s = %7.4f   %s = %8.4f" %\
             ('Pitch', user_ns['dcm_pitch'].user_readback.get(),
              'Roll',  user_ns['dcm_roll'].user_readback.get())
         #text += "                             %s = %7.4f   %s = %8.4f" %\

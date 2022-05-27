@@ -21,17 +21,27 @@ except:
 
 from BMM.user_ns.instruments import shb, bmps, idps
 
-def ocd(text, signal):
+def ocd(text, signal, negate=False):
     '''Indicated open/close/disconnected state with suitable text coloring.
     '''
     outtext = text
+    if 'ShutterTuple' in str(type(signal.get())):
+        get = signal.get()[0]
+        open_state = 'open         '
+        closed_state = error_msg('closed       ')
+    else:
+        get = signal.get()
+        open_state = 'enabled      '
+        closed_state = error_msg('disabled      ')
+    if negate:
+        get = -get+1
     try:
         if signal.connected is False:
             outtext += disconnected_msg('disconnected ')
-        elif signal.get() == 1:
-            outtext += 'enabled      '
+        elif get == 1:
+            outtext += open_state
         else:
-            outtext += error_msg('disabled      ')
+            outtext += closed_state
     except:
         outtext += whisper('unavailable   ')
     return outtext
@@ -41,7 +51,7 @@ def show_shutters():
     ena_text  = ocd('  Beamline: ', bl_enabled)
     bmps_text = ocd('  BMPS: ', bmps)
     idps_text = ocd('            IDPS: ', idps)
-    shb_text  = ocd('            Photon Shutter: ', shb)
+    shb_text  = ocd('            Photon Shutter: ', shb, True)
     return(ena_text + bmps_text + idps_text + shb_text)
 
 

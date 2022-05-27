@@ -171,7 +171,8 @@ def calibrate_high_end(mono='111', focus=False):
 def calibrate(focus=False):
     "Run a sequence of 10 foil XANES scans, Fe to Mo, to calibrate the DCM."
     def main_plan():
-        dcm = user_ns['dcm']
+        dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
+        BMMuser.instrument = ''
         report(f'Calibrating the {dcm._crystal} monochrmoator', 'bold')
         yield from calibrate_low_end(mono=dcm._crystal, focus=focus)
         yield from calibrate_high_end(mono=dcm._crystal, focus=focus)
