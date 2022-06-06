@@ -1,7 +1,6 @@
+import inspect, time
 from ophyd import EpicsSignalRO
-import inspect
 from BMM.functions import boxedtext, warning_msg, bold_msg, whisper
-import time
 
 def is_FMBO_motor(motor):
     inheritance = (str(x) for x in inspect.getmro(motor.__class__))
@@ -10,7 +9,7 @@ def is_FMBO_motor(motor):
             return True
     return False
 
-
+# expected values of signals
 status_list = {'mtact' : 1, 'mlim'  : 0, 'plim'  : 0, 'ampen' : 0,
                'loopm' : 1, 'tiact' : 0, 'intmo' : 1, 'dwpro' : 0,
                'daerr' : 0, 'dvzer' : 0, 'abdec' : 0, 'uwpen' : 0,
@@ -21,8 +20,10 @@ status_list = {'mtact' : 1, 'mlim'  : 0, 'plim'  : 0, 'ampen' : 0,
                'wfoer' : 0, 'inpos' : 1, 'enc_lss' : 0}
 
 def FMBO_status(motor):
+    '''Inspect signals from FMBO motors using disposable EpicsSignal objects.
+    '''
     if is_FMBO_motor(motor) is False:
-        print("not the thing")
+        print(f'{motor.name} is not an FMBO motor. The CSS screen should be complete for this axis.')
         return
     else:
         text = f'\n  {motor.name} is {motor.prefix}\n\n'
@@ -41,6 +42,6 @@ def FMBO_status(motor):
             if a != 'asscs':
                 if signal.get() != status_list[a]:
                     string = warning_msg(f'{string: <19}')
-            text += f'  {string: <19}  {bold_msg(signal.get())}   {whisper(suffix)}{padding}   {desc.get()}\n'
+            text += f'   {desc.get():26}  {string: <19}  {bold_msg(signal.get())}   {whisper(suffix)}{padding}\n'
         boxedtext(f'{motor.name} status signals', text, 'brown')
 

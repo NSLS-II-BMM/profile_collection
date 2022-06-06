@@ -6,11 +6,17 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 def file_resource(record):
-    '''Return the fully resolved path to the filestore image collected by a BMMSnapshot device
+    '''Return the fully resolved path to the data resource associated with
+    the record, e.g.
+
+    - the filestore image collected by a BMMSnapshot device 
+    - the HDF5 file associated with an XRF measurement or a 
+      fluorescence XAFS scan
 
     Argument is either a uid string or db.v2 (databroker.core.BlueskyRun) object.
 
     Anything that cannot be interpreted to return a path will return None.
+
     '''
     if type(record) is str:
         try:
@@ -46,3 +52,4 @@ def show_snapshot(uid):
     elif 'anacam_image' in this:
         key = 'anacam_image'
     plt.imshow(numpy.array(this[key])[0])
+    plt.grid(False)

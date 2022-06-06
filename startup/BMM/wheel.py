@@ -284,9 +284,10 @@ class WheelMacroBuilder(BMMMacroBuilder):
                         continue
                 ## skip cells with only whitespace
                 if type(m[k]) is str and len(m[k].strip()) == 0:
+                    #continue
                     m[k] = None
                 ## if a cell has data, put it in the argument list for xafs()
-                if m[k] is not None:
+                if m[k] is not None and m[k] != '':
                     if k == 'filename':
                         fname = self.make_filename(m)
                         command += f', filename=\'{fname}\''
@@ -303,6 +304,10 @@ class WheelMacroBuilder(BMMMacroBuilder):
             ########################################
             # approximate time cost of this sample #
             ########################################
+            if element is None:
+                element = self.measurements[0]['element']
+            if edge is None:
+                edge = self.measurements[0]['edge']
             self.estimate_time(m, element, edge)
             
 

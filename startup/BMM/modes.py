@@ -365,8 +365,9 @@ def change_xtals(xtal=None):
 
      RE.msg_hook = None
      BMM_log_info('Moving to the %s crystals' % xtal)
-     yield from mv(dcm_pitch.kill_cmd, 1)
-     yield from mv(dcm_roll.kill_cmd, 1)
+     #yield from mv(dcm_pitch.kill_cmd, 1)
+     #yield from mv(dcm_roll.kill_cmd, 1)
+     yield from dcm.kill_plan()
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.1,
                         dcm_roll, -5.863,
@@ -380,8 +381,9 @@ def change_xtals(xtal=None):
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
-     yield from sleep(2.0)
-     yield from mv(dcm_roll.kill_cmd, 1)
+     yield from sleep(2.0) 
+     yield from dcm.kill_plan()
+     #yield from mv(dcm_roll.kill_cmd, 1)
 
      print('Returning to %.1f eV' % current_energy)
      yield from mv(dcm.energy, current_energy)

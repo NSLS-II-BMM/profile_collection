@@ -211,9 +211,16 @@ class BMMMacroBuilder():
     def escape_quotes(self, value):
         if value is None:
             return ''
-        value = value.replace('\'', "\\'")
+        value = value.replace('\\', "\\\\").replace('\'', "\\'").replace('"', '\\"')
         return value
 
+    def is_empty(self, value):
+        if value is None:
+            return True
+        if type(value) is str and value.strip() == '':
+            return True
+        return False
+    
         
     def ini_sanity(self, default):
         '''Sanity checks for the default line from the spreadsheet.
@@ -313,15 +320,15 @@ class BMMMacroBuilder():
             self.measurements.append(self.get_keywords(row, defaultline))
 
             # check that scan parameters make sense
-            if type(self.measurements[-1]['bounds']) is str:
+            if type(self.measurements[-1]['bounds']) is str and self.measurements[-1]['bounds'].strip() != '':
                 b = re.split('[ ,]+', self.measurements[-1]['bounds'].strip())
             else:
                 b = re.split('[ ,]+', self.measurements[0]['bounds'].strip())
-            if type(self.measurements[-1]['steps']) is str:
+            if type(self.measurements[-1]['steps']) is str and self.measurements[-1]['steps'].strip() != '':
                 s = re.split('[ ,]+', self.measurements[-1]['steps'].strip())
             else:
                 s = re.split('[ ,]+', self.measurements[0]['steps'].strip())
-            if type(self.measurements[-1]['times']) is str:
+            if type(self.measurements[-1]['times']) is str and self.measurements[-1]['times'].strip() != '':
                 t = re.split('[ ,]+', self.measurements[-1]['times'].strip())
             else:
                 t = re.split('[ ,]+', self.measurements[0]['times'].strip())
@@ -395,15 +402,15 @@ class BMMMacroBuilder():
 
     def estimate_time(self, m, el, ed):
         '''Approximate the time contribution from the current row'''
-        if type(m['bounds']) is str:
+        if type(m['bounds']) is str and m['bounds'].strip() != '':
             b = re.split('[ ,]+', m['bounds'].strip())
         else:
             b = re.split('[ ,]+', self.measurements[0]['bounds'].strip())
-        if type(m['steps']) is str:
+        if type(m['steps']) is str and m['steps'].strip() != '':
             s = re.split('[ ,]+', m['steps'].strip())
         else:
             s = re.split('[ ,]+', self.measurements[0]['steps'].strip())
-        if type(m['times']) is str:
+        if type(m['times']) is str and m['times'].strip() != '':
             t = re.split('[ ,]+', m['times'].strip())
         else:
             t = re.split('[ ,]+', self.measurements[0]['times'].strip())

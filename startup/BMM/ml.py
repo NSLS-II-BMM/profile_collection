@@ -242,7 +242,7 @@ class BMMDataEvaluation():
         '''Perform an evaluation of a measurement.  The data will be
         interpolated onto the same grid used for the training set,
         then get subjected to the model.  This returns a tuple with
-        the score (1 or 0) and the Slack-appropriate value (green
+        the score (1 or 0) and the Slack-appropriate emoji (green
         check or red cross).
 
         Parameters

@@ -22,13 +22,13 @@ def sanitize_step_scan_parameters(bounds, steps, times):
     ############################################################################
     if (len(bounds) - len(steps)) != 1:
         text += error_msg('\nbounds must have one more item than steps\n')
-        text += error_msg('\tbounds = %s\n' % ' '.join(map(str, bounds)))
-        text += error_msg('\tsteps = %s\n'  % ' '.join(map(str, steps)))
+        text += error_msg('\tbounds = "%s"\n' % ' '.join(map(str, bounds)))
+        text += error_msg('\tsteps = "%s"\n'  % ' '.join(map(str, steps)))
         problem = True
     if (len(bounds) - len(times)) != 1:
         text += error_msg('\nbounds must have one more item than times\n')
-        text += error_msg('\tbounds = %s\n' % ' '.join(map(str, bounds)))
-        text += error_msg('\ttimes = %s\n'  % ' '.join(map(str, times)))
+        text += error_msg('\tbounds = "%s"\n' % ' '.join(map(str, bounds)))
+        text += error_msg('\ttimes = "%s"\n'  % ' '.join(map(str, times)))
         problem = True
 
     ############################
