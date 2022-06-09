@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 import h5py
 import os
 
-#from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
-#from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 
 from sklearn.model_selection import train_test_split
 from joblib import dump, load
@@ -17,6 +18,8 @@ from joblib import dump, load
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.larch_interface import Pandrosus
 #from BMM.functions import plotting_mode
 from BMM.user_ns.bmm import BMMuser
 
@@ -40,17 +43,24 @@ class BMMDataEvaluation():
     def __init__(self):
         self.GRIDSIZE = 401
         self.clf      = None
+        self.scaler   = StandardScaler()
+        self.trainX   = None
+        self.trainy   = None
         self.X        = None
         self.y        = None
         self.folder   = os.path.join(startup_dir, 'ML')
         self.model    = os.path.join(self.folder, 'data_evaluation.joblib')
         self.hdf5     = [os.path.join(self.folder, 'fluorescence_training_set.hdf5'),
                          os.path.join(self.folder, 'transmission_training_set.hdf5'),
-                         os.path.join(self.folder, 'verygood_training_set.hdf5'),]
+                         os.path.join(self.folder, 'verygood_training_set.hdf5'),
+                         os.path.join(self.folder, 'supplemental_training_set.hdf5'),]
+        self.matrix   = os.path.join(self.folder, 'scaler.joblib')
         self.good_emoji = ':heavy_check_mark:'
         self.bad_emoji  = ':heavy_multiplication_x:'
         if os.path.isfile(self.model):
             self.clf = load(self.model)
+        if os.path.isfile(self.matrix):
+            self.scaler = load(self.matrix)
         
 
     def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True):
@@ -204,11 +214,7 @@ class BMMDataEvaluation():
                         grp.attrs['score'] = action
         plt.close(fig)
 
-    def train(self):
-        '''Using all the hdf5 files of interpolated, scored data, create the
-        evaluation model, saving it to a joblib dump file.
-
-        '''
+    def import_training_set(self):
         scores = list()
         data = list()
         for h5file in self.hdf5:
@@ -221,22 +227,39 @@ class BMMDataEvaluation():
                     scores.append(score)
                     data.append(mu)
 
-        X_train, X_test, y_train, y_test = train_test_split(data, scores, random_state=0)
-        print("training model...")
-        #self.clf=KNeighborsClassifier(n_neighbors=1)
-        self.clf=RandomForestClassifier(random_state=0)
-        #self.clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
+        self.trainX, self.X, self.trainy, self.y = train_test_split(data, scores, random_state=0)
+        self.scaler.fit(self.trainX)
+        dump(self.scaler, self.matrix)
+        print(f'wrote scaling matrix to {self.matrix}')
         
-        self.clf.fit(X_train, y_train)
+        #self.X = self.scaler.transform(self.X)
+        
+    def train(self, model='rf'):
+        '''Using all the hdf5 files of interpolated, scored data, create the
+        evaluation model, saving it to a joblib dump file.
+
+        '''
+
+        print(f"training {model.upper()} model...")
+        if model.lower() == 'knn':
+            self.clf = KNeighborsClassifier(n_neighbors=1)
+        elif model.lower() == 'rf':
+            self.clf = RandomForestClassifier(random_state=0)
+        elif model.lower() == 'mpl':
+            self.clf = MLPClassifier(solver='lbfgs', hidden_layer_sizes=(10, )) #, random_state=1)
+        else:
+            self.clf = RandomForestClassifier(random_state=0)
+        
+        self.clf.fit(self.scaler.transform(self.trainX), self.trainy)
         dump(self.clf, self.model)
         print(f'wrote model to {self.model}')
-        self.X = X_test
-        self.y = y_test
+        #self.X = X_test
+        #self.y = y_test
         return()
 
     def score(self):
         '''Thin wrapper around the classifier object's score method.'''
-        return(self.clf.score(self.X, self.y))
+        return(self.clf.score(self.scaler.transform(self.X), self.y))
 
     def evaluate(self, uid, mode=None):
         '''Perform an evaluation of a measurement.  The data will be
@@ -254,14 +277,16 @@ class BMMDataEvaluation():
 
         '''
         if mode == 'xs':
-            t = user_ns['db'][-1].table()
+            this = user_ns['db'].v2[uid]
+            channels = this.metadata['start']['XDI']['_dtc']
             el = BMMuser.element
-            i0 = numpy.array(t['I0'])
-            en = numpy.array(t['dcm_energy'])
-            dtc1 = numpy.array(t[el+'1'])
-            dtc2 = numpy.array(t[el+'2'])
-            dtc3 = numpy.array(t[el+'3'])
-            dtc4 = numpy.array(t[el+'4'])
+            t = this.primary.read()
+            i0 = t['I0']
+            en = t['dcm_energy']
+            dtc1 = numpy.array(t[channels[0]])
+            dtc2 = numpy.array(t[channels[1]])
+            dtc3 = numpy.array(t[channels[2]])
+            dtc4 = numpy.array(t[channels[3]])
             signal = dtc1+dtc2+dtc3+dtc4
             mu = signal/i0
         else:
@@ -291,12 +316,75 @@ class BMMDataEvaluation():
                     return()
                 mu = signal/i0
         e,m = self.rationalize_mu(en, mu)
-        if len(m) > self.GRIDSIZE:
-            m = m[:-1]
-        result = self.clf.predict([m])[0]
+        if len(e) > self.GRIDSIZE:
+            e, m = e[:-1], m[:-1]
+        m = self.scaler.transform([m,])
+        #if len(m) > self.GRIDSIZE:
+        #    m = m[:-1]
+        result = self.clf.predict(m)[0]
         if result == 1:
             return(result, self.good_emoji)
         else:
             return(result, self.bad_emoji)
     
-    
+    def test_failure(self):
+        '''Examine and process data that failed the current iteration of the data evaluator. 
+        '''
+
+        fig, ax = plt.subplots(1,1)
+        plt.show()
+        plt.draw()
+        fig.canvas.flush_events()
+
+        
+        h5file = os.path.join(self.folder, f'supplemental_training_set.hdf5')
+        try:
+            os.remove(h5file)
+        except:
+            pass
+        h5 = h5py.File(h5file, 'w')
+
+        count = 0
+        faillist = '/home/xf06bm/Data/bucket/failed_data_evaluation.txt'
+        with open(faillist, 'r') as fl:
+            allstr = fl.read()
+        uids = (x[1:] for x in allstr.split('\n') if '\t' in x)
+        for uid in uids:
+            mode = user_ns['db'].v2[uid].metadata['start']['plan_name'].split()[2]
+            if mode == 'fluorescence':
+                mode = 'xs'
+            result, emoji = self.evaluate(uid, mode)
+            print(result, emoji)
+            p = Pandrosus()
+            try:
+                p.fetch(uid, mode=mode)
+            except:
+                pass
+            plt.cla()
+            ax.plot(p.group.energy, p.group.mu)
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+
+            count += 1
+            action = input('\n' + bold_msg('1= good  2=bad  3=skip  q=quit > '))
+            if action.lower() == 'q':
+                plt.close(fig)
+                h5.close()
+                return()
+            elif action == '3':
+                print(warning_msg(f'skipping #{count}'))
+                continue
+            else:
+                ee, mm = self.rationalize_mu(p.group.energy, p.group.mu)
+                print(f'{count}  {len(ee)}   {uid}   {mode}')
+                if len(ee) < self.GRIDSIZE:
+                    continue
+                elif len(ee) > self.GRIDSIZE:
+                    ee = ee[:-1]
+                    mm = mm[:-1]
+                grp = h5.create_group(uid)
+                grp.create_dataset("energy", data=ee)
+                grp.create_dataset("mu", data=mm)
+                grp.attrs['score'] = action
+                print(go_msg(f'added #{count}'))
+        h5.close()
