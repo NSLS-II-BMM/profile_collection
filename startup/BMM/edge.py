@@ -217,6 +217,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
             if action.lower() == 'q' or action.lower() == 'n':
                 return(yield from null())
 
+    # make sure edge is set sensibly in redis when XRD mode is entered
+    if mode == 'XRD':
+        if edge_energy(el,edge) > 23500:
+            edge = 'L3'
     BMMuser.edge        = edge
     BMMuser.element     = el
     BMMuser.edge_energy = energy
@@ -227,7 +231,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     
     start = time.time()
     if mode == 'XRD':
-        report('Configuring beamline for XRD', level='bold', slack=True)
+        report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True)
     else:
         report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     yield from dcm.kill_plan()
