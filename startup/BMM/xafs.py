@@ -991,7 +991,7 @@ def xafs(inifile=None, **kwargs):
                         if score == 0:
                             report('A failed data evaluation does not necessarily mean that there is anything wrong with your data. These data will be investigated and used to refine the data evaluation model.', level='whisper', slack=True)
                             with open('/home/xf06bm/Data/bucket/failed_data_evaluation.txt', 'a') as f:
-                                f.write(now() + '\n\t' + uid + '\n\n')
+                                f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:
                         pass
                     if p['lims'] is True:
