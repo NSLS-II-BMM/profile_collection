@@ -127,7 +127,7 @@ class BMMDataEvaluation():
 
 
     def rationalize_mu(self, en, mu):
-        '''Return energy and mu on a "rationalized" grid of equally spaced points.  See slef.GRIDSIZE
+        '''Return energy and mu on a "rationalized" grid of equally spaced points.  See self.GRIDSIZE
         '''
         ee=list(numpy.arange(float(en[0]), float(en[-1]), (float(en[-1])-float(en[0]))/self.GRIDSIZE))
         mm=numpy.interp(ee, en, mu)
