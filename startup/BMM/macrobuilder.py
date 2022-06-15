@@ -84,6 +84,7 @@ class BMMMacroBuilder():
         self.has_e0_column    = False
         self.offset           = 0
         self.verbose          = False
+        self.nreps            = 1
 
         self.double           = False
         
@@ -163,10 +164,12 @@ class BMMMacroBuilder():
             self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
             self.append_element  = str(self.ws['M2'].value)
+            self.nreps           = int(self.ws['O2'].value)
         else:
             self.do_first_change = self.truefalse(self.ws['G2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['J2'].value, 'closeshutters')
             self.append_element  = str(self.ws['L2'].value)
+            self.nreps           = int(self.ws['N2'].value)
 
         self.instrument = str(self.ws['B1'].value).lower()
         self.version = str(self.ws['B2'].value).lower()
@@ -425,8 +428,8 @@ class BMMMacroBuilder():
             nsc = m['nscans']
         else:
             nsc = self.measurements[0]['nscans']
-        self.totaltime += at * nsc
-        self.deltatime += delta*delta
+        self.totaltime += at * nsc * self.nreps
+        self.deltatime += delta*delta * self.nreps
 
     def write_ini_and_plan(self):
         #################################

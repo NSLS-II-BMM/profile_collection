@@ -29,6 +29,12 @@ class GridMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
 
+
+
+        if self.nreps > 1:
+            self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
+            self.tab = ' '*12
+        
         for m in self.measurements:
 
             if m['default'] is True:
@@ -126,7 +132,9 @@ class GridMacroBuilder(BMMMacroBuilder):
             # approximate time cost of this sample #
             ########################################
             self.estimate_time(m, element, edge)
-            
+
+        if self.nreps > 1:
+            self.tab = ' ' * 8
 
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
