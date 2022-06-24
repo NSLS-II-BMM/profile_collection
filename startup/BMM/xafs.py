@@ -1,7 +1,7 @@
 from bluesky.plans import rel_scan, scan_nd, count
 from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
-from databroker.core import SingleRunCache
+#from databroker.core import SingleRunCache
 
 import numpy, os, re, shutil
 import textwrap, configparser, datetime
@@ -892,7 +892,7 @@ def xafs(inifile=None, **kwargs):
                 # this one is a bit different, get dossier entry from gmb object,
                 # there is no grid object....
                 elif 'grid' in BMMuser.instrument.lower():
-                    slotno = f', motor grid {gmb.motor1}, {gmb.motor2} = {gmb.position1:.1f}, {gmb.position1:.1f}{gmb.position2:.1f}'
+                    slotno = f', motor grid {gmb.motor1.name}, {gmb.motor2.name} = {gmb.position1:.1f}, {gmb.position2:.1f}'
                     dossier.instrument = gmb.dossier_entry();
 
                     

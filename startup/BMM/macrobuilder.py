@@ -164,12 +164,16 @@ class BMMMacroBuilder():
             self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
             self.append_element  = str(self.ws['M2'].value)
-            self.nreps           = int(self.ws['O2'].value)
+            self.nreps           = self.ws['O2'].value
         else:
             self.do_first_change = self.truefalse(self.ws['G2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['J2'].value, 'closeshutters')
             self.append_element  = str(self.ws['L2'].value)
-            self.nreps           = int(self.ws['N2'].value)
+            self.nreps           = self.ws['N2'].value
+        if self.nreps is None:
+            self.nreps = 1
+        else:
+            self.nreps = int(self.nreps)
 
         self.instrument = str(self.ws['B1'].value).lower()
         self.version = str(self.ws['B2'].value).lower()

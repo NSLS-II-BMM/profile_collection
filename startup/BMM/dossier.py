@@ -9,7 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from larch.io import create_athena
 
-from BMM.functions       import plotting_mode, error_msg, whisper
+from BMM.functions       import plotting_mode, error_msg, whisper, etok
 from BMM.larch_interface import Pandrosus, Kekropidai
 from BMM.logging         import img_to_slack, post_to_slack
 from BMM.modes           import get_mode, describe_mode
@@ -411,6 +411,8 @@ class BMMDossier():
             ee = base.group.energy
             mm = base.group.mu
             save = base.group.args['label']
+            ## hardwire a fix for an odd larch/athena interaction
+            base.group.args['bkg_spl2'] = etok(float(base.group.args['bkg_spl2e']))
             proj.add_group(base.group)
             base.group.args['label'] = save
             cnt = 1
@@ -422,12 +424,15 @@ class BMMDossier():
                         mu = numpy.interp(ee, this.group.energy, this.group.mu)
                         mm = mm + mu
                         save = this.group.args['label']
+                        this.group.args['bkg_spl2'] = etok(float(this.group.args['bkg_spl2e']))
                         proj.add_group(this.group)
                         this.group.args['label'] = save
                         cnt += 1
-                    except:
+                    except Exception as E:
+                        print(E)
                         pass # presumably this is noisy data for which a valid background was not found
-        except:
+        except Exception as E:
+            print(E)
             pass # presumably this is noisy data for which a valid background was not found
         if cnt == 0:
             print(whisper(f'Unable to make triplot'))
@@ -445,8 +450,13 @@ class BMMDossier():
         plt.savefig(filename)
         print(whisper(f'Wrote triplot to {filename}'))
         matplotlib.use(thisagg) # return to screen display
+        ## hardwire a fix for an odd larch/athena interaction
+        for a in proj.groups:
+            if hasattr(proj.groups[a], 'args'):
+                proj.groups[a].args['bkg_spl2'] = etok(float(proj.groups[a].args['bkg_spl2e']))
         proj.save()
         print(whisper(f'Wrote Athena project to {projname}'))
+        #return(proj)
 
 
     def simple_plot(self, uidlist, filename, mode):

@@ -368,6 +368,7 @@ def change_xtals(xtal=None):
      #yield from mv(dcm_pitch.kill_cmd, 1)
      #yield from mv(dcm_roll.kill_cmd, 1)
      yield from dcm.kill_plan()
+     yield from sleep(2.0) 
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.1,
                         dcm_roll, -5.863,

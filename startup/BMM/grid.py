@@ -146,8 +146,8 @@ class GridMacroBuilder(BMMMacroBuilder):
         thistext  =  '	    <div id="boxinst">\n'
         thistext +=  '	      <h3>Instrument: Motor grid</h3>\n'
         thistext +=  '	      <ul>\n'
-        thistext += f'               <li><b>Motor 1:</b> {self.motor1} = self.position1:.3f</li>\n'
-        thistext += f'               <li><b>Motor 2:</b> {self.motor2} = self.position2:.3f</li>\n'
+        thistext += f'               <li><b>Motor 1:</b> {self.motor1.name} = {self.position1:.3f}</li>\n'
+        thistext += f'               <li><b>Motor 2:</b> {self.motor2.name} = {self.position2:.3f}</li>\n'
         thistext +=  '	      </ul>\n'
         thistext +=  '	    </div>\n'
         return thistext
