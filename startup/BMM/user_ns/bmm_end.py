@@ -384,4 +384,4 @@ except:
 #debug_monitor_log = logging.getLogger('ophyd.event_dispatcher')
 #debug_monitor_log.addHandler(logging.StreamHandler(stream=sys.stdout))
 
-from BMM.agent_plans import agent_driven_nap, agent_move_and_measure
+from BMM.agent_plans import agent_driven_nap, agent_move_and_measure, agent_move_motor, agent_change_edge, agent_xafs
