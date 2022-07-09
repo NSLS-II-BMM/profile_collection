@@ -3,7 +3,7 @@ import redis
 from bluesky import plan_stubs as bps
 
 
-__all__ = ["agent_driven_nap", ]
+__all__ = ["agent_driven_nap", "agent_move_and_measure"]
 
 @bpp.run_decorator(md={})
 def agent_driven_nap(delay: float, *, delay_kwarg: float = 0):
