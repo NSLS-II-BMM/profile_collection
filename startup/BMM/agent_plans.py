@@ -3,8 +3,8 @@ import redis
 from bluesky import plan_stubs as bps
 from BMM.edge import change_edge
 from BMM.xafs import xafs
-from BMM.instruments import slits3
-from BMM.motors import xafs_det
+from BMM.user_ns.instruments import slits3
+from BMM.user_ns.motors import xafs_det
 
 
 __all__ = ["agent_driven_nap", "agent_move_and_measure"]
