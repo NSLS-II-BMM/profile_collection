@@ -1074,13 +1074,13 @@ def xafs(inifile=None, **kwargs):
                                 f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:
                         pass
-                    if p['lims'] is True:
-                        try:
-                            rsync_to_gdrive()
-                            synch_gdrive_folder()
-                        except Exception as e:
-                            print(error_msg(e))
-                            report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
+                    # if p['lims'] is True:
+                    #     # try:
+                        #     rsync_to_gdrive()
+                        #     synch_gdrive_folder()
+                        # except Exception as e:
+                        #     print(error_msg(e))
+                        #     report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
                         
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
@@ -1135,8 +1135,8 @@ def xafs(inifile=None, **kwargs):
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 report('wrote dossier %s' % htmlout, 'bold')
-        rsync_to_gdrive()
-        synch_gdrive_folder()
+        # rsync_to_gdrive()
+        # synch_gdrive_folder()
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
