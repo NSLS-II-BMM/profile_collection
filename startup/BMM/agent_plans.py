@@ -101,3 +101,30 @@ def agent_move_and_measure(
         yield from Cu_plan()
         yield from Ti_plan()
 
+
+
+def agent_move_motor(motor_x, Cu_x_position, *args, **kwargs):
+    yield from bps.mv(motor_x, Cu_x_position)
+
+
+def agent_change_edge(*args, **kwargs):
+    yield from change_edge(["Cu"], focus=True)
+
+
+def agent_xafs(
+    motor_x,
+    Cu_x_position,
+    Ti_x_position,
+    motor_y,
+    Cu_y_position,
+    Ti_y_position,
+    *,
+    Cu_det_position,
+    Ti_det_position,
+    md=None,
+    **kwargs
+):
+    _md = dict(Cu_position=motor_x.position)
+    _md["Cu_det_position"] = xafs_det.position
+    _md.update(md or {})
+    yield from xafs(element="Cu", **kwargs)
