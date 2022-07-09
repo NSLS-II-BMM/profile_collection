@@ -1111,7 +1111,7 @@ def xafs(inifile=None, **kwargs):
         BMMuser.htmlout  = False
 
     if is_re_worker_active():
-        inifile = '/home/xf06bm/Data/bucket/scan.ini'
+        inifile = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
     if inifile is None:
         inifile = present_options('ini')
     if inifile is None:
@@ -1144,7 +1144,7 @@ def howlong(inifile=None, interactive=True, **kwargs):
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     if is_re_worker_active():
-        inifile = '/home/xf06bm/Data/bucket/scan.ini'
+        inifile = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
     BMMuser = user_ns['BMMuser']
     if inifile is None:
         inifile = present_options('ini')
