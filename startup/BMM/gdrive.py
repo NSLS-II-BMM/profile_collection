@@ -20,7 +20,6 @@ user_ns = vars(user_ns_module)
 
 #from BMM.user_ns.bmm import BMMuser
 
-gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
 def determine_bin_location():
@@ -34,12 +33,14 @@ def determine_bin_location():
         return(None)
         
 def copy_to_gdrive(fname):
+    gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     print(f'copying {fname} to {user_gdrive_folder}')
     shutil.copyfile(os.path.join(user_ns['BMMuser'].folder, fname), os.path.join(user_gdrive_folder, fname), follow_symlinks=True)
     return()
 
 def rsync_to_gdrive():
+    gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
     user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     print(f'syncing user folder to {user_gdrive_folder}')
     subprocess.run(['rsync', '-aq', user_ns['BMMuser'].folder, user_gdrive_folder]) 
