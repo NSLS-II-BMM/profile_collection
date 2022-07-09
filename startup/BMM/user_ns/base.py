@@ -46,6 +46,11 @@ from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
 
+
+from tiled.client import from_profile
+bmm_catalog = from_profile('bmm')
+
+
 from bluesky.callbacks.zmq import Publisher
 publisher = Publisher('localhost:5577')
 RE.subscribe(publisher)

@@ -14,14 +14,14 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.db            import file_resource
+#from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
-from BMM.user_ns.base import startup_dir
+from BMM.user_ns.base import startup_dir, bmm_catalog
         
 
 
@@ -68,14 +68,17 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
         plt.grid(which='major', axis='both')
         plt.xlim(2500, round(dcm.energy.position, -2)+500)
         try:
+            record = bmm_catalog[uid]
             #print(f'{uid}')
-            fname = file_resource(uid)
-            db = user_ns['db']
-            plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
-            f = h5py.File(fname,'r')
-            g = f['entry']['instrument']['detector']['data']
-            data_array = g.value
-            s1 = data_array[0][0]
+            # fname = file_resource(uid)
+            # db = user_ns['db']
+            # plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
+            # f = h5py.File(fname,'r')
+            # g = f['entry']['instrument']['detector']['data']
+            # data_array = g.value
+            # s1 = data_array[0][0]
+            plt.title(record.metadata['start']['XDI']['Sample']['name'])
+            s1 = record['primary']['data']['xs_channels_channel08'][0]
         except Exception as e:
             if uid is not None: print(e)
             plt.title('XRF Spectrum')
