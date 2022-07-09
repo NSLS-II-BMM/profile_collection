@@ -14,6 +14,8 @@ from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 
+from PIL import Image
+from tiled.client import from_profile
 
 from BMM.areascan        import areascan
 from BMM.db              import file_resource
@@ -30,7 +32,7 @@ from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_su
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.base      import db, startup_dir
+from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time
 
 
@@ -429,6 +431,7 @@ def raster(inifile=None, **kwargs):
         ## snap photos
         if p['snapshots']:
             ahora = now()
+            c = from_profile('bmm')
 
             ### --- XAS webcam ---------------------------------------------------------------
             annotation = p['filename']
@@ -437,7 +440,9 @@ def raster(inifile=None, **kwargs):
             xascam._annotation_string = annotation
             print(bold_msg('XAS webcam snapshot'))
             xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            os.symlink(file_resource(db.v2[xascam_uid]), image_web)
+            #os.symlink(file_resource(db.v2[xascam_uid]), image_web)
+            im = Image.fromarray(numpy.array(bmm_catalog[xascam_uid].primary.read()['xascam_image'])[0])
+            im.save(image_web, 'JPEG')
 
             ### --- analog camera using redgo dongle ------------------------------------------
             dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
@@ -446,7 +451,9 @@ def raster(inifile=None, **kwargs):
             print(bold_msg('analog camera snapshot'))
             anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             try:
-                os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
+                #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
+                im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
+                im.save(image_ana, 'JPEG')
             except:
                 print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
                 pass
@@ -457,7 +464,9 @@ def raster(inifile=None, **kwargs):
             usbcam1._annotation_string = p['filename']
             print(bold_msg('USB camera #1 snapshot'))
             usbcam1_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
+            #os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
+            im = Image.fromarray(numpy.array(bmm_catalog[usbcam1_uid].primary.read()['usbcam1_image'])[0])
+            im.save(image_usb1, 'JPEG')
 
             ### --- USB camera #2 --------------------------------------------------------------
             dossier.usb2snap = "%s_usb2_%s.jpg" % (p['filename'], ahora)
@@ -465,7 +474,9 @@ def raster(inifile=None, **kwargs):
             usbcam2._annotation_string = p['filename']
             print(bold_msg('USB camera #2 snapshot'))
             usbcam2_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
+            #os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
+            im = Image.fromarray(numpy.array(bmm_catalog[usbcam2_uid].primary.read()['usbcam2_image'])[0])
+            im.save(image_usb2, 'JPEG')
 
             
         md['_snapshots'] = {#'xrf_uid':     xrfuid,     'xrf_image': xrfimage,

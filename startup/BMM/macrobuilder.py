@@ -324,6 +324,7 @@ class BMMMacroBuilder():
                 defaultline = True
             if count > 200:
                 break
+            print(count)
             self.measurements.append(self.get_keywords(row, defaultline))
 
             # check that scan parameters make sense

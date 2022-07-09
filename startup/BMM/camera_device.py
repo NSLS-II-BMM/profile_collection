@@ -19,7 +19,6 @@ import fcntl
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.db import file_resource
 from BMM.functions import now
 from BMM.logging import report
 

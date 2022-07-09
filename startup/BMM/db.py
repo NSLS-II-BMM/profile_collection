@@ -6,7 +6,12 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 def file_resource(record):
-    '''Return the fully resolved path to the data resource associated with
+    '''Note: This function is depecated when using a conda environment
+    which uses Tiled.  The method this uses to find the associated
+    file asset does not work with the Tiled interface to the
+    databroker.
+
+    Return the fully resolved path to the data resource associated with
     the record, e.g.
 
     - the filestore image collected by a BMMSnapshot device 

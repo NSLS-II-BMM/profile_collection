@@ -205,6 +205,11 @@ class WheelMacroBuilder(BMMMacroBuilder):
         Finally, write out the master INI and macro python files.
         '''
         element, edge, focus, slot = (None, None, None, None)
+
+        if self.nreps > 1:
+            self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
+            self.tab = ' '*12
+
         for m in self.measurements:
 
             if m['default'] is True:
@@ -310,7 +315,9 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 edge = self.measurements[0]['edge']
             self.estimate_time(m, element, edge)
             
-
+        if self.nreps > 1:
+            self.tab = ' ' * 8
+            
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'
             self.content += self.tab + '    BMMuser.running_macro = False\n'

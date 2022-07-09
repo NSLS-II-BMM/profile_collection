@@ -29,8 +29,6 @@ class GridMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
 
-
-
         if self.nreps > 1:
             self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
             self.tab = ' '*12
@@ -183,9 +181,9 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'steps':       row[14].value,
                 'times':       row[15].value,
                 'motor1':      row[16].value,     # motor names and positions 
-                'position1':   row[17].value,
+                'position1':   float(row[17].value),
                 'motor2':      row[18].value,
-                'position2':   row[19].value,
+                'position2':   float(row[19].value),
                 'detectorx':   row[20].value,
                 'snapshots':   self.truefalse(row[21].value, 'snapshots' ),  # flags
                 'htmlpage':    self.truefalse(row[22].value, 'htmlpage'  ),
