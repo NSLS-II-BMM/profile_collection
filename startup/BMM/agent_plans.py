@@ -80,7 +80,7 @@ def agent_move_and_measure(
         _md["Cu_det_position"] = xafs_det.position
         _md.update(md or {})
         yield from bps.mv(slits3.vsize, 0.1)
-        yield from change_edge(["Cu"], focus=True)
+        yield from change_edge("Cu", focus=True)
         # xafs doesn't take md, so stuff it into a comment string to be ast.literal_eval()
         yield from xafs(element="Cu", comment=str(_md), **kwargs)
 
@@ -92,7 +92,7 @@ def agent_move_and_measure(
         _md["Ti_det_position"] = xafs_det.position
         _md.update(md or {})
         yield from bps.mv(slits3.vsize, 0.3)
-        yield from change_edge(["Ti"], focus=True)
+        yield from change_edge("Ti", focus=True)
         yield from xafs(element="Ti", comment=str(_md), **kwargs)
 
     rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
@@ -112,7 +112,7 @@ def agent_move_motor(motor_x, Cu_x_position, *args, **kwargs):
 
 
 def agent_change_edge(*args, **kwargs):
-    yield from change_edge(["Cu"], focus=True)
+    yield from change_edge("Cu", focus=True)
 
 
 def agent_xafs(
