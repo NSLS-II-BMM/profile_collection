@@ -1222,4 +1222,3 @@ def xafs_grid(inifile=None, **kwargs):
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     print(f'{p["element"]} {p["edge"]}')
     return(energy_grid, time_grid)
-
