@@ -72,27 +72,29 @@ def agent_move_and_measure(
             >>> 'times': '0.5 0.5 0.5 0.5'}
     """
 
-    def Cu_plan():
+    def Cu_plan(already_at_edge=True):
         yield from bps.mv(motor_x, Cu_x_position)
         _md = dict(Cu_position=motor_x.position)
         yield from bps.mv(motor_y, Cu_y_position)
         yield from bps.mv(xafs_det, Cu_det_position)
         _md["Cu_det_position"] = xafs_det.position
         _md.update(md or {})
-        yield from bps.mv(slits3.vsize, 0.1)
-        yield from change_edge("Cu", focus=True)
+        if not already_at_edge:
+            yield from bps.mv(slits3.vsize, 0.1)
+            yield from change_edge("Cu", focus=True)
         # xafs doesn't take md, so stuff it into a comment string to be ast.literal_eval()
         yield from xafs(element="Cu", comment=str(_md), **kwargs)
 
-    def Ti_plan():
+    def Ti_plan(already_at_edge=True):
         yield from bps.mv(motor_x, Ti_x_position)
         _md = dict(Ti_position=motor_x.position)
         yield from bps.mv(motor_y, Ti_y_position)
         yield from bps.mv(xafs_det, Ti_det_position)
         _md["Ti_det_position"] = xafs_det.position
         _md.update(md or {})
-        yield from bps.mv(slits3.vsize, 0.3)
-        yield from change_edge("Ti", focus=True)
+        if not already_at_edge:
+            yield from bps.mv(slits3.vsize, 0.3)
+            yield from change_edge("Ti", focus=True)
         yield from xafs(element="Ti", comment=str(_md), **kwargs)
 
     rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
@@ -100,10 +102,10 @@ def agent_move_and_measure(
     # edge = rkvs.get('BMM:pds:edge').decode('utf-8')
     if element == "Ti":
         yield from Ti_plan()
-        yield from Cu_plan()
+        yield from Cu_plan(already_at_edge=False)
     else:
         yield from Cu_plan()
-        yield from Ti_plan()
+        yield from Ti_plan(already_at_edge=False)
 
 
 
