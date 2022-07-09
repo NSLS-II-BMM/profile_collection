@@ -24,3 +24,9 @@ if not is_re_worker_active():
     get_ipython().magic(u"%xmode Plain")
     from .prompt import *
     from .magic import *
+
+from BMM.user_ns.bmm import whoami
+if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
+    print('')
+    whoami()
+    BMMuser.trigger = False
