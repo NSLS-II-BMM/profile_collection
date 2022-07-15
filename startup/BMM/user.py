@@ -52,7 +52,7 @@ class BMM_User(Borg):
         True will replace a call to xafs() with a sleep
     macro_sleep : float
         the length of that sleep
-    motor_fault : str of None
+    motor_fault : str or None
         normally None, set to a string when motors are found in a fault state
     detector : int
         4=4-element detector, 1=1-element detector
@@ -102,8 +102,6 @@ class BMM_User(Borg):
         output data file stub
     experimenters : str
         names of experimenters
-    e0 : float
-        edge energy, reference for bounds
     element : str
         absorbing element
     edge : str
@@ -171,7 +169,7 @@ class BMM_User(Borg):
         self.name            = None
         self.staff           = False
         #self.read_foils      = None
-        self.read_rois       = None
+        #self.read_rois       = None
         self.user_is_defined = False
         self.motor_fault     = None
         self.detector        = 4
@@ -233,8 +231,8 @@ class BMM_User(Borg):
         self.folder_link   = None
         self.filename      = 'data.dat'
         self.experimenters = ''
-        self.e0            = None
         self.element       = None
+        self.e0            = None
         self.edge          = 'K'
         self.sample        = ''
         self.prep          = ''
@@ -273,6 +271,26 @@ class BMM_User(Borg):
         self.extra_metadata = None
         self.syns           = False
 
+        self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
+                             "readout_mode", "folder", "folder_link", "filename",
+                             "experimenters", "element", "edge", "sample", "prep", "comment",
+                             "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode", "roi1",
+                             "roi2", "roi3", "roi4", "dtc1", "dtc2", "dtc3", "dtc4")
+        self.bmm_ints     = ("gup", "saf", "detector", "npoints", "bender_xas", "bender_xrd",
+                             "bender_margin", "filter_state", "nscans", "start")
+        self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
+                             "inttime") #, "edge_energy")
+        self.bmm_booleans = ("prompt", "final_log_entry", "use_pilatus", "staff", "echem",
+                             "use_slack", "trigger", "running_macro", "suspenders_engaged",
+                             "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
+                             "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
+                             "doi", "cif", "syns")
+        self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
+        self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
+                             "fig", "ax", "x", "y", "prev_fig", "prev_ax")
+        self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
+
+
     def to_json(self, filename=None, prefix=''):
 
         all_keys = list(self.__dict__.keys())
@@ -282,6 +300,8 @@ class BMM_User(Borg):
         d = dict()
         for k in almost_all_keys:
             d[k] = getattr(self, k)
+            rkvs.set(f'BMM:user:{k}', str(d[k]))
+        print('\n{prefix}wrote BMMuser state to redis')
         
         if filename is None:
             print(json.dumps(d, indent=4))
@@ -320,24 +340,38 @@ class BMM_User(Borg):
 
             
     def from_json(self, filename):
-        if os.path.isfile(filename):
-            with open(filename, 'r') as jsonfile:
-                config = json.load(jsonfile)
-            for k in config.keys():
-                if k in ('cycle',):
-                    continue
-                setattr(self, k, config[k])
-            #rois.trigger = True
+        # if os.path.isfile(filename):
+        #     with open(filename, 'r') as jsonfile:
+        #         config = json.load(jsonfile)
+        #     for k in config.keys():
+        #         ## deal with things that may be floating around in a
+        #         ## .BMMuser, but which need not be initialized
+        #         if k in ('cycle', 'read_rois', 'e0', 'bounds', 'steps', 'times',
+        #                  'motor', 'motor2', 'fig', 'ax', 'x', 'y', 'prev_fig', 'prev_ax',
+        #                  'bmm_strings', 'bmm_ints', 'bmm_floats', 'bmm_booleans', 'bmm_none'):
+        #             continue
+        #         setattr(self, k, config[k])
+        #     #rois.trigger = True
         from BMM.workspace import rkvs
-        try:
-            #rkvs.set('BMM:pds:edge',        str(config['edge']))
-            #rkvs.set('BMM:pds:element',     str(config['element']))
-            rkvs.set('BMM:pds:edge_energy', edge_energy(config['element'], config['edge']))
-            self.element    = rkvs.get('BMM:pds:element').decode('utf-8')
-            self.edge       = rkvs.get('BMM:pds:edge').decode('utf-8')
-            self.instrument = rkvs.get('BMM:automation:type').decode('utf-8')
-        except:
-            pass
+        for k in self.bmm_strings:
+            #print("string:", k)
+            setattr(self, k, rkvs.get(f'BMM:user:{k}').decode('utf-8'))
+        for k in self.bmm_ints:
+            #print("int:", k)
+            setattr(self, k, int(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+        for k in self.bmm_floats:
+            #print("float:", k)
+            setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+        for k in self.bmm_booleans:
+            #print("bool:", k)
+            setattr(self, k, bool(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+        for k in self.bmm_none:
+            #print("none:", k)
+            setattr(self, k, None)
+        
+        rkvs.set('BMM:pds:element',     self.element)
+        rkvs.set('BMM:pds:edge',        self.edge)
+        rkvs.set('BMM:pds:edge_energy', edge_energy(self.element, self.edge))
             
     def show(self, scan=False):
         '''
@@ -345,7 +379,7 @@ class BMM_User(Borg):
         '''
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 
-                    'read_rois', 'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
+                    'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
                     'detector', 'use_pilatus', 'echem', 'echem_remote'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
@@ -365,7 +399,7 @@ class BMM_User(Borg):
         if scan:
             print('\nScan control attributes:')
             for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'filename',
-                        'experimenters', 'e0', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
+                        'experimenters', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
                         'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
                         'dwell', 'delay'):
                 print('\t%-15s = %s' % (att, str(getattr(self, att))))
@@ -738,10 +772,6 @@ class BMM_User(Borg):
                 self.element, self.edge, self.instrument = None, 'K', ''
             if self.name is not None:
                 self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
-            #if 'foils' in user:
-            #    self.read_foils = user['foils'] # see 76-edge.py, line 114, need to delay configuring foils until 76-edge is read
-            #if 'rois' in user:
-            #    self.read_rois  = user['rois']  # see 76-edge.py, line 189, need to delay configuring ROIs until 76-edge is read
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''

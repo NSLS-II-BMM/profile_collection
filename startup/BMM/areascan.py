@@ -199,15 +199,20 @@ def areascan(detector,
         thismap = user_ns['db'].v2[uid]
         x=numpy.array(thismap.primary.read()[fast.name])
         y=numpy.array(thismap.primary.read()[slow.name])
-        if detector.lower() == 'xs':
+        if detector.lower() == 'noisy_det':
+            z=numpy.array(thismap.primary.read()['noisy_det'])
+        elif detector.lower() == 'it':
+            z=numpy.array(thismap.primary.read()['It'])
+        elif detector.lower() == 'xs':
             z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
                 numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
                 numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
                 numpy.array(thismap.primary.read()[BMMuser.xs4])
-        elif detector.lower() == 'noisy_det':
-            z=numpy.array(thismap.primary.read()['noisy_det'])
-        elif detector.lower() == 'it':
-            z=numpy.array(thismap.primary.read()['It'])
+        else:
+            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
+                numpy.array(thismap.primary.read()[BMMuser.xs4])
 
         z=z.reshape(nfast, nslow)
         # grabbing the first nfast elements of x and every

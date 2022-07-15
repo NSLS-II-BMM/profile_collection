@@ -318,16 +318,16 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 'temperature': row[1].value,          # measurement temperature
                 'settle':      self.nonezero(row[2].value),  # temperature settling time
                 'measure':     self.truefalse(row[3].value, 'measure'), # filename and visualization
-                'filename':    row[4].value,
+                'filename':    str(row[4].value),
                 'nscans':      row[5].value,
                 'start':       row[6].value,
                 'mode':        row[7].value,
                 'element':     row[8].value,      # energy range
                 'edge':        row[9].value,
                 'focus':       row[10].value,
-                'sample':      self.escape_quotes(row[11].value),     # scan metadata
-                'prep':        self.escape_quotes(row[12].value),
-                'comment':     self.escape_quotes(row[13].value),
+                'sample':      self.escape_quotes(str(row[11].value)),     # scan metadata
+                'prep':        self.escape_quotes(str(row[12].value)),
+                'comment':     self.escape_quotes(str(row[13].value)),
                 'bounds':      row[14].value,     # scan parameters
                 'steps':       row[15].value,
                 'times':       row[16].value,

@@ -401,16 +401,16 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                 'settle':      self.nonezero(row[2].value),  # temperature settling time
                 'power':       row[3].value,                 # heater power level
                 'measure':     self.truefalse(row[4].value, 'measure'), # filename and visualization
-                'filename':    row[5].value,
+                'filename':    str(row[5].value),
                 'nscans':      row[6].value,
                 'start':       row[7].value,
                 'mode':        row[8].value,
                 'element':     row[9].value,      # energy range
                 'edge':        row[10].value,
                 'focus':       row[11].value,
-                'sample':      self.escape_quotes(row[12].value),     # scan metadata
-                'prep':        self.escape_quotes(row[13].value),
-                'comment':     self.escape_quotes(row[14].value),
+                'sample':      self.escape_quotes(str(row[12].value)),     # scan metadata
+                'prep':        self.escape_quotes(str(row[13].value)),
+                'comment':     self.escape_quotes(str(row[14].value)),
                 'bounds':      row[15].value,     # scan parameters
                 'steps':       row[16].value,
                 'times':       row[17].value,

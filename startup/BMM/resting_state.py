@@ -61,7 +61,7 @@ def resting_state_plan():
     '''
 
     #BMMuser.prompt = True
-    BMMuser.macro_dryrun = False
+    #BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     #yield from quadem1.on_plan()
     #yield from vor.on_plan()
     quadem1.Iy.kind = 'omitted'

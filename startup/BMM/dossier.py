@@ -348,9 +348,9 @@ class BMMDossier():
             print(E)
 
         manifest = open(self.manifest_file, 'a')
-        manifest.write(htmlfilename + '\n')
+        manifest.write(f'xafs␣{htmlfilename}\n')
         manifest.close()
-        self.write_manifest('XAFS')
+        self.write_manifest()
 
         if pngfilename is not None and os.path.isfile(pngfilename):
             try:
@@ -370,9 +370,10 @@ class BMMDossier():
 
         experimentlist = ''
         for l in lines:
-            if not os.path.isfile(l):
+            (scantype, fname) = l.split('␣')
+            if not os.path.isfile(fname):
                 continue
-            this = os.path.basename(l)
+            this = os.path.basename(fname)
             experimentlist += f'<li>{scantype}: <a href="./{this}">{this}</a></li>\n'
 
         #with open(os.path.join(BMMuser.DATA, 'dossier', 'manifest.tmpl')) as f:
@@ -590,6 +591,6 @@ class BMMDossier():
         print(f'wrote {htmlfilename}')
 
         manifest = open(self.manifest_file, 'a')
-        manifest.write(htmlfilename + '\n')
+        manifest.write(f'raster␣{htmlfilename}\n')
         manifest.close()
-        self.write_manifest('Raster')
+        self.write_manifest()

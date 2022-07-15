@@ -20,6 +20,7 @@ user_ns = vars(user_ns_module)
 
 #from BMM.user_ns.bmm import BMMuser
 
+gdrive_folder = os.path.join(os.environ['HOME'], 'gdrive')
 
 
 def determine_bin_location():

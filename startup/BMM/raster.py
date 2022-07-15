@@ -9,6 +9,7 @@ except ImportError:
 import numpy, os, re, shutil, openpyxl
 import textwrap, configparser, datetime
 from scipy.io import savemat
+import matplotlib.pyplot as plt
 
 from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
@@ -213,15 +214,20 @@ def difference_data(uid1, uid2, tag):
     tag  : (str) a string to use to identify this difference spectrum
 
     '''
+
+    ## HIP1
+    ## 4+ : b9da51fb-a74b-4e86-bf92-e53e01ec763c
+    ## 3+ : 66672202-4d35-4e50-869a-9c6fef89cf84
+    ## bkg: 7afeb391-782a-4240-a676-4373fdbee301
     
     ## get motor names and image shape
-    motors = db.v2[uid].metadata['start']['motors']
-    [nslow, nfast] = db.v2[uid].metadata['start']['shape']
+    motors = db.v2[uid1].metadata['start']['motors']
+    [nslow, nfast] = db.v2[uid1].metadata['start']['shape']
 
     ## slurp in data
-    print('Reading first data set...')
+    print('Reading primary data set...')
     datatable1 = db.v2[uid1].primary.read()
-    print('Reading second data set...')
+    print('Reading secondary data set...')
     datatable2 = db.v2[uid2].primary.read()
 
     ## common arrays and I0 arrays
@@ -231,27 +237,27 @@ def difference_data(uid1, uid2, tag):
     i02  = numpy.array(datatable2['I0'])
 
     ## grab the signal based on what is listed in 'detectors' in the start document
-    if 'xs' in db.v2[uid].metadata['start']['detectors']:
-        det_name = db.v2[uid].metadata['start']['plan_name'].split()[-1]
+    if 'xs' in db.v2[uid1].metadata['start']['detectors']:
+        det_name = db.v2[uid1].metadata['start']['plan_name'].split()[-1]
         det_name = det_name[:-1]
         z1 = numpy.array(datatable1[det_name+'1'])+numpy.array(datatable1[det_name+'2'])+numpy.array(datatable1[det_name+'3'])+numpy.array(datatable1[det_name+'4'])
         z2 = numpy.array(datatable2[det_name+'1'])+numpy.array(datatable2[det_name+'2'])+numpy.array(datatable2[det_name+'3'])+numpy.array(datatable2[det_name+'4'])
-    elif 'noisy_det' in db.v2[uid].metadata['start']['detectors']:
+    elif 'noisy_det' in db.v2[uid1].metadata['start']['detectors']:
         z1 = numpy.array(datatable1['noisy_det'])
         z2 = numpy.array(datatable2['noisy_det'])
 
     ## save map in xlsx format
     wb = openpyxl.Workbook()
     ws1 = wb.active
-    ws1.title = label
+    ws1.title = tag
     ws1.append(('slow', 'fast', 'difference', 'normalized_1', 'normalized_2', 'signal_1', 'I0_1', 'signal_2', 'I0_2'))
     n1 = z1/i01
     n2 = z2/i02
-    diff = n1 - n1
+    diff = n1 - n2
     for i in range(len(slow)):
         ws1.append((slow[i], fast[i], diff[i], n1[i], n2[i], z1[i], i01[i], z2[i], i02[i]))
     wb.save(filename=os.path.join(user_ns['BMMuser'].folder, 'maps', f'{tag}.xlsx'))
-    print(f'wrote {user_ns["BMMuser"]}/maps/{tag}.xlsx')
+    print(f'wrote {user_ns["BMMuser"].folder}/maps/{tag}.xlsx')
     
     ## save map in matlab format 
     savemat(os.path.join(user_ns['BMMuser'].folder, 'maps', f'{tag}.mat'), {'label'        : tag,
@@ -273,8 +279,8 @@ def difference_data(uid1, uid2, tag):
     # numpy.unique due to float &/or motor precision issues
 
     plt.title(tag)
-    plt.xlabel(f'fast axis ({fast.name}) position (mm)')
-    plt.ylabel(f'slow axis ({slow.name}) position (mm)')
+    plt.xlabel(f'fast axis ({motors[0]}) position (mm)')
+    plt.ylabel(f'slow axis ({motors[1]}) position (mm)')
     plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
     plt.contourf(fast[:nfast], slow[::nslow], zzz, cmap=plt.cm.viridis)
     plt.colorbar()
@@ -528,8 +534,10 @@ def raster(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
         if 'force' in kwargs and kwargs['force'] is True:
+            force = True
             pass
         else:
+            force = False
             BMM_suspenders()
         yield from areascan(p['detector'],
                             slow, p['slow_start'], p['slow_stop'], p['slow_steps'],

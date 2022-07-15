@@ -117,18 +117,18 @@ bicron.channels.chan25.name = 'Bicron'
 bicron.channels.chan26.name = 'APD'
 
 
-## if this startup file is "%run -i"-ed, then need to reset
-## foils to the serialized configuration
-jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-if os.path.isfile(jsonfile):
-    user = json.load(open(jsonfile))
-    if 'rois' in user:
-        rois.set(user['rois'])
-        BMMuser.read_rois = None
-## else if starting bsui fresh, perform the delayed foil configuration
-if BMMuser.read_rois is not None:
-    rois.set(BMMuser.read_rois)
-    BMMuser.read_rois = None
+# ## if this startup file is "%run -i"-ed, then need to reset
+# ## foils to the serialized configuration
+# jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
+# if os.path.isfile(jsonfile):
+#     user = json.load(open(jsonfile))
+#     if 'rois' in user:
+#         rois.set(user['rois'])
+#         BMMuser.read_rois = None
+# ## else if starting bsui fresh, perform the delayed foil configuration
+# if BMMuser.read_rois is not None:
+#     rois.set(BMMuser.read_rois)
+#     BMMuser.read_rois = None
 
 
 #######################################################################################

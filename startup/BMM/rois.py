@@ -10,34 +10,6 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 
-class XSROI():
-    def __init__(self):
-        self.slots = ['Ti', 'Cr', 'Fe', 'OCR',
-                      None, None, None, None,
-                      None, None, None, None,
-                      None, None, None, None,]
-    def show_xsrois(self):
-        BMMuser = user_ns['BMMuser']
-        text = 'Xspress3 ROIs:\n'
-        text += bold_msg('    1      2      3      4      5      6      7      8\n')
-        text += ' '
-        for i in range(8):
-            if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
-            else:
-                text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
-        text += bold_msg('    9     10     11     12     13     14     15     16\n')
-        text += ' '
-        for i in range(8, 16):
-            if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
-            else:
-                text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
-        return(text)
-        
-
 class ROI():
     '''A simple class for managing the Struck ROI channels.
 

@@ -32,9 +32,8 @@ from BMM.user import BMM_User
 
 
 run_report('\t'+'detector ROIs')
-from BMM.rois import ROI, XSROI
+from BMM.rois import ROI
 rois = ROI()
-xsroi = XSROI()
 
 
 BMMuser = BMM_User()

@@ -9,7 +9,7 @@ from BMM.functions     import present_options
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.modes         import change_xtals
 from BMM.periodictable import ELEMENTS, Z_number
-from BMM.positioning   import find_slot, align_ga
+#from BMM.positioning   import find_slot, align_ga
 from BMM.xafs          import howlong, xafs
 
 from BMM import user_ns as user_ns_module
@@ -145,7 +145,7 @@ class WDYWTD():
             
     def do_AlignGA(self):
         print(go_msg('You would like to align the glancing angle stage...\n'))
-        yield from align_ga()
+        yield from user_ns['ga'].auto_align()
             
     def do_RockingCurve(self):
         print(go_msg('You would like to measure a rocking curve scan...\n'))

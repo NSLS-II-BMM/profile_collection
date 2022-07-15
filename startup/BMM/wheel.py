@@ -333,7 +333,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
         this = {'default' :   defaultline,
                 'slot':       row[1].value,      # sample location
                 'measure':    self.truefalse(row[2+plus].value, 'measure'),  # filename and visualization
-                'filename':   row[3+plus].value,
+                'filename':   str(row[3+plus].value),
                 'nscans':     row[4+plus].value,
                 'start':      row[5+plus].value,
                 'mode':       row[6+plus].value,
@@ -341,9 +341,9 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 'element':    row[7+plus+self.offset].value,      # energy range
                 'edge':       row[8+plus+self.offset].value,
                 'focus':      row[9+plus+self.offset].value,
-                'sample':     self.escape_quotes(row[10+plus+self.offset].value),     # scan metadata
-                'prep':       self.escape_quotes(row[11+plus+self.offset].value),
-                'comment':    self.escape_quotes(row[12+plus+self.offset].value),
+                'sample':     self.escape_quotes(str(row[10+plus+self.offset].value)),     # scan metadata
+                'prep':       self.escape_quotes(str(row[11+plus+self.offset].value)),
+                'comment':    self.escape_quotes(str(row[12+plus+self.offset].value)),
                 'bounds':     row[13+plus+self.offset].value,     # scan parameters
                 'steps':      row[14+plus+self.offset].value,
                 'times':      row[15+plus+self.offset].value,

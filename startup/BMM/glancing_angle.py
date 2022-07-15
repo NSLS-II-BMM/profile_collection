@@ -625,7 +625,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
         this = {'default':    defaultline,
                 'slot':       row[1].value,      # sample location
                 'measure':    self.truefalse(row[2].value, 'measure'),  # filename and visualization
-                'filename':   row[3].value,
+                'filename':   str(row[3].value),
                 'nscans':     row[4].value,
                 'start':      row[5].value,
                 'spin':       self.truefalse(row[6].value, 'spin'),
@@ -633,9 +633,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 'edge':       row[8].value,
                 'focus':      row[9].value,
                 'angle':      row[10].value,
-                'sample':     self.escape_quotes(row[11].value),     # scan metadata
-                'prep':       self.escape_quotes(row[12].value),
-                'comment':    self.escape_quotes(row[13].value),
+                'sample':     self.escape_quotes(str(row[11].value)),     # scan metadata
+                'prep':       self.escape_quotes(str(row[12].value)),
+                'comment':    self.escape_quotes(str(row[13].value)),
                 'bounds':     row[14].value,     # scan parameters
                 'steps':      row[15].value,
                 'times':      row[16].value,

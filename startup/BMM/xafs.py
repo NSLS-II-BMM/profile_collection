@@ -513,6 +513,7 @@ def xafs(inifile=None, **kwargs):
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMMuser.prompt:
+            BMMuser.instrument = ''
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])

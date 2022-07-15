@@ -324,7 +324,6 @@ class BMMMacroBuilder():
                 defaultline = True
             if count > 200:
                 break
-            print(count)
             self.measurements.append(self.get_keywords(row, defaultline))
 
             # check that scan parameters make sense
@@ -357,7 +356,11 @@ class BMMMacroBuilder():
             return True
         #if 'temperature' in m and type(m['temperature']) is not float:
         #    return True
-        if m['filename'] is None or re.search('^\s*$', m['filename']) is not None:
+        #print(m['filename'])
+        #print(type(m['filename']))
+        if m['filename'] is None:
+            return True
+        if re.search('^\s*$', m['filename']) is not None:
             return True
         if  self.truefalse(m['measure'], 'measure') is False:
             return True
