@@ -42,7 +42,7 @@ def resting_state():
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
-    quadem1.on()
+    quadem1.on(quiet=True)
     #vor.on()
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)

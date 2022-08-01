@@ -291,17 +291,41 @@ class BMM_User(Borg):
         self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
 
 
-    def to_json(self, filename=None, prefix=''):
+    def state_to_redis(self, filename=None, prefix=''):
 
         all_keys = list(self.__dict__.keys())
         almost_all_keys = [n for n in all_keys
                            if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'motor', 'cycle', 'user_is_defined') and
                            'xschannel' not in n]
         d = dict()
-        for k in almost_all_keys:
+        for k in self.bmm_strings:
             d[k] = getattr(self, k)
-            rkvs.set(f'BMM:user:{k}', str(d[k]))
-        print('\n{prefix}wrote BMMuser state to redis')
+            #print("string:", k)
+            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+        for k in self.bmm_ints:
+            d[k] = getattr(self, k)
+            #print("int:", k)
+            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+        for k in self.bmm_floats:
+            d[k] = getattr(self, k)
+            #print("float:", k)
+            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+        for k in self.bmm_booleans:
+            d[k] = getattr(self, k)
+            #print("bool:", k)
+            rkvs.set(f'BMM:user:{k}', int(getattr(self, k)))
+        for k in self.bmm_none:
+            d[k] = getattr(self, k)
+            #print("none:", k)
+            setattr(self, k, None)
+
+
+
+        
+        #for k in almost_all_keys:
+        #    d[k] = getattr(self, k)
+        #    rkvs.set(f'BMM:user:{k}', str(d[k]))
+        print(f'\n{prefix}wrote BMMuser state to redis')
         
         if filename is None:
             print(json.dumps(d, indent=4))
@@ -339,7 +363,7 @@ class BMM_User(Borg):
             print(error_msg(E))
 
             
-    def from_json(self, filename):
+    def state_from_redis(self): #, filename):
         # if os.path.isfile(filename):
         #     with open(filename, 'r') as jsonfile:
         #         config = json.load(jsonfile)
@@ -364,7 +388,7 @@ class BMM_User(Borg):
             setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_booleans:
             #print("bool:", k)
-            setattr(self, k, bool(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+            setattr(self, k, bool(int(rkvs.get(f'BMM:user:{k}').decode('utf-8'))))
         for k in self.bmm_none:
             #print("none:", k)
             setattr(self, k, None)
@@ -384,7 +408,8 @@ class BMM_User(Borg):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
-        for att in ('roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4', 'xs1', 'xs2', 'xs3', 'xs4',
+        for att in (#'roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4',
+                    'xs1', 'xs2', 'xs3', 'xs4',
                     'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
@@ -392,7 +417,7 @@ class BMM_User(Borg):
         for att in ('motor', 'motor2', 'fig', 'ax', 'x', 'y'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
-        print('\nMono acceleration and bender attributes:')
+        print('\nMono acceleration and M2 bender attributes:')
         for att in ('acc_fast', 'acc_slow', 'bender_xas', 'bender_xrd', 'bender_margin'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
@@ -692,7 +717,7 @@ class BMM_User(Borg):
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
-        self.to_json(filename=os.path.join(self.DATA, '.BMMuser'), prefix='    ')
+        self.state_to_redis(filename=os.path.join(self.DATA, '.BMMuser'), prefix='    ')
         slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
         if os.path.isfile(slink):
             os.remove(slink)
@@ -759,19 +784,20 @@ class BMM_User(Borg):
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
         #jsonfile = os.path.join(self.DATA, '.BMMuser')
-        if os.path.isfile(jsonfile):
-            self.from_json(jsonfile)
-            self.suspenders_engaged = False
-            self.trigger = True
+        self.state_from_redis()
+        #if os.path.isfile(jsonfile):
+        #    self.state_from_redis(jsonfile)
+        self.suspenders_engaged = False
+        self.trigger = True
             #user = json.load(open(jsonfile))
-            try:
-                self.element    = rkvs.get('BMM:pds:element').decode('utf-8')
-                self.edge       = rkvs.get('BMM:pds:edge').decode('utf-8')
-                self.instrument = rkvs.get('BMM:automation:type').decode('utf-8')
-            except:
-                self.element, self.edge, self.instrument = None, 'K', ''
-            if self.name is not None:
-                self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
+            # try:
+            #     self.element    = rkvs.get('BMM:pds:element').decode('utf-8')
+            #     self.edge       = rkvs.get('BMM:pds:edge').decode('utf-8')
+            #     self.instrument = rkvs.get('BMM:automation:type').decode('utf-8')
+            # except:
+            #     self.element, self.edge, self.instrument = None, 'K', ''
+        if self.name is not None:
+            self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
@@ -795,8 +821,8 @@ class BMM_User(Borg):
         Copy data from the experiment that just finished to the NAS, then
         unset the logger and the DATA variable at the end of an experiment.
         '''
-        #global DATA
 
+        self.echem = False
         if self.echem and not os.path.ismount('/mnt/nfs/ws3'):
             print(error_msg('''
 **************************************************************************

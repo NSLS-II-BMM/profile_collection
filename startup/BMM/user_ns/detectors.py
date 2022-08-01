@@ -205,11 +205,11 @@ anacam.x, anacam.y = 640, 480    # width, height
 from BMM.webcam_device import AxisWebcam
 from BMM.handler import WEBCAM_JPEG_HANDLER
 from BMM.user_ns.base import db
-db.reg.register_handler("BEAMLINE_WEBCAM", WEBCAM_JPEG_HANDLER)
+#db.reg.register_handler("BEAMLINE_WEBCAM", WEBCAM_JPEG_HANDLER)
 base = os.path.join(BMMuser.folder, 'raw')
-testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
-testcam.beamline_id = 'BMM (NSLS-II 06BM)'
-testcam.annotation_string = 'Welcome to BMM'
+# testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
+# testcam.beamline_id = 'BMM (NSLS-II 06BM)'
+# testcam.annotation_string = 'Welcome to BMM'
 
 # econcam = BMMSnapshot(root=nas_path, which='econ', name='econcam')
 # econcam.device = '/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU55_1CD90500-video-index0'

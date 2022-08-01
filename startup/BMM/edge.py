@@ -307,7 +307,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
-    #xBMMuser.to_json(os.path.join(BMMuser.folder, '.BMMuser'))
     BMM_clear_suspenders()
     yield from dcm.kill_plan()
     yield from mv(m2_bender.kill_cmd, 1)

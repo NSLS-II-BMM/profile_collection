@@ -6,6 +6,7 @@ from ophyd.areadetector import Xspress3Detector
 import numpy, h5py, math
 import pandas
 import itertools, os, json
+import xraylib
 
 from nslsii.areadetector.xspress3 import build_detector_class
 
@@ -18,7 +19,7 @@ user_ns = vars(user_ns_module)
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
-from BMM.periodictable import Z_number
+from BMM.periodictable import Z_number, edge_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
 from BMM.user_ns.base import startup_dir, bmm_catalog
@@ -63,7 +64,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             plot only the signal channel 1, 2, 3, or 4
         
         '''
-        dcm = user_ns['dcm']
+        dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
         plt.clf()
         plt.xlabel('Energy  (eV)')
         plt.ylabel('counts')
@@ -113,12 +114,28 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
             plt.legend()
+        z = Z_number(BMMuser.element)
+        if BMMuser.edge.lower() == 'k':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l3':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l2':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l1':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1)
         #plt.show()
             
     def table(self):
         '''Pretty print a table of values for each ROI and for all four channels.
         '''
-        BMMuser = user_ns['BMMuser']
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+
+        edge = xraylib.EdgeEnergy(Z_number(BMMuser.element), int(edge_number(BMMuser.edge)))*1000
+
+        if dcm.energy.position > edge:
+            print(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}\n')
+        else:
+            print(warning_msg(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}  *** Below Edge! ***\n'))
         print(' ROI    Chan1      Chan2      Chan3      Chan4 ')
         print('=================================================')
         first_channel_number = self.channel_numbers[0]
@@ -135,14 +152,20 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                     print(f"  {0:7}  ", end='')
                 print('')
             elif el == BMMuser.element or el == 'OCR':
-                print(go_msg(f' {el:3} '), end='')
+                if dcm.energy.position > edge:
+                    print(go_msg(f' {el:3} '), end='')
+                else:
+                    print(warning_msg(f' {el:3} '), end='')                    
                 for channel in self.iterate_channels():
                     mcaroi = channel.get_mcaroi(mcaroi_number=r)
                     val = mcaroi.total_rbv.get()
                     if math.isnan(val):
                         val = 0
-                    print(go_msg(f"  {int(val):7}  "), end='')
-                
+                    if dcm.energy.position > edge:
+                        print(go_msg(f"  {int(val):7}  "), end='')
+                    else:
+                        print(warning_msg(f"  {int(val):7}  "), end='')
+                        
                 print('')
             else:                
                 print(f' {el:3} ', end='')

@@ -32,6 +32,12 @@ REDISVAR="BMM:scan:type"
 rkvs.set('BMM:scan:type', 'idle')
 
 def rkvs_keys(printed=True):
+    '''Convert rkvs.keys() into a list of normal strings
+
+    With printed=True, write a table of keys and values to the screen
+
+    With printed=False, return a list containing keys as normal strings
+    '''
     keys = sorted(list(x.decode('UTF-8') for x in rkvs.keys()))
     if printed is True:
         for k in keys:
@@ -43,7 +49,9 @@ def rkvs_keys(printed=True):
             else:
                 #print(f'{k:25} {rkvs.get(k)}')
                 pass
-    return(keys)
+        return()
+    else:
+        return(keys)
     
 CHECK = '\u2714'
 TAB = '\t\t\t'
@@ -74,7 +82,7 @@ def initialize_workspace():
     initialize_secrets()
     initialize_redis()
     #initialize_gdrive()
-    initialize_ssh()
+    #initialize_ssh()
     
 def check_workstation_access():
     wa = EpicsSignalRO('XF:06BM-CT{}Prmt:RemoteExp-Sel',   name='write_access')
@@ -196,7 +204,7 @@ def initialize_ssh():
 
     '''
     if 'xf06bm-ws3' in socket.gethostname():
-        print(f'{TAB}This is xf06bm-ws1, no ssh key needed: {CHECK}')
+        print(f'{TAB}This is xf06bm-ws3, no ssh key needed: {CHECK}')
         return
     s = subprocess.run(['ssh', '-q', '-oBatchMode=yes', 'xf06bm@xf06bm-ws1', 'true'])
     if s.returncode == 0:

@@ -368,7 +368,8 @@ def check_for_synaxis():
         text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)')
         boxedtext('Disconnected motors', text, 'red', width=74)
 check_for_synaxis()
-    
+resting_state()
+
 try:
     from bluesky_widgets.utils.streaming import stream_documents_into_runs
     from bluesky_widgets.models.plot_builders import Lines

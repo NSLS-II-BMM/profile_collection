@@ -177,11 +177,11 @@ class BMM_JPEG_HANDLER:
         filepath = self._template % index
         return numpy.asarray(Image.open(filepath))
 
-if not is_re_worker_active():
-    user_ns['db'].reg.register_handler("BMM_USBCAM",        BMM_JPEG_HANDLER)
-    user_ns['db'].reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
-    user_ns['db'].reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
-    user_ns['db'].reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
+# if not is_re_worker_active():
+#     user_ns['db'].reg.register_handler("BMM_USBCAM",        BMM_JPEG_HANDLER)
+#     user_ns['db'].reg.register_handler("BMM_XAS_WEBCAM",    BMM_JPEG_HANDLER)
+#     user_ns['db'].reg.register_handler("BMM_XRD_WEBCAM",    BMM_JPEG_HANDLER)
+#     user_ns['db'].reg.register_handler("BMM_ANALOG_CAMERA", BMM_JPEG_HANDLER)
 
 class ExternalFileReference(Signal):
     """

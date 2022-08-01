@@ -70,13 +70,15 @@ class BMMQuadEM(QuadEM):
             # Clear the state to be ready for the next round.
             self._status = None
         
-    def on(self):
-        print('Turning {} on'.format(self.name))
+    def on(self, quiet=False):
+        if quiet is False:
+            print('Turning {} on'.format(self.name))
         self.acquire_mode.put(0)
         self.acquire.put(1)
 
-    def off(self):
-        print('Turning {} off'.format(self.name))
+    def off(self, quiet=False):
+        if quiet is False:
+            print('Turning {} off'.format(self.name))
         self.acquire_mode.put(2)
         self.acquire.put(0)
 

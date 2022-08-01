@@ -451,7 +451,10 @@ class BMMMacroBuilder():
         default['url'] = '...'
         default['doi'] = '...'
         default['cif'] = '...'
-        default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
+        if 'double' in self.instrument.lower():
+            default['experimenters'] = self.ws['F1'].value  # top line of xlsx file
+        else:
+            default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
         default = self.ini_sanity(default)
         if default is None:
             print(error_msg(f'Could not interpret {self.source} as a wheel macro.'))

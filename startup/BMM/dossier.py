@@ -287,15 +287,37 @@ class BMMDossier():
                                                    sample        = self.sample,
                                                    prep          = self.prep,
                                                    comment       = self.comment,
-                                                   instrument    = self.instrument,
-                                                   websnap       = quote('../snapshots/'+self.websnap),
-                                                   webuid        = self.webuid,
-                                                   anasnap       = quote('../snapshots/'+self.anasnap),
-                                                   anauid        = self.anauid,
-                                                   usb1snap      = quote('../snapshots/'+self.usb1snap),
-                                                   usb1uid       = self.usb1uid,
-                                                   usb2snap      = quote('../snapshots/'+self.usb2snap),
-                                                   usb2uid       = self.usb2uid, )
+                                                   instrument    = self.instrument,)
+            
+            # middle part, cameras, one at a time and only if actually snapped
+            if self.webuid is not None:
+                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.websnap),
+                                                       uid         = self.webuid,
+                                                       camera      = 'webcam',
+                                                       description = 'XAS web camera', )
+            if self.anauid is not None:
+                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.anasnap),
+                                                       uid         = self.anauid,
+                                                       camera      = 'anacam',
+                                                       description = 'analog pinhole camera', )
+            if self.usb1uid is not None:
+                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.usb1snap),
+                                                       uid         = self.usb1uid,
+                                                       camera      = 'usb1cam',
+                                                       description = 'USB camera #1', )
+            if self.usb2uid is not None:
+                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.usb2snap),
+                                                       uid         = self.usb2uid,
+                                                       camera      = 'usb2cam',
+                                                       description = 'USB camera #2', )
             
             # middle part, XRF and glancing angle alignment images
             if thismode == 'xs' or thismode == 'xs1':

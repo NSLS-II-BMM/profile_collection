@@ -513,7 +513,7 @@ def xafs(inifile=None, **kwargs):
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMMuser.prompt:
-            BMMuser.instrument = ''
+            BMMuser.instrument = ''  # we are NOT using a spreadsheet, so unset instrument
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])
@@ -569,8 +569,8 @@ def xafs(inifile=None, **kwargs):
         if p['rockingcurve']:
             report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
             yield from rocking_curve()
-            #RE.msg_hook = None
             close_last_plot()
+            RE.msg_hook = None
         if p['channelcut'] is True:
             dcm.mode = 'channelcut'
 
@@ -670,18 +670,21 @@ def xafs(inifile=None, **kwargs):
             im.save(image_web, 'JPEG')
 
             ### --- analog camera using redgo dongle ------------------------------------------
-            dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
-            image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)
-            anacam._annotation_string = p['filename']
-            print(bold_msg('analog camera snapshot'))
-            anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            try:
-                #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
-                im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
-                im.save(image_ana, 'JPEG')
-            except:
-                print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-                pass
+            ###     this can only be read by a client on xf06bm-ws3, so... not QS
+            if is_re_worker_active() is False:
+                dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
+                image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)
+                anacam._annotation_string = p['filename']
+                print(bold_msg('analog camera snapshot'))
+                anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+                try:
+                    #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
+                    im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
+                    im.save(image_ana, 'JPEG')
+                except:
+                    print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
+                    anacam_uid = False
+                    pass
 
             ### --- USB camera #1 --------------------------------------------------------------
             dossier.usb1snap = "%s_usb1_%s.jpg" % (p['filename'], ahora)
