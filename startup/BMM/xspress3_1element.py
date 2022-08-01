@@ -6,6 +6,7 @@ from ophyd.areadetector import Xspress3Detector
 import numpy, h5py, math
 import pandas as pd
 import itertools, os, json
+import xraylib
 
 from nslsii.areadetector.xspress3 import build_detector_class
 
@@ -61,7 +62,7 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
             ignored, included for consistency with 4-element interface
         
         '''
-        dcm = user_ns['dcm']
+        dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
         plt.clf()
         plt.xlabel('Energy  (eV)')
         plt.ylabel('counts')
@@ -87,12 +88,26 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
         plt.ion()
         plt.plot(e, s1, label='channel 8')
         plt.legend()
+        z = Z_number(BMMuser.element)
+        if BMMuser.edge.lower() == 'k':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l3':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l2':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1)
+        elif BMMuser.edge.lower() == 'l1':
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1)
         #plt.show()
 
     def table(self):
         '''Pretty print a table of values for each ROI.
         '''
-        BMMuser = user_ns['BMMuser']
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+        edge = xraylib.EdgeEnergy(Z_number(BMMuser.element), int(edge_number(BMMuser.edge)))*1000
+        if dcm.energy.position > edge:
+            print(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}\n')
+        else:
+            print(warning_msg(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}  *** Below Edge! ***\n'))
         print(' ROI    Chan8 ')
         print('================')
         first_channel_number = self.channel_numbers[0]
@@ -109,13 +124,19 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
                     print(f"  {0:7}  ", end='')
                 print('')
             elif el == BMMuser.element or el == 'OCR':
-                print(go_msg(f' {el:3} '), end='')
+                if dcm.energy.position > edge:
+                    print(go_msg(f' {el:3} '), end='')
+                else:
+                    print(warning_msg(f' {el:3} '), end='')
                 for channel in self.iterate_channels():
                     mcaroi = channel.get_mcaroi(mcaroi_number=r)
                     val = mcaroi.total_rbv.get()
                     if math.isnan(val):
                         val = 0
-                    print(go_msg(f"  {int(val):7}  "), end='')
+                    if dcm.energy.position > edge:
+                        print(go_msg(f"  {int(val):7}  "), end='')
+                    else:
+                        print(warning_msg(f"  {int(val):7}  "), end='')                        
                 print('')
             else:                
                 print(f' {el:3} ', end='')

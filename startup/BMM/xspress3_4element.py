@@ -89,7 +89,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             s4 = record['primary']['data']['xs_channels_channel04'][0]
         except Exception as e:
             if uid is not None: print(e)
-            plt.title('XRF Spectrum')
+            plt.title(f'XRF Spectrum {BMMuser.element} {BMMuser.edge}')
             s1 = self.channel01.mca.array_data.get()
             s2 = self.channel02.mca.array_data.get()
             s3 = self.channel03.mca.array_data.get()
