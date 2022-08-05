@@ -102,27 +102,29 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             # this = getattr(self, f'mca{only}')
             plt.ion()
             plt.plot(e, this.get(), label=f'channel {only}')
-            plt.legend()
         elif add is True:
             plt.ion()
             plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
-            plt.legend()
         else:
             plt.ion()
             plt.plot(e, s1, label='channel 1')
             plt.plot(e, s2, label='channel 2')
             plt.plot(e, s3, label='channel 3')
             plt.plot(e, s4, label='channel 4')
-            plt.legend()
         z = Z_number(BMMuser.element)
         if BMMuser.edge.lower() == 'k':
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1)
+            label = f'{BMMuser.element} Kα1'
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1, label=label)
         elif BMMuser.edge.lower() == 'l3':
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1)
+            label = f'{BMMuser.element} Lα1'
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
         elif BMMuser.edge.lower() == 'l2':
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1)
+            label = f'{BMMuser.element} Kβ1'
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
         elif BMMuser.edge.lower() == 'l1':
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1)
+            label = f'{BMMuser.element} Kβ3'
+            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+        plt.legend()
         #plt.show()
             
     def table(self):

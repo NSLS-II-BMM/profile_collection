@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 from BMM.functions import etok, ktoe
+from BMM.periodictable import edge_energy
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -99,20 +100,22 @@ class Pandrosus():
 
     '''
     def __init__(self, uid=None, name=None):
-        self.uid    = uid
-        self.name   = name
-        self.group  = None
-        self.title  = ''
+        self.uid     = uid
+        self.name    = name
+        self.element = None
+        self.edge    = None
+        self.group   = None
+        self.title   = ''
         ## Larch parameters
-        self.pre    = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
-        self.bkg    = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':2,}
-        self.fft    = {'window':'Hanning', 'kmin':3, 'kmax':12, 'dk':2,}
-        self.bft    = {'window':'Hanning', 'rmin':1, 'rmax':3, 'dr':0.1,}
+        self.pre     = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
+        self.bkg     = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':2,}
+        self.fft     = {'window':'Hanning', 'kmin':3, 'kmax':12, 'dk':2,}
+        self.bft     = {'window':'Hanning', 'rmin':1, 'rmax':3, 'dr':0.1,}
         ## plotting parameters
-        self.xe     = 'energy (eV)'
-        self.xk     = 'wavenumber ($\AA^{-1}$)'
-        self.xr     = 'radial distance ($\AA$)'
-        self.rmax   = 6
+        self.xe      = 'energy (eV)'
+        self.xk      = 'wavenumber ($\AA^{-1}$)'
+        self.xr      = 'radial distance ($\AA$)'
+        self.rmax    = 6
 
         ## flow control parameters
         
@@ -205,6 +208,23 @@ class Pandrosus():
         self.group.energy = energy
         self.group.mu = mu
         self.prep()
+
+    def determine_kmax(self):
+        if self.element is None or self.edge is None:
+            return None
+        if self.edge.lower() == 'k' or self.edge.lower() == 'l1':
+            return None
+        e0 = edge_energy(self.element, self.edge)
+        if e0 is None:
+            return None
+        if self.edge.lower() == 'l3':
+            l2 = edge_energy(self.element, 'L2')
+            return etok(l2-e0-30)
+        if self.edge.lower() == 'l1':
+            l1 = edge_energy(self.element, 'L1')
+            return etok(l1-e0-30)
+        
+        
         
     def prep(self):
         ## the next several lines seem necessary because the version
@@ -234,6 +254,8 @@ class Pandrosus():
                  nnorm = self.pre['nnorm'],
                  nvict = self.pre['nvict'],
                  _larch=LARCH)
+        if self.bkg['kmax'] is None:
+            self.bkg['kmax'] = self.determine_kmax()
         autobk(self.group.energy, mu=self.group.mu, group=self.group,
                rbkg    = self.bkg['rbkg'],
                e0      = self.bkg['e0'],

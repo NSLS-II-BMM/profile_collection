@@ -670,7 +670,7 @@ def xafs(inifile=None, **kwargs):
             im.save(image_web, 'JPEG')
 
             ### --- analog camera using redgo dongle ------------------------------------------
-            ###     this can only be read by a client on xf06bm-ws3, so... not QS
+            ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
             if is_re_worker_active() is False:
                 dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
                 image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)

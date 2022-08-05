@@ -210,6 +210,8 @@ class BMMDossier():
 
     initext       = None
 
+    pandrosus     = None
+
 
     def __init__(self):
         self.scanlist      = ''
@@ -428,6 +430,7 @@ class BMMDossier():
         cnt = 0
         try:
             base = Pandrosus()
+            base.element, base.edge = self.element, self.edge
             projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
             proj = create_athena(projname)
             base.fetch(uidlist[0], mode=mode)
@@ -442,6 +445,7 @@ class BMMDossier():
             if len(uidlist) > 1:
                 for uid in uidlist[1:]:
                     this = Pandrosus()
+                    this.element, this.edge = self.element, self.edge
                     try:
                         this.fetch(uid, mode=mode)
                         mu = numpy.interp(ee, this.group.energy, this.group.mu)
@@ -466,6 +470,7 @@ class BMMDossier():
             return
         mm = mm / cnt
         merge = Pandrosus()
+        merge.element, merge.edge = self.element, self.edge
         merge.put(ee, mm, 'merge')
         thisagg = matplotlib.get_backend()
         matplotlib.use('Agg') # produce a plot without screen display
