@@ -6,6 +6,7 @@ import time
 run_report(__file__, text='individual motor definitions')
 
 from BMM.motors import FMBOEpicsMotor, XAFSEpicsMotor, VacuumEpicsMotor, EndStationEpicsMotor
+from BMM.motors import EpicsMotorWithDial
 
 TAB = '\t\t\t'
 
@@ -115,6 +116,7 @@ xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_ro
 xafs_det   = xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_det')
 xafs_linxs = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_linxs')
 xafs_x     = xafs_linx  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
+#xafs_x     = xafs_linx  = EpicsMotorWithDial('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
 xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_y')
 xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
 xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....

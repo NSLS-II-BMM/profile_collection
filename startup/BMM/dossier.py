@@ -210,9 +210,6 @@ class BMMDossier():
 
     initext       = None
 
-    pandrosus     = None
-
-
     def __init__(self):
         self.scanlist      = ''
         self.motors        = motor_sidebar()

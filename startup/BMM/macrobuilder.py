@@ -322,7 +322,7 @@ class BMMMacroBuilder():
             defaultline = False
             if count == 6:
                 defaultline = True
-            if count > 200:
+            if count > 300:
                 break
             self.measurements.append(self.get_keywords(row, defaultline))
 

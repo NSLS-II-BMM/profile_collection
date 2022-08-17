@@ -111,6 +111,8 @@ class GridMacroBuilder(BMMMacroBuilder):
                 ## skip cells with only whitespace
                 if type(m[k]) is str and len(m[k].strip()) == 0:
                     m[k] = None
+                if type(m[k]) is str and m[k] == 'None':
+                    m[k] = None
                 ## if a cell has data, put it in the argument list for xafs()
                 if m[k] is not None:
                     if k == 'filename':
@@ -181,9 +183,9 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'steps':       row[14].value,
                 'times':       row[15].value,
                 'motor1':      row[16].value,     # motor names and positions 
-                'position1':   float(row[17].value),
+                'position1':   self.nonezero(row[17].value),
                 'motor2':      row[18].value,
-                'position2':   float(row[19].value),
+                'position2':   self.nonezero(row[19].value),
                 'detectorx':   row[20].value,
                 'snapshots':   self.truefalse(row[21].value, 'snapshots' ),  # flags
                 'htmlpage':    self.truefalse(row[22].value, 'htmlpage'  ),

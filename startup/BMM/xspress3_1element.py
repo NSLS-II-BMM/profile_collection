@@ -19,7 +19,7 @@ user_ns = vars(user_ns_module)
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
 from BMM.metadata      import mirror_state
-from BMM.periodictable import Z_number
+from BMM.periodictable import Z_number, edge_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
 from BMM.user_ns.base import startup_dir, bmm_catalog

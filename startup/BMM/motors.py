@@ -4,7 +4,7 @@ from ophyd.utils.epics_pvs import fmt_time
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
-from bluesky.plan_stubs import sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null, abs_set
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.logging   import BMM_log_info
 
@@ -76,6 +76,15 @@ class DeadbandEpicsMotor(DeadbandMixin, EpicsMotor):
     """
     pass
 
+class EpicsMotorWithDial(EpicsMotor):
+    dial = Cpt(EpicsSignal, '.DVAL', kind='normal')
+    def dmv(self, absolute_value):
+        yield from mv(self.dial, absolute_value)
+    def dmvr(self, relative_value):
+        absolute_value = self.dial.get() + relative_value
+        yield from mv(self.dial, absolute_value)
+
+    
 class FMBOEpicsMotor(EpicsMotor):
 #class FMBOEpicsMotor(DeadbandEpicsMotor):
     resolution = Cpt(EpicsSignal, '.MRES', kind = 'normal')
@@ -125,7 +134,7 @@ class FMBOEpicsMotor(EpicsMotor):
     # sodpl_desc = Cpt(EpicsSignal, '_SODPL_STS.DESC', kind = 'omitted')
     # sopl       = Cpt(EpicsSignal, '_SOPL_STS',       kind = 'omitted')
     # sopl_desc  = Cpt(EpicsSignal, '_SOPL_STS.DESC',  kind = 'omitted')
-    #hocpl      = Cpt(EpicsSignal, '_HOCPL_STS',      kind = 'omitted')
+    hocpl      = Cpt(EpicsSignal, '_HOCPL_STS',      kind = 'omitted')
     # hocpl_desc = Cpt(EpicsSignal, '_HOCPL_STS.DESC', kind = 'omitted')
     # phsra      = Cpt(EpicsSignal, '_PHSRA_STS',      kind = 'omitted')
     # phsra_desc = Cpt(EpicsSignal, '_PHSRA_STS.DESC', kind = 'omitted')
