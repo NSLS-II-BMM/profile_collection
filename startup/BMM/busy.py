@@ -9,7 +9,7 @@ class BusyStatus(DeviceStatus):
     """
     A "busy" device that takes a fixed amount of time in seconds to report complete.
 
-    The clock starts as soon as the device is created (so do not hold onto these things!)
+    The clock starts as soon as the object is created (so do not hold onto these things!)
 
     Parameters
     ----------
