@@ -345,7 +345,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
-        text = 'Xspress3 ROIs:\n'
+        text = list_msg('Xspress3 ROIs:\n')
         text += bold_msg('    1      2      3      4      5      6      7      8\n')
         text += ' '
         for i in range(8):
@@ -353,7 +353,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 text += go_msg('%4.4s' % self.slots[i]) + '   '
             else:
                 text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
+        text += '\n\n'
         text += bold_msg('    9     10     11     12     13     14     15     16\n')
         text += ' '
         for i in range(8, 16):

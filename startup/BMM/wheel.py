@@ -22,20 +22,36 @@ user_ns = vars(user_ns_module)
 class WheelMotor(EndStationEpicsMotor):
     '''Motor class for BMM sample wheels.
     
-    These wheels have 24 slots, spaced 15 degrees apart.
+    These wheels have 48 slots, in two rings of 24 slots spaced 15 degrees apart.
+
+    When instantiated, you must set these attributes:
+
+    x_motor : (EpicsMotor) 
+        The motor that translates the wheel between rings
+
+    outer_position : (float)
+        The position of the outer ring on that motor
+
+    inner_position : (float)
+        The position of the inner ring on that motor
+
+    slotone : (float)
+        The position of the first slot in user units on the wheel motor
+
+    See BMM/user_ns/instruments.py for examples of the use of this motor class
 
     Methods
     -------
     current_slot() :
         return the current slot number, even if the wheel has rotated many times
+
     set_slot(n) :
         move to the given slot number, taking care to go the shorter way
+
+    reset() :
+        return the wheel to 0
+
     '''
-    if rkvs.get('BMM:wheel:outer') is None:
-        outer_position = 0
-    else:
-        outer_position   = float(rkvs.get('BMM:wheel:outer'))
-    inner_position   = outer_position + 26.0
     def current_slot(self, value=None):
         '''Return the current slot number for a sample wheel.'''
         if value is not None:
@@ -84,12 +100,11 @@ class WheelMotor(EndStationEpicsMotor):
     def slot_number(self, target=None):
         try:
             target = target.capitalize()
-            slot = self.content.index(target) + 1
+            slot = xafs_ref.mapping[target][1]
             return slot
         except:
             return self.current_slot()
 
-        
     def position_of_slot(self, target):
         if type(target) is int:
             angle = self.angle_from_current(target)
@@ -107,19 +122,22 @@ class WheelMotor(EndStationEpicsMotor):
     def in_place(self):
         #user_ns['wmb'].outer_position = user_ns['xafs_x'].position
         #user_ns['wmb'].inner_position = user_ns['wmb'].outer_position + 26
-        self.outer_position = user_ns['xafs_x'].position
+        self.outer_position = self.x_motor.position
         self.inner_position = self.outer_position + 26
-        rkvs.set('BMM:wheel:outer', self.outer_position)
+        if self.x_motor.name == 'xafs_x':
+            rkvs.set('BMM:wheel:outer', self.outer_position)
+        elif self.x_motor.name == 'xafs_refx':
+            rkvs.set('BMM:ref:outer', self.outer_position)
 
     def inner(self):
-        yield from mv(user_ns['xafs_x'], self.inner_position)
+        yield from mv(self.x_motor, self.inner_position)
 
     def outer(self):
-        yield from mv(user_ns['xafs_x'], self.outer_position)
+        yield from mv(self.x_motor, self.outer_position)
 
     def slot_ring(self):
         if 'double' in user_ns['BMMuser'].instrument:
-            if abs(user_ns['xafs_x'].position - self.inner_position) < 1.0:
+            if abs(self.x_motor.position - self.inner_position) < 1.0:
                 return 'inner'
             else:
                 return 'outer'
@@ -139,47 +157,97 @@ class WheelMotor(EndStationEpicsMotor):
         
 
 
+# def reference(target=None):
+#     xafs_ref = user_ns['xafs_ref']
+#     if target is None:
+#         print('Not moving reference wheel.')
+#         return(yield from null())
+#     if type(target) is int:
+#         if target < 1 or target > 24:
+#             print('An integer reference target must be between 1 and 24 (%d)' % target)
+#             return(yield from null())
+#         else:
+#             yield from xafs_ref.set_slot(target)
+#             return
+#     try:
+#         target = target.capitalize()
+#         slot = xafs_ref.content.index(target) + 1
+#         yield from xafs_ref.set_slot(slot)
+#     except:
+#         print('Element %s is not on the reference wheel.' % target)
+
+        
 def reference(target=None):
-    xafs_ref = user_ns['xafs_ref']
-    if target is None:
-        print('Not moving reference wheel.')
+    xafs_ref  = user_ns['xafs_ref']
+    xafs_refx = user_ns['xafs_refx']
+    if type(target) is not str:
+        print('Target must be a 1- or 2-letter element symbol. Not moving reference wheel.')
         return(yield from null())
-    if type(target) is int:
-        if target < 1 or target > 24:
-            print('An integer reference target must be between 1 and 24 (%d)' % target)
-            return(yield from null())
-        else:
-            yield from xafs_ref.set_slot(target)
-            return
-    try:
-        target = target.capitalize()
-        slot = xafs_ref.content.index(target) + 1
-        yield from xafs_ref.set_slot(slot)
-    except:
-        print('Element %s is not on the reference wheel.' % target)
+    target = target.capitalize()
+    if target not in PERIODIC_TABLE:
+        print('Target must be a 1- or 2-letter element symbol. Not moving reference wheel.')
+        return(yield from null())
+    if target not in xafs_ref.mapping:
+        print(f'{target} is not configured on the reference wheel. Not moving reference wheel.')
+        return(yield from null())
+    ring = xafs_ref.mapping[target][0]
+    slot = xafs_ref.mapping[target][1]
+    if ring == 1:
+        xafs_refx.user_setpoint.set(xafs_ref.inner_position)
+        #yield from mv(xafs_refx, xafs_ref.inner_position)
+    else:
+        xafs_refx.user_setpoint.set(xafs_ref.outer_position)
+        #yield from mv(xafs_refx, xafs_ref.outer_position)
+    yield from xafs_ref.set_slot(slot)
+    print(whisper('Let\'s pause for 15 seconds to make sure xafs_refx is done moving.'))
+    yield from mv(user_ns['busy'], 15)
+
+
+def determine_reference():
+    xafs_ref  = user_ns['xafs_ref']
+    xafs_refx = user_ns['xafs_refx']
+    slot  = round((-15+xafs_ref.position) / (-15)) % 24
+    if xafs_refx.position < -10:
+        ring = 0
+    else:
+        ring = 1
+    for k in xafs_ref.mapping.keys():
+        if xafs_ref.mapping[k][0] == ring and xafs_ref.mapping[k][1] == slot and 'empty' not in k:
+            return k
+    return 'None'
         
 
 def show_reference_wheel():
     xafs_ref = user_ns['xafs_ref']
-    wheel = xafs_ref.content.copy()
-    this  = xafs_ref.current_slot() - 1
-    #wheel[this] = go_msg(wheel[this])
-    text = 'Foil wheel:\n'
-    text += bold_msg('    1      2      3      4      5      6      7      8      9     10     11     12\n')
-    text += ' '
-    for i in range(12):
-        if i==this:
-            text += go_msg('%4.4s' % str(wheel[i])) + '   '
+
+    def write_text(current_ref, k):
+        if k in ('Th', 'U', 'Pu'):              # skip elements which use other elements
+            return ''
+        elif k == current_ref:                  # green: current position of reference wheel
+            return go_msg('%4.4s' % k) + '   '
+        elif xafs_ref.mapping[k][3] == 'None':  # gray: defined position, missing reference
+            return whisper('%4.4s' % k) + '   '
         else:
-            text += '%4.4s' % str(wheel[i]) + '   '
-    text += '\n'
-    text += bold_msg('   13     14     15     16     17     18     19     20     21     22     23     24\n')
-    text += ' '
-    for i in range(12, 24):
-        if i==this:
-            text += go_msg('%4.4s' % str(wheel[i])) + '   '
-        else:
-            text += '%4.4s' % str(wheel[i]) + '   '
+            here = k
+            if 'empty' in k:
+                here = 'None'
+            return '%4.4s' % here + '   '
+    
+    this  = determine_reference()
+    text = ''
+    for i, which in enumerate(['outer', 'inner']):
+        text += list_msg(f'Reference wheel, {which} ring') + '\n'
+        text += bold_msg('    1      2      3      4      5      6      7      8      9     10     11     12\n ')
+        for k in xafs_ref.mapping.keys():
+            if xafs_ref.mapping[k][0] == i and xafs_ref.mapping[k][1] < 13:
+                text += write_text(this,k)
+        text += '\n\n'
+        text += bold_msg('   13     14     15     16     17     18     19     20     21     22     23     24\n ')
+        for k in xafs_ref.mapping.keys():
+            if xafs_ref.mapping[k][0] == i and xafs_ref.mapping[k][1] > 12:
+                text += write_text(this,k)
+        if i == 0:
+            text += '\n\n'
     text += '\n'
     return(text)
 

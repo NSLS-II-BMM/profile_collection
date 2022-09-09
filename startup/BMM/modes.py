@@ -174,7 +174,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
              m3.xd,           float(MODEDATA['m3_xd'][mode]), ]
      if reference is not None:
           #base.extend([xafs_linxs, foils.position(reference.capitalize())])
-          base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
+          #base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
+          if reference.capitalize() in xafs_ref.mapping:
+               slot = xafs_ref.mapping[reference.capitalize()][1]
+          else:
+               slot = 1
+          if xafs_ref.mapping[reference.capitalize()][0] == 1:
+               ring = xafs_ref.inner_position
+          else:
+               ring = xafs_ref.outer_position
+          base.extend([xafs_ref, xafs_ref.position_of_slot(slot)]) #  xafs_refx, ring])
+          xafs_refx.user_setpoint.set(ring) # ick!!!
+
      if edge is not None:
           #dcm_bragg.clear_encoder_loss()
           base.extend([dcm.energy, edge])

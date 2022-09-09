@@ -117,7 +117,7 @@ def bmm_metadata(measurement   = 'transmission',
     comment : str
         user-supplied, free-form comment string
     ththth : bool
-        True is measuring with the Si(333) relfection
+        True is measuring with the Si(333) reflection
     '''
 
     md                         = copy.deepcopy(bmm_metadata_stub)
@@ -132,6 +132,12 @@ def bmm_metadata(measurement   = 'transmission',
             md[k] = dict()
     md['Element']['edge']            = edge.capitalize()
     md['Element']['symbol']          = element.capitalize()
+    if element.capitalize() in user_ns['xafs_ref'].mapping:
+        md['Element']['reference']          = user_ns['xafs_ref'].mapping[element.capitalize()][2]
+        md['Element']['reference_material'] = user_ns['xafs_ref'].mapping[element.capitalize()][3]
+    else:
+        md['Element']['reference_material'] = 'None'
+    
     md['Scan']['edge_energy']        = edge_energy
     md['Scan']['experimenters']      = experimenters
     md['Mono']['name']               = 'Si(%s)' % dcm._crystal
@@ -193,7 +199,8 @@ def bmm_metadata(measurement   = 'transmission',
     #     md['Detector']['fluorescence'] = 'SII Vortex (4-element silicon drift)'
         
     if 'yield' in measurement:
-        md['Detector']['yield'] = 'Leeds multi-sample electron yield detector'
+        #md['Detector']['yield'] = 'Leeds multi-sample electron yield detector'
+        md['Detector']['yield'] = 'electron yield detector'
 
     return md
 

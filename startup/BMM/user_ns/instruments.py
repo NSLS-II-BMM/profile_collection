@@ -1,5 +1,6 @@
-import time
+import time, json
 from BMM.functions import run_report
+from BMM.workspace import rkvs
 
 run_report(__file__, text='instrument definitions')
 
@@ -270,69 +271,86 @@ mcs8_motors.extend(dm2list)
                                  
 run_report('\tsample wheels')
 from BMM.wheel import WheelMotor, WheelMacroBuilder, reference, show_reference_wheel
+from BMM.user_ns.motors import xafs_x, xafs_refx
 
 xafs_wheel = xafs_rotb  = WheelMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
 xafs_wheel.slotone = -30        # the angular position of slot #1
 #xafs_wheel.user_offset.put(-0.7821145500000031)
 slot = xafs_wheel.set_slot
+xafs_wheel.x_motor = xafs_x
+if rkvs.get('BMM:wheel:outer') is None:
+    xafs_wheel.outer_position = 0
+else:
+    xafs_wheel.outer_position   = float(rkvs.get('BMM:wheel:outer'))
+xafs_wheel.inner_position   = xafs_wheel.outer_position + 26.0
+
 
 xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
+xafs_ref.x_motor = xafs_refx
+if rkvs.get('BMM:ref:outer') is None:
+    xafs_ref.outer_position = -23
+else:
+    xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
+xafs_ref.inner_position   = xafs_ref.outer_position + 26.0
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
                     'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
-#                          ring, slot, material (0=outer, 1=inner)
-xafs_ref.mapping = {'empty0': [0,  1, 'empty'],
-                    'Ti':     [0,  2, 'foil'],
-                    'V':      [0,  3, 'foil'],
-                    'Cr':     [0,  4, 'foil'],
-                    'Mn':     [0,  5, 'metal powder'],
-                    'Fe':     [0,  6, 'foil'],
-                    'Co':     [0,  7, 'foil'],
-                    'Ni':     [0,  8, 'foil'],
-                    'Cu':     [0,  9, 'foil'],
-                    'Zn':     [0, 10, 'foil'],
-                    'Ga':     [0, 11, 'Ga2O3'],
-                    'Ge':     [0, 12, 'GeO2'],
-                    'As':     [0, 13, 'Ge2O3'],
-                    'Se':     [0, 14, 'SeO2'],
-                    'Br':     [0, 15, 'bromophenol blue'],
-                    'Zr':     [0, 16, 'foil'],
-                    'Nb':     [0, 17, 'foil'],
-                    'Mo':     [0, 18, 'foil'],
-                    'Pt':     [0, 19, 'foil'],
-                    'Au':     [0, 20, 'foil'],
-                    'Pb':     [0, 21, 'foil'],
-                    'Bi':     [0, 22, 'BiO2'],
-                    'Sr':     [0, 23, 'missing'],
-                    'Y':      [0, 24, 'missing'],
-                    'empty1': [0,  1, 'empty'],
-                    'La':     [1,  2, 'La(OH)3'],
-                    'Ce':     [1,  3, 'Ce2O3'],
-                    'Pr':     [1,  4, 'Pr6O11'],
-                    'Nd':     [1,  5, 'Nd2O3'],
-                    'Sm':     [1,  6, 'Sm2O3'],
-                    'Eu':     [1,  7, 'Eu2O3'],
-                    'Gd':     [1,  8, 'Gd2O3l'],
-                    'Tb':     [1,  9, 'Tb4O9'],
-                    'Dy':     [1, 10, 'missing'],
-                    'Ho':     [1, 11, 'Ho2O3'],
-                    'Er':     [1, 12, 'Er2O3'],
-                    'Tm':     [1, 13, 'Tm2O3'],
-                    'Yb':     [1, 14, 'Yb2O3'],
-                    'Lu':     [1, 15, 'Lu2O3'],
-                    'Rb':     [1, 16, 'missing'],
-                    'Ba':     [1, 17, 'missing'],
-                    'Hf':     [1, 18, 'missing'],
-                    'Ta':     [1, 19, 'missing'],
-                    'W':      [1, 20, 'missing'],
-                    'Re':     [1, 21, 'ReO2'], 
-                    'Os':     [1, 22, 'missing'],
-                    'Ir':     [1, 23, 'missing'],
-                    'Ru':     [1, 24, 'RuO2'],
+#                          ring, slot, elem, material (ring: 0=outer, 1=inner)
+xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
+                    'Ti':     [0,  2, 'Ti', 'Ti foil'],
+                    'V' :     [0,  3, 'V',  'V foil'],
+                    'Cr':     [0,  4, 'Cr', 'Cr foil'],
+                    'Mn':     [0,  5, 'Mn', 'Mn metal powder'],
+                    'Fe':     [0,  6, 'Fe', 'Fe foil'],
+                    'Co':     [0,  7, 'Co', 'Co foil'],
+                    'Ni':     [0,  8, 'Ni', 'Ni foil'],
+                    'Cu':     [0,  9, 'Cu', 'Cu foil'],
+                    'Zn':     [0, 10, 'Zn', 'Zn foil'],
+                    'Ga':     [0, 11, 'Ga', 'Ga2O3'],
+                    'Ge':     [0, 12, 'Ge', 'GeO2'],
+                    'As':     [0, 13, 'As', 'Ge2O3'],
+                    'Se':     [0, 14, 'Se', 'metal powder'],
+                    'Br':     [0, 15, 'Br', 'bromophenol blue'],
+                    'Zr':     [0, 16, 'Zr', 'Zr foil'],
+                    'Nb':     [0, 17, 'Nb', 'Nb foil'],
+                    'Mo':     [0, 18, 'Mo', 'Mo foil'],
+                    'Pt':     [0, 19, 'Pt', 'Pt foil'],
+                    'Au':     [0, 20, 'Au', 'Au foil'],
+                    'Pb':     [0, 21, 'Pb', 'Pb foil'],
+                    'Bi':     [0, 22, 'Bi', 'BiO2'],
+                    'Sr':     [0, 23, 'Sr', 'None'],
+                    'Y' :     [0, 24, 'Y',  'None'],
+                    'empty1': [1,  1, 'empty1', 'empty'],
+                    'La':     [1,  2, 'La', 'La(OH)3'],
+                    'Ce':     [1,  3, 'Ce', 'Ce2O3'],
+                    'Pr':     [1,  4, 'Pr', 'Pr6O11'],
+                    'Nd':     [1,  5, 'Nd', 'Nd2O3'],
+                    'Sm':     [1,  6, 'Sm', 'Sm2O3'],
+                    'Eu':     [1,  7, 'Eu', 'Eu2O3'],
+                    'Gd':     [1,  8, 'Gd', 'Gd2O3'],
+                    'Tb':     [1,  9, 'Tb', 'Tb4O9'],
+                    'Dy':     [1, 10, 'Dy', 'None'],
+                    'Ho':     [1, 11, 'Ho', 'Ho2O3'],
+                    'Er':     [1, 12, 'Er', 'Er2O3'],
+                    'Tm':     [1, 13, 'Tm', 'Tm2O3'],
+                    'Yb':     [1, 14, 'Yb', 'Yb2O3'],
+                    'Lu':     [1, 15, 'Lu', 'Lu2O3'],
+                    'Rb':     [1, 16, 'Rb', 'None'],
+                    'Ba':     [1, 17, 'Ba', 'None'],
+                    'Hf':     [1, 18, 'Hf', 'None'],
+                    'Ta':     [1, 19, 'Ta', 'None'],
+                    'W' :     [1, 20, 'W',  'None'],
+                    'Re':     [1, 21, 'Re', 'ReO2'], 
+                    'Os':     [1, 22, 'Os', 'None'],
+                    'Ir':     [1, 23, 'Ir', 'None'],
+                    'Ru':     [1, 24, 'Ru', 'RuO2'],
+                    'Th':     [0, 22, 'Bi', 'BiO2'],  # use Bi L1 for Th L3
+                    'U' :     [0, 24, 'Y',  'None'],  # use Y K for U L3
+                    'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
 }
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
 
@@ -363,13 +381,14 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty'],
 #   except:
 #      # don't move reference wheel
 
-from BMM.workspace import rkvs
 def ref2redis():
     for i in range(0, rkvs.llen('BMM:reference:list')):
         rkvs.rpop('BMM:reference:list')
     for el in xafs_ref.content:
         rkvs.rpush('BMM:reference:list', str(el))
+    rkvs.set('BMM:reference:mapping', json.dumps(xafs_ref.mapping))
 
+ref2redis()
 
 def setup_wheel():
     yield from mv(xafs_x, -119.7, xafs_y, 112.1, xafs_wheel, 0)

@@ -298,29 +298,27 @@ class BMM_User(Borg):
                            if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'motor', 'cycle', 'user_is_defined') and
                            'xschannel' not in n]
         d = dict()
+        verbose = False
         for k in self.bmm_strings:
             d[k] = getattr(self, k)
-            #print("string:", k)
+            if verbose: print(f'string: {k} = >{getattr(self, k)}<')
             rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_ints:
             d[k] = getattr(self, k)
-            #print("int:", k)
+            if verbose: print(f'int: {k} = >{getattr(self, k)}<')
             rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_floats:
             d[k] = getattr(self, k)
-            #print("float:", k)
+            if verbose: print(f'float: {k} = >{getattr(self, k)}<')
             rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_booleans:
             d[k] = getattr(self, k)
-            #print("bool:", k)
-            rkvs.set(f'BMM:user:{k}', int(getattr(self, k)))
+            if verbose: print(f'bool: {k} = >{getattr(self, k)}<')
+            rkvs.set(f'BMM:user:{k}', str(getattr(self, k)))
         for k in self.bmm_none:
             d[k] = getattr(self, k)
-            #print("none:", k)
-            setattr(self, k, None)
-
-
-
+            if verbose: print(f'none: {k} = >{getattr(self, k)}<')
+            setattr(self, k, '')
         
         #for k in almost_all_keys:
         #    d[k] = getattr(self, k)
@@ -377,20 +375,24 @@ class BMM_User(Borg):
         #         setattr(self, k, config[k])
         #     #rois.trigger = True
         from BMM.workspace import rkvs
+        verbose = False
         for k in self.bmm_strings:
-            #print("string:", k)
+            if verbose: print("string:", k)
             setattr(self, k, rkvs.get(f'BMM:user:{k}').decode('utf-8'))
         for k in self.bmm_ints:
-            #print("int:", k)
-            setattr(self, k, int(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+            if verbose: print("int:", k)
+            if rkvs.get(f'BMM:user:{k}').decode('utf-8').strip() == '':
+                setattr(self, k, 0)
+            else:
+                setattr(self, k, int(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_floats:
-            #print("float:", k)
+            if verbose: print("float:", k)
             setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_booleans:
-            #print("bool:", k)
-            setattr(self, k, bool(int(rkvs.get(f'BMM:user:{k}').decode('utf-8'))))
+            if verbose: print("bool:", k)
+            setattr(self, k, bool(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_none:
-            #print("none:", k)
+            if verbose: print("none:", k)
             setattr(self, k, None)
         
         rkvs.set('BMM:pds:element',     self.element)
@@ -892,6 +894,9 @@ class BMM_User(Borg):
         self.user_is_defined = False
         self.echem = False
         self.echem_remote = None
+        for thing in ('name', 'gup', 'saf', 'folder', 'folder_link', 'date'):
+            rkvs.set(f'BMM:user:{thing}', '')
+
         
         return None
 

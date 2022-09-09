@@ -6,7 +6,7 @@ except ImportError:
         return False
 
 import os, textwrap
-from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext
+from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -348,6 +348,37 @@ def measuring(element, edge=None):
         xs1.reset_rois()
     show_edges()
 
+def examine_diagnostics():
+    CHECK = '\u2714'
+    TAB = '\t\t\t'
+
+    print(verbosebold_msg(f'\t\tverifying positions of diagnostics ...'))
+    things = {'dm1_filters1' : ['DM1 filter ladder #1',   55],
+              'dm1_filters2' : ['DM1 filter ladder #2',   55],
+              'dm2_fs'       : ['DM2 fluorescent screen', 62],
+              'dm3_fs'       : ['DM3 fluorescent screen', 55],
+              'dm3_foils'    : ['DM3 foil ladder',        35],
+              }
+
+    for k in things.keys():
+        if user_ns[k].hocpl.get() == 1:
+            if user_ns[k].position < things[k][1]-2: ## out of beam is 67
+                print(error_msg(f'{TAB}{things[k][0]} is not out of the beam.'))
+            else:
+                print(f'{TAB}{things[k][0]} {CHECK}')
+        else:
+            print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
+
+        
+    if user_ns['dm3_foils'].hocpl.get() == 1:
+        if abs(user_ns['dm3_bpm'].position - 5.51) > 2: ## out of beam is 5.5112
+            print(error_msg(f'{TAB}DM3 BPM is not out of the beam.'))
+        else:
+            print(f'{TAB}DM3 BPM {CHECK}')
+    else:
+        print(error_msg(f'{TAB}DM3 BPM is not homed.'))
+        
+            
 def check_for_synaxis():
     '''A disconnected motor (due to IOC or controller not running) will be
     defined as a SynAxis. This does a test for that situation and
@@ -368,6 +399,7 @@ def check_for_synaxis():
         text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)')
         boxedtext('Disconnected motors', text, 'red', width=74)
 check_for_synaxis()
+examine_diagnostics()
 resting_state()
 
 try:

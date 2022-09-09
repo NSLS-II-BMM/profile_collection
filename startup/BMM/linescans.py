@@ -355,8 +355,9 @@ def find_slot(close=False):
         close_all_plots()
 
 def find_reference():
-    yield from rectangle_scan(motor=xafs_lilnxs, start=-4,  stop=4,  nsteps=31, detector='Ir')
-    print(bold_msg(f'Found reference at xafs_linxs = {xafs_linxs.position}'))
+    yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
+    yield from rectangle_scan(motor=xafs_refx, start=-10,  stop=10,  nsteps=31, detector='Ir')
+    print(bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})'))
 
     
 def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None):

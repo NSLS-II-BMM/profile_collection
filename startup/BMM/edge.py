@@ -70,7 +70,7 @@ def arrived_in_mode(mode=None):
     return ok
 
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300., xrd=False, bender=True):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
@@ -87,8 +87,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
         edge symbol ['K']
     energy : float, optional
         e0 value [None, determined from el/edge]
+    tune : bool, optional
+        perform rocking_curve() scan [True]
     slits : bool, optional
-        perform slit_height() scan [False]
+        perform slit_height() scan [True]
     target : float, optional
         energy where rocking curve is measured [300]
     xrd : boolean, optional
@@ -270,14 +272,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, target=300.,
     ############################
     # run a rocking curve scan #
     ############################
-    print('Optimizing rocking curve...')
-    yield from mv(dcm_pitch.kill_cmd, 1)
-    yield from mv(dcm_pitch, approximate_pitch(energy+target))
-    yield from sleep(1)
-    yield from mv(dcm_pitch.kill_cmd, 1)
-    yield from sleep(1)
-    yield from rocking_curve()
-    close_last_plot()
+    if tune:
+        print('Optimizing rocking curve...')
+        yield from mv(dcm_pitch.kill_cmd, 1)
+        yield from mv(dcm_pitch, approximate_pitch(energy+target))
+        yield from sleep(1)
+        yield from mv(dcm_pitch.kill_cmd, 1)
+        yield from sleep(1)
+        yield from rocking_curve()
+        close_last_plot()
     
     ##########################
     # run a slit height scan #

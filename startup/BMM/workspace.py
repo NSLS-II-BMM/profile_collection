@@ -211,4 +211,3 @@ def initialize_ssh():
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws3: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
-        

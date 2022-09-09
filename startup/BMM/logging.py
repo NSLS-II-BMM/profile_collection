@@ -138,6 +138,7 @@ def img_to_slack(imagefile):
     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
     try:
         response = client.files_upload(channels='#beamtime', file=imagefile)
+        # #beamtime channel ID: C016GHBFHTM
         assert response["file"]  # the uploaded file
     except SlackApiError as e:
         post_to_slack(f'failed to post image: {imagefile}')
