@@ -199,7 +199,7 @@ def reference(target=None):
         xafs_refx.user_setpoint.set(xafs_ref.outer_position)
         #yield from mv(xafs_refx, xafs_ref.outer_position)
     yield from xafs_ref.set_slot(slot)
-    print(whisper('Let\'s pause for 15 seconds to make sure xafs_refx is done moving.'))
+    print(whisper('Pausing for 15 seconds to make sure xafs_refx is done moving.'))
     yield from mv(user_ns['busy'], 15)
 
 
@@ -207,7 +207,7 @@ def determine_reference():
     xafs_ref  = user_ns['xafs_ref']
     xafs_refx = user_ns['xafs_refx']
     slot  = round((-15+xafs_ref.position) / (-15)) % 24
-    if xafs_refx.position < -10:
+    if xafs_refx.position < 0:
         ring = 0
     else:
         ring = 1

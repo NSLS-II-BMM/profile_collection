@@ -389,8 +389,12 @@ class BMM_User(Borg):
             if verbose: print("float:", k)
             setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_booleans:
-            if verbose: print("bool:", k)
-            setattr(self, k, bool(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+            this = rkvs.get(f'BMM:user:{k}').decode('utf-8')
+            if verbose: print("bool:", k, this)
+            if this.lower() in ('false', 'no', '0', 'f', 'n'):
+                setattr(self, k, False)
+            else:
+                setattr(self, k, True)
         for k in self.bmm_none:
             if verbose: print("none:", k)
             setattr(self, k, None)

@@ -376,10 +376,10 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             return False
         this = allrois[element]
         if edge.lower() not in this:
-            #print(f'ROIs for the {element} {edge} edge are not tabulated')
+            #print(f'ROI for the {element} {edge} edge are not tabulated')
             return False
         if this[edge.lower()]['low'] == 0 or this[edge.lower()]['high'] == 0:
-            #print(f'ROIs for the {element} {edge} edge are not tabulated')
+            #print(f'ROI for the {element} {edge} edge are not tabulated')
             return False
         return True
     

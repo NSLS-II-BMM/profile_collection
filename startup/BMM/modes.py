@@ -87,7 +87,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      XRD: focused at XRD end station, energy > 8000
      '''
      BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
-     xafs_table, m3, m2, m2_bender, xafs_ref = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['xafs_ref']
+     xafs_table, m3, m2, m2_bender = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender']
+     xafs_ref, xafs_refx = user_ns['xafs_ref'], user_ns['xafs_refx']
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -381,7 +382,7 @@ def change_xtals(xtal=None):
      yield from dcm.kill_plan()
      yield from sleep(2.0) 
      if xtal == 'Si(111)':
-          yield from mv(dcm_pitch, 4.1,
+          yield from mv(dcm_pitch, 4.2,
                         dcm_roll, -5.863,
                         dcm_x,     0.5    )
           #dcm._crystal = '111'
