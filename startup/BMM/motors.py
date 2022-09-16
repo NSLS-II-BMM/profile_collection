@@ -155,9 +155,9 @@ class FMBOEpicsMotor(EpicsMotor):
     #inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'omitted')
     # inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'omitted')
 
-    #enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'normal')
+    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'normal')
     # enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'normal')
-    #clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'normal')
+    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'normal')
     
     home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'normal')
     hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'normal') # how homing velocity gets set for an FMBO SAI

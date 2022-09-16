@@ -563,7 +563,7 @@ def xafs(inifile=None, **kwargs):
         if p['channelcut'] is True:
             report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
         dcm.mode = 'fixed'
-        #dcm_bragg.clear_encoder_loss()
+        dcm_bragg.clear_encoder_loss()
         #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
         yield from mv(dcm.energy, eave)
         if p['rockingcurve']:
@@ -937,14 +937,14 @@ def xafs(inifile=None, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
-                    #dcm_bragg.clear_encoder_loss()
+                    dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[-1]+5)
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
                     print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get())))
-                    #dcm_bragg.clear_encoder_loss()
+                    dcm_bragg.clear_encoder_loss()
                     yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
