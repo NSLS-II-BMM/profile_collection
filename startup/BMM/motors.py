@@ -203,7 +203,20 @@ class FMBOEpicsMotor(EpicsMotor):
                     self.log.error('Motion failed: %s is in an alarm state '
                                    'status=%s severity=%s',
                                    self.name, status, severity)
-                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    if 'm3' in self.name:
+                        which = 'm3'
+                    elif 'm2' in self.name:
+                        which = 'm2'
+                    elif 'dcm' in self.name:
+                        which = 'dcm'
+                    elif 'slits2' in self.name:
+                        which = 'slits2'
+                    elif 'slits3' in self.name or 'dm3' in self.name:
+                        which = 'dm3'
+
+                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    print('Then try your last command again.  If this error repeats, call for help.')
+                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '
