@@ -255,9 +255,9 @@ class FMBOEpicsMotor(EpicsMotor):
         self.home_signal.put(1)
 
     def clear_encoder_loss(self):
+        BMM_log_info('clearing encoder loss for %s' % self.name)
         self.clear_enc_lss.put(1)
         self.enable()
-        BMM_log_info('clearing encoder loss for %s' % self.name)
 
     def wh(self):
         return(round(self.user_readback.get(), 3))

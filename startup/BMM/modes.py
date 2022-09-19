@@ -88,7 +88,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      '''
      BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
      xafs_table, m3, m2, m2_bender = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender']
-     xafs_ref, xafs_refx = user_ns['xafs_ref'], user_ns['xafs_refx']
+     dcm_bragg, xafs_ref, xafs_refx = user_ns['dcm_bragg'], user_ns['xafs_ref'], user_ns['xafs_refx']
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -178,17 +178,18 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           #base.extend([xafs_ref, xafs_ref.position_of_slot(reference.capitalize())])
           if reference.capitalize() in xafs_ref.mapping:
                slot = xafs_ref.mapping[reference.capitalize()][1]
+               if xafs_ref.mapping[reference.capitalize()][0] == 1:
+                    ring = xafs_ref.inner_position
+               else:
+                    ring = xafs_ref.outer_position
           else:
                slot = 1
-          if xafs_ref.mapping[reference.capitalize()][0] == 1:
-               ring = xafs_ref.inner_position
-          else:
                ring = xafs_ref.outer_position
           base.extend([xafs_ref, xafs_ref.position_of_slot(slot)]) #  xafs_refx, ring])
           xafs_refx.user_setpoint.set(ring) # ick!!!
 
      if edge is not None:
-          #dcm_bragg.clear_encoder_loss()
+          dcm_bragg.clear_encoder_loss()
           base.extend([dcm.energy, edge])
      # if mode in ('D', 'E', 'F'):
      #      base.extend([slits3.hcenter, 2])

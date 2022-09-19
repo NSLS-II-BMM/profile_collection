@@ -318,6 +318,34 @@ def channelcut_energy(e0, bounds, ththth):
     return eave
 
 
+def attain_energy_position(value):
+    '''Attempt to move to an energy position, attempting to deal
+    gracefully with encoder loss on the Bragg axis.
+
+    Argument
+    ========
+      value : (float) target energy value
+
+    Returns True for success, False for failure
+    '''
+    dcm, dcm_bragg = user_ns['dcm'], user_ns['dcm_bragg']
+    dcm_bragg.clear_encoder_loss()
+    #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
+    yield from mv(dcm.energy, value)
+    count = 0
+    while abs(dcm.energy.position - value) > 0.1 :
+        if count > 3:
+            print(error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.'))
+            BMMuser.final_log_entry = False
+            yield from null()
+            return False
+        print('Clearing encoder loss and re-trying to move to pseudo-channel-cut energy...')
+        dcm_bragg.clear_encoder_loss()
+        yield from mv(dcm.energy, eave)
+        count = count + 1
+    return True
+
+
 def ini_sanity(found):
     '''Very simple sanity checking of the scan control file.'''
     ok = True
@@ -563,9 +591,23 @@ def xafs(inifile=None, **kwargs):
         if p['channelcut'] is True:
             report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
         dcm.mode = 'fixed'
-        dcm_bragg.clear_encoder_loss()
-        #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
-        yield from mv(dcm.energy, eave)
+        yield from attain_energy_position(eave)
+
+        # dcm_bragg.clear_encoder_loss()
+        # #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
+        # yield from mv(dcm.energy, eave)
+        # count = 0
+        # while abs(dcm.energy.position - eave) > 0.1 :
+        #     if count > 3:
+        #         print(error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.'))
+        #         BMMuser.final_log_entry = False
+        #         yield from null()
+        #         return
+        #     print('Clearing encoder loss and re-trying to move to pseudo-channel-cut energy...')
+        #     dcm_bragg.clear_encoder_loss()
+        #     yield from mv(dcm.energy, eave)
+        #     count = count + 1
+            
         if p['rockingcurve']:
             report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
             yield from rocking_curve()
@@ -937,15 +979,17 @@ def xafs(inifile=None, **kwargs):
                     energy_trajectory    = cycler(dcm.energy, energy_grid[::-1])
                     dwelltime_trajectory = cycler(dwell_time, time_grid[::-1])
                     md['Mono']['direction'] = 'backward'
-                    dcm_bragg.clear_encoder_loss()
-                    yield from mv(dcm.energy, energy_grid[-1]+5)
+                    yield from attain_energy_position(energy_grid[-1]+5)
+                    #dcm_bragg.clear_encoder_loss()
+                    #yield from mv(dcm.energy, energy_grid[-1]+5)
                 else:
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
                     print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get())))
-                    dcm_bragg.clear_encoder_loss()
-                    yield from mv(dcm.energy, energy_grid[0]-5)
+                    yield from attain_energy_position(energy_grid[0]-5)
+                    #dcm_bragg.clear_encoder_loss()
+                    #yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
                     
@@ -1238,3 +1282,10 @@ def xafs_grid(inifile=None, **kwargs):
     print(f'{p["element"]} {p["edge"]}')
     return(energy_grid, time_grid)
 
+
+
+# def xanes():
+#     BMMuser = user_ns['BMMuser']
+#     defaul_ini = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
+#     el = BMMuser.element
+#     yield from xafs(defaul_ini, filename=el+'_test', )
