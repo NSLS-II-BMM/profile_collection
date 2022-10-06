@@ -96,9 +96,9 @@ class FMBOEpicsMotor(EpicsMotor):
     ###################################################################
     # mtact      = Cpt(EpicsSignal, '_MTACT_STS',      kind = 'omitted')
     # mtact_desc = Cpt(EpicsSignal, '_MTACT_STS.DESC', kind = 'omitted')
-    #mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'omitted')
+    # mlim       = Cpt(EpicsSignal, '_MLIM_STS',       kind = 'omitted')
     # mlim_desc  = Cpt(EpicsSignal, '_MLIM_STS.DESC',  kind = 'omitted')
-    #plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'omitted')
+    # plim       = Cpt(EpicsSignal, '_PLIM_STS',       kind = 'omitted')
     # plim_desc  = Cpt(EpicsSignal, '_PLIM_STS.DESC',  kind = 'omitted')
     ampen      = Cpt(EpicsSignal, '_AMPEN_STS',      kind = 'omitted')
     # ampen_desc = Cpt(EpicsSignal, '_AMPEN_STS.DESC', kind = 'omitted')
@@ -203,9 +203,9 @@ class FMBOEpicsMotor(EpicsMotor):
                     self.log.error('Motion failed: %s is in an alarm state '
                                    'status=%s severity=%s',
                                    self.name, status, severity)
-                    if 'm3' in self.name:
+                    if 'm3' in self.name and 'dm3' not in self.name:
                         which = 'm3'
-                    elif 'm2' in self.name:
+                    elif 'm2' in self.name and 'dm2' not in self.name:
                         which = 'm2'
                     elif 'dcm' in self.name:
                         which = 'dcm'
@@ -309,7 +309,20 @@ class FMBOThinEpicsMotor(EpicsMotor):
                     self.log.error('Motion failed: %s is in an alarm state '
                                    'status=%s severity=%s',
                                    self.name, status, severity)
-                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    if 'm3' in self.name and 'dm3' not in self.name:
+                        which = 'm3'
+                    elif 'm2' in self.name and 'dm2' not in self.name:
+                        which = 'm2'
+                    elif 'dcm' in self.name:
+                        which = 'dcm'
+                    elif 'slits2' in self.name:
+                        which = 'slits2'
+                    elif 'slits3' in self.name or 'dm3' in self.name:
+                        which = 'dm3'
+
+                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    print('Then try your last command again.  If this error repeats, call for help.')
+                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '
@@ -372,7 +385,20 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
                     self.log.error('Motion failed: %s is in an alarm state '
                                    'status=%s severity=%s',
                                    self.name, status, severity)
-                    print('\n\n***  need to do ks.cycle(something) ***\n\n')
+                    if 'm3' in self.name and 'dm3' not in self.name:
+                        which = 'm3'
+                    elif 'm2' in self.name and 'dm2' not in self.name:
+                        which = 'm2'
+                    elif 'dcm' in self.name:
+                        which = 'dcm'
+                    elif 'slits2' in self.name:
+                        which = 'slits2'
+                    elif 'slits3' in self.name or 'dm3' in self.name:
+                        which = 'dm3'
+
+                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    print('Then try your last command again.  If this error repeats, call for help.')
+                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '

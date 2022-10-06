@@ -361,7 +361,9 @@ def examine_diagnostics():
               }
 
     for k in things.keys():
-        if user_ns[k].hocpl.get() == 1:
+        if 'SynAxis' in f'{user_ns[k]}':
+            print(disconnected_msg(f'{TAB}{things[k][0]} is not connected.'))
+        elif user_ns[k].hocpl.get() == 1:
             if user_ns[k].position < things[k][1]-2: ## out of beam is 67
                 print(error_msg(f'{TAB}{things[k][0]} is not out of the beam.'))
             else:
@@ -370,7 +372,9 @@ def examine_diagnostics():
             print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
 
         
-    if user_ns['dm3_foils'].hocpl.get() == 1:
+    if 'SynAxis' in f'{user_ns["dm3_bpm"]}':
+        print(disconnected_msg(f'{TAB}DM3 BPM is not connected.'))
+    elif user_ns['dm3_foils'].hocpl.get() == 1:
         if abs(user_ns['dm3_bpm'].position - 5.51) > 2: ## out of beam is 5.5112
             print(error_msg(f'{TAB}DM3 BPM is not out of the beam.'))
         else:

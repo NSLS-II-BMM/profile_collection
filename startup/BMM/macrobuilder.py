@@ -218,6 +218,8 @@ class BMMMacroBuilder():
     def escape_quotes(self, value):
         if value is None:
             return ''
+        if type(value) is str and value == 'None':
+            return ''
         value = value.replace('\\', "\\\\").replace('\'', "\\'").replace('"', '\\"')
         return value
 

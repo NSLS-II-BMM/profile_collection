@@ -1,5 +1,5 @@
 import time, json
-from BMM.functions import run_report
+from BMM.functions import run_report, examine_fmbo_motor_group
 from BMM.workspace import rkvs
 
 run_report(__file__, text='instrument definitions')
@@ -111,7 +111,8 @@ else:
     m2_xd     = SynAxis(name='m2_xd')
     m2_bender = SynAxis(name='m2_bender')
 m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
-mcs8_motors.extend(m2list)
+mcs8_motors.extend(m2list)   
+examine_fmbo_motor_group(m2list)
 
 
 ## harmonic rejection mirror
@@ -145,6 +146,7 @@ else:
     m3_xu     = SynAxis(name='m3_xu')
     m3_xd     = SynAxis(name='m3_xd')
 mcs8_motors.extend([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
+examine_fmbo_motor_group([m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd])
 
 
 
@@ -218,6 +220,7 @@ else:
     
 slits3list = [dm3_slits_o, dm3_slits_i, dm3_slits_t, dm3_slits_b]
 mcs8_motors.extend(slits3list)
+examine_fmbo_motor_group(slits3list)
 
 
 
@@ -250,6 +253,7 @@ else:
     
 dm2list = [dm2_slits_o, dm2_slits_i, dm2_slits_t, dm2_slits_b]
 mcs8_motors.extend(dm2list)
+examine_fmbo_motor_group(dm2list)
 
 
 
@@ -289,10 +293,10 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -4.5
+    xafs_ref.outer_position = -88.0
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = 21.75 # xafs_ref.outer_position + 26.0
+xafs_ref.inner_position = -61.5 # xafs_ref.outer_position + 26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',

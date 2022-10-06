@@ -1,6 +1,6 @@
 from ophyd.sim import SynAxis
 from ophyd import EpicsMotor, EpicsSignalRO
-from BMM.functions import run_report, error_msg, warning_msg, bold_msg
+from BMM.functions import run_report, error_msg, warning_msg, bold_msg, examine_fmbo_motor_group
 import time
 
 run_report(__file__, text='individual motor definitions')
@@ -62,6 +62,7 @@ dm1list = [dm1_filters1, dm1_filters2]
 mcs8_motors.extend(dm1list)
 if 'XAFSEpicsMotor' in str(type(dm1_filters2)):
     dm1_filters2.llm.put(-52)
+examine_fmbo_motor_group(dm1list)
 
 
 
@@ -71,6 +72,7 @@ dm2_fs = define_XAFSEpicsMotor('XF:06BMA-BI{Diag:02-Ax:Y}Mtr', name='dm2_fs')
 if 'XAFSEpicsMotor' in str(type(dm2_fs)):
     dm2_fs.hvel_sp.put(0.0005)
 mcs8_motors.append(dm2_fs)
+examine_fmbo_motor_group([dm2_fs])
 
 
 
@@ -84,6 +86,7 @@ dm3_bpm   = define_XAFSEpicsMotor('XF:06BM-BI{BPM:1-Ax:Y}Mtr',   name='dm3_bpm')
 
 dm3list = [dm3_fs, dm3_foils, dm3_bct, dm3_bpm]
 mcs8_motors.extend(dm3list)
+examine_fmbo_motor_group(dm3list)
 
 # make sure these motors are connected before trying to do things with them
 if 'XAFSEpicsMotor' in str(type(dm3_fs)):

@@ -150,6 +150,7 @@ def recover_diagnostics():
     print('\n')
     #yield from mv(dm3_bct.kill_cmd, 1)
     yield from mv(dm3_foils.kill_cmd, 1)
+    yield from sleep(1.0)
     ## take these from Modes.xlsx, mode D -- all out of the beam path
     yield from mv(dm2_fs, 67, dm3_fs, 55, dm3_bct, 43.6565, dm3_bpm, 5.511, dm3_foils, 41)
 

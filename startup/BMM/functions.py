@@ -227,3 +227,17 @@ def plotting_mode(mode):
         return 'yield'
     else:
         return 'trans'
+
+
+def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
+    CHECK = '\u2714'
+    for m in motor_group:
+        if 'SynAxis' in f'{m}':
+            print(disconnected_msg(f'{TAB}{m.name} is not connected.'))
+        elif m.name in ('dcm_y', 'm2_bender'):
+            print(whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}'))
+        elif m.hocpl.get() == 1:
+            print(f'{TAB}{m.name} {CHECK}')
+        else:
+            print(error_msg(f'{TAB}{m.name} is not homed.'))
+    

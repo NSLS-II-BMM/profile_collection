@@ -330,7 +330,6 @@ def attain_energy_position(value):
     '''
     dcm, dcm_bragg = user_ns['dcm'], user_ns['dcm_bragg']
     dcm_bragg.clear_encoder_loss()
-    #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
     yield from mv(dcm.energy, value)
     count = 0
     while abs(dcm.energy.position - value) > 0.1 :
@@ -339,9 +338,9 @@ def attain_energy_position(value):
             BMMuser.final_log_entry = False
             yield from null()
             return False
-        print('Clearing encoder loss and re-trying to move to pseudo-channel-cut energy...')
+        print('Clearing encoder loss and re-trying movement to pseudo-channel-cut energy...')
         dcm_bragg.clear_encoder_loss()
-        yield from mv(dcm.energy, eave)
+        yield from mv(dcm.energy, value)
         count = count + 1
     return True
 

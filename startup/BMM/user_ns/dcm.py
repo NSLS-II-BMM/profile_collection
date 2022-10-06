@@ -4,6 +4,7 @@ run_report(__file__, text='Monochromator definitions')
 from BMM.user_ns.instruments import wait_for_connection
 from BMM.motors              import FMBOEpicsMotor, VacuumEpicsMotor, XAFSEpicsMotor, DeadbandEpicsMotor
 from BMM.user_ns.motors      import mcs8_motors
+from BMM.functions           import examine_fmbo_motor_group
 
 # see comment at top of BMM/user_ns/instruments.py
 from ophyd.sim import SynAxis
@@ -75,4 +76,5 @@ else:
     
 dcmlist = [dcm_bragg, dcm_pitch, dcm_roll, dcm_perp, dcm_para, dcm_x, dcm_y]
 mcs8_motors.extend(dcmlist)
+examine_fmbo_motor_group(dcmlist)
 
