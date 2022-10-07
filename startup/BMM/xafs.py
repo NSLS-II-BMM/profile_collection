@@ -329,17 +329,19 @@ def attain_energy_position(value):
     Returns True for success, False for failure
     '''
     dcm, dcm_bragg = user_ns['dcm'], user_ns['dcm_bragg']
+    BMMuser = user_ns['BMMuser']
     dcm_bragg.clear_encoder_loss()
     yield from mv(dcm.energy, value)
     count = 0
     while abs(dcm.energy.position - value) > 0.1 :
-        if count > 3:
+        if count > 4:
             print(error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.'))
             BMMuser.final_log_entry = False
             yield from null()
             return False
         print('Clearing encoder loss and re-trying movement to pseudo-channel-cut energy...')
         dcm_bragg.clear_encoder_loss()
+        yield from sleep(2)
         yield from mv(dcm.energy, value)
         count = count + 1
     return True
