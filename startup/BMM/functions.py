@@ -240,4 +240,3 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
             print(f'{TAB}{m.name} {CHECK}')
         else:
             print(error_msg(f'{TAB}{m.name} is not homed.'))
-    

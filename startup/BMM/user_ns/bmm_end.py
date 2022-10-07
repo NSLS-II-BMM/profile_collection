@@ -172,7 +172,7 @@ def set_instrument(instrument=None):
     else:
         print(bold_msg('Default instrument choice: sample wheel'))
         BMMuser.instrument = 'sample wheel'
-    rkvs.set('BMM:automation:type', instrument)
+    rkvs.set('BMM:automation:type', BMMuser.instrument)
     
     
 
