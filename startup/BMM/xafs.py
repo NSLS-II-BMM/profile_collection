@@ -1156,8 +1156,8 @@ def xafs(inifile=None, **kwargs):
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:
-        BMMuser.snapshot = False
-        BMMuser.htmlout  = False
+        BMMuser.snapshots = False
+        BMMuser.htmlout   = False
 
     if is_re_worker_active():
         inifile = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
