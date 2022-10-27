@@ -1,5 +1,5 @@
-BMM's profile
-=============
+Bluesky profile for the BMM beamline
+====================================
 
 This repository contains the profile used for data collection at
 beamline 6BM at the [National Synchrotron Light Source
