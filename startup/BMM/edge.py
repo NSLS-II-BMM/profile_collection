@@ -313,6 +313,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     BMM_clear_suspenders()
     yield from dcm.kill_plan()
     yield from mv(m2_bender.kill_cmd, 1)
+    BMMuser.state_to_redis(filename=os.path.join(BMMuser.DATA, '.BMMuser'), prefix='')
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))
     return()

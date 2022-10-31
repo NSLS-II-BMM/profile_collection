@@ -136,6 +136,7 @@ def bmm_metadata(measurement   = 'transmission',
         md['Element']['reference']          = user_ns['xafs_ref'].mapping[element.capitalize()][2]
         md['Element']['reference_material'] = user_ns['xafs_ref'].mapping[element.capitalize()][3]
     else:
+        md['Element']['reference']          = 'None'
         md['Element']['reference_material'] = 'None'
     
     md['Scan']['edge_energy']        = edge_energy

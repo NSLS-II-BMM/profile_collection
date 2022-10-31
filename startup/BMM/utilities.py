@@ -49,6 +49,19 @@ class TCG(Device):
             return error_msg(self.pressure.get())
         return(self.pressure.get())
 
+class Rack(Device):
+    temperature = Cpt(EpicsSignalRO, 'T-I')
+    def _state(self, info=False):
+        if self.connected is False:
+            return(disconnected_msg('?????'))
+        if self.temperature.get() == 'OFF':
+            return(disconnected_msg('OFF'))
+        if float(self.temperature.get()) > 26:
+            return warning_msg(self.temperature.get())
+        if float(self.temperature.get()) > 30:
+            return error_msg(self.temperature.get())
+        return(self.temperature.get())
+    
     
 ## front end vacuum readings FE:C06B-VA{CCG:#}P-1 and FE:C06B-VA{IP:#}P-1
 ## at 6BM, # = (1 .. 6)

@@ -538,7 +538,6 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMMuser.prompt)
         if verbose: print(verbosebold_msg('computing pseudo-channelcut energy'))
-        print(p['e0'], p['bounds'], p['ththth'])
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
         length = 0
         if BMMuser.prompt:
@@ -554,6 +553,11 @@ def xafs(inifile=None, **kwargs):
                 if k in ('npoints', 'dwell', 'delay', 'inttime', 'channelcut', 'bothways'):
                     continue
                 addition = '      %-13s : %-50s\n' % (k,v)
+                text = text + addition.rstrip() + '\n'
+                if len(addition) > length: length = len(addition)
+                if length < 75: length = 75
+            for k in ('post_webcam', 'post_anacam', 'post_usbcam1', 'post_usbcam2', 'post_xrf'):
+                addition = '      %-13s : %-50s\n' % (k,getattr(user_ns['BMMuser'], k))
                 text = text + addition.rstrip() + '\n'
                 if len(addition) > length: length = len(addition)
                 if length < 75: length = 75
@@ -694,6 +698,8 @@ def xafs(inifile=None, **kwargs):
             ## save XRF plot
             plt.savefig(xrfimage)
             matplotlib.use(thisagg) # return to screen display
+            if BMMuser.post_xrf:
+                img_to_slack(xrfimage)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -711,6 +717,8 @@ def xafs(inifile=None, **kwargs):
             #os.symlink(file_resource(db.v2[xascam_uid]), image_web)
             im = Image.fromarray(numpy.array(bmm_catalog[xascam_uid].primary.read()['xascam_image'])[0])
             im.save(image_web, 'JPEG')
+            if BMMuser.post_webcam:
+                img_to_slack(image_web)
 
             ### --- analog camera using redgo dongle ------------------------------------------
             ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
@@ -724,6 +732,8 @@ def xafs(inifile=None, **kwargs):
                     #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
                     im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
                     im.save(image_ana, 'JPEG')
+                    if BMMuser.post_anacam:
+                        img_to_slack(image_ana)
                 except:
                     print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
                     anacam_uid = False
@@ -738,6 +748,8 @@ def xafs(inifile=None, **kwargs):
             #os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
             im = Image.fromarray(numpy.array(bmm_catalog[usbcam1_uid].primary.read()['usbcam1_image'])[0])
             im.save(image_usb1, 'JPEG')
+            if BMMuser.post_usbcam1:
+                img_to_slack(image_usb1)
 
             ### --- USB camera #2 --------------------------------------------------------------
             dossier.usb2snap = "%s_usb2_%s.jpg" % (p['filename'], ahora)
@@ -748,6 +760,8 @@ def xafs(inifile=None, **kwargs):
             #os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
             im = Image.fromarray(numpy.array(bmm_catalog[usbcam2_uid].primary.read()['usbcam2_image'])[0])
             im.save(image_usb2, 'JPEG')
+            if BMMuser.post_usbcam2:
+                img_to_slack(image_usb2)
 
             
         md['_snapshots'] = {'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
@@ -1241,6 +1255,12 @@ def howlong(inifile=None, interactive=True, **kwargs):
             bt = bt + addition.rstrip() + '\n'
             if len(addition) > length: length = len(addition)
             if length < 75: length = 75
+        for k in ('post_webcam', 'post_anacam', 'post_usbcam1', 'post_usbcam2', 'post_xrf'):
+            addition = '      %-13s : %-50s\n' % (k,getattr(user_ns['BMMuser'], k))
+            bt = bt + addition.rstrip() + '\n'
+            if len(addition) > length: length = len(addition)
+            if length < 75: length = 75
+            
         boxedtext('Control file contents', bt, 'cyan', width=length+4) # see 05-functions
         print(text)
     else:

@@ -176,6 +176,8 @@ def write_XDI(datafile, dataframe):
     if kind != 'sead':
         metadata.start_doc('# Element.symbol: %s', 'XDI.Element.symbol')
         metadata.start_doc('# Element.edge: %s',   'XDI.Element.edge')
+        metadata.start_doc('# Element.reference: %s',          'XDI.Element.reference')
+        metadata.start_doc('# Element.reference_material: %s', 'XDI.Element.reference_material')
 
     #try:
     #    ring_current = dataframe.table('baseline')['ring_current'][1]

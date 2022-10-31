@@ -2,7 +2,7 @@ from ophyd import EpicsSignalRO
 
 from BMM.functions import run_report, boxedtext
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.utilities import Vacuum, TCG, FEVac, GateValve, Thermocouple, OneWireTC, BMM_DIWater
+from BMM.utilities import Vacuum, TCG, FEVac, GateValve, Thermocouple, OneWireTC, BMM_DIWater, Rack
 
 run_report(__file__, text='monitor utilities')
 
@@ -139,14 +139,19 @@ tcs = [Thermocouple('XF:06BM-EPS-OP{Mir:1}T:1',              name = 'Mirror 1, i
        Thermocouple('XF:06BMA-OP{Mir:2}T:2',                 name = 'Mirror 2 downstream'),
        Thermocouple('XF:06BMA-OP{Mir:3}T:1',                 name = 'Mirror 3 upstream'),
        Thermocouple('XF:06BMA-OP{Mir:3}T:2',                 name = 'Mirror 3 downstream'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:1',                name = 'Filter assembly 1, slot 1'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:3',                name = 'Filter assembly 1, slot 2'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:5',                name = 'Filter assembly 1, slot 3'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:7',                name = 'Filter assembly 1, slot 4'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:2',                name = 'Filter assembly 2, slot 1'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:4',                name = 'Filter assembly 2, slot 2'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:6',                name = 'Filter assembly 2, slot 3'),
-       Thermocouple('XF:06BMA-OP{Fltr:1}T:8',                name = 'Filter assembly 2, slot 4'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:1',                name = 'Filter assembly 1, slot 1'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:3',                name = 'Filter assembly 1, slot 2'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:5',                name = 'Filter assembly 1, slot 3'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:7',                name = 'Filter assembly 1, slot 4'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:2',                name = 'Filter assembly 2, slot 1'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:4',                name = 'Filter assembly 2, slot 2'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:6',                name = 'Filter assembly 2, slot 3'),
+       #Thermocouple('XF:06BMA-OP{Fltr:1}T:8',                name = 'Filter assembly 2, slot 4'),
+       Rack('XF:06BM-CT{RG:A1}', name = 'Rack A'),
+       Rack('XF:06BM-CT{RG:B1}', name = 'Rack B'),
+       Rack('XF:06BM-CT{RG:C1}', name = 'Rack C1'),
+       Rack('XF:06BM-CT{RG:C2}', name = 'Rack C2'),
+       Rack('XF:06BM-CT{RG:C3}', name = 'Rack C3'),
    ]
 
 
@@ -209,6 +214,7 @@ def sw():
     boxedtext('BMM water', show_water(), 'lightblue', width=55)
         
 
+    
 ###########################################################################
 # pretty-print a summary of temperatures, valve states, and vacuum levels #
 ###########################################################################
@@ -245,4 +251,4 @@ def show_utilities():
     return text[:-1]
 
 def su():
-    boxedtext('BMM utilities', show_utilities(), 'brown', width=124)
+    boxedtext('BMM utilities', show_utilities(), 'brown', width=120)

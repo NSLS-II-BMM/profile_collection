@@ -11,9 +11,11 @@ initialize_workspace()
 
 import json, time, os
 
+## suppress the thing where matplotlib raises a new plot window to the top, stealing focus
+import matplotlib as mpl
+mpl.rcParams['figure.raise_window'] = False
 
 DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
-#BMM_CONFIGURATION_LOCATION = '/home/xf06bm/git/BMM-beamline-configuration/'
 BMM_CONFIGURATION_LOCATION = os.path.join(startup_dir, 'lookup_table')
 
 nas_mount_point = '/mnt/nfs/nas1'

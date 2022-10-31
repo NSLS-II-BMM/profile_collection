@@ -285,7 +285,7 @@ if with_xspress3 is True and use_4element is True:
 
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',
-        name='xs',
+        name='4-element SDD',
         read_attrs=['hdf5']
     )
 
@@ -348,7 +348,7 @@ if with_xspress3 is True and use_1element is True:
 
     xs1 = BMMXspress3Detector_1Element(
         prefix='XF:06BM-ES{Xsp:1}:',
-        name='xs1',
+        name='1-element SDD',
         read_attrs=['hdf5']
     )
 

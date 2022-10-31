@@ -308,12 +308,13 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         mcaroi.size_x.put(high - low)
 
         
-    def reset_rois(self, el=None, tab=''):
+    def reset_rois(self, el=None, tab='', quiet = False):
         BMMuser = user_ns['BMMuser']
         if el is None:
             el = BMMuser.element
         if el in self.slots:
-            print(whisper(f'{tab}Resetting rois with {el} as the active ROI'))
+            if quiet is False:
+                print(whisper(f'{tab}Resetting rois with {el} as the active ROI'))
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()

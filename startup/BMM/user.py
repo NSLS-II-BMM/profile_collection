@@ -271,6 +271,12 @@ class BMM_User(Borg):
         self.extra_metadata = None
         self.syns           = False
 
+        self.post_webcam    = False  ########################################################
+        self.post_usbcam1   = False  # parameters for controlling what gets posted to Slack #
+        self.post_usbcam2   = False  ########################################################
+        self.post_anacam    = False
+        self.post_xrf       = False
+
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
@@ -284,7 +290,8 @@ class BMM_User(Borg):
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
-                             "doi", "cif", "syns")
+                             "doi", "cif", "syns",
+                             "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax")
@@ -332,9 +339,24 @@ class BMM_User(Borg):
                 json.dump(d, outfile, indent=4)
             print(f'\n{prefix}wrote BMMuser state to {filename}')
 
+    def set_element(self, element, edge=None):
+        if edge is None:
+            energy = edge_energy(element,'K')
+            self.element = element
+            if energy > 23500:
+                self.edge = 'L3'
+            else:
+                self.edge = 'K'
+        else:
+            self.element = element
+            self.edge    = edge
+        for i in (1,2,3,4,8):
+            setattr(self, f'xs{i}', f'{element}{i}')
+        for key in ('element', 'edge', 'xs1', 'xs2', 'xs3', 'xs4', 'xs8'):
+            rkvs.set(f'BMM:user:{key}', getattr(self, key))
 
     def verify_roi(self, xs, el, edge, tab=''):
-        print(bold_msg(f'{tab}Attempting to set ROIs for {el} {edge} edge'))
+        print(bold_msg(f'{tab}Attempting to set ROIs on {xs.name} for {el} {edge} edge'))
         try:
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):
@@ -356,7 +378,7 @@ class BMM_User(Borg):
             else:
                 report(f'{tab}No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
-            xs.reset_rois(tab=tab)
+            xs.reset_rois(tab=tab, quiet=True)
         except Exception as E:
             print(error_msg(E))
 

@@ -2,15 +2,17 @@
 from bluesky.plan_stubs import sleep, mv, mvr, null
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
 
-import os, re
+import os, re, shutil, glob, psutil
 from openpyxl import load_workbook
 import configparser
 import numpy
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from lmfit.models import StepModel
 from scipy.ndimage import center_of_mass
+from PIL import Image
 
 from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -65,6 +67,36 @@ class GlancingAngle(Device):
     to : move to the specified spinner, turn off all other spinners, turn on this spinner
     auto_align : perform an automated alignment for the current spinner
 
+    Notes
+    =====
+
+    This plan does some ugly shit to plot the results of each
+    individual step in the alignment procedure.  It uses matplotlib to
+    fashion the plot, but switches to a headless backend before
+    plotting.  It then saves the plot to throw-away png file.  PIL is
+    then used to funnel the display of the plot out to xdg-open.
+
+    On xf06bm-ws3, the desktop is configured to have ImageMagick's
+    display be the default view for a png file.  Thus, PIL is forking
+    a process and running display to show the plot to the user.
+
+    Care is taken to clean up after PIL (which leaves png files in
+    /tmp/) and to close any running display processes (that is, a
+    process running ImageMagick's display).
+
+    This leaves images of the alignment steps which are
+    non-interactive -- the user cannot query the plot to obtain a
+    motor position, for example.  
+
+    However, it has the great advantage of not running afoul of the
+    fact that ipython and Qt are running on different threads.  Thus
+    the full plot will be shown to the user and interacting with the
+    plot window (for example, resizing it) will not crash bsui.
+
+    See the clean_img() method to details of the clean up process.
+
+    Sigh....
+
     '''
     spinner1 = Cpt(EpicsSignal, 'OutPt08:Data-Sel')
     spinner2 = Cpt(EpicsSignal, 'OutPt09:Data-Sel')
@@ -87,6 +119,8 @@ class GlancingAngle(Device):
     f_uid = ''
     alignment_filename = ''
     orientation = 'parallel'
+    toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+    img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
 
     def current(self):
         '''Return the current spinner number as an integer'''
@@ -166,8 +200,21 @@ class GlancingAngle(Device):
             this = getattr(self, f'spinner{number}')
             yield from mv(this, 1)
 
+    def clean_img(self):
+        for proc in psutil.process_iter():
+            if proc.name() == "display":
+                proc.kill()
+        for f in glob.glob('/tmp/tmp*.PNG'):
+            try:
+                os.remove(f)
+            except:
+                print(whisper(f'unable to delete {f} while cleaning up /tmp'))
+        self.img.close()
+
 
     def pitch_plot(self, pitch, signal, filename=None):
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
         target = signal.idxmax()
         close_all_plots()
         #plt.cla()
@@ -176,8 +223,13 @@ class GlancingAngle(Device):
         plt.xlabel('xafs_pitch (deg)')
         plt.ylabel('It/I0')
         plt.title(f'pitch scan, spinner {self.current()}')
+        plt.savefig(self.toss)
+        matplotlib.use(thisagg) # return to screen display
+        self.clean_img()
+        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+        self.img.show()
         #plt.draw()
-        plt.show()
+        #plt.show()
         #plt.figure().canvas.draw_idle()
         #plt.pause(0.05)
         
@@ -198,6 +250,8 @@ class GlancingAngle(Device):
 
     def y_plot(self, yy, out, filename=None):
         #plt.cla()
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
         close_all_plots()
         plt.scatter(yy, out.data)
         plt.plot(yy, out.best_fit, color='red')
@@ -210,8 +264,13 @@ class GlancingAngle(Device):
             direction = 'X'
         plt.ylabel(f'{self.inverted}data and error function')
         plt.title(f'fit to {direction} scan, spinner {self.current()}')
+        plt.savefig(self.toss)
+        matplotlib.use(thisagg) # return to screen display
+        self.clean_img()
+        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+        self.img.show()
         #plt.draw()
-        plt.show()
+        #plt.show()
         #plt.figure().canvas.draw_idle()
         #plt.pause(0.05)
 
@@ -219,6 +278,8 @@ class GlancingAngle(Device):
     def alignment_plot(self, yt, pitch, yf):
         '''Make a pretty, three-panel plot at the end of an auto-alignment'''
         BMMuser = user_ns['BMMuser']
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
         close_all_plots()
         fig = plt.figure(tight_layout=True) #, figsize=(9,6))
         gs = gridspec.GridSpec(1,3)
@@ -275,7 +336,14 @@ class GlancingAngle(Device):
 
         fig.canvas.draw()
         fig.canvas.flush_events()
-        plt.show()
+        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
+        plt.savefig(self.alignment_filename)
+        matplotlib.use(thisagg) # return to screen display
+        shutil.copyfile(self.alignment_filename,  self.toss)
+        self.clean_img()
+        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+        self.img.show()
+        #plt.show()
         #fig.canvas.draw_idle()
         #plt.pause(0.05)
 
@@ -412,8 +480,6 @@ class GlancingAngle(Device):
         
         ## make a pretty picture, post it to slack
         self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
-        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
-        plt.savefig(self.alignment_filename)
         try:
             img_to_slack(self.alignment_filename)
         except:
