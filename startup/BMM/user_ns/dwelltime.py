@@ -16,7 +16,9 @@ run_report(__file__, text='dwelltime')
 ##############################################################
 
 
-with_quadem, with_struck, with_dualem, with_xspress3 = True, False, False, True
+with_quadem, with_struck, with_xspress3 = True, False, True
+with_ic0, with_ic1, with_ic2 = True, False, False
+with_dualem = False             # deprecated
 
 # An error gets triggered during Azure CI testing that does not get triggered when
 # running under IPython. This disables the Xspress3 during testing.

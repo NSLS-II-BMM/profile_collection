@@ -777,40 +777,46 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
-        test  = lambda doc: (doc['data']['dcm_energy'], doc['data']['I0'])
-        trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['I0'] / doc['data']['It']))
-        ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data']['It'] / doc['data']['Ir']))
-        Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data']['I0'])
+
+        # switch between old ion chambers with QuadEM and new self-contained ICs
+        i0 = 'I0' # 'I0a' or 'I0b'
+        it = 'It' # 'Ita' or 'Itb'
+        ir = 'Ir' # 'Ira' or 'Irb'
+        
+        test  = lambda doc: (doc['data']['dcm_energy'], doc['data'][i0])
+        trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data'][i0] / doc['data'][it]))
+        ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data'][it] / doc['data'][ir]))
+        Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data'][i0])
         if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs':
             xspress3_4 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
                                                                   doc['data'][BMMuser.xs2] +
                                                                   doc['data'][BMMuser.xs3] +
-                                                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+                                                                  doc['data'][BMMuser.xs4] ) / doc['data'][i0])
         if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs1':
-            xspress3_1 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs8] / doc['data']['I0'])
+            xspress3_1 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs8] / doc['data'][i0])
             
         if BMMuser.detector == 1:
-            fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data']['I0'])
+            fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data'][i0])
         else:
             fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
                                                              doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
-                                                             doc['data'][BMMuser.dtc4]) / doc['data']['I0'])
+                                                             doc['data'][BMMuser.dtc4]) / doc['data'][i0])
         if 'fluo'    in p['mode'] or 'flou' in p['mode']:
             if user_ns['with_xspress3']:
                 yield from mv(xs.cam.acquire_time, 0.5)
-                plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',        title=p['filename'])
+                plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',   title=p['filename'])
             else:
-                plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',    title=p['filename'])
+                plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)', title=p['filename'])
         elif 'trans' in p['mode']:
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])
+            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',     title=p['filename'])
         elif 'ref'   in p['mode']:
-            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',       title=p['filename'])
+            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',        title=p['filename'])
         elif 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-            plot = [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)',  title=p['filename']),
-                    DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',    title=p['filename'])]
+            plot = [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)',   title=p['filename']),
+                    DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',     title=p['filename'])]
         elif 'test'  in p['mode']:
-            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                    title=p['filename'])
+            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                     title=p['filename'])
         elif 'both'  in p['mode']:
             if user_ns['with_xspress3']:
                 yield from mv(xs.cam.acquire_time, 0.5)

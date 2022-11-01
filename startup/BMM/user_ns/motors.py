@@ -111,21 +111,55 @@ if 'XAFSEpicsMotor' in str(type(dm3_foils)):
 
 
 
+
+def define_EndStationEpicsMotor(prefix, name='unnamed'):
+    '''Deal gracefully with a motor whose IOC is not running or whose
+    controller is turned off.  See discussion at the top of
+    BMM/user_ns/instruments.py
+    '''
+    this = EndStationEpicsMotor(prefix, name=name)
+    count = 0
+    while this.connected is False:  #  try for no more than 3 seconds
+        count += 1
+        time.sleep(0.5)
+        if count > 6:
+            break
+    if this.connected is False:
+        this = SynAxis(name=name)
+    return(this)
+
+
+def define_EpicsMotor(prefix, name='unnamed'):
+    '''Deal gracefully with a motor whose IOC is not running or whose
+    controller is turned off.  See discussion at the top of
+    BMM/user_ns/instruments.py
+    '''
+    this = EpicsMotor(prefix, name=name)
+    count = 0
+    while this.connected is False:  #  try for no more than 3 seconds
+        count += 1
+        time.sleep(0.5)
+        if count > 6:
+            break
+    if this.connected is False:
+        this = SynAxis(name=name)
+    return(this)
+
+    
 ## XAFS stages
 print(f'{TAB}XAFS stages motor group')
 #xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
-xafs_roth  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
-xafs_rots  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
-xafs_det   = xafs_lins  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_det')
-xafs_linxs = xafs_refy  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_refy')
-xafs_refx  = EpicsMotor('XF:06BMA-BI{XAFS-Ax:RefX}Mtr', name='xafs_refx')
-xafs_x     = xafs_linx  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
-#xafs_x     = xafs_linx  = EpicsMotorWithDial('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
-xafs_y     = xafs_liny  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_y')
-xafs_roll  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
-xafs_pitch = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
+xafs_roth  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
+xafs_rots  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
+xafs_det   = xafs_lins  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_det')
+xafs_linxs = xafs_refy  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_refy')
+xafs_refx  = define_EpicsMotor('XF:06BMA-BI{XAFS-Ax:RefX}Mtr', name='xafs_refx')
+xafs_x     = xafs_linx  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
+xafs_y     = xafs_liny  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_y')
+xafs_roll  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the
+xafs_pitch = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Roll}Mtr',  name='xafs_pitch') # EPICS names are swapped.  sigh....
 
-xafs_garot = xafs_mtr8  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped.
+xafs_garot = xafs_mtr8  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}Mtr',  name='xafs_garot') # EPICS names are swapped.
 
 #xafs_linxs.hlm.put(30)
 #xafs_linxs.llm.put(10)
@@ -137,6 +171,8 @@ xafs_x.default_llm = 2
 xafs_x.default_hlm = 126
 xafs_y.default_llm = 10
 xafs_y.default_hlm = 200
+
+xafs_motors = [xafs_roth, xafs_rots, xafs_det, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_roll, xafs_pitch, xafs_garot]
 
 
 def homed():

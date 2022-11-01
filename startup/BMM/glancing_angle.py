@@ -70,11 +70,12 @@ class GlancingAngle(Device):
     Notes
     =====
 
-    This plan does some ugly shit to plot the results of each
-    individual step in the alignment procedure.  It uses matplotlib to
-    fashion the plot, but switches to a headless backend before
-    plotting.  It then saves the plot to throw-away png file.  PIL is
-    then used to funnel the display of the plot out to xdg-open.
+    The auto_align plan does some ugly shit to plot the results of
+    each individual step in the alignment procedure.  It uses
+    matplotlib to fashion the plot, but switches to a headless backend
+    before plotting.  It then saves the plot to throw-away png file.
+    PIL is then used to funnel the display of the plot out to
+    xdg-open.
 
     On xf06bm-ws3, the desktop is configured to have ImageMagick's
     display be the default view for a png file.  Thus, PIL is forking
@@ -84,9 +85,13 @@ class GlancingAngle(Device):
     /tmp/) and to close any running display processes (that is, a
     process running ImageMagick's display).
 
-    This leaves images of the alignment steps which are
-    non-interactive -- the user cannot query the plot to obtain a
-    motor position, for example.  
+    The reason this is needed is that the user needs visual feedback
+    to know whether the alignment procedure is proceeding
+    successfully.
+
+    This plotting solution presents images of the alignment steps
+    which are non-interactive -- the user cannot query the plot to
+    obtain a motor position, for example.
 
     However, it has the great advantage of not running afoul of the
     fact that ipython and Qt are running on different threads.  Thus
@@ -201,6 +206,22 @@ class GlancingAngle(Device):
             yield from mv(this, 1)
 
     def clean_img(self):
+        '''Kill any outstanding "display" processes (i.e. ImageMagick's
+        display).  Then remove any .PNG files PIL has left lying
+        around in /tmp.  Finally, explicitly close the previous
+        filehandle.
+
+        This takes no care to verify neither that PIL launched the
+        display process nor that PIL wrote the .PNG file in /tmp.
+
+        Note that this will kill any other "display" processes
+        running.  At NSLS-II, the centrally managed screen locker is
+        configured to use feh to show a transparent png when the
+        screen is locked.  Thus, display was chosen as the viewer
+        rather than feh (although ownership would likely preclude
+        terminating the screenlocker process).
+
+        '''
         for proc in psutil.process_iter():
             if proc.name() == "display":
                 proc.kill()
@@ -465,19 +486,7 @@ class GlancingAngle(Device):
         ## move to measurement angle and align
         yield from mvr(user_ns['xafs_pitch'], pitch)
         yield from self.align_fluo()
-        # yield from mvr(user_ns['xafs_pitch'], pitch)
-        # yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False)
-        # self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
-        # tf = user_ns['db'][-1].table()
-        # yy = tf[motor.name]
-        # signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        # #if BMMuser.element in ('Cr', 'Zr'):
-        # centroid = yy[signal.idxmax()]
-        # #else:
-        # #    com = int(center_of_mass(signal)[0])+1
-        # #    centroid = yy[com]
-        # yield from mv(motor, centroid)
-        
+         
         ## make a pretty picture, post it to slack
         self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
         try:
@@ -486,8 +495,7 @@ class GlancingAngle(Device):
             post_to_slack(f'failed to post image: {self.alignment_filename}')
             pass
         BMM_clear_suspenders()
-        #user_ns['RE'].clear_suspenders()
-
+ 
         
     def flatten(self):
         '''Return the stage to its nominally flat position.'''

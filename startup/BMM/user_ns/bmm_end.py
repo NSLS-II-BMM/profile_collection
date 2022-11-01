@@ -13,7 +13,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
-from BMM.user_ns.motors import mcs8_motors
+from BMM.user_ns.motors import mcs8_motors, xafs_motors
 
 run_report(__file__, text='import the rest of the things')
 
@@ -391,7 +391,7 @@ def check_for_synaxis():
     '''
     BMMuser.syns = False
     syns = []
-    for m in mcs8_motors:
+    for m in mcs8_motors+xafs_motors:
         if 'SynAxis' in f'{m}':
             syns.append(m.name)
     if len(syns) > 0:

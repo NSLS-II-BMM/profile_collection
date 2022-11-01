@@ -34,8 +34,9 @@ from BMM.workspace     import rkvs
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs, xs1, use_4element, use_1element
-from BMM.user_ns.dwelltime   import with_dualem, with_xspress3, with_quadem, with_struck
+from BMM.user_ns.detectors   import quadem1, ic0, vor, xs, xs1, use_4element, use_1element
+from BMM.user_ns.dwelltime   import with_xspress3, with_quadem, with_struck
+from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *
 
@@ -461,7 +462,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,  'rh' : xafs_roth,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Ia', 'Ib', 'Dualio', 'Xs', 'Xs1'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'I0a', 'I0b', 'Ic0', 'Xs', 'Xs1'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -556,9 +557,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMMuser.motor = thismotor
 
         # sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ia', 'Ib', 'Dualio', 'Xs', 'Xs1'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'I0a', 'I0b', 'Ic0', 'Xs', 'Xs1'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron, dualio, xs, xs1')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, xs, xs1')))
             yield from null()
             return
 
@@ -579,14 +580,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             denominator = ' / I0'
             detname = 'transmission'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
-        elif detector == 'Ia' and dualio is not None:
-            dets.append(dualio)
-            detname = 'Ia'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ia'])
-        elif detector == 'Ib' and dualio is not None:
-            dets.append(dualio)
-            detname = 'Ib'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
+        elif detector == 'I0a' and ic0 is not None:
+            dets.append(ic0)
+            detname = 'I0a'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a'])
+        elif detector == 'I0b' and ic0 is not None:
+            dets.append(ic0)
+            detname = 'I0b'
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b'])
         elif detector == 'Ir':
             #denominator = ' / It'
             detname = 'reference'
@@ -631,10 +632,10 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
                                 doc['data'][BMMuser.xs8] / doc['data']['I0'])
             yield from mv(xs1.total_points, nsteps) # Xspress3 demands that this be set up front
 
-        elif detector == 'Dualio':
-            dets.append(dualio)
-            funcia = lambda doc: (doc['data'][thismotor.name], doc['data']['Ia'])
-            funcib = lambda doc: (doc['data'][thismotor.name], doc['data']['Ib'])
+        elif detector == 'Ic0':
+            dets.append(ic0)
+            funcia = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a'])
+            funcib = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b'])
 
         ## need a "Both" for trans + xs !!!!!!!!!!
         elif detector == 'Both':
@@ -651,9 +652,9 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         if detector == 'Both':
             plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
                     DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
-        elif detector == 'Dualio':
-            plot = [DerivedPlot(funcia, xlabel=thismotor.name, ylabel='Ia/I0', title='Ia vs. %s' % thismotor.name),
-                    DerivedPlot(funcib, xlabel=thismotor.name, ylabel='Ib/I0', title='Ib vs. %s' % thismotor.name)]
+        elif detector == 'Ic0':
+            plot = [DerivedPlot(funcia, xlabel=thismotor.name, ylabel='I0a', title='I0a vs. %s' % thismotor.name),
+                    DerivedPlot(funcib, xlabel=thismotor.name, ylabel='I0b', title='I0b vs. %s' % thismotor.name)]
         else:
             plot = DerivedPlot(func,
                                xlabel=thismotor.name,
@@ -759,6 +760,10 @@ def ls2dat(datafile, key):
     elif 'DualI0' in devices:
         abscissa = dataframe['start']['motors'][0]
         column_list = [abscissa, 'Ia', 'Ib',]
+        template = "  %.3f  %.6f  %.6f\n"
+    elif 'Ic0' in devices:
+        abscissa = dataframe['start']['motors'][0]
+        column_list = [abscissa, 'I0a', 'I0b',]
         template = "  %.3f  %.6f  %.6f\n"
     else:
         abscissa = dataframe['start']['motors'][0]

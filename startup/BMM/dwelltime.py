@@ -17,11 +17,26 @@ class DualEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'AveragingTime')
     readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
     
+class IC0DwellTime(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal,   'AveragingTime')
+    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
+    
+class IC1DwellTime(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal,   'AveragingTime')
+    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
+    
+class IC2DwellTime(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal,   'AveragingTime')
+    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
+    
 class Xspress3DwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'det1:AcquireTime')
     readback = Cpt(EpicsSignalRO, 'det1:AcquireTime_RBV')
 
-from BMM.user_ns.dwelltime import with_dualem, with_quadem, with_struck, with_xspress3
+from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3 #with_dualem,
+from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
+
+
 class LockedDwellTimes(PseudoPositioner):
     '''Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one
     pseudo-axis dwell time.  These signal chains are enabled/disabled
@@ -35,8 +50,14 @@ class LockedDwellTimes(PseudoPositioner):
         quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:2}EM180:', egu='seconds') # main ion chambers
     if with_struck is True:
         struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
-    if with_dualem is True:
-        dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
+    #if with_dualem is True:
+    #    dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
+    if with_ic0 is True:
+        ic0_dwell_time = Cpt(IC0DwellTime, 'XF:06BM-BI{IC:0}EM180:', egu='seconds') # new I0 chamber
+    if with_ic1 is True:
+        ic1_dwell_time = Cpt(IC1DwellTime, 'XF:06BM-BI{IC:1}EM180:', egu='seconds') # new It chamber
+    if with_ic2 is True:
+        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:2}EM180:', egu='seconds') # new Ir chamber
     if with_xspress3 is True:
         xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
     
@@ -50,8 +71,14 @@ class LockedDwellTimes(PseudoPositioner):
             self.quadem_dwell_time.settle_time = val
         if hasattr(self, 'struck_dwell_time'):
             self.struck_dwell_time.settle_time = val
-        if hasattr(self, 'dualem_dwell_time'):
-            self.dualem_dwell_time.settle_time = val
+        #if hasattr(self, 'dualem_dwell_time'):
+        #    self.dualem_dwell_time.settle_time = val
+        if hasattr(self, 'ic0_dwell_time'):
+            self.ic0_dwell_time.settle_time = val
+        if hasattr(self, 'ic1_dwell_time'):
+            self.ic1_dwell_time.settle_time = val
+        if hasattr(self, 'ic2_dwell_time'):
+            self.ic2_dwell_time.settle_time = val
         if hasattr(self, 'xspress3_dwell_time'):
             self.xspress3_dwell_time.settle_time = val
 
@@ -69,8 +96,14 @@ class LockedDwellTimes(PseudoPositioner):
             signal_chains['quadem_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'struck_dwell_time'):
             signal_chains['struck_dwell_time'] = pseudo_pos.dwell_time
-        if hasattr(self, 'dualem_dwell_time'):
-            signal_chains['dualem_dwell_time'] = pseudo_pos.dwell_time
+        #if hasattr(self, 'dualem_dwell_time'):
+        #    signal_chains['dualem_dwell_time'] = pseudo_pos.dwell_time
+        if hasattr(self, 'ic0_dwell_time'):
+            signal_chains['ic0_dwell_time'] = pseudo_pos.dwell_time
+        if hasattr(self, 'ic1_dwell_time'):
+            signal_chains['ic1_dwell_time'] = pseudo_pos.dwell_time
+        if hasattr(self, 'ic2_dwliell_time'):
+            signal_chains['ic2_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'xspress3_dwell_time'):
             signal_chains['xspress3_dwell_time'] = pseudo_pos.dwell_time
 

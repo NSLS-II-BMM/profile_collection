@@ -240,3 +240,12 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
             print(f'{TAB}{m.name} {CHECK}')
         else:
             print(error_msg(f'{TAB}{m.name} is not homed.'))
+
+def examine_xafs_motor_group(motor_group, TAB='\t\t\t\t'):
+    CHECK = '\u2714'
+    for m in motor_group:
+        if 'SynAxis' in f'{m}':
+            print(disconnected_msg(f'{TAB}{m.name} is not connected.'))
+        else:
+            print(f'{TAB}{m.name} {CHECK}')
+      

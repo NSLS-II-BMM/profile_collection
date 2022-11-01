@@ -48,7 +48,7 @@ def wait_for_connection(thing):
 run_report('\tmirrors and tables')
 from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable, EndStationEpicsMotor
 from BMM.user_ns.bmm import BMMuser
-from BMM.user_ns.motors import mcs8_motors
+from BMM.user_ns.motors import mcs8_motors, xafs_motors, define_EndStationEpicsMotor
 
 
 ## collimating mirror
@@ -61,6 +61,8 @@ m1.roll._limits     = (-5.0, 5.0)
 m1.yaw._limits      = (-5.0, 5.0)
 
 wait_for_connection(m1)
+
+
 
 if m1.connected is True:
     m1_yu     = XAFSEpicsMotor('XF:06BM-OP{Mir:M1-Ax:YU}Mtr',   name='m1_yu')
@@ -175,6 +177,11 @@ else:
     xafs_xu     = SynAxis(name='xafs_xu')
     xafs_xd     = SynAxis(name='xafs_xd')
     
+xafs_motors.extend([xafs_yu, xafs_ydo, xafs_ydi, xafs_xu, xafs_xd])
+
+from BMM.functions           import examine_xafs_motor_group
+print(f'{TAB}Examine XAFS motor groups')
+examine_xafs_motor_group(xafs_motors)
 
 run_report('\tmirror trigonometry')
 from BMM.mirror_trigonometry import move_m2, move_m3

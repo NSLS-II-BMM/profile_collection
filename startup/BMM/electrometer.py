@@ -10,7 +10,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #_locked_dwell_time = user_ns['_locked_dwell_time']
-from BMM.user_ns.dwelltime   import _locked_dwell_time, with_dualem, with_quadem
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_quadem, with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import shb
 
 
@@ -224,8 +224,8 @@ def dark_current():
         yield from user_ns['shb'].close_plan()
     if with_quadem:
         yield from user_ns['quadem1'].dark_current()
-    if with_dualem:
-        yield from user_ns['dualio'].dark_current()
+    if with_ic0:
+        yield from user_ns['ic1'].dark_current()
     if reopen:
         print('Opening photon shutter')
         yield from user_ns['shb'].open_plan()
