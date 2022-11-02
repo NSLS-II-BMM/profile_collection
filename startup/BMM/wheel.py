@@ -193,14 +193,14 @@ def reference(target=None):
     ring = xafs_ref.mapping[target][0]
     slot = xafs_ref.mapping[target][1]
     if ring == 1:
-        xafs_refx.user_setpoint.set(xafs_ref.inner_position)
-        #yield from mv(xafs_refx, xafs_ref.inner_position)
+        #xafs_refx.user_setpoint.set(xafs_ref.inner_position)
+        yield from mv(xafs_refx, xafs_ref.inner_position)
     else:
-        xafs_refx.user_setpoint.set(xafs_ref.outer_position)
-        #yield from mv(xafs_refx, xafs_ref.outer_position)
+        #xafs_refx.user_setpoint.set(xafs_ref.outer_position)
+        yield from mv(xafs_refx, xafs_ref.outer_position)
     yield from xafs_ref.set_slot(slot)
-    print(whisper('Pausing for 15 seconds to make sure xafs_refx is done moving.'))
-    yield from mv(user_ns['busy'], 15)
+    #print(whisper('Pausing for 15 seconds to make sure xafs_refx is done moving.'))
+    #yield from mv(user_ns['busy'], 15)
 
 
 def determine_reference():

@@ -149,7 +149,7 @@ def define_EpicsMotor(prefix, name='unnamed'):
 ## XAFS stages
 print(f'{TAB}XAFS stages motor group')
 #xafs_wheel = xafs_rotb  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotB}Mtr',  name='xafs_wheel')
-xafs_roth  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
+#xafs_roth  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotH}Mtr',  name='xafs_roth')
 xafs_rots  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='xafs_rots')
 xafs_det   = xafs_lins  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_det')
 xafs_linxs = xafs_refy  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_refy')
@@ -172,7 +172,7 @@ xafs_x.default_hlm = 126
 xafs_y.default_llm = 10
 xafs_y.default_hlm = 200
 
-xafs_motors = [xafs_roth, xafs_rots, xafs_det, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_roll, xafs_pitch, xafs_garot]
+xafs_motors = [xafs_rots, xafs_det, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_roll, xafs_pitch, xafs_garot]
 
 
 def homed():

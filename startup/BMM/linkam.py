@@ -136,7 +136,7 @@ class Linkam(PVPositioner):
         else:
             text += 'Pump Auto    : no\n'
             
-        boxedtext(f'Linkam {self.model}, stage {self.stage_model}', text, 'brown', width = 45)
+        boxedtext(f'Linkam {self.model}, stage {self.stage_model}', text, 'brown', width = 48)
 
     def dossier_entry(self):
         thistext  =  '	    <div id="boxinst">\n'

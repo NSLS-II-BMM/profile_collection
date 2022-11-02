@@ -936,17 +936,22 @@ class BMM_User(Borg):
         print('\n  r: return')
         choice = input("\nSelect a file > ")
         try:
-            if int(choice) > 0 and int(choice) <= len(instruments):
+            if type(choice) is int and int(choice) > 0 and int(choice) <= len(instruments):
                 this = instruments[int(choice)-1]
                 print(f'You selected "{this}"')
                 self.instrument = this
-            elif choice.lower() == 'u':
+                rkvs.set('BMM:user:instrument', this)
+                rkvs.set('BMM:automation:type', this)
+            elif str(choice.lower()) == 'u':
                 print('Unsetting instrument')
                 self.instrument = ''
+                rkvs.set('BMM:user:instrument', '')
+                rkvs.set('BMM:automation:type', '')
             else:
                 print('No instrument selected')
                 return None
-        except:
+        except Exception as e:
+            print(e)
             print('No instrument selected')
             return None
         

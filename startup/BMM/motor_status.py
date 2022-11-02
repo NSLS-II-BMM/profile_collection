@@ -6,7 +6,7 @@ from BMM.functions import boxedtext
 
 def motor_metadata(uid=None):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
-               user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_roth'], user_ns['xafs_rots'], user_ns['xafs_ref'],
+               user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_rots'], user_ns['xafs_ref'],
                user_ns['xafs_lins'], user_ns['xafs_mtr8'],
                
                user_ns['dm3_bct'], user_ns['dm3_foils'], user_ns['dm2_fs'],

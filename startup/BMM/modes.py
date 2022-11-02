@@ -185,8 +185,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
           else:
                slot = 1
                ring = xafs_ref.outer_position
-          base.extend([xafs_ref, xafs_ref.position_of_slot(slot)]) #  xafs_refx, ring])
-          xafs_refx.user_setpoint.set(ring) # ick!!!
+          base.extend([xafs_ref, xafs_ref.position_of_slot(slot), xafs_refx, ring])
+          #xafs_refx.user_setpoint.set(ring) # ick!!!
 
      if edge is not None:
           dcm_bragg.clear_encoder_loss()
