@@ -13,7 +13,8 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreTIFF)
 from ophyd import Signal, EpicsSignal, EpicsSignalRO, DynamicDeviceComponent as DDCpt
 from ophyd.status import SubscriptionStatus, DeviceStatus
-from ophyd import Component as Cpt, set_and_wait
+from ophyd import Component as Cpt
+from ophyd.utils.epics_pvs import set_and_wait
 from bluesky import __version__ as bluesky_version
 from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
