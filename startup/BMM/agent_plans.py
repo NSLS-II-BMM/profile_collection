@@ -97,7 +97,7 @@ def agent_measure_single_edge(motor_x, x_position, motor_y, y_position, *, md=No
     yield from bps.mv(motor_y, y_position)
     _md["det_position"] = xafs_det.position
     _md.update(md or {})
-    yield from xafs(element="Pt", comment=str(_md), **kwargs)
+    yield from xafs(comment=str(_md), **kwargs)
 
 
 def agent_move_and_measure(
