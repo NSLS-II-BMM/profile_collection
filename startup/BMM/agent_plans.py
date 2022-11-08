@@ -1,5 +1,8 @@
 import bluesky.preprocessors as bpp
+import msgpack
 import redis
+from confluent_kafka import Producer
+from nslsii import _read_bluesky_kafka_config_file
 from bluesky import plan_stubs as bps
 from BMM.edge import change_edge
 from BMM.xafs import xafs
@@ -16,6 +19,42 @@ def agent_driven_nap(delay: float, *, delay_kwarg: float = 0):
         yield from bps.sleep(delay_kwarg)
     else:
         yield from bps.sleep(delay)
+
+
+def agent_directive(tla, name, doc):
+    """
+    Issue any directive to a listening agent by name/uid.
+
+    Parameters
+    ----------
+    tla : str
+        Beamline three letter acronym
+    name : str
+        Unique agent name. These are generated using xkcdpass for names like:
+        "agent-exotic-farm"
+        "xca-clever-table"
+    doc : dict
+        This is the message to pass to the agent. It must take the form:
+        {"action": method_name,
+         "args": (arguments,),
+         "kwargs: {keyword:argument}
+        }
+
+    Returns
+    -------
+
+    """
+    kafka_config = _read_bluesky_kafka_config_file("/etc/bluesky/kafka.yml")
+    producer_config = dict()
+    producer_config.update(kafka_config["runengine_producer_config"])
+    producer_config["bootstrap.servers"] = ",".join(kafka_config["bootstrap_servers"])
+    agent_producer = Producer(producer_config)
+
+    # All 3 steps should happen for each message publication
+    agent_producer.produce(topic=f"{tla}.mmm.bluesky.agents", key="", value=msgpack.dumps((name, doc)))
+    agent_producer.poll(0)
+    agent_producer.flush()
+    yield from bps.null()
 
 
 def agent_move_and_measure(
