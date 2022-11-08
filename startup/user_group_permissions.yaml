@@ -25,7 +25,7 @@ user_groups:
       - null  # Allow all
     forbidden_devices:
       - ":^_"  # All devices with names starting with '_'
-  primary:  # The group includes beamline staff, includes all or most of the plans and devices
+  admin:  # The group includes beamline staff, includes all or most of the plans and devices
     allowed_plans:
       - ":.*"  # A different way to allow all
     forbidden_plans:
