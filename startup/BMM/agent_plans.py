@@ -12,8 +12,8 @@ from BMM.user_ns.motors import xafs_det
 
 __all__ = ["agent_driven_nap", "agent_move_and_measure"]
 
-@bpp.run_decorator(md={})
-def agent_driven_nap(delay: float, *, delay_kwarg: float = 0):
+@bpp.run_decorator()
+def agent_driven_nap(delay: float, *, delay_kwarg: float = 0, md=None):
     """Ensuring we can auto add 'agent_' plans and use args/kwargs"""
     if delay_kwarg:
         yield from bps.sleep(delay_kwarg)
