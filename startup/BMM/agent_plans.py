@@ -90,10 +90,13 @@ def agent_measure_single_edge(motor_x, x_position, motor_y, y_position, *, md=No
             >>> 'steps': '10 2 0.3 0.05k',
             >>> 'times': '0.5 0.5 0.5 0.5'}
     """
-    # rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
-    # element = rkvs.get("BMM:pds:element").decode("utf-8")
+    rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
+    element = rkvs.get("BMM:pds:element").decode("utf-8")
+    edge = rkvs.get('BMM:pds:edge').decode('utf-8')
     yield from bps.mv(motor_x, x_position)
-    _md = dict(x_position=motor_x.position)
+    _md = dict(x_position=motor_x.position,
+               redis_element=element,
+               redis_edge=edge)
     yield from bps.mv(motor_y, y_position)
     _md["det_position"] = xafs_det.position
     _md.update(md or {})
