@@ -125,7 +125,7 @@ class GlancingAngle(Device):
     alignment_filename = ''
     orientation = 'parallel'
     toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-    img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+    img = None
 
     def current(self):
         '''Return the current spinner number as an integer'''
@@ -230,7 +230,8 @@ class GlancingAngle(Device):
                 os.remove(f)
             except:
                 print(whisper(f'unable to delete {f} while cleaning up /tmp'))
-        self.img.close()
+        if self.img is not None:
+            self.img.close()
 
 
     def pitch_plot(self, pitch, signal, filename=None):
