@@ -6,6 +6,7 @@ import os, re, shutil, glob, psutil
 from openpyxl import load_workbook
 import configparser
 import numpy
+from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -125,7 +126,7 @@ class GlancingAngle(Device):
     alignment_filename = ''
     orientation = 'parallel'
     toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-    img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+    img = None  # Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
 
     def current(self):
         '''Return the current spinner number as an integer'''
@@ -230,7 +231,8 @@ class GlancingAngle(Device):
                 os.remove(f)
             except:
                 print(whisper(f'unable to delete {f} while cleaning up /tmp'))
-        self.img.close()
+            if self.img is not None:
+                self.img.close()
 
 
     def pitch_plot(self, pitch, signal, filename=None):
@@ -596,6 +598,16 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             # move to next sample #
             #######################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
+
+            ###############################
+            # move to correct slit height #
+            ###############################
+            if m['slitheight'] is not None:
+                self.content += self.tab + f'yield from mv(slits3.vsize, {m["slitheight"]})\n'
+
+            #####################################
+            # move to correct detector position #
+            #####################################
             if m['detectorx'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
             self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
@@ -716,15 +728,16 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 'method':     row[17].value,
                 'samplep':    row[18].value,     # other motors
                 'sampley':    row[19].value,
-                'detectorx':  row[20].value,
-                'snapshots':  self.truefalse(row[21].value, 'snapshots' ),  # flags
-                'htmlpage':   self.truefalse(row[22].value, 'htmlpage'  ),
-                'usbstick':   self.truefalse(row[23].value, 'usbstick'  ),
-                'bothways':   self.truefalse(row[24].value, 'bothways'  ),
-                'channelcut': self.truefalse(row[25].value, 'channelcut'),
-                'ththth':     self.truefalse(row[26].value, 'ththth'    ),
-                'url':        row[27].value,
-                'doi':        row[28].value,
-                'cif':        row[29].value, }
+                'slitheight': row[20].value,
+                'detectorx':  row[21].value,
+                'snapshots':  self.truefalse(row[22].value, 'snapshots' ),  # flags
+                'htmlpage':   self.truefalse(row[23].value, 'htmlpage'  ),
+                'usbstick':   self.truefalse(row[24].value, 'usbstick'  ),
+                'bothways':   self.truefalse(row[25].value, 'bothways'  ),
+                'channelcut': self.truefalse(row[26].value, 'channelcut'),
+                'ththth':     self.truefalse(row[27].value, 'ththth'    ),
+                'url':        row[28].value,
+                'doi':        row[29].value,
+                'cif':        row[30].value, }
         return this
 
