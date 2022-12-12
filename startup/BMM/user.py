@@ -66,7 +66,8 @@ class BMM_User(Borg):
         name of sample instrument, e.g. "sample wheel" or "glancing angle stage"
     syns : bool 
         True is any MCS8 axes are disconnected and defined as SynAxis
-
+    display_img : None or PIL object
+        Carries the most recently displayed PIL object
 
     Current plot attributes
     -----------------------
@@ -181,6 +182,7 @@ class BMM_User(Borg):
         self.instrument      = ''
         self.running_macro   = False
         self.suspenders_engaged = False
+        self.display_img     = None
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -294,7 +296,7 @@ class BMM_User(Borg):
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
-                             "fig", "ax", "x", "y", "prev_fig", "prev_ax")
+                             "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
         self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
 
 
@@ -302,7 +304,8 @@ class BMM_User(Borg):
 
         all_keys = list(self.__dict__.keys())
         almost_all_keys = [n for n in all_keys
-                           if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'motor', 'cycle', 'user_is_defined') and
+                           if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'display_img',
+                                        'motor', 'cycle', 'user_is_defined') and
                            'xschannel' not in n]
         d = dict()
         verbose = False

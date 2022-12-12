@@ -13,7 +13,9 @@ from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel, RectangleModel
 #from databroker.core import SingleRunCache
+import matplotlib
 import matplotlib.pyplot as plt
+from PIL import Image
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
@@ -25,7 +27,7 @@ user_ns = vars(user_ns_module)
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown
+from BMM.functions     import countdown, clean_img
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
@@ -363,7 +365,7 @@ def find_reference():
     
 def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None):
 
-    def main_plan(motor, start, stop, nsteps, detector, negate):
+    def main_plan(motor, start, stop, nsteps, detector, negate, filename):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(error_msg(text))
@@ -403,7 +405,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
-        def doscan():
+        def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
@@ -424,26 +426,29 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
+            thisagg = matplotlib.get_backend()
+            matplotlib.use('Agg') # produce a plot without screen display
             out.plot()
-            if filename is not None:
-                plt.savefig(filename)
-            #middle   = out.params['center1'].value + (out.params['center2'].value - out.params['center1'].value)/2
+            if filename is None:
+                filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+            plt.savefig(filename)
+            matplotlib.use(thisagg) # return to screen display
+            clean_img()
+            BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+            BMMuser.display_img.show()
+            
             yield from mv(motor, out.params['midpoint'].value)
             print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
-            rkvs.set('BMM:lmfit:center1',   out.params['center1'].value)
-            rkvs.set('BMM:lmfit:center2',   out.params['center2'].value)
-            rkvs.set('BMM:lmfit:sigma1',    out.params['sigma1'].value)
-            rkvs.set('BMM:lmfit:sigma2',    out.params['sigma2'].value)
-            rkvs.set('BMM:lmfit:amplitude', out.params['amplitude'].value)
-            rkvs.set('BMM:lmfit:midpoint',  out.params['midpoint'].value)
+            for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
+                rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
 
-        yield from doscan()
+        yield from doscan(filename)
         
     def cleanup_plan():
         yield from resting_state_plan()
     
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate), cleanup_plan())
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
     

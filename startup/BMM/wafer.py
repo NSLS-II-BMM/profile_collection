@@ -21,6 +21,7 @@ class Wafer():
     points = []
     center = []
     diameter = 0
+    out = None
     
     def clear(self):
         self.points = []
@@ -28,6 +29,7 @@ class Wafer():
     def push(self):
         xafs_x, xafs_y = user_ns['xafs_x'], user_ns['xafs_y']
         self.points.append([xafs_x.position, xafs_y.position])
+        print(f'wafer.points is {self.points}')
 
     def find_center(self):
         tri = geometry.Triangle(*self.points)
@@ -38,6 +40,11 @@ class Wafer():
     def goto_center(self):
         xafs_x, xafs_y = user_ns['xafs_x'], user_ns['xafs_y']
         yield from (mv(xafs_x, self.center[0], xafs_y, self.center[1]))
+
+    def plot(self):
+        #print(whisper(self.out.fit_report(min_correl=0)))
+        self.out.plot()
+        
         
     def edge(self, motor='x'):
         '''Fit an error function to the linear scan against It. Plot the
@@ -57,10 +64,11 @@ class Wafer():
             ss     = signal - signal[2]
         mod    = StepModel(form='erf')
         pars   = mod.guess(ss, x=numpy.array(yy))
-        out    = mod.fit(ss, pars, x=numpy.array(yy))
-        print(whisper(out.fit_report(min_correl=0)))
-        out.plot()
-        target = out.params['center'].value
+        self.out    = mod.fit(ss, pars, x=numpy.array(yy))
+        print(whisper(self.out.fit_report(min_correl=0)))
+        #self.out.plot()
+        target = self.out.params['center'].value
         yield from mv(motor, target)
         yield from resting_state_plan()
         print(f'Edge found at X={user_ns["xafs_x"].position} and Y={user_ns["xafs_y"].position}')
+        print(f'do wafer.plot() to see the fit result')

@@ -5,13 +5,14 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-from bluesky.plans import grid_scan
+from bluesky.plans import count
 from bluesky.callbacks import LiveGrid
 from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
+from bluesky.preprocessors import subs_decorator, finalize_wrapper
 
 import numpy
-import os
+import os, datetime
 import pandas
 
 from bluesky.preprocessors import subs_decorator
@@ -20,11 +21,15 @@ from bluesky.preprocessors import subs_decorator
 
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
-from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
-from BMM.metadata      import bmm_metadata
+from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.xafs          import scan_metadata
+from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
+from BMM.xdi             import write_XDI
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -63,7 +68,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
 
     '''
 
-    RE, BMMuser, quadem1, _locked_dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['quadem1'], user_ns['_locked_dwell_time']
+    RE, BMMuser, quadem1, xs, dcm, db = user_ns['RE'], user_ns['BMMuser'], user_ns['quadem1'], user_ns['xs'], user_ns['dcm'], user_ns['db']
     rkvs = user_ns['rkvs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
@@ -115,13 +120,22 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         func  = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc2]/doc['data']['I0'])
         func3 = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc3]/doc['data']['I0'])
     elif detector == 'If':
-        dets.append(vor)
+        dets.append(xs)
+        yield from mv(xs.cam.acquire_time, dwell)
+        yield from mv(xs.total_points, readings)
         denominator = ' / I0'
-        func = lambda doc: (doc['time']-epoch_offset,
-                            (doc['data'][BMMuser.dtc1] +
-                             doc['data'][BMMuser.dtc2] +
-                             doc['data'][BMMuser.dtc3] +
-                             doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
+        func = lambda doc: (doc['time']-epoch_offset, (doc['data'][BMMuser.xs1] +
+                                                       doc['data'][BMMuser.xs2] +
+                                                       doc['data'][BMMuser.xs3] +
+                                                       doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+        
+        # dets.append(vor)
+        # denominator = ' / I0'
+        # func = lambda doc: (doc['time']-epoch_offset,
+        #                     (doc['data'][BMMuser.dtc1] +
+        #                      doc['data'][BMMuser.dtc2] +
+        #                      doc['data'][BMMuser.dtc3] +
+        #                      doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
 
     ## and this is the appropriate way to plot this linescan
     if detector == 'Dtc':
@@ -148,7 +162,7 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     
     @subs_decorator(plot)
     #@subs_decorator(src.callback)
-    def count_scan(dets, readings, delay):
+    def count_scan(dets, readings, delay, md):
         #if 'purpose' not in md:
         #    md['purpose'] = 'measurement'
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md, 'plan_name' : f'count measurement {detector}'})
@@ -255,13 +269,15 @@ def ts2dat(datafile, key):
 
 
 
-##########################################################################################################################################
-# See                                                                                                                                    #
-#   Single-energy x-ray absorption detection: a combined electronic and structural local probe for phase transitions in condensed matter #
-#   A Filipponi, M Borowski, P W Loeffen, S De Panfilis, A Di Cicco, F Sperandini, M Minicucci and M Giorgetti                           #
-#   Journal of Physics: Condensed Matter, Volume 10, Number 1                                                                            #
-#   http://iopscience.iop.org/article/10.1088/0953-8984/10/1/026/meta                                                                    #
-##########################################################################################################################################
+###############################################################################
+# See                                                                         #
+#   Single-energy x-ray absorption detection: a combined electronic and       #
+#   structural local probe for phase transitions in condensed matter          #
+#   A Filipponi, M Borowski, P W Loeffen, S De Panfilis, A Di Cicco,          #
+#   F Sperandini, M Minicucci and M Giorgetti                                 #
+#   Journal of Physics: Condensed Matter, Volume 10, Number 1                 #
+#   http://iopscience.iop.org/article/10.1088/0953-8984/10/1/026/meta         #
+###############################################################################
 def sead(inifile, force=False, **kwargs):
     '''
     Read an INI file for scan matadata, then perform a single energy
@@ -273,7 +289,7 @@ def sead(inifile, force=False, **kwargs):
         ## read and check INI content
         orig = inifile
         if not os.path.isfile(inifile):
-            inifile = DATA + inifile
+            inifile = BMMuser.folder + inifile
             if not os.path.isfile(inifile):
                 print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
                 return(orig, -1)
@@ -341,13 +357,13 @@ def sead(inifile, force=False, **kwargs):
                           stoichiometry = None,
                           mode          = p['mode'],
                           comment       = p['comment'],)
-        del(md['XDI']['Element']['edge'])
-        del(md['XDI']['Element']['symbol'])
-        md['XDI']['Column']['01'] = 'time seconds'
-        md['XDI']['Column']['02'] = md.copy()['XDI']['Column']['03']
-        md['XDI']['Column']['03'] = md.copy()['XDI']['Column']['04']
-        md['XDI']['Column']['04'] = md['XDI']['Column']['05']
-        del(md['XDI']['Column']['05'])
+        #del(md['XDI']['Element']['edge'])
+        #del(md['XDI']['Element']['symbol'])
+        #md['XDI']['Column']['01'] = 'time seconds'
+        #md['XDI']['Column']['02'] = md.copy()['XDI']['Column']['03']
+        #md['XDI']['Column']['03'] = md.copy()['XDI']['Column']['04']
+        #md['XDI']['Column']['04'] = md['XDI']['Column']['05']
+        #del(md['XDI']['Column']['05'])
         md['_kind'] = 'sead'
 
         rightnow = metadata_at_this_moment() # see 62-metadata.py
@@ -372,11 +388,11 @@ def sead(inifile, force=False, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
-        if p['snapshots']:
-            image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
-            snap('XAS', filename=image)
-            image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
-            snap('analog', filename=image)
+        # if p['snapshots']:
+        #     image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
+        #     snap('XAS', filename=image)
+        #     image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
+        #     snap('analog', filename=image)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting measurement
@@ -401,8 +417,9 @@ def sead(inifile, force=False, **kwargs):
         yield from resting_state_plan()
         dcm.mode = 'fixed'
 
+    RE, dcm, BMMuser, db = user_ns['RE'], user_ns['dcm'], user_ns['BMMuser'], user_ns['db']
     RE.msg_hook = None
     ## encapsulation!
-    yield from bluesky.preprocessors.finalize_wrapper(main_plan(inifile, force, **kwargs), cleanup_plan())
+    yield from finalize_wrapper(main_plan(inifile, force, **kwargs), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
         

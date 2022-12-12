@@ -70,7 +70,7 @@ def arrived_in_mode(mode=None):
     return ok
 
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True, insist=False):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
@@ -95,6 +95,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         energy where rocking curve is measured [300]
     xrd : boolean, optional
         force photon delivery system to XRD [False]
+    insist : boolean
+        override the check for whether to skip M2, when True always move M2 [False]
 
     Examples
     --------
@@ -190,6 +192,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         with_m2 = False
     else:
         with_m2 = True
+    if insist is True:
+        with_m2 = True
     if all_connected(with_m2) is False:
         print(warning_msg('Ophyd connection failure' % el))
         return(yield from null())
@@ -246,7 +250,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
-    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
+    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
     if arrived_in_mode(mode=mode) is False:
         print('\n')
@@ -307,7 +311,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if mode == 'XRD':
         report('Finished configuring for XRD', level='bold', slack=True)
     else:
-        report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
+        report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     BMM_clear_suspenders()

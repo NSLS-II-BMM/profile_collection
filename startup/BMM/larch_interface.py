@@ -264,10 +264,11 @@ class Pandrosus():
                kweight = self.bkg['kweight'],
                _larch=LARCH)
         xftf(self.group.k, chi=self.group.chi, group=self.group,
-             window = self.fft['window'],
-             kmin   = self.fft['kmin'],
-             kmax   = self.fft['kmax'],
-             dk     = self.fft['dk'],
+             window  = self.fft['window'],
+             kmin    = self.fft['kmin'],
+             kmax    = self.fft['kmax'],
+             dk      = self.fft['dk'],
+             kweight = 2,
              _larch=LARCH)
 
     def show(self, which=None):

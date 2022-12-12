@@ -40,7 +40,7 @@ def calibrate_low_end(mono='111', focus=False):
         return(yield from null())
     
     BMM_log_info('Beginning low end calibration macro')
-    def main_plan():
+    def main_plan(focus):
         BMMuser.prompt = False
 
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
@@ -100,7 +100,7 @@ def calibrate_low_end(mono='111', focus=False):
 
     def cleanup_plan():
         yield from resting_state_plan()
-    yield from finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from finalize_wrapper(main_plan(focus), cleanup_plan())    
     yield from resting_state_plan()
     BMM_log_info('Low end calibration macro finished!')
 
@@ -114,7 +114,7 @@ def calibrate_high_end(mono='111', focus=False):
         return(yield from null())
     
     BMM_log_info('Beginning high end calibration macro')
-    def main_plan():
+    def main_plan(focus):
         BMMuser.prompt = False
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'a')
@@ -162,7 +162,7 @@ def calibrate_high_end(mono='111', focus=False):
 
     def cleanup_plan():
         yield from resting_state_plan()
-    yield from finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from finalize_wrapper(main_plan(focus), cleanup_plan())    
     yield from resting_state_plan()
     BMM_log_info('High end calibration macro finished!')
 

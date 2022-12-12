@@ -246,6 +246,8 @@ def write_XDI(datafile, dataframe):
     mm = plotting_mode(mode)
     if mm == 'xs1':
         plot_hint = f'{BMMuser.xs8}/I0  --  $8/$5'
+    elif mm == 'xs' and type == 'sead':
+        plot_hint = f'({BMMuser.xs1}+{BMMuser.xs2}+{BMMuser.xs3}+{BMMuser.xs4})/I0  --  ($5+$6+$7+$8)/$5'
     elif mm == 'xs':
         plot_hint = f'({BMMuser.xs1}+{BMMuser.xs2}+{BMMuser.xs3}+{BMMuser.xs4})/I0  --  ($8+$9+$10+$11)/$5'
     elif 'fluo' in mode or 'flou' in mode or 'both' in mode:
@@ -298,6 +300,10 @@ def write_XDI(datafile, dataframe):
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
         column_list.extend([BMMuser.xs8,])
         template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+    elif plotting_mode(mode) == 'xs' and kind == 'sead':
+        column_list = ['I0', 'It', 'Ir']
+        column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
+        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     elif plotting_mode(mode) == 'xs':
         table['xmu'] = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
@@ -352,17 +358,14 @@ def write_XDI(datafile, dataframe):
             column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
-        column_list.pop(0)
-        column_list.pop(0)
-        column_list.pop(0)
         column_list.insert(0, 'time')
-        template = template[12:]
     this = table.loc[:,column_list]
 
     for i in range(0,len(this)):
         datapoint = list(this.iloc[i])
         if kind == 'sead':
             ti = this.iloc[i, 0]
+            st = this.iloc[0, 0]
             elapsed =  (ti.value - st.value)/10**9
             datapoint[0] = elapsed
         handle.write(template % tuple(datapoint))

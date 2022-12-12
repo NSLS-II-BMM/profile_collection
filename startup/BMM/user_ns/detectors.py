@@ -177,14 +177,14 @@ toss = quadem1.Iy.describe()
 #     dualio = None
 
 
-try:                            # might not be in use
-    ic0 = BMMDualEM('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
-    ic0.Ia.kind = 'hinted'
-    ic0.Ib.kind = 'hinted'
-    ic0.Ia.name = 'I0a'
-    ic0.Ib.name = 'I0b'
-except:    
-    ic0 = None
+#try:                            # might not be in use
+#    ic0 = BMMDualEM('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
+#    ic0.Ia.kind = 'hinted'
+#    ic0.Ib.kind = 'hinted'
+#    ic0.Ia.name = 'I0a'
+#    ic0.Ib.name = 'I0b'
+#except:    
+ic0 = None
     
 #quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 

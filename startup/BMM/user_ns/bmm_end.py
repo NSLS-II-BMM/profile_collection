@@ -182,7 +182,7 @@ def set_instrument(instrument=None):
         
 
 run_report('\t'+'areascan')
-from BMM.areascan import areascan, as2dat
+from BMM.areascan import areascan, as2dat, fetch_areaplot
 
 run_report('\t'+'timescan')
 from BMM.timescan import timescan, ts2dat

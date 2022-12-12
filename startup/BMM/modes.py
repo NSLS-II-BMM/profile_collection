@@ -76,7 +76,7 @@ def pds_motors_ready():
         return(True)
 
      
-def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
+def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False):
      '''Move the photon delivery system to a new mode. 
      A: focused at XAS end station, energy > 8000
      B: focused at XAS end station, energy < 6000
@@ -227,9 +227,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True):
      yield from sleep(0.2)
      yield from mv(dm3_bct.kill_cmd, 1)
 
-     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F'):
+     if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F') and insist is False:
           yield from mv(*base)
-     elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C'): # no need to move M2
+     elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C') and insist is False: # no need to move M2
           yield from mv(*base)
      else:
           if bender is True:
@@ -384,7 +384,7 @@ def change_xtals(xtal=None):
      yield from sleep(2.0) 
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.2,
-                        dcm_roll, -5.863,
+                        dcm_roll, -10.863,
                         dcm_x,     0.5    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset

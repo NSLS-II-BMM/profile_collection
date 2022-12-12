@@ -1,4 +1,4 @@
-import os, time, datetime
+import os, time, datetime, psutil, glob
 import inflection, textwrap, ansiwrap
 from numpy import pi, sin, cos, arcsin, sqrt
 
@@ -249,3 +249,34 @@ def examine_xafs_motor_group(motor_group, TAB='\t\t\t\t'):
         else:
             print(f'{TAB}{m.name} {CHECK}')
       
+
+def clean_img():
+    '''Kill any outstanding "display" processes (i.e. ImageMagick's
+    display).  Then remove any .PNG files PIL has left lying
+    around in /tmp.  Finally, explicitly close the previous
+    filehandle.
+
+    This takes no care to verify neither that PIL launched the
+    display process nor that PIL wrote the .PNG file in /tmp.
+
+    Note that this will kill any other "display" processes
+    running.  At NSLS-II, the centrally managed screen locker is
+    configured to use feh to show a transparent png when the
+    screen is locked.  Thus, display was chosen as the viewer
+    rather than feh (although ownership would likely preclude
+    terminating the screenlocker process).
+
+    '''
+    for proc in psutil.process_iter():
+        if proc.name() == "display":
+            proc.kill()
+    for f in glob.glob('/tmp/tmp*.PNG'):
+        try:
+            os.remove(f)
+        except:
+            print(whisper(f'unable to delete {f} while cleaning up /tmp'))
+    try:
+        if BMMuser.display_img is not None:
+            BMMuser.display_img.close()
+    except:
+        pass

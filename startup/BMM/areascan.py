@@ -33,7 +33,8 @@ user_ns = vars(user_ns_module)
 def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
-             pluck=True, force=False, dwell=0.1, fname=None, md={}):
+             pluck=True, force=False, dwell=0.1, fname=None,
+             contour=False, log=True, md={}):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -67,7 +68,7 @@ def areascan(detector,
     def main_plan(detector,
                   slow, startslow, stopslow, nslow,
                   fast, startfast, stopfast, nfast,
-                  pluck, force, dwell, fname, md):
+                  pluck, force, dwell, fname, contour, log,  md):
 
         
         (ok, text) = BMM_clear_to_start()
@@ -215,6 +216,8 @@ def areascan(detector,
                 numpy.array(thismap.primary.read()[BMMuser.xs4])
 
         z=z.reshape(nfast, nslow)
+        if log is True:
+            z = numpy.log(z)
         # grabbing the first nfast elements of x and every
         # nslow-th element of y is more reliable than 
         # numpy.unique due to float &/or motor precision issues
@@ -223,10 +226,15 @@ def areascan(detector,
         plt.xlabel(f'fast axis ({fast.name}) position (mm)')
         plt.ylabel(f'slow axis ({slow.name}) position (mm)')
         plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
-        plt.contourf(x[:nfast], y[::nslow], z, cmap=plt.cm.viridis)
+        if contour is True:
+            plt.contourf(x[:nfast], y[::nslow], numpy.log(z), cmap=plt.cm.viridis)
+        else:
+            plt.pcolormesh(x[:nfast], y[::nslow], numpy.log(z), cmap=plt.cm.viridis)
         plt.colorbar()
         if fname is None:
             fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+        else:
+            fname = os.path.join(BMMuser.folder, fname+'.png')
         plt.savefig(fname)
         plt.show()
         try:
@@ -303,12 +311,12 @@ def areascan(detector,
     yield from finalize_wrapper(main_plan(detector,
                                           slow, startslow, stopslow, nslow,
                                           fast, startfast, stopfast, nfast,
-                                          pluck, force, dwell, fname, md),
+                                          pluck, force, dwell, fname, contour, log, md),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def fetch_areaplot(uid=None):
+def fetch_areaplot(uid=None, log=False):
     if uid is None:
         print('No uid provided.')
         return
@@ -325,7 +333,14 @@ def fetch_areaplot(uid=None):
     plt.xlabel(f'fast axis ({fast}) position (mm)')
     plt.ylabel(f'slow axis ({slow}) position (mm)')
     plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
-    plt.contourf(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
+    if log is True:
+        plt.pcolormesh(x[:nfast], y[::nslow], numpy.log(z.reshape(nfast, nslow)), cmap=plt.cm.viridis)
+    else:
+        plt.pcolormesh(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
+    # if log is True:
+    #     plt.contourf(x[:nfast], y[::nslow], numpy.log(z.reshape(nfast, nslow)), cmap=plt.cm.viridis)
+    # else:
+    #     plt.contourf(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
     plt.colorbar()
     plt.show()
 
