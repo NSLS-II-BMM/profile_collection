@@ -11,7 +11,7 @@ from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
-from BMM.functions     import boxedtext, countdown, approximate_pitch
+from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
@@ -25,7 +25,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm         import BMMuser, rois
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import xs, with_xspress3
+from BMM.user_ns.detectors   import xs, xs1, with_xspress3
 from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks, m2_ydi, m2_ydo, m2_yu
 from BMM.user_ns.motors      import *
 
@@ -214,12 +214,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nBegin energy change? [Y/n then Enter] ")
+        action = input("\nBegin energy change?" + PROMPT)
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
         if mode == 'C' and energy < 6000:
             print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-            action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
+            action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 return(yield from null())
 
@@ -305,6 +305,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ## Xspress3
         if with_xspress3:
             BMMuser.verify_roi(xs, el, edge)
+            BMMuser.verify_roi(xs1, el, edge)
         ## feedback
         show_edges()
     

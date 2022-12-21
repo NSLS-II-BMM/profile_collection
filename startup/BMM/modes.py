@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
-from BMM.functions     import approximate_pitch, countdown
+from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import rocking_curve
 from BMM.logging       import BMM_log_info, BMM_msg_hook
@@ -122,7 +122,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      ######################################################################
 
      if mode == 'B':
-          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? [y/N then Enter] ")
+          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue?" + PROMPT)
           if action.lower() != 'y':
                return(yield from null())
 
@@ -142,7 +142,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           description = 'focused at goniometer, >8 keV'
           print('Moving to mode %s (%s)' % (mode, description))
      if prompt:
-          action = input("Begin moving motors? [Y/n then Enter] ")
+          action = input("Begin moving motors? " + PROMPT)
           if action.lower() == 'q' or action.lower() == 'n':
                return(yield from null())
 
@@ -368,7 +368,7 @@ def change_xtals(xtal=None):
      ######################################################################
 
      print('Moving to %s crystals' % xtal)
-     action = input('Begin moving motors? [Y/n then Enter] ')
+     action = input('Begin moving motors?' + PROMPT)
      if action.lower() == 'q' or action.lower() == 'n':
           yield from null()
           return

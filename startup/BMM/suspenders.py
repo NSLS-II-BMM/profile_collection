@@ -3,7 +3,7 @@ from bluesky.suspenders import SuspendFloor, SuspendBoolHigh, SuspendBoolLow
 from BMM.user_ns.detectors   import quadem1
 from BMM.user_ns.metadata    import ring
 from BMM.user_ns.instruments import bmps, idps
-from BMM.functions import bold_msg
+from BMM.functions import bold_msg, PROMPT
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -82,7 +82,8 @@ def BMM_clear_suspenders():
     if BMMuser.running_macro is False:
         RE.clear_suspenders()
         BMMuser.suspenders_engaged = False
-    
+
+
 
 def BMM_clear_to_start():
     ok = True
@@ -98,20 +99,41 @@ def BMM_clear_to_start():
         ok = False
         text += 'Front end shutter (sha) is closed. Solution: do sha.open()\n'
     if user_ns['shb'].state.get() == 1:
-        action = input(bold_msg("\nB shutter is closed.  Open shutter? [Y/n then Enter] ")).strip()
-        openit = False
-        if action == '' or action.lower() == 'y':
-            openit = True
-        else:
-            openit = False
-        if openit = True:
-            yield from user_ns['shb'].open_plan()
-        if user_ns['shb'].state.get() == 1:  # B shutter failed to open
-            ok = False
-            text += 'Photon shutter (shb) is closed. Solution: search the hutch then do shb.open()\n'
-        else:                   # B shutter successfully opened
-            ok = True
+        ok = False
+        text += 'Photon shutter (shb) is closed. Solution: search the hutch then do shb.open()\n'
     # if quadem1.I0.get() < 0.1:
     #     ok = 0
     #     text += 'There is no signal on I0\n'
-    return (ok, text)
+    return (ok, text)        
+
+# def BMM_clear_to_start():
+#     ok = True
+#     text = ''
+#     # return (ok, text)
+#     if user_ns['ring'].current.get() < 10:
+#         ok = False
+#         text += 'There is no current in the storage ring. Solution: wait for beam to come back\n'
+#     if user_ns['bmps'].state.get() == 0:
+#         ok = False
+#         text += 'BMPS is closed. Solution: call floor coordinator\n'
+#     if user_ns['idps'].state.get() == 0:
+#         ok = False
+#         text += 'Front end shutter (sha) is closed. Solution: do sha.open()\n'
+#     if user_ns['shb'].state.get() == 1:
+#         action = input(bold_msg("\nB shutter is closed.  Open shutter?" + PROMPT)).strip()
+#         openit = False
+#         if action == '' or action.lower() == 'y':
+#             openit = True
+#         else:
+#             openit = False
+#         if openit == True:
+#             yield from user_ns['shb'].open_plan()
+#         if user_ns['shb'].state.get() == 1:  # B shutter failed to open
+#             ok = False
+#             text += 'Photon shutter (shb) is closed. Solution: search the hutch then do shb.open()\n'
+#         else:                   # B shutter successfully opened
+#             ok = True
+#     # if quadem1.I0.get() < 0.1:
+#     #     ok = 0
+#     #     text += 'There is no signal on I0\n'
+#     return (ok, text)

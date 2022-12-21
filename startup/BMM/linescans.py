@@ -27,7 +27,7 @@ user_ns = vars(user_ns_module)
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown, clean_img
+from BMM.functions     import countdown, clean_img, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
@@ -170,7 +170,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 yield from mv(motor, top)
 
             else:
-                action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+                action = input('\n' + bold_msg('Pluck motor position from the plot?' + PROMPT))
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from sleep(slp)
@@ -346,7 +346,7 @@ def find_slot(close=False):
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nIs the beam currently on a slot in the outer ring? [Y/n then Enter] ")
+        action = input("\nIs the beam currently on a slot in the outer ring?" + PROMPT)
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
     
@@ -698,7 +698,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
         if pluck is True:
-            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+            action = input('\n' + bold_msg('Pluck motor position from the plot?' + PROMPT))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             yield from move_after_scan(thismotor)

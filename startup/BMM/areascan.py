@@ -15,7 +15,7 @@ from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 from BMM.linescans     import motor_nicknames
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
-from BMM.functions     import countdown, plotting_mode, now
+from BMM.functions     import countdown, plotting_mode, now, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
@@ -249,7 +249,7 @@ def areascan(detector,
             BMMuser.x = None
             figs = list(map(plt.figure, plt.get_fignums()))
             canvas = figs[0].canvas
-            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+            action = input('\n' + bold_msg('Pluck motor position from the plot?' + PROMPT))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             print('Single click the left mouse button on the plot to pluck a point...')

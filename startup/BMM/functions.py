@@ -15,6 +15,9 @@ BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
 LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 
+PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: Enter / y then Enter ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
+
+
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
 # Red, White, Yellow,

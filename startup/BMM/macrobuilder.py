@@ -358,11 +358,13 @@ class BMMMacroBuilder():
             return True
         #if 'temperature' in m and type(m['temperature']) is not float:
         #    return True
-        #print(m['filename'])
+        #print('>', m['filename'], '<')
         #print(type(m['filename']))
-        if m['filename'] is None:
+        #print(self.is_empty(m['filename']))
+        #print()
+        if self.is_empty(m['filename']):
             return True
-        if re.search('^\s*$', m['filename']) is not None:
+        if m['filename'] == 'None':  # where does an empty cell get turned into "None"??
             return True
         if  self.truefalse(m['measure'], 'measure') is False:
             return True

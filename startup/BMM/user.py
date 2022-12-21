@@ -300,7 +300,7 @@ class BMM_User(Borg):
         self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
 
 
-    def state_to_redis(self, filename=None, prefix=''):
+    def state_to_redis(self, filename=None, prefix='', verbose=False):
 
         all_keys = list(self.__dict__.keys())
         almost_all_keys = [n for n in all_keys
@@ -308,7 +308,6 @@ class BMM_User(Borg):
                                         'motor', 'cycle', 'user_is_defined') and
                            'xschannel' not in n]
         d = dict()
-        verbose = False
         for k in self.bmm_strings:
             d[k] = getattr(self, k)
             if verbose: print(f'string: {k} = >{getattr(self, k)}<')
@@ -376,8 +375,15 @@ class BMM_User(Borg):
                                            low =allrois[el.capitalize()][edge.lower()]['low'],
                                            high=allrois[el.capitalize()][edge.lower()]['high'])
                     xs.set_rois()
+                    # xs1.slots[14] = el
+                    # for channel in xs1.iterate_channels():
+                    #     xs1.set_roi_channel(channel, index=15, name=f'{el.capitalize()}',
+                    #                         low =allrois[el.capitalize()][edge.lower()]['low'],
+                    #                         high=allrois[el.capitalize()][edge.lower()]['high'])
+                    # xs1.set_rois()
 
                 xs.measure_roi()
+                #xs1.measure_roi()
             else:
                 report(f'{tab}No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
@@ -939,17 +945,17 @@ class BMM_User(Borg):
         print('\n  r: return')
         choice = input("\nSelect a file > ")
         try:
-            if type(choice) is int and int(choice) > 0 and int(choice) <= len(instruments):
+            if str(choice.lower()) == 'u':
+                print('Unsetting instrument')
+                self.instrument = ''
+                rkvs.set('BMM:user:instrument', '')
+                rkvs.set('BMM:automation:type', '')
+            elif int(choice) > 0 and int(choice) <= len(instruments):
                 this = instruments[int(choice)-1]
                 print(f'You selected "{this}"')
                 self.instrument = this
                 rkvs.set('BMM:user:instrument', this)
                 rkvs.set('BMM:automation:type', this)
-            elif str(choice.lower()) == 'u':
-                print('Unsetting instrument')
-                self.instrument = ''
-                rkvs.set('BMM:user:instrument', '')
-                rkvs.set('BMM:automation:type', '')
             else:
                 print('No instrument selected')
                 return None

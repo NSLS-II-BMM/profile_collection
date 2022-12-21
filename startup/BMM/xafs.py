@@ -18,7 +18,7 @@ from BMM.db              import file_resource
 from BMM.demeter         import toprj
 from BMM.derivedplot     import DerivedPlot, interpret_click, close_all_plots, close_last_plot
 from BMM.dossier         import BMMDossier
-from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.linescans       import rocking_curve
@@ -574,7 +574,7 @@ def xafs(inifile=None, **kwargs):
                 else:
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
 
-            action = input("\nBegin scan sequence? [Y/n then Enter] ")
+            action = input("\nBegin scan sequence?" + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 BMMuser.final_log_entry = False
                 yield from null()

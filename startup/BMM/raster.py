@@ -21,7 +21,7 @@ from tiled.client import from_profile
 from BMM.areascan        import areascan
 from BMM.db              import file_resource
 from BMM.dossier         import BMMDossier
-from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
@@ -383,7 +383,7 @@ def raster(inifile=None, **kwargs):
             print(f'Rough time estimate: {minutes} min')
             
             
-            action = input("\nBegin raster scan? [Y/n then Enter] ")
+            action = input("\nBegin raster scan?" + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 yield from null()
                 return

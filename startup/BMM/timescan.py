@@ -22,7 +22,7 @@ from bluesky.preprocessors import subs_decorator
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -326,7 +326,7 @@ def sead(inifile, force=False, **kwargs):
             BMMuser.prompt = False
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
-            action = input("\nBegin time scan? [Y/n then Enter] ")
+            action = input("\nBegin time scan?" + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 return(yield from null())
 
