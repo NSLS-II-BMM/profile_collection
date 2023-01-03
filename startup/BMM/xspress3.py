@@ -139,6 +139,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     '''This class captures everything that is in common for the 1-element
     and 4-element detector interfaces.
     '''
+    create_dir_depth = Cpt(EpicsSignal, 'HDF1:CreateDirectory')
     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
                read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
                root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)

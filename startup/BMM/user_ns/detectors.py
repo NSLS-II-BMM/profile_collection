@@ -348,7 +348,7 @@ if with_xspress3 is True and use_4element is True:
     xs.hdf5.read_path_template = hdf5folder
     xs.hdf5.write_path_template = hdf5folder
     xs.hdf5.file_path.put(hdf5folder)
-
+    xs.create_dir_depth.put(3)
 
 if with_xspress3 is True and use_1element is True:
     run_report('\t'+'1-element SDD with Xspress3')
