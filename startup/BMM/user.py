@@ -144,6 +144,8 @@ class BMM_User(Borg):
         dwell time at each time step
     delay : float
         delay between time steps
+    shutter : bool 
+        True to close and open shutter to minimize beam exposure
 
     Methods for public use
     ----------------------
@@ -257,6 +259,7 @@ class BMM_User(Borg):
         self.npoints       = 0     ###########################################################################
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
         self.delay         = 0.1   ###########################################################################
+        self.shutter       = False
         
         ## mono acceleration control
         self.acc_fast      = 0.2   ###########################################################################
@@ -567,8 +570,8 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
-        initmpl = os.path.join(startup_dir, 'tmpl', 'scan.tmpl')
-        scanini = os.path.join(data_folder, 'scan.ini')
+        initmpl = os.path.join(startup_dir, 'tmpl', 'xafs.tmpl')
+        scanini = os.path.join(data_folder, 'xafs.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -592,6 +595,19 @@ class BMM_User(Borg):
         else:
             verb, pad = 'Found', '  '
         self.print_verb_message(step, verb, 'raster INI file', pad, scanini)
+
+        initmpl = os.path.join(startup_dir, 'tmpl', 'sead.tmpl')
+        scanini = os.path.join(data_folder, 'sead.ini')
+        if not os.path.isfile(scanini):
+            with open(initmpl) as f:
+                content = f.readlines()
+            o = open(scanini, 'w')
+            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.close()
+            verb, pad = 'Copied', ' '
+        else:
+            verb, pad = 'Found', '  '
+        self.print_verb_message(step, verb, 'sead INI file', pad, scanini)
 
         
         macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')

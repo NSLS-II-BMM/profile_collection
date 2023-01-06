@@ -185,7 +185,7 @@ run_report('\t'+'areascan')
 from BMM.areascan import areascan, as2dat, fetch_areaplot
 
 run_report('\t'+'timescan')
-from BMM.timescan import timescan, ts2dat
+from BMM.timescan import timescan, ts2dat, sead
 
 run_report('\t'+'energystep')
 from BMM.energystep import energystep

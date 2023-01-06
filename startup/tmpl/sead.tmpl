@@ -1,0 +1,24 @@
+[scan]
+
+filename      = sead_test
+experimenters = {name}
+
+energy     = 9831.8
+element    = Cu
+edge       = K
+
+sample     = <composition or stoichiometry>
+prep       = <how the sample was prepared for measurement>
+comment    = <anything else you want to say about your sample>
+
+npoints    = 15
+dwell      = 0.5
+delay      = 0.1
+
+start      = next
+
+## set shutter to True to automate shutter open/close, minimize beam exposure
+shutter    = False
+
+## mode is one of transmission, fluorescence, reference
+mode       = test

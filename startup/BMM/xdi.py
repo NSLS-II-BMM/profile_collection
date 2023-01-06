@@ -173,9 +173,9 @@ def write_XDI(datafile, dataframe):
         metadata.start_doc('# Detector.deadtime_correction: %s', 'XDI.Detector.deadtime_correction')
     if 'yield' in mode:
         metadata.start_doc('# Detector.electron_yield: %s', 'XDI.Detector.yield')
+    metadata.start_doc('# Element.symbol: %s', 'XDI.Element.symbol')
+    metadata.start_doc('# Element.edge: %s',   'XDI.Element.edge')
     if kind != 'sead':
-        metadata.start_doc('# Element.symbol: %s', 'XDI.Element.symbol')
-        metadata.start_doc('# Element.edge: %s',   'XDI.Element.edge')
         metadata.start_doc('# Element.reference: %s',          'XDI.Element.reference')
         metadata.start_doc('# Element.reference_material: %s', 'XDI.Element.reference_material')
 
@@ -233,9 +233,9 @@ def write_XDI(datafile, dataframe):
     metadata.insert_line('# Scan.uid: %s'          % dataframe.start['uid'])
 
     if kind == 'sead':
-        metadata.start_doc('# Beamline.energy: %.3f', 'XDI.Beamline.energy')
-        metadata.start_doc('# Scan.dwell_time: %d',   'XDI.Scan.dwell_time')
-        metadata.start_doc('# Scan.delay: %d',        'XDI.Scan.delay')
+        metadata.start_doc('# Beamline.energy: %.3f eV',      'XDI.Beamline.energy')
+        metadata.start_doc('# Scan.dwell_time: %.3f seconds', 'XDI.Scan.dwell_time')
+        metadata.start_doc('# Scan.delay: %.3f seconds',      'XDI.Scan.delay')
 
 
     ###############################
@@ -257,7 +257,7 @@ def write_XDI(datafile, dataframe):
     elif 'yield' in mode:
         plot_hint = 'Iy/I0  --  $8/$5'
     elif 'test' in mode:
-        plot_hint = 'I0  --  $5'
+        plot_hint = 'I0  --  $2'
     elif 'ref' in mode:
         plot_hint = 'ln(It/Ir)  --  ln($6/$7)'
     metadata.insert_line('# Scan.plot_hint: %s' % plot_hint)
@@ -343,7 +343,10 @@ def write_XDI(datafile, dataframe):
             table['xmu'] = table['I0']
         else:                   # transmission is the primary measurement
             table['xmu'] = numpy.log(table['I0'] / table['It'])
-        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
+        if (kind == 'sead'):
+            column_list = ['I0', 'It', 'Ir']
+        else:
+            column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'xmu', 'I0', 'It', 'Ir']
         if kind == '333':
             table['333_energy'] = table['dcm_energy']*3
             column_list[0] = '333_energy'
@@ -357,6 +360,8 @@ def write_XDI(datafile, dataframe):
         elif 'xs' in mode:
             column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+        if (kind == 'sead'):
+            template = "  %.3f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
         column_list.insert(0, 'time')
     this = table.loc[:,column_list]

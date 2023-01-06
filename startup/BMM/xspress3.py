@@ -1,3 +1,8 @@
+import numpy, h5py, json
+import itertools, os, sys
+import time as ttime
+from collections import deque, OrderedDict
+from itertools import product
 
 from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 TIFFPlugin, StatsPlugin, HDF5Plugin,
@@ -13,20 +18,20 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreTIFF)
 from ophyd import Signal, EpicsSignal, EpicsSignalRO, DynamicDeviceComponent as DDCpt
 from ophyd.status import SubscriptionStatus, DeviceStatus
-from ophyd import Component as Cpt, set_and_wait
+from ophyd import Component as Cpt #, set_and_wait
+from ophyd.utils import set_and_wait
 from bluesky import __version__ as bluesky_version
 from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
 
 from pathlib import PurePath
 from nslsii.detectors.xspress3 import Xspress3Channel
-from nslsii.areadetector.xspress3 import Xspress3Trigger, Xspress3FileStore, build_detector_class 
+from nslsii.areadetector.xspress3 import Xspress3Trigger, Xspress3FileStore
 
-import numpy, h5py, json
-import itertools, os
-import time as ttime
-from collections import deque, OrderedDict
-from itertools import product
+# deal with HDF5 storage as of January 2023
+if sys.version_info[1] > 9:
+    from nslsii.areadetector.xspress3 import Xspress3HDF5Plugin
+
 
 import matplotlib.pyplot as plt
 
@@ -139,13 +144,25 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     '''This class captures everything that is in common for the 1-element
     and 4-element detector interfaces.
     '''
-    create_dir_depth = Cpt(EpicsSignal, 'HDF1:CreateDirectory')
-    hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-               read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
-               root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
-               write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
-               )
 
+    if sys.version_info[1] < 10:
+        ## HDF5 storage semantics prior to January 2023
+        hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
+                   read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
+                   root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
+                   write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
+                   )
+    else:
+        ## new HDF5 storage semantics as of January 2023
+        hdf5 = Cpt(Xspress3HDF5Plugin,
+                   "HDF1:", 
+                   name="h5p",
+                   root_path='/nsls2/data/bmm/',
+                   path_template='/nsls2/data/bmm/assets/xspress3/%Y/%m/%d/',
+                   resource_kwargs={},
+        )
+
+        
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if configuration_attrs is None:

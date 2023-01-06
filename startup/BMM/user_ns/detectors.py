@@ -280,6 +280,7 @@ if with_pilatus is True:
 
 # JL: debugging xspress3 IOC crash
 from ophyd.log import config_ophyd_logging
+#import logging
 #config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
 
@@ -290,7 +291,8 @@ if with_xspress3 is True and use_4element is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element
     #from BMM.xspress3_1element import BMMXspress3Detector_1Element
-    from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_xspress3_class 
 
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',
@@ -348,12 +350,18 @@ if with_xspress3 is True and use_4element is True:
     xs.hdf5.read_path_template = hdf5folder
     xs.hdf5.write_path_template = hdf5folder
     xs.hdf5.file_path.put(hdf5folder)
-    xs.create_dir_depth.put(3)
+
+    ## this stage_sigs and trigger business was needed with the new (as of January 2023)
+    ## to maintain the correct triggering state for our mode of operation here at BMM
+    ## apparently to serve the needs of other BLs, the triggering mode would default
+    ## back to "Software" at the end of a scan.  This overrides that behavior.
+    xs.cam.stage_sigs[xs.cam.trigger_mode] = "Internal"
 
 if with_xspress3 is True and use_1element is True:
     run_report('\t'+'1-element SDD with Xspress3')
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
-    from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_xspress3_class 
 
     xs1 = BMMXspress3Detector_1Element(
         prefix='XF:06BM-ES{Xsp:1}:',
@@ -407,6 +415,7 @@ if with_xspress3 is True and use_1element is True:
     xs1.hdf5.read_path_template = hdf5folder
     xs1.hdf5.write_path_template = hdf5folder
     xs1.hdf5.file_path.put(hdf5folder)
+    xs1.cam.stage_sigs[xs.cam.trigger_mode] = "Internal"
 
 
 

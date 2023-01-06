@@ -71,12 +71,15 @@ def areascan(detector,
                   pluck, force, dwell, fname, contour, log,  md):
 
         
-        (ok, text) = BMM_clear_to_start()
-        if force is False and ok is False:
-            print(error_msg(text))
-            BMMuser.final_log_entry = False
-            yield from null()
-            return
+        if force is True:
+            (ok, text) = (True, '')
+        else:
+            (ok, text) = BMM_clear_to_start()
+            if force is False and ok is False:
+                print(error_msg(text))
+                BMMuser.final_log_entry = False
+                yield from null()
+                return
 
         user_ns['RE'].msg_hook = None
 
@@ -233,6 +236,8 @@ def areascan(detector,
         plt.colorbar()
         if fname is None:
             fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+        elif fname.endswith('.png'):
+            fname = os.path.join(BMMuser.folder, fname)
         else:
             fname = os.path.join(BMMuser.folder, fname+'.png')
         plt.savefig(fname)

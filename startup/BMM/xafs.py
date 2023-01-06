@@ -246,7 +246,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- floats
-    for a in ('e0', 'inttime', 'dwell', 'delay'):
+    for a in ('e0', 'energy', 'inttime', 'dwell', 'delay'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -259,7 +259,7 @@ def scan_metadata(inifile=None, **kwargs):
             found[a] = True
 
     ## ----- booleans
-    for a in ('snapshots', 'htmlpage', 'lims', 'bothways', 'channelcut', 'usbstick', 'rockingcurve', 'ththth'):
+    for a in ('snapshots', 'htmlpage', 'lims', 'bothways', 'channelcut', 'usbstick', 'rockingcurve', 'ththth', 'shutter'):
         found[a] = False
         if a not in kwargs:
             try:
@@ -574,7 +574,7 @@ def xafs(inifile=None, **kwargs):
                 else:
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
 
-            action = input("\nBegin scan sequence?" + PROMPT)
+            action = input("\nBegin scan sequence? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 BMMuser.final_log_entry = False
                 yield from null()
@@ -649,127 +649,28 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
-        xrfuid, xrffile, xrfimage = None, None, None
-        image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
-        usbcam1_uid, usbcam2_uid = None, None
-        usb1cam_uid, usb2cam_uid = None, None
-        image_usb1, image_usb2 = None, None
-
-        dossier.xrffile, dossier.xrfsnap = None, None
-        dossier.ocrs = ''
-        dossier.rois = ''
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
-            thisagg = matplotlib.get_backend()
-            matplotlib.use('Agg') # produce a plot without screen display
-            ahora = now()
-            dossier.xrffile = "%s_%s.xrf" % (p['filename'], ahora)
-            dossier.xrfsnap = "%s_XRF_%s.png" % (p['filename'], ahora)
-            xrffile  = os.path.join(p['folder'], 'XRF', dossier.xrffile)
-            xrfimage = os.path.join(p['folder'], 'XRF', dossier.xrfsnap)
-            if use_4element and plotting_mode(p['mode']) == 'xs':
-                report(f'measuring an XRF spectrum at {eave:.1f} (4-element detector)', 'bold')
-                yield from mv(xs.total_points, 1)
-                yield from mv(xs.cam.acquire_time, 1)
-                xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-                ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                        int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                        int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                        int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-                rois = [int(BMMuser.xschannel1.get()),
-                        int(BMMuser.xschannel2.get()),
-                        int(BMMuser.xschannel3.get()),
-                        int(BMMuser.xschannel4.get()),]
-                xs.plot(uid=xrfuid)
-                xs.to_xdi(xrffile)
-            if use_1element and plotting_mode(p['mode']) == 'xs1':
-                report(f'measuring an XRF spectrum at {eave:.1f} (1-element detector)', 'bold')
-                yield from mv(xs1.total_points, 1)
-                yield from mv(xs1.cam.acquire_time, 1)
-                xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-                ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-                rois = [int(BMMuser.xschannel1.get()),]
-                xs1.plot(uid=xrfuid)
-                xs1.to_xdi(xrffile)
-
-            ## capture OCR and target ROI values at Eave to report in dossier
-            dossier.ocrs = ", ".join(map(str,ocrs))
-            dossier.rois = ", ".join(map(str,rois))
-
-            ## save XRF plot
-            plt.savefig(xrfimage)
-            matplotlib.use(thisagg) # return to screen display
-            if BMMuser.post_xrf:
-                img_to_slack(xrfimage)
+            yield from dossier.capture_xrf(p['folder'], p['filename'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
-        #print(disconnected_msg(f"snapshots = {p['snapshots']}"))
         if p['snapshots']:
-            ahora = now()
+            yield from dossier.cameras(p['folder'], p['filename'], md)
 
-            ### --- XAS webcam ---------------------------------------------------------------
-            annotation = p['filename']
-            dossier.websnap = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
-            image_web = os.path.join(p['folder'], 'snapshots', dossier.websnap)
-            xascam._annotation_string = annotation
-            print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[xascam_uid]), image_web)
-            im = Image.fromarray(numpy.array(bmm_catalog[xascam_uid].primary.read()['xascam_image'])[0])
-            im.save(image_web, 'JPEG')
-            if BMMuser.post_webcam:
-                img_to_slack(image_web)
-
-            ### --- analog camera using redgo dongle ------------------------------------------
-            ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
-            if is_re_worker_active() is False:
-                dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
-                image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)
-                anacam._annotation_string = p['filename']
-                print(bold_msg('analog camera snapshot'))
-                anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-                try:
-                    #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
-                    im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
-                    im.save(image_ana, 'JPEG')
-                    if BMMuser.post_anacam:
-                        img_to_slack(image_ana)
-                except:
-                    print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-                    anacam_uid = False
-                    pass
-
-            ### --- USB camera #1 --------------------------------------------------------------
-            dossier.usb1snap = "%s_usb1_%s.jpg" % (p['filename'], ahora)
-            image_usb1 = os.path.join(p['folder'], 'snapshots', dossier.usb1snap)
-            usbcam1._annotation_string = p['filename']
-            print(bold_msg('USB camera #1 snapshot'))
-            usbcam1_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
-            im = Image.fromarray(numpy.array(bmm_catalog[usbcam1_uid].primary.read()['usbcam1_image'])[0])
-            im.save(image_usb1, 'JPEG')
-            if BMMuser.post_usbcam1:
-                img_to_slack(image_usb1)
-
-            ### --- USB camera #2 --------------------------------------------------------------
-            dossier.usb2snap = "%s_usb2_%s.jpg" % (p['filename'], ahora)
-            image_usb2 = os.path.join(p['folder'], 'snapshots', dossier.usb2snap)
-            usbcam2._annotation_string = p['filename']
-            print(bold_msg('USB camera #2 snapshot'))
-            usbcam2_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
-            im = Image.fromarray(numpy.array(bmm_catalog[usbcam2_uid].primary.read()['usbcam2_image'])[0])
-            im.save(image_usb2, 'JPEG')
-            if BMMuser.post_usbcam2:
-                img_to_slack(image_usb2)
-
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## capture dossier metadata for start document
+        md['_snapshots'] = {**dossier.xrf_md, **dossier.cameras_md}
             
-        md['_snapshots'] = {'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
-                            'webcam_file': image_web,  'webcam_uid': xascam_uid,
-                            'analog_file': image_ana,  'anacam_uid': anacam_uid,
-                            'usb1_file':   image_usb1, 'usbcam1_uid': usbcam1_uid,
-                            'usb2_file':   image_usb1, 'usbcam2_uid': usbcam2_uid, }
-            
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## this dictionary is used to populate the static html page for this scan sequence
+        # see https://stackoverflow.com/a/5445983 for list of string idiom
+        these_kwargs = {'start'     : p['start'],
+                        'end'       : p['start']+p['nscans']-1,
+                        'pccenergy' : eave,
+                        'bounds'    : ' '.join(map(str, p['bounds_given'])),
+                        'steps'     : ' '.join(map(str, p['steps'])),
+                        'times'     : ' '.join(map(str, p['times'])), }
+        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
 
         #legends = []
         #for i in range(p['start'], p['start']+p['nscans'], 1):
@@ -892,41 +793,36 @@ def xafs(inifile=None, **kwargs):
             ## show the metadata to the user
             display_XDI_metadata(md)
                 
-            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## this dictionary is used to populate the static html page for this scan sequence
-            dossier.filename      = p['filename']
-            dossier.experimenters = p['experimenters']
-            dossier.start         = p['start']
-            dossier.end           = p['start']+p['nscans']-1
-            dossier.seqstart      = now('%A, %B %d, %Y %I:%M %p')
-            dossier.e0            = p['e0']
-            dossier.element       = p['element']
-            dossier.edge          = p['edge']
-            dossier.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
-            dossier.sample        = p['sample']
-            dossier.prep          = p['prep']
-            dossier.comment       = p['comment']
-            dossier.mode          = p['mode']
-            dossier.pccenergy     = eave
-            # see https://stackoverflow.com/a/5445983 for list o string idiom
-            dossier.bounds        = ' '.join(map(str, p['bounds_given'])) 
-            dossier.steps         = ' '.join(map(str, p['steps']))
-            dossier.times         = ' '.join(map(str, p['times']))
-            dossier.clargs        = clargs
-            dossier.htmlpage      = p['htmlpage']
-            dossier.ththth        = p['ththth']
-            dossier.xrfuid        = xrfuid
-            dossier.webuid        = xascam_uid
-            dossier.anauid        = anacam_uid
-            dossier.usb1uid       = usbcam1_uid
-            dossier.usb2uid       = usbcam2_uid
-            ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
-            dossier.url           = p['url']
-            dossier.doi           = p['doi']
-            dossier.cif           = p['cif']
-            dossier.temperature   = ''
-            with open(os.path.join(BMMuser.DATA, inifile)) as f:
-                dossier.initext = ''.join(f.readlines())
+
+            
+            # dossier.filename      = p['filename']
+            # dossier.experimenters = p['experimenters']
+            # dossier.start         = p['start']
+            # dossier.end           = p['start']+p['nscans']-1
+            # dossier.seqstart      = now('%A, %B %d, %Y %I:%M %p')
+            # dossier.e0            = p['e0']
+            # dossier.element       = p['element']
+            # dossier.edge          = p['edge']
+            # dossier.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
+            # dossier.sample        = p['sample']
+            # dossier.prep          = p['prep']
+            # dossier.comment       = p['comment']
+            # dossier.mode          = p['mode']
+
+            # dossier.pccenergy     = eave
+            # dossier.bounds        = ' '.join(map(str, p['bounds_given'])) 
+            # dossier.steps         = ' '.join(map(str, p['steps']))
+            # dossier.times         = ' '.join(map(str, p['times']))
+            # dossier.clargs        = clargs
+            # dossier.htmlpage      = p['htmlpage']
+            # dossier.ththth        = p['ththth']
+            # ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
+            # dossier.url           = p['url']
+            # dossier.doi           = p['doi']
+            # dossier.cif           = p['cif']
+            # dossier.temperature   = ''
+            # with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            #     dossier.initext = ''.join(f.readlines())
 
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -1148,14 +1044,13 @@ def xafs(inifile=None, **kwargs):
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     #quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel, ga, linkam, gmb, lakeshore = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb'], user_ns['lakeshore']
-    xascam, anacam = user_ns['xascam'], user_ns['anacam']
-    usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     rkvs = user_ns['rkvs']
 
     try:
         dualio = user_ns['dualio']
     except:
         pass
+    
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
@@ -1173,6 +1068,7 @@ def xafs(inifile=None, **kwargs):
         return(yield from null())
     ######################################################################
     dossier = BMMDossier()
+    dossier.measurement = 'XAFS'
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:

@@ -12,24 +12,31 @@ from bluesky import __version__ as bluesky_version
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 
 import numpy
-import os, datetime
+import os, datetime, re, textwrap, configparser
 import pandas
+
+import matplotlib
+import matplotlib.pyplot as plt
 
 from bluesky.preprocessors import subs_decorator
 ## see 65-derivedplot.py for DerivedPlot class
 ## see 10-motors.py and 20-dcm.py for motor definitions
 
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.dossier       import BMMDossier
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
+from BMM.motor_status  import motor_sidebar #, motor_status
+from BMM.resting_state import resting_state_plan
+from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
-from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.xdi           import write_XDI
+
 from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
-from BMM.xdi             import write_XDI
+from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -80,22 +87,22 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    
-    (ok, text) = BMM_clear_to_start()
-    if force is False and ok is False:
-        print(error_msg(text))
-        yield from null()
-        return
+
+    if force is False:
+        (ok, text) = BMM_clear_to_start()
+        if ok is False:
+            print(error_msg(text))
+            yield from null()
+            return
 
     
     RE.msg_hook = None
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
-    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir') and 'Dtc' not in detector:
-        print(error_msg('\n*** %s is not a timescan measurement (%s)\n' %
-                        (detector, 'it, if, i0, iy, ir')))
+    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Test', 'Transmission', 'Fluorescence', 'Flourescence') and 'Dtc' not in detector:
+        print(error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, transmission, fluorescence)\n'))
         yield from null()
-        return
+        return None
 
     yield from mv(_locked_dwell_time, dwell)
     dets  = [quadem1,]
@@ -104,22 +111,27 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     epoch_offset = pandas.Timestamp.now(tz='UTC').value/10**9
     ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
     if detector == 'It':
-        denominator = ' / I0'
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['It']/doc['data']['I0'])
-    elif detector == 'Ir':
+        denominator = ''
+        func = lambda doc: (doc['time']-epoch_offset, doc['data']['It'])
+    elif detector == 'Transmission':
         denominator = ' / It'
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['Ir']/doc['data']['It'])
+        func = lambda doc: (doc['time']-epoch_offset, numpy.log(doc['data']['I0']/doc['data']['It']))
+    elif detector == 'Ir':
+        denominator = ''
+        func = lambda doc: (doc['time']-epoch_offset, doc['data']['Ir'])
     elif detector == 'I0':
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
     elif detector == 'Iy':
         denominator = ' / I0'
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['Iy']/doc['data']['I0'])
+    elif detector == 'Test':
+        func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
     elif detector == 'Dtc':
         dets.append(vor)
         denominator = ' / I0'
         func  = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc2]/doc['data']['I0'])
         func3 = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc3]/doc['data']['I0'])
-    elif detector == 'If':
+    elif detector == 'Fluorescence' or detector == 'Flourescence':
         dets.append(xs)
         yield from mv(xs.cam.acquire_time, dwell)
         yield from mv(xs.total_points, readings)
@@ -128,6 +140,15 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
                                                        doc['data'][BMMuser.xs2] +
                                                        doc['data'][BMMuser.xs3] +
                                                        doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+    elif detector == 'If':
+        dets.append(xs)
+        yield from mv(xs.cam.acquire_time, dwell)
+        yield from mv(xs.total_points, readings)
+        denominator = ''
+        func = lambda doc: (doc['time']-epoch_offset, (doc['data'][BMMuser.xs1] +
+                                                       doc['data'][BMMuser.xs2] +
+                                                       doc['data'][BMMuser.xs3] +
+                                                       doc['data'][BMMuser.xs4] ))
         
         # dets.append(vor)
         # denominator = ' / I0'
@@ -278,19 +299,29 @@ def ts2dat(datafile, key):
 #   Journal of Physics: Condensed Matter, Volume 10, Number 1                 #
 #   http://iopscience.iop.org/article/10.1088/0953-8984/10/1/026/meta         #
 ###############################################################################
-def sead(inifile, force=False, **kwargs):
+def sead(inifile=None, force=False, **kwargs):
     '''
     Read an INI file for scan matadata, then perform a single energy
     absorption detection measurement.
 
     '''
     def main_plan(inifile, force, **kwargs):
+
+
+        if force is False:
+            (ok, ctstext) = BMM_clear_to_start()
+            if ok is False:
+                print(error_msg(ctstext))
+                yield from null()
+                return
+
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## read and check INI content
         orig = inifile
         if not os.path.isfile(inifile):
-            inifile = BMMuser.folder + inifile
+            inifile = os.path.join(BMMuser.folder, inifile)
             if not os.path.isfile(inifile):
+                print(inifile)
                 print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
                 return(orig, -1)
         print(bold_msg('reading ini file: %s' % inifile))
@@ -302,10 +333,12 @@ def sead(inifile, force=False, **kwargs):
         #    return(yield from null())
               
         detector = 'It'
-        if 'trans' in p['mode']:
+        if 'trans' in p['mode'].lower():
             detector = 'It'
-        elif 'fluo' in p['mode']:
+        elif 'fluo' in p['mode'].lower():
             detector = 'If'
+        elif 'test' in p['mode'].lower():
+            detector = 'Test'
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -315,10 +348,13 @@ def sead(inifile, force=False, **kwargs):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 
+        report(f'== starting single energy absorption detection scan', level='bold', slack=True)
+
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## prompt user and verify that we are clear to start
         text = '\n'
-        for k in ('folder', 'filename', 'experimenters', 'e0', 'npoints', 'dwell', 'delay',
+        for k in ('folder', 'filename', 'experimenters', 'energy', 'npoints', 'dwell', 'delay',
                   'sample', 'prep', 'comment', 'mode', 'snapshots'):
             text = text + '      %-13s : %-50s\n' % (k,p[k])
         ## NEVER prompt when using queue server
@@ -326,17 +362,17 @@ def sead(inifile, force=False, **kwargs):
             BMMuser.prompt = False
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
-            action = input("\nBegin time scan?" + PROMPT)
+            action = input("\nBegin time scan? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 return(yield from null())
 
-        (ok, ctstext) = BMM_clear_to_start()
-        if force is False and ok is False:
-            print(error_msg(ctstext))
-            yield from null()
-            return
+        ## gather up input data into a format suitable for the dossier
+        with open(inifile, 'r') as fd: content = fd.read()
+        output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
+        clargs = textwrap.fill(str(kwargs), width=50) # .replace('\n', '<br>')
+        BMM_log_info('starting raster scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
 
-
+            
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         # organize metadata for injection into database and XDI output
         print(bold_msg('gathering metadata'))
@@ -344,7 +380,7 @@ def sead(inifile, force=False, **kwargs):
                           experimenters = p['experimenters'],
                           edge          = p['edge'],
                           element       = p['element'],
-                          edge_energy   = p['e0'],
+                          edge_energy   = p['energy'],
                           direction     = 0,
                           scantype      = 'fixed',
                           channelcut    = p['channelcut'],
@@ -357,14 +393,24 @@ def sead(inifile, force=False, **kwargs):
                           stoichiometry = None,
                           mode          = p['mode'],
                           comment       = p['comment'],)
-        #del(md['XDI']['Element']['edge'])
-        #del(md['XDI']['Element']['symbol'])
-        #md['XDI']['Column']['01'] = 'time seconds'
-        #md['XDI']['Column']['02'] = md.copy()['XDI']['Column']['03']
-        #md['XDI']['Column']['03'] = md.copy()['XDI']['Column']['04']
-        #md['XDI']['Column']['04'] = md['XDI']['Column']['05']
-        #del(md['XDI']['Column']['05'])
+        md['Beamline']['energy'] = dcm.energy.position
+        md['Scan']['dwell_time'] = p['dwell']
+        md['Scan']['delay']      = p['delay']
         md['_kind'] = 'sead'
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## snap photos
+        if p['snapshots']:
+            yield from dossier.cameras(p['folder'], p['filename'], md)
+            
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## capture dossier metadata for start document
+        md['_snapshots'] = {**dossier.cameras_md}
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## populate the static html page for this scan 
+        these_kwargs = {'npoints': p['npoints'], 'dwell': p['dwell'], 'delay': p['delay'], 'shutter': p['shutter']}
+        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
 
         rightnow = metadata_at_this_moment() # see 62-metadata.py
         for family in rightnow.keys():       # transfer rightnow to md
@@ -376,50 +422,133 @@ def sead(inifile, force=False, **kwargs):
         xdi = {'XDI': md}
 
         BMM_log_info('Starting single-energy absorption detection time scan using\n%s:\n%s\nCommand line arguments = %s\nMoving to measurement energy: %.1f eV' %
-                     (inifile, text, str(kwargs), p['e0']))
+                     (inifile, text, str(kwargs), p['energy']))
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## move to the energy specified in the INI file
-        print(bold_msg('Moving to measurement energy: %.1f eV' % p['e0']))
+        print(bold_msg('Moving to measurement energy: %.1f eV' % p['energy']))
         dcm.mode = 'fixed'
-        yield from mv(dcm.energy, p['e0'])
-
-        
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## snap photos
-        # if p['snapshots']:
-        #     image = os.path.join(p['folder'], 'snapshots', "%s_XASwebcam_%s.jpg" % (p['filename'], now()))
-        #     snap('XAS', filename=image)
-        #     image = os.path.join(p['folder'], 'snapshots', "%s_analog_%s.jpg" % (p['filename'], now()))
-        #     snap('analog', filename=image)
+        yield from mv(dcm.energy, p['energy'])
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting measurement
         if not force: BMM_suspenders()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## open the shutters (which were closed at the start of sead)
+        if openclose is True:
+            shb.open_plan()
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
-        uid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
+        dossier.seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## make a save a mode-specific plot
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
+        table = db.v2[dossier.seaduid].primary.read()
+        if detector == 'Test':
+            plt.plot(table['time']-table['time'][0], table['I0'])
+            plt.xlabel('time (seconds)')
+            plt.ylabel('I0 signal')
+        elif detector == 'I0':
+            plt.plot(table['time']-table['time'][0], table['I0'])
+            plt.xlabel('time (seconds)')
+            plt.ylabel('I0 signal')
+        elif detector == 'It':
+            plt.plot(table['time']-table['time'][0], table['It'])
+            plt.xlabel('time (seconds)')
+            plt.ylabel('It signal')
+        elif 'Trans' in detector:
+            signal = numpy.log(table['I0'] / table['It'])
+            plt.plot(table['time']-table['time'][0], signal)
+            plt.xlabel('time (seconds)')
+            plt.ylabel('It signal')
+        elif detector == 'If':
+            signal = table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]
+            plt.plot(table['time']-table['time'][0], signal)
+            plt.xlabel('time (seconds)')
+            plt.ylabel('If signal')
+        elif 'Fluo' in detector or 'Flour' in detector:
+            signal = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
+            plt.plot(table['time']-table['time'][0], signal)
+            plt.xlabel('time (seconds)')
+            plt.ylabel('If signal')
+        elif detector == 'Ir':
+            plt.plot(table['time']-table['time'][0], table['Ir'])
+            plt.xlabel('time (seconds)')
+            plt.ylabel('Ir signal')
+        plt.show()
+
+        ahora = now()
+        dossier.seadimage = f"{p['filename']}_sead_{now()}.png"
+        plt.savefig(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
+        matplotlib.use(thisagg) # return to screen display
+        img_to_slack(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
+
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## write the output file
-        header = db[uid]
-        write_XDI(outfile, header) # yield from ?
-        report('wrote time scan to %s' % outfile)
-        #BMM_log_info('wrote time scan to %s' % outfile)
-        #print(bold_msg('wrote %s' % outfile))
+        ## close the shutters again
+        if openclose is True:
+            shb.close_plan()
+
+        if dossier.seaduid is not None:
+            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+            ## write the output file
+            header = db[dossier.seaduid]
+            write_XDI(outfile, header) # yield from ?
+            report('wrote time scan to %s' % outfile)
+            dossier.sead = os.path.basename(outfile)
+            #BMM_log_info('wrote time scan to %s' % outfile)
+            #print(bold_msg('wrote %s' % outfile))
 
     def cleanup_plan():
-        print('Cleaning up after single energy absorption detector measurement')
+        print('Cleaning up after single energy absorption detection measurement')
         BMM_clear_suspenders()
-        #RE.clear_suspenders()
-        yield from resting_state_plan()
-        dcm.mode = 'fixed'
+        try:
+            dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
+            how = 'finished  :tada:'
+            try:
+                if 'primary' not in db[-1].stop['num_events']:
+                    how = '*stopped*'
+                elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+                    how = '*stopped*'
+            except:
+                how = '*stopped*'
+            report(f'== SEAD scan {how}', level='bold', slack=True)
+            try:
+                htmlout = dossier.sead_dossier()
+                report('wrote dossier %s' % htmlout, 'bold')
+            except Exception as E:
+                print(error_msg('Failed to write SEAD dossier.  Here is the exception message:'))
+                print(E)
+                htmlout, prjout, pngout = None, None, None
+            #rsync_to_gdrive()
+            #synch_gdrive_folder()
+        except:
+            print(whisper('Quitting SEAD scan.'))
 
-    RE, dcm, BMMuser, db = user_ns['RE'], user_ns['dcm'], user_ns['BMMuser'], user_ns['db']
+        yield from resting_state_plan()
+
+    
+    RE, dcm, BMMuser, db, shb = user_ns['RE'], user_ns['dcm'], user_ns['BMMuser'], user_ns['db'], user_ns['shb']
+    openclose = False
+    if openclose is True:
+        shb.close_plan()
     RE.msg_hook = None
-    ## encapsulation!
+    dossier = BMMDossier()
+    dossier.measurement = 'SEAD'
+
+    if is_re_worker_active():
+        inifile = '/home/xf06bm/Data/bucket/sead.ini'
+    if inifile is None:
+        inifile = present_options('ini')
+    if inifile is None:
+        return(yield from null())
+    if inifile[-4:] != '.ini':
+        inifile = inifile+'.ini'
     yield from finalize_wrapper(main_plan(inifile, force, **kwargs), cleanup_plan())
     RE.msg_hook = BMM_msg_hook
         

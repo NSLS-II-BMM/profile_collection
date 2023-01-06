@@ -42,7 +42,7 @@ class DCM(PseudoPositioner):
 
     @property
     def _twod(self):
-        if self._crystal is '311':
+        if self._crystal == '311':
             return 2*BMM_dcm.dspacing_311
         else:
             return 2*BMM_dcm.dspacing_111
@@ -164,7 +164,7 @@ class DCM(PseudoPositioner):
     def set_crystal(self, crystal=None):
         if crystal is not None:
             self._crystal = crystal
-        if self._crystal is '311':
+        if self._crystal == '311':
             self.bragg.user_offset.put(BMM_dcm.offset_311)
         else:
             self.bragg.user_offset.put(BMM_dcm.offset_111)

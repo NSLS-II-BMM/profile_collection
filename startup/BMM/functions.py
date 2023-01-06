@@ -1,5 +1,5 @@
 import os, time, datetime, psutil, glob
-import inflection, textwrap, ansiwrap
+import inflection, textwrap, ansiwrap, termcolor
 from numpy import pi, sin, cos, arcsin, sqrt
 
 from BMM import user_ns as user_ns_module
@@ -15,7 +15,7 @@ BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
 LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 
-PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: Enter / y then Enter ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
+PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 
 
 
@@ -218,7 +218,8 @@ def present_options(suffix='xlsx'):
         return None
 
 def plotting_mode(mode):
-    if user_ns['with_xspress3'] and mode.lower() == 'xs1':
+    mode = mode.lower()
+    if user_ns['with_xspress3'] and mode == 'xs1':
         return 'xs1'
     elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
         return 'xs'
@@ -228,6 +229,8 @@ def plotting_mode(mode):
         return 'ref'
     elif mode == 'yield':
         return 'yield'
+    elif mode == 'test':
+        return 'test'
     else:
         return 'trans'
 
