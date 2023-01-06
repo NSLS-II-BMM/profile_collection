@@ -244,6 +244,8 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
             print(whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}'))
         elif m.hocpl.get() == 1:
             print(f'{TAB}{m.name} {CHECK}')
+        elif 'filter' in m.name:
+            print(whisper(f'{TAB}{m.name} is not homed, but that\'s probably OK.'))
         else:
             print(error_msg(f'{TAB}{m.name} is not homed.'))
 

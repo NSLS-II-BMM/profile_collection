@@ -486,6 +486,7 @@ class BMM_User(Borg):
         dst     = os.path.join(self.folder, fname)
         if 'xlsx' in fname:
             src = os.path.join(startup_dir, 'xlsx', fname)
+            dst     = os.path.join(self.folder, 'templates', fname)
         if not os.path.isfile(dst):
             shutil.copyfile(src,  dst)
             verb, pad = 'Copied', ' '
@@ -545,9 +546,10 @@ class BMM_User(Borg):
         except:
             pass
         
-        imagefolder = os.path.join(data_folder, 'snapshots')
-        prjfolder   = os.path.join(data_folder, 'prj')
-        htmlfolder  = os.path.join(data_folder, 'dossier')
+        imagefolder    = os.path.join(data_folder, 'snapshots')
+        prjfolder      = os.path.join(data_folder, 'prj')
+        htmlfolder     = os.path.join(data_folder, 'dossier')
+        templatefolder = os.path.join(data_folder, 'templates')
         self.establish_folder(step, 'Lustre folder', folder)
         self.establish_folder(0,    'data folder', data_folder)
         self.establish_folder(0,    'snapshot folder', imagefolder)
@@ -559,6 +561,7 @@ class BMM_User(Borg):
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
             print('    copied html generation files, touched MANIFEST')
+        self.establish_folder(0,    'templates folder', templatefolder)
      
         step += 1
 
@@ -571,7 +574,7 @@ class BMM_User(Borg):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
         initmpl = os.path.join(startup_dir, 'tmpl', 'xafs.tmpl')
-        scanini = os.path.join(data_folder, 'xafs.ini')
+        scanini = os.path.join(data_folder, 'templates', 'xafs.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -584,7 +587,7 @@ class BMM_User(Borg):
         self.print_verb_message(step, verb, 'XAFS INI file', pad, scanini)
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'rasterscan.tmpl')
-        scanini = os.path.join(data_folder, 'raster.ini')
+        scanini = os.path.join(data_folder, 'templates', 'raster.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -594,10 +597,10 @@ class BMM_User(Borg):
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
-        self.print_verb_message(step, verb, 'raster INI file', pad, scanini)
+        self.print_verb_message(0, verb, 'raster INI file', pad, scanini)
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'sead.tmpl')
-        scanini = os.path.join(data_folder, 'sead.ini')
+        scanini = os.path.join(data_folder, 'templates', 'sead.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -607,11 +610,11 @@ class BMM_User(Borg):
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
-        self.print_verb_message(step, verb, 'sead INI file', pad, scanini)
+        self.print_verb_message(0, verb, 'sead INI file', pad, scanini)
 
         
         macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
-        macropy = os.path.join(data_folder, 'sample_macro.py')
+        macropy = os.path.join(data_folder, 'templates', 'sample_macro.py')
         commands = '''
         ## sample 1
         yield from slot(1)

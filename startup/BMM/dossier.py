@@ -237,8 +237,8 @@ class BMMDossier():
 
     def __init__(self):
         self.scanlist      = ''
-        self.motors        = motor_sidebar()
-        self.manifest_file = os.path.join(user_ns['BMMuser'].DATA, 'dossier', 'MANIFEST')
+        #self.motors        = motor_sidebar()
+        self.manifest_file = os.path.join(user_ns['BMMuser'].folder, 'dossier', 'MANIFEST')
 
     def capture_xrf(self, folder, stub, md):
         '''Capture an XRF spectrum and related metadata at the current energy

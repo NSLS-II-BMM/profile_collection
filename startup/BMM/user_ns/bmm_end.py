@@ -367,6 +367,8 @@ def examine_diagnostics():
                 print(error_msg(f'{TAB}{things[k][0]} is not out of the beam.'))
             else:
                 print(f'{TAB}{things[k][0]} {CHECK}')
+        elif 'filter' in k:
+            print(whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.'))
         else:
             print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
 

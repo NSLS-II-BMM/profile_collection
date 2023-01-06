@@ -36,7 +36,6 @@ from BMM.xdi           import write_XDI
 
 from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
 from BMM.user_ns.dwelltime import _locked_dwell_time
-from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -331,7 +330,12 @@ def sead(inifile=None, force=False, **kwargs):
         #if not os.path.isdir(p['folder']):
         #    print(error_msg('\n%s is not a folder\n' % p['folder']))
         #    return(yield from null())
-              
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## close the shutter if requested
+        if p['shutter'] is True:
+            shb.close_plan()
+        
         detector = 'It'
         if 'trans' in p['mode'].lower():
             detector = 'It'
@@ -437,12 +441,17 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## open the shutters (which were closed at the start of sead)
-        if openclose is True:
+        if p['shutter'] is True:
             shb.open_plan()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
         dossier.seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## close the shutters again
+        if p['shutter'] is True:
+            shb.close_plan()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make a save a mode-specific plot
@@ -489,11 +498,6 @@ def sead(inifile=None, force=False, **kwargs):
         img_to_slack(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
 
         
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## close the shutters again
-        if openclose is True:
-            shb.close_plan()
-
         if dossier.seaduid is not None:
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## write the output file
@@ -535,8 +539,8 @@ def sead(inifile=None, force=False, **kwargs):
     
     RE, dcm, BMMuser, db, shb = user_ns['RE'], user_ns['dcm'], user_ns['BMMuser'], user_ns['db'], user_ns['shb']
     openclose = False
-    if openclose is True:
-        shb.close_plan()
+    #if openclose is True:
+    #    shb.close_plan()
     RE.msg_hook = None
     dossier = BMMDossier()
     dossier.measurement = 'SEAD'
