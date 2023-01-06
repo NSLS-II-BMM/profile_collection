@@ -529,8 +529,8 @@ def sead(inifile=None, force=False, **kwargs):
                 print(error_msg('Failed to write SEAD dossier.  Here is the exception message:'))
                 print(E)
                 htmlout, prjout, pngout = None, None, None
-            #rsync_to_gdrive()
-            #synch_gdrive_folder()
+            rsync_to_gdrive()
+            synch_gdrive_folder()
         except:
             print(whisper('Quitting SEAD scan.'))
 

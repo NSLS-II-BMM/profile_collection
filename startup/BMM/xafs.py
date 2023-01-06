@@ -793,38 +793,6 @@ def xafs(inifile=None, **kwargs):
             ## show the metadata to the user
             display_XDI_metadata(md)
                 
-
-            
-            # dossier.filename      = p['filename']
-            # dossier.experimenters = p['experimenters']
-            # dossier.start         = p['start']
-            # dossier.end           = p['start']+p['nscans']-1
-            # dossier.seqstart      = now('%A, %B %d, %Y %I:%M %p')
-            # dossier.e0            = p['e0']
-            # dossier.element       = p['element']
-            # dossier.edge          = p['edge']
-            # dossier.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
-            # dossier.sample        = p['sample']
-            # dossier.prep          = p['prep']
-            # dossier.comment       = p['comment']
-            # dossier.mode          = p['mode']
-
-            # dossier.pccenergy     = eave
-            # dossier.bounds        = ' '.join(map(str, p['bounds_given'])) 
-            # dossier.steps         = ' '.join(map(str, p['steps']))
-            # dossier.times         = ' '.join(map(str, p['times']))
-            # dossier.clargs        = clargs
-            # dossier.htmlpage      = p['htmlpage']
-            # dossier.ththth        = p['ththth']
-            # ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
-            # dossier.url           = p['url']
-            # dossier.doi           = p['doi']
-            # dossier.cif           = p['cif']
-            # dossier.temperature   = ''
-            # with open(os.path.join(BMMuser.DATA, inifile)) as f:
-            #     dossier.initext = ''.join(f.readlines())
-
-                
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## store data in redis, used by cadashboard
             rkvs.set('BMM:scan:type',      'xafs')
@@ -849,6 +817,8 @@ def xafs(inifile=None, **kwargs):
                     yield from null()
                     return
 
+                ## this block is in the wrong place.  should be outside the loop over repetitions
+                ## same is true of several more things below
                 slotno, ring = '', ''
                 if 'wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
@@ -927,8 +897,9 @@ def xafs(inifile=None, **kwargs):
                 else:
                     md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
                 
+                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+                ## metadata for XDI entry in start document
                 xdi = {'XDI': md}
-                #mtr = {'BMM_motors' : motor_metadata()}
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
@@ -1042,7 +1013,6 @@ def xafs(inifile=None, **kwargs):
 
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
-    #quadem1, vor = user_ns['quadem1'], user_ns['vor']
     xafs_wheel, ga, linkam, gmb, lakeshore = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb'], user_ns['lakeshore']
     rkvs = user_ns['rkvs']
 
