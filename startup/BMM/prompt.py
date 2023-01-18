@@ -75,6 +75,8 @@ import types
 get_ipython().display_formatter.formatters['text/plain'].for_type(types.GeneratorType, lambda x, y, z: print(f'{x}   Hint: enclose bsui commands in RE()'))
 
 
+
+
 def BMM_help():
     '''
     Print a concise summary of data acquisition commands.

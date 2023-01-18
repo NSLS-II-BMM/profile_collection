@@ -451,6 +451,108 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
     yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
+
+def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='max', how='peak', filename=None):
+
+    def main_plan(motor, start, stop, nsteps, detector, find, how, filename):
+        (ok, text) = BMM_clear_to_start()
+        if ok is False:
+            print(error_msg(text))
+            yield from null()
+            return
+
+        user_ns['RE'].msg_hook = None
+        BMMuser.motor = motor
+
+        dets = [user_ns['quadem1'],]
+
+        sgnl = 'fluorescence (Xspress3)'
+
+        if detector.lower() == 'if':
+            dets.append(user_ns['xs'])
+            denominator = ' / I0'
+            sgnl = 'fluorescence (Xspress3)'
+            func = lambda doc: (doc['data'][motor.name],
+                                (doc['data'][BMMuser.xs1] +
+                                 doc['data'][BMMuser.xs2] +
+                                 doc['data'][BMMuser.xs3] +
+                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            yield from mv(xs.total_points, nsteps)
+        elif detector.lower() == 'it':
+            sgnl = 'transmission'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
+        elif detector.lower() == 'ir':
+            sgnl = 'reference'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
+
+        titl = f'{sgnl} vs. {motor.name}'
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
+
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
+        
+        @subs_decorator(plot)
+        #@subs_decorator(src.callback)
+        def doscan(filename):
+            line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
+
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            t  = user_ns['db'][-1].table()
+            if detector.lower() == 'if':
+                signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
+            elif detector.lower() == 'it':
+                signal   = numpy.array(t['It']/t['I0'])
+            elif detector.lower() == 'ir':
+                signal   = numpy.array(t['Ir']/t['It'])
+
+            signal = signal - signal[0]
+            if find == 'min':
+                signal = -1 * signal
+            pos      = numpy.array(t[motor.name])
+
+            if choice.lower() == 'com':
+                position = com(signal)
+                top      = t[motor.name][position]
+            elif choice.lower() == 'fit':
+                pitch    = t[motor_name]
+                mod      = SkewedGaussianModel()
+                pars     = mod.guess(signal, x=pitch)
+                out      = mod.fit(signal, pars, x=pitch)
+                print(whisper(out.fit_report(min_correl=0)))
+                out.plot()
+                top      = out.params['center'].value
+            else:
+                position = peak(signal)
+                top      = t[motor.name][position]
+            
+            thisagg = matplotlib.get_backend()
+            matplotlib.use('Agg') # produce a plot without screen display
+            out.plot()
+            if filename is None:
+                filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+            plt.savefig(filename)
+            matplotlib.use(thisagg) # return to screen display
+            clean_img()
+            BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+            BMMuser.display_img.show()
+            
+            yield from mv(motor, top)
+            print(bold_msg(f'Found peak at {motor.name} = {motor.position}'))
+            for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
+                rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
+
+        yield from doscan(filename)
+        
+    def cleanup_plan():
+        yield from resting_state_plan()
+    
+    user_ns['RE'].msg_hook = None
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, find, filename), cleanup_plan())
+    user_ns['RE'].msg_hook = BMM_msg_hook
+
+
     
 
 ##                     linear stages        tilt stage           rotation stages

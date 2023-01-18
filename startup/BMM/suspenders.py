@@ -29,7 +29,7 @@ beam_dump_screen_message = warning_msg('''
   You do not need to do anything.  Bluesky suspenders have
   noticed the loss of beam and have paused your scan.
 
-  Your scan will resume when the beam returns.
+  Your scan will resume soon after the beam returns.
 ''') + whisper('''
       You may also terminate your scan by hitting 
       C-c twice then entering RE.stop()

@@ -140,24 +140,28 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' %
                        (BMMuser.macro_sleep, el)))
         countdown(BMMuser.macro_sleep)
-        return(yield from null())
+        yield from null()
+        return
     ######################################################################
 
     if pds_motors_ready() is False:
         print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
-        return(yield from null())    
+        yield from null()
+        return
     
     (ok, text) = BMM_clear_to_start()
     if ok is False:
         print(error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n'))
-        return(yield from null())
+        yield from null()
+        return
     
     if energy is None:
         energy = edge_energy(el,edge)
         
     if energy is None:
         print(error_msg('\nEither %s or %s is not a valid symbol\n' % (el, edge)))
-        return(yield from null())
+        yield from null()
+        return
     if energy > 23500:
         edge = 'L3'
         energy = edge_energy(el,'L3')
@@ -165,15 +169,16 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if energy < 4000:
         print(warning_msg('The %s edge energy is below 4950 eV' % el))
         print(warning_msg('You have to change energy by hand.'))
-        return(yield from null())
+        yield from null()
+        return
 
     if energy > 23500:
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
-        return(yield from null())
+        yield from null()
+        return
 
     BMM_suspenders()
 
-    
     if energy > 8000:
         mode = 'A' if focus else 'D'
     elif energy < 6000:
@@ -196,7 +201,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         with_m2 = True
     if all_connected(with_m2) is False:
         print(warning_msg('Ophyd connection failure' % el))
-        return(yield from null())
+        yield from null()
+        return
 
 
     ################################
@@ -221,8 +227,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
             action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
-                return(yield from null())
-
+                yield from null()
+                return
+    else:
+        if element == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
+            print(warning_msg(f'You are already at the {element} {edge} edge.'))
+            if insist is False:
+                yield from null()
+                return
+            
     # make sure edge is set sensibly in redis when XRD mode is entered
     if mode == 'XRD':
         if edge_energy(el,edge) > 23500:
@@ -258,8 +271,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('Fixing this is often as simple as re-running the change_mode() command.')
         #print('Or try dm3_bct.kill_cmd() then dm3_bct.enable_cmd() then re-run the change_mode() command.')
         print('If that doesn\'t work, call for help')
-        
-        return(yield from null())
+        yield from null()
+        return
         
     yield from kill_mirror_jacks()
     yield from sleep(1)
@@ -269,7 +282,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('Clear the faults and try running the same change_edge() command again.')
         print('Troubleshooting: ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
         BMMuser.motor_fault = None
-        return(yield from null())
+        yield from null()
+        return
     BMMuser.motor_fault = None
     
         

@@ -98,11 +98,13 @@ class BMMMacroBuilder():
         self.cleanup          = ''
         self.initialize       = ''
 
-        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2')
+        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2', 'optimize')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'slitheight', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
 
+        self.do_opt           = False
+        self.optimize         = None
         self.orientation      = 'parallel'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
@@ -153,13 +155,20 @@ class BMMMacroBuilder():
             self.basename = sheet
         else:
             self.ws = self.wb.active
-        self.basename = re.sub('[ -]+', '_', self.basename)
+        self.basename = re.sub('[ -+*/]+', '_', self.basename)
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
 
-        if self.ws['H5'].value.lower() == 'e0':  # accommodate older xlsx files which have e0 values in column H
+        ## this is looking for presence/absence of a column labeled "optimize", which is experimental on 13 January 2023
+        self.do_opt = False
+        if 'wheel' in str(type(self)) and 'Optimize' in self.ws['U5'].value:
+            self.do_opt = True
+
+        ## this is trying to deal with very early spreadsheets which had an e0 column which no longer exists 
+        if self.ws['H5'].value.lower() == 'e0': 
             self.has_e0_column = True
 
+        ## this is dealing with single and double ring sample wheels
         if double is True:
             self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
@@ -450,7 +459,10 @@ class BMMMacroBuilder():
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
         #          things in the spreadsheet but not in the INI file
-        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx', 'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2'):
+        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method',
+                  'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx',
+                  'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2',
+                  'optimize'):
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'

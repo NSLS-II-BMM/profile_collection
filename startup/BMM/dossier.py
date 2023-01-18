@@ -140,8 +140,23 @@ class BMMDossier():
 
     methods
     =======
+    capture_xrf
+      measure an XRF spectrum and capture its metadata for use in a dossier
+
+    cameras
+      take a snapshot with each camera and capture metadata for use in a dossier
+
+    prep_metadata
+      organize metadata common to any dossier
+
     write_dossier
-       generate the sample specific dossier file
+       generate the sample specific dossier file for an XAFS measurement
+
+    raster_dossier
+       generate the sample specific dossier file for a raster measurement
+    
+    sead_dossier
+       generate the sample specific dossier file for a SEAD measurement
     
     write_manifest
        update the manifest and the 00INDEX.html file
@@ -183,6 +198,9 @@ class BMMDossier():
     gets described in the dossier.
 
     The dossier_entry methods get used in BMM/xafs.py around line 880.
+
+    The methods raster_dossier and sead_dossier serve this purpose for
+    those measurements.
 
     '''
     measurement   = None
@@ -358,6 +376,7 @@ class BMMDossier():
 
         
     def prep_metadata(self, p, inifile, clargs, kwargs):
+        '''Set metadata common to all scan types.'''
         BMMuser = user_ns['BMMuser']
         self.filename      = p['filename']
         self.experimenters = p['experimenters']

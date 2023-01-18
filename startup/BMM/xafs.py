@@ -997,11 +997,12 @@ def xafs(inifile=None, **kwargs):
             try:
                 htmlout = dossier.write_dossier()
             except Exception as E:
-                print(error_msg('Failed to write dossier.  Here is the exception message:'))
+                report('Failed to write dossier', level='error', slack=True)
+                print(error_msg('Here is the exception message:'))
                 print(E)
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
-                report('wrote dossier %s' % htmlout, 'bold')
+                report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
         rsync_to_gdrive()
         synch_gdrive_folder()
                     
