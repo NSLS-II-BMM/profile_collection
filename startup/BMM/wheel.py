@@ -319,6 +319,12 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
             if m['detectorx'] is not None:
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
+            if m['optimize'] is not None:  # parse optimize string, which is something like "max fluo(X)"
+                do_max = 'max' if 'max'  in m['optimize'] else 'min'
+                optdet = 'If'  if 'fluo' in m['optimize'] else 'It'
+                (optmotor, startstop) = ('xafs_x', 3) if '(X)' in m['optimize'] else ('xafs_y', 10)
+                self.content += self.tab + f'yield from peak_scan(motor={optmotor}, start=-{startstop}, stop={startstop}, nsteps=41, detector={optdet}, find=\'{do_max}\')\n'
+                self.totaltime += 1
 
             
             ##########################
@@ -418,18 +424,31 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 'samplex':    row[16+plus+self.offset].value,     # other motors 
                 'sampley':    row[17+plus+self.offset].value,
                 'slitwidth':  row[18+plus+self.offset].value,
-                'detectorx':  row[19+plus+self.offset].value,
-                'snapshots':  self.truefalse(row[20+plus+self.offset].value, 'snapshots' ), # flags
-                'htmlpage':   self.truefalse(row[21+plus+self.offset].value, 'htmlpage'  ),
-                'usbstick':   self.truefalse(row[22+plus+self.offset].value, 'usbstick'  ),
-                'bothways':   self.truefalse(row[23+plus+self.offset].value, 'bothways'  ),
-                'channelcut': self.truefalse(row[24+plus+self.offset].value, 'channelcut'),
-                'ththth':     self.truefalse(row[25+plus+self.offset].value, 'ththth'    ),
-                'url':        row[26+plus+self.offset].value,
-                'doi':        row[27+plus+self.offset].value,
-                'cif':        row[28+plus+self.offset].value, }
+                'detectorx':  row[19+plus+self.offset].value}
+        if self.do_opt:
+            rightend = {'optimize':   row[20+plus+self.offset].value,
+                        'snapshots':  self.truefalse(row[21+plus+self.offset].value, 'snapshots' ), # flags
+                        'htmlpage':   self.truefalse(row[22+plus+self.offset].value, 'htmlpage'  ),
+                        'usbstick':   self.truefalse(row[23+plus+self.offset].value, 'usbstick'  ),
+                        'bothways':   self.truefalse(row[24+plus+self.offset].value, 'bothways'  ),
+                        'channelcut': self.truefalse(row[25+plus+self.offset].value, 'channelcut'),
+                        'ththth':     self.truefalse(row[26+plus+self.offset].value, 'ththth'    ),
+                        'url':        row[27+plus+self.offset].value,
+                        'doi':        row[28+plus+self.offset].value,
+                        'cif':        row[29+plus+self.offset].value, }
+        else:
+            rightend = {'optimize' :  None,
+                        'snapshots':  self.truefalse(row[20+plus+self.offset].value, 'snapshots' ), # flags
+                        'htmlpage':   self.truefalse(row[21+plus+self.offset].value, 'htmlpage'  ),
+                        'usbstick':   self.truefalse(row[22+plus+self.offset].value, 'usbstick'  ),
+                        'bothways':   self.truefalse(row[23+plus+self.offset].value, 'bothways'  ),
+                        'channelcut': self.truefalse(row[24+plus+self.offset].value, 'channelcut'),
+                        'ththth':     self.truefalse(row[25+plus+self.offset].value, 'ththth'    ),
+                        'url':        row[26+plus+self.offset].value,
+                        'doi':        row[27+plus+self.offset].value,
+                        'cif':        row[28+plus+self.offset].value, }
         if self.double is True:
             this['ring'] = row[2].value
-        return this
+        return {**this, **rightend}
                          
             
