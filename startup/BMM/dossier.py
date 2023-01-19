@@ -14,16 +14,16 @@ from larch.io import create_athena
 
 from PIL import Image
 
-from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions       import plotting_mode, error_msg, whisper, etok, now
-from BMM.larch_interface import Pandrosus, Kekropidai
-from BMM.logging         import img_to_slack, post_to_slack
-from BMM.modes           import get_mode, describe_mode
-from BMM.motor_status    import motor_sidebar
-from BMM.periodictable   import edge_energy, Z_number, element_name
+from BMM.functions         import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions         import plotting_mode, error_msg, whisper, etok, now
+from BMM.larch_interface   import Pandrosus, Kekropidai
+from BMM.logging           import img_to_slack, post_to_slack, report
+from BMM.modes             import get_mode, describe_mode
+from BMM.motor_status      import motor_sidebar
+from BMM.periodictable     import edge_energy, Z_number, element_name
 
-from BMM.user_ns.base    import db, startup_dir, bmm_catalog
-
+from BMM.user_ns.base      import db, startup_dir, bmm_catalog
+from BMM.user_ns.detectors import use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -258,7 +258,7 @@ class BMMDossier():
         #self.motors        = motor_sidebar()
         self.manifest_file = os.path.join(user_ns['BMMuser'].folder, 'dossier', 'MANIFEST')
 
-    def capture_xrf(self, folder, stub, md):
+    def capture_xrf(self, folder, stub, mode, md):
         '''Capture an XRF spectrum and related metadata at the current energy
         '''
         
@@ -271,7 +271,7 @@ class BMMDossier():
         self.xrfsnap = "%s_XRF_%s.png" % (stub, ahora)
         xrffile  = os.path.join(folder, 'XRF', self.xrffile)
         xrfimage = os.path.join(folder, 'XRF', self.xrfsnap)
-        if use_4element and plotting_mode(p['mode']) == 'xs':
+        if use_4element and plotting_mode(mode) == 'xs':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
@@ -286,7 +286,7 @@ class BMMDossier():
                     int(BMMuser.xschannel4.get()),]
             xs.plot(uid=xrfuid)
             xs.to_xdi(xrffile)
-        if use_1element and plotting_mode(p['mode']) == 'xs1':
+        if use_1element and plotting_mode(mode) == 'xs1':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)

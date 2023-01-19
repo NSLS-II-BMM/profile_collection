@@ -30,7 +30,7 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, 
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar #, motor_status
 from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
+from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
 
@@ -307,12 +307,12 @@ def sead(inifile=None, force=False, **kwargs):
     def main_plan(inifile, force, **kwargs):
 
 
-        if force is False:
-            (ok, ctstext) = BMM_clear_to_start()
-            if ok is False:
-                print(error_msg(ctstext))
-                yield from null()
-                return
+        # if force is False:
+        #     (ok, ctstext) = BMM_clear_to_start()
+        #     if ok is False:
+        #         print(error_msg(ctstext))
+        #         yield from null()
+        #         return
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## read and check INI content
@@ -334,13 +334,13 @@ def sead(inifile=None, force=False, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## close the shutter if requested
         if p['shutter'] is True:
-            shb.close_plan()
+            yield from shb.close_plan()
         
         detector = 'It'
         if 'trans' in p['mode'].lower():
-            detector = 'It'
-        elif 'fluo' in p['mode'].lower():
-            detector = 'If'
+            detector = 'transmission'
+        elif 'fluo' in p['mode'].lower() or 'flou' in p['mode'].lower():
+            detector = 'fluorescence'
         elif 'test' in p['mode'].lower():
             detector = 'Test'
 
@@ -359,7 +359,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## prompt user and verify that we are clear to start
         text = '\n'
         for k in ('folder', 'filename', 'experimenters', 'energy', 'npoints', 'dwell', 'delay',
-                  'sample', 'prep', 'comment', 'mode', 'snapshots'):
+                  'sample', 'prep', 'comment', 'mode', 'shutter', 'snapshots'):
             text = text + '      %-13s : %-50s\n' % (k,p[k])
         ## NEVER prompt when using queue server
         if is_re_worker_active() is True:
@@ -436,13 +436,13 @@ def sead(inifile=None, force=False, **kwargs):
         yield from mv(dcm.energy, p['energy'])
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## engage suspenders right before starting measurement
-        if not force: BMM_suspenders()
-
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## open the shutters (which were closed at the start of sead)
         if p['shutter'] is True:
-            shb.open_plan()
+            yield from shb.open_plan()
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## engage suspenders right before starting measurement
+        if not force: BMM_suspenders()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
@@ -451,7 +451,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## close the shutters again
         if p['shutter'] is True:
-            shb.close_plan()
+            yield from shb.close_plan()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## make a save a mode-specific plot

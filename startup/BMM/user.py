@@ -239,6 +239,7 @@ class BMM_User(Borg):
         self.experimenters = ''
         self.element       = None
         self.e0            = None
+        self.energy        = None
         self.edge          = 'K'
         self.sample        = ''
         self.prep          = ''

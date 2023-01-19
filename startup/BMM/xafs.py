@@ -650,7 +650,7 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
-            yield from dossier.capture_xrf(p['folder'], p['filename'], md)
+            yield from dossier.capture_xrf(p['folder'], p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos

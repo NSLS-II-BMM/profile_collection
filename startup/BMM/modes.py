@@ -122,7 +122,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      ######################################################################
 
      if mode == 'B':
-          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue?" + PROMPT)
+          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? " + PROMPT)
           if action.lower() != 'y':
                return(yield from null())
 
@@ -368,7 +368,7 @@ def change_xtals(xtal=None):
      ######################################################################
 
      print('Moving to %s crystals' % xtal)
-     action = input('Begin moving motors?' + PROMPT)
+     action = input('Begin moving motors? ' + PROMPT)
      if action.lower() == 'q' or action.lower() == 'n':
           yield from null()
           return

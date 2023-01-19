@@ -220,7 +220,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nBegin energy change?" + PROMPT)
+        action = input("\nBegin energy change? " + PROMPT)
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
         if mode == 'C' and energy < 6000:
@@ -230,8 +230,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 yield from null()
                 return
     else:
-        if element == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
-            print(warning_msg(f'You are already at the {element} {edge} edge.'))
+        if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
+            print(warning_msg(f'You are already at the {el} {edge} edge.'))
             if insist is False:
                 yield from null()
                 return
