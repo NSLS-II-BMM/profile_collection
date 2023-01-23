@@ -317,19 +317,31 @@ class BMM_User(Borg):
         for k in self.bmm_strings:
             d[k] = getattr(self, k)
             if verbose: print(f'string: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 'None')
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_ints:
             d[k] = getattr(self, k)
             if verbose: print(f'int: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 0)
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_floats:
             d[k] = getattr(self, k)
             if verbose: print(f'float: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 0.0)
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_booleans:
             d[k] = getattr(self, k)
             if verbose: print(f'bool: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', str(getattr(self, k)))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 'False')
+            else:
+                rkvs.set(f'BMM:user:{k}', str(getattr(self, k)))
         for k in self.bmm_none:
             d[k] = getattr(self, k)
             if verbose: print(f'none: {k} = >{getattr(self, k)}<')

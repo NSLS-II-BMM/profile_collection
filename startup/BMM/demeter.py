@@ -9,13 +9,13 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.bmm import BMMuser
 
 
-def athena():
+def run_athena():
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
-    subprocess.Popen(["dathena"])
+    subprocess.Popen(["dathena"], stderr=subprocess.DEVNULL)
     
-def hephaestus():
+def run_hephaestus():
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
-    subprocess.Popen(["dhephaestus"])
+    subprocess.Popen(["dhephaestus"], stderr=subprocess.DEVNULL)
 
 
 TOPRJ = '/home/xf06bm/bin/toprj.pl'

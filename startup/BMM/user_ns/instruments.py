@@ -306,8 +306,8 @@ else:
 xafs_ref.inner_position = -48 # xafs_ref.outer_position + 26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
-xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
+#xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+#                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
 #                          ring, slot, elem, material (ring: 0=outer, 1=inner)
@@ -323,7 +323,7 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Zn':     [0, 10, 'Zn', 'Zn foil'],
                     'Ga':     [0, 11, 'Ga', 'Ga2O3'],
                     'Ge':     [0, 12, 'Ge', 'GeO2'],
-                    'As':     [0, 13, 'As', 'Ge2O3'],
+                    'As':     [0, 13, 'As', 'As2O3'],
                     'Se':     [0, 14, 'Se', 'Se metal powder'],
                     'Br':     [0, 15, 'Br', 'bromophenol blue'],
                     'Zr':     [0, 16, 'Zr', 'Zr foil'],
@@ -393,10 +393,10 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
 #      # don't move reference wheel
 
 def ref2redis():
-    for i in range(0, rkvs.llen('BMM:reference:list')):
-        rkvs.rpop('BMM:reference:list')
-    for el in xafs_ref.content:
-        rkvs.rpush('BMM:reference:list', str(el))
+    #for i in range(0, rkvs.llen('BMM:reference:list')):
+    #    rkvs.rpop('BMM:reference:list')
+    #for el in xafs_ref.content:
+    #    rkvs.rpush('BMM:reference:list', str(el))
     rkvs.set('BMM:reference:mapping', json.dumps(xafs_ref.mapping))
 
 ref2redis()

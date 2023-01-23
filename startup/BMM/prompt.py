@@ -104,10 +104,8 @@ def BMM_help():
     print(bold_msg('Run a scan sequence:\t\t')+'RE(xafs(\'scan.ini\'))')
     print(bold_msg('Scan a motor, plot a detector:\t')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
     print(bold_msg('Scan 2 motors, plot a detector:\t')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
-    #print(bold_msg('Single energy XAS detection:\t')+'RE(sead(\'timescan.ini\'))')
-    print(bold_msg('Make a log entry:\t\t')+'BMM_log_info(\'blah blah blah\')')
     print('')
-    print(bold_msg('DATA = ') + BMMuser.DATA)
+    print(bold_msg('athena / hephaestus:\t\t') + '%athena / %hephaestus')
     print('')
     print(bold_msg('All the details: ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/index.html'))
     return None
