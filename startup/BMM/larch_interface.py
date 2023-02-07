@@ -24,23 +24,37 @@ import larch.utils.show as lus
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from BMM.functions import etok, ktoe
+#from BMM.functions import etok, ktoe
 from BMM.periodictable import edge_energy
 
-from BMM import user_ns as user_ns_module
-user_ns = vars(user_ns_module)
+#from BMM import user_ns as user_ns_module
+#user_ns = vars(user_ns_module)
 
-from BMM.user_ns.bmm import BMMuser
+#from BMM.user_ns.bmm import BMMuser
 
 LARCH = Interpreter()
+
+KTOE = 3.8099819442818976
+def etok(ee):
+    '''convert relative energy to wavenumber'''
+    return sqrt(ee/KTOE)
+def ktoe(k):
+    '''convert wavenumber to relative energy'''
+    return k*k*KTOE
 
 
 class Pandrosus():
     '''A thin wrapper around basic XAS data processing for individual
     data sets as implemented in Larch.
 
-    The plotting capabilities of this class are very similar to the
-    orange plot buttons in Athena.
+    The plotting capabilities of this class are similar to the orange
+    plot buttons in Athena.
+
+    in bsui:
+        this = Pandrosus()
+        this.folder, this.db = BMMuser.folder, user_ns['db']
+    That is, every time you make a Pandrosus object, you need to orient
+    it correctly for reading and producing data for this session.
 
     Attributes
     ----------
@@ -117,6 +131,13 @@ class Pandrosus():
         self.xr      = 'radial distance ($\AA$)'
         self.rmax    = 6
 
+        ## some parameters to make this usable in bsui and not in bsui
+        self.folder  = None
+        self.db      = None
+        self.reuse   = True
+
+        self.facecolor = (1.0, 1.0, 1.0)
+        
         ## flow control parameters
         
     def make_xmu(self, uid, mode):
@@ -138,8 +159,13 @@ class Pandrosus():
             'transmission', 'fluorescence', or 'reference'
 
         '''
-        header = user_ns['db'][uid]
-        table  = header.table()
+        if 'Broker' in str(type(self.db)):  # v1 databroker
+            header = self.db[uid]
+            table  = header.table()
+        else:                               # tiled catalog
+            header = self.db[uid].metadata
+            table  = self.db[uid].primary.read()
+            
         self.group.energy = numpy.array(table['dcm_energy'])
         self.group.i0 = numpy.array(table['I0'])
         if mode == 'flourescence': mode = 'fluorescence'
@@ -184,6 +210,11 @@ class Pandrosus():
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table['It'])
+
+        # why does self.group.signal get lost? weird....
+        #print(self.group.signal)
+        self.signal = self.group.signal
+        
             
     def fetch(self, uid, name=None, mode='transmission'):
         self.uid = uid
@@ -192,15 +223,23 @@ class Pandrosus():
         else:
             self.name = uid[-6:]
         self.group = Group(__name__=self.name)
-        self.title = user_ns['db'].v2[uid].metadata['start']['XDI']['Sample']['name']
+        if 'Broker' in str(type(self.db)):  # v1 databroker
+            self.title = self.db.v2[uid].metadata['start']['XDI']['Sample']['name']
+        else:                               # tiled catalog
+            self.title = self.db[uid].metadata['start']['XDI']['Sample']['name']
+
+        self.mode = mode
         self.make_xmu(uid, mode=mode)
         self.prep()
-        toss = create_athena(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
+        toss = create_athena(os.path.join(self.folder, 'prj', 'toss.prj'))
         toss.add_group(self.group)
         toss.save()
-        os.remove(os.path.join(BMMuser.folder, 'prj', 'toss.prj'))
+        os.remove(os.path.join(self.folder, 'prj', 'toss.prj'))
         toss = None
-        self.group.args['label'] = user_ns['db'].v2[uid].metadata['start']['XDI']['_filename']
+        if 'Broker' in str(type(self.db)):  # v1 databroker
+            self.group.args['label'] = self.db.v2[uid].metadata['start']['XDI']['_filename']
+        else:                               # tiled catalog
+            self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
 
     def put(self, energy, mu, name):
         self.name = name
@@ -312,7 +351,11 @@ class Pandrosus():
 
         Setting deriv to True forces all other arguments to false.
         '''
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
         plt.xlabel(self.xe)
         plt.title(self.name + ' in energy')
         plt.grid(which='major', axis='both')
@@ -366,7 +409,11 @@ class Pandrosus():
         glitches and other experimental artifacts.
 
         '''
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
         plt.xlabel(self.xe)
         plt.title(self.name + ' in energy')
         plt.grid(which='major', axis='both')
@@ -375,11 +422,11 @@ class Pandrosus():
 
         max_xmu    = g.mu.max()
         max_i0     = g.i0.max()
-        max_signal = g.signal.max()
+        max_signal = self.signal.max()
 
         plt.plot(g.energy, g.mu, label='$\mu(E)$')
         plt.plot(g.energy, g.i0*max_xmu/max_i0, label='$I_0$')
-        plt.plot(g.energy, g.signal*max_xmu/max_signal, label='signal')
+        plt.plot(g.energy, self.signal*max_xmu/max_signal, label='signal')
         plt.legend(loc='best', shadow=True)
 
         
@@ -391,7 +438,11 @@ class Pandrosus():
           kw:   specify the k-weight used in the plot [2]
           win:  plot FT window if True [True]
         '''
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
         plt.xlabel(self.xk)
         plt.ylabel(f"$k^{kw}\cdot\chi(k)$  ($\AA^{{-{kw}}}$)")
         plt.title(self.name + ' in k-space')
@@ -443,7 +494,12 @@ class Pandrosus():
         '''
         self.do_xftf(kw=kw)
         self.do_xftr()
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
+
         plt.xlabel(self.xr)
         plt.title(self.name + ' in R-space')
         plt.grid(which='major', axis='both')
@@ -523,7 +579,11 @@ class Pandrosus():
         self.prep()
         self.do_xftf(kw=kw)
         self.do_xftr()
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
         plt.xlabel(self.xk)
         plt.title(self.name + ' in back-transformed k-space')
         plt.xlim(right=self.group.k.max())
@@ -577,7 +637,11 @@ class Pandrosus():
         '''
         self.do_xftf(kw=kw)
         self.do_xftr()
-        plt.cla()
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
         plt.xlabel('wavenumber ($\AA^{-1}$)')
         plt.ylabel('$\chi$(k)')
         plt.title(self.name + ' in k-space and q-space')
@@ -598,20 +662,20 @@ class Pandrosus():
         self.prep()
         self.do_xftf(kw=kw)
 
-        mu = fig.add_subplot(gs[0, :])
+        mu = fig.add_subplot(gs[0, :], facecolor=self.facecolor)
         mu.plot(self.group.energy, self.group.mu, label='$\mu(E)$', color='C0')
         mu.set_title(self.title)
         mu.set_ylabel('$\mu(E)$')
         mu.set_xlabel('energy (eV)')
 
-        chik = fig.add_subplot(gs[1, 0])
+        chik = fig.add_subplot(gs[1, 0], facecolor=self.facecolor)
         #chik.set_xlim(left=0)
         y = self.group.chi*self.group.k**kw
         chik.plot(self.group.k, y, label='$\chi(k)$', color='C0')
         chik.set_ylabel(f'$\chi(k)$  ($\AA^{{-{kw}}}$)')
         chik.set_xlabel('wavenumber ($\AA^{-1}$)')
 
-        chir = fig.add_subplot(gs[1, 1])
+        chir = fig.add_subplot(gs[1, 1], facecolor=self.facecolor)
         chir.set_xlim(0,6)
         chir.plot(self.group.r, self.group.chir_mag, label='$|\chi(R)|$', color='C0')
         chir.set_ylabel(f"$|\chi(R)|$  ($\AA^{{-{kw+1}}}$)")
@@ -649,6 +713,11 @@ class Kekropidai():
     -------
     add :
         add a single group or a list of groups to the Kekropidai object
+    put :
+        make a Kekropidai object out of a list of UIDs
+    merge :
+        merge the contents of the Kekropidai object and return a
+        Pandrosus object containing the merge
     plot_xmu : 
         (alias = pe) overplot all the groups in energy
     plot_i0 :
@@ -673,10 +742,13 @@ class Kekropidai():
         self.groups = list()
         self.name   = name
         self.rmax   = 6
+        self.folder = None
+        self.db     = None
 
     def put(self, uidlist):
         for u in uidlist:
             this = Pandrosus()
+            this.folder, this.db = self.folder, self.db
             this.fetch(u)
             self.add(this)
 
@@ -689,6 +761,7 @@ class Kekropidai():
             mm = mm + mu
         mm = mm / len(self.groups)
         merge = Pandrosus()
+        merge.folder, merge.db = self.folder, self.db
         merge.put(ee, mm, 'merge')
         return(merge)
         

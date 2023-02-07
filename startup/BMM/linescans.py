@@ -351,7 +351,9 @@ def find_slot(close=False):
             return(yield from null())
     
     yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
     if close:
@@ -359,18 +361,21 @@ def find_slot(close=False):
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refy notnegated'}})
     yield from rectangle_scan(motor=xafs_refx, start=-10,  stop=10,  nsteps=31, detector='Ir')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refx notnegated'}})
     print(bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})'))
 
     
-def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None):
+def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None, move=True, force=False, md={}):
 
-    def main_plan(motor, start, stop, nsteps, detector, negate, filename):
-        (ok, text) = BMM_clear_to_start()
-        if ok is False:
-            print(error_msg(text))
-            yield from null()
-            return
+    def main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, md):
+        if force is False:
+            (ok, text) = BMM_clear_to_start()
+            if ok is False:
+                print(error_msg(text))
+                yield from null()
+                return
 
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
@@ -408,8 +413,18 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
+            
+            if negate == True:
+                hint = f'rectanglescan {detector.capitalize()} {motor.name} negated'
+            else:
+                hint = f'rectanglescan {detector.capitalize()} {motor.name} notnegated'
+            if 'BMM_kafka' not in md:
+                md['BMM_kafka'] = dict()
+            if 'hint' not in md['BMM_kafka']:
+                md['BMM_kafka']['hint'] = hint
 
-            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+                
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**md, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
             t  = user_ns['db'][-1].table()
             if detector.lower() == 'if':
                 signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
@@ -428,7 +443,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
             print(whisper(out.fit_report(min_correl=0)))
             thisagg = matplotlib.get_backend()
             matplotlib.use('Agg') # produce a plot without screen display
-            out.plot()
+            out.plot(xlabel=motor.name, ylabel=detector)
             if filename is None:
                 filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
             plt.savefig(filename)
@@ -436,8 +451,9 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
             clean_img()
             BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
             BMMuser.display_img.show()
-            
-            yield from mv(motor, out.params['midpoint'].value)
+
+            if move is True:
+                yield from mv(motor, out.params['midpoint'].value)
             print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
             for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
                 rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
@@ -448,7 +464,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         yield from resting_state_plan()
     
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename), cleanup_plan())
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, md), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
@@ -618,11 +634,12 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     '''
 
     def main_plan(detector, axis, start, stop, nsteps, pluck, force, md):
-        (ok, text) = BMM_clear_to_start()
-        if force is False and ok is False:
-            print(error_msg(text))
-            yield from null()
-            return
+        if force is False:
+            (ok, text) = BMM_clear_to_start()
+            if ok is False:
+                print(error_msg(text))
+                yield from null()
+                return
 
         detector, axis = ls_backwards_compatibility(detector, axis)
         # print('detector is: ' + str(detector))
@@ -689,12 +706,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
         elif detector == 'I0a' and ic0 is not None:
             dets.append(ic0)
+            denominator = ' / I0'
             detname = 'I0a'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a'])
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a']/doc['data']['I0'])
         elif detector == 'I0b' and ic0 is not None:
             dets.append(ic0)
+            denominator = ' / I0'
             detname = 'I0b'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b'])
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b']/doc['data']['I0'])
         elif detector == 'Ir':
             #denominator = ' / It'
             detname = 'reference'
@@ -782,6 +801,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
         #if 'purpose' not in md:
         #    md['purpose'] = 'alignment'
+
+        if 'BMM_kafka' not in md:
+            md['BMM_kafka'] = dict()
+        if 'hint' not in md['BMM_kafka'] or thismotor.name not in md['BMM_kafka']['hint']:
+            md['BMM_kafka']['hint'] = f'linescan {detector} {thismotor.name}'
         
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))

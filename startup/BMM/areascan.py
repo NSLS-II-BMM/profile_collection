@@ -24,7 +24,7 @@ from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs
+from BMM.user_ns.detectors   import quadem1, vor, xs, ic0
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -54,6 +54,8 @@ def areascan(detector,
        pluck:    optional flag for whether to offer to pluck & move motor
        force:    optional flag for forcing a scan even if not clear to start
        dwell:    dwell time at each point (0.1 sec default)
+       contour:  True=plot with filled-in countours, False=plot with pcolormesh
+       log:      True=plot log of signal in color scale
        md:       composable dictionary of metadata
 
     slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
@@ -115,13 +117,19 @@ def areascan(detector,
         if detector == 'If':
             dets.append(vor)
             detector = 'ROI1'
-        if detector.lower() == 'xs':
+        elif detector.lower() == 'xs':
             dets.append(xs)
             detector = BMMuser.xs1
             yield from mv(xs.total_points, nslow*nfast)
-        if detector == 'Random':
+        elif detector in ('Random', 'Noisy', 'Noisy_det'):
             dets.append(noisy_det)
             detector = 'noisy_det'
+        elif detector == 'I0a':
+            dets.append(ic0)
+            detector = ic0.Ia.name
+        elif detector == 'I0a':
+            dets.append(ic0)
+            detector = ic0.Ib.name
         
         line1 = f'slow motor: {slow.name}, {startslow}, {stopslow}, {nslow} -- starting at {slow.position:.3f}\n'
         line2 = f'fast motor: {fast.name}, {startfast}, {stopfast}, {nfast} -- starting at {fast.position:.3f}\n'
@@ -167,6 +175,14 @@ def areascan(detector,
         thismd['slow_motor'] = slow.name
         thismd['fast_motor'] = fast.name
 
+
+        if fname is None:
+            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
+        elif fname.endswith('.png'):
+            fname = os.path.join(BMMuser.folder, fname)
+        else:
+            fname = os.path.join(BMMuser.folder, fname+'.png')
+
         report(f'Starting areascan at x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=True)
 
         ## engage suspenders right before starting scan sequence
@@ -177,12 +193,15 @@ def areascan(detector,
         def make_areascan(dets,
                           slow, startslow, stopslow, nslow,
                           fast, startfast, stopfast, nfast,
-                          snake=False):
+                          fname, snake=False):
             BMMuser.final_log_entry = False
+            
             uid = yield from grid_scan(dets,
                                        slow, startslow, stopslow, nslow,
                                        fast, startfast, stopfast, nfast,
-                                       snake, md={'plan_name' : f'grid_scan measurement {slow.name} {fast.name} {detector}'})
+                                       snake, md={'plan_name' : f'grid_scan measurement {slow.name} {fast.name} {detector}',
+                                                  'BMM_kafka' : {'hint': f'areascan {detector.capitalize()} {slow.name} {fast.name} {contour} {log} {user_ns["dcm"].energy.position:.1f}',
+                                                                 'pngout': fname}})
             BMMuser.final_log_entry = True
             return uid
 
@@ -194,7 +213,7 @@ def areascan(detector,
         uid = yield from make_areascan(dets,
                                        slow, slow.position+startslow, slow.position+stopslow, nslow,
                                        fast, fast.position+startfast, fast.position+stopfast, nfast,
-                                       snake=False)
+                                       fname, snake=False)
         report(f'map uid = {uid}', level='bold', slack=True)
         
 
@@ -207,6 +226,10 @@ def areascan(detector,
             z=numpy.array(thismap.primary.read()['noisy_det'])
         elif detector.lower() == 'it':
             z=numpy.array(thismap.primary.read()['It'])
+        elif detector.lower() == 'i0a':
+            z=numpy.array(thismap.primary.read()['I0a'])
+        elif detector.lower() == 'i0b':
+            z=numpy.array(thismap.primary.read()['I0b'])
         elif detector.lower() == 'xs':
             z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
                 numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
@@ -218,7 +241,7 @@ def areascan(detector,
                 numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
                 numpy.array(thismap.primary.read()[BMMuser.xs4])
 
-        z=z.reshape(nfast, nslow)
+        z=z.reshape(nslow, nfast)
         if log is True:
             z = numpy.log(z)
         # grabbing the first nfast elements of x and every
@@ -226,20 +249,15 @@ def areascan(detector,
         # numpy.unique due to float &/or motor precision issues
 
         #plt.title(f'Energy = {energies["below"]}')
+        fig = plt.figure(figsize=(nfast/20,nslow/20))
         plt.xlabel(f'fast axis ({fast.name}) position (mm)')
         plt.ylabel(f'slow axis ({slow.name}) position (mm)')
         plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
         if contour is True:
-            plt.contourf(x[:nfast], y[::nslow], numpy.log(z), cmap=plt.cm.viridis)
+            plt.contourf(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
         else:
-            plt.pcolormesh(x[:nfast], y[::nslow], numpy.log(z), cmap=plt.cm.viridis)
+            plt.pcolormesh(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
         plt.colorbar()
-        if fname is None:
-            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
-        elif fname.endswith('.png'):
-            fname = os.path.join(BMMuser.folder, fname)
-        else:
-            fname = os.path.join(BMMuser.folder, fname+'.png')
         plt.savefig(fname)
         plt.show()
         try:
@@ -321,7 +339,7 @@ def areascan(detector,
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def fetch_areaplot(uid=None, log=False):
+def fetch_areaplot(uid=None, signal=None, log=False, contour=False):
     if uid is None:
         print('No uid provided.')
         return
@@ -331,21 +349,23 @@ def fetch_areaplot(uid=None, log=False):
     x = numpy.array(df.primary.read()[fast])
     y = numpy.array(df.primary.read()[slow])
     el = df.metadata['start']['plan_name'].split(" ")[-1][:-1]
-    z = numpy.array(df.primary.read()[el+'1']) + numpy.array(df.primary.read()[el+'2']) + numpy.array(df.primary.read()[el+'3']) + numpy.array(df.primary.read()[el+'4'])
+    if signal is None:
+        z = numpy.array(df.primary.read()[el+'1']) + numpy.array(df.primary.read()[el+'2']) + numpy.array(df.primary.read()[el+'3']) + numpy.array(df.primary.read()[el+'4'])
+    elif signal.lower() in ('it', 'i0a', 'i0b'):
+        z = numpy.array(df.primary.read()[signal.capitalize()])
     (nslow, nfast) = df.metadata['start']['shape']
-
+    if log is True:
+        z = numpy.log(z)
     
+    
+    fig = plt.figure(figsize=(nfast/20,nslow/20))
     plt.xlabel(f'fast axis ({fast}) position (mm)')
     plt.ylabel(f'slow axis ({slow}) position (mm)')
     plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
-    if log is True:
-        plt.pcolormesh(x[:nfast], y[::nslow], numpy.log(z.reshape(nfast, nslow)), cmap=plt.cm.viridis)
+    if contour is True:
+        plt.contourf(x[:nfast], y[::nfast], z.reshape(nslow, nfast), cmap=plt.cm.viridis)
     else:
-        plt.pcolormesh(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
-    # if log is True:
-    #     plt.contourf(x[:nfast], y[::nslow], numpy.log(z.reshape(nfast, nslow)), cmap=plt.cm.viridis)
-    # else:
-    #     plt.contourf(x[:nfast], y[::nslow], z.reshape(nfast, nslow), cmap=plt.cm.viridis)
+        plt.pcolormesh(x[:nfast], y[::nfast], z.reshape(nslow, nfast), cmap=plt.cm.viridis)
     plt.colorbar()
     plt.show()
 

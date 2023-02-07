@@ -217,6 +217,11 @@ class BMMDualEM(QuadEM):
             yield from shb.open_plan()
             print('You are ready to measure!\n')
 
+
+class IntegratedIC(BMMDualEM):
+    bias = Cpt(EpicsSignal, 'BiasVoltage')
+
+            
 def dark_current():
     reopen = shb.state.get() == shb.openval 
     if reopen:

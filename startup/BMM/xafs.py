@@ -38,7 +38,7 @@ user_ns = vars(user_ns_module)
 #from __main__ import db
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time
-from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
+from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0, use_4element, use_1element
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -672,6 +672,11 @@ def xafs(inifile=None, **kwargs):
                         'times'     : ' '.join(map(str, p['times'])), }
         dossier.prep_metadata(p, inifile, clargs, these_kwargs)
 
+        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            initext = ''.join(f.readlines())
+        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
+        md['_user'] = user_metadata
+
         #legends = []
         #for i in range(p['start'], p['start']+p['nscans'], 1):
         #    legends.append("%s.%3.3d" % (p['filename'], i))
@@ -889,6 +894,8 @@ def xafs(inifile=None, **kwargs):
                             md[family][k] = rightnow[family][k]
                 
                 md['_kind'] = 'xafs'
+                md['_pccenergy'] = round(eave, 3)
+
                 if p['ththth']: md['_kind'] = '333'
                 if plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
@@ -904,18 +911,29 @@ def xafs(inifile=None, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## call the stock scan_nd plan with the correct detectors
                 uid = None
+                more_kafka = {'filename': p["filename"],
+                              'folder': BMMuser.folder,
+                              'element': p["element"],
+                              'edge': p["edge"],
+                              'repetitions': p["nscans"],
+                              'count': cnt, }
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}'})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
+                                                 'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':
                     uid = yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
+                                                 'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs1':
                     uid = yield from scan_nd([quadem1, xs1], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
+                                                 'BMM_kafka': { 'hint':  'xafs xs1', **more_kafka }})
                 else:
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence'})
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
+                                                 'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
+
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 

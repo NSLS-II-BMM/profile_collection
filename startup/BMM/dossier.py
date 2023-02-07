@@ -271,6 +271,9 @@ class BMMDossier():
         self.xrfsnap = "%s_XRF_%s.png" % (stub, ahora)
         xrffile  = os.path.join(folder, 'XRF', self.xrffile)
         xrfimage = os.path.join(folder, 'XRF', self.xrfsnap)
+        md['_xrffile']  = xrffile
+        md['_xrfimage'] = xrfimage
+        md['_pccenergy'] = f'{dcm.energy.position:.2f}'
         if use_4element and plotting_mode(mode) == 'xs':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
@@ -320,6 +323,7 @@ class BMMDossier():
         annotation = stub
         self.websnap = "%s_XASwebcam_%s.jpg" % (stub, ahora)
         image_web = os.path.join(folder, 'snapshots', self.websnap)
+        md['_filename'] = image_web
         xascam._annotation_string = annotation
         print(bold_msg('XAS webcam snapshot'))
         self.webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -333,6 +337,7 @@ class BMMDossier():
         if is_re_worker_active() is False:
             self.anasnap = "%s_analog_%s.jpg" % (stub, ahora)
             image_ana = os.path.join(folder, 'snapshots', self.anasnap)
+            md['_filename'] = image_ana
             anacam._annotation_string = stub
             print(bold_msg('analog camera snapshot'))
             self.anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -349,6 +354,7 @@ class BMMDossier():
         ### --- USB camera #1 --------------------------------------------------------------
         self.usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
         image_usb1 = os.path.join(folder, 'snapshots', self.usb1snap)
+        md['_filename'] = image_usb1
         usbcam1._annotation_string = stub
         print(bold_msg('USB camera #1 snapshot'))
         self.usb1uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -360,6 +366,7 @@ class BMMDossier():
         ### --- USB camera #2 --------------------------------------------------------------
         self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
         image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
+        md['_filename'] = image_usb2
         usbcam2._annotation_string = stub
         print(bold_msg('USB camera #2 snapshot'))
         self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -372,7 +379,7 @@ class BMMDossier():
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': self.webuid,
                            'analog_file': image_ana,  'anacam_uid': self.anauid,
                            'usb1_file':   image_usb1, 'usbcam1_uid': self.usb1uid,
-                           'usb2_file':   image_usb1, 'usbcam2_uid': self.usb2uid, }
+                           'usb2_file':   image_usb2, 'usbcam2_uid': self.usb2uid, }
 
         
     def prep_metadata(self, p, inifile, clargs, kwargs):
@@ -619,7 +626,7 @@ class BMMDossier():
         cnt = 0
         try:
             base = Pandrosus()
-            base.element, base.edge = self.element, self.edge
+            base.element, base.edge, base.folder, base.db = self.element, self.edge, BMMuser.folder, user_ns['db']
             projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
             proj = create_athena(projname)
             base.fetch(uidlist[0], mode=mode)
@@ -634,7 +641,7 @@ class BMMDossier():
             if len(uidlist) > 1:
                 for uid in uidlist[1:]:
                     this = Pandrosus()
-                    this.element, this.edge = self.element, self.edge
+                    this.element, this.edge, this.folder, this.db = self.element, self.edge, BMMuser.folder, user_ns['db']
                     try:
                         this.fetch(uid, mode=mode)
                         mu = numpy.interp(ee, this.group.energy, this.group.mu)
@@ -659,7 +666,7 @@ class BMMDossier():
             return
         mm = mm / cnt
         merge = Pandrosus()
-        merge.element, merge.edge = self.element, self.edge
+        merge.element, merge.edge, merge.folder, merge.db = self.element, self.edge, BMMuser.folder, user_ns['db']
         merge.put(ee, mm, 'merge')
         thisagg = matplotlib.get_backend()
         matplotlib.use('Agg') # produce a plot without screen display

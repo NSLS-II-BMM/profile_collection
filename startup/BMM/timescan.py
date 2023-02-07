@@ -179,7 +179,12 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     thismd['XDI']['Scan'] = dict()
     thismd['XDI']['Scan']['dwell_time'] = dwell
     thismd['XDI']['Scan']['delay']      = delay
-    
+
+    if 'BMM_kafka' not in md:
+        md['BMM_kafka'] = dict()
+    if 'hint' not in md['BMM_kafka']:
+        md['BMM_kafka']['hint'] = f'timescan {detector}'
+        
     @subs_decorator(plot)
     #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay, md):

@@ -1,0 +1,171 @@
+
+# missing:
+
+# measurement (str)
+# date (measurement start date str)
+# sequnumber (int)
+# instrument (str)
+
+# xrf ocrs and rois ... these are known only after the measurements,
+# but can be stuffed into the xafs scans start docs
+
+# ga things have to be gathered after the ga alignment then stuffed
+# into the the scan start doc
+
+
+
+# available:
+
+# filename ['XDI']['_filename']   one of these uses seqnumber
+# basename ['XDI']['_filename']
+# xrfuid in ['XDI']['_snapshots']
+# xrffile can be made from filename/seqnumber
+# scanlist can be accumulated by the consumer
+# motors done, see dossier_functions
+
+# sample, prep, comment: ['XDI']['Sample'] and ['XDI']['_comment']
+
+# image snap will be in image start doc
+# uid comes from XAS scan start doc
+# description/camera on the fly
+
+
+** top
+ + [X] 'measurement': *'XAFS' for xafs, etc*
+ + [ ] 'filename': self.filename  *take from ['start']['XDI']['_filename']*
+ + [ ] 'date': BMMuser.date
+ + [ ] 'seqnumber': seqnumber
+
+notes:
+
+- ~basename~ comes from ~filename~ and ~seqnumber~
+- ~filename~ is ~['start']['XDI']['_filename']~
+- ~basename~ is ~f'{filename}-{seqnumber}.{suffix}'~
+- ~suffix~ is prj, html, etc.
+
+** xrf
+ + [X] 'basename': basename  *take from ['start']['XDI']['_filename']*
+ + [X] 'xrffile': quote('../XRF/'+str(self.xrffile))
+ + [X] 'xrfuid': self.xrfuid
+
+notes:
+
+- ~xrffile~ is now captured as ~['start']['XDI']['_xrffile']~
+- ~xrfuid~ is in ~['start']['XDI']['_snapshots']~ as 'xrf_uid'
+
+** middle
+ + [X] 'basename': basename  *take from ['start']['XDI']['_filename']*
+ + [ ] 'scanlist': self.scanlist
+ + [X] 'motors': self.motors
+ + [ ] 'sample': self.sample
+ + [ ] 'prep': self.prep
+ + [ ] 'comment': self.comment
+ + [ ] 'instrument': self.instrument
+
+notes:
+
+- ~motors~ is in dossier_tools.motor_sidebar
+
+sample, prep, comment, instrument need to be captured as
+sequence begins
+
+scanlist needs to be constructed as individual stop documents arrive
+
+
+** images
+ + [ ] 'snap': quote('../snapshots/'+self.websnap)
+ + [ ] 'uid': self.webuid
+ + [ ] 'camera': 'webcam'
+ + [ ] 'description': 'XAS web camera'
+
+ + [ ] 'snap': quote('../snapshots/'+self.anasnap)
+ + [ ] 'uid': self.anauid
+ + [ ] 'camera': 'anacam'
+ + [ ] 'description': 'analog pinhole camera'
+
+ + [ ] 'snap': quote('../snapshots/'+self.usb1snap)
+ + [ ] 'uid': self.usb1uid
+ + [ ] 'camera': 'usb1cam'
+ + [ ] 'description': 'USB camera #1'
+
+ + [ ] 'snap': quote('../snapshots/'+self.usb2snap)
+ + [ ] 'uid': self.usb2uid
+ + [ ] 'camera': 'usb2cam'
+ + [ ] 'description': 'USB camera #2'
+
+notes:
+
+- ~uid~ are in ~['start']['XDI']['_snapshots']~
+
+- ~snap~ is constructed from ~basename~ and time stamp
+
+- the other two can be hard-coded strings
+
+
+** xrf
+ + [ ] 'xrfsnap': quote('../XRF/'+str(self.xrfsnap))
+ + [X] 'pccenergy': '%.1f' % self.pccenergy
+ + [X] 'ocrs': self.ocrs
+ + [X] 'rois': self.rois
+ + [X] 'symbol': self.element
+
+notes:
+
+- ~xrfsnap~ same as above
+- others from dossier_tools.xrf_metadata using the UID from 
+  ~['start']['XDI']['_snapshots']~
+
+** ga
+ + [ ] 'ga':_align ga.alignment_filename
+ + [ ] 'ga':_yuid ga.y_uid
+ + [ ] 'ga':_puid ga.pitch_uid
+ + [ ] 'ga':_fuid ga.f_uid
+
+notes:
+
+captured from ga object, need to be captured in start doc
+
+~['start']['XDI']['_ga'] = {'align': ..., 'yuid': ..., etc}~
+
+** bottom
+ + [X] 'e0': '%.1f' % self.e0
+ + [X] 'edge': self.edge
+ + [X] 'element': self.element_text()
+ + [ ] 'mode': self.mode
+ + [ ] 'bounds': self.bounds
+ + [ ] 'steps': self.steps
+ + [ ] 'times': self.times
+ + [.] 'seqstart': self.seqstart
+ + [.] 'seqend': self.seqend
+ + [X] 'mono': mono
+ + [X] 'pdsmode': pdstext
+ + [X] 'pccenergy': '%.1f' % self.pccenergy
+ + [ ] 'experimenters': self.experimenters
+ + [X] 'gup': BMMuser.gup
+ + [X] 'saf': BMMuser.saf
+ + [ ] 'url': self.url
+ + [ ] 'doi': self.doi
+ + [ ] 'cif': self.cif
+ + [ ] 'initext': highlight(self.initext IniLexer() HtmlFormatter())
+ + [ ] 'clargs': highlight(self.clargs PythonLexer() HtmlFormatter())
+ + [ ] 'filename': self.filename
+
+notes:
+
+- ~seqstart~ and ~seq_end~ should come as time stamps on the messages
+  that start and stop the sequence.
+
+- ~mono~, ~pdsmode~ come from dossier_tools.describe_mode
+
+- ~pccenergy~ comes from ~['start']['XDI']['_pccenergy']~ or 300 eV
+  above BMM.periodic_table.edge_energy(el, ed) where ~el~ and ~ed~
+  come from ~['start']['XDI']['Sample']['symbol']~ and 
+  ~['start']['XDI']['Sample'][edge']~
+
+- ~gup~ and ~saf~ are in ~['start']['XDI']['Facility']~
+
+- ~element~ and ~edge~ are in ~['start']['XDI']['Element']~ and ~e0~
+  is computed with BMM.periodic_table.edge_energy(el, ed)
+
+- most others need to be captured after reading ini file and before
+  launching sequence

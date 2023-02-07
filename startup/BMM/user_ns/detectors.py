@@ -142,7 +142,7 @@ bicron.channels.chan26.name = 'APD'
 
 
 run_report('\t'+'electrometers')
-from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
+from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
@@ -177,14 +177,19 @@ toss = quadem1.Iy.describe()
 #     dualio = None
 
 
-#try:                            # might not be in use
-#    ic0 = BMMDualEM('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
-#    ic0.Ia.kind = 'hinted'
-#    ic0.Ib.kind = 'hinted'
-#    ic0.Ia.name = 'I0a'
-#    ic0.Ib.name = 'I0b'
-#except:    
-ic0 = None
+try:                            # might not be in use
+    ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
+    ic0.Ia.kind = 'hinted'
+    ic0.Ib.kind = 'hinted'
+    ic0.Ia.name = 'I0a'
+    ic0.Ib.name = 'I0b'
+except:    
+    ic0 = None
+
+#set_precision(ic0.current1.mean_value, 3)
+#toss = ic0.Ia.describe()
+#set_precision(ic0.current2.mean_value, 3)
+#toss = ic0.Ib.describe()
     
 #quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 

@@ -152,7 +152,6 @@ def preserve_data(uid, label, xlsxout, matout):
     '''Save the data from an areascan as a .xlsx file (a simple spreadsheet
     which can be ingested by many plotting programs) and as a .mat
     file (which can be ingested by Matlab).
-
     '''
     motors = db.v2[uid].metadata['start']['motors']
     print('Reading data set...')
