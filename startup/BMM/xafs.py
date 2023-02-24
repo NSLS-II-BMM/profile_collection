@@ -21,6 +21,7 @@ from BMM.dossier         import BMMDossier
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
+from BMM.kafka           import kafka_message
 from BMM.linescans       import rocking_curve
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -301,7 +302,9 @@ def scan_metadata(inifile=None, **kwargs):
 
 
 def channelcut_energy(e0, bounds, ththth):
-    '''From the scan parameters, find the energy at the center of the angular range of the scan.'''
+    '''From the scan parameters, find the energy at the center of the angular range of the scan.
+    If the center of the angular range is too close to (or below) e0, use 50 eV above e0.
+    '''
     dcm = user_ns['dcm']
     for i,s in enumerate(bounds):
         if type(s) is str:
@@ -315,6 +318,8 @@ def channelcut_energy(e0, bounds, ththth):
     aave = amin + 1.0*(amax - amin) / 2.0
     wavelength = dcm.wavelength(aave)
     eave = e2l(wavelength)
+    if eave < e0 + 30:
+        eave = e0 + 50
     return eave
 
 
@@ -811,6 +816,12 @@ def xafs(inifile=None, **kwargs):
                    level='bold', slack=True)
             cnt = 0
             uidlist = []
+            kafka_message({'xafs_sequence' : 'start',
+                           'element'       : p["element"],
+                           'edge'          : p["edge"],
+                           'folder'        : BMMuser.folder,
+                           'repetitions'   : p["nscans"],
+                           'mode'          : p['mode']})
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -822,6 +833,7 @@ def xafs(inifile=None, **kwargs):
                     yield from null()
                     return
 
+                
                 ## this block is in the wrong place.  should be outside the loop over repetitions
                 ## same is true of several more things below
                 slotno, ring = '', ''
@@ -937,9 +949,17 @@ def xafs(inifile=None, **kwargs):
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
 
+                kafka_message({'xafs_sequence'      :'add',
+                               'uid'                : uid})
+                #kafka_message({'xafs_visualization' : uid,
+                #               'element'            : p["element"],
+                #               'edge'               : p["edge"],
+                #               'folder'             : BMMuser.folder,
+                #               'mode'               : p['mode']})
+                
                 if 'xs' in plotting_mode(p['mode']):
                     hdf5_uid = xs.hdf5.file_name.value
-                
+                    
                 uidlist.append(uid)
                 header = db[uid]
                 write_XDI(datafile, header)
@@ -996,6 +1016,7 @@ def xafs(inifile=None, **kwargs):
     def cleanup_plan(inifile):
         print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
+        kafka_message({'xafs_sequence':'stop'})
 
         #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan

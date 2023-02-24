@@ -1,5 +1,8 @@
 from BMM.macrobuilder import BMMMacroBuilder
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
 class GridMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and
     generating macros for measuring XAS using the Linkam stage.
@@ -53,6 +56,9 @@ class GridMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################
             if m['position1'] is not None and m['position2'] is not None:
+                if self.check_limit(m['motor1'], m['position1']) is False: return(False)
+                if self.check_limit(m['motor2'], m['position2']) is False: return(False)
+                
                 self.content += self.tab + f'gmb.motor1, gmb.motor2, gmb.position1, gmb.position2 = {m["motor1"]}, {m["motor2"]}, {m["position1"]}, {m["position2"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
                 self.motor1    = m["motor1"]
@@ -61,16 +67,19 @@ class GridMacroBuilder(BMMMacroBuilder):
                 self.position2 = m["position1"]
             else:
                 if m['position1'] is not None:
+                    if self.check_limit(m['motor1'], m['position1']) is False: return(False)
                     self.motor1    = m["motor1"]
                     self.position1 = m["position1"]
                     self.content += self.tab + f'gmb.motor1, gmb.position1 = {m["motor1"]}, {m["position1"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
                 if m['position2'] is not None:
+                    if self.check_limit(m['motor2'], m['position2']) is False: return(False)
                     self.motor2    = m["motor1"]
                     self.position2 = m["position1"]
                     self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
             if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 
             

@@ -252,6 +252,13 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             channel.mca_sum.array_data.put(numpy.zeros)
         self.erase.put(1)
 
+    def describe(self):
+        res = super().describe()
+        res['4-element SDD_channel01_xrf']['dtype_str'] = '<f8'
+        res['4-element SDD_channel02_xrf']['dtype_str'] = '<f8'
+        res['4-element SDD_channel03_xrf']['dtype_str'] = '<f8'
+        res['4-element SDD_channel04_xrf']['dtype_str'] = '<f8'
+        return res
 
     def set_rois(self):
         '''Read ROI values from a JSON serialization on disk and set all 16 ROIs for channels 1-4.

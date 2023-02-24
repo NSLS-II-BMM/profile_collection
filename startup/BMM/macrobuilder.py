@@ -238,6 +238,40 @@ class BMMMacroBuilder():
         if type(value) is str and value.strip() == '':
             return True
         return False
+
+    def check_limit(self, motor, value):
+        '''Perform a sanity check on a requested motor position.
+        Return False if there is a problem.
+        '''
+        if type(motor) is str:
+            if motor in user_ns:
+                motor = user_ns[motor]
+            else:
+                print(error_msg(f'"{motor}" is not a valid motor name.'))
+                return(False)
+        if value > motor.limits[1]:
+            print(error_msg(f"A requested {motor.name} position ({value}) is greater than the high limit ({motor.limits[1]})"))
+            return(False)
+        if value < motor.limits[0]:
+            print(error_msg(f"A requested {motor.name} position ({value}) is less than the low limit ({motor.limits[0]})"))
+            return(False)
+        return(True)
+
+    def check_temp(self, stage, value):
+        '''Perform a sanity check on a requested heating/cooling stage temperature.
+        Return False if there is a problem.
+        '''
+        name, units = stage.name.capitalize(), 'C'
+        if 'lakeshore' in stage.name.lower():
+            name, units = 'Displex', 'K'
+        if value > stage.limits[1]:
+            print(error_msg(f"A requested {name} temperature ({value}{units}) is greater than the high limit ({stage.limits[1]}{units})"))
+            return(False)
+        if value < stage.limits[0]:
+            print(error_msg(f"A requested {name} temperature ({value}{units}) is less than the low limit ({stage.limits[0]}{units})"))
+            return(False)
+        return(True)
+
     
         
     def ini_sanity(self, default):
@@ -527,7 +561,8 @@ class BMMMacroBuilder():
         '''
         self.totaltime, self.deltatime = 0, 0
         self.content = ''
-        self._write_macro()     # populate self.content
+        success = self._write_macro()     # populate self.content
+        if success is False: return
         # write_ini_and_plan uses self.measurements and self.content
         self.write_ini_and_plan()
         self.finish_macro()

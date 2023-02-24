@@ -356,6 +356,18 @@ if with_xspress3 is True and use_4element is True:
     xs.hdf5.write_path_template = hdf5folder
     xs.hdf5.file_path.put(hdf5folder)
 
+    try:
+        xs.channel01.xrf.dtype_str = "<f8"
+        xs.channel02.xrf.dtype_str = "<f8"
+        xs.channel03.xrf.dtype_str = "<f8"
+        xs.channel04.xrf.dtype_str = "<f8"
+        xs.channel01.get_external_file_ref().dtype_str = "<f8"
+        xs.channel02.get_external_file_ref().dtype_str = "<f8"
+        xs.channel03.get_external_file_ref().dtype_str = "<f8"
+        xs.channel04.get_external_file_ref().dtype_str = "<f8"
+    except:
+        pass
+        
     ## this stage_sigs and trigger business was needed with the new (as of January 2023)
     ## to maintain the correct triggering state for our mode of operation here at BMM
     ## apparently to serve the needs of other BLs, the triggering mode would default

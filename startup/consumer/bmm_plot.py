@@ -103,18 +103,18 @@ def plot_timescan(bmm_catalog, uid):
     elif detector == 'Fluorescence' or detector == 'Xs':
         xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
         signal = (table[xs1]+table[xs2]+table[xs3]+table[xs4]) / table['I0']
-        label = 'If/I0'
-        title = '4 element fluorescence time scan'
+        label  = 'If/I0'
+        title  = '4 element fluorescence time scan'
     elif detector == 'If':
         xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
         signal = table[xs1]+table[xs2]+table[xs3]+table[xs4]
-        label = 'If'
-        title = '4 element If time scan'
+        label  = 'If'
+        title  = '4 element If time scan'
     elif detector == 'Xs1':
-        xs8 = rkvs.get('BMM:user:xs8')
+        xs8    = rkvs.get('BMM:user:xs8')
         signal = table[xs8] / table['I0']
-        label = 'If/I0'
-        title = '1 element fluorescence time scan'
+        label  = 'If/I0'
+        title  = '1 element fluorescence time scan'
 
 
     # Tom's explanation for how to do multiple plots: https://stackoverflow.com/a/31686953

@@ -246,6 +246,7 @@ class GlancingAngle(Device):
         plt.xlabel('xafs_pitch (deg)')
         plt.ylabel('It/I0')
         plt.title(f'pitch scan, spinner {self.current()}')
+        plt.plot()
         plt.savefig(self.toss)
         matplotlib.use(thisagg) # return to screen display
         self.clean_img()
@@ -287,6 +288,7 @@ class GlancingAngle(Device):
             direction = 'X'
         plt.ylabel(f'{self.inverted}data and error function')
         plt.title(f'fit to {direction} scan, spinner {self.current()}')
+        plt.plot()
         plt.savefig(self.toss)
         matplotlib.use(thisagg) # return to screen display
         self.clean_img()
@@ -603,12 +605,14 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             # move to correct slit height #
             ###############################
             if m['slitheight'] is not None:
+                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
                 self.content += self.tab + f'yield from mv(slits3.vsize, {m["slitheight"]})\n'
 
             #####################################
             # move to correct detector position #
             #####################################
             if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
             self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
@@ -635,8 +639,10 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
                 if m['sampley'] is not None:
+                    if self.check_limit(user_ns['xafs_y'], m['sampley']) is False: return(False)
                     self.content += self.tab + f'yield from mv({motor}, {m["sampley"]})\n'
                 if m['samplep'] is not None:
+                    if self.check_limit(user_ns['xafs_pitch'], m['samplep']) is False: return(False)
                     self.content += self.tab + f'yield from mv(xafs_pitch, {m["samplep"]})\n'
                 user_ns['ga'].automatic = False
             

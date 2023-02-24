@@ -46,3 +46,4 @@ dossier.url           = ''
 dossier.doi           = ''
 dossier.cif           = ''
 dossier.instrument    = '' #ga.dossier_entry()
+dossier.motors        = motor_sidebar()

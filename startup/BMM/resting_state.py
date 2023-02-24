@@ -7,6 +7,7 @@ except ImportError:
 
 from bluesky.plan_stubs import mv, sleep
 import datetime
+import matplotlib
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -49,6 +50,7 @@ def resting_state():
     dcm.kill()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
+    matplotlib.use('Qt5Agg')
     resting_redis()
     
 def resting_state_plan():
@@ -72,6 +74,7 @@ def resting_state_plan():
     dcm.kill()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
+    matplotlib.use('Qt5Agg')
     resting_redis()
     
 
@@ -99,6 +102,7 @@ def end_of_macro():
     yield from xafs_wheel.recenter()
     dcm.mode = 'fixed'
     user_ns['RE'].msg_hook = BMM_msg_hook
+    matplotlib.use('Qt5Agg')
     resting_redis()
     BMM_clear_suspenders()
 

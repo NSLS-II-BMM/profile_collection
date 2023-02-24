@@ -232,7 +232,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     else:
         if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
             print(warning_msg(f'You are already at the {el} {edge} edge.'))
-            if insist is False:
+            if insist is True:
+                print(warning_msg('But changing edge anyway.'))                
+            else:
                 yield from null()
                 return
             

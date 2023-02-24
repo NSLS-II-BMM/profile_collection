@@ -312,12 +312,16 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 #if here < 150:
                 #    self.content += self.tab + f'yield from mv(xafs_det, {here:.3f})\n'
             if m['samplex'] is not None:
+                if self.check_limit(user_ns['xafs_x'], m['samplex']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_x, %.3f)\n' % m['samplex']
             if m['sampley'] is not None:
+                if self.check_limit(user_ns['xafs_y'], m['sampley']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_y, %.3f)\n' % m['sampley']
             if m['slitwidth'] is not None:
+                if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
             if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
             if m['optimize'] is not None:  # parse optimize string, which is something like "max fluo(X)"
                 do_max = 'max' if 'max'  in m['optimize'] else 'min'
@@ -397,7 +401,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + '    BMMuser.running_macro = False\n'
             self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
-
+        return(True)
 
 
     def get_keywords(self, row, defaultline):

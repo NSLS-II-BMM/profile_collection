@@ -1,4 +1,4 @@
-import os
+import os, re
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
@@ -412,7 +412,7 @@ class BMMDossier():
 
         
     def write_dossier(self):
-        BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
+        BMMuser, dcm, ga, xafs_ref = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga'], user_ns['xafs_ref']
         if self.filename is None or self.start is None:
             print(error_msg('Filename and/or start number not given.  (xafs_dossier).'))
             return None
@@ -545,6 +545,7 @@ class BMMDossier():
                                                    bounds        = self.bounds,
                                                    steps         = self.steps,
                                                    times         = self.times,
+                                                   reference     = re.sub(r'(\d+)', r'<sub>\1</sub>', xafs_ref.mapping[self.element][3]),
                                                    seqstart      = self.seqstart,
                                                    seqend        = self.seqend,
                                                    mono          = mono,

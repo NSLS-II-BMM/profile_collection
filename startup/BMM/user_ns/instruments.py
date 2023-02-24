@@ -215,10 +215,10 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    dm3_slits_i.user_offset.put(-6.3535)
-    dm3_slits_o.user_offset.put(7.6535)
-    dm3_slits_t.user_offset.put(-2.676)
-    dm3_slits_b.user_offset.put(-2.9737)
+    #dm3_slits_i.user_offset.put(-6.3535)
+    #dm3_slits_o.user_offset.put(7.6535)
+    #dm3_slits_t.user_offset.put(-2.676)
+    #dm3_slits_b.user_offset.put(-2.9737)
 else:
     dm3_slits_o = SynAxis(name='dm3_slits_o')
     dm3_slits_i = SynAxis(name='dm3_slits_i')
@@ -354,7 +354,8 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Ba':     [1, 17, 'Ba', 'None'],
                     'Hf':     [1, 18, 'Hf', 'HfO2'],
                     'Ta':     [1, 19, 'Ta', 'Ta2O5'],
-                    'W' :     [1, 20, 'W',  'None'],
+                    'Sc' :    [1, 20, 'Sc', 'Sc2O3'],
+                    #'W' :     [1, 20, 'W',  'None'],
                     'Re':     [1, 21, 'Re', 'ReO2'], 
                     'Os':     [1, 22, 'Os', 'None'],
                     'Ir':     [1, 23, 'Ir', 'None'],
@@ -547,7 +548,7 @@ busy = Busy(name='busy')
 
 run_report('\tLinkam controller')
 from BMM.linkam import Linkam, LinkamMacroBuilder
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,500.0))
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,560.0))
 
 lmb = LinkamMacroBuilder()
 lmb.description = 'the Linkam stage'

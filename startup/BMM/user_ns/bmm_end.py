@@ -154,6 +154,27 @@ def xlsx():
 
 
 def set_instrument(instrument=None):
+    if instrument is None:
+        print('''
+  1: Double wheel
+  2: Single wheel
+  3: Glancing angle stage
+  4: Linkam stage
+  5: Displex and LakeShore
+  6: Motor grid
+
+  r: return
+''')
+        actual = ['', 'double wheel', 'sample wheel', 'glancing angle', 'linkam', 'lakeshore', 'grid']
+        choice = input("\nSelect an instrument > ")
+        try:
+            if int(choice) > 0 and int(choice) <= 6:
+                instrument = actual[int(choice)]
+            else:
+                instrument = 'double wheel'
+        except:
+            instrument = 'double wheel'
+
     if instrument.lower() == 'glancing angle':
         print(bold_msg('Setting instrument as glancing angle stage'))
         BMMuser.instrument = 'glancing angle stage'

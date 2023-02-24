@@ -21,6 +21,7 @@ from larch import (Group, Parameter, isParameter, param_value, isNamedClass, Int
 from larch.xafs import (find_e0, pre_edge, autobk, xftf, xftr)
 from larch.io import create_athena
 import larch.utils.show as lus
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -37,7 +38,7 @@ LARCH = Interpreter()
 KTOE = 3.8099819442818976
 def etok(ee):
     '''convert relative energy to wavenumber'''
-    return sqrt(ee/KTOE)
+    return numpy.sqrt(ee/KTOE)
 def ktoe(k):
     '''convert wavenumber to relative energy'''
     return k*k*KTOE
@@ -159,11 +160,13 @@ class Pandrosus():
             'transmission', 'fluorescence', or 'reference'
 
         '''
-        if 'Broker' in str(type(self.db)):  # v1 databroker
+        if 'v1' in str(type(self.db)):  # v1 databroker
             header = self.db[uid]
+            start = header.start
             table  = header.table()
         else:                               # tiled catalog
             header = self.db[uid].metadata
+            start = header['start']
             table  = self.db[uid].primary.read()
             
         self.group.energy = numpy.array(table['dcm_energy'])
@@ -179,19 +182,19 @@ class Pandrosus():
         # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
         #######################################################################################
         elif any(md in mode for md in ('fluo', 'flou', 'both')):
-            columns = header.start['XDI']['_dtc']
+            columns = start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
         elif mode == 'xs1':
-            columns = header.start['XDI']['_dtc']
+            columns = start['XDI']['_dtc']
             self.group.mu = numpy.array(table[columns[0]]/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]])
 
         elif mode == 'xs':
-            columns = header.start['XDI']['_dtc']
+            columns = start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
@@ -214,7 +217,21 @@ class Pandrosus():
         # why does self.group.signal get lost? weird....
         #print(self.group.signal)
         self.signal = self.group.signal
-        
+
+
+    def make_ref(self, uid):
+        if 'v1' in str(type(self.db)):  # v1 databroker
+            header = self.db[uid]
+            start = header.start
+            table  = header.table()
+        else:                               # tiled catalog
+            header = self.db[uid].metadata
+            start = header['start']
+            table  = self.db[uid].primary.read()
+            
+        self.group.energy = numpy.array(table['dcm_energy'])
+        self.group.reference = numpy.array(numpy.log(table['It']/table['Ir']))
+
             
     def fetch(self, uid, name=None, mode='transmission'):
         self.uid = uid
@@ -230,6 +247,7 @@ class Pandrosus():
 
         self.mode = mode
         self.make_xmu(uid, mode=mode)
+        self.make_ref(uid)
         self.prep()
         toss = create_athena(os.path.join(self.folder, 'prj', 'toss.prj'))
         toss.add_group(self.group)
@@ -400,6 +418,9 @@ class Pandrosus():
                 y = numpy.interp(g.e0+g.pre_edge_details.norm2, g.energy, g.mu)
                 plt.scatter(g.e0+g.pre_edge_details.norm2, y, marker='|', color='orchid')
         plt.legend(loc='best', shadow=True)
+        if self.reuse is False:
+            plt.close()
+            return fig
 
     def plot_signals(self):
         '''Make a plot of mu(E) for a single data set with I0 and the signal
@@ -428,6 +449,35 @@ class Pandrosus():
         plt.plot(g.energy, g.i0*max_xmu/max_i0, label='$I_0$')
         plt.plot(g.energy, self.signal*max_xmu/max_signal, label='signal')
         plt.legend(loc='best', shadow=True)
+        if self.reuse is False:
+            plt.close()
+            return fig
+
+    def plot_reference(self):
+        if self.reuse is True:
+            plt.cla()
+        else:
+            fig = plt.figure()
+            fig.set_facecolor((0.9, 0.9, 0.9))
+            
+        g = self.group
+        plt.xlabel(self.xe)
+        plt.title(self.name + ' in energy')
+        plt.grid(which='major', axis='both')
+        plt.ylabel('normalized $\mu(E)$')
+        plt.plot(g.energy, g.flat, label=self.name + ' normalized')
+        #y = numpy.interp(g.e0, g.energy, g.norm)
+        #plt.scatter(g.e0, y, marker='d', color='orchid')
+
+        b=Pandrosus()
+        b.put(g.energy, g.reference, 'reference')
+        b.prep()
+        plt.plot(b.group.energy, b.group.flat, label='reference')
+
+        legend = plt.legend(loc='best', shadow=True)
+        if self.reuse is False:
+            plt.close()
+            return fig
 
         
     def plot_chi(self, kw=2, win=True):
@@ -453,6 +503,9 @@ class Pandrosus():
             plt.plot(self.group.k, self.group.kwin*y.max()*1.1, label='window', color='C8')
         #color_counter += 1
         legend = plt.legend(loc='best', shadow=True)
+        if self.reuse is False:
+            plt.close()
+            return fig
     plot_chik = plot_chi
         
     def do_xftf(self, kw=2):
@@ -539,6 +592,9 @@ class Pandrosus():
             plt.plot(self.group.r, self.group.rwin*y.max()*1.1, label='window', color='C8')
         plt.xlim(right=self.rmax)
         plt.legend(loc='best', shadow=True)
+        if self.reuse is False:
+            plt.close()
+            return fig
         
     def do_xftr(self):
         xftr(self.group.r, chir=self.group.chir, group=self.group,
@@ -682,7 +738,11 @@ class Pandrosus():
         chir.set_xlabel('radial distance ($\AA$)')
 
         fig.align_labels()
-        plt.show()
+        if matplotlib.get_backend().lower() != 'agg':
+            #plt.show()
+            fig.canvas.manager.show()
+            fig.canvas.flush_events()
+        return(fig)
         
     pe  = plot_xmu
     ps  = plot_signals
