@@ -155,7 +155,7 @@ class BMMMacroBuilder():
             self.basename = sheet
         else:
             self.ws = self.wb.active
-        self.basename = re.sub('[ -+*/]+', '_', self.basename)
+        self.basename = re.sub('[ \-+*/]+', '_', self.basename)
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
 

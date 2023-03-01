@@ -1,6 +1,9 @@
 
+import os
+
 from BMM.larch_interface import Pandrosus, Kekropidai, plt
 
+from slack import img_to_slack, post_to_slack
 
 class XAFSSequence():
     '''Class for managing the specific plotting chore required for an
@@ -23,19 +26,20 @@ class XAFSSequence():
         the views of the data, a la bluesky-widgets, maybe tabs
 
     '''
-    ongoing = False
-    uidlist = []
-    panlist = []
-    catalog = None
-    element = None
-    edge    = None
-    folder  = None
+    ongoing  = False
+    uidlist  = []
+    panlist  = []
+    catalog  = None
+    element  = None
+    edge     = None
+    folder   = None
     repetitions  = 0
-    mode    = 'transmission'
-    kek     = None
-    fig     = None
+    mode     = 'transmission'
+    tossfile = None
+    kek      = None
+    fig      = None
     
-    def start(self, element=None, edge=None, folder=None, repetitions=0, mode='transmission'):
+    def start(self, element=None, edge=None, folder=None, repetitions=0, mode='transmission', tossfile=None):
         self.ongoing = True
         self.uidlist = []
         self.panlist = []
@@ -44,7 +48,8 @@ class XAFSSequence():
         self.edge = edge
         self.folder = folder
         self.repetitions = repetitions
-        self.mode=mode
+        self.mode = mode
+        self.tossfile = os.path.join(folder, 'snapshots', 'toss.png')
         #if self.fig is not None:
         #    plt.close(self.fig.number)
         
@@ -63,6 +68,11 @@ class XAFSSequence():
             if self.fig is not None:
                 plt.close(self.fig.number)
             self.merge()
+            if self.repetitions > 5 and len(self.uidlist) % 3 == 0:
+                post_to_slack('(Posting a plot every third scan in a sequence...)')
+                self.fig.savefig(tossfile)
+                img_to_slack(tossfile)
+                
 
     def merge(self):
         if len(self.uidlist) == 0:
@@ -81,11 +91,13 @@ class XAFSSequence():
         self.fig.canvas.manager.window.setGeometry(1237, 856, 640, 584)
 
 
-    def stop(self):
+    def stop(self, filename):
         self.ongoing = False
         if self.fig is not None:
             plt.close(self.fig.number)
         #plt.close('all')
         self.merge()
+        self.fig.savefig(filename)
+        img_to_slack(filename)
         
 

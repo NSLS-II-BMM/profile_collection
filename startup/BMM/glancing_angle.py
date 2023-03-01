@@ -18,6 +18,7 @@ from PIL import Image
 from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import countdown, isfloat, present_options, now
+from BMM.kafka          import kafka_message
 from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
@@ -124,10 +125,23 @@ class GlancingAngle(Device):
     pitch_uid = ''
     f_uid = ''
     alignment_filename = ''
-    orientation = 'parallel'
+    _orientation = 'parallel'
     toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
     img = None  # Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
 
+    @property
+    def orientation(self):
+        return self._orientation
+    @orientation.setter
+    def orientation(self, value):
+        if value.lower() == 'perpendicular':
+            self._orientation = 'perpendicular'
+            user_ns['gawheel'].orientation = 'perpendicular'
+        else:
+            self._orientation = 'parallel'
+            user_ns['gawheel'].orientation = 'parallel'
+
+    
     def current(self):
         '''Return the current spinner number as an integer'''
         pos = self.garot.position
@@ -235,6 +249,207 @@ class GlancingAngle(Device):
                 self.img.close()
 
 
+    def align_pitch(self, force=False):
+        '''Find the peak of xafs_pitch scan against It. Plot the
+        result. Move to the peak.'''        
+        xafs_pitch = user_ns['xafs_pitch']
+        uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
+        close_last_plot()
+        table  = user_ns['db'][-1].table()
+        pitch  = table['xafs_pitch']
+        signal = table['It']/table['I0']
+        target = signal.idxmax()
+        yield from mv(xafs_pitch, pitch[target])
+        kafka_message({'glancing_angle' : 'pitch',
+                       'motor'          : 'xafs_pitch',
+                       'center'         : pitch[target],
+                       'amplitude'      : signal.max(),
+                       'spinner'        : self.current(),
+                       'xaxis'          : list(pitch),
+                       'data'           : list(signal),
+                       'uid'            : uid,})
+        #self.pitch_plot(pitch, signal)
+    
+
+    def align_linear(self, force=False, drop=None):
+        '''Fit an error function to the linear scan against It. Plot the
+        result. Move to the centroid of the error function.'''
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_liny']
+        else:
+            motor = user_ns['xafs_linx']
+        uid = yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False)
+        close_last_plot()
+        table  = user_ns['db'][-1].table()
+        yy     = table[motor.name]
+        signal = table['It']/table['I0']
+        if drop is not None:
+            yy = yy[:-drop]
+            signal = signal[:-drop]
+        if float(signal[2]) > list(signal)[-2] :
+            ss     = -(signal - signal[2])
+            self.inverted = 'inverted '
+        else:
+            ss     = signal - signal[2]
+            self.inverted    = ''
+        mod    = StepModel(form='erf')
+        pars   = mod.guess(ss, x=numpy.array(yy))
+        out    = mod.fit(ss, pars, x=numpy.array(yy))
+        print(whisper(out.fit_report(min_correl=0)))
+        target = out.params['center'].value
+        yield from mv(motor, target)
+        kafka_message({'glancing_angle' : 'linear',
+                       'motor'          : motor.name,
+                       'center'         : target,
+                       'amplitude'      : out.params['amplitude'].value,
+                       'inverted'       : self.inverted,
+                       'spinner'        : self.current(),
+                       'xaxis'          : list(yy),
+                       'data'           : list(ss),
+                       'best_fit'       : list(out.best_fit),
+                       'uid'            : uid,})
+
+        #self.y_plot(yy, out)
+
+
+    def align_fluo(self, force=False):
+        BMMuser = user_ns['BMMuser']
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_liny']
+        else:
+            motor = user_ns['xafs_linx']
+        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, force=force)
+        self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        tf = user_ns['db'][-1].table()
+        yy = tf[motor.name]
+        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        #if BMMuser.element in ('Cr', 'Zr'):
+        centroid = yy[signal.idxmax()]
+        #else:
+        #    com = int(center_of_mass(signal)[0])+1
+        #    centroid = yy[com]
+        yield from mv(motor, centroid)
+        kafka_message({'glancing_angle' : 'fluo',
+                       'motor'          : motor.name,
+                       'center'         : centroid,
+                       'amplitude'      : signal.max(),
+                       'inverted'       : self.inverted,
+                       'spinner'        : self.current(),
+                       'xaxis'          : list(yy),
+                       'data'           : list(signal),
+                       'uid'            : uid,})
+
+        
+    def auto_align(self, pitch=2, drop=None):
+        '''Align a sample on a spinner automatically.  This performs 5 scans.
+        The first four iterate twice between linear and pitch
+        against the signal in It.  This find the flat position.
+
+        Then the sample is pitched to the requested angle and a fifth
+        scan is done to optimize the linear motor position against the
+        fluorescence signal.
+
+        The linear scans against It look like a step-down function.
+        The center of this step is found as the centroid of a fitted
+        error function.
+
+        The xafs_pitch scan should be peaked.  Move to the max of the
+        signal.
+
+        The linear scan against fluorescence ideally looks like a
+        flat-topped peak.  Move to the center of mass.
+
+        At the end, a three-panel figure is drawn showing the last
+        three scans.  This is posted to Slack.  It also finds its way
+        into the dossier as a record of the quality of the alignment.
+
+        Arguments
+        =========
+        pitch : int
+          The angle at which to make the glancing angle measurements.
+        drop : int or None
+          If not None, then this many points will be dropped from the
+          end of linear scan against transmission when fitting the error
+          function. This is an attempt to deal gracefully with leakage 
+          through the adhesive at very high energy.
+
+        '''
+        BMMuser = user_ns['BMMuser']
+        if BMMuser.macro_dryrun:
+            report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
+            print(info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
+                           (BMMuser.macro_sleep, self.current())))
+            countdown(BMMuser.macro_sleep)
+            return(yield from null())
+
+        report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
+            
+        BMM_suspenders()
+        kafka_message({'glancing_angle' : 'start',
+                       'filename' : os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')})
+
+        ## first pass in transmission
+        yield from self.align_linear(drop=drop)
+        yield from self.align_pitch()
+
+        ## for realsies X or Y in transmission
+        yield from self.align_linear(drop=drop)
+        self.y_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+
+        ## for realsies Y in pitch
+        yield from self.align_pitch()
+        self.pitch_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+
+        ## record the flat position
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_y']
+        else:
+            motor = user_ns['xafs_x']
+        self.flat = [motor.position, user_ns['xafs_pitch'].position]
+
+        ## move to measurement angle and align
+        yield from mvr(user_ns['xafs_pitch'], pitch)
+        yield from self.align_fluo()
+        kafka_message({'glancing_angle' : 'stop'})
+         
+        ## make a pretty picture, post it to slack
+        # self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
+        # try:
+        #     img_to_slack(self.alignment_filename)
+        # except:
+        #     post_to_slack(f'failed to post image: {self.alignment_filename}')
+        #     pass
+        BMM_clear_suspenders()
+ 
+        
+    def flatten(self):
+        '''Return the stage to its nominally flat position.'''
+        xafs_pitch = user_ns['xafs_pitch']
+        if self.orientation == 'parallel':
+            motor = user_ns['xafs_y']
+        else:
+            motor = user_ns['xafs_x']
+        if self.flat != [0, 0]:
+            yield from mv(motor, self.flat[0], xafs_pitch, self.flat[1])
+        
+
+    def dossier_entry(self):
+        thistext  =  '	    <div id="boxinst">\n'
+        thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
+        thistext +=  '	      <ul>\n'
+        thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
+        if self.automatic is True:
+            thistext +=  '               <li><b>Alignment:</b> automatic</li>\n'
+            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'
+        else:
+            thistext +=  '               <li><b>Alignment:</b> manual</li>\n'
+            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position:.1f}</li>\n'
+        thistext += f'               <li><b>Spinning:</b> {"yes" if self.spin else "no"}</li>\n'
+        thistext +=  '	      </ul>\n'
+        thistext +=  '	    </div>\n'
+        return thistext
+
+
     def pitch_plot(self, pitch, signal, filename=None):
         thisagg = matplotlib.get_backend()
         matplotlib.use('Agg') # produce a plot without screen display
@@ -247,10 +462,11 @@ class GlancingAngle(Device):
         plt.ylabel('It/I0')
         plt.title(f'pitch scan, spinner {self.current()}')
         plt.plot()
+        self.toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
         plt.savefig(self.toss)
         matplotlib.use(thisagg) # return to screen display
         self.clean_img()
-        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+        self.img = Image.open(self.toss)
         self.img.show()
         #plt.draw()
         #plt.show()
@@ -258,20 +474,6 @@ class GlancingAngle(Device):
         #plt.pause(0.05)
         
             
-    def align_pitch(self, force=False):
-        '''Find the peak of xafs_pitch scan against It. Plot the
-        result. Move to the peak.'''        
-        xafs_pitch = user_ns['xafs_pitch']
-        yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
-        close_last_plot()
-        table  = user_ns['db'][-1].table()
-        pitch  = table['xafs_pitch']
-        signal = table['It']/table['I0']
-        target = signal.idxmax()
-        yield from mv(xafs_pitch, pitch[target])
-        self.pitch_plot(pitch, signal)
-    
-
     def y_plot(self, yy, out, filename=None):
         #plt.cla()
         thisagg = matplotlib.get_backend()
@@ -289,10 +491,11 @@ class GlancingAngle(Device):
         plt.ylabel(f'{self.inverted}data and error function')
         plt.title(f'fit to {direction} scan, spinner {self.current()}')
         plt.plot()
+        self.toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
         plt.savefig(self.toss)
         matplotlib.use(thisagg) # return to screen display
         self.clean_img()
-        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+        self.img = Image.open(self.toss)
         self.img.show()
         #plt.draw()
         #plt.show()
@@ -373,161 +576,8 @@ class GlancingAngle(Device):
         #plt.pause(0.05)
 
         
-    def align_linear(self, force=False, drop=None):
-        '''Fit an error function to the linear scan against It. Plot the
-        result. Move to the centroid of the error function.'''
-        if self.orientation == 'parallel':
-            motor = user_ns['xafs_liny']
-        else:
-            motor = user_ns['xafs_linx']
-        yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False)
-        close_last_plot()
-        table  = user_ns['db'][-1].table()
-        yy     = table[motor.name]
-        signal = table['It']/table['I0']
-        if drop is not None:
-            yy = yy[:-drop]
-            signal = signal[:-drop]
-        if float(signal[2]) > list(signal)[-2] :
-            ss     = -(signal - signal[2])
-            self.inverted = 'inverted '
-        else:
-            ss     = signal - signal[2]
-            self.inverted    = ''
-        mod    = StepModel(form='erf')
-        pars   = mod.guess(ss, x=numpy.array(yy))
-        out    = mod.fit(ss, pars, x=numpy.array(yy))
-        print(whisper(out.fit_report(min_correl=0)))
-        target = out.params['center'].value
-        yield from mv(motor, target)
-        self.y_plot(yy, out)
 
-
-    def align_fluo(self, force=False):
-        BMMuser = user_ns['BMMuser']
-        if self.orientation == 'parallel':
-            motor = user_ns['xafs_liny']
-        else:
-            motor = user_ns['xafs_linx']
-        yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, force=force)
-        self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
-        tf = user_ns['db'][-1].table()
-        yy = tf[motor.name]
-        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        #if BMMuser.element in ('Cr', 'Zr'):
-        centroid = yy[signal.idxmax()]
-        #else:
-        #    com = int(center_of_mass(signal)[0])+1
-        #    centroid = yy[com]
-        yield from mv(motor, centroid)
-
-        
-    def auto_align(self, pitch=2, drop=None):
-        '''Align a sample on a spinner automatically.  This performs 5 scans.
-        The first four iterate twice between linear and pitch
-        against the signal in It.  This find the flat position.
-
-        Then the sample is pitched to the requested angle and a fifth
-        scan is done to optimize the linear motor position against the
-        fluorescence signal.
-
-        The linear scans against It look like a step-down function.
-        The center of this step is found as the centroid of a fitted
-        error function.
-
-        The xafs_pitch scan should be peaked.  Move to the max of the
-        signal.
-
-        The linear scan against fluorescence ideally looks like a
-        flat-topped peak.  Move to the center of mass.
-
-        At the end, a three-panel figure is drawn showing the last
-        three scans.  This is posted to Slack.  It also finds its way
-        into the dossier as a record of the quality of the alignment.
-
-        Arguments
-        =========
-        pitch : int
-          The angle at which to make the glancing angle measurements.
-        drop : int or None
-          If not None, then this many points will be dropped from the
-          end of linear scan against transmission when fitting the error
-          function. This is an attempt to deal gracefully with leakage 
-          through the adhesive at very high energy.
-
-        '''
-        BMMuser = user_ns['BMMuser']
-        if BMMuser.macro_dryrun:
-            report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
-            print(info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
-                           (BMMuser.macro_sleep, self.current())))
-            countdown(BMMuser.macro_sleep)
-            return(yield from null())
-
-        report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
-            
-        BMM_suspenders()
-
-        ## first pass in transmission
-        yield from self.align_linear(drop=drop)
-        yield from self.align_pitch()
-
-        ## for realsies X or Y in transmission
-        yield from self.align_linear(drop=drop)
-        self.y_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
-
-        ## for realsies Y in pitch
-        yield from self.align_pitch()
-        self.pitch_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
-
-        ## record the flat position
-        if self.orientation == 'parallel':
-            motor = user_ns['xafs_y']
-        else:
-            motor = user_ns['xafs_x']
-        self.flat = [motor.position, user_ns['xafs_pitch'].position]
-
-        ## move to measurement angle and align
-        yield from mvr(user_ns['xafs_pitch'], pitch)
-        yield from self.align_fluo()
-         
-        ## make a pretty picture, post it to slack
-        self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
-        try:
-            img_to_slack(self.alignment_filename)
-        except:
-            post_to_slack(f'failed to post image: {self.alignment_filename}')
-            pass
-        BMM_clear_suspenders()
- 
-        
-    def flatten(self):
-        '''Return the stage to its nominally flat position.'''
-        xafs_pitch = user_ns['xafs_pitch']
-        if self.orientation == 'parallel':
-            motor = user_ns['xafs_y']
-        else:
-            motor = user_ns['xafs_x']
-        if self.flat != [0, 0]:
-            yield from mv(motor, self.flat[0], xafs_pitch, self.flat[1])
-        
-
-    def dossier_entry(self):
-        thistext  =  '	    <div id="boxinst">\n'
-        thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
-        thistext +=  '	      <ul>\n'
-        thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
-        if self.automatic is True:
-            thistext +=  '               <li><b>Alignment:</b> automatic</li>\n'
-            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position - self.flat[1]:.1f}</li>\n'
-        else:
-            thistext +=  '               <li><b>Alignment:</b> manual</li>\n'
-            thistext += f'               <li><b>Tilt angle:</b> {xafs_pitch.position:.1f}</li>\n'
-        thistext += f'               <li><b>Spinning:</b> {"yes" if self.spin else "no"}</li>\n'
-        thistext +=  '	      </ul>\n'
-        thistext +=  '	    </div>\n'
-        return thistext
-            
+    
 
 class GlancingAngleMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and

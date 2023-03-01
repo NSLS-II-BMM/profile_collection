@@ -24,8 +24,10 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
+from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, clean_img, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -341,7 +343,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def find_slot(close=False):
+def find_slot():
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -350,14 +352,16 @@ def find_slot(close=False):
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
     
+    kafka_message({'align_wheel' : 'start'})
     yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
+    close_all_plots()
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
+    kafka_message({'align_wheel' : 'stop'})
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
-    if close:
-        close_all_plots()
+    close_all_plots()
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
@@ -441,16 +445,26 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
-            thisagg = matplotlib.get_backend()
-            matplotlib.use('Agg') # produce a plot without screen display
-            out.plot(xlabel=motor.name, ylabel=detector)
-            if filename is None:
-                filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-            plt.savefig(filename)
-            matplotlib.use(thisagg) # return to screen display
-            clean_img()
-            BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
-            BMMuser.display_img.show()
+            kafka_message({'align_wheel' : 'find_slot',
+                           'motor' : motor.name,
+                           'detector' : detector.lower(),
+                           'xaxis' : list(pos),
+                           'data' : list(signal),
+                           'best_fit' : list(out.best_fit),
+                           'center' : out.params['midpoint'].value,
+                           'amplitude' : out.params['amplitude'].value,
+                           'uid' : uid})
+
+            # thisagg = matplotlib.get_backend()
+            # matplotlib.use('Agg') # produce a plot without screen display
+            # out.plot(xlabel=motor.name, ylabel=detector)
+            # if filename is None:
+            #     filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+            # plt.savefig(filename)
+            # matplotlib.use(thisagg) # return to screen display
+            # clean_img()
+            # BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+            # BMMuser.display_img.show()
 
             if move is True:
                 yield from mv(motor, out.params['midpoint'].value)

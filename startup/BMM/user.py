@@ -998,3 +998,14 @@ class BMM_User(Borg):
             print('No instrument selected')
             return None
         
+    def fix(self):
+        '''Using the wrong version of a spreadsheet can set booleans
+        incorrectly.  This restores them to their defaults.
+        '''
+        self.snapshots = True
+        self.htmlpage = True
+        self.usbstick = False
+        self.bothways = False
+        self.channelcut = True
+        self.ththth = False
+        self.lims = True

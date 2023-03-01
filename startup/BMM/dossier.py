@@ -206,6 +206,7 @@ class BMMDossier():
     measurement   = None
     inifile       = None
     filename      = None
+    basename      = None
     start         = None
     end           = None
     experimenters = None
@@ -435,6 +436,7 @@ class BMMDossier():
             basename     = "%s-%2.2d" % (self.filename,seqnumber)
             htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))
 
+        self.basename = basename
         ## generate triplot as a png image (or fail gracefully)
         prjfilename, pngfilename = None, None
         try:
@@ -573,12 +575,12 @@ class BMMDossier():
         manifest.close()
         self.write_manifest()
 
-        if pngfilename is not None and os.path.isfile(pngfilename):
-            try:
-                img_to_slack(pngfilename)
-            except:
-                post_to_slack(f'failed to post image: {pngfilename}')
-                pass
+        #if pngfilename is not None and os.path.isfile(pngfilename):
+        #    try:
+        #        img_to_slack(pngfilename)
+        #    except:
+        #        post_to_slack(f'failed to post image: {pngfilename}')
+        #        pass
 
         return htmlfilename
 

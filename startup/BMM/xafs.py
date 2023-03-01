@@ -1016,7 +1016,6 @@ def xafs(inifile=None, **kwargs):
     def cleanup_plan(inifile):
         print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
-        kafka_message({'xafs_sequence':'stop'})
 
         #db = user_ns['db']
         ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
@@ -1042,6 +1041,7 @@ def xafs(inifile=None, **kwargs):
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
+        kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
         rsync_to_gdrive()
         synch_gdrive_folder()
                     

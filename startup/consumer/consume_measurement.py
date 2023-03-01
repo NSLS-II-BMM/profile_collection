@@ -20,6 +20,12 @@ from xafs_sequence import XAFSSequence
 xafsseq = XAFSSequence()
 xafsseq.catalog = bmm_catalog
 
+from glancing_angle_stage import GlancingAngle
+ga = GlancingAngle()
+
+from align_wheel import AlignWheel
+aw = AlignWheel()
+
 from BMM.larch_interface import plt
 
 
@@ -35,6 +41,9 @@ def handler(signal, frame):
     sys.exit(0)
 signal.signal(signal.SIGINT, handler)
 
+
+
+
 def plot_from_kafka_messages(beamline_acronym):
 
     def examine_message(consumer, doctype, doc):
@@ -46,13 +55,13 @@ def plot_from_kafka_messages(beamline_acronym):
         name, message = doc
 
         if name == 'bmm':
-            print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message)}')
+            print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
             if 'xafs_sequence' in message:
                 if message['xafs_sequence'] == 'start':
                     xafsseq.start(element=message['element'], edge=message['edge'], folder=message['folder'],
                                   repetitions=message['repetitions'], mode=message['mode'])
                 elif message['xafs_sequence'] == 'stop':
-                    xafsseq.stop()
+                    xafsseq.stop(filename=message['filename'])
                 elif message['xafs_sequence'] == 'add':
                     xafsseq.add(message['uid'])
             elif 'xafs_visualization' in message:
@@ -70,8 +79,26 @@ def plot_from_kafka_messages(beamline_acronym):
                     xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
                                                     edge=message['edge'], folder=message['folder'],
                                                     mode=message['mode'], catalog=bmm_catalog)
+            elif 'glancing_angle' in message:
+                if message['glancing_angle'] == 'linear':
+                    ga.plot_linear(**message)
+                elif message['glancing_angle'] == 'pitch':
+                    ga.plot_pitch(**message)
+                elif message['glancing_angle'] == 'fluo':
+                    ga.plot_fluo(**message)
+                elif message['glancing_angle'] == 'start':
+                    ga.start(**message)
+                elif message['glancing_angle'] == 'stop':
+                    ga.stop()
 
-                
+            elif 'align_wheel' in message:
+                if message['align_wheel'] == 'start':
+                    aw.start(**message)
+                elif message['align_wheel'] == 'stop':
+                    aw.stop()
+                else:
+                    aw.plot_rectangle(**message)
+                    
         if name == 'stop':
             #print(
             #    f"{datetime.datetime.now().isoformat()} document: {name}\n"
