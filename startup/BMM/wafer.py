@@ -8,6 +8,7 @@ from lmfit.models import StepModel
 import numpy
 from sympy import geometry
 
+from BMM.kafka import kafka_message
 from BMM.linescans   import linescan
 from BMM.derivedplot import close_all_plots, close_last_plot
 from BMM.functions   import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -66,9 +67,18 @@ class Wafer():
         pars   = mod.guess(ss, x=numpy.array(yy))
         self.out    = mod.fit(ss, pars, x=numpy.array(yy))
         print(whisper(self.out.fit_report(min_correl=0)))
-        #self.out.plot()
         target = self.out.params['center'].value
+        kafka_message({'wafer'     : 'edge',
+                       'motor'     : motor.name,
+                       'xaxis'     : list(yy),
+                       'data'      : list(ss),
+                       'best_fit'  : list(out.best_fit),
+                       'center'    : target,
+                       'amplitude' : out.params['amplitude'].value,
+                       'uid'       : uid})
+                       
+        #self.out.plot()
         yield from mv(motor, target)
         yield from resting_state_plan()
         print(f'Edge found at X={user_ns["xafs_x"].position} and Y={user_ns["xafs_y"].position}')
-        print(f'do wafer.plot() to see the fit result')
+        print(f'do wafer.push() to add this point to the list for finding the wafer circumcenter')

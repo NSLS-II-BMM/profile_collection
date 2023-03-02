@@ -353,10 +353,10 @@ def find_slot():
             return(yield from null())
     
     kafka_message({'align_wheel' : 'start'})
-    yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
+    yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
     close_all_plots()
-    yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
+    yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
     kafka_message({'align_wheel' : 'stop'})
@@ -371,9 +371,10 @@ def find_reference():
     print(bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})'))
 
     
-def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None, move=True, force=False, md={}):
+def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
+                   negate=False, filename=None, move=True, force=False, chore='', md={}):
 
-    def main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, md):
+    def main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, chore, md):
         if force is False:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
@@ -445,15 +446,16 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
-            kafka_message({'align_wheel' : 'find_slot',
-                           'motor' : motor.name,
-                           'detector' : detector.lower(),
-                           'xaxis' : list(pos),
-                           'data' : list(signal),
-                           'best_fit' : list(out.best_fit),
-                           'center' : out.params['midpoint'].value,
-                           'amplitude' : out.params['amplitude'].value,
-                           'uid' : uid})
+            if chore == 'find_slot':
+                kafka_message({'align_wheel' : 'find_slot',
+                               'motor'       : motor.name,
+                               'detector'    : detector.lower(),
+                               'xaxis'       : list(pos),
+                               'data'        : list(signal),
+                               'best_fit'    : list(out.best_fit),
+                               'center'      : out.params['midpoint'].value,
+                               'amplitude'   : out.params['amplitude'].value,
+                               'uid'         : uid})
 
             # thisagg = matplotlib.get_backend()
             # matplotlib.use('Agg') # produce a plot without screen display
@@ -478,7 +480,8 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         yield from resting_state_plan()
     
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, md), cleanup_plan())
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, chore, md),
+                                cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 

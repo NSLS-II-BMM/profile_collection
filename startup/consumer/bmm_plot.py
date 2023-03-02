@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 from lmfit.models import SkewedGaussianModel, RectangleModel
 import numpy
+from scipy.interpolate import interp1d
 
 from larch_interface import Pandrosus, Kekropidai
 
@@ -220,4 +221,60 @@ def plot_xafs(bmm_catalog, uid):
     this.fetch(uid=uid, mode=mode)
     this.title = f"{metadata['filename']}  scan {metadata['count']}/{metadata['repetitions']}"
     this.triplot()
+    
+
+def wafer_plot(**kwargs):
+    uid       = kwargs['uid']
+    motor     = kwargs['motor']
+    center    = kwargs['center']
+    amplitude = kwargs['amplitude']
+    xaxis     = kwargs['xaxis']
+    data      = kwargs['data']
+    best_fit  = kwargs['best_fit']
+
+    direction = motor.split('_')[1]
+
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.scatter(xaxis, data, color='blue')
+    ax.plot(xaxis, best_fit, color='red')
+    ax.scatter(center, amplitude/2, s=160, marker='x', color='green')
+    ax.set_facecolor((0.95, 0.95, 0.95))
+    ax.set_xlabel(f'{motor} (mm)')
+    ax.set_ylabel(f'It/I0 and error function')
+    ax.set_title(f'Wafer edge: {direction} scan, center={center:.3f}')
+    fig.canvas.manager.show()
+    fig.canvas.flush_events() 
+    
+    
+def mono_calibration_plot(**kwargs):
+    found    = kwargs['found']
+    ee       = kwargs['ee']
+    tt       = kwargs['tt']
+    mono     = kwargs['mono']
+    dspacing = kwargs['dspacing']
+    offset   = kwargs['offset']
+
+    y1, y2 = 13.5, 12.9
+    if mono == '311':
+        y1, y2 = 2*y1, 2*y2
+    
+    ## cubic interpolation of tabulated edge energies
+    xnew = numpy.linspace(min(ee),max(ee),100)
+    f = interp1d(ee, tt, kind='cubic')
+        
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.plot(xnew, f(xnew), label='tabulated')
+    ax.plot(found, tt, 'ro', label='measured')
+    ax.set_facecolor((0.95, 0.95, 0.95))
+    ax.set_xlabel('energy (eV)')
+    ax.set_ylabel('angle (degrees)')
+    ax.set_title(f'Si({mono}) calibration curve')
+    ax.text(12000, y1, f'd-spacing = {dspacing[0]:.8f} ± {dspacing[1]:.8f} Å', fontsize='small')
+    ax.text(12000, y2, f'offset = {offset[0]:.5f} ± {offset[1]:.5f} degrees', fontsize='small')
+    ax.legend(loc='upper right', shadow=True)
+    fig.canvas.manager.show()
+    fig.canvas.flush_events() 
+
     

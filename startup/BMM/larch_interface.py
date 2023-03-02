@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 #from BMM.functions import etok, ktoe
-from BMM.periodictable import edge_energy
+from BMM.periodictable import edge_energy, element_symbol
 
 #from BMM import user_ns as user_ns_module
 #user_ns = vars(user_ns_module)
@@ -238,7 +238,11 @@ class Pandrosus():
         if name is not None:
             self.name = name
         else:
-            self.name = uid[-6:]
+            if 'Broker' in str(type(self.db)):  # v1 databroker
+                self.name = self.db.v2[uid].metadata['start']['XDI']['_filename']
+            else:
+                self.name = self.db[uid].metadata['start']['XDI']['_filename']
+            #self.name = uid[-6:]
         self.group = Group(__name__=self.name)
         if 'Broker' in str(type(self.db)):  # v1 databroker
             self.title = self.db.v2[uid].metadata['start']['XDI']['Sample']['name']
@@ -259,6 +263,7 @@ class Pandrosus():
         else:                               # tiled catalog
             self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
 
+            
     def put(self, energy, mu, name):
         self.name = name
         self.group = Group(__name__=self.name)
@@ -266,6 +271,50 @@ class Pandrosus():
         self.group.mu = mu
         self.prep()
 
+    def find_edge(self):
+        '''This re-implements the Demeter::Data::find_edge method
+        '''
+        diff = 100000
+        for ed in ('K', 'l3', 'L2', 'L1'):
+            for z in range(14, 104):
+                en = edge_energy(z, ed)
+                this = abs(en - self.group.e0)
+                if this > diff and en > self.group.e0:
+                    break
+                if this < diff:
+                    diff = this
+                    answer = z
+                    edge = ed
+        elem = element_symbol(answer)
+        if (elem, edge) == ('Nd', 'L1'):    # Fe oxide
+            (elem, edge) = ('Fe', 'K')
+        elif (elem, edge) == ('Sm', 'L1'):  # Co oxide
+            (elem, edge) = ('Co', 'K')
+        elif (elem, edge) == ('Er', 'L1'):  # Ni oxide
+            (elem, edge) = ('Ni', 'K')
+        elif (elem, edge) == ('Ce', 'L1'):  # Mn oxide
+            (elem, edge) = ('Mn', 'K')
+        elif (elem, edge) == ('Ir', 'L1'):  # prefer Bi l3 to Ir L1
+            (elem, edge) = ('Bi', 'L3')
+        elif (elem, edge) == ('Th', 'L3'):  # prefer Se K to Tl L3
+            (elem, edge) = ('Se', 'K')
+        #elif (elem, edge) == ('W', 'L2'):   # prefer Pt L3 to W L2
+        #    (elem, edge) = ('Pt', 'L3')
+        elif (elem, edge) == ('Pb', 'L2'):  # prefer Se K to Tl L3
+            (elem, edge) = ('Rb', 'K')
+        #elif (elem, edge) == ('At', 'L1'):  # prefer Np L3 to At L1
+        #    (elem, edge) = ('Np', 'L3')
+        elif (elem, edge) == ('Ba', 'L1'):  # prefer Cr K to Ba L1
+            (elem, edge) = ('Cr', 'K')
+        #elif (elem, edge) == ('Er', 'L3'):  # prefer Ni K to Er L3
+        #    (elem, edge) = ('Ni', 'K')
+        elif (elem, edge) == ('Bk', 'L2'):  # prefer Pd K to Bk L2
+            (elem, edge) = ('Pd', 'K')
+
+        self.element = elem
+        self.edge = edge
+            
+        
     def determine_kmax(self):
         if self.element is None or self.edge is None:
             return None
@@ -301,6 +350,16 @@ class Pandrosus():
             self.pre['pre1'] = self.group.energy.min() - ezero
         if self.pre['pre2'] is None:
             self.pre['pre2'] = self.pre['pre1'] / 3
+        if self.element is None or self.edge is None:
+            self.find_edge()
+        if self.edge.lower() == 'l3':
+            diff = edge_energy(self.element, 'L2') - edge_energy(self.element, 'L3')
+            if self.pre['norm2'] > diff:
+               self.pre['norm2'] = diff - 20 
+        if self.edge.lower() == 'l2':
+            diff = edge_energy(self.element, 'L1') - edge_energy(self.element, 'L2')
+            if self.pre['norm2'] > diff:
+               self.pre['norm2'] = diff - 20 
         pre_edge(self.group.energy, mu=self.group.mu, group=self.group,
                  e0    = ezero,
                  step  = None,

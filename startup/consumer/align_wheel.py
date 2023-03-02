@@ -26,7 +26,11 @@ class AlignWheel():
     def start(self, **kwargs):
         self.ongoing = True
         self.fig = None
-
+        self.x_xaxis = self.x_data = self.x_best_fit = []
+        self.y_xaxis = self.y_data = self.y_best_fit = []
+        self.x_center = self.x_amplitude = self.y_center = self.y_amplitude = 0
+        self.x_detector = self.y_detector = ''
+        
     def plot_rectangle(self, **kwargs):
         motor     = kwargs['motor']
         detector  = kwargs['detector']

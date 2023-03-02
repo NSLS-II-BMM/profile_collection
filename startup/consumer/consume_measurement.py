@@ -98,6 +98,12 @@ def plot_from_kafka_messages(beamline_acronym):
                     aw.stop()
                 else:
                     aw.plot_rectangle(**message)
+
+            elif 'wafer' in message:
+                bmm_plot.wafer_plot(**message)
+
+            elif 'mono_calibration' in message:
+                bmm_plot.mono_calibration_plot(**message)
                     
         if name == 'stop':
             #print(
@@ -107,6 +113,7 @@ def plot_from_kafka_messages(beamline_acronym):
             #return
             uid = message['run_start']  # stop document is the second item in the doc list
             record = bmm_catalog[uid]
+            verbose = False
             if 'BMM_kafka' in record.metadata['start']:
                 hint = record.metadata['start']['BMM_kafka']['hint']
                 #print(f'[{datetime.datetime.now().isoformat(timespec="seconds")}]   {uid}')
@@ -114,19 +121,19 @@ def plot_from_kafka_messages(beamline_acronym):
                     print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
 
                 if hint.startswith('linescan'):
-                    print('saw a linescan stop doc')
+                    if verbose: print('saw a linescan stop doc')
                     #bmm_plot.plot_linescan(bmm_catalog, uid)
                 elif hint.startswith('timescan'):
-                    print('saw a timescan stop doc')
+                    if verbose: print('saw a timescan stop doc')
                     #bmm_plot.plot_timescan(bmm_catalog, uid)
                 elif hint.startswith('rectanglescan'):
-                    print('saw a rectanglescan stop doc')
+                    if verbose: print('saw a rectanglescan stop doc')
                     #bmm_plot.plot_rectanglescan(bmm_catalog, uid)
                 elif hint.startswith('areascan'):
-                    print('saw a areascan stop doc')
+                    if verbose: print('saw a areascan stop doc')
                     #bmm_plot.plot_areascan(bmm_catalog, uid)
                 elif hint.startswith('xafs'):
-                    print('saw an xafs stop doc')
+                    if verbose: print('saw an xafs stop doc')
                     #plt.close('all')
                     #bmm_plot.plot_xafs(bmm_catalog, uid)
     ## end of examine_message ##################################################################
