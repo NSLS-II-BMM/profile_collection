@@ -40,8 +40,6 @@ from BMM.wafer import Wafer
 wafer = Wafer()
 
 
-#run_report('\t'+'positioning of instruments')
-#from BMM.positioning import find_slot
 
 ###########################################################################################
 #  _____  _       ___   _   _ _____ _____ _   _ _____    ___   _   _ _____  _      _____  #
