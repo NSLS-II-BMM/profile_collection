@@ -10,17 +10,18 @@ from ophyd.sim import noisy_det
 
 from bluesky.preprocessors import subs_decorator
 
-from BMM.user_ns.dwelltime   import with_xspress3
-from BMM.resting_state import resting_state_plan
-from BMM.suspenders    import BMM_clear_to_start
-from BMM.linescans     import motor_nicknames
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
-from BMM.functions     import countdown, plotting_mode, now, PROMPT
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.derivedplot   import DerivedPlot, interpret_click, close_all_plots
-from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
+from BMM.user_ns.dwelltime import with_xspress3
+from BMM.resting_state     import resting_state_plan
+from BMM.suspenders        import BMM_clear_to_start
+from BMM.kafka             import kafka_message
+from BMM.linescans         import motor_nicknames
+from BMM.logging           import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.functions         import countdown, plotting_mode, now, PROMPT
+from BMM.functions         import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.derivedplot       import DerivedPlot, interpret_click, close_all_plots
+from BMM.suspenders        import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 #from BMM.purpose       import purpose
-from BMM.workspace     import rkvs
+from BMM.workspace         import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dwelltime   import _locked_dwell_time
@@ -217,83 +218,31 @@ def areascan(detector,
         report(f'map uid = {uid}', level='bold', slack=True)
         
 
-        close_all_plots()
-        print('Fetching map data from database...')
-        thismap = user_ns['db'].v2[uid]
-        x=numpy.array(thismap.primary.read()[fast.name])
-        y=numpy.array(thismap.primary.read()[slow.name])
-        if detector.lower() == 'noisy_det':
-            z=numpy.array(thismap.primary.read()['noisy_det'])
-        elif detector.lower() == 'it':
-            z=numpy.array(thismap.primary.read()['It'])
-        elif detector.lower() == 'i0a':
-            z=numpy.array(thismap.primary.read()['I0a'])
-        elif detector.lower() == 'i0b':
-            z=numpy.array(thismap.primary.read()['I0b'])
-        elif detector.lower() == 'xs':
-            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs4])
-        else:
-            z=numpy.array(thismap.primary.read()[BMMuser.xs1]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs2]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs3]) +\
-                numpy.array(thismap.primary.read()[BMMuser.xs4])
+        #     BMMuser.x = None
+        #     figs = list(map(plt.figure, plt.get_fignums()))
+        #     canvas = figs[0].canvas
+        #     action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+        #     if action.lower() == 'n' or action.lower() == 'q':
+        #         return(yield from null())
+        #     print('Single click the left mouse button on the plot to pluck a point...')
+        #     cid = canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
+        #     while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
+        #         yield from sleep(0.5)
 
-        z=z.reshape(nslow, nfast)
-        if log is True:
-            z = numpy.log(z)
-        # grabbing the first nfast elements of x and every
-        # nslow-th element of y is more reliable than 
-        # numpy.unique due to float &/or motor precision issues
-
-        #plt.title(f'Energy = {energies["below"]}')
-        fig = plt.figure(figsize=(nfast/20,nslow/20))
-        plt.xlabel(f'fast axis ({fast.name}) position (mm)')
-        plt.ylabel(f'slow axis ({slow.name}) position (mm)')
-        plt.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
-        if contour is True:
-            plt.contourf(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
-        else:
-            plt.pcolormesh(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
-        plt.colorbar()
-        plt.savefig(fname)
-        plt.show()
-        try:
-            img_to_slack(fname)
-        except:
-            post_to_slack(f'failed to post image: {fname}')
-            pass
-
-            
-        if pluck is True:
-
-            BMMuser.x = None
-            figs = list(map(plt.figure, plt.get_fignums()))
-            canvas = figs[0].canvas
-            action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
-            if action.lower() == 'n' or action.lower() == 'q':
-                return(yield from null())
-            print('Single click the left mouse button on the plot to pluck a point...')
-            cid = canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
-            while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
-                yield from sleep(0.5)
-
-            # print('Converting plot coordinates to real coordinates...')
-            # begin = valuefast + startfast
-            # stepsize = (stopfast - startfast) / (nfast - 1)
-            # pointfast = begin + stepsize * BMMuser.x
-            # #print(BMMuser.x, pointfast)
+        #     # print('Converting plot coordinates to real coordinates...')
+        #     # begin = valuefast + startfast
+        #     # stepsize = (stopfast - startfast) / (nfast - 1)
+        #     # pointfast = begin + stepsize * BMMuser.x
+        #     # #print(BMMuser.x, pointfast)
         
-            # begin = valueslow + startslow
-            # stepsize = (stopslow - startslow) / (nslow - 1)
-            # pointslow = begin + stepsize * BMMuser.y
-            # #print(BMMuser.y, pointslow)
+        #     # begin = valueslow + startslow
+        #     # stepsize = (stopslow - startslow) / (nslow - 1)
+        #     # pointslow = begin + stepsize * BMMuser.y
+        #     # #print(BMMuser.y, pointslow)
 
-            # print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
-            yield from mv(fast, BMMuser.x, slow, BMMuser.y)
-            report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=False)
+        #     # print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
+        #     yield from mv(fast, BMMuser.x, slow, BMMuser.y)
+        #     report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=False)
             
             
         

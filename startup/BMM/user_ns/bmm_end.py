@@ -26,6 +26,10 @@ from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xr
 run_report('\t'+'FMBO motor tools')
 from BMM.fmbo import FMBO_status
 
+run_report('\t'+'Setting motor description strings')
+from BMM.desc_string import set_desc_strings
+set_desc_strings()
+
 run_report('\t'+'derived plot')
 from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 

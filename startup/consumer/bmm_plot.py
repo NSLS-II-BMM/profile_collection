@@ -163,6 +163,7 @@ def plot_areascan(bmm_catalog, uid):
     hint = record.metadata['start']['BMM_kafka']['hint']
     if checkhint(hint, 'areascan') is False: return
     detector, slow, fast, contour, log, energy = hint.split()[1:]
+    pngout = record.metadata['start']['BMM_kafka']['pngout']
     nslow, nfast = record.metadata['start']['shape']
     try:
         fname = record.metadata['start']['BMM_kafka']['pngout']
@@ -193,7 +194,7 @@ def plot_areascan(bmm_catalog, uid):
         z = numpy.log(z)
         
     fig = plt.figure()
-    fig.set_facecolor((0.9, 0.9, 0.9))
+    fig.set_facecolor((0.95, 0.95, 0.95))
     plt.title(f'{detector}     Energy = {energy}')
     plt.xlabel(f'fast axis ({fast}) position (mm)')
     plt.ylabel(f'slow axis ({slow}) position (mm)')
@@ -203,8 +204,8 @@ def plot_areascan(bmm_catalog, uid):
     else:
         plt.pcolormesh(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
     plt.colorbar()
-    # if fname is not None and fname.strip() is not '':
-    #     plt.savefig(fname)
+    if pngout is not None and pngout.strip() != '':
+        plt.savefig(pngout)
     plt.show()
 
 

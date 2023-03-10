@@ -70,6 +70,7 @@ class XAFSSequence():
             self.merge()
             if self.repetitions > 5 and len(self.uidlist) % 3 == 0:
                 post_to_slack('(Posting a plot every third scan in a sequence...)')
+                tossfile = os.path.join(folder, 'snapshots', 'toss.png')
                 self.fig.savefig(tossfile)
                 img_to_slack(tossfile)
                 

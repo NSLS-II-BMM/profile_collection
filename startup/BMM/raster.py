@@ -161,7 +161,7 @@ def preserve_data(uid, label, xlsxout, matout):
     fast = numpy.array(datatable[motors[1]])
     i0   = numpy.array(datatable['I0'])
 
-    if 'xs' in db.v2[uid].metadata['start']['detectors']:
+    if '4-element SDD' in db.v2[uid].metadata['start']['detectors'] or 'if' in db.v2[uid].metadata['start']['detectors'] or 'xs' in db.v2[uid].metadata['start']['detectors']:
         det_name = db.v2[uid].metadata['start']['plan_name'].split()[-1]
         det_name = det_name[:-1]
         z = numpy.array(datatable[det_name+'1'])+numpy.array(datatable[det_name+'2'])+numpy.array(datatable[det_name+'3'])+numpy.array(datatable[det_name+'4'])

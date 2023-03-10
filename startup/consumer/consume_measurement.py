@@ -131,7 +131,8 @@ def plot_from_kafka_messages(beamline_acronym):
                     #bmm_plot.plot_rectanglescan(bmm_catalog, uid)
                 elif hint.startswith('areascan'):
                     if verbose: print('saw a areascan stop doc')
-                    #bmm_plot.plot_areascan(bmm_catalog, uid)
+                    print(f"{datetime.datetime.now().isoformat()} document: {name}\n")
+                    bmm_plot.plot_areascan(bmm_catalog, uid)
                 elif hint.startswith('xafs'):
                     if verbose: print('saw an xafs stop doc')
                     #plt.close('all')
