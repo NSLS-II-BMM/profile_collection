@@ -300,7 +300,7 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -74.5
+    xafs_ref.outer_position = -76.82
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
 xafs_ref.inner_position = -48 # xafs_ref.outer_position + 26.5

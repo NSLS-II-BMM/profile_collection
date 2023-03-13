@@ -343,7 +343,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def find_slot():
+def find_slot(shape='slot'):
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -353,7 +353,10 @@ def find_slot():
             return(yield from null())
     
     kafka_message({'align_wheel' : 'start'})
-    yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
+    if shape == 'circle':
+        yield from rectangle_scan(motor=xafs_y, start=-10,  stop=10,  nsteps=31, detector='It', chore='find_slot')
+    else:
+        yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
     close_all_plots()
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
