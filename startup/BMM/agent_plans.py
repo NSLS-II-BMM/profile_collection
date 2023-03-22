@@ -1,13 +1,15 @@
+from typing import Sequence
+
 import bluesky.preprocessors as bpp
 import msgpack
 import redis
-from confluent_kafka import Producer
-from nslsii import _read_bluesky_kafka_config_file
 from bluesky import plan_stubs as bps
 from BMM.edge import change_edge
-from BMM.xafs import xafs
 from BMM.user_ns.instruments import slits3
 from BMM.user_ns.motors import xafs_det
+from BMM.xafs import xafs
+from confluent_kafka import Producer
+from nslsii import _read_bluesky_kafka_config_file
 
 __all__ = ["agent_driven_nap", "agent_move_and_measure"]
 
@@ -92,11 +94,9 @@ def agent_measure_single_edge(motor_x, x_position, motor_y, y_position, *, md=No
     """
     rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
     element = rkvs.get("BMM:pds:element").decode("utf-8")
-    edge = rkvs.get('BMM:pds:edge').decode('utf-8')
+    edge = rkvs.get("BMM:pds:edge").decode("utf-8")
     yield from bps.mv(motor_x, x_position)
-    _md = dict(x_position=motor_x.position,
-               redis_element=element,
-               redis_edge=edge)
+    _md = dict(x_position=motor_x.position, redis_element=element, redis_edge=edge)
     yield from bps.mv(motor_y, y_position)
     _md["det_position"] = xafs_det.position
     _md.update(md or {})
@@ -104,41 +104,47 @@ def agent_measure_single_edge(motor_x, x_position, motor_y, y_position, *, md=No
 
 
 def agent_move_and_measure(
-        motor_x,
-        Cu_x_position,
-        Ti_x_position,
-        motor_y,
-        Cu_y_position,
-        Ti_y_position,
-        *,
-        Cu_det_position,
-        Ti_det_position,
-        md=None,
-        **kwargs
+    motor_x,
+    elem1_x_position,
+    elem2_x_position,
+    motor_y,
+    elem1_y_position,
+    elem2_y_position,
+    elem1_det_position,
+    elem2_det_position,
+    *,
+    elements: Sequence[str],
+    edges: Sequence[str],
+    md=None,
+    **kwargs,
 ):
     """
     A complete XAFS measurement for the Cu/Ti sample.
     Each element edge must have it's own calibrated motor positioning and detector distance.
     The sample is moved into position, edge changed and spectra taken.
-
     Parameters
     ----------
     motor_x :
         Positional motor for sample in x.
-    Cu_x_position : float
+    elem1_x_position : float
         Absolute motor position for Cu measurement (This is the real independent variable)
-    Ti_x_position : float
+    elem2_x_position : float
         Absolute motor position for Ti measurement
     motor_y :
         Positional motor for sample in y.
-    Cu_y_position : float
+    elem1_y_position : float
         Absolute motor position for Cu measurement
-    Ti_y_position : float
+    elem2_y_position : float
         Absolute motor position for Ti measurement
-    Cu_det_position : float
+    elem1_det_position : float
         Absolute motor position for the xafs detector for the Cu measurement.
-    Ti_det_position : float
+    elem2_det_position : float
         Absolute motor position for the xafs detector for the Ti measurement.
+    elements : Sequence[str]
+        List of element symbols
+    edges: Sequence[str]
+        List of edges corresponding to elements
+
     md : Optional[dict]
         Metadata
     kwargs :
@@ -157,62 +163,62 @@ def agent_move_and_measure(
             >>> 'times': '0.5 0.5 0.5 0.5'}
     """
 
-    def Cu_plan(already_at_edge=True):
-        yield from bps.mv(motor_x, Cu_x_position)
-        _md = dict(Cu_position=motor_x.position)
-        yield from bps.mv(motor_y, Cu_y_position)
-        yield from bps.mv(xafs_det, Cu_det_position)
-        _md["Cu_det_position"] = xafs_det.position
+    def elem1_plan():
+        yield from bps.mv(motor_x, elem1_x_position)
+        _md = {f"{elements[0]}_position": motor_x.position}
+        yield from bps.mv(motor_y, elem1_y_position)
+        yield from bps.mv(xafs_det, elem1_det_position)
+        _md[f"{elements[0]}_det_position"] = xafs_det.position
         _md.update(md or {})
-        if not already_at_edge:
-            yield from bps.mv(slits3.vsize, 0.1)
-            yield from change_edge("Cu", focus=True)
+        yield from bps.mv(slits3.vsize, 0.1)
+        if rkvs.get("BMM:pds:element").decode("utf-8") != elements[0]:
+            yield from change_edge(elements[0], focus=True)
         # xafs doesn't take md, so stuff it into a comment string to be ast.literal_eval()
-        yield from xafs(element="Cu", comment=str(_md), **kwargs)
+        yield from xafs(element=elements[0], edge=edges[0], comment=str(_md), **kwargs)
 
-    def Ti_plan(already_at_edge=True):
-        yield from bps.mv(motor_x, Ti_x_position)
-        _md = dict(Ti_position=motor_x.position)
-        yield from bps.mv(motor_y, Ti_y_position)
-        yield from bps.mv(xafs_det, Ti_det_position)
-        _md["Ti_det_position"] = xafs_det.position
+    def elem2_plan():
+        yield from bps.mv(motor_x, elem2_x_position)
+        _md = {f"{elements[1]}_position": motor_x.position}
+        yield from bps.mv(motor_y, elem2_y_position)
+        yield from bps.mv(xafs_det, elem2_det_position)
+        _md[f"{elements[1]}_det_position"] = xafs_det.position
         _md.update(md or {})
-        if not already_at_edge:
-            yield from bps.mv(slits3.vsize, 0.3)
-            yield from change_edge("Ti", focus=True)
-        yield from xafs(element="Ti", comment=str(_md), **kwargs)
+        yield from bps.mv(slits3.vsize, 0.3)
+        if rkvs.get("BMM:pds:element").decode("utf-8") != elements[1]:
+            yield from change_edge(elements[1], focus=True)
+        yield from xafs(element=elements[1], edge=edges[1], comment=str(_md), **kwargs)
 
     rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
     element = rkvs.get("BMM:pds:element").decode("utf-8")
     # edge = rkvs.get('BMM:pds:edge').decode('utf-8')
-    if element == "Ti":
-        yield from Ti_plan()
-        yield from Cu_plan(already_at_edge=False)
+    if element == elements[1]:
+        yield from elem2_plan()
+        yield from elem1_plan()
     else:
-        yield from Cu_plan()
-        yield from Ti_plan(already_at_edge=False)
+        yield from elem1_plan()
+        yield from elem2_plan()
 
 
 def agent_move_motor(motor_x, Cu_x_position, *args, **kwargs):
     yield from bps.mv(motor_x, Cu_x_position)
 
 
-def agent_change_edge(*args, **kwargs):
-    yield from change_edge("Cu", focus=True)
+def agent_change_edge(element):
+    yield from change_edge(element, focus=True)
 
 
 def agent_xafs(
-        motor_x,
-        Cu_x_position,
-        Ti_x_position,
-        motor_y,
-        Cu_y_position,
-        Ti_y_position,
-        *,
-        Cu_det_position,
-        Ti_det_position,
-        md=None,
-        **kwargs
+    motor_x,
+    Cu_x_position,
+    Ti_x_position,
+    motor_y,
+    Cu_y_position,
+    Ti_y_position,
+    *,
+    Cu_det_position,
+    Ti_det_position,
+    md=None,
+    **kwargs,
 ):
     _md = dict(Cu_position=motor_x.position)
     _md["Cu_det_position"] = xafs_det.position
