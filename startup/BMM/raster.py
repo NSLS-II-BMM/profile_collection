@@ -486,8 +486,9 @@ def raster(inifile=None, **kwargs):
             if htmlout is not None:
                 htmlout = dossier.raster_dossier()
                 report('wrote dossier %s' % htmlout, 'bold')
-            rsync_to_gdrive()
-            synch_gdrive_folder()
+            if not is_re_worker_active():
+                rsync_to_gdrive()
+                synch_gdrive_folder()
         except:
             print(whisper('Quitting raster scan. Not returning to start position or writing dossier.'))
         yield from resting_state_plan()

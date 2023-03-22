@@ -179,14 +179,15 @@ class DCM(PseudoPositioner):
         """convert between mono angle and photon wavelength"""
         return self._twod * sin(val*pi/180)
 
-    def motor_positions(self, energy):
+    def motor_positions(self, energy, quiet=False):
         wavelength = 2*pi*HBARC / energy
         angle = arcsin(wavelength / self._twod)
         bragg = 180 * arcsin(wavelength/self._twod) / pi
         para  = self.offset / (2*sin(angle))
         perp  = self.offset / (2*cos(angle))
-        print(f'Si({self._crystal}), {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
-    
+        if quiet is False:
+            print(f'Si({self._crystal}), {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}\n')
+        return(bragg, para, perp)
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

@@ -18,6 +18,7 @@ from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.resting_state import resting_state_plan
 from BMM.workspace     import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -216,6 +217,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
     print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
 
+    ## prepare for the possibility of dcm_para stalling while moving to new energy
+    if energy+target > dcm.energy.position:
+        correction = -1
+    else:
+        correction = 1
+        
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -267,6 +274,20 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
+
+    (bragg, para, perp) = dcm.motor_positions(energy+target, quiet=True)
+    count = 0
+    while abs(dcm_para.position - para) > 0.1:
+        count = count+1
+        report(':warning: dcm_para failed to arrive in position.  Attempting to resolve this problem. :warning: ', level='warning', slack=True)
+        yield from mvr(dcm_para, correction*5)
+        yield from mv(dcm.energy, energy+target)
+        if count > 5:
+            report(':boom: dcm_para failed to arrive in position.  Unable to resolve this problem. :boom:', level='error', slack=True)
+            return
+    if count > 0:
+        report('Able to successfully resolve the stalling of dcm_para.  :sparkler:', slack=True)
+            
     if arrived_in_mode(mode=mode) is False:
         print('\n')
         report(f'Failed to arrive in Mode {mode}', level='error', slack=True)
@@ -332,9 +353,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     BMM_clear_suspenders()
-    yield from dcm.kill_plan()
+    #yield from dcm.kill_plan()
     yield from mv(m2_bender.kill_cmd, 1)
     BMMuser.state_to_redis(filename=os.path.join(BMMuser.DATA, '.BMMuser'), prefix='')
+    yield from resting_state_plan()
     end = time.time()
     print('\n\nThat took %.1f min' % ((end-start)/60))
     return()

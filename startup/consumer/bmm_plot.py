@@ -5,6 +5,7 @@ import numpy
 from scipy.interpolate import interp1d
 
 from larch_interface import Pandrosus, Kekropidai
+from slack import img_to_slack, post_to_slack
 
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
@@ -140,7 +141,11 @@ def plot_rectanglescan(bmm_catalog, uid):
     table = record.primary.read()
 
     if detector.lower() == 'if':
-        signal   = numpy.array((table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4])/table['I0'])
+        xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
+        xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
+        xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
+        xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
+        signal   = numpy.array((table[xs1]+table[xs2]+table[xs3]+table[xs4])/table['I0'])
     elif detector.lower() == 'it':
         signal   = numpy.array(table['It']/table['I0'])
     elif detector.lower() == 'ir':
@@ -174,20 +179,18 @@ def plot_areascan(bmm_catalog, uid):
 
     x=numpy.array(table[fast])
     y=numpy.array(table[slow])
+    xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
+    xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
+    xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
+    xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
     if detector.lower() == 'noisy_det':
         z=numpy.array(table['noisy_det'])
     elif detector.lower() == 'it':
         z=numpy.array(table['It'])
     elif detector.lower() == 'xs':
-        z=numpy.array(table[BMMuser.xs1]) +\
-            numpy.array(table[BMMuser.xs2]) +\
-            numpy.array(table[BMMuser.xs3]) +\
-            numpy.array(table[BMMuser.xs4])
+        z=numpy.array(table[xs1]) + numpy.array(table[xs2]) + numpy.array(table[xs3]) + numpy.array(table[xs4])
     else:
-        z=numpy.array(table[BMMuser.xs1]) +\
-            numpy.array(table[BMMuser.xs2]) +\
-            numpy.array(table[BMMuser.xs3]) +\
-            numpy.array(table[BMMuser.xs4])
+        z=numpy.array(table[xs1]) + numpy.array(table[xs2]) + numpy.array(table[xs3]) + numpy.array(table[xs4])
 
     z=z.reshape(nslow, nfast)
     if log == 'True':
@@ -206,6 +209,7 @@ def plot_areascan(bmm_catalog, uid):
     plt.colorbar()
     if pngout is not None and pngout.strip() != '':
         plt.savefig(pngout)
+        img_to_slack(pngout)
     plt.show()
 
 

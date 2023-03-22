@@ -54,7 +54,7 @@ class Wafer():
             motor = user_ns['xafs_linx']
         else:
             motor = user_ns['xafs_liny']
-        yield from linescan(motor, 'it', -2, 2, 41, pluck=False)
+        uid = yield from linescan(motor, 'it', -2, 2, 41, pluck=False)
         close_last_plot()
         table  = user_ns['db'][-1].table()
         yy     = table[motor.name]
@@ -72,9 +72,9 @@ class Wafer():
                        'motor'     : motor.name,
                        'xaxis'     : list(yy),
                        'data'      : list(ss),
-                       'best_fit'  : list(out.best_fit),
+                       'best_fit'  : list(self.out.best_fit),
                        'center'    : target,
-                       'amplitude' : out.params['amplitude'].value,
+                       'amplitude' : self.out.params['amplitude'].value,
                        'uid'       : uid})
                        
         #self.out.plot()

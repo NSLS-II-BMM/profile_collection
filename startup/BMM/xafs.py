@@ -981,8 +981,9 @@ def xafs(inifile=None, **kwargs):
                         pass
                     if p['lims'] is True:
                         try:
-                            rsync_to_gdrive()
-                            synch_gdrive_folder()
+                            if not is_re_worker_active():
+                                rsync_to_gdrive()
+                                synch_gdrive_folder()
                         except Exception as e:
                             print(error_msg(e))
                             report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
@@ -1042,8 +1043,9 @@ def xafs(inifile=None, **kwargs):
             if htmlout is not None:
                 report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
         kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
-        rsync_to_gdrive()
-        synch_gdrive_folder()
+        if not is_re_worker_active():
+            rsync_to_gdrive()
+            synch_gdrive_folder()
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
