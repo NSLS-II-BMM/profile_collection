@@ -292,6 +292,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             ################################
             #self.content += self.tab + f'lakeshore.settle_time = {m["settle"]:.1f}\n'
             if m['temperature'] != temperature:
+                if self.check_temp(user_ns['lakeshore'], m['temperature']) is False: return(False)
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
                 self.content += self.tab + f'yield from lakeshore.to({m["temperature"]:.1f}, heater=\'{m["power"]}\')\n'
                 self.content += self.tab + f'yield from mv(busy, {m["settle"]:.1f})\n'
@@ -304,10 +305,13 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################           
             if m['samplex'] is not None:
+                if self.check_limit(user_ns['xafs_x'], m['samplex']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_x, {m["samplex"]:.3f})\n'
             if m['sampley'] is not None:
+                if self.check_limit(user_ns['xafs_y'], m['sampley']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]:.3f})\n'
             if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 
             
@@ -379,7 +383,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + '    BMMuser.running_macro = False\n'
             self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
-
+        return(True)
 
     def get_keywords(self, row, defaultline):
         '''Instructions for parsing spreadsheet columns into keywords.

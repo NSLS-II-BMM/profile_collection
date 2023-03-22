@@ -6,13 +6,20 @@ fast          = xafs_x -9 9 90
 slow          = xafs_y -9 9 90
 dwelltime     = 0.1
 detector      = random
+# detector = 'It', 'If', or 'random' (for testing)
 
-filename      = CeHIP
+filename      = best_sample_ever
 
 element       = Ce
 edge          = L3
 energy        = 5738.3
 
-sample        = CeHIP
-prep          = pressed and sliced
-comment       = Welcome to BMM
+sample        = <sample composition or stoichiometry>
+prep          = <how the sample was prepared for measurement>
+comment       = <anything else you want to say about your sample>
+
+## these control how the final image is made
+##   contour = True plots filled contours, False is to show pixels as measured
+##   log = True means to put the color scale on a log scale, False means linear scale
+contour       = False
+log           = False

@@ -5,6 +5,7 @@ from BMM.motor_status  import motor_status
 
 #run_report(__file__, text='mirror trigonometry')
 
+from BMM.functions import PROMPT
 from BMM.user_ns.instruments import *
 from BMM.user_ns.motors      import *
 
@@ -40,7 +41,7 @@ def move_m3(target=5):
     print('\t (correction): %.2f' % correction)
     print('')
 
-    action = input("Begin moving motors> [Y/n then Enter] ")
+    action = input("Begin moving motors? " + PROMPT)
     if action.lower() == 'q' or action.lower() == 'n':
         yield from null()
         return
@@ -94,7 +95,7 @@ def move_m2(target=3.5):
     print('\t (correction): %.2f' % correction)
     print('')
 
-    action = input("Begin moving motors? [Y/n then Enter] ")
+    action = input("Begin moving motors? " + PROMPT)
     if action.lower() == 'q' or action.lower() == 'n':
         yield from null()
         return

@@ -1,5 +1,5 @@
-import os, time, datetime
-import inflection, textwrap, ansiwrap
+import os, time, datetime, psutil, glob
+import inflection, textwrap, ansiwrap, termcolor
 from numpy import pi, sin, cos, arcsin, sqrt
 
 from BMM import user_ns as user_ns_module
@@ -14,6 +14,9 @@ os.environ['PAGER'] = 'most'
 BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
 LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
+
+PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
+
 
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
@@ -115,7 +118,7 @@ l2e = e2l
 
 ## see calibrate_pitch in BMM/mono_calibration.py
 def approximate_pitch(energy):
-    if user_ns['dcm']._crystal is '111':
+    if user_ns['dcm']._crystal == '111':
         m = -4.5329e-06
         b = 4.26511766
         return(m*energy + b)
@@ -215,7 +218,8 @@ def present_options(suffix='xlsx'):
         return None
 
 def plotting_mode(mode):
-    if user_ns['with_xspress3'] and mode.lower() == 'xs1':
+    mode = mode.lower()
+    if user_ns['with_xspress3'] and mode == 'xs1':
         return 'xs1'
     elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
         return 'xs'
@@ -225,6 +229,8 @@ def plotting_mode(mode):
         return 'ref'
     elif mode == 'yield':
         return 'yield'
+    elif mode == 'test':
+        return 'test'
     else:
         return 'trans'
 
@@ -238,6 +244,8 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
             print(whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}'))
         elif m.hocpl.get() == 1:
             print(f'{TAB}{m.name} {CHECK}')
+        elif 'filter' in m.name:
+            print(whisper(f'{TAB}{m.name} is not homed, but that\'s probably OK.'))
         else:
             print(error_msg(f'{TAB}{m.name} is not homed.'))
 
@@ -249,3 +257,34 @@ def examine_xafs_motor_group(motor_group, TAB='\t\t\t\t'):
         else:
             print(f'{TAB}{m.name} {CHECK}')
       
+
+def clean_img():
+    '''Kill any outstanding "display" processes (i.e. ImageMagick's
+    display).  Then remove any .PNG files PIL has left lying
+    around in /tmp.  Finally, explicitly close the previous
+    filehandle.
+
+    This takes no care to verify neither that PIL launched the
+    display process nor that PIL wrote the .PNG file in /tmp.
+
+    Note that this will kill any other "display" processes
+    running.  At NSLS-II, the centrally managed screen locker is
+    configured to use feh to show a transparent png when the
+    screen is locked.  Thus, display was chosen as the viewer
+    rather than feh (although ownership would likely preclude
+    terminating the screenlocker process).
+
+    '''
+    for proc in psutil.process_iter():
+        if proc.name() == "display":
+            proc.kill()
+    for f in glob.glob('/tmp/tmp*.PNG'):
+        try:
+            os.remove(f)
+        except:
+            print(whisper(f'unable to delete {f} while cleaning up /tmp'))
+    try:
+        if BMMuser.display_img is not None:
+            BMMuser.display_img.close()
+    except:
+        pass

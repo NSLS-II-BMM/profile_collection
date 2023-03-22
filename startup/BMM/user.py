@@ -16,6 +16,8 @@ from BMM.workspace import rkvs
 
 from BMM.user_ns.base import startup_dir
 
+TEMPLATES_FOLDER = 'templates'
+
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -66,7 +68,8 @@ class BMM_User(Borg):
         name of sample instrument, e.g. "sample wheel" or "glancing angle stage"
     syns : bool 
         True is any MCS8 axes are disconnected and defined as SynAxis
-
+    display_img : None or PIL object
+        Carries the most recently displayed PIL object
 
     Current plot attributes
     -----------------------
@@ -143,6 +146,8 @@ class BMM_User(Borg):
         dwell time at each time step
     delay : float
         delay between time steps
+    shutter : bool 
+        True to close and open shutter to minimize beam exposure
 
     Methods for public use
     ----------------------
@@ -181,6 +186,7 @@ class BMM_User(Borg):
         self.instrument      = ''
         self.running_macro   = False
         self.suspenders_engaged = False
+        self.display_img     = None
         
         self.macro_dryrun    = False  ############################################################################
         self.macro_sleep     = 2      # These are used to help macro writers test motor motions in their macros. #
@@ -233,6 +239,7 @@ class BMM_User(Borg):
         self.experimenters = ''
         self.element       = None
         self.e0            = None
+        self.energy        = None
         self.edge          = 'K'
         self.sample        = ''
         self.prep          = ''
@@ -241,7 +248,7 @@ class BMM_User(Borg):
         self.start         = 0
         self.inttime       = 1
         self.snapshots     = True
-        self.usbstick      = True
+        self.usbstick      = False
         self.rockingcurve  = False
         self.htmlpage      = True
         self.bothways      = False
@@ -255,6 +262,7 @@ class BMM_User(Borg):
         self.npoints       = 0     ###########################################################################
         self.dwell         = 1.0   ## parameters for single energy absorption detection, see 72-timescans.py #
         self.delay         = 0.1   ###########################################################################
+        self.shutter       = False
         
         ## mono acceleration control
         self.acc_fast      = 0.2   ###########################################################################
@@ -294,34 +302,46 @@ class BMM_User(Borg):
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
-                             "fig", "ax", "x", "y", "prev_fig", "prev_ax")
+                             "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
         self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
 
 
-    def state_to_redis(self, filename=None, prefix=''):
+    def state_to_redis(self, filename=None, prefix='', verbose=False):
 
         all_keys = list(self.__dict__.keys())
         almost_all_keys = [n for n in all_keys
-                           if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'motor', 'cycle', 'user_is_defined') and
+                           if n not in ('fig', 'ax', 'prev_fig', 'prev_ax', 'display_img',
+                                        'motor', 'cycle', 'user_is_defined') and
                            'xschannel' not in n]
         d = dict()
-        verbose = False
         for k in self.bmm_strings:
             d[k] = getattr(self, k)
             if verbose: print(f'string: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 'None')
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_ints:
             d[k] = getattr(self, k)
             if verbose: print(f'int: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 0)
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_floats:
             d[k] = getattr(self, k)
             if verbose: print(f'float: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', getattr(self, k))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 0.0)
+            else:
+                rkvs.set(f'BMM:user:{k}', getattr(self, k))
         for k in self.bmm_booleans:
             d[k] = getattr(self, k)
             if verbose: print(f'bool: {k} = >{getattr(self, k)}<')
-            rkvs.set(f'BMM:user:{k}', str(getattr(self, k)))
+            if getattr(self, k) is None:
+                rkvs.set(f'BMM:user:{k}', 'False')
+            else:
+                rkvs.set(f'BMM:user:{k}', str(getattr(self, k)))
         for k in self.bmm_none:
             d[k] = getattr(self, k)
             if verbose: print(f'none: {k} = >{getattr(self, k)}<')
@@ -373,8 +393,15 @@ class BMM_User(Borg):
                                            low =allrois[el.capitalize()][edge.lower()]['low'],
                                            high=allrois[el.capitalize()][edge.lower()]['high'])
                     xs.set_rois()
+                    # xs1.slots[14] = el
+                    # for channel in xs1.iterate_channels():
+                    #     xs1.set_roi_channel(channel, index=15, name=f'{el.capitalize()}',
+                    #                         low =allrois[el.capitalize()][edge.lower()]['low'],
+                    #                         high=allrois[el.capitalize()][edge.lower()]['high'])
+                    # xs1.set_rois()
 
                 xs.measure_roi()
+                #xs1.measure_roi()
             else:
                 report(f'{tab}No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)
@@ -474,6 +501,7 @@ class BMM_User(Borg):
         dst     = os.path.join(self.folder, fname)
         if 'xlsx' in fname:
             src = os.path.join(startup_dir, 'xlsx', fname)
+            dst     = os.path.join(self.folder, TEMPLATES_FOLDER, fname)
         if not os.path.isfile(dst):
             shutil.copyfile(src,  dst)
             verb, pad = 'Copied', ' '
@@ -533,9 +561,10 @@ class BMM_User(Borg):
         except:
             pass
         
-        imagefolder = os.path.join(data_folder, 'snapshots')
-        prjfolder   = os.path.join(data_folder, 'prj')
-        htmlfolder  = os.path.join(data_folder, 'dossier')
+        imagefolder    = os.path.join(data_folder, 'snapshots')
+        prjfolder      = os.path.join(data_folder, 'prj')
+        htmlfolder     = os.path.join(data_folder, 'dossier')
+        templatefolder = os.path.join(data_folder, TEMPLATES_FOLDER)
         self.establish_folder(step, 'Lustre folder', folder)
         self.establish_folder(0,    'data folder', data_folder)
         self.establish_folder(0,    'snapshot folder', imagefolder)
@@ -547,6 +576,7 @@ class BMM_User(Borg):
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()
             print('    copied html generation files, touched MANIFEST')
+        self.establish_folder(0,    'templates folder', templatefolder)
      
         step += 1
 
@@ -558,8 +588,8 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
-        initmpl = os.path.join(startup_dir, 'tmpl', 'scan.tmpl')
-        scanini = os.path.join(data_folder, 'scan.ini')
+        initmpl = os.path.join(startup_dir, 'tmpl', 'xafs.tmpl')
+        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'xafs.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -572,7 +602,7 @@ class BMM_User(Borg):
         self.print_verb_message(step, verb, 'XAFS INI file', pad, scanini)
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'rasterscan.tmpl')
-        scanini = os.path.join(data_folder, 'raster.ini')
+        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'raster.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -582,11 +612,24 @@ class BMM_User(Borg):
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
-        self.print_verb_message(step, verb, 'raster INI file', pad, scanini)
+        self.print_verb_message(0, verb, 'raster INI file', pad, scanini)
+
+        initmpl = os.path.join(startup_dir, 'tmpl', 'sead.tmpl')
+        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'sead.ini')
+        if not os.path.isfile(scanini):
+            with open(initmpl) as f:
+                content = f.readlines()
+            o = open(scanini, 'w')
+            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.close()
+            verb, pad = 'Copied', ' '
+        else:
+            verb, pad = 'Found', '  '
+        self.print_verb_message(0, verb, 'sead INI file', pad, scanini)
 
         
         macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
-        macropy = os.path.join(data_folder, 'sample_macro.py')
+        macropy = os.path.join(data_folder, TEMPLATES_FOLDER, 'sample_macro.py')
         commands = '''
         ## sample 1
         yield from slot(1)
@@ -936,17 +979,17 @@ class BMM_User(Borg):
         print('\n  r: return')
         choice = input("\nSelect a file > ")
         try:
-            if type(choice) is int and int(choice) > 0 and int(choice) <= len(instruments):
+            if str(choice.lower()) == 'u':
+                print('Unsetting instrument')
+                self.instrument = ''
+                rkvs.set('BMM:user:instrument', '')
+                rkvs.set('BMM:automation:type', '')
+            elif int(choice) > 0 and int(choice) <= len(instruments):
                 this = instruments[int(choice)-1]
                 print(f'You selected "{this}"')
                 self.instrument = this
                 rkvs.set('BMM:user:instrument', this)
                 rkvs.set('BMM:automation:type', this)
-            elif str(choice.lower()) == 'u':
-                print('Unsetting instrument')
-                self.instrument = ''
-                rkvs.set('BMM:user:instrument', '')
-                rkvs.set('BMM:automation:type', '')
             else:
                 print('No instrument selected')
                 return None
@@ -955,3 +998,14 @@ class BMM_User(Borg):
             print('No instrument selected')
             return None
         
+    def fix(self):
+        '''Using the wrong version of a spreadsheet can set booleans
+        incorrectly.  This restores them to their defaults.
+        '''
+        self.snapshots = True
+        self.htmlpage = True
+        self.usbstick = False
+        self.bothways = False
+        self.channelcut = True
+        self.ththth = False
+        self.lims = True

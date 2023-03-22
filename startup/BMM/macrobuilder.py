@@ -98,11 +98,13 @@ class BMMMacroBuilder():
         self.cleanup          = ''
         self.initialize       = ''
 
-        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2')
+        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2', 'optimize')
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
-        self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'detectorx')
+        self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'slitheight', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
 
+        self.do_opt           = False
+        self.optimize         = None
         self.orientation      = 'parallel'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
@@ -153,13 +155,20 @@ class BMMMacroBuilder():
             self.basename = sheet
         else:
             self.ws = self.wb.active
-        self.basename = re.sub('[ -]+', '_', self.basename)
+        self.basename = re.sub('[ \-+*/]+', '_', self.basename)
         self.ini      = os.path.join(self.folder, self.basename+'.ini')
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
 
-        if self.ws['H5'].value.lower() == 'e0':  # accommodate older xlsx files which have e0 values in column H
+        ## this is looking for presence/absence of a column labeled "optimize", which is experimental on 13 January 2023
+        self.do_opt = False
+        if 'wheel' in str(type(self)) and 'Optimize' in self.ws['U5'].value:
+            self.do_opt = True
+
+        ## this is trying to deal with very early spreadsheets which had an e0 column which no longer exists 
+        if self.ws['H5'].value.lower() == 'e0': 
             self.has_e0_column = True
 
+        ## this is dealing with single and double ring sample wheels
         if double is True:
             self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
@@ -229,6 +238,40 @@ class BMMMacroBuilder():
         if type(value) is str and value.strip() == '':
             return True
         return False
+
+    def check_limit(self, motor, value):
+        '''Perform a sanity check on a requested motor position.
+        Return False if there is a problem.
+        '''
+        if type(motor) is str:
+            if motor in user_ns:
+                motor = user_ns[motor]
+            else:
+                print(error_msg(f'"{motor}" is not a valid motor name.'))
+                return(False)
+        if value > motor.limits[1]:
+            print(error_msg(f"A requested {motor.name} position ({value}) is greater than the high limit ({motor.limits[1]})"))
+            return(False)
+        if value < motor.limits[0]:
+            print(error_msg(f"A requested {motor.name} position ({value}) is less than the low limit ({motor.limits[0]})"))
+            return(False)
+        return(True)
+
+    def check_temp(self, stage, value):
+        '''Perform a sanity check on a requested heating/cooling stage temperature.
+        Return False if there is a problem.
+        '''
+        name, units = stage.name.capitalize(), 'C'
+        if 'lakeshore' in stage.name.lower():
+            name, units = 'Displex', 'K'
+        if value > stage.limits[1]:
+            print(error_msg(f"A requested {name} temperature ({value}{units}) is greater than the high limit ({stage.limits[1]}{units})"))
+            return(False)
+        if value < stage.limits[0]:
+            print(error_msg(f"A requested {name} temperature ({value}{units}) is less than the low limit ({stage.limits[0]}{units})"))
+            return(False)
+        return(True)
+
     
         
     def ini_sanity(self, default):
@@ -358,11 +401,13 @@ class BMMMacroBuilder():
             return True
         #if 'temperature' in m and type(m['temperature']) is not float:
         #    return True
-        #print(m['filename'])
+        #print('>', m['filename'], '<')
         #print(type(m['filename']))
-        if m['filename'] is None:
+        #print(self.is_empty(m['filename']))
+        #print()
+        if self.is_empty(m['filename']):
             return True
-        if re.search('^\s*$', m['filename']) is not None:
+        if m['filename'] == 'None':  # where does an empty cell get turned into "None"??
             return True
         if  self.truefalse(m['measure'], 'measure') is False:
             return True
@@ -448,7 +493,10 @@ class BMMMacroBuilder():
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
         #          things in the spreadsheet but not in the INI file
-        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method', 'samplep', 'samplex', 'sampley', 'slitwidth', 'detectorx', 'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2'):
+        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method',
+                  'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx',
+                  'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2',
+                  'optimize'):
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'
@@ -513,7 +561,8 @@ class BMMMacroBuilder():
         '''
         self.totaltime, self.deltatime = 0, 0
         self.content = ''
-        self._write_macro()     # populate self.content
+        success = self._write_macro()     # populate self.content
+        if success is False: return
         # write_ini_and_plan uses self.measurements and self.content
         self.write_ini_and_plan()
         self.finish_macro()

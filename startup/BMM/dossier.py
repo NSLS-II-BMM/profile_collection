@@ -1,25 +1,40 @@
-import os
+import os, re
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 from urllib.parse import quote
 import numpy
 
+from bluesky.plans import count
+from bluesky.plan_stubs import sleep, mv, null
+
 import matplotlib
 import matplotlib.pyplot as plt
 from larch.io import create_athena
 
-from BMM.functions       import plotting_mode, error_msg, whisper, etok
-from BMM.larch_interface import Pandrosus, Kekropidai
-from BMM.logging         import img_to_slack, post_to_slack
-from BMM.modes           import get_mode, describe_mode
-from BMM.motor_status    import motor_sidebar
-from BMM.periodictable   import edge_energy, Z_number, element_name
+from PIL import Image
 
-from BMM.user_ns.base import db, startup_dir
+from BMM.functions         import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions         import plotting_mode, error_msg, whisper, etok, now
+from BMM.larch_interface   import Pandrosus, Kekropidai
+from BMM.logging           import img_to_slack, post_to_slack, report
+from BMM.modes             import get_mode, describe_mode
+from BMM.motor_status      import motor_sidebar
+from BMM.periodictable     import edge_energy, Z_number, element_name
+
+from BMM.user_ns.base      import db, startup_dir, bmm_catalog
+from BMM.user_ns.detectors import use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
+
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 
 class BMMDossier():
     '''A class for generating a static HTML file for documenting an XAS
@@ -35,6 +50,8 @@ class BMMDossier():
 
     attributes
     ==========
+    measurement : str
+      the measurement type, currently XAFS, raster, or sead
     inifile : str
       the INI file used for the xafs() plan
     filename : str
@@ -123,8 +140,23 @@ class BMMDossier():
 
     methods
     =======
+    capture_xrf
+      measure an XRF spectrum and capture its metadata for use in a dossier
+
+    cameras
+      take a snapshot with each camera and capture metadata for use in a dossier
+
+    prep_metadata
+      organize metadata common to any dossier
+
     write_dossier
-       generate the sample specific dossier file
+       generate the sample specific dossier file for an XAFS measurement
+
+    raster_dossier
+       generate the sample specific dossier file for a raster measurement
+    
+    sead_dossier
+       generate the sample specific dossier file for a SEAD measurement
     
     write_manifest
        update the manifest and the 00INDEX.html file
@@ -167,9 +199,14 @@ class BMMDossier():
 
     The dossier_entry methods get used in BMM/xafs.py around line 880.
 
+    The methods raster_dossier and sead_dossier serve this purpose for
+    those measurements.
+
     '''
+    measurement   = None
     inifile       = None
     filename      = None
+    basename      = None
     start         = None
     end           = None
     experimenters = None
@@ -187,6 +224,8 @@ class BMMDossier():
     steps         = None
     times         = None
     clargs        = ''
+    xrf_md        = {}
+    cameras_md    = {}
     websnap       = ''
     webuid        = ''
     anasnap       = ''
@@ -208,23 +247,184 @@ class BMMDossier():
     cif           = None
     instrument    = ''
 
+    npoints       = 0
+    dwell         = 0
+    delay         = 0
+    scanuid       = None
+    
     initext       = None
 
     def __init__(self):
         self.scanlist      = ''
-        self.motors        = motor_sidebar()
-        self.manifest_file = os.path.join(user_ns['BMMuser'].DATA, 'dossier', 'MANIFEST')
+        #self.motors        = motor_sidebar()
+        self.manifest_file = os.path.join(user_ns['BMMuser'].folder, 'dossier', 'MANIFEST')
 
+    def capture_xrf(self, folder, stub, mode, md):
+        '''Capture an XRF spectrum and related metadata at the current energy
+        '''
+        
+        BMMuser, xs, xs1, dcm = user_ns['BMMuser'], user_ns['xs'], user_ns['xs1'], user_ns['dcm']
+
+        thisagg = matplotlib.get_backend()
+        matplotlib.use('Agg') # produce a plot without screen display
+        ahora = now()
+        self.xrffile = "%s_%s.xrf" % (stub, ahora)
+        self.xrfsnap = "%s_XRF_%s.png" % (stub, ahora)
+        xrffile  = os.path.join(folder, 'XRF', self.xrffile)
+        xrfimage = os.path.join(folder, 'XRF', self.xrfsnap)
+        md['_xrffile']  = xrffile
+        md['_xrfimage'] = xrfimage
+        md['_pccenergy'] = f'{dcm.energy.position:.2f}'
+        if use_4element and plotting_mode(mode) == 'xs':
+            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
+            yield from mv(xs.total_points, 1)
+            yield from mv(xs.cam.acquire_time, 1)
+            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+            ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+                    int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+            rois = [int(BMMuser.xschannel1.get()),
+                    int(BMMuser.xschannel2.get()),
+                    int(BMMuser.xschannel3.get()),
+                    int(BMMuser.xschannel4.get()),]
+            xs.plot(uid=xrfuid)
+            xs.to_xdi(xrffile)
+        if use_1element and plotting_mode(mode) == 'xs1':
+            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
+            yield from mv(xs1.total_points, 1)
+            yield from mv(xs1.cam.acquire_time, 1)
+            xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+            ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+            rois = [int(BMMuser.xschannel1.get()),]
+            xs1.plot(uid=xrfuid)
+            xs1.to_xdi(xrffile)
+
+        ## capture OCR and target ROI values at Eave to report in dossier
+        self.ocrs = ", ".join(map(str,ocrs))
+        self.rois = ", ".join(map(str,rois))
+
+        ## save XRF plot
+        plt.savefig(xrfimage)
+        matplotlib.use(thisagg) # return to screen display
+        if BMMuser.post_xrf:
+            img_to_slack(xrfimage)
+        
+        ### --- capture metadata for dossier -----------------------------------------------
+        self.xrf_md = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,}
+
+    def cameras(self, folder, stub, md):
+        '''For each camera in use at the beamline, capture and image and record relevant
+        metadata (UID, filename) for dossier creation
+        '''
+        ahora = now()
+        BMMuser, xascam, anacam, usbcam1, usbcam2 = user_ns['BMMuser'], user_ns['xascam'], user_ns['anacam'], user_ns['usbcam1'], user_ns['usbcam2']
+
+        ### --- XAS webcam ---------------------------------------------------------------
+        annotation = stub
+        self.websnap = "%s_XASwebcam_%s.jpg" % (stub, ahora)
+        image_web = os.path.join(folder, 'snapshots', self.websnap)
+        md['_filename'] = image_web
+        xascam._annotation_string = annotation
+        print(bold_msg('XAS webcam snapshot'))
+        self.webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        im = Image.fromarray(numpy.array(bmm_catalog[self.webuid].primary.read()['xascam_image'])[0])
+        im.save(image_web, 'JPEG')
+        if BMMuser.post_webcam:
+            img_to_slack(image_web)
+
+        ### --- analog camera using redgo dongle ------------------------------------------
+        ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
+        if is_re_worker_active() is False:
+            self.anasnap = "%s_analog_%s.jpg" % (stub, ahora)
+            image_ana = os.path.join(folder, 'snapshots', self.anasnap)
+            md['_filename'] = image_ana
+            anacam._annotation_string = stub
+            print(bold_msg('analog camera snapshot'))
+            self.anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            try:
+                im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
+                im.save(image_ana, 'JPEG')
+                if BMMuser.post_anacam:
+                    img_to_slack(image_ana)
+            except:
+                print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
+                anacam_uid = False
+                pass
+
+        ### --- USB camera #1 --------------------------------------------------------------
+        self.usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
+        image_usb1 = os.path.join(folder, 'snapshots', self.usb1snap)
+        md['_filename'] = image_usb1
+        usbcam1._annotation_string = stub
+        print(bold_msg('USB camera #1 snapshot'))
+        self.usb1uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
+        im.save(image_usb1, 'JPEG')
+        if BMMuser.post_usbcam1:
+            img_to_slack(image_usb1)
+
+        ### --- USB camera #2 --------------------------------------------------------------
+        self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+        image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
+        md['_filename'] = image_usb2
+        usbcam2._annotation_string = stub
+        print(bold_msg('USB camera #2 snapshot'))
+        self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        im.save(image_usb2, 'JPEG')
+        if BMMuser.post_usbcam2:
+            img_to_slack(image_usb2)
+        
+        ### --- capture metadata for dossier -----------------------------------------------
+        self.cameras_md = {'webcam_file': image_web,  'webcam_uid': self.webuid,
+                           'analog_file': image_ana,  'anacam_uid': self.anauid,
+                           'usb1_file':   image_usb1, 'usbcam1_uid': self.usb1uid,
+                           'usb2_file':   image_usb2, 'usbcam2_uid': self.usb2uid, }
+
+        
+    def prep_metadata(self, p, inifile, clargs, kwargs):
+        '''Set metadata common to all scan types.'''
+        BMMuser = user_ns['BMMuser']
+        self.filename      = p['filename']
+        self.experimenters = p['experimenters']
+        self.seqstart      = now('%A, %B %d, %Y %I:%M %p')
+        if 'energy' in p:
+            self.energy    = p['energy']
+        if 'e0' in p:
+            self.e0        = p['e0']
+        self.element       = p['element']
+        self.edge          = p['edge']
+        self.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
+        self.sample        = p['sample'].replace('<', '&lt;').replace('>', '&gt;')
+        self.prep          = p['prep'].replace('<', '&lt;').replace('>', '&gt;')
+        self.comment       = p['comment'].replace('<', '&lt;').replace('>', '&gt;')
+        self.mode          = p['mode']
+        self.clargs        = clargs
+        self.htmlpage      = p['htmlpage']
+        self.ththth        = p['ththth']
+        self.url           = p['url']
+        self.doi           = p['doi']
+        self.cif           = p['cif']
+        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            self.initext = ''.join(f.readlines())
+        for k in kwargs.keys():
+            setattr(self, k, kwargs[k])
+
+        
     def write_dossier(self):
-        BMMuser, dcm, ga = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga']
+        BMMuser, dcm, ga, xafs_ref = user_ns['BMMuser'], user_ns['dcm'], user_ns['ga'], user_ns['xafs_ref']
         if self.filename is None or self.start is None:
-            print(error_msg('Filename and/or start number not given.'))
+            print(error_msg('Filename and/or start number not given.  (xafs_dossier).'))
             return None
         firstfile = f'{self.filename}.{self.start:03d}'
         if not os.path.isfile(os.path.join(BMMuser.DATA, firstfile)):
             print(error_msg(f'Could not find {os.path.join(BMMuser.DATA, firstfile)}'))
             return None
 
+        #import pprint
+        #pprint.pprint(self.__dict__)
+        
         # figure out various filenames
         basename     = self.filename
         htmlfilename = os.path.join(BMMuser.DATA, 'dossier/', self.filename+'-01.html')
@@ -236,6 +436,7 @@ class BMMDossier():
             basename     = "%s-%2.2d" % (self.filename,seqnumber)
             htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))
 
+        self.basename = basename
         ## generate triplot as a png image (or fail gracefully)
         prjfilename, pngfilename = None, None
         try:
@@ -262,7 +463,8 @@ class BMMDossier():
             # dossier header
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
                 content = f.readlines()
-            thiscontent = ''.join(content).format(filename      = self.filename,
+            thiscontent = ''.join(content).format(measurement   = self.measurement,
+                                                  filename      = self.filename,
                                                   date          = BMMuser.date,
                                                   seqnumber     = seqnumber, )
 
@@ -345,6 +547,7 @@ class BMMDossier():
                                                    bounds        = self.bounds,
                                                    steps         = self.steps,
                                                    times         = self.times,
+                                                   reference     = re.sub(r'(\d+)', r'<sub>\1</sub>', xafs_ref.mapping[self.element][3]),
                                                    seqstart      = self.seqstart,
                                                    seqend        = self.seqend,
                                                    mono          = mono,
@@ -360,7 +563,6 @@ class BMMDossier():
                                                    clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
                                                    filename      = self.filename,)
 
-
             with open(htmlfilename, 'a') as o:
                 o.write(thiscontent)
 
@@ -373,12 +575,12 @@ class BMMDossier():
         manifest.close()
         self.write_manifest()
 
-        if pngfilename is not None and os.path.isfile(pngfilename):
-            try:
-                img_to_slack(pngfilename)
-            except:
-                post_to_slack(f'failed to post image: {pngfilename}')
-                pass
+        #if pngfilename is not None and os.path.isfile(pngfilename):
+        #    try:
+        #        img_to_slack(pngfilename)
+        #    except:
+        #        post_to_slack(f'failed to post image: {pngfilename}')
+        #        pass
 
         return htmlfilename
 
@@ -427,7 +629,7 @@ class BMMDossier():
         cnt = 0
         try:
             base = Pandrosus()
-            base.element, base.edge = self.element, self.edge
+            base.element, base.edge, base.folder, base.db = self.element, self.edge, BMMuser.folder, user_ns['db']
             projname = os.path.join(BMMuser.folder, 'prj', os.path.basename(filename)).replace('.png', '.prj')
             proj = create_athena(projname)
             base.fetch(uidlist[0], mode=mode)
@@ -442,7 +644,7 @@ class BMMDossier():
             if len(uidlist) > 1:
                 for uid in uidlist[1:]:
                     this = Pandrosus()
-                    this.element, this.edge = self.element, self.edge
+                    this.element, this.edge, this.folder, this.db = self.element, self.edge, BMMuser.folder, user_ns['db']
                     try:
                         this.fetch(uid, mode=mode)
                         mu = numpy.interp(ee, this.group.energy, this.group.mu)
@@ -467,7 +669,7 @@ class BMMDossier():
             return
         mm = mm / cnt
         merge = Pandrosus()
-        merge.element, merge.edge = self.element, self.edge
+        merge.element, merge.edge, merge.folder, merge.db = self.element, self.edge, BMMuser.folder, user_ns['db']
         merge.put(ee, mm, 'merge')
         thisagg = matplotlib.get_backend()
         matplotlib.use('Agg') # produce a plot without screen display
@@ -533,6 +735,16 @@ class BMMDossier():
         thistext +=  '      </div>\n'
         return thistext
 
+    def sead_instrument_entry(self):
+        thistext  =  '      <div id="boxinst">\n'
+        thistext +=  '        <h3>Instrument: SEAD scan</h3>\n'
+        thistext += f'          <a href="../snapshots/{self.seadimage}">\n'
+        thistext += f'                        <img src="../snapshots/{self.seadimage}" width="300" alt="" /></a>\n'
+        thistext +=  '          <br>'
+        thistext += f'          <a href="javascript:void(0)" onclick="toggle_visibility(\'areascan\');" title="Click to show/hide the UID of this areascan">(uid)</a><div id="areascan" style="display:none;"><small>{self.seaduid}</small></div>\n'
+        thistext +=  '      </div>\n'
+        return thistext
+
 
     def raster_dossier(self):
         print(whisper('writing raster dossier'))
@@ -565,11 +777,12 @@ class BMMDossier():
 
         with open(os.path.join(startup_dir, 'tmpl', 'raster.tmpl')) as f:
                 content = f.readlines()
-        thiscontent = ''.join(content).format(filename      = self.filename,
+        thiscontent = ''.join(content).format(measurement   = self.measurement,
+                                              filename      = self.filename,
                                               basename      = self.basename,
                                               date          = BMMuser.date,
                                               seqnumber     = seqnumber,
-                                              e0            = '%.1f' % self.e0,
+                                              energy        = '%.1f' % self.energy,
                                               edge          = self.edge,
                                               element       = self.element_text(),
                                               sample        = self.sample,
@@ -618,3 +831,88 @@ class BMMDossier():
         manifest.write(f'raster␣{htmlfilename}\n')
         manifest.close()
         self.write_manifest()
+
+
+
+
+    def sead_dossier(self):
+        print(whisper('writing sead dossier'))
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+        if self.filename is None:
+            print(error_msg('Filename not given.'))
+            return None
+
+        
+        # figure out various filenames
+        self.basename = self.filename
+        htmlfilename = os.path.join(BMMuser.DATA, 'dossier/', self.filename+'-01.html')
+        seqnumber = 1
+        if os.path.isfile(htmlfilename):
+            seqnumber = 2
+            while os.path.isfile(os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))):
+                seqnumber += 1
+            self.basename = "%s-%2.2d" % (self.filename,seqnumber)
+            htmlfilename = os.path.join(BMMuser.DATA, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))
+
+        # slurp in the INI file contents
+        if self.initext is None:
+            with open(os.path.join(BMMuser.DATA, self.inifile)) as f:
+                self.initext = ''.join(f.readlines())
+
+        # gather some information about the photon delivery system
+        pdstext = f'{get_mode()} ({describe_mode()})'
+        mono = 'Si(%s)' % dcm._crystal
+        if self.ththth:
+            mono = 'Si(333)'
+            
+        with open(os.path.join(startup_dir, 'tmpl', 'sead_dossier.tmpl')) as f:
+                content = f.readlines()
+        thiscontent = ''.join(content).format(measurement   = self.measurement,
+                                              filename      = self.filename,
+                                              sead          = self.sead,
+                                              date          = BMMuser.date,
+                                              seqnumber     = seqnumber,
+                                              energy        = '%.1f' % self.energy,
+                                              edge          = self.edge,
+                                              element       = self.element_text(),
+                                              sample        = self.sample,
+                                              prep          = self.prep,
+                                              comment       = self.comment,
+                                              instrument    = self.sead_instrument_entry(),
+                                              npoints       = self.npoints,
+                                              dwell         = self.dwell,
+                                              delay         = self.delay,
+                                              shutter       = self.shutter,
+                                              websnap       = quote('../snapshots/'+self.websnap),
+                                              webuid        = self.webuid,
+                                              anasnap       = quote('../snapshots/'+self.anasnap),
+                                              anauid        = self.anauid,
+                                              usb1snap      = quote('../snapshots/'+self.usb1snap),
+                                              usb1uid       = self.usb1uid,
+                                              usb2snap      = quote('../snapshots/'+self.usb2snap),
+                                              usb2uid       = self.usb2uid,
+                                              mode          = self.mode,
+                                              motors        = self.motors,
+                                              seqstart      = self.seqstart,
+                                              seqend        = self.seqend,
+                                              mono          = mono,
+                                              pdsmode       = pdstext,
+                                              experimenters = self.experimenters,
+                                              gup           = BMMuser.gup,
+                                              saf           = BMMuser.saf,
+                                              url           = self.url,
+                                              doi           = self.doi,
+                                              cif           = self.cif,
+                                              initext       = highlight(self.initext, IniLexer(), HtmlFormatter()),
+                                              clargs        = highlight(self.clargs, PythonLexer(), HtmlFormatter()),
+        )
+        with open(htmlfilename, 'a') as o:
+            o.write(thiscontent)
+
+        print(f'wrote {htmlfilename}')
+
+        manifest = open(self.manifest_file, 'a')
+        manifest.write(f'sead␣{htmlfilename}\n')
+        manifest.close()
+        self.write_manifest()
+        

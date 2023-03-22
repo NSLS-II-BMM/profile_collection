@@ -87,3 +87,13 @@ def xrf1(arg):
     xs1.measure_xrf()
     return None
 
+from BMM.demeter import run_athena, run_hephaestus
+@register_line_magic
+def athena(arg):
+    run_athena()
+    return None
+@register_line_magic
+def hephaestus(arg):
+    run_hephaestus()
+    return None
+

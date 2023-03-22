@@ -13,7 +13,9 @@ from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel, RectangleModel
 #from databroker.core import SingleRunCache
+import matplotlib
 import matplotlib.pyplot as plt
+from PIL import Image
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 ## see 65-derivedplot.py for DerivedPlot class
@@ -22,10 +24,12 @@ from bluesky.preprocessors import subs_decorator, finalize_wrapper
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
+from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown
+from BMM.functions     import countdown, clean_img, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
@@ -168,7 +172,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 yield from mv(motor, top)
 
             else:
-                action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+                action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
                 if action.lower() == 'n' or action.lower() == 'q':
                     return(yield from null())
                 yield from sleep(slp)
@@ -339,31 +343,154 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def find_slot(close=False):
+def find_slot(shape='slot'):
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nIs the beam currently on a slot in the outer ring? [Y/n then Enter] ")
+        action = input("\nIs the beam currently on a slot in the outer ring? " + PROMPT)
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
     
-    yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It')
-    yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It')
+    kafka_message({'align_wheel' : 'start'})
+    if shape == 'circle':
+        yield from rectangle_scan(motor=xafs_y, start=-10,  stop=10,  nsteps=31, detector='It', chore='find_slot')
+    else:
+        yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
+    close_all_plots()
+    yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
+    kafka_message({'align_wheel' : 'stop'})
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
-    if close:
-        close_all_plots()
+    close_all_plots()
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refy notnegated'}})
     yield from rectangle_scan(motor=xafs_refx, start=-10,  stop=10,  nsteps=31, detector='Ir')
+                              #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refx notnegated'}})
     print(bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})'))
 
     
-def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', negate=False, filename=None):
+def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
+                   negate=False, filename=None, move=True, force=False, chore='', md={}):
 
-    def main_plan(motor, start, stop, nsteps, detector, negate):
+    def main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, chore, md):
+        if force is False:
+            (ok, text) = BMM_clear_to_start()
+            if ok is False:
+                print(error_msg(text))
+                yield from null()
+                return
+
+        user_ns['RE'].msg_hook = None
+        BMMuser.motor = motor
+
+        dets = [user_ns['quadem1'],]
+
+        sgnl = 'fluorescence (Xspress3)'
+
+        if detector.lower() == 'if':
+            dets.append(user_ns['xs'])
+            denominator = ' / I0'
+            sgnl = 'fluorescence (Xspress3)'
+            func = lambda doc: (doc['data'][motor.name],
+                                (doc['data'][BMMuser.xs1] +
+                                 doc['data'][BMMuser.xs2] +
+                                 doc['data'][BMMuser.xs3] +
+                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
+            yield from mv(xs.total_points, nsteps)
+        elif detector.lower() == 'it':
+            sgnl = 'transmission'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
+        elif detector.lower() == 'ir':
+            sgnl = 'reference'
+            func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
+
+        titl = f'{sgnl} vs. {motor.name}'
+        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
+
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
+        
+        @subs_decorator(plot)
+        #@subs_decorator(src.callback)
+        def doscan(filename):
+            line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                    (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
+            
+            if negate == True:
+                hint = f'rectanglescan {detector.capitalize()} {motor.name} negated'
+            else:
+                hint = f'rectanglescan {detector.capitalize()} {motor.name} notnegated'
+            if 'BMM_kafka' not in md:
+                md['BMM_kafka'] = dict()
+            if 'hint' not in md['BMM_kafka']:
+                md['BMM_kafka']['hint'] = hint
+
+                
+            uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**md, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            t  = user_ns['db'][-1].table()
+            if detector.lower() == 'if':
+                signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
+            elif detector.lower() == 'it':
+                signal   = numpy.array(t['It']/t['I0'])
+            elif detector.lower() == 'ir':
+                signal   = numpy.array(t['Ir']/t['It'])
+
+            signal = signal - signal[0]
+            if negate is True:
+                signal = -1 * signal
+            pos      = numpy.array(t[motor.name])
+            mod      = RectangleModel(form='erf')
+            pars     = mod.guess(signal, x=pos)
+            out      = mod.fit(signal, pars, x=pos)
+            print(whisper(out.fit_report(min_correl=0)))
+            if chore == 'find_slot':
+                kafka_message({'align_wheel' : 'find_slot',
+                               'motor'       : motor.name,
+                               'detector'    : detector.lower(),
+                               'xaxis'       : list(pos),
+                               'data'        : list(signal),
+                               'best_fit'    : list(out.best_fit),
+                               'center'      : out.params['midpoint'].value,
+                               'amplitude'   : out.params['amplitude'].value,
+                               'uid'         : uid})
+
+            # thisagg = matplotlib.get_backend()
+            # matplotlib.use('Agg') # produce a plot without screen display
+            # out.plot(xlabel=motor.name, ylabel=detector)
+            # if filename is None:
+            #     filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+            # plt.savefig(filename)
+            # matplotlib.use(thisagg) # return to screen display
+            # clean_img()
+            # BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+            # BMMuser.display_img.show()
+
+            if move is True:
+                yield from mv(motor, out.params['midpoint'].value)
+            print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
+            for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
+                rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
+
+        yield from doscan(filename)
+        
+    def cleanup_plan():
+        yield from resting_state_plan()
+    
+    user_ns['RE'].msg_hook = None
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate, filename, move, force, chore, md),
+                                cleanup_plan())
+    user_ns['RE'].msg_hook = BMM_msg_hook
+
+
+def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='max', how='peak', filename=None):
+
+    def main_plan(motor, start, stop, nsteps, detector, find, how, filename):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(error_msg(text))
@@ -403,7 +530,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
         
         @subs_decorator(plot)
         #@subs_decorator(src.callback)
-        def doscan():
+        def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
@@ -417,34 +544,50 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', neg
                 signal   = numpy.array(t['Ir']/t['It'])
 
             signal = signal - signal[0]
-            if negate is True:
+            if find == 'min':
                 signal = -1 * signal
             pos      = numpy.array(t[motor.name])
-            mod      = RectangleModel(form='erf')
-            pars     = mod.guess(signal, x=pos)
-            out      = mod.fit(signal, pars, x=pos)
-            print(whisper(out.fit_report(min_correl=0)))
-            out.plot()
-            if filename is not None:
-                plt.savefig(filename)
-            #middle   = out.params['center1'].value + (out.params['center2'].value - out.params['center1'].value)/2
-            yield from mv(motor, out.params['midpoint'].value)
-            print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
-            rkvs.set('BMM:lmfit:center1',   out.params['center1'].value)
-            rkvs.set('BMM:lmfit:center2',   out.params['center2'].value)
-            rkvs.set('BMM:lmfit:sigma1',    out.params['sigma1'].value)
-            rkvs.set('BMM:lmfit:sigma2',    out.params['sigma2'].value)
-            rkvs.set('BMM:lmfit:amplitude', out.params['amplitude'].value)
-            rkvs.set('BMM:lmfit:midpoint',  out.params['midpoint'].value)
 
-        yield from doscan()
+            if choice.lower() == 'com':
+                position = com(signal)
+                top      = t[motor.name][position]
+            elif choice.lower() == 'fit':
+                pitch    = t[motor_name]
+                mod      = SkewedGaussianModel()
+                pars     = mod.guess(signal, x=pitch)
+                out      = mod.fit(signal, pars, x=pitch)
+                print(whisper(out.fit_report(min_correl=0)))
+                out.plot()
+                top      = out.params['center'].value
+            else:
+                position = peak(signal)
+                top      = t[motor.name][position]
+            
+            thisagg = matplotlib.get_backend()
+            matplotlib.use('Agg') # produce a plot without screen display
+            out.plot()
+            if filename is None:
+                filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
+            plt.savefig(filename)
+            matplotlib.use(thisagg) # return to screen display
+            clean_img()
+            BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+            BMMuser.display_img.show()
+            
+            yield from mv(motor, top)
+            print(bold_msg(f'Found peak at {motor.name} = {motor.position}'))
+            for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
+                rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
+
+        yield from doscan(filename)
         
     def cleanup_plan():
         yield from resting_state_plan()
     
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, negate), cleanup_plan())
+    yield from finalize_wrapper(main_plan(motor, start, stop, nsteps, detector, find, filename), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
+
 
     
 
@@ -511,11 +654,12 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     '''
 
     def main_plan(detector, axis, start, stop, nsteps, pluck, force, md):
-        (ok, text) = BMM_clear_to_start()
-        if force is False and ok is False:
-            print(error_msg(text))
-            yield from null()
-            return
+        if force is False:
+            (ok, text) = BMM_clear_to_start()
+            if ok is False:
+                print(error_msg(text))
+                yield from null()
+                return
 
         detector, axis = ls_backwards_compatibility(detector, axis)
         # print('detector is: ' + str(detector))
@@ -582,12 +726,14 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
         elif detector == 'I0a' and ic0 is not None:
             dets.append(ic0)
+            denominator = ' / I0'
             detname = 'I0a'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a'])
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a']/doc['data']['I0'])
         elif detector == 'I0b' and ic0 is not None:
             dets.append(ic0)
+            denominator = ' / I0'
             detname = 'I0b'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b'])
+            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b']/doc['data']['I0'])
         elif detector == 'Ir':
             #denominator = ' / It'
             detname = 'reference'
@@ -675,6 +821,11 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
         #if 'purpose' not in md:
         #    md['purpose'] = 'alignment'
+
+        if 'BMM_kafka' not in md:
+            md['BMM_kafka'] = dict()
+        if 'hint' not in md['BMM_kafka'] or thismotor.name not in md['BMM_kafka']['hint']:
+            md['BMM_kafka']['hint'] = f'linescan {detector} {thismotor.name}'
         
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
@@ -693,7 +844,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
         if pluck is True:
-            action = input('\n' + bold_msg('Pluck motor position from the plot? [Y/n then Enter] '))
+            action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
             yield from move_after_scan(thismotor)

@@ -60,16 +60,10 @@
 	    
 	    <h2>Files</h2>
 	    
-	    <h3>Excel file</h3>
+	    <h3>Data file</h3>
 	    <p>
-	      <a href="../maps/{xlsxout}">{xlsxout}</a>
+	      <a href="../{sead}">{sead}</a>
 	    </p>
-	    
-	    <h3>Matlab file</h3>
-	    <p>
-	      <a href="../maps/{matout}">{matout}</a>
-	    </p>
-	    
 	  </div>
 	  <div id="sidebar2">
 	    <h3>Motor positions</h3>
@@ -120,9 +114,11 @@
            <h3>Scan details</h3>
 	      <ul>
 		<li><b>Energy</b>: {energy} eV</li>
-		<li><b>Fast motor</b>: {fast_motor}</li>
-		<li><b>Slow motor</b>: {slow_motor}</li>
-		<li><b>Start position</b>: fast={fast_init}, slow={slow_init}</li>
+		<li><b>Mode</b>: {mode}</li>
+		<li><b>Number of points</b>: {npoints}</li>
+		<li><b>Dwell time</b>: {dwell}</li>
+		<li><b>Delay</b>: {delay}</li>
+		<li><b>Shutter control</b>: {shutter}</li>
 		<li><b>Element</b>: {element}</li>
 		<li><b>Edge</b>: {edge}</li>
 	      </ul>
@@ -130,8 +126,8 @@
 	    <div id="box4">
             <h3>Experiment details</h3>
 	      <ul>
-		<li><b>Raster scan start time:</b> {seqstart}</li>
-		<li><b>Raster scan end time:</b> {seqend}</li>
+		<li><b>SEAD scan start time:</b> {seqstart}</li>
+		<li><b>SEAD scan end time:</b> {seqend}</li>
 		<li><b>Monochromator:</b> {mono}</li>
 		<li><b>Photon delivery mode:</b> {pdsmode}</li>
 		<li><b>Experimenters:</b> {experimenters}</li>

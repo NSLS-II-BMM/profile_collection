@@ -2,7 +2,6 @@
 from bluesky.preprocessors import finalize_wrapper
 from bluesky.plan_stubs import null, sleep, mv, mvr
 import matplotlib.pyplot as plt
-from lmfit.models import LinearModel
 
 import configparser, os
 config = configparser.ConfigParser()
@@ -16,6 +15,7 @@ from BMM.dcm_parameters import dcm_parameters
 from BMM.edge           import change_edge
 from BMM.functions      import HBARC, boxedtext
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka          import kafka_message
 from BMM.logging        import BMM_log_info, BMM_msg_hook, report
 #from BMM.purpose        import purpose
 from BMM.xafs           import xafs
@@ -40,7 +40,7 @@ def calibrate_low_end(mono='111', focus=False):
         return(yield from null())
     
     BMM_log_info('Beginning low end calibration macro')
-    def main_plan():
+    def main_plan(focus):
         BMMuser.prompt = False
 
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
@@ -100,7 +100,7 @@ def calibrate_low_end(mono='111', focus=False):
 
     def cleanup_plan():
         yield from resting_state_plan()
-    yield from finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from finalize_wrapper(main_plan(focus), cleanup_plan())    
     yield from resting_state_plan()
     BMM_log_info('Low end calibration macro finished!')
 
@@ -114,7 +114,7 @@ def calibrate_high_end(mono='111', focus=False):
         return(yield from null())
     
     BMM_log_info('Beginning high end calibration macro')
-    def main_plan():
+    def main_plan(focus):
         BMMuser.prompt = False
         datafile = os.path.join(BMMuser.DATA, 'edges%s.ini' % mono)
         handle = open(datafile, 'a')
@@ -162,7 +162,7 @@ def calibrate_high_end(mono='111', focus=False):
 
     def cleanup_plan():
         yield from resting_state_plan()
-    yield from finalize_wrapper(main_plan(), cleanup_plan())    
+    yield from finalize_wrapper(main_plan(focus), cleanup_plan())    
     yield from resting_state_plan()
     BMM_log_info('High end calibration macro finished!')
 
@@ -205,7 +205,7 @@ def calibrate_pitch(mono='111'):
         ee.append(edges[el][1])
         tt.append(edges[el][3])
         
-    mod    = LinearModel()
+    mod    = lmfit.LinearModel()
     pars   = mod.guess(tt, x=ee)
     out    = mod.fit(tt, pars, x=ee)
     print(whisper(out.fit_report(min_correl=0)))
@@ -287,28 +287,13 @@ def calibrate_mono(mono='111'):
     else:
         text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 + offset)
         boxedtext('new values for BMM/dcm-parameters.py', text, 'lightgray')
-    
-    y1 = 13.5
-    y2 = 12.9
-    if mono == '311':
-        (y1, y2) = (2*y1, 2*y2)
 
-    ## cubic interpolation of tabulated edge energies ... eye candy
-    xnew = linspace(min(ee),max(ee),100)
-    f = interp1d(ee, tt, kind='cubic')
-        
-    plt.cla()
-    #fig, ax = plt.subplots()
-    plt.plot(xnew, f(xnew), label='tabulated')
-    plt.plot(found, tt, 'ro', label='measured')
-    plt.xlabel('energy (eV)')
-    plt.ylabel('angle (degrees)')
-    plt.title(thistitle)
-    plt.text(12000, y1, 'd-spacing = %.8f ± %.8f Å' % (d_spacing, derr), fontsize='small')
-    plt.text(12000, y2, 'offset = %.5f ± %.5f degrees' % (offset, oerr), fontsize='small')
-    legend = plt.legend(loc='upper right', shadow=True)
-    plt.show()
-    
-    plottheta = arange(20.0, 5.0,-0.1)
-    if mono == '311':
-        plottheta = arange(36.0,10.0,-0.1)
+    ## plot with the kafka consumer
+    kafka_message({'mono_calibration' : True,
+                   'found'    : found,
+                   'ee'       : ee,
+                   'tt'       : tt,
+                   'mono'     : mono,
+                   'dspacing' : (d_spacing, derr),
+                   'offset'   : (offset, oerr), })
+

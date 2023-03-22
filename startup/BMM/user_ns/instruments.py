@@ -215,10 +215,10 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    dm3_slits_i.user_offset.put(-6.3535)
-    dm3_slits_o.user_offset.put(7.6535)
-    dm3_slits_t.user_offset.put(-2.676)
-    dm3_slits_b.user_offset.put(-2.9737)
+    #dm3_slits_i.user_offset.put(-6.3535)
+    #dm3_slits_o.user_offset.put(7.6535)
+    #dm3_slits_t.user_offset.put(-2.676)
+    #dm3_slits_b.user_offset.put(-2.9737)
 else:
     dm3_slits_o = SynAxis(name='dm3_slits_o')
     dm3_slits_i = SynAxis(name='dm3_slits_i')
@@ -300,14 +300,14 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -88.0
+    xafs_ref.outer_position = -76.82
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = -61.5 # xafs_ref.outer_position + 26.5
+xafs_ref.inner_position = -48 # xafs_ref.outer_position + 26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
-xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
+#xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
+#                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
 #                          ring, slot, elem, material (ring: 0=outer, 1=inner)
@@ -323,8 +323,8 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Zn':     [0, 10, 'Zn', 'Zn foil'],
                     'Ga':     [0, 11, 'Ga', 'Ga2O3'],
                     'Ge':     [0, 12, 'Ge', 'GeO2'],
-                    'As':     [0, 13, 'As', 'Ge2O3'],
-                    'Se':     [0, 14, 'Se', 'metal powder'],
+                    'As':     [0, 13, 'As', 'As2O3'],
+                    'Se':     [0, 14, 'Se', 'Se metal powder'],
                     'Br':     [0, 15, 'Br', 'bromophenol blue'],
                     'Zr':     [0, 16, 'Zr', 'Zr foil'],
                     'Nb':     [0, 17, 'Nb', 'Nb foil'],
@@ -334,8 +334,8 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Pb':     [0, 21, 'Pb', 'Pb foil'],
                     'Bi':     [0, 22, 'Bi', 'BiO2'],
                     'Sr':     [0, 23, 'Sr', 'SrTiO3'],
-                    'Y' :     [0, 24, 'Y',  'None'],
-                    'empty1': [1,  1, 'empty1', 'empty'],
+                    'Y' :     [0, 24, 'Y',  'Y2O3'],
+                    'Cs':     [1,  1, 'Cs', 'CsNO3'],
                     'La':     [1,  2, 'La', 'La(OH)3'],
                     'Ce':     [1,  3, 'Ce', 'Ce2O3'],
                     'Pr':     [1,  4, 'Pr', 'Pr6O11'],
@@ -344,23 +344,24 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Eu':     [1,  7, 'Eu', 'Eu2O3'],
                     'Gd':     [1,  8, 'Gd', 'Gd2O3'],
                     'Tb':     [1,  9, 'Tb', 'Tb4O9'],
-                    'Dy':     [1, 10, 'Dy', 'None'],
+                    'Dy':     [1, 10, 'Dy', 'Dy2O3'],
                     'Ho':     [1, 11, 'Ho', 'Ho2O3'],
                     'Er':     [1, 12, 'Er', 'Er2O3'],
                     'Tm':     [1, 13, 'Tm', 'Tm2O3'],
                     'Yb':     [1, 14, 'Yb', 'Yb2O3'],
                     'Lu':     [1, 15, 'Lu', 'Lu2O3'],
-                    'Rb':     [1, 16, 'Rb', 'None'],
+                    'Rb':     [1, 16, 'Rb', 'RbCO3'],
                     'Ba':     [1, 17, 'Ba', 'None'],
-                    'Hf':     [1, 18, 'Hf', 'None'],
-                    'Ta':     [1, 19, 'Ta', 'None'],
-                    'W' :     [1, 20, 'W',  'None'],
+                    'Hf':     [1, 18, 'Hf', 'HfO2'],
+                    'Ta':     [1, 19, 'Ta', 'Ta2O5'],
+                    'Sc' :    [1, 20, 'Sc', 'Sc2O3'],
+                    #'W' :     [1, 20, 'W',  'None'],
                     'Re':     [1, 21, 'Re', 'ReO2'], 
                     'Os':     [1, 22, 'Os', 'None'],
                     'Ir':     [1, 23, 'Ir', 'None'],
                     'Ru':     [1, 24, 'Ru', 'RuO2'],
                     'Th':     [0, 22, 'Bi', 'BiO2'],  # use Bi L1 for Th L3
-                    'U' :     [0, 24, 'Y',  'None'],  # use Y K for U L3
+                    'U' :     [0, 24, 'Y',  'Y2O3'],  # use Y K for U L3
                     'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
 }
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
@@ -393,10 +394,10 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
 #      # don't move reference wheel
 
 def ref2redis():
-    for i in range(0, rkvs.llen('BMM:reference:list')):
-        rkvs.rpop('BMM:reference:list')
-    for el in xafs_ref.content:
-        rkvs.rpush('BMM:reference:list', str(el))
+    #for i in range(0, rkvs.llen('BMM:reference:list')):
+    #    rkvs.rpop('BMM:reference:list')
+    #for el in xafs_ref.content:
+    #    rkvs.rpush('BMM:reference:list', str(el))
     rkvs.set('BMM:reference:mapping', json.dumps(xafs_ref.mapping))
 
 ref2redis()
@@ -547,7 +548,7 @@ busy = Busy(name='busy')
 
 run_report('\tLinkam controller')
 from BMM.linkam import Linkam, LinkamMacroBuilder
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,500.0))
+linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,560.0))
 
 lmb = LinkamMacroBuilder()
 lmb.description = 'the Linkam stage'

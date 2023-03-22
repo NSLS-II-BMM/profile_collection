@@ -356,6 +356,7 @@ class BMMDataEvaluation():
             result, emoji = self.evaluate(uid, mode)
             print(result, emoji)
             p = Pandrosus()
+            this.folder, this.db = user_ns['BMMuser'].folder, user_ns['db']
             try:
                 p.fetch(uid, mode=mode)
             except:

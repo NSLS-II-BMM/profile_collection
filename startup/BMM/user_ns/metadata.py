@@ -16,10 +16,10 @@ from BMM.user_ns.dcm import *
 from BMM.user_ns.motors import *
 from BMM.user_ns.instruments import * #xafs_wheel, xafs_ref, slits2, slits3, m2, m3, xafs_table, m2_bender
 
-user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_wheel, xafs_det, xafs_ref, xafs_refx, xafs_refy,
-                          #xafs_roll, xafs_linxs, xafs_roth, xafs_rots,
+user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_wheel, xafs_det,
+                          xafs_ref, xafs_refx, xafs_refy, xafs_rots, xafs_garot,
                           dm3_bct, dm3_foils, dm2_fs,
-                          dcm_x, dcm_pitch, dcm_roll,
+                          dcm_x, dcm_pitch, dcm_roll, # dcm_bragg, dcm_para, dcm_pitch,
                           slits3.top, slits3.bottom, slits3.outboard, slits3.inboard, slits3.vsize, slits3.vcenter, slits3.hsize, slits3.hcenter, 
                           slits2.top, slits2.bottom, slits2.outboard, slits2.inboard, slits2.vsize, slits2.vcenter, slits2.hsize, slits2.hcenter,
                           #m1.yu, m1.ydo, m1.ydi, m1.xu, m1.xd, m1.vertical, m1.lateral, m1.pitch, m1.roll, m1.yaw,

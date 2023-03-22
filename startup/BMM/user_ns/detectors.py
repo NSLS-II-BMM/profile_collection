@@ -142,7 +142,7 @@ bicron.channels.chan26.name = 'APD'
 
 
 run_report('\t'+'electrometers')
-from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current
+from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
@@ -178,13 +178,18 @@ toss = quadem1.Iy.describe()
 
 
 try:                            # might not be in use
-    ic0 = BMMDualEM('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
+    ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
     ic0.Ia.kind = 'hinted'
     ic0.Ib.kind = 'hinted'
     ic0.Ia.name = 'I0a'
     ic0.Ib.name = 'I0b'
 except:    
     ic0 = None
+
+#set_precision(ic0.current1.mean_value, 3)
+#toss = ic0.Ia.describe()
+#set_precision(ic0.current2.mean_value, 3)
+#toss = ic0.Ib.describe()
     
 #quadem2 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem2')
 
@@ -280,6 +285,7 @@ if with_pilatus is True:
 
 # JL: debugging xspress3 IOC crash
 from ophyd.log import config_ophyd_logging
+#import logging
 #config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
 
@@ -290,7 +296,8 @@ if with_xspress3 is True and use_4element is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element
     #from BMM.xspress3_1element import BMMXspress3Detector_1Element
-    from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_xspress3_class 
 
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',
@@ -349,11 +356,29 @@ if with_xspress3 is True and use_4element is True:
     xs.hdf5.write_path_template = hdf5folder
     xs.hdf5.file_path.put(hdf5folder)
 
+    try:
+        xs.channel01.xrf.dtype_str = "<f8"
+        xs.channel02.xrf.dtype_str = "<f8"
+        xs.channel03.xrf.dtype_str = "<f8"
+        xs.channel04.xrf.dtype_str = "<f8"
+        xs.channel01.get_external_file_ref().dtype_str = "<f8"
+        xs.channel02.get_external_file_ref().dtype_str = "<f8"
+        xs.channel03.get_external_file_ref().dtype_str = "<f8"
+        xs.channel04.get_external_file_ref().dtype_str = "<f8"
+    except:
+        pass
+        
+    ## this stage_sigs and trigger business was needed with the new (as of January 2023)
+    ## to maintain the correct triggering state for our mode of operation here at BMM
+    ## apparently to serve the needs of other BLs, the triggering mode would default
+    ## back to "Software" at the end of a scan.  This overrides that behavior.
+    xs.cam.stage_sigs[xs.cam.trigger_mode] = "Internal"
 
 if with_xspress3 is True and use_1element is True:
     run_report('\t'+'1-element SDD with Xspress3')
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
-    from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_detector_class 
+    #from nslsii.areadetector.xspress3 import build_xspress3_class 
 
     xs1 = BMMXspress3Detector_1Element(
         prefix='XF:06BM-ES{Xsp:1}:',
@@ -407,6 +432,7 @@ if with_xspress3 is True and use_1element is True:
     xs1.hdf5.read_path_template = hdf5folder
     xs1.hdf5.write_path_template = hdf5folder
     xs1.hdf5.file_path.put(hdf5folder)
+    xs1.cam.stage_sigs[xs.cam.trigger_mode] = "Internal"
 
 
 

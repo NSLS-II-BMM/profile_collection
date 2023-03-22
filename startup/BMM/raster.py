@@ -21,7 +21,7 @@ from tiled.client import from_profile
 from BMM.areascan        import areascan
 from BMM.db              import file_resource
 from BMM.dossier         import BMMDossier
-from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
@@ -35,7 +35,6 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time
-
 
 def read_ini(inifile, **kwargs):
 
@@ -88,7 +87,7 @@ def read_ini(inifile, **kwargs):
                     parameters[a] = None
 
     ## booleans
-    for a in ('snapshots', 'lims', 'htmlpage', 'usbstick'):
+    for a in ('snapshots', 'lims', 'htmlpage', 'usbstick', 'contour', 'log'):
         found[a] = False
         if a in kwargs:
             parameters[a] = kwargs[a]
@@ -153,7 +152,6 @@ def preserve_data(uid, label, xlsxout, matout):
     '''Save the data from an areascan as a .xlsx file (a simple spreadsheet
     which can be ingested by many plotting programs) and as a .mat
     file (which can be ingested by Matlab).
-
     '''
     motors = db.v2[uid].metadata['start']['motors']
     print('Reading data set...')
@@ -163,7 +161,7 @@ def preserve_data(uid, label, xlsxout, matout):
     fast = numpy.array(datatable[motors[1]])
     i0   = numpy.array(datatable['I0'])
 
-    if 'xs' in db.v2[uid].metadata['start']['detectors']:
+    if '4-element SDD' in db.v2[uid].metadata['start']['detectors'] or 'if' in db.v2[uid].metadata['start']['detectors'] or 'xs' in db.v2[uid].metadata['start']['detectors']:
         det_name = db.v2[uid].metadata['start']['plan_name'].split()[-1]
         det_name = det_name[:-1]
         z = numpy.array(datatable[det_name+'1'])+numpy.array(datatable[det_name+'2'])+numpy.array(datatable[det_name+'3'])+numpy.array(datatable[det_name+'4'])
@@ -336,6 +334,8 @@ def raster(inifile=None, **kwargs):
             print(error_msg('\ninifile does not exist\n'))
             return(yield from null())
 
+        report(f'== starting raster scan', level='bold', slack=True)
+
         p, f = read_ini(inifile, **kwargs)
         #print(f)
         #print(p)
@@ -383,7 +383,7 @@ def raster(inifile=None, **kwargs):
             print(f'Rough time estimate: {minutes} min')
             
             
-            action = input("\nBegin raster scan? [Y/n then Enter] ")
+            action = input("\nBegin raster scan? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 yield from null()
                 return
@@ -395,7 +395,7 @@ def raster(inifile=None, **kwargs):
         with open(inifile, 'r') as fd: content = fd.read()
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         clargs = textwrap.fill(str(kwargs), width=50) # .replace('\n', '<br>')
-        BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
+        BMM_log_info('starting raster scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
         #BMM_log_info(motor_status())
 
         ## organize metadata for injection into database and XDI output
@@ -420,116 +420,31 @@ def raster(inifile=None, **kwargs):
                           ththth        = p['ththth'],
         )
         
-        xrfuid, xrffile, xrfimage = None, None, None
-        image_web, xascam_uid, image_ana, anacam_uid = None, None, None, None
-        usbcam1_uid, usbcam2_uid = None, None
-        usb1cam_uid, usb2cam_uid = None, None
-        image_usb1, image_usb2 = None, None
-
         if not os.path.isdir(os.path.join(BMMuser.folder, 'maps')):
             os.makedirs(os.path.join(BMMuser.folder, 'maps'))
-
         
         #if p['detector'].lower() in ('if', 'xs', 'xs1'):
-            
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
         if p['snapshots']:
-            ahora = now()
-            c = from_profile('bmm')
-
-            ### --- XAS webcam ---------------------------------------------------------------
-            annotation = p['filename']
-            dossier.websnap = "%s_XASwebcam_%s.jpg" % (p['filename'], ahora)
-            image_web = os.path.join(p['folder'], 'snapshots', dossier.websnap)
-            xascam._annotation_string = annotation
-            print(bold_msg('XAS webcam snapshot'))
-            xascam_uid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[xascam_uid]), image_web)
-            im = Image.fromarray(numpy.array(bmm_catalog[xascam_uid].primary.read()['xascam_image'])[0])
-            im.save(image_web, 'JPEG')
-
-            ### --- analog camera using redgo dongle ------------------------------------------
-            dossier.anasnap = "%s_analog_%s.jpg" % (p['filename'], ahora)
-            image_ana = os.path.join(p['folder'], 'snapshots', dossier.anasnap)
-            anacam._annotation_string = p['filename']
-            print(bold_msg('analog camera snapshot'))
-            anacam_uid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            try:
-                #os.symlink(file_resource(db.v2[anacam_uid]), image_ana)
-                im = Image.fromarray(numpy.array(bmm_catalog[anacam_uid].primary.read()['anacam_image'])[0])
-                im.save(image_ana, 'JPEG')
-            except:
-                print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-                pass
-
-            ### --- USB camera #1 --------------------------------------------------------------
-            dossier.usb1snap = "%s_usb1_%s.jpg" % (p['filename'], ahora)
-            image_usb1 = os.path.join(p['folder'], 'snapshots', dossier.usb1snap)
-            usbcam1._annotation_string = p['filename']
-            print(bold_msg('USB camera #1 snapshot'))
-            usbcam1_uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[usbcam1_uid]), image_usb1)
-            im = Image.fromarray(numpy.array(bmm_catalog[usbcam1_uid].primary.read()['usbcam1_image'])[0])
-            im.save(image_usb1, 'JPEG')
-
-            ### --- USB camera #2 --------------------------------------------------------------
-            dossier.usb2snap = "%s_usb2_%s.jpg" % (p['filename'], ahora)
-            image_usb2 = os.path.join(p['folder'], 'snapshots', dossier.usb2snap)
-            usbcam2._annotation_string = p['filename']
-            print(bold_msg('USB camera #2 snapshot'))
-            usbcam2_uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            #os.symlink(file_resource(db.v2[usbcam2_uid]), image_usb2)
-            im = Image.fromarray(numpy.array(bmm_catalog[usbcam2_uid].primary.read()['usbcam2_image'])[0])
-            im.save(image_usb2, 'JPEG')
-
+            yield from dossier.cameras(p['folder'], p['filename'], md)
             
-        md['_snapshots'] = {#'xrf_uid':     xrfuid,     'xrf_image': xrfimage,
-                            'webcam_file': image_web,  'webcam_uid': xascam_uid,
-                            'analog_file': image_ana,  'anacam_uid': anacam_uid,
-                            'usb1_file':   image_usb1, 'usbcam1_uid': usbcam1_uid,
-                            'usb2_file':   image_usb1, 'usbcam2_uid': usbcam2_uid, }
-
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## capture dossier metadata for start document
+        md['_snapshots'] = {**dossier.cameras_md}
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## show the metadata to the user
         display_XDI_metadata(md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## this dictionary is used to populate the static html page for this scan sequence
-        dossier.filename      = p['filename']
-        dossier.experimenters = p['experimenters']
-        dossier.seqstart      = now('%A, %B %d, %Y %I:%M %p')
-        dossier.e0            = p['energy']
-        dossier.element       = p['element']
-        dossier.edge          = p['edge']
-        dossier.motors        = motor_sidebar() # this could be motor_sidebar(uid=uid)
-        dossier.sample        = p['sample']
-        dossier.prep          = p['prep']
-        dossier.comment       = p['comment']
-        dossier.clargs        = clargs
-        dossier.htmlpage      = p['htmlpage']
-        dossier.ththth        = p['ththth']
-        dossier.webuid        = xascam_uid
-        dossier.anauid        = anacam_uid
-        dossier.usb1uid       = usbcam1_uid
-        dossier.usb2uid       = usbcam2_uid
-        dossier.instrument    = ''
-        dossier.fast          = fast
-        dossier.slow          = slow
-        dossier.fast_motor    = f'{fast.name} [{p["fast_start"]}:{p["fast_stop"]}], {p["fast_steps"]} steps'
-        dossier.slow_motor    = f'{slow.name} [{p["slow_start"]}:{p["slow_stop"]}], {p["slow_steps"]} steps'
-        dossier.fast_init     = f'{fast.position:7.3f}'
-        dossier.slow_init     = f'{slow.position:7.3f}'
-
-        
-        ## https://www.codespeedy.com/check-if-a-string-is-a-valid-url-or-not-in-python/
-        dossier.url           = p['url']
-        dossier.doi           = p['doi']
-        dossier.cif           = p['cif']
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
-            dossier.initext = ''.join(f.readlines())
+        ## populate the static html page for this scan 
+        these_kwargs = {'fast': fast, 'slow': slow,
+                        'fast_motor': f'{fast.name} [{p["fast_start"]}:{p["fast_stop"]}], {p["fast_steps"]} steps',
+                        'slow_motor': f'{slow.name} [{p["slow_start"]}:{p["slow_stop"]}], {p["slow_steps"]} steps',
+                        'fast_init': f'{fast.position:7.3f}', 'slow_init': f'{slow.position:7.3f}' }
+        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
@@ -543,9 +458,9 @@ def raster(inifile=None, **kwargs):
                             slow, p['slow_start'], p['slow_stop'], p['slow_steps'],
                             fast, p['fast_start'], p['fast_stop'], p['fast_steps'],
                             pluck=False, force=force, dwell=p['dwelltime'],
-                            fname=pngout, md=md)
+                            fname=pngout, contour=p['contour'], log=p['log'], md=md)
         dossier.scanuid = db.v2[-1].metadata['start']['uid']
-        preserve_data(dossier.scanuid, f'{dossier.filename} {dossier.e0} eV', dossier.xlsxout, dossier.matout)
+        preserve_data(dossier.scanuid, f'{dossier.filename} {dossier.energy} eV', dossier.xlsxout, dossier.matout)
         
     def cleanup_plan(inifile):
         BMM_clear_suspenders()
@@ -571,8 +486,8 @@ def raster(inifile=None, **kwargs):
             if htmlout is not None:
                 htmlout = dossier.raster_dossier()
                 report('wrote dossier %s' % htmlout, 'bold')
-            #rsync_to_gdrive()
-            #synch_gdrive_folder()
+            rsync_to_gdrive()
+            synch_gdrive_folder()
         except:
             print(whisper('Quitting raster scan. Not returning to start position or writing dossier.'))
         yield from resting_state_plan()
@@ -584,6 +499,7 @@ def raster(inifile=None, **kwargs):
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     RE.msg_hook = None
     dossier = BMMDossier()
+    dossier.measurement = 'raster'
 
     if is_re_worker_active():
         inifile = '/home/xf06bm/Data/bucket/raster.ini'

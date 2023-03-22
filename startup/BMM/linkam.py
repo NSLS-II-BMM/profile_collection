@@ -208,6 +208,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             # change temperature is needed #
             ################################
             if m['temperature'] != temperature:
+                if self.check_temp(user_ns['linkam'], m['temperature']) is False: return(False)
                 self.content += self.tab + f"report('== Moving to temperature {m['temperature']:.1f}C', slack=True)\n"
                 self.content += self.tab +  'linkam.settle_time = 10\n'
                 self.content += self.tab + f'yield from mv(linkam, {m["temperature"]:.1f})\n'
@@ -222,10 +223,13 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################           
             if m['samplex'] is not None:
+                if self.check_limit(user_ns['xafs_x'], m['samplex']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_x, {m["samplex"]:.3f})\n'
             if m['sampley'] is not None:
+                if self.check_limit(user_ns['xafs_y'], m['sampley']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]:.3f})\n'
             if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 
             
@@ -286,7 +290,6 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             # approximate time cost of this sample #
             ########################################
             self.estimate_time(m, element, edge)
-            
 
         print(whisper(f'XAS time:      about {self.totaltime/60:.1f} hours'))
         print(whisper(f'ramp time:     about {ramp_time:.1f} minutes'))
@@ -297,6 +300,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + '    BMMuser.running_macro = False\n'
             self.content += self.tab + '    BMM_clear_suspenders()\n'
             self.content += self.tab + '    yield from shb.close_plan()\n'
+        return(True)
 
 
     def get_keywords(self, row, defaultline):

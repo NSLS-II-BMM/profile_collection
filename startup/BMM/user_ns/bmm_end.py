@@ -26,22 +26,24 @@ from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xr
 run_report('\t'+'FMBO motor tools')
 from BMM.fmbo import FMBO_status
 
+run_report('\t'+'Setting motor description strings')
+from BMM.desc_string import set_desc_strings
+set_desc_strings()
+
 run_report('\t'+'derived plot')
 from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
 
 run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
-run_report('\t'+'linescan, rocking curve, slit_height, pluck')
+run_report('\t'+'linescan, rocking curve, slit_height, find_slot, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
-run_report('\t'+'wafers')
+run_report('\t'+'support for wafer samples')
 from BMM.wafer import Wafer
 wafer = Wafer()
 
 
-#run_report('\t'+'positioning of instruments')
-#from BMM.positioning import find_slot
 
 ###########################################################################################
 #  _____  _       ___   _   _ _____ _____ _   _ _____    ___   _   _ _____  _      _____  #
@@ -154,6 +156,27 @@ def xlsx():
 
 
 def set_instrument(instrument=None):
+    if instrument is None:
+        print('''
+  1: Double wheel
+  2: Single wheel
+  3: Glancing angle stage
+  4: Linkam stage
+  5: Displex and LakeShore
+  6: Motor grid
+
+  r: return
+''')
+        actual = ['', 'double wheel', 'sample wheel', 'glancing angle', 'linkam', 'lakeshore', 'grid']
+        choice = input("\nSelect an instrument > ")
+        try:
+            if int(choice) > 0 and int(choice) <= 6:
+                instrument = actual[int(choice)]
+            else:
+                instrument = 'double wheel'
+        except:
+            instrument = 'double wheel'
+
     if instrument.lower() == 'glancing angle':
         print(bold_msg('Setting instrument as glancing angle stage'))
         BMMuser.instrument = 'glancing angle stage'
@@ -176,19 +199,15 @@ def set_instrument(instrument=None):
     
     
 
-
-
-
-        
-
-run_report('\t'+'areascan')
-from BMM.areascan import areascan, as2dat
-
-run_report('\t'+'timescan')
-from BMM.timescan import timescan, ts2dat
-
-run_report('\t'+'energystep')
-from BMM.energystep import energystep
+###########################################################################################
+# ______ _   _ _____ _____ _____ _   _  ______ _____ _     _____ _   _ _____________   __ #
+# | ___ \ | | |  _  |_   _|  _  | \ | | |  _  \  ___| |   |_   _| | | |  ___| ___ \ \ / / #
+# | |_/ / |_| | | | | | | | | | |  \| | | | | | |__ | |     | | | | | | |__ | |_/ /\ V /  #
+# |  __/|  _  | | | | | | | | | | . ` | | | | |  __|| |     | | | | | |  __||    /  \ /   #
+# | |   | | | \ \_/ / | | \ \_/ / |\  | | |/ /| |___| |_____| |_\ \_/ / |___| |\ \  | |   #
+# \_|   \_| |_/\___/  \_/  \___/\_| \_/ |___/ \____/\_____/\___/ \___/\____/\_| \_| \_/   #
+###########################################################################################
+                                                                                      
 
 run_report('\t'+'other plans')
 from BMM.plans import tu, td, mvbct, mvrbct, mvbender, mvrbender
@@ -202,10 +221,25 @@ if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
 if BMMuser.pds_mode is None:
      BMMuser.pds_mode = get_mode()
 
-
 run_report('\t'+'change_edge')
 from BMM.edge import show_edges, change_edge
 from BMM.functions import approximate_pitch
+
+run_report('\t'+'mono calibration')
+from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono, calibrate_pitch
+
+
+
+
+
+###############################################################
+#  _____ _____   ___   _   _   _______   _______ _____ _____  #
+# /  ___/  __ \ / _ \ | \ | | |_   _\ \ / / ___ \  ___/  ___| #
+# \ `--.| /  \// /_\ \|  \| |   | |  \ V /| |_/ / |__ \ `--.  #
+#  `--. \ |    |  _  || . ` |   | |   \ / |  __/|  __| `--. \ #
+# /\__/ / \__/\| | | || |\  |   | |   | | | |   | |___/\__/ / #
+# \____/ \____/\_| |_/\_| \_/   \_/   \_/ \_|   \____/\____/  #
+###############################################################
 
 
 XDI_record = {'xafs_linx'                        : (True,  'Sample.x'),
@@ -236,23 +270,35 @@ XDI_record = {'xafs_linx'                        : (True,  'Sample.x'),
 run_report('\t'+'XDI')
 from BMM.xdi import write_XDI
 
-run_report('\t'+'machine learning and data evaluation')
-from BMM.ml import BMMDataEvaluation
-clf = BMMDataEvaluation()
-
-## suppress some uninteresting messages from lib/python3.7/site-packages/hdf5plugin/__init__.py
-import logging
-logging.getLogger("hdf5plugin").setLevel(logging.ERROR)
+# suppress some uninteresting messages from lib/python3.7/site-packages/hdf5plugin/__init__.py
+# import logging
+# logging.getLogger("hdf5plugin").setLevel(logging.ERROR) # no longer needed, I guess...
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, db2xdi
+                                                           
+run_report('\t'+'areascan')
+from BMM.areascan import areascan, as2dat, fetch_areaplot
+
+run_report('\t'+'timescan')
+from BMM.timescan import timescan, ts2dat, sead
+
+run_report('\t'+'energystep')
+from BMM.energystep import energystep
 
 run_report('\t'+'raster scans')
 from BMM.raster import raster, difference_data
 
 
+################################################################################################################
+#  _______   ________ ___________ ________  ___ _____ _   _ _____   _____ _   _____________ ___________ _____  #
+# |  ___\ \ / /| ___ \  ___| ___ \_   _|  \/  ||  ___| \ | |_   _| /  ___| | | | ___ \ ___ \  _  | ___ \_   _| #
+# | |__  \ V / | |_/ / |__ | |_/ / | | | .  . || |__ |  \| | | |   \ `--.| | | | |_/ / |_/ / | | | |_/ / | |   #
+# |  __| /   \ |  __/|  __||    /  | | | |\/| ||  __|| . ` | | |    `--. \ | | |  __/|  __/| | | |    /  | |   #
+# | |___/ /^\ \| |   | |___| |\ \ _| |_| |  | || |___| |\  | | |   /\__/ / |_| | |   | |   \ \_/ / |\ \  | |   #
+# \____/\/   \/\_|   \____/\_| \_|\___/\_|  |_/\____/\_| \_/ \_/   \____/ \___/\_|   \_|    \___/\_| \_| \_/   #
+################################################################################################################
+                                                                                                           
 
-run_report('\t'+'mono calibration')
-from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono, calibrate_pitch
 
 run_report('\t'+'Larch')
 from BMM.larch_interface import Pandrosus, Kekropidai
@@ -267,9 +313,12 @@ from BMM.larch_interface import Pandrosus, Kekropidai
 # bunch.add(se)
 # bunch.add(seo)
 
-
 run_report('\t'+'Demeter')
-from BMM.demeter import athena, hephaestus, toprj
+from BMM.demeter import run_athena, run_hephaestus, toprj
+
+run_report('\t'+'machine learning and data evaluation')
+from BMM.ml import BMMDataEvaluation
+clf = BMMDataEvaluation()
 
 run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelemetry
@@ -299,6 +348,17 @@ if BMMuser.element is None:
      except:
           pass
 
+
+#########################################################################
+# ______ _____ _   _ _____ _____ _   _ _____ _   _ _____   _   _______  #
+# |  ___|_   _| \ | |_   _/  ___| | | |_   _| \ | |  __ \ | | | | ___ \ #
+# | |_    | | |  \| | | | \ `--.| |_| | | | |  \| | |  \/ | | | | |_/ / #
+# |  _|   | | | . ` | | |  `--. \  _  | | | | . ` | | __  | | | |  __/  #
+# | |    _| |_| |\  |_| |_/\__/ / | | |_| |_| |\  | |_\ \ | |_| | |     #
+# \_|    \___/\_| \_/\___/\____/\_| |_/\___/\_| \_/\____/  \___/\_|     #
+#########################################################################
+                                                                    
+      
 run_report('\t'+'final setup: Xspress3')
 from BMM.user_ns.dwelltime import with_xspress3
 from BMM.user_ns.detectors import xs, xs1, use_4element, use_1element
@@ -367,6 +427,8 @@ def examine_diagnostics():
                 print(error_msg(f'{TAB}{things[k][0]} is not out of the beam.'))
             else:
                 print(f'{TAB}{things[k][0]} {CHECK}')
+        elif 'filter' in k:
+            print(whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.'))
         else:
             print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
 

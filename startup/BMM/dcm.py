@@ -42,7 +42,7 @@ class DCM(PseudoPositioner):
 
     @property
     def _twod(self):
-        if self._crystal is '311':
+        if self._crystal == '311':
             return 2*BMM_dcm.dspacing_311
         else:
             return 2*BMM_dcm.dspacing_111
@@ -125,7 +125,7 @@ class DCM(PseudoPositioner):
         ## move x into the correct position for Si(111)
         print('\n')
         yield from mv(user_ns['dcm_x'], 1)
-        yield from mv(user_ns['dcm_x'], 0.3)
+        yield from mv(user_ns['dcm_x'], 0.45)
         ## move pitch and roll to the Si(111) positions
         this_energy = self.energy.readback.get()
         yield from self.kill_plan()
@@ -164,7 +164,7 @@ class DCM(PseudoPositioner):
     def set_crystal(self, crystal=None):
         if crystal is not None:
             self._crystal = crystal
-        if self._crystal is '311':
+        if self._crystal == '311':
             self.bragg.user_offset.put(BMM_dcm.offset_311)
         else:
             self.bragg.user_offset.put(BMM_dcm.offset_111)
@@ -185,7 +185,7 @@ class DCM(PseudoPositioner):
         bragg = 180 * arcsin(wavelength/self._twod) / pi
         para  = self.offset / (2*sin(angle))
         perp  = self.offset / (2*cos(angle))
-        print(f'Si({dcm._crystal}), {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
+        print(f'Si({self._crystal}), {energy} ev: bragg={bragg:.4f}  para={para:.4f}  perp={perp:.4f}')
     
 
     @pseudo_position_argument

@@ -5,7 +5,7 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
 from bluesky.plan_stubs import sleep, mv, null, abs_set
-from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper, PROMPT
 from BMM.logging   import BMM_log_info
 
 
@@ -249,7 +249,7 @@ class FMBOEpicsMotor(EpicsMotor):
 
     def home(self, force=False):
         if force is False:
-            action = input("\nBegin homing %s? [Y/n then Enter] " % self.name)
+            action = input(f"\nBegin homing {self.name}? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
                 return
         self.home_signal.put(1)

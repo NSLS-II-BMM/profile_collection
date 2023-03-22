@@ -47,6 +47,8 @@ def {base}_macro(dryrun=False, ref=False):
         yield from end_of_macro()
         {cleanup}
         elapsed_time(start)
+        print(bold_msg('[Hint] to start Athena:\t\t') + '%athena')
+
 
     start = time.time()
     {initialize}

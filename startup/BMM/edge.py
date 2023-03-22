@@ -11,7 +11,7 @@ from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
-from BMM.functions     import boxedtext, countdown, approximate_pitch
+from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.wheel         import show_reference_wheel
@@ -25,7 +25,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm         import BMMuser, rois
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import xs, with_xspress3
+from BMM.user_ns.detectors   import xs, xs1, with_xspress3
 from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks, m2_ydi, m2_ydo, m2_yu
 from BMM.user_ns.motors      import *
 
@@ -70,7 +70,7 @@ def arrived_in_mode(mode=None):
     return ok
 
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True):
+def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True, insist=False):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
@@ -95,6 +95,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         energy where rocking curve is measured [300]
     xrd : boolean, optional
         force photon delivery system to XRD [False]
+    insist : boolean
+        override the check for whether to skip M2, when True always move M2 [False]
 
     Examples
     --------
@@ -138,24 +140,28 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' %
                        (BMMuser.macro_sleep, el)))
         countdown(BMMuser.macro_sleep)
-        return(yield from null())
+        yield from null()
+        return
     ######################################################################
 
     if pds_motors_ready() is False:
         print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
-        return(yield from null())    
+        yield from null()
+        return
     
     (ok, text) = BMM_clear_to_start()
     if ok is False:
         print(error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n'))
-        return(yield from null())
+        yield from null()
+        return
     
     if energy is None:
         energy = edge_energy(el,edge)
         
     if energy is None:
         print(error_msg('\nEither %s or %s is not a valid symbol\n' % (el, edge)))
-        return(yield from null())
+        yield from null()
+        return
     if energy > 23500:
         edge = 'L3'
         energy = edge_energy(el,'L3')
@@ -163,15 +169,16 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if energy < 4000:
         print(warning_msg('The %s edge energy is below 4950 eV' % el))
         print(warning_msg('You have to change energy by hand.'))
-        return(yield from null())
+        yield from null()
+        return
 
     if energy > 23500:
         print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
-        return(yield from null())
+        yield from null()
+        return
 
     BMM_suspenders()
 
-    
     if energy > 8000:
         mode = 'A' if focus else 'D'
     elif energy < 6000:
@@ -190,9 +197,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         with_m2 = False
     else:
         with_m2 = True
+    if insist is True:
+        with_m2 = True
     if all_connected(with_m2) is False:
         print(warning_msg('Ophyd connection failure' % el))
-        return(yield from null())
+        yield from null()
+        return
 
 
     ################################
@@ -210,15 +220,24 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nBegin energy change? [Y/n then Enter] ")
+        action = input("\nBegin energy change? " + PROMPT)
         if action.lower() == 'q' or action.lower() == 'n':
             return(yield from null())
         if mode == 'C' and energy < 6000:
             print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-            action = input("You will not get optimal harmonic rejection.  Continue anyway?  [Y/n then Enter] ")
+            action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
             if action.lower() == 'q' or action.lower() == 'n':
-                return(yield from null())
-
+                yield from null()
+                return
+    else:
+        if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
+            print(warning_msg(f'You are already at the {el} {edge} edge.'))
+            if insist is True:
+                print(warning_msg('But changing edge anyway.'))                
+            else:
+                yield from null()
+                return
+            
     # make sure edge is set sensibly in redis when XRD mode is entered
     if mode == 'XRD':
         if edge_energy(el,edge) > 23500:
@@ -246,7 +265,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     # if not calibrating and mode != current_mode:
     #     print('Moving to photon delivery mode %s...' % mode)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
-    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender)
+    yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
     if arrived_in_mode(mode=mode) is False:
         print('\n')
@@ -254,8 +273,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('Fixing this is often as simple as re-running the change_mode() command.')
         #print('Or try dm3_bct.kill_cmd() then dm3_bct.enable_cmd() then re-run the change_mode() command.')
         print('If that doesn\'t work, call for help')
-        
-        return(yield from null())
+        yield from null()
+        return
         
     yield from kill_mirror_jacks()
     yield from sleep(1)
@@ -265,7 +284,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('Clear the faults and try running the same change_edge() command again.')
         print('Troubleshooting: ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
         BMMuser.motor_fault = None
-        return(yield from null())
+        yield from null()
+        return
     BMMuser.motor_fault = None
     
         
@@ -301,13 +321,14 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ## Xspress3
         if with_xspress3:
             BMMuser.verify_roi(xs, el, edge)
+            BMMuser.verify_roi(xs1, el, edge)
         ## feedback
         show_edges()
     
     if mode == 'XRD':
         report('Finished configuring for XRD', level='bold', slack=True)
     else:
-        report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
+        report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
     if slits is False:
         print('  * You may need to verify the slit position:  RE(slit_height())')
     BMM_clear_suspenders()
