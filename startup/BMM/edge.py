@@ -275,11 +275,19 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
 
+    dcm_axes = (user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"])
     (bragg, para, perp) = dcm.motor_positions(energy+target, quiet=True)
     count = 0
     while abs(dcm_para.position - para) > 0.1:
         count = count+1
         report(':warning: dcm_para failed to arrive in position.  Attempting to resolve this problem. :warning: ', level='warning', slack=True)
+        faulted_axes = False
+        for m in dcm_axes:
+            if m.amfe.get() or m.amfae.get():
+                #print(error_msg("%-12s : %s / %s" % (m.name, m.amfe.enum_strs[m.amfe.get()], m.amfae.enum_strs[m.amfae.get()])))
+                faulted_axes = True
+        if faulted_axes is True:
+            user_ns['ks'].cycle('dcm')
         yield from mvr(dcm_para, correction*5)
         yield from mv(dcm.energy, energy+target)
         if count > 5:

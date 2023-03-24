@@ -50,7 +50,8 @@ def resting_state():
     dcm.kill()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
-    matplotlib.use('Qt5Agg')
+    if is_re_worker_active() is True:
+        matplotlib.use('Qt5Agg')
     resting_redis()
     
 def resting_state_plan():
@@ -74,7 +75,8 @@ def resting_state_plan():
     dcm.kill()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
-    matplotlib.use('Qt5Agg')
+    if is_re_worker_active() is True:
+        matplotlib.use('Qt5Agg')
     resting_redis()
     
 
@@ -102,7 +104,8 @@ def end_of_macro():
     yield from xafs_wheel.recenter()
     dcm.mode = 'fixed'
     user_ns['RE'].msg_hook = BMM_msg_hook
-    matplotlib.use('Qt5Agg')
+    if is_re_worker_active() is True:
+        matplotlib.use('Qt5Agg')
     resting_redis()
     BMM_clear_suspenders()
 

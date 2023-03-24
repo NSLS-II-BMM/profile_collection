@@ -1,8 +1,19 @@
 
-import nslsii.kafka_utils
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
+#if is_re_worker_active():
+#    from nslsii import _read_bluesky_kafka_config_file
+#else:
+from nslsii.kafka_utils import _read_bluesky_kafka_config_file
+    
 from bluesky_kafka.produce import BasicProducer
 
-kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
+kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
 producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
                          topic='bmm.test',
