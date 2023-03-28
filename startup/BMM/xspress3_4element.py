@@ -184,7 +184,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                 print('')
 
 
-    def to_xdi(self, filename=None):
+    def to_xdi(self, filename=None, uid=None):
         '''Write an XDI-style file with bin energy in the first column and the
         waveform of each of the 4 channels in the other columns.
 
@@ -206,8 +206,12 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
         handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
         handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
+        handle.write('# Sample.x: %.3f\n'                    % user_ns['xafs_x'].position)
+        handle.write('# Sample.y: %.3f\n'                    % user_ns['xafs_y'].position)
         handle.write('# Scan.end_time: %s\n'                 % now())
         handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
+        if uid is not None:
+            handle.write('# Scan.uid: %s\n'                      % uid)
         handle.write('# Facility.name: NSLS-II\n')
         handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
         handle.write('# Facility.mode: %s\n'                 % ring.mode.value)

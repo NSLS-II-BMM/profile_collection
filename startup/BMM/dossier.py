@@ -279,7 +279,7 @@ class BMMDossier():
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
-            xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+            self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
             ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                     int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
                     int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
@@ -288,16 +288,16 @@ class BMMDossier():
                     int(BMMuser.xschannel2.get()),
                     int(BMMuser.xschannel3.get()),
                     int(BMMuser.xschannel4.get()),]
-            xs.plot(uid=xrfuid)
+            xs.plot(uid=self.xrfuid)
             xs.to_xdi(xrffile)
         if use_1element and plotting_mode(mode) == 'xs1':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)
-            xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+            self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
             ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
             rois = [int(BMMuser.xschannel1.get()),]
-            xs1.plot(uid=xrfuid)
+            xs1.plot(uid=self.xrfuid)
             xs1.to_xdi(xrffile)
 
         ## capture OCR and target ROI values at Eave to report in dossier
@@ -311,7 +311,7 @@ class BMMDossier():
             img_to_slack(xrfimage)
         
         ### --- capture metadata for dossier -----------------------------------------------
-        self.xrf_md = {'xrf_uid': xrfuid, 'xrf_image': xrfimage,}
+        self.xrf_md = {'xrf_uid': self.xrfuid, 'xrf_image': xrfimage,}
 
     def cameras(self, folder, stub, md):
         '''For each camera in use at the beamline, capture and image and record relevant

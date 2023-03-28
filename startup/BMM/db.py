@@ -6,12 +6,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 def file_resource(record):
-    '''Note: This function is depecated when using a conda environment
-    which uses Tiled.  The method this uses to find the associated
-    file asset does not work with the Tiled interface to the
-    databroker.
-
-    Return the fully resolved path to the data resource associated with
+    '''Return the fully resolved path to the data resource associated with
     the record, e.g.
 
     - the filestore image collected by a BMMSnapshot device 
@@ -40,6 +35,11 @@ def file_resource(record):
             return(template % 0)
         except:
             return(template)
+    elif 'databroker.client.BlueskyRun' in str(type(record)):
+        docs = record.documents()
+        for d in docs:
+            if d[0] == 'resource':
+                return(d[1]['root'] + d[1]['resource_path'])
     else:
         return(None)
 

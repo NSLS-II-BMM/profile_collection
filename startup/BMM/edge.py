@@ -145,10 +145,39 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         return
     ######################################################################
 
-    if pds_motors_ready() is False:
-        print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
-        yield from null()
-        return
+    ready_count = 0
+
+    m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
+    dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg = user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"]
+
+    while pds_motors_ready() is False:
+        ready_count += 1
+        report('\nOne or more motors are showing amplifier faults. Attempting to correct the problem.', level='error', slack=True)
+        problem_is_m2 = False
+        for m in (m2.xu, m2.xd, m2.yu, m2.ydo, m2.ydi, m2_bender):
+            if m.amfe.get() or m.amfae.get():
+                problem_is_m2 = True
+        if problem_is_m2 is True:
+            user_ns['ks'].cycle('m2')
+
+        problem_is_m3 = False
+        for m in (m3.xu, m3.xd, m3.yu, m3.ydo, m3.ydi):
+            if m.amfe.get() or m.amfae.get():
+                problem_is_m3 = True
+        if problem_is_m3 is True:
+            user_ns['ks'].cycle('m3')
+            
+        problem_is_dcm = False
+        for m in (dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg):
+            if m.amfe.get() or m.amfae.get():
+                problem_is_dcm = True
+        if problem_is_dcm is True:
+            user_ns['ks'].cycle('dcm')
+            
+        if ready_count > 5:
+            report('Failed to fix an amplifier fault.')
+            yield from null()
+            return
     
     (ok, text) = BMM_clear_to_start()
     if ok is False:
