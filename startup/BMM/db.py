@@ -39,7 +39,10 @@ def file_resource(record):
         docs = record.documents()
         for d in docs:
             if d[0] == 'resource':
-                return(d[1]['root'] + d[1]['resource_path'])
+                this = os.path.join(d[1]['root'], d[1]['resource_path'])
+                if '_%d' in this:
+                    this = this % 0
+                return(this)
     else:
         return(None)
 
