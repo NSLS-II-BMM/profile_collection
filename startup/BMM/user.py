@@ -759,7 +759,7 @@ class BMM_User(Borg):
             print(error_msg('You did not supply the start date'))
             return()
         pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
-        if not pattern.search(date):
+        if not pattern.fullmatch(date) is not None:
             print(error_msg('The start date must be in the form YYYY-MM-DD'))
             return()
         if gup == 0:
