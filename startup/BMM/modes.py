@@ -7,7 +7,7 @@ from bluesky.plan_stubs import null, sleep, mv, mvr
 from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
 from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.linescans     import rocking_curve
+from BMM.linescans     import rocking_curve, slit_height
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.motor_status  import motor_status
 from BMM.suspenders    import BMM_clear_to_start
@@ -410,6 +410,7 @@ def change_xtals(xtal=None):
      yield from rocking_curve()
      yield from sleep(2.0)
      yield from mv(dcm_pitch.kill_cmd, 1)
+     yield from slit_height()
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      close_last_plot()

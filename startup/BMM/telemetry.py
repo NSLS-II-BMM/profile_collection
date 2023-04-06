@@ -4,6 +4,7 @@ import numpy, json, os, time
 from tqdm import tqdm           # progress bar
 
 from BMM.periodictable import element_symbol, edge_energy, Z_number
+from BMM.functions import elapsed_time
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -44,15 +45,15 @@ class BMMTelemetry():
         
     def overhead(self, element=None):
         if element is None: return(0)
-        db = user_ns['db']
         element_search = self.records(element)
         ratio, difference, dpp = numpy.array([]), numpy.array([]), numpy.array([])
         l = len(list(element_search))
         if l == 0: return(0)
         count = 0
+        start = time.time()
         for u in tqdm(list(element_search)):
             
-            this=db.v2[u]
+            this = self.bc[u]
 
             ## records that did not complete normally
             if 'primary' in this.metadata['stop']['num_events']:
@@ -61,19 +62,22 @@ class BMMTelemetry():
             try:
                 t = this.primary.read()['dwti_dwell_time']
                 measurement_time = float(t.sum())
-                elapsed_time = this.metadata['stop']['time'] - this.metadata['start']['time']
+                time_elapsed = this.metadata['stop']['time'] - this.metadata['start']['time']
 
-                ## records that scan beam dumps or other pauses would skew the statistics
-                if elapsed_time/measurement_time > self.beamdump:
+                ## exclude records that span beam dumps or other pauses
+                if time_elapsed/measurement_time > self.beamdump:
                     continue
 
-                difference = numpy.append(difference, (elapsed_time - measurement_time))
-                ratio = numpy.append(ratio, elapsed_time/measurement_time)
-                diff_per_point = (elapsed_time - measurement_time) / len(t)
+                ## gather simple statistics
+                difference = numpy.append(difference, (time_elapsed - measurement_time))  # total motor motion overhead
+                ratio = numpy.append(ratio, time_elapsed/measurement_time)
+                diff_per_point = (time_elapsed - measurement_time) / len(t)  # approximate overhead as point-by-point equal
                 dpp = numpy.append(dpp, diff_per_point)
                 count = count + 1
-            except:
+            except:             # if a record cannot be processed for any reason, just skip it.
                 pass
+        elapsed_time(start)
+        ## return means and standard deviations
         return({'count'     : count,
                 'ratio'     : [ratio.mean(), ratio.std()],
                 'difference': [difference.mean(), difference.std()],
