@@ -44,11 +44,11 @@ class BMMTelemetry():
         return(element_search)
         
     def overhead(self, element=None):
-        if element is None: return(0)
+        if element is None: return({})
         element_search = self.records(element)
-        ratio, difference, dpp = numpy.array([]), numpy.array([]), numpy.array([])
         l = len(list(element_search))
-        if l == 0: return(0)
+        if l == 0: return({})
+        ratio, difference, dpp = numpy.zeros(l), numpy.zeros(l), numpy.zeros(l)
         count = 0
         start = time.time()
         for u in tqdm(list(element_search)):
@@ -69,13 +69,18 @@ class BMMTelemetry():
                     continue
 
                 ## gather simple statistics
-                difference = numpy.append(difference, (time_elapsed - measurement_time))  # total motor motion overhead
-                ratio = numpy.append(ratio, time_elapsed/measurement_time)
+                difference[count] = time_elapsed - measurement_time  # total motor motion overhead
+                ratio[count] = time_elapsed/measurement_time
                 diff_per_point = (time_elapsed - measurement_time) / len(t)  # approximate overhead as point-by-point equal
-                dpp = numpy.append(dpp, diff_per_point)
+                dpp[count] = diff_per_point
                 count = count + 1
             except:             # if a record cannot be processed for any reason, just skip it.
                 pass
+
+        ## count will likely be smaller than l
+        ratio = ratio[numpy.flatnonzero(ratio)]
+        difference = difference[numpy.flatnonzero(difference)]
+        dpp = dpp[numpy.flatnonzero(dpp)]
         elapsed_time(start)
         ## return means and standard deviations
         return({'count'     : count,
