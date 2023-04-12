@@ -53,7 +53,7 @@ class BMMDataEvaluation():
         self.hdf5     = [os.path.join(self.folder, 'fluorescence_training_set.hdf5'),
                          os.path.join(self.folder, 'transmission_training_set.hdf5'),
                          os.path.join(self.folder, 'verygood_training_set.hdf5'),
-                         os.path.join(self.folder, 'supplemental_training_set.hdf5'),]
+                         os.path.join(self.folder, '2023-04-12_training_set.hdf5'),]
         self.matrix   = os.path.join(self.folder, 'scaler.joblib')
         self.good_emoji = ':heavy_check_mark:'
         self.bad_emoji  = ':heavy_multiplication_x:'
@@ -222,7 +222,10 @@ class BMMDataEvaluation():
                 print(f'reading data from {h5file}')
                 f = h5py.File(h5file,'r')
                 for uid in f.keys():
-                    score = int(f[uid].attrs['score'])
+                    try:
+                        score = int(f[uid].attrs['score'])
+                    except:
+                        continue
                     mu = list(f[uid]['mu'])
                     scores.append(score)
                     data.append(mu)
@@ -348,15 +351,32 @@ class BMMDataEvaluation():
         faillist = '/home/xf06bm/Data/bucket/failed_data_evaluation.txt'
         with open(faillist, 'r') as fl:
             allstr = fl.read()
-        uids = (x[1:] for x in allstr.split('\n') if '\t' in x)
-        for uid in uids:
-            mode = user_ns['db'].v2[uid].metadata['start']['plan_name'].split()[2]
-            if mode == 'fluorescence':
+        a = allstr.replace('\t', '')
+        b = a[:-1]
+        l = b.split('\n')
+        fails = {}
+        for n in range(0, len(l), 4):
+            k = l[n+2]
+            v = l[n+1]
+            fails[k] = v
+
+        
+        #uids = (x[1:] for x in allstr.split('\n') if '\t' in x)
+        for uid in fails.keys():
+            #mode = user_ns['db'].v2[uid].metadata['start']['plan_name'].split()[2]
+            if 'xs' in fails[uid]:
                 mode = 'xs'
+            elif 'reference' in fails[uid]:
+                mode = 'reference'
+            elif 'transmission' in fails[uid]:
+                mode = 'transmission'
+            else:
+                mode = 'transmission'
+                
             result, emoji = self.evaluate(uid, mode)
             print(result, emoji)
             p = Pandrosus()
-            this.folder, this.db = user_ns['BMMuser'].folder, user_ns['db']
+            p.folder, p.db = user_ns['BMMuser'].folder, user_ns['db']
             try:
                 p.fetch(uid, mode=mode)
             except:
