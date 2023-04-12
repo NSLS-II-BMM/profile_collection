@@ -90,6 +90,7 @@ class BMMMacroBuilder():
         
         self.totaltime        = 0
         self.deltatime        = 0
+        self.metadatatime     = 0
 
         self.description      = ''
         self.ref              = ''
@@ -485,7 +486,12 @@ class BMMMacroBuilder():
             nsc = self.measurements[0]['nscans']
         self.totaltime += at * nsc * self.nreps
         self.deltatime += delta*delta * self.nreps
-
+        tele = user_ns['tele']
+        self.metadatatime += tele.value(el, 'visual')
+        if m['mode'] in ('fluorescence', 'flourescence', 'both', 'xs', 'xs1'):
+            self.metadatatime += tele.value(el, 'xrf')
+        print(at, nsc, self.nreps, tele.value(el, 'visual'), tele.value(el, 'xrf'))
+        
     def write_ini_and_plan(self):
         #################################
         # write out the master INI file #
@@ -548,8 +554,10 @@ class BMMMacroBuilder():
         else:
             print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
             #print('Dryrun:  '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
-        hours = int(self.totaltime/60)
-        minutes = int(self.totaltime - hours*60)
+
+        alltime = self.totaltime + self.metadatatime/60
+        hours = int(alltime/60)
+        minutes = int(alltime - hours*60)
         self.deltatime = numpy.sqrt(self.deltatime)
         print(f'\nApproximate time: {hours} hours, {minutes} minutes +/- {self.deltatime:.1f} minutes')
 
@@ -559,7 +567,7 @@ class BMMMacroBuilder():
         Call the subclass' _write_macro to generate the text of the plan.
 
         '''
-        self.totaltime, self.deltatime = 0, 0
+        self.totaltime, self.deltatime, self.metadatatime = 0, 0, 0
         self.content = ''
         success = self._write_macro()     # populate self.content
         if success is False: return

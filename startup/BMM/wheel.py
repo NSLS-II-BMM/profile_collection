@@ -328,7 +328,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 optdet = 'If'  if 'fluo' in m['optimize'] else 'It'
                 (optmotor, startstop) = ('xafs_x', 3) if '(X)' in m['optimize'] else ('xafs_y', 10)
                 self.content += self.tab + f'yield from peak_scan(motor={optmotor}, start=-{startstop}, stop={startstop}, nsteps=41, detector={optdet}, find=\'{do_max}\')\n'
-                self.totaltime += 1
+                self.totaltime += 1.0
 
             
             ##########################
@@ -340,13 +340,13 @@ class WheelMacroBuilder(BMMMacroBuilder):
             if self.do_first_change is True:
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
-                self.totaltime += 4
+                self.totaltime += 5.0
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
-                self.totaltime += 4
+                self.totaltime += 5.0
                 
             else:
                 if self.verbose:

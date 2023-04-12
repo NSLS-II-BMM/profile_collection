@@ -285,6 +285,8 @@ class BMM_User(Borg):
         self.post_anacam    = False
         self.post_xrf       = False
 
+        self.tweak_xas_time = 24.0
+        
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
@@ -293,7 +295,7 @@ class BMM_User(Borg):
         self.bmm_ints     = ("gup", "saf", "detector", "npoints", "bender_xas", "bender_xrd",
                              "bender_margin", "filter_state", "nscans", "start")
         self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
-                             "inttime") #, "edge_energy")
+                             "inttime", "tweak_xas_time") #, "edge_energy")
         self.bmm_booleans = ("prompt", "final_log_entry", "use_pilatus", "staff", "echem",
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
@@ -427,7 +429,10 @@ class BMM_User(Borg):
         verbose = False
         for k in self.bmm_strings:
             if verbose: print("string:", k)
-            setattr(self, k, rkvs.get(f'BMM:user:{k}').decode('utf-8'))
+            try:
+                setattr(self, k, rkvs.get(f'BMM:user:{k}').decode('utf-8'))
+            except AttributeError:
+                setattr(self, k, '')
         for k in self.bmm_ints:
             if verbose: print("int:", k)
             if rkvs.get(f'BMM:user:{k}').decode('utf-8').strip() == '':
@@ -436,7 +441,10 @@ class BMM_User(Borg):
                 setattr(self, k, int(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
         for k in self.bmm_floats:
             if verbose: print("float:", k)
-            setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+            try:
+                setattr(self, k, float(rkvs.get(f'BMM:user:{k}').decode('utf-8')))
+            except AttributeError:
+                setattr(self, k, 0.0)
         for k in self.bmm_booleans:
             this = rkvs.get(f'BMM:user:{k}').decode('utf-8')
             if verbose: print("bool:", k, this)

@@ -633,13 +633,13 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             if self.do_first_change is True:
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
-                self.totaltime += 4
+                self.totaltime += 5.0
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
-                self.totaltime += 4
+                self.totaltime += 5.0
                 
             else:
                 if self.verbose:

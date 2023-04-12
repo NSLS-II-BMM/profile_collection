@@ -190,7 +190,6 @@ def areascan(detector,
         if force is False: BMM_suspenders()
     
         @subs_decorator(areaplot)
-        #@subs_decorator(src.callback)
         def make_areascan(dets,
                           slow, startslow, stopslow, nslow,
                           fast, startfast, stopfast, nfast,

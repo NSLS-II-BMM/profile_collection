@@ -142,7 +142,6 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         rkvs.set('BMM:scan:estimated', 0)
 
         @subs_decorator(plot)
-        #@subs_decorator(src.callback)
         def scan_slit(slp):
 
             #if slit_height < 0.5:
@@ -152,8 +151,12 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from mv(motor.velocity, 0.4)
             yield from mv(motor.kill_cmd, 1)
 
+            kafka_message({'linescan': 'start',
+                           'motor' : motor.name,
+                           'detector' : 'I0',})
             uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
-
+            kafka_message({'linescan': 'end',})
+            
             user_ns['RE'].msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                          (line1, uid, user_ns['db'][-1].start['scan_id']))
@@ -262,7 +265,6 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         rkvs.set('BMM:scan:estimated', 0)
 
         @subs_decorator(plot)
-        #@subs_decorator(src.callback)
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -274,14 +276,12 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             if sgnl == 'Bicron':
                 yield from mv(slitsg.vsize, 5)
                 
+            kafka_message({'linescan': 'start',
+                           'motor' : motor.name,
+                           'detector' : 'I0',})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
-            #yield from rel_adaptive_scan(dets, 'I0', motor,
-            #                             start=start,
-            #                             stop=stop,
-            #                             min_step=0.002,
-            #                             max_step=0.03,
-            #                             target_delta=.15,
-            #                             backstep=True)
+            kafka_message({'linescan': 'end',})
+
             t  = user_ns['db'][-1].table()
             signal = t[sgnl]
             if choice.lower() == 'com':
@@ -417,7 +417,6 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         rkvs.set('BMM:scan:estimated', 0)
         
         @subs_decorator(plot)
-        #@subs_decorator(src.callback)
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -432,7 +431,12 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
                 md['BMM_kafka']['hint'] = hint
 
                 
+            kafka_message({'linescan': 'start',
+                           'motor' : motor.name,
+                           'detector' : detector.capitalize(),})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**md, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            kafka_message({'linescan': 'end',})
+            
             t  = user_ns['db'][-1].table()
             if detector.lower() == 'if':
                 signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
@@ -529,12 +533,16 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
         rkvs.set('BMM:scan:estimated', 0)
         
         @subs_decorator(plot)
-        #@subs_decorator(src.callback)
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
+            kafka_message({'linescan': 'start',
+                           'motor' : motor.name,
+                           'detector' : detector. capitalize(),})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            kafka_message({'linescan': 'end',})
+
             t  = user_ns['db'][-1].table()
             if detector.lower() == 'if':
                 signal   = numpy.array((t[BMMuser.xs1]+t[BMMuser.xs2]+t[BMMuser.xs3]+t[BMMuser.xs4])/t['I0'])
@@ -826,21 +834,22 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
             md['BMM_kafka'] = dict()
         if 'hint' not in md['BMM_kafka'] or thismotor.name not in md['BMM_kafka']['hint']:
             md['BMM_kafka']['hint'] = f'linescan {detector} {thismotor.name}'
-        
+        kafka_message({'linescan': 'start',
+                       'motor' : thismotor.name,
+                       'detector' : detector,})
+            
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        @subs_decorator(plot)
-        #@subs_decorator(src.callback)
+        #@subs_decorator(plot)
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md, 'plan_name' : f'rel_scan linescan {motor.name} {detector}'})
             return uid
 
         uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
-        #global mytable
-        #run = src.retrieve()
-        #mytable = run.primary.read().to_dataframe()
+        kafka_message({'linescan': 'end',})
+        
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
         if pluck is True:
@@ -851,8 +860,6 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
 
     
     def cleanup_plan():
-        ## BMM_clear_suspenders()
-        ##user_ns['RE'].clear_suspenders()       # disable suspenders
         yield from resting_state_plan()
 
 
@@ -945,26 +952,24 @@ def ls2dat(datafile, key):
     print(bold_msg('wrote linescan to %s' % datafile))
 
 
-## these should use src rather than db
-    
-def center_sample_y():
-    yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
-    table = user_ns['db'][-1].table()
-    diff = -1 * table['It'].diff()
-    inflection = table['xafs_liny'][diff.idxmax()]
-    yield from mv(xafs_liny, inflection)
-    print(bold_msg('Optimal position in y at %.3f' % inflection))
+# def center_sample_y():
+#     yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
+#     table = user_ns['db'][-1].table()
+#     diff = -1 * table['It'].diff()
+#     inflection = table['xafs_liny'][diff.idxmax()]
+#     yield from mv(xafs_liny, inflection)
+#     print(bold_msg('Optimal position in y at %.3f' % inflection))
 
-def center_sample_roll():
-    yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
-    table = user_ns['db'][-1].table()
-    peak = table['xafs_roll'][table['It'].idxmax()]
-    yield from mv(xafs_roll, peak)
-    print(bold_msg('Optimal position in roll at %.3f' % peak))
+# def center_sample_roll():
+#     yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
+#     table = user_ns['db'][-1].table()
+#     peak = table['xafs_roll'][table['It'].idxmax()]
+#     yield from mv(xafs_roll, peak)
+#     print(bold_msg('Optimal position in roll at %.3f' % peak))
 
-def align_flat_sample(angle=0):
-    yield from center_sample_y()
-    yield from center_sample_roll()
-    yield from center_sample_y()
-    yield from center_sample_roll()
-    yield from mvr(xafs_roll, angle)
+# def align_flat_sample(angle=0):
+#     yield from center_sample_y()
+#     yield from center_sample_roll()
+#     yield from center_sample_y()
+#     yield from center_sample_roll()
+#     yield from mvr(xafs_roll, angle)

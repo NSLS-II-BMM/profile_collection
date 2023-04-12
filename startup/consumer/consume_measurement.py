@@ -26,6 +26,12 @@ ga = GlancingAngle()
 from align_wheel import AlignWheel
 aw = AlignWheel()
 
+
+doing = None
+
+from bmm_live import LineScan
+ls = LineScan()
+
 from BMM.larch_interface import plt
 
 
@@ -48,14 +54,16 @@ def plot_from_kafka_messages(beamline_acronym):
 
     def examine_message(consumer, doctype, doc):
         global xafsviz_window
-        #print(
-        #    f"\n[{datetime.datetime.now().isoformat(timespec='seconds')}] document topic: {doctype}\n"
-            #f"contents: {pprint.pformat(doc)}\n"
-        #)
+        global doing
+        # print(
+        #     f"\n[{datetime.datetime.now().isoformat(timespec='seconds')}] document topic: {doctype}\n"
+        #     f"contents: {pprint.pformat(doc)}\n"
+        # )
         name, message = doc
 
         if name == 'bmm':
             print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
+
             if 'xafs_sequence' in message:
                 if message['xafs_sequence'] == 'start':
                     xafsseq.start(element=message['element'], edge=message['edge'], folder=message['folder'],
@@ -64,6 +72,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     xafsseq.stop(filename=message['filename'])
                 elif message['xafs_sequence'] == 'add':
                     xafsseq.add(message['uid'])
+
             elif 'xafs_visualization' in message:
                 use_tabs = False
                 if use_tabs is True:
@@ -79,6 +88,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
                                                     edge=message['edge'], folder=message['folder'],
                                                     mode=message['mode'], catalog=bmm_catalog)
+                    
             elif 'glancing_angle' in message:
                 if message['glancing_angle'] == 'linear':
                     ga.plot_linear(**message)
@@ -104,7 +114,43 @@ def plot_from_kafka_messages(beamline_acronym):
 
             elif 'mono_calibration' in message:
                 bmm_plot.mono_calibration_plot(**message)
-                    
+
+            elif 'linescan' in message:
+                if message['linescan'] == 'start':
+                    ls.start(**message)
+                    doing = 'linescan'
+                elif message['linescan'] == 'stop':
+                    ls.stop(**message)
+                    doing = None
+
+            ## todo...
+            elif 'xafsscan' in message:
+                pass
+            elif 'timescan' in message:
+                pass
+            elif 'areascan' in message:
+                pass
+
+            elif 'close' in message:
+                if message['close'] == 'all':
+                    plt.close('all')
+                elif message['close'] == 'line':
+                    ls.close_all_lineplots()
+                elif message['close'] == 'last':
+                    plt.close(ls.plots[-1])
+
+        if name == 'event':
+            if doing is None:
+                pass
+            elif doing == 'linescan':
+                ls.add(**message)
+            elif doing == 'xafsscan':
+                pass
+            elif doing == 'timescan':
+                pass
+            elif doing == 'areascan':
+                pass
+                
         if name == 'stop':
             #print(
             #    f"{datetime.datetime.now().isoformat()} document: {name}\n"
@@ -118,6 +164,8 @@ def plot_from_kafka_messages(beamline_acronym):
                 hint = record.metadata['start']['BMM_kafka']['hint']
                 #print(f'[{datetime.datetime.now().isoformat(timespec="seconds")}]   {uid}')
                 for k in record.metadata['start']['BMM_kafka'].keys():
+                    if k == 'hint':
+                        continue
                     print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
 
                 if hint.startswith('linescan'):

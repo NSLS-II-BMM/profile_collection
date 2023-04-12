@@ -1,5 +1,4 @@
 
-from bluesky.plans import rel_scan
 from bluesky.plan_stubs import sleep, mv, mvr, null
 from bluesky import __version__ as bluesky_version
 import numpy

@@ -186,7 +186,6 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
         md['BMM_kafka']['hint'] = f'timescan {detector}'
         
     @subs_decorator(plot)
-    #@subs_decorator(src.callback)
     def count_scan(dets, readings, delay, md):
         #if 'purpose' not in md:
         #    md['purpose'] = 'measurement'

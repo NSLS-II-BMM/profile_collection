@@ -55,7 +55,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     def plot(self, uid=None, add=False, only=None): 
         '''Make a plot appropriate for the 4-element detector.
 
-        The default is to overplot the four channels.
+        The default is to sum the four channels.
         
         Parameters
         ----------
@@ -75,17 +75,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         plt.xlim(2500, round(dcm.energy.position, -2)+500)
         try:
             record = bmm_catalog[uid]
-            #print(f'{uid}')
-            # fname = file_resource(uid)
-            # db = user_ns['db']
             plt.title(record.metadata['start']['XDI']['Sample']['name'])
-            # f = h5py.File(fname,'r')
-            # g = f['entry']['instrument']['detector']['data']
-            # data_array = g.value
-            # s1 = data_array[0][0]
-            # s2 = data_array[0][1]
-            # s3 = data_array[0][2]
-            # s4 = data_array[0][3]
             s1 = record['primary']['data']['xs_channels_channel01'][0]
             s2 = record['primary']['data']['xs_channels_channel02'][0]
             s3 = record['primary']['data']['xs_channels_channel03'][0]
@@ -98,18 +88,14 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             s3 = self.channel03.mca.array_data.get()
             s4 = self.channel04.mca.array_data.get()
         e = numpy.arange(0, len(s1)) * 10
+        plt.ion()
         if only is not None and only in (1, 2, 3, 4):
             channel = self.get_channel(number=only)
             this = channel.mca.array_data
-
-            # this = getattr(self, f'mca{only}')
-            plt.ion()
             plt.plot(e, this.get(), label=f'channel {only}')
         elif add is True:
-            plt.ion()
             plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
         else:
-            plt.ion()
             plt.plot(e, s1, label='channel 1')
             plt.plot(e, s2, label='channel 2')
             plt.plot(e, s3, label='channel 3')

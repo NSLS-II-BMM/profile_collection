@@ -209,13 +209,13 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
         timegrid = list(numpy.round(timegrid, decimals=2))
 
     if element is not None:
-        overhead, uncertainty = tele.overhead_per_point(element, edge)
+        overhead, uncertainty, maxdpp, mindpp = tele.overhead_per_point(element) #, edge)
     else:
-        overhead = tele.interpolate(e0)
-        
-    approximate_time = (sum(timegrid) + float(len(timegrid))*overhead) / 60.0
+        overhead, uncertainty = tele.average()
+
+    approximate_time = (sum(timegrid) + float(len(timegrid))*overhead + user_ns['BMMuser'].tweak_xas_time) / 60.0
     delta = float(len(timegrid))*uncertainty / 60.0
-    return (grid, timegrid, round(approximate_time, 1), round(delta, 1))
+    return (grid, timegrid, approximate_time, delta)
 
 ## -----------------------
 ##  energy step scan plan concept

@@ -1,4 +1,4 @@
-from bluesky.plans import rel_scan, scan_nd, count
+from bluesky.plans import scan_nd, count
 from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 #from databroker.core import SingleRunCache
@@ -748,10 +748,6 @@ def xafs(inifile=None, **kwargs):
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## SingleRunCache -- manage data as it comes out
-        #src = SingleRunCache()
-
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
         if 'force' in kwargs and kwargs['force'] is True:
             pass
@@ -761,7 +757,6 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
         @subs_decorator(plot)
-        #@subs_decorator(src.callback)
         def scan_sequence(clargs): #, noreturn=False):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
@@ -1146,10 +1141,10 @@ def howlong(inifile=None, interactive=True, **kwargs):
         return(orig, -1)
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     if delta == 0:
-        text = f'One scan of {len(energy_grid)} points will take about {approx_time} minutes\n'
+        text = f'One scan of {len(energy_grid)} points will take about {approx_time:.1f} minutes\n'
         text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours'
     else:
-        text = f'One scan of {len(energy_grid)} points will take {approx_time} minutes +/- {delta} minutes \n'
+        text = f'One scan of {len(energy_grid)} points will take {approx_time:.1f} minutes +/- {delta:.1f} minutes \n'
         text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours +/- {delta*numpy.sqrt(int(p["nscans"])):.1f} minutes'
 
 
