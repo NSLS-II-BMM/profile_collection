@@ -54,6 +54,8 @@ class XAFSSequence():
         #    plt.close(self.fig.number)
         
     def add(self, uid):
+        if 'test' in self.mode:
+            return
         if self.ongoing is not True:
             print('add called, but no sequence started')
             return
@@ -93,6 +95,8 @@ class XAFSSequence():
 
     def stop(self, filename):
         self.ongoing = False
+        if 'test' in self.mode:
+            return
         if self.fig is not None:
             plt.close(self.fig.number)
         #plt.close('all')

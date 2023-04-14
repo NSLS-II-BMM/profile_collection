@@ -29,10 +29,11 @@ aw = AlignWheel()
 
 doing = None
 
-from bmm_live import LineScan
+from bmm_live import LineScan, XAFSScan
 ls = LineScan()
+xs = XAFSScan()
 
-from BMM.larch_interface import plt
+##from BMM.larch_interface import plt
 
 
 # these two lines allow a stale plot to remain interactive and prevent
@@ -125,7 +126,15 @@ def plot_from_kafka_messages(beamline_acronym):
 
             ## todo...
             elif 'xafsscan' in message:
-                pass
+                if message['xafsscan'] == 'start':
+                    xs.start(**message)
+                    doing = 'xafsscan'
+                elif message['xafsscan'] == 'next':
+                    xs.Next(**message)
+                elif message['xafsscan'] == 'stop':
+                    xs.stop(**message)
+                    doing = None
+
             elif 'timescan' in message:
                 pass
             elif 'areascan' in message:
@@ -139,52 +148,56 @@ def plot_from_kafka_messages(beamline_acronym):
                 elif message['close'] == 'last':
                     plt.close(ls.plots[-1])
 
+        # for live plotting, need to capture and parse event
+        # documents. use the global state variable "doing"
+        # to keep track of which plotting chore needs to be done.
         if name == 'event':
             if doing is None:
                 pass
             elif doing == 'linescan':
                 ls.add(**message)
             elif doing == 'xafsscan':
-                pass
+                #pprint.pprint(message)
+                xs.add(**message)
             elif doing == 'timescan':
                 pass
             elif doing == 'areascan':
                 pass
                 
-        if name == 'stop':
-            #print(
-            #    f"{datetime.datetime.now().isoformat()} document: {name}\n"
-            #    f"contents: {pprint.pformat(doc)}\n"
-            #)
-            #return
-            uid = message['run_start']  # stop document is the second item in the doc list
-            record = bmm_catalog[uid]
-            verbose = False
-            if 'BMM_kafka' in record.metadata['start']:
-                hint = record.metadata['start']['BMM_kafka']['hint']
-                #print(f'[{datetime.datetime.now().isoformat(timespec="seconds")}]   {uid}')
-                for k in record.metadata['start']['BMM_kafka'].keys():
-                    if k == 'hint':
-                        continue
-                    print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
+        # if name == 'stop':
+        #     #print(
+        #     #    f"{datetime.datetime.now().isoformat()} document: {name}\n"
+        #     #    f"contents: {pprint.pformat(doc)}\n"
+        #     #)
+        #     #return
+        #     uid = message['run_start']  # stop document is the second item in the doc list
+        #     record = bmm_catalog[uid]
+        #     verbose = False
+        #     if 'BMM_kafka' in record.metadata['start']:
+        #         hint = record.metadata['start']['BMM_kafka']['hint']
+        #         #print(f'[{datetime.datetime.now().isoformat(timespec="seconds")}]   {uid}')
+        #         for k in record.metadata['start']['BMM_kafka'].keys():
+        #             if k == 'hint':
+        #                 continue
+        #             print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
 
-                if hint.startswith('linescan'):
-                    if verbose: print('saw a linescan stop doc')
-                    #bmm_plot.plot_linescan(bmm_catalog, uid)
-                elif hint.startswith('timescan'):
-                    if verbose: print('saw a timescan stop doc')
-                    #bmm_plot.plot_timescan(bmm_catalog, uid)
-                elif hint.startswith('rectanglescan'):
-                    if verbose: print('saw a rectanglescan stop doc')
-                    #bmm_plot.plot_rectanglescan(bmm_catalog, uid)
-                elif hint.startswith('areascan'):
-                    if verbose: print('saw a areascan stop doc')
-                    print(f"{datetime.datetime.now().isoformat()} document: {name}\n")
-                    bmm_plot.plot_areascan(bmm_catalog, uid)
-                elif hint.startswith('xafs'):
-                    if verbose: print('saw an xafs stop doc')
-                    #plt.close('all')
-                    #bmm_plot.plot_xafs(bmm_catalog, uid)
+        #         if hint.startswith('linescan'):
+        #             if verbose: print('saw a linescan stop doc')
+        #             #bmm_plot.plot_linescan(bmm_catalog, uid)
+        #         elif hint.startswith('timescan'):
+        #             if verbose: print('saw a timescan stop doc')
+        #             #bmm_plot.plot_timescan(bmm_catalog, uid)
+        #         elif hint.startswith('rectanglescan'):
+        #             if verbose: print('saw a rectanglescan stop doc')
+        #             #bmm_plot.plot_rectanglescan(bmm_catalog, uid)
+        #         elif hint.startswith('areascan'):
+        #             if verbose: print('saw a areascan stop doc')
+        #             print(f"{datetime.datetime.now().isoformat()} document: {name}\n")
+        #             bmm_plot.plot_areascan(bmm_catalog, uid)
+        #         elif hint.startswith('xafs'):
+        #             if verbose: print('saw an xafs stop doc')
+        #             #plt.close('all')
+        #             #bmm_plot.plot_xafs(bmm_catalog, uid)
     ## end of examine_message ##################################################################
     
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")

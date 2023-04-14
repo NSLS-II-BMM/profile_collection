@@ -21,7 +21,7 @@ BMM_CONFIGURATION_LOCATION = os.path.join(startup_dir, 'lookup_table')
 nas_mount_point = '/mnt/nfs/nas1'
 nas_path = os.path.join(nas_mount_point, 'xf06bm', 'experiments', 'XAS', 'snapshots')
 
-from BMM.functions           import now, colored, run_report, boxedtext, elapsed_time
+from BMM.functions           import now, colored, run_report, boxedtext, elapsed_time, ENABLE_LIVE_PLOTS
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 run_report(__file__, text='functions and other basics')
 run_report('\t'+'logging')

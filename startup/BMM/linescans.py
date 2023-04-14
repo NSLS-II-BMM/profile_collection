@@ -31,6 +31,7 @@ from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, clean_img, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions     import do_nothing
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs

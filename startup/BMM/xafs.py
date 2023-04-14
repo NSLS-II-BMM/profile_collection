@@ -817,6 +817,14 @@ def xafs(inifile=None, **kwargs):
                            'folder'        : BMMuser.folder,
                            'repetitions'   : p["nscans"],
                            'mode'          : p['mode']})
+            kafka_message({'xafsscan': 'start',
+                           'element': p["element"],
+                           'edge': p["edge"],
+                           'mode': p['mode'],
+                           'filename': p["filename"],
+                           'repetitions': p["nscans"],
+                           'sample': p["sample"],
+                           'reference_material': user_ns['xafs_ref'].mapping[p["element"]][3], })
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -924,6 +932,8 @@ def xafs(inifile=None, **kwargs):
                               'edge': p["edge"],
                               'repetitions': p["nscans"],
                               'count': cnt, }
+                kafka_message({'xafsscan': 'next',
+                               'count': cnt })
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
@@ -940,6 +950,7 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
+                kafka_message({'xafsscan': 'end',})
 
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials

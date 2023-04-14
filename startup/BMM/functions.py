@@ -18,6 +18,12 @@ LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 
 
+ENABLE_LIVE_PLOTS = False
+def do_nothing(func):
+    def empty_func(*args, **kwargs):
+        pass
+    return empty_func
+
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
 # Red, White, Yellow,
