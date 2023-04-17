@@ -18,9 +18,6 @@ import pandas
 import matplotlib
 import matplotlib.pyplot as plt
 
-from bluesky.preprocessors import subs_decorator
-## see 65-derivedplot.py for DerivedPlot class
-## see 10-motors.py and 20-dcm.py for motor definitions
 
 from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.dossier       import BMMDossier

@@ -5,10 +5,6 @@ import numpy
 import os
 import time
 
-#from bluesky.preprocessors import subs_decorator
-## see 65-derivedplot.py for DerivedPlot class
-## see 10-motors.py and 20-dcm.py for motor definitions
-
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 

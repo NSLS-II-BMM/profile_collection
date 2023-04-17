@@ -199,7 +199,7 @@ class XAFSScan():
             self.ref = self.fig.add_subplot(self.gs[1, 1])
         ## 1x3 grid if no fluorescence (transmission, reference, test)
         else:
-            self.fig.canvas.manager.window.setGeometry(1377, 778, 1800, 562)
+            self.fig.canvas.manager.window.setGeometry(760, 2259, 1800, 593)
             self.gs = gridspec.GridSpec(1,3)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[0, 1])

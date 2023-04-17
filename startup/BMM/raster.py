@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 from bluesky.plans import count
 from bluesky.plan_stubs import sleep, mv, null
-from bluesky.preprocessors import subs_decorator, finalize_wrapper
+from bluesky.preprocessors import finalize_wrapper
 
 from PIL import Image
 from tiled.client import from_profile

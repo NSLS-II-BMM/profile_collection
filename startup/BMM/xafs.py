@@ -753,10 +753,18 @@ def xafs(inifile=None, **kwargs):
             pass
         else:
             BMM_suspenders()
-            
+
+        ## This helped Bruce understand how to make a decorator conditional:
+        ## https://stackoverflow.com/a/49204061
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
+
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## begin the scan sequence with the plotting subscription
-        @subs_decorator(plot)
+        @conditional_subs_decorator
         def scan_sequence(clargs): #, noreturn=False):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
@@ -806,7 +814,7 @@ def xafs(inifile=None, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
-            close_last_plot()
+            if BMMuser.enable_live_plots: close_last_plot()
             report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True)
             cnt = 0

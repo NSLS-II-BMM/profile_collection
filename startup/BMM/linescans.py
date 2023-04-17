@@ -31,7 +31,6 @@ from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, clean_img, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions     import do_nothing
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
@@ -142,7 +141,13 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        @subs_decorator(plot)
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
+        
+        @conditional_subs_decorator
         def scan_slit(slp):
 
             #if slit_height < 0.5:
@@ -265,7 +270,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        @subs_decorator(plot)
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
+
+        @conditional_subs_decorator
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -417,7 +428,13 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
         
-        @subs_decorator(plot)
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
+            
+        @conditional_subs_decorator
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -532,8 +549,14 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
+
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
         
-        @subs_decorator(plot)
+        @conditional_subs_decorator
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -843,7 +866,15 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        #@subs_decorator(plot)
+        ## This helped Bruce understand how to make a decorator conditional:
+        ## https://stackoverflow.com/a/49204061
+        def conditional_subs_decorator(function):
+            if user_ns['BMMuser'].enable_live_plots is True:
+                return subs_decorator(plot)(function)
+            else:
+                return function
+        
+        @conditional_subs_decorator
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md, 'plan_name' : f'rel_scan linescan {motor.name} {detector}'})
             return uid

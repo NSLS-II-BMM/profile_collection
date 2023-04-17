@@ -8,8 +8,6 @@ import os
 import matplotlib.pyplot as plt
 from ophyd.sim import noisy_det
 
-from bluesky.preprocessors import subs_decorator
-
 from BMM.user_ns.dwelltime import with_xspress3
 from BMM.resting_state     import resting_state_plan
 from BMM.suspenders        import BMM_clear_to_start

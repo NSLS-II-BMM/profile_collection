@@ -286,6 +286,7 @@ class BMM_User(Borg):
         self.post_xrf       = False
 
         self.tweak_xas_time = 24.0
+        self.enable_live_plots = False
         
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "filename",
@@ -300,7 +301,7 @@ class BMM_User(Borg):
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
-                             "doi", "cif", "syns",
+                             "doi", "cif", "syns", "enable_live_plots",
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
@@ -446,12 +447,16 @@ class BMM_User(Borg):
             except AttributeError:
                 setattr(self, k, 0.0)
         for k in self.bmm_booleans:
-            this = rkvs.get(f'BMM:user:{k}').decode('utf-8')
-            if verbose: print("bool:", k, this)
-            if this.lower() in ('false', 'no', '0', 'f', 'n'):
+            if verbose: print("bool:", k)
+            try:
+                this = rkvs.get(f'BMM:user:{k}').decode('utf-8')
+                if this.lower() in ('false', 'no', '0', 'f', 'n'):
+                    setattr(self, k, False)
+                else:
+                    setattr(self, k, True)
+            except AttributeError:
                 setattr(self, k, False)
-            else:
-                setattr(self, k, True)
+                
         for k in self.bmm_none:
             if verbose: print("none:", k)
             setattr(self, k, None)
