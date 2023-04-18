@@ -8,7 +8,85 @@ rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
 
 class LineScan():
+    '''Manage the live plot for a motor scan or a time scan.
 
+    Before yielding from the basic scan type, issue a kafka document
+    indicating the start of the scan.  This document will look
+    something like this:
+
+      {'linescan' : 'start', ... }
+
+    where the ... elides the various arguments used to construct the
+    desired plot.
+
+    Every time an event document from BlueSky is observed, call the
+    add method, which will parse the event document, extract the
+    latest data point, add it correctly to the data arrays, and redraw
+    the plot.
+
+    After the basic scan finishes, issue a kafka document indicating
+    the end of the scan.  This document will look
+    something like this:
+
+      {'linescan' : 'end',}
+
+    This is a single scan plot.  Over plotting of successive scans is
+    not currently supported.
+
+    This works for time scans as well as motor scans.  Those two scan
+    types plot the same sorts of signals on the y-axis.  If the
+    "motor" attribute is None, then a time scan (with time in seconds
+    on the x-axis) will be displayed.
+
+    attributes
+    ==========
+    ongoing (bool)
+      a flag indicating whether a line or time scan is in progress
+
+    xdata (list)
+      a list containing all x-axis values measured thus far
+
+    ydata (list)
+      a list containing all y-axis values measured thus far
+
+    motor (str)
+      the name of the motor in motion or None for a time scan
+
+    numerator (str)
+      the name of the detector being plotted, something like io, it,
+      ir, if, xs, xs1 ...
+
+    denominator (str or int)
+      the name of the signal used to normalize the numerator
+      signal. for most plots, this would be "i0", for a plot of the
+      reference detector, this would be 'it'. For an plot of a signal
+      without a normalization signal (I0) for example, this should be
+      1.
+
+    figure (mpl figure object)
+      this will hold the reference to the active figure object
+
+    axes (mpl axis object)
+      this will hold the reference to the active axis object
+
+    line (mpl line object)
+      this will hold the reference to the active line object
+
+    description (str)
+      a generated string used in the figure title
+
+    xs1, xs2, xs3, xs4, xs8 (strs)
+      strings identifying the names of the fluorescence ROIs for the
+      current state of the photon delivery system.  these will be
+      fetched from redis.
+
+    plots (list)
+      a list of the matplotlib figure objects still on screen
+
+    initial (float)
+      the time in epoch seconds of the first point of a time scan
+
+    '''
     ongoing     = False
     xdata       = []
     ydata       = []
@@ -21,6 +99,7 @@ class LineScan():
     description = None
     xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
     plots       = []
+    initial     = 0
     
     def start(self, **kwargs):
         #if self.figure is not None:
@@ -28,16 +107,15 @@ class LineScan():
         self.ongoing = True
         self.xdata = []
         self.ydata = []
-        self.motor = kwargs['motor']
+        if 'motor' in kwargs: self.motor = kwargs['motor']
         self.numerator = kwargs['detector']
         self.denominator = None
         self.figure = plt.figure()
         self.plots.append(self.figure.number)
         self.axes = self.figure.add_subplot(111)
-        self.axes.set_xlabel(self.motor)
-        self.axes.set_ylabel(self.numerator)
         self.axes.set_facecolor((0.95, 0.95, 0.95))
         self.line, = self.axes.plot([],[])
+        self.initial = 0
 
         self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
         self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
@@ -52,21 +130,25 @@ class LineScan():
         if self.numerator == 'It':
             self.description = 'transmission'
             self.denominator = 'I0'
+            self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
 
         ## I0: plot just I0
         elif self.numerator == 'I0':
             self.description = 'I0'
             self.denominator = None
+            self.axes.set_ylabel(self.numerator)
 
         ## reference: plot just Ir
         elif self.numerator == 'Ir':
             self.description = 'reference'
             self.denominator = None
+            self.axes.set_ylabel(self.numerator)
 
         ## yield: plot Iy/I0
         elif self.numerator == 'Iy':
             self.description = 'yield'
             self.denominator = 'I0'
+            self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
 
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
@@ -82,7 +164,12 @@ class LineScan():
             self.denominator = 'I0'
             self.axes.set_ylabel('fluorescence (1 channel)')
             
-        self.axes.set_title(f'{self.description} vs. {self.motor}')
+        if 'motor' in kwargs:
+            self.axes.set_xlabel(self.motor)
+            self.axes.set_title(f'{self.description} vs. {self.motor}')
+        else:                   # this is a time scan
+            self.axes.set_xlabel('time (seconds)')
+            self.axes.set_title(f'{self.description} vs. time')
 
         
     def stop(self, **kwargs):
@@ -91,8 +178,12 @@ class LineScan():
     # this helped: https://techoverflow.net/2021/08/20/how-to-autoscale-matplotlib-xy-axis-after-set_data-call/
     def add(self, **kwargs):
         if self.numerator in kwargs['data']:
-            #print('*********  ', kwargs['data'][self.motor], kwargs['data'][self.numerator])
-            self.xdata.append(kwargs['data'][self.motor])
+            if self.motor is None:   # this is a time scan
+                if kwargs['seq_num'] == 1:
+                    self.initial = kwargs['time']
+                self.xdata.append(kwargs['time'] - self.initial)
+            else:
+                self.xdata.append(kwargs['data'][self.motor])
             if self.numerator in ('If', 'Xs'):
                 signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
                 if numpy.isnan(signal):
@@ -120,6 +211,9 @@ class LineScan():
 class XAFSScan():
     '''Plot a grid of views of the data streaming from an XAFS scan.
 
+    Care is taken to maintain references to the matplotlib objects in
+    each grid panel of the plot.
+
     In the event of an ion-chamber-only scan, show a 1x3 grid:
 
     +----------+----------+----------+
@@ -139,7 +233,6 @@ class XAFSScan():
     |    I0    | ref(E)   |
     |          |          |
     +----------+----------+
-
 
     '''
 
@@ -161,6 +254,7 @@ class XAFSScan():
     muf, line_muf = None, None
     i0 , line_i0  = None, None
     ref, line_ref = None, None
+    axis_list = []
     
     def start(self, **kwargs):
         '''Begin a sequence of XAFS live plots.
@@ -197,6 +291,7 @@ class XAFSScan():
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[1, 0])
             self.ref = self.fig.add_subplot(self.gs[1, 1])
+            self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
         ## 1x3 grid if no fluorescence (transmission, reference, test)
         else:
             self.fig.canvas.manager.window.setGeometry(760, 2259, 1800, 593)
@@ -204,6 +299,7 @@ class XAFSScan():
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[0, 1])
             self.ref = self.fig.add_subplot(self.gs[0, 2])
+            self.axis_list   = [self.mut,  self.i0,  self.ref]
         self.fig.suptitle(f'{self.filename}: scan {self.count} of {self.repetitions}')
 
 
@@ -223,8 +319,8 @@ class XAFSScan():
         self.ref.set_xlabel('energy (eV)')
         self.ref.set_title(f'reference: {self.reference_material}')
 
-        ## common appearence
-        for ax in (self.mut, self.i0, self.ref):
+        ## common appearance
+        for ax in self.axis_list:
             ax.grid(which='major', axis='both')
             ax.set_facecolor((0.95, 0.95, 0.95))
         
@@ -235,8 +331,6 @@ class XAFSScan():
             self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
-            self.muf.grid(which='major', axis='both')
-            self.muf.set_facecolor((0.95, 0.95, 0.95))
 
 
     def Next(self, **kwargs):
@@ -282,11 +376,6 @@ class XAFSScan():
         self.line_i0.set_data(self.energy, self.i0sig)
         self.line_ref.set_data(self.energy, self.refer)
 
-        ## rescale everything
-        for ax in (self.mut, self.i0, self.ref):
-            ax.relim()
-            ax.autoscale_view(True,True,True)
-
         ## and do all that for the fluorescence spectrum if it is being plotted.
         if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
             if self.mode == 'xs1':
@@ -294,9 +383,11 @@ class XAFSScan():
             else:
                 self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4])/kwargs['data']['I0'])
             self.line_muf.set_data(self.energy, self.fluor)
-            self.muf.relim()
-            self.muf.autoscale_view(True,True,True)
 
+        ## rescale everything
+        for ax in self.axis_list:
+            ax.relim()
+            ax.autoscale_view(True,True,True)
         ## redraw and flush the canvas 
         ## Tom's explanation for how to do multiple plots: https://stackoverflow.com/a/31686953
         self.fig.canvas.draw()
@@ -318,6 +409,9 @@ class XAFSScan_tabbed():
     fig_muf, ax_muf, line_muf = None, None, None
     fig_i0 , ax_i0 , line_i0  = None, None, None
     fig_ref, ax_ref, line_ref = None, None, None
+
+    axis_list = []
+    figure_list = []
     
     def start(self, **kwargs):
         #if self.figure is not None:
@@ -372,8 +466,12 @@ class XAFSScan_tabbed():
 
         if kwargs['mode'] in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
             self.ui.set_focus(1)
+            self.axis_list   = [self.ax_mut,  self.ax_muf,  self.ax_i0,  self.ax_ref]
+            self.figure_list = [self.fig_mut, self.fig_muf, self.fig_i0, self.fig_ref]
         else:
             self.ui.set_focus(0)
+            self.axis_list   = [self.ax_mut, self.ax_i0, self.ax_ref]
+            self.figure_list = [self.fig_mut, self.fig_i0, self.fig_ref]
         self.ui.show()
 
         
@@ -383,37 +481,30 @@ class XAFSScan_tabbed():
     def add(self, **kwargs):
         if 'dcm_energy' not in kwargs['data']:
             return              # this is a baseline event document
+
+        ## energy and ion chamber signals
         self.energy.append(kwargs['data']['dcm_energy'])
         self.i0.append(kwargs['data']['I0'])
         self.mut.append(numpy.log(kwargs['data']['I0']/kwargs['data']['It']))
         self.ref.append(numpy.log(kwargs['data']['It']/kwargs['data']['Ir']))
 
-        ## transmission plot tab
+        ## transmission, i0, reference
         self.line_mut.set_data(self.energy, self.mut)
-        self.ax_mut.relim()
-        self.ax_mut.autoscale_view(True,True,True)
-        self.fig_mut.canvas.draw()
-        self.fig_mut.canvas.flush_events()
-
-        ## i0 plot tab
         self.line_i0.set_data(self.energy, self.i0)
-        self.ax_i0.relim()
-        self.ax_i0.autoscale_view(True,True,True)
-        self.fig_i0.canvas.draw()
-        self.fig_i0.canvas.flush_events()
-
-        ## reference plot tab
         self.line_ref.set_data(self.energy, self.ref)
-        self.ax_ref.relim()
-        self.ax_ref.autoscale_view(True,True,True)
-        self.fig_ref.canvas.draw()
-        self.fig_ref.canvas.flush_events()
 
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs'):
             self.muf.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4]) / kwargs['data']['I0'] )
-            ## fluorescence plot tab
             self.line_muf.set_data(self.energy, self.muf)
-            self.ax_muf.relim()
-            self.ax_muf.autoscale_view(True,True,True)
-            self.fig_muf.canvas.draw()
-            self.fig_muf.canvas.flush_events()
+        elif self.mode == 'xs1':
+            self.muf.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
+            self.line_muf.set_data(self.energy, self.muf)
+            
+        ## redraw all the panels
+        for a in self.axis_list:
+            a.relim()
+            a.autoscale_view(True,True,True)
+        for f in self.figure_list:
+            f.canvas.draw()
+            f.canvas.flush_events()
+            

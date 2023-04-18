@@ -32,9 +32,7 @@ doing = None
 from bmm_live import LineScan, XAFSScan
 ls = LineScan()
 xs = XAFSScan()
-
-##from BMM.larch_interface import plt
-
+ts = LineScan()
 
 # these two lines allow a stale plot to remain interactive and prevent
 # the current plot from stealing focus.  thanks to Tom:
@@ -47,8 +45,6 @@ def handler(signal, frame):
     print('Exiting Kafka consumer')
     sys.exit(0)
 signal.signal(signal.SIGINT, handler)
-
-
 
 
 def plot_from_kafka_messages(beamline_acronym):
@@ -136,7 +132,14 @@ def plot_from_kafka_messages(beamline_acronym):
                     doing = None
 
             elif 'timescan' in message:
-                pass
+                if message['timescan'] == 'start':
+                    ts.motor = None
+                    ts.start(**message)
+                    doing = 'timescan'
+                elif message['timescan'] == 'stop':
+                    ts.stop(**message)
+                    doing = None
+
             elif 'areascan' in message:
                 pass
 
@@ -151,7 +154,7 @@ def plot_from_kafka_messages(beamline_acronym):
         # for live plotting, need to capture and parse event
         # documents. use the global state variable "doing"
         # to keep track of which plotting chore needs to be done.
-        if name == 'event':
+        elif name == 'event':
             if doing is None:
                 pass
             elif doing == 'linescan':
@@ -160,7 +163,8 @@ def plot_from_kafka_messages(beamline_acronym):
                 #pprint.pprint(message)
                 xs.add(**message)
             elif doing == 'timescan':
-                pass
+                #pprint.pprint(message)
+                ts.add(**message)
             elif doing == 'areascan':
                 pass
                 

@@ -23,10 +23,11 @@ from BMM.derivedplot   import DerivedPlot, interpret_click
 from BMM.dossier       import BMMDossier
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka           import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar #, motor_status
-from BMM.resting_state import resting_state_plan
+from BMM.resting_state import resting_state
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
@@ -182,7 +183,15 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     if 'hint' not in md['BMM_kafka']:
         md['BMM_kafka']['hint'] = f'timescan {detector}'
         
-    @subs_decorator(plot)
+    ## This helped Bruce understand how to make a decorator conditional:
+    ## https://stackoverflow.com/a/49204061
+    def conditional_subs_decorator(function):
+        if user_ns['BMMuser'].enable_live_plots is True:
+            return subs_decorator(plot)(function)
+        else:
+            return function
+
+    @conditional_subs_decorator
     def count_scan(dets, readings, delay, md):
         #if 'purpose' not in md:
         #    md['purpose'] = 'measurement'
@@ -193,13 +202,20 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
     rkvs.set('BMM:scan:estimated', 0)
 
+    kafka_message({'timescan': 'start',
+                   'detector' : detector,})
+
+    
     uid = yield from count_scan(dets, readings, delay, md)
+
+    kafka_message({'timescan': 'end',})
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))
 
     yield from mv(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
+    resting_state()
     return(uid)
 
 

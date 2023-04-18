@@ -24,3 +24,11 @@ producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
 
 def kafka_message(message):
     producer.produce(['bmm', message])
+
+
+# Maintenance of kafka output
+def close_line_plots():
+    kafka_message({'close': 'line'})
+
+def close_plots():
+    kafka_message({'close': 'all'})

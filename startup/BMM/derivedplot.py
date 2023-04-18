@@ -17,9 +17,9 @@ from BMM.user_ns.bmm import BMMuser
 
 
 
-#############################################################################
-# this is the callback that gets assigned to mouse clicks on theplot window #
-#############################################################################
+##############################################################################
+# this is the callback that gets assigned to mouse clicks on the plot window #
+##############################################################################
 def interpret_click(ev):
     print('You clicked on x=%.3f, y=%.3f' % (ev.xdata, ev.ydata))
     BMMuser.x = ev.xdata

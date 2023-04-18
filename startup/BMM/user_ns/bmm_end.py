@@ -324,6 +324,10 @@ run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelemetry
 tele = BMMTelemetry()
 
+run_report('\t'+'kafka')
+from BMM.kafka import close_line_plots, close_plots
+
+
 if not is_re_worker_active():
     run_report('\t'+'user interaction')
     from BMM.wdywtd import WDYWTD
