@@ -4,7 +4,7 @@ from openpyxl import load_workbook
 
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
-from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.linescans     import rocking_curve, slit_height

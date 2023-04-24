@@ -17,7 +17,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
-from BMM.derivedplot   import close_all_plots, close_last_plot, interpret_click
+from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.resting_state import resting_state_plan
 from BMM.workspace     import rkvs
 

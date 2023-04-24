@@ -21,7 +21,7 @@ from BMM.logging        import BMM_log_info, BMM_msg_hook, report
 from BMM.xafs           import xafs
 from BMM.resting_state  import resting_state_plan
 from BMM.suspenders     import BMM_clear_to_start
-from BMM.derivedplot    import close_all_plots, close_last_plot, interpret_click
+from BMM.derivedplot    import close_all_plots, close_last_plot
 
 
 from BMM import user_ns as user_ns_module

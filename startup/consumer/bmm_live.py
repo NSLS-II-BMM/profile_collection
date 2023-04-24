@@ -3,6 +3,10 @@ import matplotlib.gridspec as gridspec
 from mpl_multitab import MplTabs
 import numpy
 
+#from nslsii.kafka_utils import _read_bluesky_kafka_config_file
+#from bluesky_kafka.produce import BasicProducer
+import pprint
+
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
@@ -111,6 +115,10 @@ class LineScan():
         self.numerator = kwargs['detector']
         self.denominator = None
         self.figure = plt.figure()
+        if self.motor is not None:
+            cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
+            #cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+        
         self.plots.append(self.figure.number)
         self.axes = self.figure.add_subplot(111)
         self.axes.set_facecolor((0.95, 0.95, 0.95))
@@ -170,6 +178,31 @@ class LineScan():
         else:                   # this is a time scan
             self.axes.set_xlabel('time (seconds)')
             self.axes.set_title(f'{self.description} vs. time')
+
+
+    def interpret_click(self, ev):
+        '''Grab location of mouse click.  Identify motor by grabbing the
+        x-axis label from the canvas clicked upon.
+
+        Stash those in Redis.
+        '''
+        x,y = ev.xdata, ev.ydata
+        #print(x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
+        rkvs.set('BMM:mouse_event:value', x)
+        rkvs.set('BMM:mouse_event:motor', ev.canvas.figure.axes[0].get_xlabel())
+        
+
+        
+        # kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
+        # producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
+        #                          topic='bmm.test',
+        #                          producer_config=kafka_config["runengine_producer_config"],
+        #                          key='abcdef')
+        # document = {'mpl_event' : 'mouse_click',
+        #             'motor' : self.motor,
+        #             'position' : ev.xdata, }
+        # pprint.pprint(documemnt)
+        # producer.produce(['bmm', document])
 
         
     def stop(self, **kwargs):
@@ -332,7 +365,9 @@ class XAFSScan():
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
 
+        
 
+            
     def Next(self, **kwargs):
         '''Initialize data arrays and plotting lines for next scan.
         '''

@@ -63,33 +63,106 @@ def get_mode():
         else:
             return 'E'
 
-def move_after_scan(thismotor):
-    '''
-    Call this to pluck a point from a plot and move the plotted motor to that x-value.
-    '''
-    if BMMuser.motor is None:
-        print(error_msg('\nThere\'s not a current plot on screen.\n'))
-        return(yield from null())
-    if thismotor is not BMMuser.motor:
-        print(error_msg('\nThe motor you are asking to move is not the motor in the current plot.\n'))
-        return(yield from null())
-    print('Single click the left mouse button on the plot to pluck a point...')
-    cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see derivedplot.py and
-    while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
-        yield from sleep(0.5)
-    if BMMuser.motor2 is None:
-        yield from mv(thismotor, BMMuser.x)
-    else:
-        print('%.3f  %.3f' % (BMMuser.x, BMMuser.y))
-        #yield from mv(BMMuser.motor, BMMuser.x, BMMuser.motor2, BMMuser.y)
-    cid = BMMuser.fig.canvas.mpl_disconnect(cid)
-    BMMuser.x = BMMuser.y = None
+def unset_mouse_click():
+    rkvs.set('BMM:mouse_event:value', '')
+    rkvs.set('BMM:mouse_event:motor', '')
 
-def pluck():
+        
+def pluck(suggested_motor=None):
+    '''Negotiate an interaction with the Kafka consumer to pluck a
+    position from a plot, stash that position and its motor in Redis,
+    then grab that position from Redis.  Assuming the motor name can
+    be correlated to an actual motor, offer to move the motor to that
+    position.
+
+    This is a bit cumbersome.  Some notes on that:
+
+    (1) Using Kafka to communicate from the consumer back to the bsui
+    process would be sensible.  But that would require putting the
+    consumer on a thread, which Bruce doesn't really understand.
+
+    (2) The additional check to verify the movement before moving
+    might get annoying, however it is easy to attach a callback to
+    every plot that the Kafka consumer makes.  Thus, any plot that
+    still exists on screen can be plucked from.  The additional
+    handshake with the user is required to make sure that the plucked
+    value makes sense -- it is possible to pluck from a very stale
+    plot!
+
+    (3) There is a hard-coded 20 second time out on clicking on a
+    plot.  There has to be a timeout to avoid blocking forever.
+
     '''
-    Call this to pluck a point from the most recent plot and move the motor to that point.
-    '''
-    yield from move_after_scan(BMMuser.motor)
+
+    unset_mouse_click()
+    print('Single click the left mouse button on the plot to pluck a point (you have 20 seconds)...')
+    count = 0
+    while rkvs.get('BMM:mouse_event:value').decode('utf-8') == '':
+        yield from sleep(0.25)
+        count = count + 1
+        if count > 80:
+            print('Timing out...')
+            return(yield from null())
+    
+    yield from sleep(0.25)
+    position = float(rkvs.get('BMM:mouse_event:value').decode('utf-8'))
+    motor_name = rkvs.get('BMM:mouse_event:motor').decode('utf-8')
+    motor = None
+    
+    if suggested_motor is not None and suggested_motor.name != motor_name:
+        print(f'You seem to have clicked on the wrong plot.')
+        print(f'You just scanned {suggested_motor.name} but clicked on a window showing {motor.name}.')
+        unset_mouse_click()
+        return(yield from null())
+        
+    for m in user_ns['sd'].baseline:
+        if m.name == motor_name:
+            motor = m
+            break
+
+    if motor == None:
+        print(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....')
+        unset_mouse_click()
+        return(yield from null())
+        
+    action = input(f'\nMove {motor_name} to {position:.3f}? ' + PROMPT)
+    if action.lower() == 'n' or action.lower() == 'q':
+        print('Skipping...')
+        unset_mouse_click()
+        return(yield from null())
+    #print(motor.name, motor_name, position)
+    yield from mv(motor, position)
+    unset_mouse_click()
+    
+
+        
+# def move_after_scan(thismotor):
+#     '''
+#     Call this to pluck a point from a plot and move the plotted motor to that x-value.
+#     '''
+#     if BMMuser.motor is None:
+#         print(error_msg('\nThere\'s not a current plot on screen.\n'))
+#         return(yield from null())
+#     if thismotor is not BMMuser.motor:
+#         print(error_msg('\nThe motor you are asking to move is not the motor in the current plot.\n'))
+#         return(yield from null())
+#     print('Single click the left mouse button on the plot to pluck a point...')
+#     cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see derivedplot.py and
+#     while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
+#         yield from sleep(0.5)
+#     if BMMuser.motor2 is None:
+#         yield from mv(thismotor, BMMuser.x)
+#     else:
+#         print('%.3f  %.3f' % (BMMuser.x, BMMuser.y))
+#         #yield from mv(BMMuser.motor, BMMuser.x, BMMuser.motor2, BMMuser.y)
+#     cid = BMMuser.fig.canvas.mpl_disconnect(cid)
+#     BMMuser.x = BMMuser.y = None
+
+# def pluck():
+#     '''
+#     Call this to pluck a point from the most recent plot and move the motor to that point.
+#     '''
+#     yield from move_after_scan(BMMuser.motor)
 
 from scipy.ndimage import center_of_mass
 def com(signal):
@@ -188,7 +261,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 yield from mv(motor.kill_cmd, 1)
                 #yield from mv(motor.inpos, 1)
                 yield from sleep(slp)
-                yield from move_after_scan(motor)
+                yield from pluck(suggested_motor=motor)
+                #yield from move_after_scan(motor)
             yield from mv(quadem1.averaging_time, 0.5)
         yield from scan_slit(slp)
 
@@ -647,7 +721,7 @@ def ls_backwards_compatibility(detin, axin):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, inttime=0.1, md={}): # integration time?
+def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, inttime=0.1, md={}): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -669,7 +743,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
          ending value for a relative scan
     nsteps : int
         number of steps in scan
-    pluck : bool, optional
+    dopluck : bool, optional
         flag for whether to offer to pluck & move motor
     force : bool, optional
         flag for forcing a scan even if not clear to start
@@ -685,7 +759,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
     database and write it to a file.
     '''
 
-    def main_plan(detector, axis, start, stop, nsteps, pluck, force, md):
+    def main_plan(detector, axis, start, stop, nsteps, dopluck, force, md):
         if force is False:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
@@ -884,11 +958,12 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
-        if pluck is True:
+        if dopluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
             if action.lower() == 'n' or action.lower() == 'q':
                 return(yield from null())
-            yield from move_after_scan(thismotor)
+            yield from pluck(suggested_motor=thismotor)
+            #yield from move_after_scan(thismotor)
 
     
     def cleanup_plan():
@@ -911,7 +986,7 @@ def linescan(detector, axis, start, stop, nsteps, pluck=True, force=False, intti
         return(yield from null())
     ######################################################################
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, pluck, force, md), cleanup_plan())
+    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, dopluck, force, md), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 

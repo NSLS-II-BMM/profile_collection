@@ -19,7 +19,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-from BMM.derivedplot   import DerivedPlot, interpret_click
+from BMM.derivedplot   import DerivedPlot
 from BMM.dossier       import BMMDossier
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
