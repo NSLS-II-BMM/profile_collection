@@ -95,7 +95,7 @@ def pluck(suggested_motor=None):
     '''
 
     unset_mouse_click()
-    print('Single click the left mouse button on the plot to pluck a point (you have 20 seconds)...')
+    print('\nSingle click the left mouse button on the plot to pluck a point (you have 20 seconds)...')
     count = 0
     while rkvs.get('BMM:mouse_event:value').decode('utf-8') == '':
         yield from sleep(0.25)
@@ -110,8 +110,8 @@ def pluck(suggested_motor=None):
     motor = None
     
     if suggested_motor is not None and suggested_motor.name != motor_name:
-        print(f'You seem to have clicked on the wrong plot.')
-        print(f'You just scanned {suggested_motor.name} but clicked on a window showing {motor.name}.')
+        print(warning_msg(f'You seem to have clicked on the wrong plot.'))
+        print(warning_msg(f'You just scanned {suggested_motor.name} but clicked on a window showing {motor.name}.'))
         unset_mouse_click()
         return(yield from null())
         
@@ -121,7 +121,7 @@ def pluck(suggested_motor=None):
             break
 
     if motor == None:
-        print(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....')
+        print(warning_msg(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....'))
         unset_mouse_click()
         return(yield from null())
         
@@ -133,6 +133,7 @@ def pluck(suggested_motor=None):
     #print(motor.name, motor_name, position)
     yield from mv(motor, position)
     unset_mouse_click()
+    print(whisper('\nRE(pluck()) to grab a different point from the plot.\n'))
     
 
         
