@@ -18,6 +18,7 @@ user_groups:
       - "shb_close_plan"
       - "mv"
       - "mvr"  
+      - ":^agent_"
     forbidden_plans:
       - ":^_"  # All plans with names starting with '_'
     allowed_devices:
