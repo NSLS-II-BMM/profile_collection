@@ -65,7 +65,7 @@ if os.path.isdir(LUSTRE_ROOT_BMM):
 #         BMM_log_nas.setFormatter(BMM_formatter)
 #         BMM_logger.addHandler(BMM_log_nas)
 
-BMM_logger.setLevel(logging.INFO)
+BMM_logger.setLevel(logging.WARNING)
 
 BMM_log_user = None
 
@@ -177,29 +177,30 @@ def report(text, level=None, slack=False, rid=None):
     '''
     BMMuser = user_ns['BMMuser']
     BMM_log_info(text)
+    screen = emojis.encode(text)
     if color:                   # test that color is sensible...
         if level == 'error':
-            print(error_msg(text))
+            print(error_msg(screen))
         elif level == 'warning':
-            print(warning_msg(text))
+            print(warning_msg(screen))
         elif level == 'info':
-            print(info_msg(text))
+            print(info_msg(screen))
         elif level == 'url':
-            print(url_msg(text))
+            print(url_msg(screen))
         elif level == 'bold':
-            print(bold_msg(text))
+            print(bold_msg(screen))
         elif level == 'verbosebold':
-            print(verbosebold_msg(text))
+            print(verbosebold_msg(screen))
         elif level == 'disconnected':
-            print(disconnected_msg(text))
+            print(disconnected_msg(screen))
         elif level == 'list':
-            print(list_msg(text))
+            print(list_msg(screen))
         elif level == 'whisper':
-            print(whisper(text))
+            print(whisper(screen))
         else:
-            print(text)
+            print(screen)
     else:
-        print(text)
+        print(screen)
     if BMMuser.use_slack and slack:
         post_to_slack(text)
         echo_slack(text=text, img=None, icon='message', rid=rid)

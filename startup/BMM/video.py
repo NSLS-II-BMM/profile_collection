@@ -3,13 +3,14 @@ from ophyd import Component as Cpt, EpicsSignal, Device
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.functions     import PROMPT
+from BMM.logging       import report
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 
 class USBVideo(Device):
-    '''Simple class for recording timed videos via the USB cameras in the
+    '''Simple class for recording videos via the USB cameras in the
     hutch.
 
       usbvideo1.record_video(name, time)
@@ -28,6 +29,7 @@ class USBVideo(Device):
        usbvideo1.stop()
        usbvideo1.save_video(name)
 
+    where name is the same as above.
 
     '''
     visionfunction3 = Cpt(EpicsSignal, 'CompVisionFunction3')
@@ -79,7 +81,7 @@ class USBVideo(Device):
             os.makedirs(folder)
         shutil.copyfile(os.path.join(self.path, self.find_video()),
                         os.path.join(folder, name))
-        print(f'Wrote {os.path.join(folder, name)}')
+        report(f'Wrote {os.path.join(folder, name)}', slack=True)
         
     def record_video(self, name='video.avi', time=5):
         folder = os.path.join(user_ns['BMMuser'].folder, 'video')
