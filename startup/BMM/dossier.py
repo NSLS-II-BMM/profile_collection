@@ -246,6 +246,7 @@ class BMMDossier():
     doi           = None
     cif           = None
     instrument    = ''
+    rid           = None
 
     npoints       = 0
     dwell         = 0
@@ -459,6 +460,9 @@ class BMMDossier():
         if self.ththth:
             mono = 'Si(333)'
 
+        ## sanity check the "report ID" (used to link to correct position in messagelog.html
+        if self.rid is None: self.rid=''
+
         try:
             # dossier header
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
@@ -466,6 +470,7 @@ class BMMDossier():
             thiscontent = ''.join(content).format(measurement   = self.measurement,
                                                   filename      = self.filename,
                                                   date          = BMMuser.date,
+                                                  rid           = self.rid,
                                                   seqnumber     = seqnumber, )
 
             # left sidebar, entry for XRF file in the case of fluorescence data

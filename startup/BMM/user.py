@@ -584,7 +584,7 @@ class BMM_User(Borg):
         self.establish_folder(0,    'Athena prj folder', prjfolder)
         if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
             # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
-            for f in ('manifest.tmpl', 'logo.png', 'style.css', 'trac.css'):
+            for f in ('manifest.tmpl', 'logo.png', 'message.png', 'plot.png', 'camera.png', 'style.css', 'trac.css', 'messagelog.css'):
                 shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
             manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
             manifest.close()

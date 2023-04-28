@@ -1,4 +1,4 @@
-import logging
+import logging, datetime, emojis
 import os
 from urllib import request, parse
 import json
@@ -132,7 +132,7 @@ def img_to_slack(imagefile):
         with open(token_file, "r") as f:
             token = f.read().replace('\n','')
     except:
-        post_to_slack(f'failed to post image: {imagefile}')
+        post_to_slack(f'failed to post image (token failure): {imagefile}')
         return()
     client = WebClient(token=token)
     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
@@ -140,19 +140,22 @@ def img_to_slack(imagefile):
         response = client.files_upload(channels='#beamtime', file=imagefile)
         # #beamtime channel ID: C016GHBFHTM
         assert response["file"]  # the uploaded file
+        icon = 'plot'
+        if imagefile.endswith('.jpg.'): icon = 'camera'
+        echo_slack(text=os.path.basename(imagefile), img=os.path.basename(imagefile), icon=icon)
     except SlackApiError as e:
-        post_to_slack(f'failed to post image: {imagefile}')
+        post_to_slack(f'failed to post image (SlackApiError): {imagefile}')
         # You will get a SlackApiError if "ok" is False
         assert e.response["ok"] is False
         assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
         print(f"Got an error: {e.response['error']}")
     except Exception as em:
         print("EXCEPTION: " + str(em))
-        report(f'failed to post image: {imagefile}', level='bold', slack=True)
+        report(f'failed to post image (other exception): {imagefile}', level='bold', slack=True)
 
 
         
-def report(text, level=None, slack=False):
+def report(text, level=None, slack=False, rid=None):
     '''Print a string to:
       * the log file
       * the screen
@@ -199,7 +202,56 @@ def report(text, level=None, slack=False):
         print(text)
     if BMMuser.use_slack and slack:
         post_to_slack(text)
+        echo_slack(text=text, img=None, icon='message', rid=rid)
 
+
+def echo_slack(text='', img=None, icon='message', rid=None):
+    BMMuser = user_ns['BMMuser']
+    rawlogfile = os.path.join(BMMuser.folder, 'dossier', '.rawlog')
+    rawlog = open(rawlogfile, 'a')
+    rawlog.write(message_div(text, img, icon, rid))
+    rawlog.close()
+
+    with open(os.path.join(startup_dir, 'tmpl', 'messagelog.tmpl')) as f:
+        content = f.readlines()
+
+    with open(rawlogfile, 'r') as fd:
+        allmessages = fd.read()
+        
+    messagelog = os.path.join(BMMuser.DATA, 'dossier', 'messagelog.html')
+    o = open(messagelog, 'w')
+    o.write(''.join(content).format(text = allmessages,))
+    o.close()
+        
+# this bit of html+css is derived from https://www.w3schools.com/howto/howto_css_chat.asp
+def message_div(text='', img=None, icon='message', rid=None):
+    if icon == 'message':
+        avatar = 'message.png'
+        image  = ''
+        words  = f'<p>{emojis.encode(text)}</p>'
+    elif icon == 'plot':
+        avatar = 'plot.png'
+        image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
+        words  = f'<span class="figuretitle">{text}</span>'
+    elif icon == 'camera':
+        avatar = 'camera.png'
+        image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
+        words  = f'<span class="figuretitle">{text}</span>'
+    else:
+        return
+    
+    thisrid = ''
+    if rid is not None:
+        thisrid = f' id="{rid}"'
+        
+    this = f'''    <div class="container"{thisrid}>
+      <div class="left"><img src="{avatar}" style="width:30px;" /></div>
+      <span class="time-right">{datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")}</span>
+      {words}{image}
+    </div>
+'''
+    return this
+        
 
 ######################################################################################
 # here is an example of what a message tuple looks like when moving a motor          #

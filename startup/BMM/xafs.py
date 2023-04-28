@@ -3,7 +3,7 @@ from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 #from databroker.core import SingleRunCache
 
-import numpy, os, re, shutil
+import numpy, os, re, shutil, uuid
 import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
@@ -815,8 +815,9 @@ def xafs(inifile=None, **kwargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
             if BMMuser.enable_live_plots: close_last_plot()
+            dossier.rid = str(uuid.uuid4())[:8]
             report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
-                   level='bold', slack=True)
+                   level='bold', slack=True, rid=dossier.rid)
             cnt = 0
             uidlist = []
             kafka_message({'xafs_sequence' : 'start',

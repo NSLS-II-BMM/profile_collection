@@ -23,10 +23,10 @@ class USBVideo(Device):
 
     A bit more hands on:
 
-       usbvideo.start()
+       usbvideo1.start()
        (do some things for a while)
-       usbvideo.stop()
-       usbvideo.save_video(name)
+       usbvideo1.stop()
+       usbvideo1.save_video(name)
 
 
     '''

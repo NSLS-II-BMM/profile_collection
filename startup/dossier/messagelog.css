@@ -1,0 +1,71 @@
+/* derived from https://www.w3schools.com/howto/howto_css_chat.asp */
+
+/* Chat containers */
+.container {
+    border: 1px solid #000;;
+    background-color: #ffffff;
+    border-radius: 0px;
+    padding: 5px;
+    margin: 10px 0;
+}
+
+body {
+    background-color: #fff;
+}
+
+h1 {
+    color: #000000;
+}
+
+p {
+    margin: 0px;
+}
+
+/* Darker chat container */
+.darker {
+  border-color: #ccc;
+  background-color: #ddd;
+}
+
+/* Clear floats */
+.container::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+/* Style images */
+.container div.left {
+  float: left;
+  max-width: 60px;
+  width: 100%;
+  margin-right: 20px;
+  border-radius: 50%;
+}
+
+/* Style the right image */
+.container div.right {
+  float: right;
+  margin-left: 20px;
+  margin-right:0;
+}
+
+/* Style time text */
+.time-right {
+  float: right;
+  color: #555;
+  font-size: 0.85em;
+}
+
+/* Style time text */
+.time-left {
+  float: left;
+  color: #555;
+  font-size: 0.85em;
+}
+
+.figuretitle {
+    color: #333;
+    font-weight: bold;
+    font-size: 1.2em;
+}
