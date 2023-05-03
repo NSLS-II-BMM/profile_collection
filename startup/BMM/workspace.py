@@ -54,26 +54,32 @@ def rkvs_keys(printed=True):
         return(keys)
     
 CHECK = '\u2714'
-TAB = '\t\t\t'
+TAB   = '\t\t\t'
+wa    = EpicsSignalRO('XF:06BM-CT{}Prmt:RemoteExp-Sel', name='write_access')
 
 def initialize_workspace():
     '''Perform a series of checks to see if the workspace on this computer
     is set up as expected by the BMM data collection profile.  This
     includes checks that:
+      * channel access is enabled
+      * servers can be seen on the LAN
       * various directories exist
-      * NAS1 is mounted
+      * Lustre mounted
       * a redis server is available
       * certain git repositories are cloned onto this computer
       * authentication files for Slack are available.
-      * the public key for xf06bm@xf06bm-ws3 is available or that this is xf06bm-ws3
 
     For most checks, a failure triggers a corrective action, if
     possible.  Some failures print a warning to screen, with no
     corrective action.
 
+    This is, essentially, a deployment verification that is run every
+    time bsui starts.
+
     '''
     print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
     check_workstation_access()
+    check_lan()
     check_profile_branch()
     initialize_data_directories()
     #initialize_beamline_configuration()
@@ -85,14 +91,34 @@ def initialize_workspace():
     #initialize_ssh()
     
 def check_workstation_access():
-    wa = EpicsSignalRO('XF:06BM-CT{}Prmt:RemoteExp-Sel',   name='write_access')
     if wa.get() == 0:
-        print(f'{TAB}*** Uh oh!  The beamline is not enabled for write access to PVs!')
-        print(f'{TAB}    You need to get a beamline staff person to do:')
+        print(BMM.functions.error_msg(f'{TAB}*** Uh oh!  The beamline is not enabled for write access to PVs!'))
+        print(f'{TAB}    A beamline staff person needs to do:')
         print(f'{TAB}       caput XF:06BM-CT{{}}Prmt:RemoteExp-Sel 1')
         print(f'{TAB}    then restart bsui')
+        print(f'{TAB}    (Now issuing a command that will fail and return to the command line.)')
         ## the next line is intended to trigger an immediate error and return to the IPython command line
         wa.put(1)
+    else:
+        print(f'{TAB}Channel access enabled: {CHECK}')
+        
+def check_lan():
+    freakout = 0
+    for host in ('ioc2', 'disp1', 'xspress3'):
+        response = os.system(f"ping -q -c 1 xf06bm-{host} > /dev/null")
+        if response != 0:
+            print(BMM.functions.error_msg(f'{TAB}*** Uh oh!  xf06bm-{host} is not responding to a ping!'))
+            freakout = 1;
+
+    if freakout == 1:
+        print(f'{TAB}    You may need to reboot the missing server(s).')
+        print(f'{TAB}    Consult the DSSI support team for help.')
+        print(f'{TAB}    (Now issuing a command that will fail and return to the command line.)')
+        ## the next line is intended to trigger an immediate error and return to the IPython command line
+        wa.put(1)
+    else:
+        print(f'{TAB}Servers on LAN are accessible: {CHECK}')
+        
         
 def check_profile_branch():
     here = os.getcwd()
@@ -101,7 +127,7 @@ def check_profile_branch():
         branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
     except subprocess.CalledProcessError:
         branch = "not a git repository"
-    print(f'{TAB}Using profile branch {branch}')
+    print(f'{TAB}Using profile branch {branch}: {CHECK}')
     os.chdir(here)
     
 def check_directory(dir, desc):
@@ -127,8 +153,59 @@ def initialize_data_directories():
         check_directory(folder, 'data')
 
 
+def initialize_lustre():
+    '''Check if a the Lustre mount point for data directories is mounted.
+    If not, complain on screen.
+
+    '''
+    if os.path.ismount(LUSTRE_ROOT_BMM):
+        print(f'{TAB}Found Lustre mount point: {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}*** Uh oh! Lustre is not mounted!'))
+        print(f'{TAB}    Consult the DSSI support team for help.')
+        print(f'{TAB}    (Now issuing a command that will fail and return to the command line.)')
+        ## the next line is intended to trigger an immediate error and return to the IPython command line
+        wa.put(1)
+
+
+
+def initialize_secrets():
+    '''Check that the Slack secret files are in their expected locations.
+    If not, copy them from Lustre at /nsls2/data/bmm/XAS/secrets.
+
+    '''
+    STARTUP = os.path.join(startup_dir, 'BMM')
+    for fname in SECRET_FILES:
+        if os.path.isfile(os.path.join(STARTUP, fname)):
+            print(f'{TAB}Found {fname} file: {CHECK}')
+        else:
+            try:
+                shutil.copyfile(os.path.join(SECRETS, fname), os.path.join(STARTUP, fname))
+                print(f'{TAB}Copied {fname} file')
+            except Exception as e:
+                print(e)
+                print(BMM.functions.error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
+
+                
+def initialize_redis():
+    '''Check to see if a successful response can be obtained from a redis
+    server.  If not, complain on screen.
+
+    '''
+    if rkvs.get(REDISVAR) is not None:
+        print(f'{TAB}Found Redis server: {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}*** Uh oh! Did not find redis server'))
+        print(f'{TAB}    A beamline staff person needs to log onto xf06bm-ioc2:')
+        print(f'{TAB}       dzdo systemctl start redis')
+        print(f'{TAB}    then restart bsui')
+        print(f'{TAB}    (Now issuing a command that will fail and return to the command line.)')
+        ## the next line is intended to trigger an immediate error and return to the IPython command line
+        wa.put(1)
+
+
 def initialize_beamline_configuration():
-    '''Check that a git directory exists beneath the home of the usr
+    '''Check that a git directory exists beneath the home of the user
     running bsui.  Create the git directory and clone the
     BMM-beamline-configuration repository if absent.  If present, pull
     from the upstream repository to be sure the modes JSON file is up
@@ -157,46 +234,6 @@ def initialize_nas():
         print(f'{TAB}Found NAS1 mount point: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}NAS1 is not mounted!'))
-
-def initialize_lustre():
-    '''Check if a the Lustre mount point for data directories is mounted.
-    If not, complain on screen.
-
-    '''
-    if os.path.ismount(LUSTRE_ROOT_BMM):
-        print(f'{TAB}Found Lustre mount point: {CHECK}')
-    else:
-        print(BMM.functions.error_msg(f'{TAB}Lustre is not mounted!'))
-        
-
-def initialize_secrets():
-    '''Check that the Slack secret files are in their expected locations.
-    If not, copy them from Lustre at /nsls2/data/bmm/XAS/secrets.
-
-    '''
-    STARTUP = os.path.join(startup_dir, 'BMM')
-    for fname in SECRET_FILES:
-        if os.path.isfile(os.path.join(STARTUP, fname)):
-            print(f'{TAB}Found {fname} file: {CHECK}')
-        else:
-            try:
-                shutil.copyfile(os.path.join(SECRETS, fname), os.path.join(STARTUP, fname))
-                print(f'{TAB}Copied {fname} file')
-            except Exception as e:
-                print(e)
-                print(BMM.functions.error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
-
-                
-def initialize_redis():
-    '''Check to see if a successful response can be obtained from a redis
-    server.  If not, complain on screen.
-
-    '''
-    if rkvs.get(REDISVAR) is not None:
-        print(f'{TAB}Found Redis server: {CHECK}')
-    else:
-        print(BMM.functions.error_msg(f'{TAB}Did not find redis server'))
-
 
 def initialize_ssh():
     '''Check to see if xf06bm-ws3 has an authorized ssh key from this

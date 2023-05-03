@@ -221,7 +221,7 @@ def echo_slack(text='', img=None, icon='message', rid=None):
         
     messagelog = os.path.join(BMMuser.DATA, 'dossier', 'messagelog.html')
     o = open(messagelog, 'w')
-    o.write(''.join(content).format(text = allmessages,))
+    o.write(''.join(content).format(text = allmessages, channel = 'BMM #beamtime'))
     o.close()
         
 # this bit of html+css is derived from https://www.w3schools.com/howto/howto_css_chat.asp

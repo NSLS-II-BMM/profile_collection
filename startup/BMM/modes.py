@@ -61,7 +61,8 @@ MODEDATA = read_mode_data();
 def pds_motors_ready():
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg = user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"]
-    mcs8_motors = [m3.xu, m3.xd, m3.yu, m3.ydo, m3.ydi, m2.xu, m2.xd, m2.yu, m2.ydo, m2.ydi, m2_bender, dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg, dm3_bct]
+    mcs8_motors = [m3.xu, m3.xd, m3.yu, m3.ydo, m3.ydi, m2.xu, m2.xd, m2.yu, m2.ydo, m2.ydi, m2_bender,
+                   dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg, dm3_bct]
 
     count = 0
     for m in mcs8_motors:
@@ -356,6 +357,11 @@ def change_xtals(xtal=None):
           print('%s is not a crytsal set' % xtal)
           return(yield from null())
 
+     if pds_motors_ready() is False:
+          print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
+          return(yield from null())
+
+     
      ######################################################################
      # this is a tool for verifying a macro.  this replaces an xafs scan  #
      # with a sleep, allowing the user to easily map out motor motions in #
@@ -374,6 +380,13 @@ def change_xtals(xtal=None):
           return
 
      current_energy = dcm.energy.readback.get()
+
+     ## make sure the starting energy is sensible for the mono being moved to
+     if xtal == 'Si(111)' and current_energy > 20000:
+          yield from mv(dcm.energy, 20000)
+     elif xtal == 'Si(311)' and current_energy < 5500:
+          yield from mv(dcm.energy, 5500)
+     
      start = time.time()
 
      RE.msg_hook = None

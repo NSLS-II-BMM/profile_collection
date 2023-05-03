@@ -94,7 +94,7 @@ def show_vacuum():
 # state of gate valves     #
 ############################
 
-from BMM.user_ns.instruments import fs1
+from BMM.user_ns.instruments import fs1, ln2
 gv = [GateValve('FE:C06B-VA{GV:1}',        name='FEGV1'),
       GateValve('FE:C06B-VA{GV:3}',        name='FEGV3'),
       GateValve('FE:C06B-VA{GV:2}',        name='FEGV2'),
@@ -104,7 +104,7 @@ gv = [GateValve('FE:C06B-VA{GV:1}',        name='FEGV1'),
       GateValve('XF:06BMA-VA{Mir:2-GV:1}', name='GV4'),
       GateValve('XF:06BMA-VA{Mir:3-GV:1}', name='GV5'),
       GateValve('XF:06BMB-VA{BT:1-GV:1}',  name='GV6'),
-      fs1]
+      fs1, ln2]
 
 def show_gate_valves():
     print('  Valve      state')

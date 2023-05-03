@@ -333,14 +333,26 @@ class BMMMacroBuilder():
         # if default['mode'] is None or str(default['mode']).strip() == '':
         #    default['mode'] = 'transmission'
 
-        if str(default['element']).capitalize() not in re.split('\s+', PERIODIC_TABLE): # see 06-periodic table 
+        el = str(default['element']).capitalize()
+        ed = str(default['edge']).lower()
+        if el not in re.split('\s+', PERIODIC_TABLE): # see 06-periodic table 
             message += '\nDefault entry for element is not recognized.'
             unrecoverable = True
 
-        if str(default['edge']).lower() not in ('k', 'l1', 'l2', 'l3'):
+        if ed not in ('k', 'l1', 'l2', 'l3'):
             message += '\nDefault entry for edge is not recognized.'
             unrecoverable = True
 
+        ee = edge_energy(el, ed)
+        if ee is not None:
+            if dcm._crystal == '111' and ee > 21200:
+                message += f'\nCannot measure {el} {ed} edge on the {dcm._crystal} crystals.'
+                unrecoverable = True
+            if dcm._crystal == '311' and ee < 5500:
+                message += f'\nCannot measure {el} {ed} edge on the {dcm._crystal} crystals.'
+                unrecoverable = True
+            
+            
         # try:
         #     default['e0'] = float(default['e0'])
         # except:

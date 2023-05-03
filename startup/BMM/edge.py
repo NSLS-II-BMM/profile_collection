@@ -97,7 +97,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     xrd : boolean, optional
         force photon delivery system to XRD [False]
     insist : boolean
-        override the check for whether to skip M2, when True always move M2 [False]
+        override the check for whether to move M2, when True always move M2 [False]
 
     Examples
     --------
@@ -126,11 +126,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     implies focus=True and target=0
 
     '''
-    # try:
-    #     xs = user_ns['xs']
-    # except:
-    #     pass
-
     el = el.capitalize()
     
     ######################################################################

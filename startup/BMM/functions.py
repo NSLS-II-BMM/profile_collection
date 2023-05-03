@@ -17,7 +17,7 @@ LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
 
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 
-
+DEFAULT_INI = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
 # Red, White, Yellow,
@@ -95,6 +95,9 @@ def disconnected_msg(text):
 def info_msg(text):
     '''Brown text'''
     return colored(text, 'brown')
+def cold_msg(text):
+    '''Light blue text'''
+    return colored(text, 'lightblue')
 def whisper(text):
     '''Light gray text'''
     return colored(text, 'darkgray')

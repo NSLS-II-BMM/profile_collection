@@ -475,6 +475,10 @@ fs1.openval  = 1
 fs1.closeval = 0
 
 
+ln2 = EPS_Shutter('XF:06BM-PU{LN2-Main:IV}', name = 'LN2')
+ln2.shutter_type = 'LN'
+ln2.openval  = 1
+ln2.closeval = 0
 
 
 

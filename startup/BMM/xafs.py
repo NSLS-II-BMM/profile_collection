@@ -18,7 +18,8 @@ from BMM.db              import file_resource
 from BMM.demeter         import toprj
 from BMM.derivedplot     import DerivedPlot, close_all_plots, close_last_plot
 from BMM.dossier         import BMMDossier
-from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions       import PROMPT, DEFAULT_INI
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.kafka           import kafka_message
@@ -470,6 +471,8 @@ def xafs(inifile=None, **kwargs):
         p['channelcut'] = True
         if p['lims'] is False:
             BMMuser.lims = False
+        else:
+            BMMuser.lims = True
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
 
@@ -1038,11 +1041,11 @@ def xafs(inifile=None, **kwargs):
         how = 'finished  :tada:'
         try:
             if 'primary' not in db[-1].stop['num_events']:
-                how = '*stopped*'
+                how = '*stopped*  :octagonal_sign:'
             elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
-                how = '*stopped*'
+                how = '*stopped*  :octagonal_sign:'
         except:
-            how = '*stopped*'
+            how = '*stopped*  :octagonal_sign:'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
@@ -1101,9 +1104,12 @@ def xafs(inifile=None, **kwargs):
     if BMMuser.lims is False:
         BMMuser.snapshots = False
         BMMuser.htmlout   = False
-
+    else:
+        BMMuser.snapshots = True
+        BMMuser.htmlout   = True
+        
     if is_re_worker_active():
-        inifile = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
+        inifile = DEFAULT_INI
     if inifile is None:
         inifile = present_options('ini')
     if inifile is None:
@@ -1113,6 +1119,29 @@ def xafs(inifile=None, **kwargs):
     yield from finalize_wrapper(main_plan(inifile, **kwargs), cleanup_plan(inifile))
     RE.msg_hook = BMM_msg_hook
 
+
+def xanes(filename=None, step=2):
+    '''Measure one repetition of a quick-n-dirty XANES scan from -30 to
+    +40 using the element and edge currently reported by redis.
+
+    attributes
+    ==========
+    filename: str
+       Filename stub, default is {el}-{ed}-testXANES
+
+    step: float
+       step size in eV, default is 2 eV
+
+    '''
+    params = {'bounds' : '-30 -10 20 40', 'steps' : f'5 {step} {step*2}', 'times': '0.5 0.5 0.5'}
+    el = rkvs.get("BMM:pds:element").decode("utf-8")
+    ed = rkvs.get("BMM:pds:edge").decode("utf-8")
+    if filename is None:
+        filename = f'{el}-{ed}-testXANES'
+    comment = 'quick-n-dirty XANES scan'
+    yield from xafs(DEFAULT_INI, filename=filename, element=el, prep=comment, comment=comment,
+                    mode='both', edge=ed, experimenters='', snapshots=False, **params)
+    
 
 def howlong(inifile=None, interactive=True, **kwargs):
     '''
