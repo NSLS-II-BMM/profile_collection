@@ -205,7 +205,7 @@ def calibrate_pitch(mono='111'):
         ee.append(edges[el][1])
         tt.append(edges[el][3])
         
-    mod    = lmfit.LinearModel()
+    mod    = lmfit.models.LinearModel()
     pars   = mod.guess(tt, x=ee)
     out    = mod.fit(tt, pars, x=ee)
     print(whisper(out.fit_report(min_correl=0)))

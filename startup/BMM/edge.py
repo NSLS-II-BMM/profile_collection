@@ -14,6 +14,7 @@ from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka         import kafka_message
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
@@ -69,6 +70,38 @@ def arrived_in_mode(mode=None):
             print(f'{m} is out of position, target={target}, current position={achieved}')
             ok = False
     return ok
+
+def m2_lateral_position(energy=None):
+    '''In an attempt to deliver the beam to a more constant position at
+    the XAFS end station, we adjust the M2 lateral position to deflect
+    the beam sideways.
+
+    These parameters were obtained from looking at the focused beam on
+    the direct beam camera and adjusting m2.lateral to bring the beam
+    to the same horizontal position (within uncertainty from the bleed
+    on the sensor).  These positions were recorded as a function of
+    energy for every second element from Ti to Mo, then regressed
+    above and below 8 keV (i.e. in Modes A and C).  (See .org and .png
+    files in ~/Data/Staff/Bruce Ravel/2023-05-02 for details.)
+
+    '''
+    if energy is None:
+        print('Usage: m2_lateral_position(energy)')
+        return None
+    if user_ns['dcm']._crystal == '311':
+        print('Have not yet calibrated M2 lateral for the 311 mono.')
+        print('Not computing position.')
+        return None
+    if energy > 7999:
+        slope = 5.44903781e-06
+        intercept = -9.96931312e-01
+    else:
+        slope = 9.31465746e-05
+        intercept = -1.33792232e+00
+
+    target = energy * slope + intercept
+    return target
+
 
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300., xrd=False, bender=True, insist=False):
@@ -243,9 +276,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
 
     ## prepare for the possibility of dcm_para stalling while moving to new energy
     if energy+target > dcm.energy.position:
-        correction = -1
+        parity = -1
     else:
-        correction = 1
+        parity = 1
         
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
@@ -283,7 +316,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     
     start = time.time()
     if mode == 'XRD':
-        report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True)
+        report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True, rid=True)
     else:
         report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
     yield from dcm.kill_plan()
@@ -299,12 +332,14 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
 
+    ## verify that dcm_para has arrived in place.  if not, presume
+    ## that it has stalled.  back off and try again to move
     dcm_axes = (user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"])
     (bragg, para, perp) = dcm.motor_positions(energy+target, quiet=True)
     count = 0
     while abs(dcm_para.position - para) > 0.1:
         count = count+1
-        report(':warning: dcm_para failed to arrive in position.  Attempting to resolve this problem. :warning: ', level='warning', slack=True)
+        report(':bangbang: dcm_para failed to arrive in position.  Attempting to resolve this problem. :bangbang: ', level='warning', slack=True)
         faulted_axes = False
         for m in dcm_axes:
             if m.amfe.get() or m.amfae.get():
@@ -312,7 +347,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 faulted_axes = True
         if faulted_axes is True:
             user_ns['ks'].cycle('dcm')
-        yield from mvr(dcm_para, correction*5)
+        yield from mvr(dcm_para, parity*5)
         yield from mv(dcm.energy, energy+target)
         if count > 5:
             report(':boom: dcm_para failed to arrive in position.  Unable to resolve this problem. :boom:', level='error', slack=True)
@@ -340,7 +375,11 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         yield from null()
         return
     BMMuser.motor_fault = None
-    
+
+    if mode in ('A', 'C'):
+        latpos = m2_lateral_position(energy+target)
+        print(f'Moving M2 lateral to {latpos:.3f}')
+        yield from mv(m2.lateral, latpos)
         
     ############################
     # run a rocking curve scan #
@@ -354,6 +393,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         yield from sleep(1)
         yield from rocking_curve()
         close_last_plot()
+        kafka_message({'close': 'line'})
     
     ##########################
     # run a slit height scan #
@@ -362,6 +402,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('Optimizing slits height...')
         yield from slit_height(move=True)
         close_last_plot()
+        kafka_message({'close': 'line'})
         ## redo rocking curve?
 
     ##################################

@@ -120,7 +120,6 @@ def plot_from_kafka_messages(beamline_acronym):
                     ls.stop(**message)
                     doing = None
 
-            ## todo...
             elif 'xafsscan' in message:
                 if message['xafsscan'] == 'start':
                     xs.start(**message)
@@ -140,6 +139,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     ts.stop(**message)
                     doing = None
 
+            ## todo...
             elif 'areascan' in message:
                 pass
 

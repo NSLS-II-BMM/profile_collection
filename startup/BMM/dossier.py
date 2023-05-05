@@ -36,6 +36,17 @@ except ImportError:
         return False
 
 
+def lims(toggle='on'):
+    if toggle == 'off':
+        user_ns['BMMuser'].lims     = False
+        user_ns['BMMuser'].snapshot = False
+        user_ns['BMMuser'].htmlout  = False
+    else:
+        user_ns['BMMuser'].lims     = True
+        user_ns['BMMuser'].snapshot = True
+        user_ns['BMMuser'].htmlout  = True
+        
+    
 class BMMDossier():
     '''A class for generating a static HTML file for documenting an XAS
     measurement at BMM.

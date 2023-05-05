@@ -75,8 +75,7 @@ class AlignWheel():
     def stop(self):
         self.ongoing = False
 
-        if self.fig is not None:
-            plt.close(self.fig.number)
+        plt.close('all')
 
         self.fig = plt.figure(tight_layout=True) #, figsize=(9,6))
         gs = gridspec.GridSpec(2,1)
@@ -84,7 +83,7 @@ class AlignWheel():
         x  = self.fig.add_subplot(gs[0, 0])
         x.scatter(self.x_xaxis, self.x_data, color='blue')
         x.plot(self.x_xaxis, self.x_best_fit, color='red')
-        x.scatter(self.x_center, self.x_amplitude, s=160, marker='x', color='green')
+        x.scatter(self.x_center, abs(self.x_amplitude), s=160, marker='x', color='green')
         x.set_facecolor((0.95, 0.95, 0.95))
         x.set_xlabel('xafs_x (mm)')
         x.set_ylabel(f'{self.x_detector.capitalize()}/I0')
@@ -93,7 +92,7 @@ class AlignWheel():
         y  = self.fig.add_subplot(gs[1, 0])
         y.scatter(self.y_xaxis, self.y_data, color='blue')
         y.plot(self.y_xaxis, self.y_best_fit, color='red')
-        y.scatter(self.y_center, self.y_amplitude, s=160, marker='x', color='green')
+        y.scatter(self.y_center, abs(self.y_amplitude), s=160, marker='x', color='green')
         y.set_facecolor((0.95, 0.95, 0.95))
         y.set_xlabel('xafs_y (mm)')
         y.set_ylabel(f'{self.y_detector.capitalize()}/IO')

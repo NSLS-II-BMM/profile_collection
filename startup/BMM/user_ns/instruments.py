@@ -215,8 +215,8 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    #dm3_slits_i.user_offset.put(-6.3535)
-    #dm3_slits_o.user_offset.put(7.6535)
+    dm3_slits_i.user_offset.put(-6.0211)
+    dm3_slits_o.user_offset.put(7.9844)
     #dm3_slits_t.user_offset.put(-2.676)
     #dm3_slits_b.user_offset.put(-2.9737)
 else:
@@ -300,7 +300,7 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -76.82
+    xafs_ref.outer_position = -78.018
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
 xafs_ref.inner_position = -48 # xafs_ref.outer_position + 26.5

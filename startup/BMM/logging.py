@@ -241,11 +241,18 @@ def message_div(text='', img=None, icon='message', rid=None):
     else:
         return
     
-    thisrid = ''
-    if rid is not None:
+    thisrid, clss, style = '', 'left', ''
+    if rid is None:
+        avatar = 'blank'
+    elif rid is True:
+        clss = 'top'
+        style = ' style="border-top: 1px solid #000;"'  # horizontal line to demark groupings of comments
+    else:
         thisrid = f' id="{rid}"'
+        clss = 'top'
+        style = ' style="border-top: 1px solid #000;"'
         
-    this = f'''    <div class="container"{thisrid}>
+    this = f'''    <div class="container"{thisrid}{style}>
       <div class="left"><img src="{avatar}" style="width:30px;" /></div>
       <span class="time-right">{datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")}</span>
       {words}{image}

@@ -520,8 +520,8 @@ class XAFSScan_tabbed():
         ## energy and ion chamber signals
         self.energy.append(kwargs['data']['dcm_energy'])
         self.i0.append(kwargs['data']['I0'])
-        self.mut.append(numpy.log(kwargs['data']['I0']/kwargs['data']['It']))
-        self.ref.append(numpy.log(kwargs['data']['It']/kwargs['data']['Ir']))
+        self.mut.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
+        self.ref.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
 
         ## transmission, i0, reference
         self.line_mut.set_data(self.energy, self.mut)

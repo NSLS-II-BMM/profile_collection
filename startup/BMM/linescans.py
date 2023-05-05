@@ -359,9 +359,9 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             yield from mv(_locked_dwell_time, 0.1)
             yield from dcm.kill_plan()
 
-            yield from mv(slits3.vsize, 3)
-            if sgnl == 'Bicron':
-                yield from mv(slitsg.vsize, 5)
+            yield from mv(slits3.top, 1.5, slits3.bottom, -1.5)
+            #if sgnl == 'Bicron':
+            #    yield from mv(slitsg.vsize, 5)
                 
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
@@ -393,12 +393,13 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             BMM_log_info('rocking curve scan: %s\tuid = %s, scan_id = %d' %
                          (line1, uid, user_ns['db'][-1].start['scan_id']))
             yield from mv(motor, top)
-            if sgnl == 'Bicron':
-                yield from mv(slitsg.vsize, gonio_slit_height)
+            #if sgnl == 'Bicron':
+            #    yield from mv(slitsg.vsize, gonio_slit_height)
         yield from scan_dcmpitch(sgnl)
 
     def cleanup_plan():
-        yield from mv(slits3.vsize, slit_height)
+        yield from mv(slits3.top, slit_height/2, slits3.bottom, -1*slit_height/2)
+        #yield from mv(slits3.vsize, slit_height)
         yield from mv(_locked_dwell_time, 0.5)
         yield from sleep(1.0)
         yield from mv(motor.kill_cmd, 1)
@@ -421,10 +422,10 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     ######################################################################
     motor = dcm_pitch
     slit_height = slits3.vsize.readback.get()
-    try:
-        gonio_slit_height = slitsg.vsize.readback.get()
-    except:
-        gonio_slit_height = 1
+    # try:
+    #     gonio_slit_height = slitsg.vsize.readback.get()
+    # except:
+    #     gonio_slit_height = 1
     user_ns['RE'].msg_hook = None
     yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

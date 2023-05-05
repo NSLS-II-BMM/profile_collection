@@ -87,7 +87,10 @@ class Linkam(PVPositioner):
         for l in lst[:-1]:
             word += chr(l)
         return word
-        
+
+    def temperature(self):
+        return self.readback.get()
+    
     @property
     def serial(self):
         return self.arr2word(self.serial_array.get())

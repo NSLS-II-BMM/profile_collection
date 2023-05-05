@@ -274,8 +274,9 @@ from BMM.xdi import write_XDI
 # import logging
 # logging.getLogger("hdf5plugin").setLevel(logging.ERROR) # no longer needed, I guess...
 run_report('\t'+'xafs')
-from BMM.xafs import howlong, xafs, db2xdi
-                                                           
+from BMM.xafs import howlong, xafs, xanes, db2xdi
+from BMM.dossier import lims
+
 run_report('\t'+'areascan')
 from BMM.areascan import areascan, as2dat, fetch_areaplot
 
@@ -434,7 +435,8 @@ def examine_diagnostics():
         elif 'filter' in k:
             print(whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.'))
         else:
-            print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
+            print(whisper(f'{TAB}{things[k][0]} is not homed (which is ok, BR 5/5/23).'))
+            #print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
 
         
     if 'SynAxis' in f'{user_ns["dm3_bpm"]}':

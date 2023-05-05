@@ -72,7 +72,7 @@ def resting_state_plan():
     yield from mv(_locked_dwell_time, 0.5)
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
-    dcm.kill()
+    yield from dcm.kill_plan()
     dcm.mode = 'fixed'
     #user_ns['RE'].msg_hook = BMM_msg_hook
     if is_re_worker_active() is True:

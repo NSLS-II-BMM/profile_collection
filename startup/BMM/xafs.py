@@ -1041,11 +1041,11 @@ def xafs(inifile=None, **kwargs):
         how = 'finished  :tada:'
         try:
             if 'primary' not in db[-1].stop['num_events']:
-                how = '*stopped*  :octagonal_sign:'
+                how = '*stopped*  :warning:'
             elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
-                how = '*stopped*  :octagonal_sign:'
+                how = '*stopped*  :warning:'
         except:
-            how = '*stopped*  :octagonal_sign:'
+            how = '*stopped*  :warning:'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
