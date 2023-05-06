@@ -175,7 +175,7 @@ class BMMTelemetry():
         with open(self.json, 'r') as td:
             tdata = td.read()
         alltele = json.loads(tdata)
-        return alltele[el][thing][0]
+        return alltele[el.capitalize()][thing][0]
         
     def average(self, thing='dpp'):
         '''In the case of an element that has not been measured before, use

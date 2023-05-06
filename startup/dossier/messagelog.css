@@ -2,11 +2,11 @@
 
 /* Chat containers */
 .container {
-    border: 1px solid #000;;
+    border: 0px solid #000;
     background-color: #ffffff;
     border-radius: 0px;
-    padding: 5px;
-    margin: 10px 0;
+    padding: 3px;
+    margin: 5px 0;
 }
 
 body {
@@ -36,11 +36,11 @@ p {
 
 /* Style images */
 .container div.left {
-  float: left;
-  max-width: 60px;
-  width: 100%;
-  margin-right: 20px;
-  border-radius: 50%;
+    float: left;
+    max-width: 60px;
+    width: 100%;
+    margin-right: 20px;
+    border-radius: 50%;
 }
 
 /* Style the right image */

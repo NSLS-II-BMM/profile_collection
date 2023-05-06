@@ -447,7 +447,8 @@ def examine_diagnostics():
         else:
             print(f'{TAB}DM3 BPM {CHECK}')
     else:
-        print(error_msg(f'{TAB}DM3 BPM is not homed.'))
+        print(whisper(f'{TAB}DM3 BPM is not homed (which is ok, BR 5/5/23).'))
+        #print(error_msg(f'{TAB}DM3 BPM is not homed.'))
         
             
 def check_for_synaxis():

@@ -312,6 +312,7 @@ class XAFSScan():
         self.fig = plt.figure(num='XAFS live view', tight_layout=True)
         plt.rcParams["figure.raise_window"] = False
 
+
         ## 2x2 grid if fluorescence
         if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
             self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
@@ -319,9 +320,10 @@ class XAFSScan():
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
             self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
             self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
-            self.fig.canvas.manager.window.setGeometry(1877, 378, 1200, 1062)
+            self.fig.canvas.manager.window.setGeometry(1360, 1790, 1200, 1062)
             self.gs = gridspec.GridSpec(2,2)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
+            self.muf = self.fig.add_subplot(self.gs[0, 1])
             self.i0  = self.fig.add_subplot(self.gs[1, 0])
             self.ref = self.fig.add_subplot(self.gs[1, 1])
             self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
@@ -359,8 +361,6 @@ class XAFSScan():
         
         ## do all that for a fluorescence panel
         if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
-            self.muf = self.fig.add_subplot(self.gs[0, 1])
-            self.line_muf, = self.muf.plot([],[], label='$\mu_F(E)$')
             self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')

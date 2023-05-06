@@ -343,6 +343,7 @@ class BMMMacroBuilder():
             message += '\nDefault entry for edge is not recognized.'
             unrecoverable = True
 
+        dcm = user_ns['dcm']
         ee = edge_energy(el, ed)
         if ee is not None:
             if dcm._crystal == '111' and ee > 21200:
@@ -502,7 +503,7 @@ class BMMMacroBuilder():
         self.metadatatime += tele.value(el, 'visual')
         if m['mode'] in ('fluorescence', 'flourescence', 'both', 'xs', 'xs1'):
             self.metadatatime += tele.value(el, 'xrf')
-        print(at, nsc, self.nreps, tele.value(el, 'visual'), tele.value(el, 'xrf'))
+        #print(at, nsc, self.nreps, tele.value(el, 'visual'), tele.value(el, 'xrf'))
         
     def write_ini_and_plan(self):
         #################################

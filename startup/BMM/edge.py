@@ -316,9 +316,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     
     start = time.time()
     if mode == 'XRD':
-        report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True, rid=True)
+        report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True)
     else:
-        report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True)
+        report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True, rid=True)
     yield from dcm.kill_plan()
 
     ################################################

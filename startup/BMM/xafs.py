@@ -190,8 +190,9 @@ def scan_metadata(inifile=None, **kwargs):
         parameters['bounds_given'] = parameters['bounds'].copy()
 
     (problem, text, reference) = sanitize_step_scan_parameters(parameters['bounds'], parameters['steps'], parameters['times'])
-    print(text)
-    print(f'\nsee: {reference}')
+    if len(text) > 1:
+        print(text)
+        print(f'\nsee: {reference}')
     if problem:
         return {}, {}
 
@@ -1133,6 +1134,7 @@ def xanes(filename=None, step=2):
        step size in eV, default is 2 eV
 
     '''
+    rkvs = user_ns['rkvs']
     params = {'bounds' : '-30 -10 20 40', 'steps' : f'5 {step} {step*2}', 'times': '0.5 0.5 0.5'}
     el = rkvs.get("BMM:pds:element").decode("utf-8")
     ed = rkvs.get("BMM:pds:edge").decode("utf-8")
