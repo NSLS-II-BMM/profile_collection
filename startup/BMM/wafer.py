@@ -54,7 +54,7 @@ class Wafer():
             motor = user_ns['xafs_linx']
         else:
             motor = user_ns['xafs_liny']
-        uid = yield from linescan(motor, 'it', -2, 2, 41, pluck=False)
+        uid = yield from linescan(motor, 'it', -2, 2, 41, dopluck=False)
         close_last_plot()
         table  = user_ns['db'][-1].table()
         yy     = table[motor.name]

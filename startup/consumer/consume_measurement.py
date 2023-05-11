@@ -71,20 +71,9 @@ def plot_from_kafka_messages(beamline_acronym):
                     xafsseq.add(message['uid'])
 
             elif 'xafs_visualization' in message:
-                use_tabs = False
-                if use_tabs is True:
-                    if xafsviz_window is not None:
-                        plt.close('all')
-                        xafsviz_window.MainWindow.close()
-                    xafsviz_window = plotWindow()
-                    xafs_visualization.tabbed_plot(pw=xafsviz_window, uid=message['xafs_visualization'],
-                                                   element=message['element'], edge=message['edge'],
-                                                   folder=message['folder'], mode=message['mode'], catalog=bmm_catalog)
-                    #print('here')
-                else:
-                    xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
-                                                    edge=message['edge'], folder=message['folder'],
-                                                    mode=message['mode'], catalog=bmm_catalog)
+                xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
+                                                edge=message['edge'], folder=message['folder'],
+                                                mode=message['mode'], catalog=bmm_catalog)
                     
             elif 'glancing_angle' in message:
                 if message['glancing_angle'] == 'linear':

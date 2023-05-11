@@ -4,7 +4,7 @@ import os, datetime, emojis
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
-startup_dir = '/home/xf06bm/.ipython/profile_collection/startup/'
+startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 
 def echo_slack(text='', img=None, icon='message', rid=None):
     #BMMuser = user_ns['BMMuser']

@@ -1141,7 +1141,7 @@ def xanes(filename=None, step=2):
     if filename is None:
         filename = f'{el}-{ed}-testXANES'
     comment = 'quick-n-dirty XANES scan'
-    yield from xafs(DEFAULT_INI, filename=filename, element=el, prep=comment, comment=comment,
+    yield from xafs(DEFAULT_INI, filename=filename, element=el, sample=comment, prep=comment, comment=comment,
                     mode='both', edge=ed, experimenters='', snapshots=False, **params)
     
 

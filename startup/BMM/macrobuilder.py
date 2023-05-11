@@ -491,6 +491,7 @@ class BMMMacroBuilder():
         s = [float(x) if isfloat(x) else x for x in s]
         t = [float(x) if isfloat(x) else x for x in t]
 
+        #print(el, ed, edge_energy(el, ed), b, s, t)
         (e, t, at, delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(el, ed), element=el, edge=ed, ththth=False)
 
         if type(m['nscans']) is int:
