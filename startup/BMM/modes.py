@@ -7,9 +7,11 @@ from bluesky.plan_stubs import null, sleep, mv, mvr
 from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka         import kafka_message
 from BMM.linescans     import rocking_curve, slit_height
-from BMM.logging       import BMM_log_info, BMM_msg_hook
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.motor_status  import motor_status
+from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start
 
 from BMM import user_ns as user_ns_module
@@ -89,6 +91,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      '''
      BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
      xafs_table, m3, m2, m2_bender = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender']
+     m2_xu, m2_xd = user_ns['m2_xu'], user_ns['m2_xd']
      dcm_bragg, xafs_ref, xafs_refx = user_ns['dcm_bragg'], user_ns['xafs_ref'], user_ns['xafs_refx']
      if mode is None:
           print('No mode specified')
@@ -237,10 +240,14 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                yield from mv(m2_bender.kill_cmd, 1)
                if mode == 'XRD':
                     if abs(m2_bender.user_readback.get() - BMMuser.bender_xrd) > BMMuser.bender_margin: # give some wiggle room for having
-                         base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend 
+                         base.extend([m2_bender, BMMuser.bender_xrd])                                   # recently adjusted the bend
+                    base.extend([m2_xu,  0.091])
+                    base.extend([m2_xd,  0.315])
                elif mode in ('A', 'B', 'C'):
                     if abs(m2_bender.user_readback.get() - BMMuser.bender_xas) > BMMuser.bender_margin:
                          base.extend([m2_bender, BMMuser.bender_xas])
+                    base.extend([m2_xu, -1.015])
+                    base.extend([m2_xd, -0.779])
 
           base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
           base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
@@ -373,7 +380,7 @@ def change_xtals(xtal=None):
           return(yield from null())
      ######################################################################
 
-     print('Moving to %s crystals' % xtal)
+     report(f'Moving to {xtal} crystals', level='bold', slack=True, rid=True)
      action = input('Begin moving motors? ' + PROMPT)
      if action.lower() == 'q' or action.lower() == 'n':
           yield from null()
@@ -423,10 +430,15 @@ def change_xtals(xtal=None):
      yield from rocking_curve()
      yield from sleep(2.0)
      yield from mv(dcm_pitch.kill_cmd, 1)
-     yield from slit_height()
+     kafka_message({'close': 'line'})
+     yield from slit_height(move=True)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      close_last_plot()
+     kafka_message({'close': 'line'})
      end = time.time()
      print('\n\nTime elapsed: %.1f min' % ((end-start)/60))
-        
+     yield from sleep(2.0)
+     yield from resting_state_plan()
+     report(f'Done moving to {xtal} crystals', level='bold', slack=True)
+     
