@@ -111,7 +111,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
 
      if pds_motors_ready() is False:
-          print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
+          print(error_msg('\nOne or more motors are showing amplifier faults.\nCycle the correct kill switch, then try again.'))
           return(yield from null())
 
      ######################################################################
@@ -126,7 +126,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      ######################################################################
 
      if mode == 'B':
-          action = input("You are entering Mode B -- focused beam below 6 keV is not properly configured at BMM. Continue? " + PROMPT)
+          action = input("You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? " + PROMPT)
           if action.lower() != 'y':
                return(yield from null())
 
@@ -149,19 +149,6 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           action = input("Begin moving motors? " + PROMPT)
           if action.lower() == 'q' or action.lower() == 'n':
                return(yield from null())
-
-     ## bad solution ... fixing m3.yaw instead ... see user_ns/instruments.py
-     # if mode == 'B' or mode == 'C':
-     #      ## original offsets for these, this works for focus
-     #      m3.ydo.user_offset.put(-0.37)
-     #      m3.ydi.user_offset.put(-0.24)
-     # else:
-     #      ## offsets after mirror intervention January 2022
-     #      ## this introduces roll relative to offsets above
-     #      ## to correct a slant of the unfocused beam 
-     #      m3.ydo.user_offset.put(-2.1705)
-     #      m3.ydi.user_offset.put(1.5599)
-
           
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
@@ -195,10 +182,6 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      if edge is not None:
           dcm_bragg.clear_encoder_loss()
           base.extend([dcm.energy, edge])
-     # if mode in ('D', 'E', 'F'):
-     #      base.extend([slits3.hcenter, 2])
-     # else:
-     #      base.extend([slits3.hcenter, 0])
 
      
      ###################################################################

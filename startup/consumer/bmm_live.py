@@ -210,30 +210,36 @@ class LineScan():
 
     # this helped: https://techoverflow.net/2021/08/20/how-to-autoscale-matplotlib-xy-axis-after-set_data-call/
     def add(self, **kwargs):
-        if self.numerator in kwargs['data']:
-            if self.motor is None:   # this is a time scan
-                if kwargs['seq_num'] == 1:
-                    self.initial = kwargs['time']
-                self.xdata.append(kwargs['time'] - self.initial)
-            else:
-                self.xdata.append(kwargs['data'][self.motor])
-            if self.numerator in ('If', 'Xs'):
+        if self.numerator in ('If', 'Xs'):
+            if self.xs1 in kwargs['data']:  # this is a primary documemnt
                 signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
                 if numpy.isnan(signal):
                     signal = 0
-            elif self.numerator == 'Xs1':
-                signal = kwargs['data'][self.xs8]
-            else:
-                signal = kwargs['data'][self.numerator]
-            if self.denominator is None:
-                self.ydata.append(signal)
-            else:
-                self.ydata.append(signal/kwargs['data'][self.denominator])
-            self.line.set_data(self.xdata, self.ydata)
-            self.axes.relim()
-            self.axes.autoscale_view(True,True,True)
-            self.figure.canvas.draw()
-            self.figure.canvas.flush_events()
+            else:                           # this is a baseline document
+                return
+        elif self.numerator == 'Xs1':
+            signal = kwargs['data'][self.xs8]
+        elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
+            signal = kwargs['data'][self.numerator]
+        else:
+            print('could not determine signal, self.numerator is {self.numerator}')
+            return
+            
+        if self.motor is None:   # this is a time scan
+            if kwargs['seq_num'] == 1:
+                self.initial = kwargs['time']
+            self.xdata.append(kwargs['time'] - self.initial)
+        else:
+            self.xdata.append(kwargs['data'][self.motor])
+        if self.denominator is None:
+            self.ydata.append(signal)
+        else:
+            self.ydata.append(signal/kwargs['data'][self.denominator])
+        self.line.set_data(self.xdata, self.ydata)
+        self.axes.relim()
+        self.axes.autoscale_view(True,True,True)
+        self.figure.canvas.draw()
+        self.figure.canvas.flush_events()
 
     def close_all_lineplots(self):
         for i in self.plots:

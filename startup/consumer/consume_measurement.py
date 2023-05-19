@@ -12,9 +12,9 @@ bmm_catalog = from_profile('bmm')
 import matplotlib.pyplot as plt
 import bmm_plot
 
-from plotWindow import plotWindow
-import xafs_visualization
-xafsviz_window=None
+#from plotWindow import plotWindow
+#import xafs_visualization
+#xafsviz_window=None
 
 from xafs_sequence import XAFSSequence
 xafsseq = XAFSSequence()
@@ -50,7 +50,7 @@ signal.signal(signal.SIGINT, handler)
 def plot_from_kafka_messages(beamline_acronym):
 
     def examine_message(consumer, doctype, doc):
-        global xafsviz_window
+        #global xafsviz_window
         global doing
         # print(
         #     f"\n[{datetime.datetime.now().isoformat(timespec='seconds')}] document topic: {doctype}\n"
@@ -70,10 +70,10 @@ def plot_from_kafka_messages(beamline_acronym):
                 elif message['xafs_sequence'] == 'add':
                     xafsseq.add(message['uid'])
 
-            elif 'xafs_visualization' in message:
-                xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
-                                                edge=message['edge'], folder=message['folder'],
-                                                mode=message['mode'], catalog=bmm_catalog)
+            # elif 'xafs_visualization' in message:
+            #     xafs_visualization.gridded_plot(uid=message['xafs_visualization'], element=message['element'],
+            #                                     edge=message['edge'], folder=message['folder'],
+            #                                     mode=message['mode'], catalog=bmm_catalog)
                     
             elif 'glancing_angle' in message:
                 if message['glancing_angle'] == 'linear':
@@ -147,9 +147,9 @@ def plot_from_kafka_messages(beamline_acronym):
             if doing is None:
                 pass
             elif doing == 'linescan':
+                ##pprint.pprint(message)
                 ls.add(**message)
             elif doing == 'xafsscan':
-                #pprint.pprint(message)
                 xs.add(**message)
             elif doing == 'timescan':
                 #pprint.pprint(message)
