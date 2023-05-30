@@ -289,10 +289,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 return(yield from null())
             if mode == 'C' and energy < 6000:
                 print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-                action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
-                if action.lower() == 'q' or action.lower() == 'n':
-                    yield from null()
-                    return
+                print(warning_msg("You will not get optimal harmonic rejection."))
+                print(whisper("This message is informational, not indicative of a problem with your experiment."))
+                #action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
+                #if action.lower() == 'q' or action.lower() == 'n':
+                #    yield from null()
+                #    return
         else:
             if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
                 print(warning_msg(f'You are already at the {el} {edge} edge.'))
@@ -436,11 +438,11 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print(f'\n\nThat took {(end-start)/60:.1f} min')
 
     
-    RE.msg_hook = None
+    user_ns['RE'].msg_hook = None
     start = time.time()
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
     yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist),
                                 cleanup_plan())
-    RE.msg_hook = BMM_msg_hook
+    user_ns['RE'].msg_hook = BMM_msg_hook

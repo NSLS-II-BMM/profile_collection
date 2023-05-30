@@ -93,12 +93,22 @@ class GridMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
                 self.totaltime += 5.0
+                ee = edge_energy(m['element'], m['edge'])
+                if ee > 23500 or ee < 3500:
+                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
+                    print('You probably have the edge set incorrectly in your spreadsheet.')
+                    return(False)
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.totaltime += 5.0
+                ee = edge_energy(m['element'], m['edge'])
+                if ee > 23500 or ee < 3500:
+                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
+                    print('You probably have the edge set incorrectly in your spreadsheet.')
+                    return(False)
                 
             else:
                 if self.verbose:

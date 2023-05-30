@@ -354,11 +354,11 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Ba':     [1, 17, 'Ba', 'None'],
                     'Hf':     [1, 18, 'Hf', 'HfO2'],
                     'Ta':     [1, 19, 'Ta', 'Ta2O5'],
-                    #'Sc' :    [1, 20, 'Sc', 'Sc2O3'],
                     'W' :     [1, 20, 'W',  'WO3'],
                     'Re':     [1, 21, 'Re', 'ReO2'], 
                     'Os':     [1, 22, 'Os', 'None'],
-                    'Ir':     [1, 23, 'Ir', 'None'],
+                    #'Ir':     [1, 23, 'Ir', 'None'],
+                    'Sc' :    [1, 23, 'Sc', 'Sc metal powder'],
                     'Ru':     [1, 24, 'Ru', 'RuO2'],
                     'Th':     [0, 22, 'Bi', 'BiO2'],  # use Bi L1 for Th L3
                     'U' :     [0, 24, 'Y',  'Y2O3'],  # use Y K for U L3
@@ -631,7 +631,7 @@ run_report('\tvideo recording via USB cameras')
 from BMM.video import USBVideo
 usbvideo1 = USBVideo('XF:06BM-ES{UVC-Cam:1}CV1:', name='usbvideo1')
 usbvideo1.path = '/nsls2/data/bmm/assets/usbcam/'
-usbvideo1.initialize()
+usbvideo1.initialize()RE
 
 # usbvideo2 = USBVideo('XF:06BM-ES{UVC-Cam:1}CV2:', name='usbvideo2')
 # usbvideo2.enable.put(0)

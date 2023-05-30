@@ -830,6 +830,9 @@ def xafs(inifile=None, **kwargs):
                            'folder'        : BMMuser.folder,
                            'repetitions'   : p["nscans"],
                            'mode'          : p['mode']})
+            refmat = 'none'
+            if p["element"] in user_ns['xafs_ref'].mapping:
+                refmat = user_ns['xafs_ref'].mapping[p["element"]][3]
             kafka_message({'xafsscan': 'start',
                            'element': p["element"],
                            'edge': p["edge"],
@@ -837,7 +840,7 @@ def xafs(inifile=None, **kwargs):
                            'filename': p["filename"],
                            'repetitions': p["nscans"],
                            'sample': p["sample"],
-                           'reference_material': user_ns['xafs_ref'].mapping[p["element"]][3], })
+                           'reference_material': refmat, })
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
