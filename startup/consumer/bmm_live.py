@@ -222,7 +222,7 @@ class LineScan():
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
             signal = kwargs['data'][self.numerator]
         else:
-            print('could not determine signal, self.numerator is {self.numerator}')
+            print(f'could not determine signal, self.numerator is {self.numerator}')
             return
             
         if self.motor is None:   # this is a time scan

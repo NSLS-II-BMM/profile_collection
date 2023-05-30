@@ -103,7 +103,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         z = Z_number(BMMuser.element)
         if BMMuser.edge.lower() == 'k':
             label = f'{BMMuser.element} Kα1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1, label=label)
+            ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+            plt.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
         elif BMMuser.edge.lower() == 'l3':
             label = f'{BMMuser.element} Lα1'
             plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
@@ -170,6 +171,8 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                 print('')
 
 
+    
+                
     def to_xdi(self, filename=None, uid=None):
         '''Write an XDI-style file with bin energy in the first column and the
         waveform of each of the 4 channels in the other columns.

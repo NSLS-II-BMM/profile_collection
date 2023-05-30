@@ -1,6 +1,7 @@
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
+from BMM.kafka         import kafka_message
 import numpy
 
 from BMM import user_ns as user_ns_module
@@ -237,3 +238,53 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
 ##  8. return to fixed exit mode
 ##  9. return detectors to AutoCount and Continuous modes
 
+
+def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
+    '''Examine an XRF spectrum measured during a fluorescence XAFS scan.  
+
+    This extracts an array from the data stored in the HDF5 file
+    recorded during an XAFS scan and plots it for the user.
+
+    arguments
+    =========
+    uid : UID string
+      The UID of the XAFS scan
+
+    energy : int or float
+      The incident energy of the XRF spectrum. If energy is 0 or -1,
+      the first or last data point will be displayed.  Otherwise, the
+      data point closest in value to the given  energy will be displayed.
+
+    xrffile : str
+      The filename stub for an output XDI-style file containing the
+      displayed XRF spectrum. This will be written into the XRF folder
+      in the user's data folder.  If missing, the .xdi extension will
+      be added. (THIS CURRENTLY DOES NOT WORK.)
+
+    add : bool 
+      If True, plot the sum of detector channels, else plot each
+      individual channel.
+
+    only : int
+      If 1, 2, 3, or 4, plot only that channel from the 4-element
+      detector.  8 means to plot the sole channel of the single
+      element detector.  This does not actually have to be specified
+      for and XAFS measurement using the 1-element detector.  That the
+      1-element was used will be gleaned from the scan metadata.
+
+    xmax : float 
+      The upper extent of the XRF plot is the specified energy plus
+      this value.
+
+    '''
+    if xrffile is not None:
+        if not xrffile.endswith('.xrf'):
+            xrffile = xrffile + '.xrf'
+            xrffile = os.path.join(user_ns['BMMuser'].folder, 'xrf', xrffile)
+    kafka_message({'xrfat': 'start',
+                   'uid' : uid,
+                   'energy' : energy,
+                   'xrffile' : xrffile,
+                   'add' : add,
+                   'only' : only,
+                   'xmax' : xmax, })

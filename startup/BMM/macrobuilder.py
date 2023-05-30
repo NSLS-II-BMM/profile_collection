@@ -383,22 +383,31 @@ class BMMMacroBuilder():
                 defaultline = True
             if count > 300:
                 break
-            self.measurements.append(self.get_keywords(row, defaultline))
+
+            this = self.get_keywords(row, defaultline)
+            if self.skip_row(this):
+                continue
+            self.measurements.append(this)
 
             # check that scan parameters make sense
-            if type(self.measurements[-1]['bounds']) is str and self.measurements[-1]['bounds'].strip() != '':
+            bounds = self.measurements[-1]['bounds']
+            if type(bounds) is str and bounds != 'None' and bounds.strip() != '':
                 b = re.split('[ ,]+', self.measurements[-1]['bounds'].strip())
             else:
                 b = re.split('[ ,]+', self.measurements[0]['bounds'].strip())
-            if type(self.measurements[-1]['steps']) is str and self.measurements[-1]['steps'].strip() != '':
+
+            steps = self.measurements[-1]['steps']
+            if type(steps) is str and steps != 'None' and steps.strip() != '':
                 s = re.split('[ ,]+', self.measurements[-1]['steps'].strip())
             else:
                 s = re.split('[ ,]+', self.measurements[0]['steps'].strip())
-            if type(self.measurements[-1]['times']) is str and self.measurements[-1]['times'].strip() != '':
+
+            times = self.measurements[-1]['times']
+            if type(times) is str and times != 'None' and times.strip() != '':
                 t = re.split('[ ,]+', self.measurements[-1]['times'].strip())
             else:
                 t = re.split('[ ,]+', self.measurements[0]['times'].strip())
-
+                
             (problem, text, reference) = sanitize_step_scan_parameters(b, s, t)
             if problem is True:
                 isok = False

@@ -198,9 +198,9 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'sample':      self.escape_quotes(str(row[10].value)),     # scan metadata
                 'prep':        self.escape_quotes(str(row[11].value)),
                 'comment':     self.escape_quotes(str(row[12].value)),
-                'bounds':      row[13].value,     # scan parameters
-                'steps':       row[14].value,
-                'times':       row[15].value,
+                'bounds':      str(row[13].value),     # scan parameters
+                'steps':       str(row[14].value),
+                'times':       str(row[15].value),
                 'motor1':      row[16].value,     # motor names and positions 
                 'position1':   self.nonezero(row[17].value),
                 'motor2':      row[18].value,

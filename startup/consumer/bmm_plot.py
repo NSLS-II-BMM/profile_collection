@@ -1,8 +1,9 @@
 
 import matplotlib.pyplot as plt
 from lmfit.models import SkewedGaussianModel, RectangleModel
-import numpy
+import numpy, os, h5py, xraylib
 from scipy.interpolate import interp1d
+from mendeleev import element
 
 from larch_interface import Pandrosus, Kekropidai
 from slack import img_to_slack, post_to_slack
@@ -283,3 +284,146 @@ def mono_calibration_plot(**kwargs):
     fig.canvas.flush_events() 
 
     
+def xrfat(**kwargs):
+    '''Examine an XRF spectrum measured during a fluorescence XAFS scan.  
+
+    This extracts an array from the data stored in the HDF5 file
+    recorded during an XAFS scan and plots it for the user.
+
+    arguments
+    =========
+    uid : UID string
+      The UID of the XAFS scan
+
+    energy : int or float
+      The incident energy of the XRF spectrum. If energy is 0 or -1,
+      the first or last data point will be displayed.  Otherwise, the
+      data point closest in value to the given  energy will be displayed.
+
+    xrffile : str
+      The filename stub for an output XDI-style file containing the
+      displayed XRF spectrum. This will be written into the XRF folder
+      in the user's data folder.  If missing, the .xdi extension will
+      be added. (THIS CURRENTLY DOES NOT WORK.)
+
+    add : bool 
+      If True, plot the sum of detector channels, else plot each
+      individual channel.
+
+    only : int
+      If 1, 2, 3, or 4, plot only that channel from the 4-element
+      detector.  8 means to plot the sole channel of the single
+      element detector.  This does not actually have to be specified
+      for and XAFS measurement using the 1-element detector.  That the
+      1-element was used will be gleaned from the scan metadata.
+
+    xmax : float 
+      The upper extent of the XRF plot is the specified energy plus
+      this value.
+
+    '''
+    catalog = kwargs['catalog']
+    uid = kwargs['uid']
+    energy = kwargs['energy']
+    xrffile = kwargs['xrffile']
+    add = kwargs['add']
+    only = kwargs['only']
+    xmax = kwargs['xmax']
+    
+    record = catalog[uid]
+    xafs = record.primary.read()
+    docs = record.documents()
+    for d in docs:
+        if d[0] == 'resource':
+            hfile = os.path.join(d[1]['root'], d[1]['resource_path'])
+            #if '_%d' in this:
+            #    hfile = this % 0
+            break
+    
+    #hfile = file_resource(uid)
+    f = h5py.File(hfile,'r')
+
+    el = record.metadata["start"]["XDI"]["Element"]["symbol"]
+    ed = record.metadata["start"]["XDI"]["Element"]["edge"]
+    
+
+    is_4elem, is_1elem = False, False
+    if '4-element SDD' in record.metadata["start"]['detectors']:
+        is_4elem = True
+    elif '1-element SDD' in record.metadata["start"]['detectors']:
+        is_1elem = True
+    else:
+        print('The specified scan was not a fluorescence XAFS scan.')
+        return()
+        
+    dcm = numpy.array(xafs['dcm_energy'])
+    if energy <= 0:
+        position = energy
+        energy = float(dcm[position])
+    elif energy < dcm[0] and energy < len(dcm):
+        position = energy
+        energy = float(dcm[position])
+    elif energy < dcm[0] and energy > len(dcm):
+        position = 0
+        energy = float(dcm[position])
+    else:
+        position = numpy.abs(dcm - energy).argmin()
+        energy = float(dcm[position])
+
+    s1 = f['entry']['data']['data'][position][0]
+    if is_4elem is True:
+        s2 = f['entry']['data']['data'][position][1]
+        s3 = f['entry']['data']['data'][position][2]
+        s4 = f['entry']['data']['data'][position][3]
+    else:
+        add, only = False, 8
+    ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
+
+    thisname = record.metadata["start"]["XDI"]["Sample"]["name"]
+    if len(thisname) > 30:
+        thisname = thisname[:30].strip() + ' ...'
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.set_title(f'{thisname} at {energy:.1f} eV')
+    ax.set_xlabel('Energy  (eV)')
+    ax.set_ylabel('counts')
+    ax.grid(which='major', axis='both')
+    ax.set_facecolor((0.95, 0.95, 0.95))
+    ax.set_xlim(2500, energy+xmax)
+    if only is not None and only in (1, 2, 3, 4, 8):
+        if only == 1:
+            ax.plot(ee, s1, label='channel1')
+        elif only == 8:         #  1 element SDD
+            ax.plot(ee, s1, label='channel1')
+        elif only == 2:
+            ax.plot(ee, s2, label='channel2')
+        elif only == 3:
+            ax.plot(ee, s3, label='channel3')
+        elif only == 4:
+            ax.plot(ee, s4, label='channel4')
+    elif add is True:
+        ax.plot(ee, s1+s2+s3+s4, label='sum of four channels')
+    else:
+        ax.plot(ee, s1, label='channel1')
+        ax.plot(ee, s2, label='channel2')
+        ax.plot(ee, s3, label='channel3')
+        ax.plot(ee, s4, label='channel4')
+        
+    z = element(el).atomic_number
+    if ed.lower() == 'k':
+        label = f'{el} Kα1'
+        ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+        ax.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
+    elif ed.lower() == 'l3':
+        label = f'{el} Lα1'
+        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+    elif ed.lower() == 'l2':
+        label = f'{el} Kβ1'
+        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+    elif ed.lower() == 'l1':
+        label = f'{el} Kβ3'
+        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+    ax.legend()
+
+    if xrffile is not None:
+        print(f'We have every intent to write to {xrffile}.')

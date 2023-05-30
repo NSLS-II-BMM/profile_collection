@@ -275,6 +275,7 @@ from BMM.xdi import write_XDI
 # logging.getLogger("hdf5plugin").setLevel(logging.ERROR) # no longer needed, I guess...
 run_report('\t'+'xafs')
 from BMM.xafs import howlong, xafs, xanes, db2xdi
+from BMM.xafs_functions import xrfat
 from BMM.dossier import lims
 
 run_report('\t'+'areascan')
