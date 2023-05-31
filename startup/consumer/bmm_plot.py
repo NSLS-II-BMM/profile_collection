@@ -1,7 +1,9 @@
+import sys
+sys.path.append('/home/xf06bm/.ipython/profile_collection/startup')
 
 import matplotlib.pyplot as plt
 from lmfit.models import SkewedGaussianModel, RectangleModel
-import numpy, os, h5py, xraylib
+import numpy, os, h5py, xraylib, datetime, pandas
 from scipy.interpolate import interp1d
 from mendeleev import element
 
@@ -11,6 +13,7 @@ from slack import img_to_slack, post_to_slack
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
+from BMM_common.xdi import xdi_xrf_header
 
 def finished(record):
     if 'num' in record.metadata['start']['plan_args']:  # 1D scan
@@ -293,12 +296,16 @@ def xrfat(**kwargs):
     arguments
     =========
     uid : UID string
-      The UID of the XAFS scan
+      The UID of the XAFS scan from which to extract the XRF spectrum
 
     energy : int or float
-      The incident energy of the XRF spectrum. If energy is 0 or -1,
-      the first or last data point will be displayed.  Otherwise, the
-      data point closest in value to the given  energy will be displayed.
+      The incident energy of the XRF spectrum. If energy is 0 the
+      first data point will be displayed.  If energy is a negative
+      integer, the point that many steps from the end of the scan will
+      be used. If energy is a positive integer less than the length of
+      the scan, the point that many steps from the start of the scan
+      will be used.  Otherwise, the data point with energy closest in 
+      value to the given energy will be displayed.
 
     xrffile : str
       The filename stub for an output XDI-style file containing the
@@ -323,26 +330,24 @@ def xrfat(**kwargs):
 
     '''
     catalog = kwargs['catalog']
-    uid = kwargs['uid']
-    energy = kwargs['energy']
+    uid     = kwargs['uid']
+    energy  = kwargs['energy']
     xrffile = kwargs['xrffile']
-    add = kwargs['add']
-    only = kwargs['only']
-    xmax = kwargs['xmax']
+    add     = kwargs['add']
+    only    = kwargs['only']
+    xmax    = kwargs['xmax']
     
-    record = catalog[uid]
-    xafs = record.primary.read()
-    docs = record.documents()
+    record  = catalog[uid]
+    xafs    = record.primary.read()
+    docs    = record.documents()
     for d in docs:
         if d[0] == 'resource':
             hfile = os.path.join(d[1]['root'], d[1]['resource_path'])
-            #if '_%d' in this:
-            #    hfile = this % 0
+            #if '_%d' in this: hfile = this % 0  #  deal with image files
             break
     
     #hfile = file_resource(uid)
-    f = h5py.File(hfile,'r')
-
+    f  = h5py.File(hfile,'r')
     el = record.metadata["start"]["XDI"]["Element"]["symbol"]
     ed = record.metadata["start"]["XDI"]["Element"]["edge"]
     
@@ -350,8 +355,10 @@ def xrfat(**kwargs):
     is_4elem, is_1elem = False, False
     if '4-element SDD' in record.metadata["start"]['detectors']:
         is_4elem = True
+        ncol = 4
     elif '1-element SDD' in record.metadata["start"]['detectors']:
         is_1elem = True
+        ncol = 1
     else:
         print('The specified scan was not a fluorescence XAFS scan.')
         return()
@@ -426,4 +433,36 @@ def xrfat(**kwargs):
     ax.legend()
 
     if xrffile is not None:
-        print(f'We have every intent to write to {xrffile}.')
+        thistime = float(record.primary.read()['time'][position])
+        kwargs = {'m2state' : record.metadata["start"]["XDI"]["Beamline"]["focusing"],
+                  'm3state' : record.metadata["start"]["XDI"]["Beamline"]["harmonic_rejection"],
+                  'energy' : round(energy, 1),
+                  'i0val' : round(float(record.primary.read()['I0'][position]), 3),
+                  'sample_name' : record.metadata["start"]["XDI"]["Sample"]["name"],
+                  'sample_prep' : record.metadata["start"]["XDI"]["Sample"]["prep"],
+                  'sample_x' : round(float(record.baseline.read()['xafs_x'][0]), 3),
+                  'sample_y' : round(float(record.baseline.read()['xafs_y'][0]), 3),
+                  'scan_end' : datetime.datetime.fromtimestamp(thistime).strftime("%Y-%m-%dT%H-%M-%S"),
+                  'dwell_time' : float(record.primary.read()['dwti_dwell_time'][position]),
+                  'uid' : uid + '  (this is the UID of the parent XAFS scan)',
+                  'current' : record.metadata["start"]["XDI"]["Facility"]["current"],
+                  'ring_mode' : record.metadata["start"]["XDI"]["Facility"]["mode"],
+                  'cycle' : record.metadata["start"]["XDI"]["Facility"]["cycle"],
+                  'gup' : record.metadata["start"]["XDI"]["Facility"]["GUP"],
+                  'saf' : record.metadata["start"]["XDI"]["Facility"]["SAF"],
+                  'ncol' : ncol,
+            }
+        handle = open(xrffile, 'w')
+        handle.write(xdi_xrf_header(**kwargs))  # write XDI header
+        if is_4elem:
+            a = numpy.vstack((s1, s2, s3, s4))
+            column_list = ['MCA1','MCA2','MCA3','MCA4']
+        elif is_1elem:
+            a = s1
+            column_list = ['MCA1',]
+        b=pandas.DataFrame(a.transpose(), index=ee, columns=column_list)
+        handle.write(b.to_csv(sep=' ', header=False))  # write data table
+        handle.flush()
+        handle.close()
+        print(f'Wrote XRF spectrum at {energy} eV to {xrffile}.')
+

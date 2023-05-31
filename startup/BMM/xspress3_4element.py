@@ -25,8 +25,9 @@ from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number, edge_number
 from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase, BMMXspress3Channel
 
-from BMM.user_ns.base import startup_dir, bmm_catalog
+from BMM.user_ns.base  import startup_dir, bmm_catalog
 
+from BMM_common.xdi    import xdi_xrf_header
 
 
 ################################################################################
@@ -171,7 +172,7 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
                 print('')
 
 
-    
+
                 
     def to_xdi(self, filename=None, uid=None):
         '''Write an XDI-style file with bin energy in the first column and the
@@ -184,34 +185,55 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         column_list = [f'MCA{channel_number}' for channel_number in self.channel_numbers]
         m2state, m3state = mirror_state()
 
+        kwargs = {'m2state' : m2state,
+                  'm3state' : m3state,
+                  'energy' : dcm.energy.position,
+                  'i0val' : None,
+                  'sample_name' : None,
+                  'sample_prep' : None,
+                  'sample_x' : user_ns['xafs_x'].position,
+                  'sample_y' : user_ns['xafs_y'].position,
+                  'scan_end' : now(),
+                  'dwell_time' : self.cam.acquire_time.value,
+                  'uid' : uid,
+                  'current' : ring.current.value,
+                  'ring_mode' : ring.mode.value,
+                  'cycle' : BMMuser.cycle,
+                  'gup' : BMMuser.gup,
+                  'saf' : BMMuser.saf,
+                  'ncol' : 4,
+            }
+        
         handle = open(filename, 'w')
-        handle.write('# XDI/1.0 BlueSky/%s\n'                % bluesky_version)
-        #handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
-        #handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-        handle.write('# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement')
-        handle.write('# Beamline.xray_source: NSLS-II three-pole wiggler\n')
-        handle.write('# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
-        handle.write('# Beamline.focusing: %s\n'             % m2state)
-        handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
-        handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
-        handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
-        handle.write('# Sample.x: %.3f\n'                    % user_ns['xafs_x'].position)
-        handle.write('# Sample.y: %.3f\n'                    % user_ns['xafs_y'].position)
-        handle.write('# Scan.end_time: %s\n'                 % now())
-        handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
-        if uid is not None:
-            handle.write('# Scan.uid: %s\n'                      % uid)
-        handle.write('# Facility.name: NSLS-II\n')
-        handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
-        handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
-        handle.write('# Facility.cycle: %s\n'                % BMMuser.cycle)
-        handle.write('# Facility.GUP: %d\n'                  % BMMuser.gup)
-        handle.write('# Facility.SAF: %d\n'                  % BMMuser.saf)
-        handle.write('# Column.1: energy (eV)\n')
-        for c, mca_number in enumerate(column_list):
-            handle.write(f'# Column.{c+2}: MCA{mca_number} (counts)\n')
-        handle.write('# ==========================================================\n')
-        handle.write('# energy ')
+        handle.write(xdi_xrf_header(**kwargs))
+        
+        # handle.write('# XDI/1.0 BlueSky/%s\n'                % bluesky_version)
+        # #handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
+        # #handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
+        # handle.write('# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement')
+        # handle.write('# Beamline.xray_source: NSLS-II three-pole wiggler\n')
+        # handle.write('# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
+        # handle.write('# Beamline.focusing: %s\n'             % m2state)
+        # handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
+        # handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
+        # handle.write('# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
+        # handle.write('# Sample.x: %.3f\n'                    % user_ns['xafs_x'].position)
+        # handle.write('# Sample.y: %.3f\n'                    % user_ns['xafs_y'].position)
+        # handle.write('# Scan.end_time: %s\n'                 % now())
+        # handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
+        # if uid is not None:
+        #     handle.write('# Scan.uid: %s\n'                      % uid)
+        # handle.write('# Facility.name: NSLS-II\n')
+        # handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
+        # handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
+        # handle.write('# Facility.cycle: %s\n'                % BMMuser.cycle)
+        # handle.write('# Facility.GUP: %d\n'                  % BMMuser.gup)
+        # handle.write('# Facility.SAF: %d\n'                  % BMMuser.saf)
+        # handle.write('# Column.1: energy (eV)\n')
+        # for c, mca_number in enumerate(column_list):
+        #     handle.write(f'# Column.{c+2}: MCA{mca_number} (counts)\n')
+        # handle.write('# ==========================================================\n')
+        # handle.write('# energy ')
 
         ## data table
         e=numpy.arange(0, len(self.channel01.mca.array_data.get())) * 10

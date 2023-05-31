@@ -1,3 +1,4 @@
+import os
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
@@ -248,18 +249,22 @@ def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
     arguments
     =========
     uid : UID string
-      The UID of the XAFS scan
+      The UID of the XAFS scan from which to extract the XRF spectrum
 
     energy : int or float
-      The incident energy of the XRF spectrum. If energy is 0 or -1,
-      the first or last data point will be displayed.  Otherwise, the
-      data point closest in value to the given  energy will be displayed.
+      The incident energy of the XRF spectrum. If energy is 0 the
+      first data point will be displayed.  If energy is a negative
+      integer, the point that many steps from the end of the scan will
+      be used. If energy is a positive integer less than the length of
+      the scan, the point that many steps from the start of the scan
+      will be used.  Otherwise, the data point with energy closest in 
+      value to the given energy will be displayed.
 
     xrffile : str
       The filename stub for an output XDI-style file containing the
       displayed XRF spectrum. This will be written into the XRF folder
       in the user's data folder.  If missing, the .xdi extension will
-      be added. (THIS CURRENTLY DOES NOT WORK.)
+      be added.  This will not overwrite an existing file.
 
     add : bool 
       If True, plot the sum of detector channels, else plot each
@@ -273,14 +278,17 @@ def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
       1-element was used will be gleaned from the scan metadata.
 
     xmax : float 
-      The upper extent of the XRF plot is the specified energy plus
+      The upper extent of the plot is the specified energy plus
       this value.
 
     '''
     if xrffile is not None:
         if not xrffile.endswith('.xrf'):
             xrffile = xrffile + '.xrf'
-            xrffile = os.path.join(user_ns['BMMuser'].folder, 'xrf', xrffile)
+            xrffile = os.path.join(user_ns['BMMuser'].folder, 'XRF', xrffile)
+    if os.path.isfile(xrffile):
+        print(warning_msg(f'{xrffile} already exists.  The plot will be shown, but the file will not be written.'))
+        xrffile = None
     kafka_message({'xrfat': 'start',
                    'uid' : uid,
                    'energy' : energy,
