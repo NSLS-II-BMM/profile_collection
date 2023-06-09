@@ -286,9 +286,9 @@ def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
         if not xrffile.endswith('.xrf'):
             xrffile = xrffile + '.xrf'
             xrffile = os.path.join(user_ns['BMMuser'].folder, 'XRF', xrffile)
-    if os.path.isfile(xrffile):
-        print(warning_msg(f'{xrffile} already exists.  The plot will be shown, but the file will not be written.'))
-        xrffile = None
+        if os.path.isfile(xrffile):
+            print(warning_msg(f'{xrffile} already exists.  The plot will be shown, but the file will not be written.'))
+            xrffile = None
     kafka_message({'xrfat': 'start',
                    'uid' : uid,
                    'energy' : energy,

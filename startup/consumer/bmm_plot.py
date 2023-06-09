@@ -386,9 +386,10 @@ def xrfat(**kwargs):
         add, only = False, 8
     ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
 
-    thisname = record.metadata["start"]["XDI"]["Sample"]["name"]
-    if len(thisname) > 30:
-        thisname = thisname[:30].strip() + ' ...'
+    # thisname = record.metadata["start"]["XDI"]["Sample"]["name"]
+    # if len(thisname) > 30:
+    #     thisname = thisname[:30].strip() + ' ...'
+    thisname = os.path.splitext(os.path.basename(record.metadata["start"]["XDI"]['_filename']))[0]
     fig = plt.figure()
     ax = fig.gca()
     ax.set_title(f'{thisname} at {energy:.1f} eV')
