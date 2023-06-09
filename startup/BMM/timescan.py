@@ -27,7 +27,7 @@ from BMM.kafka           import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar #, motor_status
-from BMM.resting_state import resting_state
+from BMM.resting_state import resting_state, resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
@@ -42,7 +42,7 @@ user_ns = vars(user_ns_module)
 ####################################
 # generic timescan vs. It/If/Ir/I0 #
 ####################################
-def timescan(detector, readings, dwell, delay, force=False, md={}):
+def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={}):
     '''
     Generic timescan plan.
 
@@ -208,7 +208,8 @@ def timescan(detector, readings, dwell, delay, force=False, md={}):
     
     uid = yield from count_scan(dets, readings, delay, md)
 
-    kafka_message({'timescan': 'end',})
+    kafka_message({'timescan': 'stop',
+                   'fname' : outfile, })
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, db[-1].start['scan_id']))
@@ -463,7 +464,10 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
-        dossier.seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'], force=force, md={**xdi})
+        pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
+        dossier.seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'],
+                                              outfile=pngout,
+                                              force=force, md={**xdi})
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## close the shutters again
@@ -471,48 +475,48 @@ def sead(inifile=None, force=False, **kwargs):
             yield from shb.close_plan()
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## make a save a mode-specific plot
-        thisagg = matplotlib.get_backend()
-        matplotlib.use('Agg') # produce a plot without screen display
-        table = db.v2[dossier.seaduid].primary.read()
-        if detector == 'Test':
-            plt.plot(table['time']-table['time'][0], table['I0'])
-            plt.xlabel('time (seconds)')
-            plt.ylabel('I0 signal')
-        elif detector == 'I0':
-            plt.plot(table['time']-table['time'][0], table['I0'])
-            plt.xlabel('time (seconds)')
-            plt.ylabel('I0 signal')
-        elif detector == 'It':
-            plt.plot(table['time']-table['time'][0], table['It'])
-            plt.xlabel('time (seconds)')
-            plt.ylabel('It signal')
-        elif 'Trans' in detector:
-            signal = numpy.log(table['I0'] / table['It'])
-            plt.plot(table['time']-table['time'][0], signal)
-            plt.xlabel('time (seconds)')
-            plt.ylabel('It signal')
-        elif detector == 'If':
-            signal = table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]
-            plt.plot(table['time']-table['time'][0], signal)
-            plt.xlabel('time (seconds)')
-            plt.ylabel('If signal')
-        elif 'Fluo' in detector or 'Flour' in detector:
-            signal = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
-            plt.plot(table['time']-table['time'][0], signal)
-            plt.xlabel('time (seconds)')
-            plt.ylabel('If signal')
-        elif detector == 'Ir':
-            plt.plot(table['time']-table['time'][0], table['Ir'])
-            plt.xlabel('time (seconds)')
-            plt.ylabel('Ir signal')
-        plt.show()
+        ## save a mode-specific plot
+        # thisagg = matplotlib.get_backend()
+        # matplotlib.use('Agg') # produce a plot without screen display
+        # table = db.v2[dossier.seaduid].primary.read()
+        # if detector == 'Test':
+        #     plt.plot(table['time']-table['time'][0], table['I0'])
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('I0 signal')
+        # elif detector == 'I0':
+        #     plt.plot(table['time']-table['time'][0], table['I0'])
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('I0 signal')
+        # elif detector == 'It':
+        #     plt.plot(table['time']-table['time'][0], table['It'])
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('It signal')
+        # elif 'Trans' in detector:
+        #     signal = numpy.log(table['I0'] / table['It'])
+        #     plt.plot(table['time']-table['time'][0], signal)
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('It signal')
+        # elif detector == 'If':
+        #     signal = table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]
+        #     plt.plot(table['time']-table['time'][0], signal)
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('If signal')
+        # elif 'Fluo' in detector or 'Flour' in detector:
+        #     signal = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
+        #     plt.plot(table['time']-table['time'][0], signal)
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('If signal')
+        # elif detector == 'Ir':
+        #     plt.plot(table['time']-table['time'][0], table['Ir'])
+        #     plt.xlabel('time (seconds)')
+        #     plt.ylabel('Ir signal')
+        # plt.show()
 
         ahora = now()
-        dossier.seadimage = f"{p['filename']}_sead_{now()}.png"
-        plt.savefig(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
-        matplotlib.use(thisagg) # return to screen display
-        img_to_slack(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
+        dossier.seadimage = os.path.basename(pngout)
+        # plt.savefig(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
+        # matplotlib.use(thisagg) # return to screen display
+        # img_to_slack(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
 
         
         if dossier.seaduid is not None:

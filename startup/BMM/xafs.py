@@ -966,7 +966,7 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
-                kafka_message({'xafsscan': 'end',})
+                kafka_message({'xafsscan': 'stop',})
 
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
@@ -996,7 +996,7 @@ def xafs(inifile=None, **kwargs):
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"ML data evaluation model: {emoji}", level='bold', slack=True)
                         if score == 0:
-                            report('A failed data evaluation does not necessarily mean that there is anything wrong with your data. These data will be investigated and used to refine the data evaluation model.', level='whisper', slack=True)
+                            report(f'An {emoji} may not mean that there is anything wrong with your data. See https://tinyurl.com/yrnrhshj', level='whisper', slack=True)
                             with open('/home/xf06bm/Data/bucket/failed_data_evaluation.txt', 'a') as f:
                                 f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:

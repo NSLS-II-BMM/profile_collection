@@ -385,7 +385,7 @@ class BMMMacroBuilder():
                 break
 
             this = self.get_keywords(row, defaultline)
-            if self.skip_row(this):
+            if self.skip_row(this) and not defaultline:
                 continue
             self.measurements.append(this)
 

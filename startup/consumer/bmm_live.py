@@ -10,6 +10,7 @@ import pprint
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
+from slack import img_to_slack
 
 class LineScan():
     '''Manage the live plot for a motor scan or a time scan.
@@ -135,7 +136,8 @@ class LineScan():
         ## todo:  bicron, new ion chambers, both
         
         ## transmission: plot It/I0
-        if self.numerator == 'It':
+        if self.numerator in ('It', 'Transmission'):
+            self.numerator = 'It'
             self.description = 'transmission'
             self.denominator = 'I0'
             self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
@@ -160,7 +162,8 @@ class LineScan():
 
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
-        elif self.numerator in ('If', 'Xs'):
+        elif self.numerator in ('If', 'Xs', 'Fluorescence'):
+            self.numerator = 'If'
             self.description = 'fluorescence (4 channel)'
             self.denominator = 'I0'
             self.axes.set_ylabel('fluorescence (4 channel)')
@@ -206,7 +209,23 @@ class LineScan():
 
         
     def stop(self, **kwargs):
-        self.ongoing = False
+        if 'fname' in kwargs:
+            self.figure.savefig(kwargs['fname'])
+            img_to_slack(kwargs['fname'])
+            
+        self.ongoing     = False
+        self.xdata       = []
+        self.ydata       = []
+        self.motor       = None
+        self.numerator   = None
+        self.denominator = 1
+        self.figure      = None
+        self.axes        = None
+        self.line        = None
+        self.description = None
+        self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
+        self.plots       = []
+        self.initial     = 0
 
     # this helped: https://techoverflow.net/2021/08/20/how-to-autoscale-matplotlib-xy-axis-after-set_data-call/
     def add(self, **kwargs):
@@ -388,16 +407,34 @@ class XAFSScan():
         self.line_i0,    = self.i0.plot([],[],  label=f'scan {self.count}')
         self.line_ref,   = self.ref.plot([],[], label=f'scan {self.count}')
         for ax in (self.mut, self.i0, self.ref):
-            ax.legend(loc='best', shadow=True)
+            if self.count < 16:
+                ax.legend(loc='best', shadow=True)
+            else:
+                ax.legend.remove()
         if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
-            self.muf.legend(loc='best', shadow=True)
-        
+            if self.count < 16:
+                self.muf.legend(loc='best', shadow=True)
+            else:
+                self.muf.legend.remove()
             
     def stop(self, **kwargs):
         '''Done with a sequence of XAFS live plots.
         '''
-        self.ongoing = False
+        self.ongoing     = False
+        self.xdata       = []
+        self.ydata       = []
+        self.motor       = None
+        self.numerator   = None
+        self.denominator = 1
+        self.figure      = None
+        self.axes        = None
+        self.line        = None
+        self.description = None
+        self.xs1, self.xs2, self.xs3, self.xs4, xs8 = None, None, None, None, None
+        self.plots       = []
+        self.initial     = 0
+        
 
 
     def add(self, **kwargs):

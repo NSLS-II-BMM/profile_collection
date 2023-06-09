@@ -235,7 +235,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                            'motor' : motor.name,
                            'detector' : 'I0',})
             uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
-            kafka_message({'linescan': 'end',})
+            kafka_message({'linescan': 'stop',})
             
             user_ns['RE'].msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
@@ -367,7 +367,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                            'motor' : motor.name,
                            'detector' : 'I0',})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
-            kafka_message({'linescan': 'end',})
+            kafka_message({'linescan': 'stop',})
 
             t  = user_ns['db'][-1].table()
             signal = t[sgnl]
@@ -529,7 +529,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
                            'motor' : motor.name,
                            'detector' : detector.capitalize(),})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**md, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
-            kafka_message({'linescan': 'end',})
+            kafka_message({'linescan': 'stop',})
             
             t  = user_ns['db'][-1].table()
             if detector.lower() == 'if':
@@ -641,7 +641,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
                            'motor' : motor.name,
                            'detector' : detector. capitalize(),})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
-            kafka_message({'linescan': 'end',})
+            kafka_message({'linescan': 'stop',})
 
             t  = user_ns['db'][-1].table()
             if detector.lower() == 'if':
@@ -956,7 +956,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             return uid
 
         uid = yield from scan_xafs_motor(dets, thismotor, start, stop, nsteps)
-        kafka_message({'linescan': 'end',})
+        kafka_message({'linescan': 'stop',})
         
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))

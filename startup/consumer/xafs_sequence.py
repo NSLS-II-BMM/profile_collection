@@ -68,30 +68,32 @@ class XAFSSequence():
         if len(self.uidlist) != self.repetitions:
             if self.fig is not None:
                 plt.close(self.fig.number)
-            self.merge()
-            if self.repetitions > 5 and len(self.uidlist) % 3 == 0:
-                post_to_slack('(Posting a plot every third scan in a sequence...)')
-                tossfile = os.path.join(this.folder, 'snapshots', 'toss.png')
-                self.fig.savefig(tossfile)
-                img_to_slack(tossfile)
+            ok = self.merge()
+            if ok == 1:
+                if self.repetitions > 5 and len(self.uidlist) % 3 == 0:
+                    post_to_slack('(Posting a plot every third scan in a sequence...)')
+                    tossfile = os.path.join(this.folder, 'snapshots', 'toss.png')
+                    self.fig.savefig(tossfile)
+                    img_to_slack(tossfile)
                 
 
     def merge(self):
         if len(self.uidlist) == 0:
-            return
+            return 0
         elif len(self.uidlist) == 1:
             toplot = self.panlist[0]
         else:
             toplot = self.kek.merge()
         toplot.facecolor = (0.95, 0.95, 0.95)
         name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+        if name == 'None': return 0
         if self.ongoing:
             toplot.title = f"Sequence: {name}  {len(self.uidlist)}/{self.repetitions}"
         else:
             toplot.title = f"Sequence ended: {name}  {len(self.uidlist)} scans"
         self.fig = toplot.triplot()
         self.fig.canvas.manager.window.setGeometry(1237, 856, 640, 584)
-
+        return 1
 
     def stop(self, filename):
         self.ongoing = False
@@ -100,8 +102,9 @@ class XAFSSequence():
         if self.fig is not None:
             plt.close(self.fig.number)
         #plt.close('all')
-        self.merge()
-        self.fig.savefig(filename)
-        img_to_slack(filename)
+        ok = self.merge()
+        if ok == 1:
+            self.fig.savefig(filename)
+            img_to_slack(filename)
         
 
