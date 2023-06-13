@@ -334,7 +334,8 @@ def raster(inifile=None, **kwargs):
             print(error_msg('\ninifile does not exist\n'))
             return(yield from null())
 
-        report(f'== starting raster scan', level='bold', slack=True)
+        dossier.rid = str(uuid.uuid4())[:8]
+        report(f'== starting raster scan', level='bold', slack=True, rid=dossier.rid)
 
         p, f = read_ini(inifile, **kwargs)
         #print(f)

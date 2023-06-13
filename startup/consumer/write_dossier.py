@@ -91,7 +91,7 @@ def xafs_dossier(catalog, uid):
     # middle part of dossier
     instrument = ''
     if instrument == '':
-        instrument = '<div id=boxinst><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
+        instrument = '<div><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
     with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
         content = f.readlines()
 
@@ -108,7 +108,7 @@ def xafs_dossier(catalog, uid):
 
     instrument = get_user_text(record.metadata, 'instrument')
     if instrument.startswith('sample') is True:
-        instrument = '<div id=boxinst><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
+        instrument = '<div><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
     
     thiscontent += ''.join(content).format(basename      = basename,
                                            scanlist      = scanlist,

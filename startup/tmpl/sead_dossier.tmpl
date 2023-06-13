@@ -39,6 +39,11 @@
 	      <li class="first active">
 		<a href="00INDEX.html">Experiment: {date}</a>
 	      </li>
+	      <li>
+		<a href="messagelog.html#{rid}">
+		  Timeline
+		</a>
+	      </li>
 	    </ul>
 	    <br class="clear" />
 	  </div>
@@ -70,7 +75,7 @@
 	    <span style="font-size:0.6em;"><tt>{motors}</tt></span>
 	  </div>
 	  <div id="content">
-	    <div id="box1">
+	    <div>
 	      <h3>Sample details</h3>
 	      <ul>
 		<li><b>Sample composition:</b> {sample}</li>
@@ -79,9 +84,7 @@
 	      </ul>
 	    </div>
 	    {instrument}
-	    </div>
-	    <div id="content">
-	    <div id="box2">
+	    <div>
 	      <h3>Snapshots</h3>
 	      <ul class="imageList">
 		<li class="first">
@@ -110,7 +113,7 @@
 		</li>
 	      </ul>
 	    </div>
-	    <div id="box3">	
+	    <div>	
            <h3>Scan details</h3>
 	      <ul>
 		<li><b>Energy</b>: {energy} eV</li>
@@ -123,7 +126,7 @@
 		<li><b>Edge</b>: {edge}</li>
 	      </ul>
 	    </div>
-	    <div id="box4">
+	    <div>
             <h3>Experiment details</h3>
 	      <ul>
 		<li><b>SEAD scan start time:</b> {seqstart}</li>

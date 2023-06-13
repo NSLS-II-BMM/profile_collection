@@ -221,7 +221,7 @@ class LakeShore(PVPositioner):
 
 
     def dossier_entry(self):
-        thistext  =  '	    <div id="boxinst">\n'
+        thistext  =  '	    <div>\n'
         thistext +=  '	      <h3>Instrument: Displex/LakeShore 331</h3>\n'
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Temperature sensor A:</b> {self.sample_a.get():.1f} {self.units_sel.enum_strs[self.units_sel.get()]}</li>\n'

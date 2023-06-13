@@ -434,7 +434,7 @@ class GlancingAngle(Device):
         
 
     def dossier_entry(self):
-        thistext  =  '	    <div id="boxinst">\n'
+        thistext  =  '	    <div>\n'
         thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'

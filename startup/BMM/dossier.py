@@ -188,7 +188,7 @@ class BMMDossier():
     from the glancing angle stage class:
 
            def dossier_entry(self):
-              thistext  =  '	    <div id="boxinst">\n'
+              thistext  =  '	    <div>\n'
               thistext +=  '	      <h3>Instrument: Glancing angle stage</h3>\n'
               thistext +=  '	      <ul>\n'
               thistext += f'               <li><b>Spinner:</b> {self.current()}</li>\n'
@@ -198,9 +198,8 @@ class BMMDossier():
               thistext +=  '	    </div>\n'
               return thistext
 
-    This returns a <div> block for the HTML dossier file with
-    id="boxinst", which identifies the div for the CSS formatting.
-    The contents of this text include a header3 description of the
+    This returns a <div> block for the HTML dossier file.  The
+    contents of this text include a header3 description of the
     instrument and an unordered list of the most salient aspects of
     the current state of the instrument.
 
@@ -495,7 +494,7 @@ class BMMDossier():
 
             # middle part of dossier
             if self.instrument == '':
-                self.instrument = '<div id=boxinst><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p><p> &nbsp;</p></div>'
+                self.instrument = '<div></div>'
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
             thiscontent += ''.join(content).format(basename      = basename,
@@ -742,7 +741,7 @@ class BMMDossier():
             
 
     def raster_instrument_entry(self):
-        thistext  =  '      <div id="boxinst">\n'
+        thistext  =  '      <div>\n'
         thistext +=  '        <h3>Instrument: Raster scan</h3>\n'
         thistext += f'          <a href="../maps/{self.pngout}">\n'
         thistext += f'                        <img src="../maps/{self.pngout}" width="300" alt="" /></a>\n'
@@ -752,7 +751,7 @@ class BMMDossier():
         return thistext
 
     def sead_instrument_entry(self):
-        thistext  =  '      <div id="boxinst">\n'
+        thistext  =  '      <div>\n'
         thistext +=  '        <h3>Instrument: SEAD scan</h3>\n'
         thistext += f'          <a href="../snapshots/{self.seadimage}">\n'
         thistext += f'                        <img src="../snapshots/{self.seadimage}" width="300" alt="" /></a>\n'
@@ -798,6 +797,7 @@ class BMMDossier():
                                               basename      = self.basename,
                                               date          = BMMuser.date,
                                               seqnumber     = seqnumber,
+                                              rid           = self.rid,
                                               energy        = '%.1f' % self.energy,
                                               edge          = self.edge,
                                               element       = self.element_text(),
@@ -888,6 +888,7 @@ class BMMDossier():
                                               sead          = self.sead,
                                               date          = BMMuser.date,
                                               seqnumber     = seqnumber,
+                                              rid           = self.rid,
                                               energy        = '%.1f' % self.energy,
                                               edge          = self.edge,
                                               element       = self.element_text(),

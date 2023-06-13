@@ -142,7 +142,7 @@ class Linkam(PVPositioner):
         boxedtext(f'Linkam {self.model}, stage {self.stage_model}', text, 'brown', width = 48)
 
     def dossier_entry(self):
-        thistext  =  '	    <div id="boxinst">\n'
+        thistext  =  '	    <div>\n'
         thistext +=  '	      <h3>Instrument: Linkam stage</h3>\n'
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Temperature:</b> {self.readback.get():.1f} C</li>\n'

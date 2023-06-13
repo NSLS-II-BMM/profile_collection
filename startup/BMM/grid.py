@@ -162,7 +162,7 @@ class GridMacroBuilder(BMMMacroBuilder):
             self.content += self.tab + '    yield from shb.close_plan()\n'
 
     def dossier_entry(self):
-        thistext  =  '	    <div id="boxinst">\n'
+        thistext  =  '	    <div>\n'
         thistext +=  '	      <h3>Instrument: Motor grid</h3>\n'
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Motor 1:</b> {self.motor1.name} = {self.position1:.3f}</li>\n'

@@ -370,7 +370,8 @@ def sead(inifile=None, force=False, **kwargs):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 
-        report(f'== starting single energy absorption detection scan', level='bold', slack=True)
+        dossier.rid = str(uuid.uuid4())[:8]
+        report(f'== starting single energy absorption detection scan', level='bold', slack=True, rid=dossier.rid)
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
