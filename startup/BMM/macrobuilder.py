@@ -481,6 +481,18 @@ class BMMMacroBuilder():
             
         return fname
 
+    def do_change_edge(self, el, ed, focus, tab):
+        text = f"{tab}yield from change_edge('{el}', edge='{ed}', focus={focus})\n"
+        time = 5.0
+        inrange = True
+        ee = edge_energy(el, ed)
+        if ee > 23500 or ee < 3500:
+            print(error_msg(f'\nThe {el} {ed} energy {ee:.1f} is outside the available range at BMM.'))
+            print('You probably have the edge set incorrectly in your spreadsheet.\n')
+            inrange = False
+        return(text, time, inrange)
+
+    
     def estimate_time(self, m, el, ed):
         '''Approximate the time contribution from the current row'''
         if type(m['bounds']) is str and m['bounds'].strip() != '':

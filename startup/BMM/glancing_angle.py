@@ -603,6 +603,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
         scan.
         '''
         element, edge, focus = (None, None, None)
+        self.tab = ' '*8
 
         if self.nreps > 1:
             self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
@@ -620,7 +621,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge', 'method', 'focus', 'spin', 'angle'):
+            for k in ('element', 'edge', 'focus', 'method', 'spin', 'angle'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 
@@ -630,26 +631,19 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             focus = False
             if m['focus'] == 'focused':
                 focus = True
+            text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
+            if inrange is False: return(False)
+
             if self.do_first_change is True:
-                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
-                self.totaltime += 5.0
-                ee = edge_energy(m['element'], m['edge'])
-                if ee > 23500 or ee < 3500:
-                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
-                    print('You probably have the edge set incorrectly in your spreadsheet.')
-                    return(False)
+                self.content += text
+                self.totaltime += time
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
-                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
-                self.totaltime += 5.0
-                ee = edge_energy(m['element'], m['edge'])
-                if ee > 23500 or ee < 3500:
-                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
-                    print('You probably have the edge set incorrectly in your spreadsheet.')
-                    return(False)
+                self.content += text
+                self.totaltime += time
                 
             else:
                 if self.verbose:
@@ -745,6 +739,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             ########################################
             # approximate time cost of this sample #
             ########################################
+            m['mode'] = 'fluorescence'  # always fluo in glancing angle
             self.estimate_time(m, element, edge)
             
         if self.nreps > 1:

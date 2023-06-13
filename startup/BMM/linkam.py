@@ -181,6 +181,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         element, edge, focus = (None, None, None)
         settle_time, ramp_time = 0,0
         previous = 25
+        self.tab = ' '*8
         
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
@@ -242,26 +243,19 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             focus = False
             if m['focus'] == 'focused':
                 focus = True
+            text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
+            if inrange is False: return(False)
+                
             if self.do_first_change is True:
-                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
                 self.do_first_change = False
-                self.totaltime += 5.0
-                ee = edge_energy(m['element'], m['edge'])
-                if ee > 23500 or ee < 3500:
-                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
-                    print('You probably have the edge set incorrectly in your spreadsheet.')
-                    return(False)
+                self.content += text
+                self.totaltime += time
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
-                self.content += self.tab + 'yield from change_edge(\'%s\', edge=\'%s\', focus=%r)\n' % (m['element'], m['edge'], focus)
-                self.totaltime += 5.0
-                ee = edge_energy(m['element'], m['edge'])
-                if ee > 23500 or ee < 3500:
-                    print(error_msg(f'The {m["element"]} {m["edge"]} energy {ee:.1f} is outside the available range at BMM.'))
-                    print('You probably have the edge set incorrectly in your spreadsheet.')
-                    return(False)
+                self.content += text
+                self.totaltime += time
                 
             else:
                 if self.verbose:
