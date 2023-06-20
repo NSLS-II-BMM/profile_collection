@@ -131,7 +131,7 @@ def BMM_clear_to_start():
     if user_ns['shb'].state.get() == 1:
         action = input(bold_msg("\nB shutter is closed.  Open shutter? " + PROMPT)).strip()
         openit = False
-        if action == '' or action.lower() == 'y':
+        if action == '' or action[0].lower() == 'y':
             openit = True
         else:
             openit = False

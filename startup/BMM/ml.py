@@ -207,7 +207,7 @@ class BMMDataEvaluation():
                     grp.attrs['score'] = 1
                 else:
                     action = input('\n' + bold_msg('1= good  2=bad  q=quit > '))
-                    if action.lower() == 'q':
+                    if action[0].lower() == 'q':
                         plt.close(fig)
                         return()
                     else:
@@ -388,7 +388,7 @@ class BMMDataEvaluation():
 
             count += 1
             action = input('\n' + bold_msg('1= good  2=bad  3=skip  q=quit > '))
-            if action.lower() == 'q':
+            if action[0].lower() == 'q':
                 plt.close(fig)
                 h5.close()
                 return()

@@ -584,7 +584,7 @@ def xafs(inifile=None, **kwargs):
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
 
             action = input("\nBegin scan sequence? " + PROMPT)
-            if action.lower() == 'q' or action.lower() == 'n':
+            if action[0].lower() == 'q' or action[0].lower() == 'n':
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
@@ -966,7 +966,6 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
-                kafka_message({'xafsscan': 'stop',})
 
                 ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
                 ## see #64 at https://github.com/bluesky/tutorials
@@ -1064,6 +1063,7 @@ def xafs(inifile=None, **kwargs):
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
+        kafka_message({'xafsscan': 'stop',})
         kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
         if not is_re_worker_active():
             rsync_to_gdrive()

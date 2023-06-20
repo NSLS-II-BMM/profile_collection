@@ -250,7 +250,7 @@ class FMBOEpicsMotor(EpicsMotor):
     def home(self, force=False):
         if force is False:
             action = input(f"\nBegin homing {self.name}? " + PROMPT)
-            if action.lower() == 'q' or action.lower() == 'n':
+            if action[0].lower() == 'q' or action[0].lower() == 'n':
                 return
         self.home_signal.put(1)
 

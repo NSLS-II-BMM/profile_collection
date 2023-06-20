@@ -285,14 +285,14 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             BMMuser.prompt = False
         if BMMuser.prompt:
             action = input("\nBegin energy change? " + PROMPT)
-            if action.lower() == 'q' or action.lower() == 'n':
+            if action[0].lower() == 'q' or action[0].lower() == 'n':
                 return(yield from null())
             if mode == 'C' and energy < 6000:
                 print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
                 print(warning_msg("You will not get optimal harmonic rejection."))
                 print(whisper("This message is informational, not indicative of a problem with your experiment."))
                 #action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
-                #if action.lower() == 'q' or action.lower() == 'n':
+                #if action[0].lower() == 'q' or action[0].lower() == 'n':
                 #    yield from null()
                 #    return
         else:
@@ -395,7 +395,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from sleep(1)
             yield from rocking_curve()
             close_last_plot()
-            kafka_message({'close': 'line'})
+            kafka_message({'close': 'last'})
 
         ##########################
         # run a slit height scan #
@@ -404,7 +404,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             print('Optimizing slits height...')
             yield from slit_height(move=True)
             close_last_plot()
-            kafka_message({'close': 'line'})
+            kafka_message({'close': 'last'})
             ## redo rocking curve?
 
         ##################################

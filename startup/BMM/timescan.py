@@ -12,7 +12,7 @@ from bluesky import __version__ as bluesky_version
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 
 import numpy
-import os, datetime, re, textwrap, configparser
+import os, datetime, re, textwrap, configparser, uuid
 import pandas
 
 import matplotlib
@@ -386,7 +386,7 @@ def sead(inifile=None, force=False, **kwargs):
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
             action = input("\nBegin time scan? " + PROMPT)
-            if action.lower() == 'q' or action.lower() == 'n':
+            if action[0].lower() == 'q' or action[0].lower() == 'n':
                 return(yield from null())
 
         ## gather up input data into a format suitable for the dossier

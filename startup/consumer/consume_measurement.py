@@ -143,15 +143,15 @@ def plot_from_kafka_messages(beamline_acronym):
                 elif message['close'] == 'last':
                     plt.close(ls.plots[-1])
 
-            elif 'resting_state' in message:
-                if doing == 'timescan':
-                    ts.stop()
-                elif doing == 'xafsscan':
-                    xs.stop()
-                elif doing == 'linescan':
-                    ts.stop()
-                #elif doing == 'areascan':
-                doing = None
+            # elif 'resting_state' in message:
+            #     if doing == 'timescan':
+            #         ts.stop()
+            #     elif doing == 'xafsscan':
+            #         xs.stop()
+            #     elif doing == 'linescan':
+            #         ts.stop()
+            #     #elif doing == 'areascan':
+            #     doing = None
 
         # for live plotting, need to capture and parse event
         # documents. use the global state variable "doing"

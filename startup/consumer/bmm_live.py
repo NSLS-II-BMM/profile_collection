@@ -224,7 +224,6 @@ class LineScan():
         self.line        = None
         self.description = None
         self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
-        self.plots       = []
         self.initial     = 0
 
     # this helped: https://techoverflow.net/2021/08/20/how-to-autoscale-matplotlib-xy-axis-after-set_data-call/
@@ -422,18 +421,17 @@ class XAFSScan():
         '''Done with a sequence of XAFS live plots.
         '''
         self.ongoing     = False
-        self.xdata       = []
-        self.ydata       = []
-        self.motor       = None
-        self.numerator   = None
-        self.denominator = 1
-        self.figure      = None
-        self.axes        = None
-        self.line        = None
-        self.description = None
-        self.xs1, self.xs2, self.xs3, self.xs4, xs8 = None, None, None, None, None
-        self.plots       = []
-        self.initial     = 0
+        # self.xdata       = []
+        # self.ydata       = []
+        # self.motor       = None
+        # self.numerator   = None
+        # self.denominator = 1
+        # self.figure      = None
+        # self.axes        = None
+        # self.line        = None
+        # self.description = None
+        # self.xs1, self.xs2, self.xs3, self.xs4, xs8 = None, None, None, None, None
+        # self.initial     = 0
         
 
 

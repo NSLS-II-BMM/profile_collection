@@ -219,7 +219,7 @@ def areascan(detector,
         #     figs = list(map(plt.figure, plt.get_fignums()))
         #     canvas = figs[0].canvas
         #     action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
-        #     if action.lower() == 'n' or action.lower() == 'q':
+        #     if action[0].lower() == 'n' or action[0].lower() == 'q':
         #         return(yield from null())
         #     print('Single click the left mouse button on the plot to pluck a point...')
         #     cid = canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and

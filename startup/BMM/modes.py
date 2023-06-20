@@ -78,6 +78,43 @@ def pds_motors_ready():
     else:
         return(True)
 
+# def pds_mirrors_cycle():
+#    ready_count = 0
+#    while pds_motors_ready() is False:
+#        ready_count += 1
+#        report('\nOne or more motors are showing amplifier faults. Attempting to correct the problem.', level='error', slack=True)
+#        problem_is_m2 = False
+#        m2_yu, m2_ydo, m2_ydi = user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
+#        m2_xu, m2_xd, m2_bender = user_ns['m2_xu'], user_ns['m2_xd'], user_ns['m2_bender']
+#        for m in (m2.xu, m2.xd, m2.yu, m2.ydo, m2.ydi, m2_bender):
+#            if m.amfe.get() or m.amfae.get():
+#                problem_is_m2 = True
+#        if problem_is_m2 is True:
+#            user_ns['ks'].cycle('m2')
+
+#        problem_is_m3 = False
+#        m3_yu, m3_ydo, m3_ydi = user_ns['m2_yu'], user_ns['m2_ydo'], user_ns['m2_ydi']
+#        m3_xu, m3_xd = user_ns['m2_xu'], user_ns['m2_xd']
+#        for m in (m3.xu, m3.xd, m3.yu, m3.ydo, m3.ydi):
+#            if m.amfe.get() or m.amfae.get():
+#                problem_is_m3 = True
+#        if problem_is_m3 is True:
+#            user_ns['ks'].cycle('m3')
+
+#        # problem_is_dcm = False
+#        # dcm_pitch, dcm_roll, dcm_perp = user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_perp']
+#        # dcm_para, dcm_bragg = user_ns['dcm_para'], user_ns['dcm_bragg']
+#        # for m in (dcm_pitch, dcm_roll, dcm_perp, dcm_para, dcm_bragg):
+#        #     if m.amfe.get() or m.amfae.get():
+#        #         problem_is_dcm = True
+#        # if problem_is_dcm is True:
+#        #     user_ns['ks'].cycle('dcm')
+
+#        if ready_count > 5:
+#            report('Failed to fix an amplifier fault while changing mode.', level='error', slack=True)
+#            yield from null()
+#            return
+     
      
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False):
      '''Move the photon delivery system to a new mode. 
@@ -127,7 +164,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
      if mode == 'B':
           action = input("You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? " + PROMPT)
-          if action.lower() != 'y':
+          if action[0].lower() != 'y':
                return(yield from null())
 
      if mode == 'A':
@@ -147,7 +184,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           print('Moving to mode %s (%s)' % (mode, description))
      if prompt:
           action = input("Begin moving motors? " + PROMPT)
-          if action.lower() == 'q' or action.lower() == 'n':
+          if action[0].lower() == 'q' or action[0].lower() == 'n':
                return(yield from null())
           
      RE.msg_hook = None
@@ -215,9 +252,21 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      yield from mv(dm3_bct.kill_cmd, 1)
 
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F') and insist is False:
-          yield from mv(*base)
+          try:
+               yield from mv(*base)
+          except:
+               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
+               user_ns['ks'].cycle('m2')
+               user_ns['ks'].cycle('m3')
+               yield from mv(*base)
      elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C') and insist is False: # no need to move M2
-          yield from mv(*base)
+          try:
+               yield from mv(*base)
+          except:
+               report('\nMirror  amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
+               user_ns['ks'].cycle('m2')
+               user_ns['ks'].cycle('m3')
+               yield from mv(*base)
      else:
           if bender is True:
                yield from mv(m2_bender.kill_cmd, 1)
@@ -235,7 +284,13 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           base.extend([m2.yu,  float(MODEDATA['m2_yu'][mode])])
           base.extend([m2.ydo, float(MODEDATA['m2_ydo'][mode])])
           base.extend([m2.ydi, float(MODEDATA['m2_ydi'][mode])])
-          yield from mv(*base)
+          try:
+               yield from mv(*base)
+          except:
+               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
+               user_ns['ks'].cycle('m2')
+               user_ns['ks'].cycle('m3')
+               yield from mv(*base)
 
      yield from sleep(2.0)
      yield from mv(m2_bender.kill_cmd, 1)
@@ -365,7 +420,7 @@ def change_xtals(xtal=None):
 
      report(f'Moving to {xtal} crystals', level='bold', slack=True, rid=True)
      action = input('Begin moving motors? ' + PROMPT)
-     if action.lower() == 'q' or action.lower() == 'n':
+     if action[0].lower() == 'q' or action[0].lower() == 'n':
           yield from null()
           return
 

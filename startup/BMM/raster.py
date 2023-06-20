@@ -6,7 +6,7 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-import numpy, os, re, shutil, openpyxl
+import numpy, os, re, shutil, openpyxl, uuid
 import textwrap, configparser, datetime
 from scipy.io import savemat
 import matplotlib.pyplot as plt
@@ -385,7 +385,7 @@ def raster(inifile=None, **kwargs):
             
             
             action = input("\nBegin raster scan? " + PROMPT)
-            if action.lower() == 'q' or action.lower() == 'n':
+            if action[0].lower() == 'q' or action[0].lower() == 'n':
                 yield from null()
                 return
 

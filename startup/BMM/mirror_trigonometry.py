@@ -42,7 +42,7 @@ def move_m3(target=5):
     print('')
 
     action = input("Begin moving motors? " + PROMPT)
-    if action.lower() == 'q' or action.lower() == 'n':
+    if action[0].lower() == 'q' or action[0].lower() == 'n':
         yield from null()
         return
 
@@ -96,7 +96,7 @@ def move_m2(target=3.5):
     print('')
 
     action = input("Begin moving motors? " + PROMPT)
-    if action.lower() == 'q' or action.lower() == 'n':
+    if action[0].lower() == 'q' or action[0].lower() == 'n':
         yield from null()
         return
 
