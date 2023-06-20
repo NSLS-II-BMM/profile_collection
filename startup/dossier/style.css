@@ -363,6 +363,12 @@ ul {
     font-family: monospace;
 }
 
+#manifestcontent {
+    background: #ffffff;
+    width: 75%;
+    margin-left: 10%;
+    padding: 20px;
+}
 #content {
     background: #ffffff;
     column-width: 400px;

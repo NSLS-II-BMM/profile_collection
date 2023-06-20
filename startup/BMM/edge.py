@@ -10,6 +10,7 @@ import time, json, os
 from bluesky.plan_stubs import null, sleep, mv, mvr
 from bluesky.preprocessors import finalize_wrapper
 
+from BMM.exceptions    import FailedDCMParaException, ArrivedInModeException
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
 from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT
@@ -353,7 +354,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from mv(dcm.energy, energy+target)
             if count > 5:
                 report(':boom: dcm_para failed to arrive in position.  Unable to resolve this problem. :boom:', level='error', slack=True)
-                return
+                raise FailedDCMParaException('dcm_para failed to arrive in position.  Unable to resolve this problem. (in BMM/edge.py)')
         if count > 0:
             report('Able to successfully resolve the stalling of dcm_para.  :sparkler:', slack=True)
 
@@ -363,8 +364,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             print('Fixing this is often as simple as re-running the change_mode() command.')
             #print('Or try dm3_bct.kill_cmd() then dm3_bct.enable_cmd() then re-run the change_mode() command.')
             print('If that doesn\'t work, call for help')
-            yield from null()
-            return
+            raise ArrivedInModeException(f'Failed to arrive in mode {mode}. (in BMM/edge.py)')
+            #yield from null()
+            #return
 
         yield from kill_mirror_jacks()
         yield from sleep(1)
@@ -374,8 +376,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             print('Clear the faults and try running the same change_edge() command again.')
             print('Troubleshooting: ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
             BMMuser.motor_fault = None
-            yield from null()
-            return
+            raise ArrivedInModeException(f'Failed to arrive in mode {mode} due to amplifier faults. (in BMM/edge.py)')
+            #yield from null()
+            #return
         BMMuser.motor_fault = None
 
         if mode in ('A', 'C'):

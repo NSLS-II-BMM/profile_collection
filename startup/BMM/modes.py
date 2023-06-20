@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.derivedplot   import close_all_plots, close_last_plot
+from BMM.exceptions    import ChangeModeException
 from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
@@ -148,8 +149,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
 
      if pds_motors_ready() is False:
-          print(error_msg('\nOne or more motors are showing amplifier faults.\nCycle the correct kill switch, then try again.'))
-          return(yield from null())
+          report('\nOne or more motors are showing amplifier faults.\nCycle the correct kill switch, then try again.', level='error', slack=True)
+          raise ChangeModeException('One or more motors are showing amplifier faults. (in BMM/modes.py)')
+          #return(yield from null())
 
      ######################################################################
      # this is a tool for verifying a macro.  this replaces an xafs scan  #
@@ -236,7 +238,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                continue
      if motors_ready is False:
           BMMuser.motor_fault = ', '.join(problem_motors)
-          return (yield from null())
+          report('One or more motors are failing amplifier fault checks.', level='error', slack=True)
+          raise ChangeModeException('One or more motors are failing amplifier fault checks. (in BMM/modes.py)')
+          #return (yield from null())
 
      ##########################
      # do the motor movements #
