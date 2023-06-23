@@ -250,8 +250,9 @@ class FMBOEpicsMotor(EpicsMotor):
     def home(self, force=False):
         if force is False:
             action = input(f"\nBegin homing {self.name}? " + PROMPT)
-            if action[0].lower() == 'q' or action[0].lower() == 'n':
-                return
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    return
         self.home_signal.put(1)
 
     def clear_encoder_loss(self):

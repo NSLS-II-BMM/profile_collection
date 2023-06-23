@@ -251,9 +251,10 @@ class GlancingAngle(Device):
 
     def align_pitch(self, force=False):
         '''Find the peak of xafs_pitch scan against It. Plot the
-        result. Move to the peak.'''        
+        result. Move to the peak.'''
+        kafka_message({'close': 'last'})
         xafs_pitch = user_ns['xafs_pitch']
-        uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, pluck=False, force=force)
+        uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, dopluck=False, force=force)
         close_last_plot()
         table  = user_ns['db'][-1].table()
         pitch  = table['xafs_pitch']
@@ -274,11 +275,12 @@ class GlancingAngle(Device):
     def align_linear(self, force=False, drop=None):
         '''Fit an error function to the linear scan against It. Plot the
         result. Move to the centroid of the error function.'''
+        kafka_message({'close': 'last'})
         if self.orientation == 'parallel':
             motor = user_ns['xafs_liny']
         else:
             motor = user_ns['xafs_linx']
-        uid = yield from linescan(motor, 'it', -2.3, 2.3, 51, pluck=False)
+        uid = yield from linescan(motor, 'it', -2.3, 2.3, 51, dopluck=False)
         close_last_plot()
         table  = user_ns['db'][-1].table()
         yy     = table[motor.name]
@@ -313,12 +315,13 @@ class GlancingAngle(Device):
 
 
     def align_fluo(self, force=False):
+        kafka_message({'close': 'last'})
         BMMuser = user_ns['BMMuser']
         if self.orientation == 'parallel':
             motor = user_ns['xafs_liny']
         else:
             motor = user_ns['xafs_linx']
-        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, pluck=False, force=force)
+        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, dopluck=False, force=force)
         self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
@@ -385,8 +388,9 @@ class GlancingAngle(Device):
         report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
             
         BMM_suspenders()
+        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
         kafka_message({'glancing_angle' : 'start',
-                       'filename' : os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')})
+                       'filename' : self.alignment_filename})
 
         ## first pass in transmission
         yield from self.align_linear(drop=drop)
@@ -410,6 +414,7 @@ class GlancingAngle(Device):
         ## move to measurement angle and align
         yield from mvr(user_ns['xafs_pitch'], pitch)
         yield from self.align_fluo()
+        kafka_message({'close': 'last'})
         kafka_message({'glancing_angle' : 'stop'})
          
         ## make a pretty picture, post it to slack
@@ -503,77 +508,77 @@ class GlancingAngle(Device):
         #plt.pause(0.05)
 
 
-    def alignment_plot(self, yt, pitch, yf):
-        '''Make a pretty, three-panel plot at the end of an auto-alignment'''
-        BMMuser = user_ns['BMMuser']
-        thisagg = matplotlib.get_backend()
-        matplotlib.use('Agg') # produce a plot without screen display
-        close_all_plots()
-        fig = plt.figure(tight_layout=True) #, figsize=(9,6))
-        gs = gridspec.GridSpec(1,3)
+    # def alignment_plot(self, yt, pitch, yf):
+    #     '''Make a pretty, three-panel plot at the end of an auto-alignment'''
+    #     BMMuser = user_ns['BMMuser']
+    #     thisagg = matplotlib.get_backend()
+    #     matplotlib.use('Agg') # produce a plot without screen display
+    #     close_all_plots()
+    #     fig = plt.figure(tight_layout=True) #, figsize=(9,6))
+    #     gs = gridspec.GridSpec(1,3)
 
-        if self.orientation == 'parallel':
-            motor = 'xafs_y'
-        else:
-            motor =  'xafs_x'
+    #     if self.orientation == 'parallel':
+    #         motor = 'xafs_y'
+    #     else:
+    #         motor =  'xafs_x'
 
-        t  = fig.add_subplot(gs[0, 0])
-        tt = user_ns['db'][yt].table()
-        yy = tt[motor]
-        signal = tt['It']/tt['I0']
-        if float(signal[2]) > list(signal)[-2] :
-            ss     = -(signal - signal[2])
-            self.inverted = 'inverted '
-        else:
-            ss     = signal - signal[2]
-            self.inverted    = ''
-        mod    = StepModel(form='erf')
-        pars   = mod.guess(ss, x=numpy.array(yy))
-        out    = mod.fit(ss, pars, x=numpy.array(yy))
-        t.scatter(yy, out.data)
-        t.plot(yy, out.best_fit, color='red')
-        t.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=120, marker='x', color='green')
-        t.set_xlabel(f'{motor} (mm)')
-        t.set_ylabel(f'{self.inverted}data and error function')
+    #     t  = fig.add_subplot(gs[0, 0])
+    #     tt = user_ns['db'][yt].table()
+    #     yy = tt[motor]
+    #     signal = tt['It']/tt['I0']
+    #     if float(signal[2]) > list(signal)[-2] :
+    #         ss     = -(signal - signal[2])
+    #         self.inverted = 'inverted '
+    #     else:
+    #         ss     = signal - signal[2]
+    #         self.inverted    = ''
+    #     mod    = StepModel(form='erf')
+    #     pars   = mod.guess(ss, x=numpy.array(yy))
+    #     out    = mod.fit(ss, pars, x=numpy.array(yy))
+    #     t.scatter(yy, out.data)
+    #     t.plot(yy, out.best_fit, color='red')
+    #     t.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=120, marker='x', color='green')
+    #     t.set_xlabel(f'{motor} (mm)')
+    #     t.set_ylabel(f'{self.inverted}data and error function')
 
-        p  = fig.add_subplot(gs[0, 1])
-        tp = user_ns['db'][pitch].table()
-        xp = tp['xafs_pitch']
-        signal = tp['It']/tp['I0']
-        target = signal.idxmax()
-        p.plot(xp, signal)
-        p.scatter(xp[target], signal.max(), s=120, marker='x', color='green')
-        p.set_xlabel('xafs_pitch (deg)')
-        p.set_ylabel('It/I0')
-        p.set_title(f'alignment of spinner {self.current()}')
+    #     p  = fig.add_subplot(gs[0, 1])
+    #     tp = user_ns['db'][pitch].table()
+    #     xp = tp['xafs_pitch']
+    #     signal = tp['It']/tp['I0']
+    #     target = signal.idxmax()
+    #     p.plot(xp, signal)
+    #     p.scatter(xp[target], signal.max(), s=120, marker='x', color='green')
+    #     p.set_xlabel('xafs_pitch (deg)')
+    #     p.set_ylabel('It/I0')
+    #     p.set_title(f'alignment of spinner {self.current()}')
 
-        f = fig.add_subplot(gs[0, 2])
-        tf = user_ns['db'][yf].table()
-        yy = tf[motor]
-        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-        #if BMMuser.element in ('Zr', 'Sc', 'Nb'):
-        com = signal.idxmax()
-        centroid = yy[com]
-        #else:
-        #com = int(center_of_mass(signal)[0])+1
-        #centroid = yy[com]
-        f.plot(yy, signal)
-        f.scatter(centroid, signal[com], s=120, marker='x', color='green')
-        f.set_xlabel(f'{motor} (mm)')
-        f.set_ylabel('If/I0')
+    #     f = fig.add_subplot(gs[0, 2])
+    #     tf = user_ns['db'][yf].table()
+    #     yy = tf[motor]
+    #     signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+    #     #if BMMuser.element in ('Zr', 'Sc', 'Nb'):
+    #     com = signal.idxmax()
+    #     centroid = yy[com]
+    #     #else:
+    #     #com = int(center_of_mass(signal)[0])+1
+    #     #centroid = yy[com]
+    #     f.plot(yy, signal)
+    #     f.scatter(centroid, signal[com], s=120, marker='x', color='green')
+    #     f.set_xlabel(f'{motor} (mm)')
+    #     f.set_ylabel('If/I0')
 
-        fig.canvas.draw()
-        fig.canvas.flush_events()
-        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
-        plt.savefig(self.alignment_filename)
-        matplotlib.use(thisagg) # return to screen display
-        shutil.copyfile(self.alignment_filename,  self.toss)
-        self.clean_img()
-        self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
-        self.img.show()
-        #plt.show()
-        #fig.canvas.draw_idle()
-        #plt.pause(0.05)
+    #     fig.canvas.draw()
+    #     fig.canvas.flush_events()
+    #     self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
+    #     plt.savefig(self.alignment_filename)
+    #     matplotlib.use(thisagg) # return to screen display
+    #     shutil.copyfile(self.alignment_filename,  self.toss)
+    #     self.clean_img()
+    #     self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+    #     self.img.show()
+    #     #plt.show()
+    #     #fig.canvas.draw_idle()
+    #     #plt.pause(0.05)
 
         
 

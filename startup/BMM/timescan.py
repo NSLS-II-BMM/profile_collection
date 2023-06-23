@@ -386,8 +386,9 @@ def sead(inifile=None, force=False, **kwargs):
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
             action = input("\nBegin time scan? " + PROMPT)
-            if action[0].lower() == 'q' or action[0].lower() == 'n':
-                return(yield from null())
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    return(yield from null())
 
         ## gather up input data into a format suitable for the dossier
         with open(inifile, 'r') as fd: content = fd.read()

@@ -385,9 +385,10 @@ def raster(inifile=None, **kwargs):
             
             
             action = input("\nBegin raster scan? " + PROMPT)
-            if action[0].lower() == 'q' or action[0].lower() == 'n':
-                yield from null()
-                return
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    yield from null()
+                    return
 
         ## move to measurement energy
         yield from mv(dcm.energy, p['energy'])

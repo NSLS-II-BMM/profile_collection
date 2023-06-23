@@ -286,16 +286,17 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             BMMuser.prompt = False
         if BMMuser.prompt:
             action = input("\nBegin energy change? " + PROMPT)
-            if action[0].lower() == 'q' or action[0].lower() == 'n':
-                return(yield from null())
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    return(yield from null())
             if mode == 'C' and energy < 6000:
                 print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
                 print(warning_msg("You will not get optimal harmonic rejection."))
                 print(whisper("This message is informational, not indicative of a problem with your experiment."))
                 #action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
-                #if action[0].lower() == 'q' or action[0].lower() == 'n':
-                #    yield from null()
-                #    return
+                #if action != '':
+                #    if action[0].lower() == 'n' or action[0].lower() == 'q':
+                #        return(yield from null())
         else:
             if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
                 print(warning_msg(f'You are already at the {el} {edge} edge.'))

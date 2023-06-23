@@ -126,10 +126,11 @@ def pluck(suggested_motor=None):
         return(yield from null())
         
     action = input(f'\nMove {motor_name} to {position:.3f}? ' + PROMPT)
-    if action[0].lower() == 'n' or action[0].lower() == 'q':
-        print('Skipping...')
-        unset_mouse_click()
-        return(yield from null())
+    if action != '':
+        if action[0].lower() == 'n' or action[0].lower() == 'q':
+            print('Skipping...')
+            unset_mouse_click()
+            return(yield from null())
     #print(motor.name, motor_name, position)
     yield from mv(motor, position)
     unset_mouse_click()
@@ -256,8 +257,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
 
             else:
                 action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
-                if action[0].lower() == 'n' or action[0].lower() == 'q':
-                    return(yield from null())
+                if action != '':
+                    if action[0].lower() == 'n' or action[0].lower() == 'q':
+                        return(yield from null())
                 yield from sleep(slp)
                 yield from mv(motor.kill_cmd, 1)
                 #yield from mv(motor.inpos, 1)
@@ -437,8 +439,9 @@ def find_slot(shape='slot'):
         BMMuser.prompt = False
     if BMMuser.prompt:
         action = input("\nIs the beam currently on a slot in the outer ring? " + PROMPT)
-        if action[0].lower() == 'q' or action[0].lower() == 'n':
-            return(yield from null())
+        if action != '':
+            if action[0].lower() == 'n' or action[0].lower() == 'q':
+                return(yield from null())
     
     kafka_message({'align_wheel' : 'start'})
     if shape == 'circle':
@@ -962,8 +965,9 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
         if dopluck is True:
             action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
-            if action[0].lower() == 'n' or action[0].lower() == 'q':
-                return(yield from null())
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    return(yield from null())
             yield from pluck(suggested_motor=thismotor)
             #yield from move_after_scan(thismotor)
 

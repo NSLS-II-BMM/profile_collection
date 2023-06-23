@@ -42,9 +42,10 @@ def move_m3(target=5):
     print('')
 
     action = input("Begin moving motors? " + PROMPT)
-    if action[0].lower() == 'q' or action[0].lower() == 'n':
-        yield from null()
-        return
+    if action != '':
+        if action[0].lower() == 'n' or action[0].lower() == 'q':
+            yield from null()
+            return
 
     RE.msg_hook = None
     BMM_log_info('Moving mirror 3: target = %.2f, M3 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'
@@ -96,9 +97,10 @@ def move_m2(target=3.5):
     print('')
 
     action = input("Begin moving motors? " + PROMPT)
-    if action[0].lower() == 'q' or action[0].lower() == 'n':
-        yield from null()
-        return
+    if action != '':
+        if action[0].lower() == 'n' or action[0].lower() == 'q':
+            yield from null()
+            return
 
     RE.msg_hook = None
     BMM_log_info('Moving mirror 2: target = %.2f, M2 pitch = %.2f\nBCT -> %.2f, yu -> %.2f, yd -> %.2f, correction = %.2f'

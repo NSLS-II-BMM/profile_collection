@@ -166,7 +166,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
      if mode == 'B':
           action = input("You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? " + PROMPT)
-          if action[0].lower() != 'y':
+          if action !='' and action[0].lower() != 'y':
                return(yield from null())
 
      if mode == 'A':
@@ -186,8 +186,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           print('Moving to mode %s (%s)' % (mode, description))
      if prompt:
           action = input("Begin moving motors? " + PROMPT)
-          if action[0].lower() == 'q' or action[0].lower() == 'n':
-               return(yield from null())
+          if action != '':
+               if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    return(yield from null())
           
      RE.msg_hook = None
      BMM_log_info('Changing photon delivery system to mode %s' % mode)
@@ -424,9 +425,10 @@ def change_xtals(xtal=None):
 
      report(f'Moving to {xtal} crystals', level='bold', slack=True, rid=True)
      action = input('Begin moving motors? ' + PROMPT)
-     if action[0].lower() == 'q' or action[0].lower() == 'n':
-          yield from null()
-          return
+     if action != '':
+          if action[0].lower() == 'n' or action[0].lower() == 'q':
+               yield from null()
+               return
 
      current_energy = dcm.energy.readback.get()
 

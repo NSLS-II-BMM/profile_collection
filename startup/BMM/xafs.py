@@ -584,10 +584,11 @@ def xafs(inifile=None, **kwargs):
                     print('\nPseudo-channel-cut energy = %.1f' % eave)
 
             action = input("\nBegin scan sequence? " + PROMPT)
-            if action[0].lower() == 'q' or action[0].lower() == 'n':
-                BMMuser.final_log_entry = False
-                yield from null()
-                return
+            if action != '':
+                if action[0].lower() == 'n' or action[0].lower() == 'q':
+                    BMMuser.final_log_entry = False
+                    yield from null()
+                    return
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

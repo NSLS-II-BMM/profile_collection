@@ -92,10 +92,11 @@ class USBVideo(Device):
             yield from null()
             return()
         action = input(f'\nWrite a {time} second video to {os.path.join(folder, name)}? ' + PROMPT)
-        if action[0].lower() == 'n' or action[0].lower() == 'q':
-            print('Abandoning video...')
-            yield from null()
-            return
+        if action != '':
+            if action[0].lower() == 'n' or action[0].lower() == 'q':
+                print('Abandoning video...')
+                yield from null()
+                return
         yield from mv(self.enable, 1)
         yield from sleep(0.5)
         yield from mv(self.startstop, 1)
