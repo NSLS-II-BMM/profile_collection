@@ -104,6 +104,9 @@ def plot_from_kafka_messages(beamline_acronym):
             elif 'xrfat' in message:
                 bmm_plot.xrfat(catalog=bmm_catalog, **message)
 
+            elif 'xrfplot' in message:
+                bmm_plot.xrfplot(catalog=bmm_catalog, **message)
+
             elif 'linescan' in message:
                 if message['linescan'] == 'start':
                     ls.start(**message)

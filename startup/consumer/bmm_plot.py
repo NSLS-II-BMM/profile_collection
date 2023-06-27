@@ -467,3 +467,12 @@ def xrfat(**kwargs):
         handle.close()
         print(f'Wrote XRF spectrum at {energy} eV to {xrffile}.')
 
+
+
+def xrfplot(**kwargs):
+    catalog = kwargs['catalog']
+    uid     = kwargs['uid']
+    energy  = kwargs['energy']
+    add     = kwargs['add']
+    only    = kwargs['only']
+    return

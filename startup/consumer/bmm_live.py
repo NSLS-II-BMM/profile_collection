@@ -280,7 +280,8 @@ class LineScan():
             if self.numerator == 'Ic0':
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
-        self.line2.set_data(self.xdata, self.y2data)
+        if self.numerator == 'Ic0':
+            self.line2.set_data(self.xdata, self.y2data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)
         self.figure.canvas.draw()
