@@ -687,9 +687,6 @@ def xafs(inifile=None, **kwargs):
         user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
         md['_user'] = user_metadata
 
-        #legends = []
-        #for i in range(p['start'], p['start']+p['nscans'], 1):
-        #    legends.append("%s.%3.3d" % (p['filename'], i))
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
@@ -953,6 +950,10 @@ def xafs(inifile=None, **kwargs):
                                'count': cnt })
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
                     uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
+                                                 'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
+                elif any(md in p['mode'] for md in ('icit', 'ici0')):
+                    uid = yield from scan_nd([quadem1, ic0], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':

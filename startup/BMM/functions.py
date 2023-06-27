@@ -234,6 +234,10 @@ def plotting_mode(mode):
         return 'yield'
     elif mode == 'test':
         return 'test'
+    elif mode == 'icit':
+        return 'icit'
+    elif mode == 'ici0':
+        return 'ici0'
     else:
         return 'trans'
 

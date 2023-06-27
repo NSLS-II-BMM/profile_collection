@@ -101,6 +101,7 @@ class LineScan():
     figure      = None
     axes        = None
     line        = None
+    line2       = None
     description = None
     xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
     plots       = []
@@ -112,6 +113,7 @@ class LineScan():
         self.ongoing = True
         self.xdata = []
         self.ydata = []
+        self.y2data = []
         if 'motor' in kwargs: self.motor = kwargs['motor']
         self.numerator = kwargs['detector']
         self.denominator = None
@@ -159,6 +161,16 @@ class LineScan():
             self.description = 'yield'
             self.denominator = 'I0'
             self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
+
+        ## split ion chamber
+        elif self.numerator == 'Ic0':
+            self.line.set_label('I0a')
+            self.line2, = self.axes.plot([],[], label='I0b')
+            self.description = 'split ion chamber (channel A)'
+            self.denominator = 'I0'
+            self.axes.set_ylabel(f'I0a/{self.denominator}')
+            self.axes.legend(loc='best', shadow=True)
+            
 
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
@@ -216,18 +228,25 @@ class LineScan():
         self.ongoing     = False
         self.xdata       = []
         self.ydata       = []
+        self.y2data       = []
         self.motor       = None
         self.numerator   = None
         self.denominator = 1
         self.figure      = None
         self.axes        = None
         self.line        = None
+        self.line2        = None
         self.description = None
         self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
         self.initial     = 0
 
     # this helped: https://techoverflow.net/2021/08/20/how-to-autoscale-matplotlib-xy-axis-after-set_data-call/
     def add(self, **kwargs):
+
+        if 'dcm_roll' in kwargs['data']:
+            return              # this is a baseline event document, dcm_roll is almost never scanned
+
+        
         if self.numerator in ('If', 'Xs'):
             if self.xs1 in kwargs['data']:  # this is a primary documemnt
                 signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
@@ -235,6 +254,9 @@ class LineScan():
                     signal = 0
             else:                           # this is a baseline document
                 return
+        elif self.numerator == 'Ic0':
+            signal  = kwargs['data']['I0a']
+            signal2 = kwargs['data']['I0b']
         elif self.numerator == 'Xs1':
             signal = kwargs['data'][self.xs8]
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
@@ -251,9 +273,14 @@ class LineScan():
             self.xdata.append(kwargs['data'][self.motor])
         if self.denominator is None:
             self.ydata.append(signal)
+            if self.numerator == 'Ic0':
+                self.y2data.append(signal2)
         else:
             self.ydata.append(signal/kwargs['data'][self.denominator])
+            if self.numerator == 'Ic0':
+                self.y2data.append(signal2/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
+        self.line2.set_data(self.xdata, self.y2data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)
         self.figure.canvas.draw()
@@ -365,6 +392,8 @@ class XAFSScan():
         ## start lines and set axis labels
         #self.line_mut, = self.mut.plot([],[], label='$\mu_T(E)$')
         self.mut.set_ylabel('$\mu(E)$ (transmission)')
+        if self.mode == 'icit':
+            self.mut.set_ylabel('$\mu(E)$ (transmission, integrated ion chamber for It)')
         self.mut.set_xlabel('energy (eV)')
         self.mut.set_title(f'data: {self.sample}')
 
@@ -444,7 +473,10 @@ class XAFSScan():
         ## primary event document, append to data arrays
         self.energy.append(kwargs['data']['dcm_energy'])
         self.i0sig.append(kwargs['data']['I0'])
-        self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
+        if self.mode == 'icit':
+            self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
+        else:                   # normal quadem transmission
+            self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
         self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
 
         ## push the updated data arrays to the various lines

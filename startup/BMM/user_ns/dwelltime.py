@@ -17,7 +17,7 @@ run_report(__file__, text='dwelltime')
 
 
 with_quadem, with_struck, with_xspress3 = True, False, True
-with_ic0, with_ic1, with_ic2 = False, False, False
+with_ic0, with_ic1, with_ic2 = True, False, False
 with_dualem = False             # deprecated
 
 # An error gets triggered during Azure CI testing that does not get triggered when

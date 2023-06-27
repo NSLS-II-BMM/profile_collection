@@ -230,7 +230,7 @@ def dark_current():
     if with_quadem:
         yield from user_ns['quadem1'].dark_current()
     if with_ic0:
-        yield from user_ns['ic1'].dark_current()
+        yield from user_ns['ic0'].dark_current()
     if reopen:
         print('Opening photon shutter')
         yield from user_ns['shb'].open_plan()

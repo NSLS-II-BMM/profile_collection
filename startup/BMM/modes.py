@@ -256,6 +256,13 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      yield from sleep(0.2)
      yield from mv(dm3_bct.kill_cmd, 1)
 
+     if mode in ('D', 'E', 'F') and user_ns['slits3'].vsize.position < 0.4:
+          print('Slit height appears to be set for focused beam.  Opening slits.')
+          yield from mv(user_ns['slits3'].vsize, 1.0)
+     elif mode in ('A', 'B', 'C') and user_ns['slits3'].vsize.position > 0.5:
+          print('Slit height appears to be set for collimated beam.  Narrowing slits.')
+          yield from mv(user_ns['slits3'].vsize, 0.3)
+     
      if mode in ('D', 'E', 'F') and current_mode in ('D', 'E', 'F') and insist is False:
           try:
                yield from mv(*base)
@@ -268,7 +275,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                yield from mv(*base)
           except:
-               report('\nMirror  amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
+               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
                user_ns['ks'].cycle('m2')
                user_ns['ks'].cycle('m3')
                yield from mv(*base)

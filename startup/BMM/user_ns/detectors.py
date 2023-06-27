@@ -178,11 +178,13 @@ toss = quadem1.Iy.describe()
 
 
 try:                            # might not be in use
-    ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='I0 chamber')
+    ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
     ic0.Ia.kind = 'hinted'
     ic0.Ib.kind = 'hinted'
     ic0.Ia.name = 'I0a'
     ic0.Ib.name = 'I0b'
+    set_precision(ic0.current1.mean_value, 3)
+    set_precision(ic0.current1.mean_value, 3)
 except:    
     ic0 = None
 

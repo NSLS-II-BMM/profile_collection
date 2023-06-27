@@ -812,7 +812,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         BMMuser.motor = thismotor
 
         # sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'I0a', 'I0b', 'Ic0', 'Xs', 'Xs1'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Xs', 'Xs1'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
                             (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, xs, xs1')))
             yield from null()

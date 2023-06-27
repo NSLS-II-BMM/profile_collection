@@ -117,6 +117,7 @@ class Pandrosus():
     def __init__(self, uid=None, name=None):
         self.uid     = uid
         self.name    = name
+        self.mode    = None
         self.element = None
         self.edge    = None
         self.group   = None
@@ -187,6 +188,16 @@ class Pandrosus():
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
+        elif mode in ('icit', 'ici0'):
+            if mode == 'icit':
+                self.group.mu = numpy.array(numpy.log(table['I0']/table['I0a']))
+                self.group.i0 = numpy.array(table['I0'])
+                self.group.signal = numpy.array(table['I0a'])
+            elif mode == 'icit':
+                self.group.mu = numpy.array(numpy.log(table['I0a']/table['It']))
+                self.group.i0 = numpy.array(table['I0a'])
+                self.group.signal = numpy.array(table['It'])
+
         elif mode == 'xs1':
             columns = start['XDI']['_dtc']
             self.group.mu = numpy.array(table[columns[0]]/table['I0'])
@@ -235,6 +246,7 @@ class Pandrosus():
             
     def fetch(self, uid, name=None, mode='transmission'):
         self.uid = uid
+        self.mode = mode
         if name is not None:
             self.name = name
         else:
@@ -246,10 +258,11 @@ class Pandrosus():
         self.group = Group(__name__=self.name)
         if 'Broker' in str(type(self.db)):  # v1 databroker
             self.title = self.db.v2[uid].metadata['start']['XDI']['Sample']['name']
+            self.mode  = self.db.v2[uid].metadata['start']['XDI']['_user']['mode']
         else:                               # tiled catalog
             self.title = self.db[uid].metadata['start']['XDI']['Sample']['name']
+            self.mode  = self.db[uid].metadata['start']['XDI']['_user']['mode']
 
-        self.mode = mode
         self.make_xmu(uid, mode=mode)
         self.make_ref(uid)
         self.prep()
@@ -781,6 +794,10 @@ class Pandrosus():
         mu.plot(self.group.energy, self.group.mu, label='$\mu(E)$', color='C0')
         mu.set_title(self.title)
         mu.set_ylabel('$\mu(E)$')
+        if self.mode == 'icit':
+            mu.set_ylabel('$\mu(E)$ (It is new IC)')
+        elif self.mode == 'ici0':
+            mu.set_ylabel('$\mu(E)$ (I0 is new IC)')
         mu.set_xlabel('energy (eV)')
 
         chik = fig.add_subplot(gs[1, 0], facecolor=self.facecolor)

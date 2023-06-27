@@ -14,7 +14,7 @@ def units(label):
             return 'eV'
         elif 'time' in label:
             return 'seconds'
-        elif label in ('i0', 'it', 'ir', 'iy'):
+        elif label in ('i0', 'it', 'ir', 'iy', 'i0a', 'i0b'):
             return 'nA'
         elif label[:-1] in ('roi', 'icr', 'ocr'):
             return 'counts'
@@ -34,8 +34,9 @@ def units(label):
         return ''
 
 
-quadem1, vor = user_ns['quadem1'], user_ns['vor']
+quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+_ic0         = [ic0.Ia, ic0.Ib]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
 _vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
@@ -141,6 +142,8 @@ def write_XDI(datafile, dataframe):
         detectors = _ionchambers + [BMMuser.xschannel8,]
     elif 'xs' in mm:
         detectors = _ionchambers + [BMMuser.xschannel1, BMMuser.xschannel2, BMMuser.xschannel3, BMMuser.xschannel4]
+    elif mm in ('icit', 'ici0'):
+        detectors = _ionchambers + _ic0
     else:
         detectors = fluorescence
         if BMMuser.detector == 1:
@@ -333,6 +336,10 @@ def write_XDI(datafile, dataframe):
     else:
         if 'yield' in mode:     # yield is the primary measurement
             table['xmu'] = table['Iy'] / table['I0']
+        elif 'icit' in mode:
+            table['xmu'] = numpy.log(table['I0'] / table['I0a'])
+        elif 'ici0' in mode:
+            table['xmu'] = numpy.log(table['I0a'] / table['It'])
         elif 'ref' in mode:     # reference is the primary measurement
             table['xmu'] = numpy.log(table['It'] / table['Ir'])
         elif 'xs1' in mode:     # reference is the primary measurement
@@ -360,6 +367,9 @@ def write_XDI(datafile, dataframe):
         elif 'xs' in mode:
             column_list.extend([BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4])
             template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
+        elif mode in ('icit', 'ici0'):
+            column_list.extend(['I0a', 'I0b'])
+            template = "  %.3f  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f\n"
         if (kind == 'sead'):
             template = "  %.3f  %.6f  %.6f  %.6f\n"
     if kind == 'sead':
