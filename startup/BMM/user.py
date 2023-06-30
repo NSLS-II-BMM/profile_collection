@@ -18,6 +18,12 @@ from BMM.user_ns.base import startup_dir
 
 TEMPLATES_FOLDER = 'templates'
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -763,6 +769,7 @@ class BMM_User(Borg):
         echem : bool
             true if this experiment uses the BioLogic potentiostat
         '''
+        do_sync = False
         if self.user_is_defined:
             print(error_msg('An experiment is already started.'))
             return()
@@ -786,6 +793,7 @@ class BMM_User(Borg):
         lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
         if not os.path.isdir(lustre_root):
             os.makedirs(lustre_root)
+            do_sync = True
         if name in BMM_STAFF:
             self.staff = True
             local_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
@@ -825,6 +833,9 @@ class BMM_User(Borg):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(f'    Made symbolic link to data folder at {local_folder}')
         self.folder_link = local_folder
+        if not is_re_worker_active() and do_sync is True:
+            rsync_to_gdrive()
+            synch_gdrive_folder()
         
         # if 'xf06bm-ws1' in self.host:
         #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
@@ -980,6 +991,12 @@ class BMM_User(Borg):
         for thing in ('name', 'gup', 'saf', 'folder', 'folder_link', 'date'):
             rkvs.set(f'BMM:user:{thing}', '')
 
+        ######################
+        # final sync of data #
+        ######################
+        if not is_re_worker_active() and do_sync is True:
+            rsync_to_gdrive()
+            synch_gdrive_folder()
         
         return None
 

@@ -14,10 +14,11 @@ class GridMacroBuilder(BMMMacroBuilder):
     >>> gmb.write_macro()
 
     '''
-    motor1    = None
-    motor2    = None
-    position1 = None
-    position2 = None
+    macro_type = 'Grid'
+    motor1     = None
+    motor2     = None
+    position1  = None
+    position2  = None
 
     
     def _write_macro(self):
@@ -32,9 +33,10 @@ class GridMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
         self.tab = ' '*8
-
+        count = 0
+        
         if self.nreps > 1:
-            self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
+            self.content = self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
         
         for m in self.measurements:
@@ -46,6 +48,14 @@ class GridMacroBuilder(BMMMacroBuilder):
             if self.skip_row(m) is True:
                 continue
 
+            count += 1
+            if self.nreps > 1:
+                self.content += self.tab + f'report(f"{self.macro_type} sequence {{{count}+{int(self.calls_to_xafs/self.nreps)}*rep}} of {self.calls_to_xafs}", level="bold", slack=True)\n'
+            else:
+                self.content += self.tab + f'report("{self.macro_type} sequence {count} of {self.calls_to_xafs}", level="bold", slack=True)\n'
+                
+
+                
             #######################################
             # default element/edge(/focus) values #
             #######################################
@@ -56,6 +66,9 @@ class GridMacroBuilder(BMMMacroBuilder):
             ############################
             # sample and slit movement #
             ############################
+            if m['detectorx'] is not None:
+                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
+                self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
             if m['position1'] is not None and m['position2'] is not None:
                 if self.check_limit(m['motor1'], m['position1']) is False: return(False)
                 if self.check_limit(m['motor2'], m['position2']) is False: return(False)
@@ -79,9 +92,6 @@ class GridMacroBuilder(BMMMacroBuilder):
                     self.position2 = m["position1"]
                     self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
-            if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
-                self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 
             
             ##########################

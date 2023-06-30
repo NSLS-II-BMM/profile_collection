@@ -412,6 +412,12 @@ class BMMMacroBuilder():
             if problem is True:
                 isok = False
                 explanation += bold_msg(f'\nrow {count}, sample {self.measurements[-1]["filename"]}:\n') + text
+
+        self.calls_to_xafs = 0
+        for m in self.measurements:
+            if m['default'] is False and  self.skip_row(m) is False:
+                self.calls_to_xafs += 1
+        self.calls_to_xafs = self.calls_to_xafs * self.nreps
         return(isok, explanation, reference)
         # pp.pprint(self.measurements)
 

@@ -165,8 +165,8 @@ class LinkamMacroBuilder(BMMMacroBuilder):
     >>> lmb = LinkamMacroBuilder()
     >>> lmb.spreadsheet('linkam.xlsx')
     >>> lmb.write_macro()
-
     '''
+    macro_type = 'Linkam'
         
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
@@ -182,6 +182,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         settle_time, ramp_time = 0,0
         previous = 25
         self.tab = ' '*8
+        count = 0
         
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
@@ -198,6 +199,9 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 continue
             if self.skip_row(m) is True:
                 continue
+
+            count += 1
+            self.content += self.tab + f'report("{self.macro_type} sequence {count} of {self.calls_to_xafs}", level="bold", slack=True)\n'
 
             #######################################
             # default element/edge(/focus) values #

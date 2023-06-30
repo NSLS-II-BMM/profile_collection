@@ -261,7 +261,8 @@ class WheelMacroBuilder(BMMMacroBuilder):
     >>> mb.spreadsheet('wheel1.xlsx')
     >>> mb.write_macro()
     '''
-
+    macro_type = 'Wheel'
+    
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
         spreadsheet.  A paragraph consists of line to move to the
@@ -274,6 +275,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus, slot = (None, None, None, None)
         self.tab = ' '*8
+        count = 0
 
         if self.nreps > 1:
             self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
@@ -289,6 +291,12 @@ class WheelMacroBuilder(BMMMacroBuilder):
             if self.skip_row(m) is True:
                 continue
 
+            count += 1
+            if self.nreps > 1:
+                self.content += self.tab + f'report(f"{self.macro_type} sequence {{{count}+{int(self.calls_to_xafs/self.nreps)}*rep}} of {self.calls_to_xafs}", level="bold", slack=True)\n'
+            else:
+                self.content += self.tab + f'report("{self.macro_type} sequence {count} of {self.calls_to_xafs}", level="bold", slack=True)\n'
+            
             #######################################
             # default element/edge(/focus) values #
             #######################################

@@ -249,6 +249,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
     >>> lmb.write_macro()
 
     '''
+    macro_type = 'LakeShore'
         
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
@@ -264,6 +265,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
         settle_time, ramp_time = 0,0
         previous = 25
         self.tab = ' '*8
+        count = 0
         
         self.content += self.tab + 'yield from mv(lakeshore.setpoint, lakeshore.readback.get())\n\n'
 
@@ -278,6 +280,9 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                 continue
             if self.skip_row(m) is True:
                 continue
+
+            count += 1
+            self.content += self.tab + f'report("{self.macro_type} sequence {count} of {self.calls_to_xafs}", level="bold", slack=True)\n'
 
             #######################################
             # default element/edge(/focus) values #

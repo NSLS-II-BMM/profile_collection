@@ -818,7 +818,7 @@ def xafs(inifile=None, **kwargs):
             ## loop over scan count
             if BMMuser.enable_live_plots: close_last_plot()
             dossier.rid = str(uuid.uuid4())[:8]
-            report(f'Beginning measurement of "{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
+            report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True, rid=dossier.rid)
             cnt = 0
             uidlist = []

@@ -596,6 +596,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
     >>> mb.write_macro()
 
     '''
+    macro_type = 'Glancing angle'
         
     def _write_macro(self):
         '''Write a macro paragraph for each sample described in the
@@ -609,6 +610,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
         '''
         element, edge, focus = (None, None, None)
         self.tab = ' '*8
+        count = 0
 
         if self.nreps > 1:
             self.content = self.tab + f'for reps in range({self.nreps}):\n\n'
@@ -622,6 +624,12 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 continue
             if self.skip_row(m) is True:
                 continue
+
+            count += 1
+            if self.nreps > 1:
+                self.content += self.tab + f'report(f"{self.macro_type} sequence {{{count}+{int(self.calls_to_xafs/self.nreps)}*rep}} of {self.calls_to_xafs}", level="bold", slack=True)\n'
+            else:
+                self.content += self.tab + f'report("{self.macro_type} sequence {count} of {self.calls_to_xafs}", level="bold", slack=True)\n'
 
             #######################################
             # default element/edge(/focus) values #
