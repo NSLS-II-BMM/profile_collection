@@ -1,4 +1,4 @@
-from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Component as Cpt, EpicsSignal, EpicsSignalRO)
+from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, FormattedComponent, Component as Cpt, EpicsSignal, EpicsSignalRO)
 from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
@@ -17,7 +17,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm    import BMMuser
 from BMM.user_ns.dcm    import *
-from bluesky_unreal import UnrealPositioner
+from bluesky_unreal import UnrealMotor
 # PV for clearing encoder signal loss
 # XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr_ENC_LSS_CLR_CMD.PROC
 
@@ -93,10 +93,11 @@ class DCM(PseudoPositioner):
         #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
     
     if UNREAL: 
-        bragg  = Cpt(UnrealPositioner, preset_name='mono_remote', name='Bragg (Crystals)')
-        para   = Cpt(UnrealPositioner, preset_name='mono_remote', name='Para (Crystals)')
-        perp   = Cpt(UnrealPositioner, preset_name='mono_remote', name='Perp (Crystals)')
-        color  = Cpt(UnrealPositioner, preset_name='mono_remote', name='Bragg (Laser_Emitter)') 
+        breakpoint()
+        bragg  = FormattedComponent(UnrealMotor, name='dcm.bragg')
+        para   = FormattedComponent(UnrealMotor, name='dcm.para')
+        perp   = FormattedComponent(UnrealMotor, name='dcm.perp')
+        color  = FormattedComponent(UnrealMotor, name='dcm.color') 
 
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
