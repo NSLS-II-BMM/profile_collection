@@ -13,7 +13,10 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.functions  import now
-from BMM.kafka      import kafka_message
+
+UNREAL=True
+if not UNREAL:
+    from BMM.kafka      import kafka_message
 from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 from BMM.workspace  import rkvs
@@ -50,7 +53,8 @@ def resting_state():
     _locked_dwell_time.move(0.5)
     dcm.kill()
     dcm.mode = 'fixed'
-    kafka_message({'resting_state': True,})
+    if not UNREAL:
+        kafka_message({'resting_state': True,})
     #user_ns['RE'].msg_hook = BMM_msg_hook
     if is_re_worker_active() is False:
         matplotlib.use('Qt5Agg')
@@ -76,7 +80,8 @@ def resting_state_plan():
     yield from sleep(0.2)
     yield from dcm.kill_plan()
     dcm.mode = 'fixed'
-    kafka_message({'resting_state': True,})
+    if not UNREAL:
+        kafka_message({'resting_state': True,})
     #user_ns['RE'].msg_hook = BMM_msg_hook
     if is_re_worker_active() is False:
         matplotlib.use('Qt5Agg')

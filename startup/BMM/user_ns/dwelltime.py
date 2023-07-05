@@ -5,7 +5,7 @@ from BMM.functions import run_report
 from BMM.user_ns.bmm import BMMuser
 
 run_report(__file__, text='dwelltime')
-
+UNREAL=True
 ##############################################################
 # ______ _    _ _____ _      _    _____ ________  ___ _____  #
 # |  _  \ |  | |  ___| |    | |  |_   _|_   _|  \/  ||  ___| #
@@ -24,7 +24,7 @@ with_dualem = False             # deprecated
 # running under IPython. This disables the Xspress3 during testing.
 # This is a crude stopgap.
 # See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
-if os.environ.get('AZURE_TESTING'):
+if os.environ.get('AZURE_TESTING') or UNREAL:
     with_xspress3 = False
 
 if with_xspress3 is True:

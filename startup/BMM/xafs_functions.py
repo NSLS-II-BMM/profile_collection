@@ -2,7 +2,9 @@ import os
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe
-from BMM.kafka         import kafka_message
+UNREAL=True
+if not UNREAL:
+    from BMM.kafka         import kafka_message
 import numpy
 
 from BMM import user_ns as user_ns_module
@@ -289,10 +291,11 @@ def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
         if os.path.isfile(xrffile):
             print(warning_msg(f'{xrffile} already exists.  The plot will be shown, but the file will not be written.'))
             xrffile = None
-    kafka_message({'xrfat': 'start',
-                   'uid' : uid,
-                   'energy' : energy,
-                   'xrffile' : xrffile,
-                   'add' : add,
-                   'only' : only,
-                   'xmax' : xmax, })
+    if not UNREAL:
+        kafka_message({'xrfat': 'start',
+                    'uid' : uid,
+                    'energy' : energy,
+                    'xrffile' : xrffile,
+                    'add' : add,
+                    'only' : only,
+                    'xmax' : xmax, })

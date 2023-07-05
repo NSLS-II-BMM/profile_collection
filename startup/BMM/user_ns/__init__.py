@@ -41,9 +41,11 @@ from .detectors import *
 from .utilities import *
 
 # everything else, read comments in that file
-from .bmm_end import *
+UNREAL=True
+if not UNREAL:
+    from .bmm_end import *
 
-if not is_re_worker_active():
+if not is_re_worker_active() and not UNREAL:
     print('\t\t', end='')
     get_ipython().magic(u"%xmode Plain")
     from .prompt import *

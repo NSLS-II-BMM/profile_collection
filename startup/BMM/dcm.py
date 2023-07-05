@@ -17,7 +17,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm    import BMMuser
 from BMM.user_ns.dcm    import *
-
+from bluesky_unreal import UnrealPositioner
 # PV for clearing encoder signal loss
 # XF:06BMA-OP{Mono:DCM1-Ax:Bragg}Mtr_ENC_LSS_CLR_CMD.PROC
 
@@ -83,13 +83,20 @@ class DCM(PseudoPositioner):
     # The pseudo positioner axes:
     energy = Cpt(PseudoSingle, limits=(2900, 25000))
 
-
+    UNREAL=True
     # The real (or physical) positioners:
-    bragg  = Cpt(XAFSEpicsMotor, 'Bragg}Mtr')
-    para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
-    perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
-    #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
-    #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
+    if not UNREAL: 
+        bragg  = Cpt(XAFSEpicsMotor, 'Bragg}Mtr')
+        para   = Cpt(VacuumEpicsMotor, 'Par2}Mtr')
+        perp   = Cpt(VacuumEpicsMotor, 'Per2}Mtr')
+        #pitch  = Cpt(VacuumEpicsMotor, 'P2}Mtr')
+        #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
+    
+    if UNREAL: 
+        bragg  = Cpt(UnrealPositioner, preset_name='mono_remote', name='Bragg (Crystals)')
+        para   = Cpt(UnrealPositioner, preset_name='mono_remote', name='Para (Crystals)')
+        perp   = Cpt(UnrealPositioner, preset_name='mono_remote', name='Perp (Crystals)')
+        color  = Cpt(UnrealPositioner, preset_name='mono_remote', name='Bragg (Laser_Emitter)') 
 
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
@@ -192,6 +199,7 @@ class DCM(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
+        print("psuedo:", pseudo_pos)
         wavelength = 2*pi*HBARC / pseudo_pos.energy
         angle = arcsin(wavelength / self._twod)
         if self._pseudo_channel_cut:
@@ -203,9 +211,10 @@ class DCM(PseudoPositioner):
                                      para  = self.offset / (2*sin(angle)),
                                      perp  = self.offset / (2*cos(angle))
                                     )
-
+        
     @real_position_argument
     def inverse(self, real_pos):
+        print("real_pos:", real_pos)
         '''Run an inverse (real -> pseudo) calculation'''
         return self.PseudoPosition(energy = 2*pi*HBARC/(self._twod*sin(real_pos.bragg*pi/180)))
 

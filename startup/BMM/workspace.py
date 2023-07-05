@@ -3,7 +3,7 @@ import os, subprocess, shutil, socket
 import redis
 import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
 from BMM.user_ns.base import startup_dir
-
+UNREAL=True
 if not os.environ.get('AZURE_TESTING'):
     redis_host = 'xf06bm-ioc2'
 else:
@@ -19,8 +19,11 @@ class NoRedis():
 ###################################################################
 # things that are configurable                                    #
 ###################################################################
-rkvs = redis.Redis(host=redis_host, port=6379, db=0)
-#rkvs = NoRedis()
+
+if UNREAL:
+    rkvs = NoRedis()
+else:
+    rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 NAS = '/mnt/nfs/nas1'
 LUSTRE_ROOT = '/nsls2/data'
 LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
@@ -78,6 +81,7 @@ def initialize_workspace():
 
     '''
     print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
+  
     check_workstation_access()
     check_lan()
     check_profile_branch()

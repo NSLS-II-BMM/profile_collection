@@ -4,10 +4,11 @@ logger = logging.getLogger('ophyd')
 logger.setLevel('WARNING')
 logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
-
 from BMM.user_ns.base import startup_dir
 from BMM.workspace import initialize_workspace, rkvs_keys
-initialize_workspace()
+UNREAL=True
+if not UNREAL:
+    initialize_workspace()
 
 import json, time, os
 

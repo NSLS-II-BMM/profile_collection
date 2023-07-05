@@ -17,7 +17,7 @@ from BMM.workspace import rkvs
 from BMM.user_ns.base import startup_dir
 
 TEMPLATES_FOLDER = 'templates'
-
+UNREAL=True
 
 #run_report(__file__, text='user definitions and start/stop an experiment')
 
@@ -436,7 +436,7 @@ class BMM_User(Borg):
                 setattr(self, k, '')
         for k in self.bmm_ints:
             if verbose: print("int:", k)
-            if rkvs.get(f'BMM:user:{k}').decode('utf-8').strip() == '':
+            if UNREAL or rkvs.get(f'BMM:user:{k}').decode('utf-8').strip() == '':
                 setattr(self, k, 0)
             else:
                 setattr(self, k, int(rkvs.get(f'BMM:user:{k}').decode('utf-8')))

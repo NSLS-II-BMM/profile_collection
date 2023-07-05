@@ -28,7 +28,9 @@ from BMM.xspress3      import Xspress3FileStoreFlyable, BMMXspress3DetectorBase,
 
 from BMM.user_ns.base  import startup_dir, bmm_catalog
 
-from BMM_common.xdi    import xdi_xrf_header
+UNREAL=True
+if not UNREAL:
+    from BMM_common.xdi    import xdi_xrf_header
 
 
 ################################################################################

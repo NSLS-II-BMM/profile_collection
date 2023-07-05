@@ -3,7 +3,7 @@ import os, json
 from BMM.functions import run_report
 from BMM.user_ns.bmm import BMMuser
 from ophyd import EpicsSignal
-
+UNREAL=True
 run_report(__file__, text='detectors and cameras')
 
 with_pilatus = False
@@ -144,11 +144,14 @@ bicron.channels.chan26.name = 'APD'
 run_report('\t'+'electrometers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
-        
-quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
-quadem1.enable_electrometer()
-quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
-quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
+if not UNREAL:     
+    
+    quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
+    quadem1.enable_electrometer()
+
+if not UNREAL:
+    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
+    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
 
 
 ## need to do something like this:
@@ -156,15 +159,15 @@ quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It',
 ## to get a sensible reporting precision from the Ix channels
 def set_precision(pv, val):
     EpicsSignal(pv.pvname + ".PREC", name='').put(val)
-
-set_precision(quadem1.current1.mean_value, 3)
-toss = quadem1.I0.describe()
-set_precision(quadem1.current2.mean_value, 3)
-toss = quadem1.It.describe()
-set_precision(quadem1.current3.mean_value, 3)
-toss = quadem1.Ir.describe()
-set_precision(quadem1.current4.mean_value, 3)
-toss = quadem1.Iy.describe()
+if not UNREAL:
+    set_precision(quadem1.current1.mean_value, 3)
+    toss = quadem1.I0.describe()
+    set_precision(quadem1.current2.mean_value, 3)
+    toss = quadem1.It.describe()
+    set_precision(quadem1.current3.mean_value, 3)
+    toss = quadem1.Ir.describe()
+    set_precision(quadem1.current4.mean_value, 3)
+    toss = quadem1.Iy.describe()
 
 
 # try:                            # might not be in use
@@ -300,6 +303,7 @@ if with_xspress3 is True and use_4element is True:
     #from BMM.xspress3_1element import BMMXspress3Detector_1Element
     #from nslsii.areadetector.xspress3 import build_detector_class 
     #from nslsii.areadetector.xspress3 import build_xspress3_class 
+
 
     xs = BMMXspress3Detector_4Element(
         prefix='XF:06BM-ES{Xsp:1}:',

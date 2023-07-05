@@ -2,7 +2,7 @@ import nslsii
 import os
 
 from bluesky.plan_stubs import mv, mvr, sleep
-
+UNREAL=True
 try:
     from bluesky_queueserver import is_re_worker_active
 except ImportError:
@@ -21,7 +21,10 @@ uns_dict = dict()
 
 if not is_re_worker_active():
     ip = get_ipython()
-    nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_with_kafka=use_kafka)
+    if UNREAL:
+       nslsii.configure_base(ip.user_ns, 'temp', configure_logging=True, publish_documents_with_kafka=False) 
+    else:   
+        nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_with_kafka=use_kafka)
     ip.log.setLevel('ERROR')
     RE  = ip.user_ns['RE']
     db  = ip.user_ns['db']
@@ -47,10 +50,13 @@ RE.msg_hook = ts_msg_hook
 
 
 
-from tiled.client import from_profile
-bmm_catalog = from_profile('bmm')
+from tiled.client import from_profile,from_uri
+if UNREAL: 
+    bmm_catalog= None
+else:
+   from tiled.client import from_profile,from_uri
+   bmm_catalog = from_profile('bmm')
 
-
-from bluesky.callbacks.zmq import Publisher
-publisher = Publisher('localhost:5577')
-RE.subscribe(publisher)
+   from bluesky.callbacks.zmq import Publisher
+   publisher = Publisher('localhost:5577')
+   RE.subscribe(publisher)
