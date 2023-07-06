@@ -14,7 +14,6 @@ TAB = '\t\t\t'
 dcm = False
 from BMM.dcm import DCM
 #from BMM.user_ns.motors import dcm_x
-
 dcm = DCM('XF:06BMA-OP{Mono:DCM1-Ax:', name='dcm', crystal='111')
 wait_for_connection(dcm)
 

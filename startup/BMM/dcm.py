@@ -93,11 +93,9 @@ class DCM(PseudoPositioner):
         #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
     
     if UNREAL: 
-        breakpoint()
-        bragg  = FormattedComponent(UnrealMotor, name='dcm.bragg')
-        para   = FormattedComponent(UnrealMotor, name='dcm.para')
-        perp   = FormattedComponent(UnrealMotor, name='dcm.perp')
-        color  = FormattedComponent(UnrealMotor, name='dcm.color') 
+        bragg  = FormattedComponent(UnrealMotor, 'dcm.bragg')
+        para   = FormattedComponent(UnrealMotor, 'dcm.para')
+        perp   = FormattedComponent(UnrealMotor, 'dcm.perp') 
 
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
