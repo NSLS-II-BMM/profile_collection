@@ -93,9 +93,9 @@ class DCM(PseudoPositioner):
         #roll   = Cpt(VacuumEpicsMotor, 'R2}Mtr')
     
     if UNREAL: 
-        bragg  = FormattedComponent(UnrealMotor, 'dcm.bragg')
-        para   = FormattedComponent(UnrealMotor, 'dcm.para')
-        perp   = FormattedComponent(UnrealMotor, 'dcm.perp') 
+        bragg  = FormattedComponent(UnrealMotor, 'dcm:bragg')
+        para   = FormattedComponent(UnrealMotor, 'dcm:para')
+        perp   = FormattedComponent(UnrealMotor, 'dcm:perp') 
 
     def recover(self):
         '''Home and re-position all DCM motors after a power interruption.
@@ -198,7 +198,6 @@ class DCM(PseudoPositioner):
     @pseudo_position_argument
     def forward(self, pseudo_pos):
         '''Run a forward (pseudo -> real) calculation'''
-        print("psuedo:", pseudo_pos)
         wavelength = 2*pi*HBARC / pseudo_pos.energy
         angle = arcsin(wavelength / self._twod)
         if self._pseudo_channel_cut:
@@ -213,7 +212,6 @@ class DCM(PseudoPositioner):
         
     @real_position_argument
     def inverse(self, real_pos):
-        print("real_pos:", real_pos)
         '''Run an inverse (real -> pseudo) calculation'''
         return self.PseudoPosition(energy = 2*pi*HBARC/(self._twod*sin(real_pos.bragg*pi/180)))
 

@@ -436,7 +436,7 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
         
     def set(self, position, **kwargs):
         self.kill_cmd.put(1)
-        return super().set(position, **kwargs)
+        return super().est(position, **kwargs)
         
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
