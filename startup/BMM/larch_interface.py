@@ -26,7 +26,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 #from BMM.functions import etok, ktoe
-from BMM.periodictable import edge_energy, element_symbol
+#from BMM.periodictable import edge_energy, element_symbol
+from larch.xray import atomic_symbol, xray_edge
 
 #from BMM import user_ns as user_ns_module
 #user_ns = vars(user_ns_module)
@@ -290,7 +291,7 @@ class Pandrosus():
         diff = 100000
         for ed in ('K', 'l3', 'L2', 'L1'):
             for z in range(14, 104):
-                en = edge_energy(z, ed)
+                en = xray_edge(z, ed).energy
                 this = abs(en - self.group.e0)
                 if this > diff and en > self.group.e0:
                     break
@@ -298,7 +299,7 @@ class Pandrosus():
                     diff = this
                     answer = z
                     edge = ed
-        elem = element_symbol(answer)
+        elem = atomic_symbol(answer)
         if (elem, edge) == ('Nd', 'L1'):    # Fe oxide
             (elem, edge) = ('Fe', 'K')
         elif (elem, edge) == ('Sm', 'L1'):  # Co oxide
@@ -333,14 +334,14 @@ class Pandrosus():
             return None
         if self.edge.lower() == 'k' or self.edge.lower() == 'l1':
             return None
-        e0 = edge_energy(self.element, self.edge)
+        e0 = xray_edge(self.element, self.edge).energy
         if e0 is None:
             return None
         if self.edge.lower() == 'l3':
-            l2 = edge_energy(self.element, 'L2')
+            l2 = xray_edge(self.element, 'L2').energy
             return etok(l2-e0-30)
         if self.edge.lower() == 'l1':
-            l1 = edge_energy(self.element, 'L1')
+            l1 = xray_edge(self.element, 'L1').energy
             return etok(l1-e0-30)
         
         
@@ -366,11 +367,11 @@ class Pandrosus():
         if self.element is None or self.edge is None:
             self.find_edge()
         if self.edge.lower() == 'l3':
-            diff = edge_energy(self.element, 'L2') - edge_energy(self.element, 'L3')
+            diff = xray_edge(self.element, 'L2').energy - xray_edge(self.element, 'L3').energy
             if self.pre['norm2'] > diff:
                self.pre['norm2'] = diff - 20 
         if self.edge.lower() == 'l2':
-            diff = edge_energy(self.element, 'L1') - edge_energy(self.element, 'L2')
+            diff = xray_edge(self.element, 'L1').energy - xray_edge(self.element, 'L2').energy
             if self.pre['norm2'] > diff:
                self.pre['norm2'] = diff - 20 
         pre_edge(self.group.energy, mu=self.group.mu, group=self.group,
