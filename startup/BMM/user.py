@@ -9,7 +9,7 @@ user_ns = vars(user_ns_module)
 import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive    import make_gdrive_folder
+from BMM.gdrive    import make_gdrive_folder, copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
 from BMM.workspace import rkvs
@@ -971,6 +971,13 @@ class BMM_User(Borg):
             os.chmod(jsonfile, 0o644)
             os.remove(jsonfile)
 
+        ######################
+        # final sync of data #
+        ######################
+        if not is_re_worker_active():
+            rsync_to_gdrive()
+            synch_gdrive_folder()
+        
             
         ###############################################################
         # unset self attributes, DATA, and experiment specific logger #
@@ -991,13 +998,6 @@ class BMM_User(Borg):
         for thing in ('name', 'gup', 'saf', 'folder', 'folder_link', 'date'):
             rkvs.set(f'BMM:user:{thing}', '')
 
-        ######################
-        # final sync of data #
-        ######################
-        if not is_re_worker_active() and do_sync is True:
-            rsync_to_gdrive()
-            synch_gdrive_folder()
-        
         return None
 
     def set_instrument(self):

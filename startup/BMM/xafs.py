@@ -781,6 +781,11 @@ def xafs(inifile=None, **kwargs):
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
+            if any(t > 20 for t in time_grid):
+                print(error_msg('Your scan asks for an integration time greater than 20 seconds, which the ion chamber electrometer cannot accommodate.  Bailing out....'))
+                BMMuser.final_log_entry = False
+                yield from null()
+                return
             if any(y > 23500 for y in energy_grid):
                 print(error_msg('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....'))
                 BMMuser.final_log_entry = False
@@ -831,13 +836,16 @@ def xafs(inifile=None, **kwargs):
             refmat = 'none'
             if p["element"] in user_ns['xafs_ref'].mapping:
                 refmat = user_ns['xafs_ref'].mapping[p["element"]][3]
+            sample = p['sample']
+            if len(sample) > 50:
+                sample = sample[:45] + ' ...'
             kafka_message({'xafsscan': 'start',
                            'element': p["element"],
                            'edge': p["edge"],
                            'mode': p['mode'],
                            'filename': p["filename"],
                            'repetitions': p["nscans"],
-                           'sample': p["sample"],
+                           'sample': sample,
                            'reference_material': refmat, })
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1

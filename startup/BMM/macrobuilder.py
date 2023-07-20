@@ -413,6 +413,26 @@ class BMMMacroBuilder():
                 isok = False
                 explanation += bold_msg(f'\nrow {count}, sample {self.measurements[-1]["filename"]}:\n') + text
 
+            def float_or_string(l):
+                out = []
+                for thing in l:
+                    try:
+                        out.append(float(thing))
+                    except:
+                        out.append(thing)
+                return out
+                        
+            el = self.measurements[-1]['element'] or self.measurements[0]['element']
+            ed = self.measurements[-1]['edge']    or self.measurements[0]['edge']
+            e0 = edge_energy(el, ed)
+            (grid, inttime, time, delta) = conventional_grid(bounds=float_or_string(b), steps=float_or_string(s), times=float_or_string(t), e0=e0)
+            if any(it > 20 for it in inttime):
+                isok = False
+                text = error_msg('\tYour scan asks for an integration time greater than 20 seconds, which the ion chamber electrometer cannot accommodate.')
+                explanation += bold_msg(f'\nrow {count}, sample {self.measurements[-1]["filename"]}:\n') + text
+                
+            
+                
         self.calls_to_xafs = 0
         for m in self.measurements:
             if m['default'] is False and  self.skip_row(m) is False:
@@ -439,6 +459,8 @@ class BMMMacroBuilder():
         if m['filename'] == 'None':  # where does an empty cell get turned into "None"??
             return True
         if  self.truefalse(m['measure'], 'measure') is False:
+            return True
+        if m['nscans'] is None:
             return True
         if m['nscans'] is not None and m['nscans'] < 1:
             return True

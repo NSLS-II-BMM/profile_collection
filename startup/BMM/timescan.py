@@ -177,6 +177,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     thismd['XDI']['Scan'] = dict()
     thismd['XDI']['Scan']['dwell_time'] = dwell
     thismd['XDI']['Scan']['delay']      = delay
+    thismd['XDI']['Scan']['element']    = BMMuser.element
 
     if 'BMM_kafka' not in md:
         md['BMM_kafka'] = dict()
@@ -257,6 +258,10 @@ def ts2dat(datafile, key):
                        BMMuser.roi3, 'ICR3', 'OCR3',
                        BMMuser.roi4, 'ICR4', 'OCR4']
         template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
+    elif '4-element SDD' in devices:
+        el = dataframe.start['XDI']['Scan']['element']
+        column_list = ['time', 'I0', 'It', 'Ir', f'{el}1', f'{el}2', f'{el}3', f'{el}4']
+        template = "  %.3f  %.6f  %.6f  %.6f  %.2f  %.2f  %.2f  %.2f\n"        
     else:
         column_list = ['time', 'I0', 'It', 'Ir']
         template = "  %.3f  %.6f  %.6f  %.6f\n"
@@ -275,14 +280,15 @@ def ts2dat(datafile, key):
 
         
     handle = open(datafile, 'w')
-    handle.write('# XDI/1.0 BlueSky/%s'      % bluesky_version)
+    handle.write('# XDI/1.0 BlueSky/%s\n'    % bluesky_version)
     handle.write('# Scan.start_time: %s\n'   % start_time)
     handle.write('# Scan.end_time: %s\n'     % end_time)
     handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
     handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
     handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI']['Beamline']['energy'])
-    handle.write('# Scan.dwell_time: %d\n'   % dataframe['start']['XDI']['Scan']['dwell_time'])
-    handle.write('# Scan.delay: %d\n'        % dataframe['start']['XDI']['Scan']['delay'])
+    handle.write('# Scan.dwell_time: %.3f\n' % dataframe['start']['XDI']['Scan']['dwell_time'])
+    handle.write('# Scan.delay: %.3f\n'      % dataframe['start']['XDI']['Scan']['delay'])
+    handle.write('# Scan.element: %s\n'      % dataframe['start']['XDI']['Scan']['element'])
     try:
         handle.write('# Facility.GUP: %d\n'  % dataframe['start']['XDI']['Facility']['GUP'])
     except:
@@ -296,7 +302,8 @@ def ts2dat(datafile, key):
     slowval = None
     for i in range(0,len(this)):
         ti = this.iloc[i, 0]
-        elapsed =  (ti.value - st.value)/10**9
+        #elapsed =  (ti.value - st.value)/10**9
+        elapsed = (ti.value - this.iloc[0, 0].value)/10**9
         datapoint = list(this.iloc[i])
         datapoint[0] = elapsed
         handle.write(template % tuple(datapoint))

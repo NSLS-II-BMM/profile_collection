@@ -254,10 +254,17 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
     def describe(self):
         res = super().describe()
-        res['4-element SDD_channel01_xrf']['dtype_str'] = '<f8'
-        res['4-element SDD_channel02_xrf']['dtype_str'] = '<f8'
-        res['4-element SDD_channel03_xrf']['dtype_str'] = '<f8'
-        res['4-element SDD_channel04_xrf']['dtype_str'] = '<f8'
+        try:
+            res['4-element SDD_channel01_xrf']['dtype_str'] = '<f8'
+            res['4-element SDD_channel02_xrf']['dtype_str'] = '<f8'
+            res['4-element SDD_channel03_xrf']['dtype_str'] = '<f8'
+            res['4-element SDD_channel04_xrf']['dtype_str'] = '<f8'
+        except:
+            pass
+        try:
+            res['1-element SDD_channel08_xrf']['dtype_str'] = '<f8'
+        except:
+            pass            
         return res
 
     def set_rois(self):
@@ -306,7 +313,13 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                     mcaroi.kind = 'hinted'
                     mcaroi.total_rbv.kind = 'hinted'
                     setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
-                    setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv) 
+                    setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv)
+                elif self.slots[mcaroi.mcaroi_number-1] == 'K':
+                    mcaroi.kind = 'hinted'
+                    mcaroi.total_rbv.kind = 'hinted'
+                # elif self.slots[mcaroi.mcaroi_number-1] == 'La':
+                #     mcaroi.kind = 'hinted'
+                #     mcaroi.total_rbv.kind = 'hinted'
                 else:
                     mcaroi.kind = 'omitted'
                     mcaroi.total_rbv.kind = 'omitted'

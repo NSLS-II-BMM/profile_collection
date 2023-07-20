@@ -12,6 +12,9 @@ bmm_catalog = from_profile('bmm')
 import matplotlib.pyplot as plt
 import bmm_plot
 
+import matplotlib
+matplotlib.use('Qt5Agg')
+
 #from plotWindow import plotWindow
 #import xafs_visualization
 #xafsviz_window=None

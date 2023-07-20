@@ -61,6 +61,22 @@ MODEDATA = read_mode_data();
 #if os.path.isfile(os.path.join(user_ns["BMM_CONFIGURATION_LOCATION"], 'Modes.json')):
 #     MODEDATA = read_mode_data()
 
+def motors_in_position(mode=None):
+    motors = ['dm3_bct',
+              'xafs_yu', 'xafs_ydo', 'xafs_ydi',
+              'm2_yu', 'm2_ydo', 'm2_ydi', #'m2_xu', 'm2_xd',
+              'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
+    ok = True
+    for m in motors:
+        target = float(MODEDATA[user_ns[m].name][mode])
+        achieved = user_ns[m].position
+        diff = abs(target - achieved)
+        if diff > 0.5:
+            print(f'{m} is out of position, target={target}, current position={achieved}')
+            ok = False
+    return ok
+
+
 def pds_motors_ready():
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_roll, dcm_perp, dcm_roll, dcm_bragg = user_ns["dcm_pitch"], user_ns["dcm_roll"], user_ns["dcm_perp"], user_ns["dcm_roll"], user_ns["dcm_bragg"]
@@ -147,10 +163,22 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           dm3_bct.llm.put(-60)
           dm3_bct.hlm.put(60)
 
-
      if pds_motors_ready() is False:
           report('\nOne or more motors are showing amplifier faults.\nCycle the correct kill switch, then try again.', level='error', slack=True)
-          raise ChangeModeException('One or more motors are showing amplifier faults. (in BMM/modes.py)')
+          print(error_msg('One or more motors are showing amplifier faults. (in BMM/modes.py)'))
+          count = 0
+          while pds_motors_ready() is False:
+               count += 1
+               report('\nMirror amplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
+               yield from sleep(2)
+               user_ns['ks'].cycle('m2')
+               user_ns['ks'].cycle('m3')
+               yield from sleep(2)
+               if count == 5:
+                    report('\nFailed to correct the problem. Giving up.)', level='error', slack=True)
+                    yield from null()
+                    return
+          #raise ChangeModeException('One or more motors are showing amplifier faults. (in BMM/modes.py)')
           #return(yield from null())
 
      ######################################################################
@@ -256,6 +284,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      yield from sleep(0.2)
      yield from mv(dm3_bct.kill_cmd, 1)
 
+     #print(mode, current_mode, insist)
+     
      if mode in ('D', 'E', 'F') and user_ns['slits3'].vsize.position < 0.4:
           print('Slit height appears to be set for focused beam.  Opening slits.')
           yield from mv(user_ns['slits3'].vsize, 1.0)
@@ -267,18 +297,43 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                yield from mv(*base)
           except:
-               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
-               user_ns['ks'].cycle('m2')
-               user_ns['ks'].cycle('m3')
-               yield from mv(*base)
+               count = 0
+               while motors_in_position(mode) is False:
+                    count += 1
+                    if count > 5:
+                         report('\nTried five times to correct the amplifier fault.  Giving up now.',
+                                level='error', slack=True)
+                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                           level='error', slack=True)
+                    yield from sleep(2)
+                    user_ns['ks'].cycle('m2')
+                    user_ns['ks'].cycle('m3')
+                    yield from sleep(2)
+                    try:
+                         yield from mv(*base)
+                    except:
+                         pass
+               
      elif mode in ('A', 'B', 'C') and current_mode in ('A', 'B', 'C') and insist is False: # no need to move M2
           try:
                yield from mv(*base)
           except:
-               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
-               user_ns['ks'].cycle('m2')
-               user_ns['ks'].cycle('m3')
-               yield from mv(*base)
+               count = 0
+               while motors_in_position(mode) is False:
+                    count += 1
+                    if count > 5:
+                         report('\nTried five times to correct the amplifier fault.  Giving up now.',
+                                level='error', slack=True)
+                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                           level='error', slack=True)
+                    yield from sleep(2)
+                    user_ns['ks'].cycle('m2')
+                    user_ns['ks'].cycle('m3')
+                    yield from sleep(2)
+                    try:
+                         yield from mv(*base)
+                    except:
+                         pass
      else:
           if bender is True:
                yield from mv(m2_bender.kill_cmd, 1)
@@ -299,11 +354,25 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                yield from mv(*base)
           except:
-               report('\nMirror amplifier fault?. Attempting to correct the problem.', level='error', slack=True)
-               user_ns['ks'].cycle('m2')
-               user_ns['ks'].cycle('m3')
-               yield from mv(*base)
+               count = 0
+               while motors_in_position(mode) is False:
+                    count += 1
+                    if count > 5:
+                         report('\nTried five times to correct the amplifier fault.  Giving up now.',
+                                level='error', slack=True)
+                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                           level='error', slack=True)
+                    yield from sleep(2)
+                    user_ns['ks'].cycle('m2')
+                    user_ns['ks'].cycle('m3')
+                    yield from sleep(2)
+                    try:
+                         yield from mv(*base)
+                    except:
+                         pass
 
+     #print(base)
+                    
      yield from sleep(2.0)
      yield from mv(m2_bender.kill_cmd, 1)
      yield from mv(dm3_bct.kill_cmd, 1)

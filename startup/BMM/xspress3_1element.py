@@ -50,6 +50,10 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
             read_attrs = ['hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
+        self.slots = ['Ti', 'V',  'Cr', 'Mn',
+                      'Fe', 'Co', 'Ni', 'Cu',
+                      'Zn', 'Ge', 'As', 'Br',
+                      'Nb', 'K', None, 'OCR']
         self.hdf5.num_extra_dims.put(0)
     
     def plot(self, uid=None, add=False, only=None):

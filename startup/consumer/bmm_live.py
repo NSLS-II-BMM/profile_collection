@@ -175,6 +175,7 @@ class LineScan():
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
         elif self.numerator in ('If', 'Xs', 'Fluorescence'):
+            #self.line2, = self.axes.plot([],[], label='I0b')
             self.numerator = 'If'
             self.description = 'fluorescence (4 channel)'
             self.denominator = 'I0'
@@ -183,6 +184,7 @@ class LineScan():
         ## fluorescence (1 channel): plot If/I0
         ##xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
         elif self.numerator == 'Xs1':
+            self.line2, = self.axes.plot([],[], label='I0b')
             self.description = 'fluorescence (1 channel)'
             self.denominator = 'I0'
             self.axes.set_ylabel('fluorescence (1 channel)')
@@ -252,6 +254,7 @@ class LineScan():
                 signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
                 if numpy.isnan(signal):
                     signal = 0
+                #signal2 = kwargs['data']['La1'] + kwargs['data']['La2'] + kwargs['data']['La3'] + kwargs['data']['La4']
             else:                           # this is a baseline document
                 return
         elif self.numerator == 'Ic0':
@@ -259,6 +262,7 @@ class LineScan():
             signal2 = kwargs['data']['I0b']
         elif self.numerator == 'Xs1':
             signal = kwargs['data'][self.xs8]
+            signal2 = kwargs['data']['K8']
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
             signal = kwargs['data'][self.numerator]
         else:
@@ -273,14 +277,16 @@ class LineScan():
             self.xdata.append(kwargs['data'][self.motor])
         if self.denominator is None:
             self.ydata.append(signal)
-            if self.numerator == 'Ic0':
+            #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
+            if self.numerator in ('Ic0', 'Xs1', 'Xs', 'If'):
                 self.y2data.append(signal2)
         else:
             self.ydata.append(signal/kwargs['data'][self.denominator])
-            if self.numerator == 'Ic0':
+            #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
+            if self.numerator in ('Ic0', 'Xs1'): #, 'Xs', 'If'):
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
-        if self.numerator == 'Ic0':
+        if self.numerator in ('Ic0', 'Xs1'): #, 'Xs', 'If'):
             self.line2.set_data(self.xdata, self.y2data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)

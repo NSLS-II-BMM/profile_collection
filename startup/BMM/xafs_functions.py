@@ -96,7 +96,8 @@ def sanitize_step_scan_parameters(bounds, steps, times):
         elif not isfloat(t) and t[-1:].lower() == 'k' and isfloat(t[-1:]) and float(t[:-1]) < 0.05:
             text += warning_msg('\n%s is a very short integration time!\n' % t)
 
-
+    
+            
     reference = 'https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n'
 
     return problem, text, reference
@@ -177,9 +178,9 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
     tele = user_ns['tele']
     
     if (len(bounds) - len(steps)) != 1:
-        return (None, None, None)
+        return (None, None, None, None)
     if (len(bounds) - len(times)) != 1:
-        return (None, None, None)
+        return (None, None, None, None)
     for i,s in enumerate(bounds):
         if type(s) is str:
             this = float(s[:-1])

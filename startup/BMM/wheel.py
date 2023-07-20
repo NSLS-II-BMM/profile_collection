@@ -137,7 +137,7 @@ class WheelMotor(EndStationEpicsMotor):
 
     def slot_ring(self):
         if 'double' in user_ns['BMMuser'].instrument:
-            if abs(self.x_motor.position - self.inner_position) < 1.0:
+            if abs(self.x_motor.position - self.inner_position) < 5.0:
                 return 'inner'
             else:
                 return 'outer'

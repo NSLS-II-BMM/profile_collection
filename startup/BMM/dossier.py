@@ -307,7 +307,7 @@ class BMMDossier():
             yield from mv(xs1.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
             ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            rois = [int(BMMuser.xschannel1.get()),]
+            rois = [int(BMMuser.xschannel8.get()),]
             xs1.plot(uid=self.xrfuid)
             xs1.to_xdi(xrffile)
 
