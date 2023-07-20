@@ -38,7 +38,9 @@ from BMM.workspace     import rkvs
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, ic0, vor, xs, xs1, use_4element, use_1element
+UNREAL = True
+if not UNREAL:
+    from BMM.user_ns.detectors   import quadem1, ic0, vor, xs, xs1, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_xspress3, with_quadem, with_struck
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel

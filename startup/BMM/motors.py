@@ -1,4 +1,4 @@
-from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Signal, Device, PositionerBase, Component as Cpt, EpicsSignal, EpicsSignalRO)
+from ophyd import (EpicsMotor, PseudoPositioner, PseudoSingle, Signal, Device, PositionerBase, Component as Cpt, EpicsSignal, EpicsSignalRO, FormattedComponent)
 from ophyd.epics_motor import EpicsMotor, required_for_connection, AlarmSeverity
 from ophyd.utils.epics_pvs import fmt_time
 from ophyd.pseudopos import (pseudo_position_argument,
@@ -12,7 +12,7 @@ from BMM.logging   import BMM_log_info
 import time
 
 from BMM.functions import boxedtext
-
+from bluesky_unreal import UnrealMotor
 status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'LOOPM' : 1, 'TIACT' : 0, 'INTMO' : 1, 'DWPRO' : 0,
                'DAERR' : 0, 'DVZER' : 0, 'ABDEC' : 0, 'UWPEN' : 0,
@@ -552,13 +552,20 @@ class Mirrors(PseudoPositioner):
     roll     = Cpt(PseudoSingle, limits=(-3, 3))
     yaw      = Cpt(PseudoSingle, limits=(-3, 3))
 
-
     # The real (or physical) positioners:
-    yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
-    ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
-    ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
-    xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
-    xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
+    UNREAL = True
+    if not UNREAL: 
+        yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
+        ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
+        ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
+        xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
+        xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
+    else: 
+        yu = FormattedComponent(UnrealMotor, 'm3:yu')
+        ydo = FormattedComponent(UnrealMotor, 'm3:ydo')
+        ydi = FormattedComponent(UnrealMotor, 'm3:ydo')
+        xu = FormattedComponent(UnrealMotor,'m3:xu' ) 
+        xd = FormattedComponent(UnrealMotor,'m3:xu' )
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):

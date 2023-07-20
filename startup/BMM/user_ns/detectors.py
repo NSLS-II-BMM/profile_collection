@@ -144,14 +144,14 @@ bicron.channels.chan26.name = 'APD'
 run_report('\t'+'electrometers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
-if not UNREAL:     
+   
     
-    quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
-    quadem1.enable_electrometer()
+quadem1 = BMMQuadEM('XF:06BM-BI{EM:2}EM180:', name='quadem1')
+quadem1.enable_electrometer()
 
-if not UNREAL:
-    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
-    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
+
+quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
+quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
 
 
 ## need to do something like this:

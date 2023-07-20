@@ -12,23 +12,27 @@ except ImportError:
 from nslsii.kafka_utils import _read_bluesky_kafka_config_file
     
 from bluesky_kafka.produce import BasicProducer
+UNREAL=True
+if not UNREAL: 
+    kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
-kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
-
-producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
-                         topic='bmm.test',
-                         producer_config=kafka_config["runengine_producer_config"],
-                         key='abcdef'
-)
-
-
-def kafka_message(message):
-    producer.produce(['bmm', message])
+    producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
+                            topic='bmm.test',
+                            producer_config=kafka_config["runengine_producer_config"],
+                            key='abcdef'
+    )
 
 
-# Maintenance of kafka output
-def close_line_plots():
-    kafka_message({'close': 'line'})
+    def kafka_message(message):
+        producer.produce(['bmm', message])
 
-def close_plots():
-    kafka_message({'close': 'all'})
+
+    # Maintenance of kafka output
+    def close_line_plots():
+        kafka_message({'close': 'line'})
+
+    def close_plots():
+        kafka_message({'close': 'all'})
+else: 
+    def kafka_message(message):
+        return

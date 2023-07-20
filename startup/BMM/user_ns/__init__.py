@@ -33,15 +33,16 @@ from .dwelltime import *
 
 # dcm motor group
 from .dcm import *
-
+UNREAL=True
 # Struck (deprecated), electrometers, optical cameras, Pilatus, Xspress3 (4 channel & 1 channel)
-from .detectors import *
+if not UNREAL:
+    from .detectors import *
 
 # valves, temperatures, water flow, etc
 from .utilities import *
 
 # everything else, read comments in that file
-UNREAL=True
+
 if not UNREAL:
     from .bmm_end import *
 
