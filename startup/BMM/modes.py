@@ -523,7 +523,7 @@ def change_xtals(xtal=None):
      yield from dcm.kill_plan()
      yield from sleep(2.0) 
      if xtal == 'Si(111)':
-          yield from mv(dcm_pitch, 4.2,
+          yield from mv(dcm_pitch, 4.3,
                         dcm_roll, -4.5608,  # new value May 4, 2023
                         dcm_x,     0.5    )
           #dcm._crystal = '111'

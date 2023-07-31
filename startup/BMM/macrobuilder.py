@@ -460,8 +460,6 @@ class BMMMacroBuilder():
             return True
         if  self.truefalse(m['measure'], 'measure') is False:
             return True
-        if m['nscans'] is None:
-            return True
         if m['nscans'] is not None and m['nscans'] < 1:
             return True
         return False

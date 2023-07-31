@@ -38,6 +38,7 @@ class GridMacroBuilder(BMMMacroBuilder):
         if self.nreps > 1:
             self.content = self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
+            self.do_first_change = True
         
         for m in self.measurements:
 
