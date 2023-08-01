@@ -290,7 +290,7 @@ class Pandrosus():
         '''
         diff = 100000
         for ed in ('K', 'l3', 'L2', 'L1'):
-            for z in range(14, 104):
+            for z in range(14, 98):  # larch.xray stops at Cf
                 en = xray_edge(z, ed).energy
                 this = abs(en - self.group.e0)
                 if this > diff and en > self.group.e0:
