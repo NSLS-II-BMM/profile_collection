@@ -140,8 +140,16 @@ def analog_camera(filename    = None,
     if sample is not None and sample != '':
         title = title + ' - ' + sample
     if 'xf06bm-ws3' in BMMuser.host:
-        command = ['fswebcam', quiet, '-i', f'{camera}', '-d', device, '-r', f'{x}x{y}', '--title', title, '--timestamp', timestamp,
-               '-S', f'{skip}', '-F', f'{frames}', '--set', f'brightness={brightness}%', filename]
+        command = ['fswebcam', quiet,
+                   '-i', f'{camera}',
+                   '-d', device,
+                   '-r', f'{x}x{y}',
+                   '--title', title,
+                   '--timestamp', timestamp,
+                   '-S', f'{skip}',
+                   '-F', f'{frames}',
+                   '--set', f'brightness={brightness}%',
+                   filename]
     else:
         command = ['ssh', 'xf06bm@xf06bm-ws3', f"fswebcam {quiet}-i {camera} -d {device} -r {x}x{y} --title '{title}' --timestamp '{timestamp}' -S {skip} -F {frames} --set brightness={brightness}% '{filename}'"]
     run(command)
