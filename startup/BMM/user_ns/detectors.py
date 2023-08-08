@@ -287,8 +287,8 @@ if with_pilatus is True:
 
 # JL: debugging xspress3 IOC crash
 from ophyd.log import config_ophyd_logging
-#import logging
-#config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
+import logging
+config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
 
 xs = False
@@ -306,12 +306,13 @@ if with_xspress3 is True and use_4element is True:
         name='4-element SDD',
         read_attrs=['hdf5']
     )
-
+    a = xs.hdf5.run_time.get()
+    
     # This is necessary for when the ioc restarts
     # we have to trigger one image for the hdf5 plugin to work correctly
     # else, we get file writing errors
     # DEBUGGING: commented this out
-    if xs.hdf5.run_time.get() == 0:
+    if xs.hdf5.run_time.get() == 0.0:
         xs.hdf5.warmup()
 
     # Hints:
