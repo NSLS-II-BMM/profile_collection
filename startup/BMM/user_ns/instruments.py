@@ -46,7 +46,7 @@ def wait_for_connection(thing):
 
 
 run_report('\tmirrors and tables')
-from BMM.motors import XAFSEpicsMotor, Mirrors, XAFSTable, GonioTable, EndStationEpicsMotor
+from BMM.motors import XAFSEpicsMotor, Mirrors, UnrealMirror2, UnrealMirror3, XAFSTable, GonioTable, EndStationEpicsMotor
 from BMM.user_ns.bmm import BMMuser
 from BMM.user_ns.motors import mcs8_motors, xafs_motors, define_EndStationEpicsMotor
 
@@ -80,10 +80,13 @@ else:
 m1list = [m1_yu, m1_ydo, m1_ydi, m1_xu, m1_xd]
 mcs8_motors.extend(m1list)
 
-
+UNREAL=True
 ## focusing mirror
 print(f'{TAB}FMBO motor group: m2')
-m2 = Mirrors('XF:06BMA-OP{Mir:M2-Ax:', name='m2', mirror_length=1288, mirror_width=240)
+if not UNREAL: 
+    m2 = Mirrors('XF:06BMA-OP{Mir:M2-Ax:', name='m2', mirror_length=1288, mirror_width=240)
+else: 
+    m2 = UnrealMirror2('XF:06BMA-OP{Mir:M2-Ax:', name='m2', mirror_length=1288, mirror_width=240)
 m2.vertical._limits = (-6.0, 8.0)
 m2.lateral._limits  = (-2, 2)
 m2.pitch._limits    = (-0.5, 5.0)
@@ -94,24 +97,38 @@ wait_for_connection(m2)
 
 
 #m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender = None, None, None, None, None, None
-if m2.connected is True:
-    m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
-    m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
-    m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
-    m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
-    m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
+if not UNREAL:
+    if m2.connected is True:
+        m2_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YU}Mtr',   name='m2_yu')
+        m2_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDO}Mtr',  name='m2_ydo')
+        m2_ydi    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:YDI}Mtr',  name='m2_ydi')
+        m2_xu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XU}Mtr',   name='m2_xu')
+        m2_xd     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:XD}Mtr',   name='m2_yxd')
+        m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
+        m2_xu.velocity.put(0.05)
+        m2_xd.velocity.put(0.05)
+        m2.xu.user_offset.put(-0.2679)
+        m2.xd.user_offset.put(1.0199)
+    else:
+        m2_yu     = SynAxis(name='m2_yu')
+        m2_ydo    = SynAxis(name='m2_ydo')
+        m2_ydi    = SynAxis(name='m2_ydi')
+        m2_xu     = SynAxis(name='m2_xu')
+        m2_xd     = SynAxis(name='m2_xd')
+        m2_bender = SynAxis(name='m2_bender')
+else: 
+    from bluesky_unreal import UnrealMotor
+    m2_yu     = UnrealMotor('m2:yu',   name='m2_yu')
+    m2_ydo    = UnrealMotor('m2:ydo',  name='m2_ydo')
+    m2_ydi    = UnrealMotor('m2:ydi',  name='m2_ydi')
+    m2_xu     = UnrealMotor('m2:xu',   name='m2_xu')
+    m2_xd     = UnrealMotor('m2:xd',   name='m2_yxd')
+    #m2_bender not defined in Unreal, use caproto
     m2_bender = XAFSEpicsMotor('XF:06BMA-OP{Mir:M2-Ax:Bend}Mtr', name='m2_bender')
     m2_xu.velocity.put(0.05)
     m2_xd.velocity.put(0.05)
     m2.xu.user_offset.put(-0.2679)
     m2.xd.user_offset.put(1.0199)
-else:
-    m2_yu     = SynAxis(name='m2_yu')
-    m2_ydo    = SynAxis(name='m2_ydo')
-    m2_ydi    = SynAxis(name='m2_ydi')
-    m2_xu     = SynAxis(name='m2_xu')
-    m2_xd     = SynAxis(name='m2_xd')
-    m2_bender = SynAxis(name='m2_bender')
 m2list = [m2_yu, m2_ydo, m2_ydi, m2_xu, m2_xd, m2_bender]
 mcs8_motors.extend(m2list)   
 examine_fmbo_motor_group(m2list)
@@ -119,7 +136,10 @@ examine_fmbo_motor_group(m2list)
 
 ## harmonic rejection mirror
 print(f'{TAB}FMBO motor group: m3')
-m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
+if not UNREAL:
+    m3 = Mirrors('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
+else: 
+    m3 = UnrealMirror3('XF:06BMA-OP{Mir:M3-Ax:', name='m3', mirror_length=667,  mirror_width=240)
 m3.vertical._limits = (-11, 1)
 m3.lateral._limits  = (-16, 16)
 m3.pitch._limits    = (-6, 6)
@@ -129,6 +149,7 @@ m3.yaw._limits      = (-1, 1)
 wait_for_connection(m3)
 
 #m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd = None, None, None, None, None
+
 if m3.connected is True:
     m3_yu     = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YU}Mtr',   name='m3_yu')
     m3_ydo    = XAFSEpicsMotor('XF:06BMA-OP{Mir:M3-Ax:YDO}Mtr',  name='m3_ydo')

@@ -38,8 +38,14 @@ if os.path.isfile(BMM_log_master_file):
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
-BMM_lustre_log_file = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'BMM_master.log')
+UNREAL=True
+if not UNREAL:
+    LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
+    BMM_lustre_log_file = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'BMM_master.log')
+else: 
+    LUSTRE_ROOT_BMM = os.getcwd()
+    BMM_lustre_log_file = os.path.join(LUSTRE_ROOT_BMM, 'BMM_master.log')
+
 if os.path.isdir(LUSTRE_ROOT_BMM):
     if not os.path.isfile(BMM_lustre_log_file):
         basedir = os.path.dirname(BMM_lustre_log_file)

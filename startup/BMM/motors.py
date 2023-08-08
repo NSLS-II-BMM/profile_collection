@@ -471,6 +471,9 @@ class Mirrors(PseudoPositioner):
         self.mirror_length = mirror_length
         self.mirror_width  = mirror_width
         super().__init__(*args, **kwargs)
+        
+       
+       
 
     def _done_moving(self, *args, **kwargs):
         ## this method is originally defined as Positioner, a base class of EpicsMotor
@@ -552,20 +555,14 @@ class Mirrors(PseudoPositioner):
     roll     = Cpt(PseudoSingle, limits=(-3, 3))
     yaw      = Cpt(PseudoSingle, limits=(-3, 3))
 
-    # The real (or physical) positioners:
-    UNREAL = True
-    if not UNREAL: 
-        yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
-        ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
-        ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
-        xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
-        xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
-    else: 
-        yu = FormattedComponent(UnrealMotor, 'm3:yu')
-        ydo = FormattedComponent(UnrealMotor, 'm3:ydo')
-        ydi = FormattedComponent(UnrealMotor, 'm3:ydo')
-        xu = FormattedComponent(UnrealMotor,'m3:xu' ) 
-        xd = FormattedComponent(UnrealMotor,'m3:xu' )
+    # The real (or physical) positioners: 
+
+    yu  = Cpt(XAFSEpicsMotor, 'YU}Mtr')
+    ydo = Cpt(XAFSEpicsMotor, 'YDO}Mtr')
+    ydi = Cpt(XAFSEpicsMotor, 'YDI}Mtr')
+    xu  = Cpt(VacuumEpicsMotor, 'XU}Mtr')
+    xd  = Cpt(VacuumEpicsMotor, 'XD}Mtr')
+   
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -589,7 +586,21 @@ class Mirrors(PseudoPositioner):
                                    roll     = 1000*arctan2( real_pos.ydo - real_pos.ydi,                   self.mirror_width ))
 
 
+class UnrealMirror2(Mirrors):
+    yu = Cpt(UnrealMotor, 'm2:yu', add_prefix = ())
+    ydo = Cpt(UnrealMotor, 'm2:ydo', add_prefix = ())
+    ydi = Cpt(UnrealMotor, 'm2:ydi', add_prefix = ())
+    xu = Cpt(UnrealMotor,'m2:xu' , add_prefix = ()) 
+    xd = Cpt(UnrealMotor,'m2:xd' , add_prefix = ())
 
+class UnrealMirror3(Mirrors):
+    yu = Cpt(UnrealMotor, 'm3:yu', add_prefix = ())
+    ydo = Cpt(UnrealMotor, 'm3:ydo', add_prefix = ())
+    ydi = Cpt(UnrealMotor, 'm3:ydi', add_prefix = ())
+    xu = Cpt(UnrealMotor,'m3:xu' , add_prefix = ()) 
+    xd = Cpt(UnrealMotor,'m3:xd' , add_prefix = ())
+
+    
 class XAFSTable(PseudoPositioner):
     def __init__(self, *args, mirror_length, mirror_width, **kwargs):
         self.mirror_length = mirror_length
@@ -630,9 +641,6 @@ class XAFSTable(PseudoPositioner):
         return self.PseudoPosition(vertical = (real_pos.yu + (real_pos.ydo + real_pos.ydi) / 2 ) / 2,
                                    pitch    = 1000*arctan2( (real_pos.ydo + real_pos.ydi)/2 - real_pos.yu, self.mirror_length),
                                    roll     = 1000*arctan2( real_pos.ydo - real_pos.ydi,                   self.mirror_width ))
-
-
-
 
 
 
