@@ -291,6 +291,8 @@ class BMM_User(Borg):
         self.post_anacam    = False
         self.post_xrf       = False
 
+        self.mouse_click    = None
+        
         self.tweak_xas_time = 24.0
         self.enable_live_plots = False
         

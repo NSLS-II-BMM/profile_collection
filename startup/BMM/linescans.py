@@ -29,7 +29,7 @@ from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown, clean_img, PROMPT
+from BMM.functions     import countdown, clean_img, PROMPT, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
@@ -95,6 +95,7 @@ def pluck(suggested_motor=None):
     '''
 
     unset_mouse_click()
+    user_ns['BMMuser'].mouse_click = None
     print('\nSingle click the left mouse button on the plot to pluck a point (you have 20 seconds)...')
     count = 0
     while rkvs.get('BMM:mouse_event:value').decode('utf-8') == '':
@@ -133,6 +134,7 @@ def pluck(suggested_motor=None):
             return(yield from null())
     #print(motor.name, motor_name, position)
     yield from mv(motor, position)
+    user_ns['BMMuser'].mouse_click = position
     unset_mouse_click()
     print(whisper('\nRE(pluck()) to grab a different point from the plot.\n'))
     
@@ -970,6 +972,15 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
                     return(yield from null())
             yield from pluck(suggested_motor=thismotor)
             #yield from move_after_scan(thismotor)
+            ## right here... put UID and plucked value in a store of some sort
+            if user_ns["BMMuser"].mouse_click is not None:
+                with open('/home/xf06bm/Data/bucket/linescan_evaluation.txt', 'a') as f:
+                    f.write(f'''{now()}
+     mode = {thismotor.name}/{detector}
+     uid = {uid}
+     position = {user_ns["BMMuser"].mouse_click}
+
+''')
 
     
     def cleanup_plan():
