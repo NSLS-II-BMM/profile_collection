@@ -3,6 +3,7 @@ import itertools, os, sys
 import time as ttime
 from collections import deque, OrderedDict
 from itertools import product
+from tqdm import tqdm
 
 from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 TIFFPlugin, StatsPlugin, HDF5Plugin,
@@ -60,7 +61,8 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 # This means that Xspress3 will require its own count plan
 # also that a linescan or xafs scan must set total_points up front
 
-class Xspress3FileStoreFlyable(Xspress3FileStore):
+#class Xspress3FileStoreFlyable(Xspress3FileStore):
+class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
     def warmup(self):
         """
         A convenience method for 'priming' the plugin.
@@ -70,11 +72,12 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
             https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
         """
-        print(whisper("                        warming up the hdf5 plugin..."))
-        set_and_wait(self.enable, 1)
+        print(whisper("                        warming up the hdf5 plugin..."), flush=True)
+        self.enable.set(1).wait()
 
         # JOSH: proposed changes for new IOC
         sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
+                            (self.parent.cam.image_mode, "Single"),
                             (self.parent.cam.trigger_mode, 'Internal'),
                             # just in case the acquisition time is set very long...
                             (self.parent.cam.acquire_time, 0.2),
@@ -89,18 +92,19 @@ class Xspress3FileStoreFlyable(Xspress3FileStore):
         # del original_vals[self.capture]
 
         for sig, val in sigs.items():
-            set_and_wait(sig, val)
+            sig.set(val).wait()
             ttime.sleep(0.1)  # abundance of caution
 
-        set_and_wait(self.parent.cam.acquire, 1)
+        self.parent.cam.acquire.set(1).wait()
         
         # JOSH: do we need more than 2 seconds here?
         #       adding more time here helps!
-        ttime.sleep(10)  # wait for acquisition
+        for i in tqdm(range(4), colour='#7f8c8d'):
+            ttime.sleep(0.5)  # wait for acquisition
 
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
-            set_and_wait(sig, val)
+            sig.set(val).wait()
         print(whisper("                        done"))
 
     def unstage(self):
@@ -146,22 +150,22 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     and 4-element detector interfaces.
     '''
 
-    if sys.version_info[1] < 10:
-        ## HDF5 storage semantics prior to January 2023
-        hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-                   read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
-                   root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
-                   write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
-                   )
-    else:
+    # if sys.version_info[1] < 10:
+    #     ## HDF5 storage semantics prior to January 2023
+    #     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
+    #                read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
+    #                root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
+    #                write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
+    #                )
+    # else:
         ## new HDF5 storage semantics as of January 2023
-        hdf5 = Cpt(Xspress3HDF5Plugin,
-                   "HDF1:", 
-                   name="h5p",
-                   root_path='/nsls2/data/bmm/',
-                   path_template='/nsls2/data/bmm/assets/xspress3/%Y/%m/%d/',
-                   resource_kwargs={},
-        )
+    hdf5 = Cpt(BMMXspress3HDF5Plugin,
+               "HDF1:", 
+               name="h5p",
+               root_path='/nsls2/data/bmm/',
+               path_template='/nsls2/data/bmm/assets/xspress3/%Y/%m/%d/',
+               resource_kwargs={},
+    )
 
         
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
