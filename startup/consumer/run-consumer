@@ -1,0 +1,44 @@
+#!/bin/env bash
+######################################################################
+## Start BMM's kafka consumer in a correctly configured environment
+## This uses some concepts swiped from bsui's start-up script
+######################################################################
+
+. /opt/conda/etc/profile.d/conda.sh
+. /etc/profile.d/bluesky.sh 
+cd /home/xf06bm/.ipython/profile_collection/startup/consumer
+conda activate $BS_ENV
+
+cat << EOL
+
+$(tput smul; tput bold)BMM's data consumer for real-time data visualization$(tput sgr0)
+
+Using the following software:
+    - Conda      : ${BS_ENV}
+$(python -c '\
+msg = "Not installed"
+try:
+    import bluesky
+    bluesky_version = "v{}".format(bluesky.__version__)
+except ImportError:
+    bluesky_version = msg
+try:
+    import databroker
+    databroker_version = "v{}".format(databroker.__version__)
+except ImportError:
+    databroker_version = msg
+try:
+    import larch
+    larch_version = "v{}".format(larch.__version__)
+except ImportError:
+    ophyd_version = msg
+
+print("    - Bluesky    : {}".format(bluesky_version))
+print("    - Databroker : {}".format(databroker_version))
+print("    - Larch      : {}".format(larch_version))
+')
+
+EOL
+
+
+ipython -i 'consume_measurement.py'

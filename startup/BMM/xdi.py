@@ -3,6 +3,8 @@ import re, pathlib, sys, datetime, pandas, numpy
 
 from BMM.functions import plotting_mode
 
+from BMM.user_ns.dwelltime import with_ic0
+
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
@@ -36,7 +38,8 @@ def units(label):
 
 quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
 _ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
-_ic0         = [ic0.Ia, ic0.Ib]
+if with_ic0:
+    _ic0         = [ic0.Ia, ic0.Ib]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 _vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
 _vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]

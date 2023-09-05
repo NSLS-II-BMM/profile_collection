@@ -32,8 +32,8 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
 
-from BMM.user_ns.detectors import quadem1, vor, xs, xs1, use_4element, use_1element
-from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.detectors import quadem1, ic0, vor, xs, xs1
+from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -102,7 +102,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
         return None
 
     yield from mv(_locked_dwell_time, dwell)
-    dets  = [quadem1,]
+    dets  = [quadem1, ic0,]
     denominator = ''
 
     epoch_offset = pandas.Timestamp.now(tz='UTC').value/10**9

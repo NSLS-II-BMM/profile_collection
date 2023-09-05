@@ -1,6 +1,6 @@
 
 import os, json
-from BMM.functions import run_report
+from BMM.functions import run_report, whisper
 from BMM.user_ns.bmm import BMMuser
 from ophyd import EpicsSignal
 
@@ -147,8 +147,9 @@ from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.enable_electrometer()
-quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
-quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
+print(whisper('\t\t\t'+'instantiated quadem1'))
+quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'omitted', 'hinted', 'hinted', 'omitted'
+quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0q', 'It', 'Ir', 'Iy'
 
 
 ## need to do something like this:
@@ -158,7 +159,7 @@ def set_precision(pv, val):
     EpicsSignal(pv.pvname + ".PREC", name='').put(val)
 
 set_precision(quadem1.current1.mean_value, 3)
-toss = quadem1.I0.describe()
+toss = quadem1.I0.describe()    # this seems to be necessary for the BEC to use the correct precision
 set_precision(quadem1.current2.mean_value, 3)
 toss = quadem1.It.describe()
 set_precision(quadem1.current3.mean_value, 3)
@@ -179,14 +180,35 @@ toss = quadem1.Iy.describe()
 
 try:                            # might not be in use
     ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
+    ic0.enable_electrometer()
+    print(whisper('\t\t\t'+'instantiated ic0'))
     ic0.Ia.kind = 'hinted'
-    ic0.Ib.kind = 'hinted'
-    ic0.Ia.name = 'I0a'
+    ic0.Ib.kind = 'omitted'
+    ic0.Ia.name = 'I0'
     ic0.Ib.name = 'I0b'
     set_precision(ic0.current1.mean_value, 3)
-    set_precision(ic0.current1.mean_value, 3)
+    toss = ic0.Ia.describe()
+    set_precision(ic0.current2.mean_value, 3)
+    toss = ic0.Ib.describe()
 except:    
+    print(whisper('\t\t\t'+'ic0 is not available'))
     ic0 = None
+
+try:                            # might not be in use
+    ic1 = IntegratedIC('XF:06BM-BI{IC:1}EM180:', name='Ic1')
+    ic1.enable_electrometer()
+    print(whisper('\t\t\t'+'instantiated ic1'))
+    ic1.Ia.kind = 'hinted'
+    ic1.Ib.kind = 'hinted'
+    ic1.Ia.name = 'Ita'
+    ic1.Ib.name = 'Itb'
+    set_precision(ic1.current1.mean_value, 3)
+    toss = ic1.Ia.describe()
+    set_precision(ic1.current2.mean_value, 3)
+    toss = ic1.Ib.describe()
+except:    
+    print(whisper('\t\t\t'+'ic1 is not available'))
+    ic1 = None
 
 #set_precision(ic0.current1.mean_value, 3)
 #toss = ic0.Ia.describe()
@@ -292,8 +314,8 @@ config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
 
 xs = False
-use_4element, use_1element = True, True
-from BMM.user_ns.dwelltime import with_xspress3
+xs1 = False
+from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element
 if with_xspress3 is True and use_4element is True:
     run_report('\t'+'4-element SDD with Xspress3')
     from BMM.xspress3_4element import BMMXspress3Detector_4Element

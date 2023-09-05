@@ -204,7 +204,7 @@ class LineScan():
         Stash those in Redis.
         '''
         x,y = ev.xdata, ev.ydata
-        #print(x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
+        print(x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
         rkvs.set('BMM:mouse_event:value', x)
         rkvs.set('BMM:mouse_event:motor', ev.canvas.figure.axes[0].get_xlabel())
         
@@ -230,14 +230,14 @@ class LineScan():
         self.ongoing     = False
         self.xdata       = []
         self.ydata       = []
-        self.y2data       = []
+        self.y2data      = []
         self.motor       = None
         self.numerator   = None
         self.denominator = 1
         self.figure      = None
         self.axes        = None
         self.line        = None
-        self.line2        = None
+        self.line2       = None
         self.description = None
         self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
         self.initial     = 0

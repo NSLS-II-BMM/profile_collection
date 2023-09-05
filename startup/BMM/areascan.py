@@ -108,7 +108,7 @@ def areascan(detector,
 
         detector = detector.capitalize()
         yield from mv(_locked_dwell_time, dwell)
-        dets = [quadem1,]
+        dets = [quadem1, ic0,]
 
         if with_xspress3 and detector == 'If':
             detector = 'Xs'

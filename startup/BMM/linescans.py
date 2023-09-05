@@ -37,9 +37,8 @@ from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, ic0, vor, xs, xs1, use_4element, use_1element
-from BMM.user_ns.dwelltime   import with_xspress3, with_quadem, with_struck
+from BMM.user_ns.detectors   import quadem1, ic0, vor, xs, xs1
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *
@@ -237,7 +236,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
                            'detector' : 'I0',})
-            uid = yield from rel_scan([quadem1], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            uid = yield from rel_scan([quadem1, ic0], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
             
             user_ns['RE'].msg_hook = BMM_msg_hook
@@ -339,7 +338,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             titl = 'Bicron signal vs. DCM 2nd crystal pitch'
         else:
             func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-            dets = [quadem1,]
+            dets = [quadem1, ic0,]
             sgnl = 'I0'
             titl = 'I0 signal vs. DCM 2nd crystal pitch'
 
@@ -481,7 +480,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = [user_ns['quadem1'],]
+        dets = [user_ns['quadem1'], user_ns['ic0'], ]
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -603,7 +602,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = [user_ns['quadem1'],]
+        dets = [user_ns['quadem1'], user_ns['ic0'],]
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -824,7 +823,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         if detector == 'Xs':
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
-        dets  = [quadem1, ]
+        dets  = [quadem1, ic0, ]
         denominator = ''
         detname = ''
 

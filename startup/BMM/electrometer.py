@@ -115,7 +115,7 @@ class BMMQuadEM(QuadEM):
         EpicsSignal('XF:06BM-BI{EM:1}EM180:Acquire', name='').put(1)
 
     def dark_current(self):
-        print(f'Measuring current offsets for {self.name}, this will take several seconds')
+        print(f'Measuring current offsets for {self.name}, this may take several seconds')
         yield from mv(self.compute_current_offset1,1)
         yield from mv(self.compute_current_offset2,1)
         yield from mv(self.compute_current_offset3,1)
@@ -221,7 +221,37 @@ class BMMDualEM(QuadEM):
 class IntegratedIC(BMMDualEM):
     bias = Cpt(EpicsSignal, 'BiasVoltage')
 
-            
+    def enable_electrometer(self):
+        '''Set various quadEM parameters to the values used at BMM.  This is
+        particularly useful after power cycling or some other
+        disruptive event.  And it is harmless when stopping and
+        restarting bsui under normal circumstances.
+
+        '''
+        stats_pvs = (self.prefix + 'Current1:EnableCallbacks',
+                     self.prefix + 'Current2:EnableCallbacks',
+                     self.prefix + 'Current3:EnableCallbacks',
+                     self.prefix + 'Current4:EnableCallbacks',
+                     self.prefix + 'SumX:EnableCallbacks',
+                     self.prefix + 'SumY:EnableCallbacks',
+                     self.prefix + 'SumAll:EnableCallbacks',
+                     self.prefix + 'DiffX:EnableCallbacks',
+                     self.prefix + 'DiffY:EnableCallbacks',
+                     self.prefix + 'PosX:EnableCallbacks',
+                     self.prefix + 'PosY:EnableCallbacks')
+        for pv in stats_pvs:
+            EpicsSignal(pv, name='').put(1)
+        EpicsSignal(self.prefix + 'Range', name='').put(3)
+        EpicsSignal(self.prefix + 'AveragingTime', name='').put(0.5)
+        EpicsSignal(self.prefix + 'Acquire', name='').put(1)
+        EpicsSignal(self.prefix + 'BiasVoltage', name='').put(500)
+
+    def dark_current(self):
+        print(f'Measuring current offsets for {self.name}, this may take several seconds')
+        yield from mv(self.compute_current_offset1,1)
+        yield from mv(self.compute_current_offset2,1)
+        BMM_log_info(f'Measured dark current on {self.name}')
+        
 def dark_current():
     reopen = shb.state.get() == shb.openval 
     if reopen:
@@ -231,6 +261,10 @@ def dark_current():
         yield from user_ns['quadem1'].dark_current()
     if with_ic0:
         yield from user_ns['ic0'].dark_current()
+    if with_ic1:
+        yield from user_ns['ic1'].dark_current()
+    if with_ic2:
+        yield from user_ns['ic2'].dark_current()
     if reopen:
         print('Opening photon shutter')
         yield from user_ns['shb'].open_plan()

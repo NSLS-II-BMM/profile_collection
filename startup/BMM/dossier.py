@@ -23,7 +23,7 @@ from BMM.motor_status      import motor_sidebar
 from BMM.periodictable     import edge_energy, Z_number, element_name
 
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
-from BMM.user_ns.detectors import use_4element, use_1element
+from BMM.user_ns.dwelltime import use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)

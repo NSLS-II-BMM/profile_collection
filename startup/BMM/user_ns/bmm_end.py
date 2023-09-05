@@ -366,14 +366,14 @@ if BMMuser.element is None:
                                                                     
       
 run_report('\t'+'final setup: Xspress3')
-from BMM.user_ns.dwelltime import with_xspress3
-from BMM.user_ns.detectors import xs, xs1, use_4element, use_1element
+from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element
+from BMM.user_ns.detectors import xs, xs1
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
-    if use_4element:
+    if xs is not False and use_4element:
         BMMuser.verify_roi(xs,  BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    if use_1element:
+    if xs1 is not False and use_1element:
         BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    show_edges()
+    #show_edges()
 
 run_report('\t'+'final setup: cameras')
 from BMM.user_ns.detectors import xascam, xrdcam, anacam

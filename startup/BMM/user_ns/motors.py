@@ -176,9 +176,15 @@ xafs_motors = [xafs_rots, xafs_det, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_r
 
 
 def homed():
+    normally_not_homed = ('dm1_filters1', 'dm1_filters2', 'dm2_fs',
+                          'dm3_fs', 'dm3_foils', 'dm3_bpm', 'm1_yu',
+                          'm1_ydo', 'm1_ydi', 'm1_xu', 'm1_xd',
+                          'm2_bender', 'dmc_y')
     for m in mcs8_motors:
         if m.hocpl.get():
             print("%-12s : %s" % (m.name, m.hocpl.enum_strs[m.hocpl.get()]))
+        elif m.name in normally_not_homed:
+            print("%-12s : normally %s" % (m.name, warning_msg(m.hocpl.enum_strs[m.hocpl.get()])))
         else:
             print("%-12s : %s" % (m.name, error_msg(m.hocpl.enum_strs[m.hocpl.get()])))
 

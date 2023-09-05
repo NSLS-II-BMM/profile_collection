@@ -39,8 +39,8 @@ user_ns = vars(user_ns_module)
 
 #from __main__ import db
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
-from BMM.user_ns.dwelltime import _locked_dwell_time
-from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0, use_4element, use_1element
+from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
+from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -957,7 +957,7 @@ def xafs(inifile=None, **kwargs):
                 kafka_message({'xafsscan': 'next',
                                'count': cnt })
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
-                    uid = yield from scan_nd([quadem1], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([quadem1, ic0], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif any(md in p['mode'] for md in ('icit', 'ici0')):
@@ -965,15 +965,15 @@ def xafs(inifile=None, **kwargs):
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':
-                    uid = yield from scan_nd([quadem1, xs], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([quadem1, ic0, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs1':
-                    uid = yield from scan_nd([quadem1, xs1], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([quadem1, ic0, xs1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs1', **more_kafka }})
                 else:
-                    uid = yield from scan_nd([quadem1, vor], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([quadem1, ic0, vor], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
 

@@ -71,6 +71,9 @@ class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
         NOTE : this comes from:
             https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
+
+        This has been slightly modified by Bruce to avoid a situation where the warmup
+        hangs.  Also to add some indication on screen for what is happening.
         """
         print(whisper("                        warming up the hdf5 plugin..."), flush=True)
         self.enable.set(1).wait()
