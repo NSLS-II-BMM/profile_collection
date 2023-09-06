@@ -19,7 +19,6 @@ startup_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 uns_dict = dict()
 
-print(1)
 if not is_re_worker_active():
     ip = get_ipython()
     nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_with_kafka=use_kafka)
@@ -38,18 +37,15 @@ else:
 bec.disable_plots()
 bec.disable_baseline()
 
-print(2)
 import ophyd
 ophyd.EpicsSignal.set_defaults(timeout=10, connection_timeout=10)
 
 #from databroker.core import SingleRunCache
 
-print(3)
 from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
 
-print(4)
 from tiled.client import from_profile
 bmm_catalog = from_profile('bmm')
 

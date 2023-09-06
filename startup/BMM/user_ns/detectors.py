@@ -3,6 +3,7 @@ import os, json
 from BMM.functions import run_report, whisper
 from BMM.user_ns.bmm import BMMuser
 from ophyd import EpicsSignal
+from ophyd.sim import noisy_det
 
 run_report(__file__, text='detectors and cameras')
 
@@ -18,7 +19,19 @@ with_pilatus = False
 # \____/  \_/ \_| \_|\___/ \____/\_| \_/ #
 ##########################################
                                       
-                                      
+## use of Struck is largely DEPRECATED.  Code remains in case there is
+## ever a need to return to the analog signal chain for the SDD.  At
+## this point (Sep 2023), it is no longer an easy switch between
+## XSpress3 and analog.  Work will be required to get the analog
+## solution fully integrated into data acquisition.
+##
+## that is work that would be greatly exacerbated by the fact that the
+## only known way to visualize the XRF spectrum and the ROI settings
+## involves the Canberra software on a Windows 95 machine using a
+## security key fob.
+##
+## all that said, the only way (currently) of reading the XRD Bicron
+## is to use the Struck
 
 run_report('\t'+'Struck')
 from BMM.struck import BMMVortex, GonioStruck, icrs, ocrs
@@ -117,19 +130,6 @@ bicron.channels.chan25.name = 'Bicron'
 bicron.channels.chan26.name = 'APD'
 
 
-# ## if this startup file is "%run -i"-ed, then need to reset
-# ## foils to the serialized configuration
-# jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
-# if os.path.isfile(jsonfile):
-#     user = json.load(open(jsonfile))
-#     if 'rois' in user:
-#         rois.set(user['rois'])
-#         BMMuser.read_rois = None
-# ## else if starting bsui fresh, perform the delayed foil configuration
-# if BMMuser.read_rois is not None:
-#     rois.set(BMMuser.read_rois)
-#     BMMuser.read_rois = None
-
 
 #######################################################################################
 #  _____ _      _____ _____ ___________ ________  ___ _____ _____ ___________  _____  #
@@ -141,7 +141,7 @@ bicron.channels.chan26.name = 'APD'
 #######################################################################################
 
 
-run_report('\t'+'electrometers')
+run_report('\t'+'electrometer and ion chambers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
         
@@ -191,8 +191,8 @@ try:                            # might not be in use
     set_precision(ic0.current2.mean_value, 3)
     toss = ic0.Ib.describe()
 except:    
-    print(whisper('\t\t\t'+'ic0 is not available'))
-    ic0 = None
+    print(whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det'))
+    ic0 = noisy_det
 
 try:                            # might not be in use
     ic1 = IntegratedIC('XF:06BM-BI{IC:1}EM180:', name='Ic1')
@@ -207,8 +207,8 @@ try:                            # might not be in use
     set_precision(ic1.current2.mean_value, 3)
     toss = ic1.Ib.describe()
 except:    
-    print(whisper('\t\t\t'+'ic1 is not available'))
-    ic1 = None
+    print(whisper('\t\t\t'+'ic1 is not available, falling back to ophyd.sim.noisy_det'))
+    ic1 = noisy_det
 
 #set_precision(ic0.current1.mean_value, 3)
 #toss = ic0.Ia.describe()
@@ -232,7 +232,9 @@ from BMM.camera_device import BMMSnapshot, snap
 from BMM.db import file_resource, show_snapshot
 
 
-## see 01-bmm.py for definition of nas_path
+# this root location is deprecated for the camera devices.  the NAS devices were retired
+# in early 2023. The _root of the camera device will be reset when the user configuration
+# happens, so this initial configuration is harmless, if confusing
 from BMM.user_ns.bmm import nas_path
 xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
 xrdcam = BMMSnapshot(root=nas_path, which='XRD',    name='xrdcam')

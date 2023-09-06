@@ -373,7 +373,7 @@ if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 i
         BMMuser.verify_roi(xs,  BMMuser.element, BMMuser.edge, tab='\t\t\t')
     if xs1 is not False and use_1element:
         BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    #show_edges()
+    show_edges()
 
 run_report('\t'+'final setup: cameras')
 from BMM.user_ns.detectors import xascam, xrdcam, anacam

@@ -60,12 +60,14 @@ def run_report(thisfile, text=None):
     Noisily proclaim to be importing a file of python code.
     '''
     add = '...'
+    prepend = ''
     if text is not None:
         add = f'({text})'
+        prepend = 'BMM/user_ns/'
     importing = 'Importing'
     if thisfile[0] == '\t':
         importing = '\t'
-    print(colored(f'{importing} {thisfile.split("/")[-1]} {add}', 'lightcyan'))
+    print(colored(f'{importing} {prepend}{thisfile.split("/")[-1]} {add}', 'lightcyan'))
 
 
 def error_msg(text):
@@ -251,7 +253,7 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
             print(whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}'))
         elif m.hocpl.get() == 1:
             print(f'{TAB}{m.name} {CHECK}')
-        elif 'filter' in m.name:
+        elif any(x in m.name for x in ('filter', 'fs', 'bpm', 'foils')):
             print(whisper(f'{TAB}{m.name} is not homed, but that\'s probably OK.'))
         else:
             print(error_msg(f'{TAB}{m.name} is not homed.'))

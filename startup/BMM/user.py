@@ -361,14 +361,14 @@ class BMM_User(Borg):
         #for k in almost_all_keys:
         #    d[k] = getattr(self, k)
         #    rkvs.set(f'BMM:user:{k}', str(d[k]))
-        print(f'\n{prefix}wrote BMMuser state to redis')
+        print(f'{prefix}wrote BMMuser state to redis')
         
         if filename is None:
             print(json.dumps(d, indent=4))
         else:
             with open(filename, 'w') as outfile:
                 json.dump(d, outfile, indent=4)
-            print(f'\n{prefix}wrote BMMuser state to {filename}')
+            print(f'{prefix}wrote BMMuser state to {filename}')
 
     def set_element(self, element, edge=None):
         if edge is None:
@@ -782,7 +782,7 @@ class BMM_User(Borg):
             print(error_msg('You did not supply the start date'))
             return()
         pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
-        if not pattern.fullmatch(date) is not None:
+        if pattern.fullmatch(date) is None:
             print(error_msg('The start date must be in the form YYYY-MM-DD'))
             return()
         if gup == 0:
@@ -812,7 +812,7 @@ class BMM_User(Borg):
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
-        self.state_to_redis(filename=os.path.join(self.DATA, '.BMMuser'), prefix='    ')
+        self.state_to_redis(filename=os.path.join(self.DATA, '.BMMuser'), prefix=' >> ')
         slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
         if os.path.isfile(slink):
             os.remove(slink)

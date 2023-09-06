@@ -38,6 +38,7 @@ from BMM.rois import ROI
 rois = ROI()
 
 
+run_report('\t'+'recovering user configuration')
 BMMuser = BMM_User()
 BMMuser.start_experiment_from_serialization()
 

@@ -220,6 +220,7 @@ class BMMDualEM(QuadEM):
 
 class IntegratedIC(BMMDualEM):
     bias = Cpt(EpicsSignal, 'BiasVoltage')
+    capacitor_range = Cpt(EpicsSignal, 'Range')
 
     def enable_electrometer(self):
         '''Set various quadEM parameters to the values used at BMM.  This is

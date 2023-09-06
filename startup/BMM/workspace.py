@@ -76,18 +76,31 @@ def initialize_workspace():
     This is, essentially, a deployment verification that is run every
     time bsui starts.
 
+    Additional acceptance testing is done throughout the profile
+    start-up, including steps to 
+      * check connectivity and homed state of motors
+      * availability and configuration of detectors.
+
     '''
-    print(BMM.functions.verbosebold_msg('Checking workspace on this computer ...'))
+    print(BMM.functions.verbosebold_msg('''
+
+================================================================
+bsui profile for NIST's Beamline for Materials Measurement (6BM)
+================================================================
+
+Verifying workspace on this computer ...'''))
     check_workstation_access()
     check_lan()
     check_profile_branch()
     initialize_data_directories()
-    #initialize_beamline_configuration()
     initialize_lustre()
-    #initialize_nas()
     initialize_secrets()
     initialize_redis()
     #initialize_gdrive()
+
+    ## deprecated steps
+    #initialize_beamline_configuration()
+    #initialize_nas()
     #initialize_ssh()
     
 def check_workstation_access():
@@ -127,7 +140,7 @@ def check_profile_branch():
         branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
     except subprocess.CalledProcessError:
         branch = "not a git repository"
-    print(f'{TAB}Using profile branch {branch}: {CHECK}')
+    print(f'{TAB}Using profile branch "{branch}": {CHECK}')
     os.chdir(here)
     
 def check_directory(dir, desc):
@@ -211,6 +224,8 @@ def initialize_beamline_configuration():
     from the upstream repository to be sure the modes JSON file is up
     to date.
 
+    DEPRECATED, relevant files moved into beamline profile
+
     '''
     GIT=f'{os.environ["HOME"]}/git'
     check_directory(GIT, 'git')
@@ -229,6 +244,8 @@ def initialize_nas():
     '''Check if a the NAS1 mount point is mounted.  If not, complain on
     screen.
 
+    DEPRECATED
+
     '''
     if os.path.ismount(NAS):
         print(f'{TAB}Found NAS1 mount point: {CHECK}')
@@ -238,6 +255,8 @@ def initialize_nas():
 def initialize_ssh():
     '''Check to see if xf06bm-ws3 has an authorized ssh key from this
     computer.  If not, complain on screen.
+
+    DEPRECATED
 
     '''
     if 'xf06bm-ws3' in socket.gethostname():
