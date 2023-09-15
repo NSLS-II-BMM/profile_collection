@@ -163,12 +163,12 @@ class LineScan():
             self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
 
         ## split ion chamber
-        elif self.numerator == 'Ic0':
-            self.line.set_label('I0a')
-            self.line2, = self.axes.plot([],[], label='I0b')
+        elif self.numerator == 'Ic1':
+            self.line.set_label('Ita')
+            self.line2, = self.axes.plot([],[], label='Itb')
             self.description = 'split ion chamber (channel A)'
             self.denominator = 'I0'
-            self.axes.set_ylabel(f'I0a/{self.denominator}')
+            self.axes.set_ylabel(f'Ita/{self.denominator}')
             self.axes.legend(loc='best', shadow=True)
             
 
@@ -260,6 +260,9 @@ class LineScan():
         elif self.numerator == 'Ic0':
             signal  = kwargs['data']['I0a']
             signal2 = kwargs['data']['I0b']
+        elif self.numerator == 'Ic1':
+            signal  = kwargs['data']['Ita']
+            signal2 = kwargs['data']['Itb']
         elif self.numerator == 'Xs1':
             signal = kwargs['data'][self.xs8]
             signal2 = kwargs['data']['K8']
@@ -278,15 +281,15 @@ class LineScan():
         if self.denominator is None:
             self.ydata.append(signal)
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
-            if self.numerator in ('Ic0', 'Xs1', 'Xs', 'If'):
+            if self.numerator in ('Ic0q', 'Ic1', 'Xs1', 'Xs', 'If'):
                 self.y2data.append(signal2)
         else:
             self.ydata.append(signal/kwargs['data'][self.denominator])
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
-            if self.numerator in ('Ic0', 'Xs1'): #, 'Xs', 'If'):
+            if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
-        if self.numerator in ('Ic0', 'Xs1'): #, 'Xs', 'If'):
+        if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
             self.line2.set_data(self.xdata, self.y2data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)

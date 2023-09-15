@@ -14,7 +14,7 @@ class EPS_Shutter(Device):
     error = Cpt(EpicsSignal,'Err-Sts')
     permit = Cpt(EpicsSignal, 'Permit:Enbl-Sts')
     enabled = Cpt(EpicsSignal, 'Enbl-Sts')
-    maxcount = 3
+    maxcount = 4
     openval = 1                 # normal shutter values, FS1 is reversed
     closeval = 0
 

@@ -23,7 +23,7 @@ with_xspress3, use_4element, use_1element = True, True, True
 #with_xspress3, use_4element, use_1element = False, False, False
 
 # use these to turn on/off the monolithic ion chambers
-with_ic0, with_ic1, with_ic2 = True, False, False
+with_ic0, with_ic1, with_ic2 = True, True, False
 with_dualem = False             # deprecated, prototype
 
 # An error gets triggered during Azure CI testing that does not get triggered when

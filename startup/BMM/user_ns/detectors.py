@@ -144,13 +144,18 @@ bicron.channels.chan26.name = 'APD'
 run_report('\t'+'electrometer and ion chambers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
+i0_is = 'ic' # 'quadem'
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.enable_electrometer()
 print(whisper('\t\t\t'+'instantiated quadem1'))
-quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'omitted', 'hinted', 'hinted', 'omitted'
-quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0q', 'It', 'Ir', 'Iy'
-
+if i0_is == 'quadem':
+    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
+    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
+else: #is_is == 'ic'
+    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'omitted', 'hinted', 'hinted', 'omitted'
+    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0q', 'It', 'Ir', 'Iy'
+    
 
 ## need to do something like this:
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
@@ -182,12 +187,18 @@ try:                            # might not be in use
     ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
     ic0.enable_electrometer()
     print(whisper('\t\t\t'+'instantiated ic0'))
-    ic0.Ia.kind = 'hinted'
+    if i0_is == 'quadem':
+        ic0.Ia.kind = 'omitted'
+        ic0.Ia.name = 'I0a'
+    else:
+        ic0.Ia.kind = 'hinted'
+        ic0.Ia.name = 'I0'
+        
     ic0.Ib.kind = 'omitted'
-    ic0.Ia.name = 'I0'
     ic0.Ib.name = 'I0b'
     set_precision(ic0.current1.mean_value, 3)
     toss = ic0.Ia.describe()
+    
     set_precision(ic0.current2.mean_value, 3)
     toss = ic0.Ib.describe()
 except:    
