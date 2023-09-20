@@ -347,7 +347,8 @@ class BMMDossier():
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
         if is_re_worker_active() is False:
-            print(whisper('The error text below saying "Error opening file for output:" is expected and does not indicate a problem of any sort.'))
+            print(whisper('The error text below saying "Error opening file for output:"'))
+            print(whisper('happens every time and does not indicate a problem of any sort.'))
             self.anasnap = "%s_analog_%s.jpg" % (stub, ahora)
             image_ana = os.path.join(folder, 'snapshots', self.anasnap)
             md['_filename'] = image_ana

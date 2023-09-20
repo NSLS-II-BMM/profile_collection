@@ -32,7 +32,7 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
 
-from BMM.user_ns.detectors import quadem1, ic0, vor, xs, xs1
+from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -96,8 +96,8 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     RE.msg_hook = None
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
-    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Test', 'Transmission', 'Fluorescence', 'Flourescence') and 'Dtc' not in detector:
-        print(error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, transmission, fluorescence)\n'))
+    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Ic1', 'Test', 'Transmission', 'Fluorescence', 'Flourescence') and 'Dtc' not in detector:
+        print(error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, ic1, transmission, fluorescence)\n'))
         yield from null()
         return None
 
@@ -123,6 +123,11 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['Iy']/doc['data']['I0'])
     elif detector == 'Test':
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
+    elif detector == 'Ic1':
+        dets.append(ic1)
+        denominator = ' / I0'
+        func  = lambda doc: (doc['time']-epoch_offset, doc['data']['Ita']/doc['data']['I0'])
+        func3 = lambda doc: (doc['time']-epoch_offset, doc['data']['Itb']/doc['data']['I0'])
     elif detector == 'Dtc':
         dets.append(vor)
         denominator = ' / I0'
@@ -159,6 +164,9 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     if detector == 'Dtc':
         plot = [DerivedPlot(func,  xlabel='elapsed time (seconds)', ylabel='dtc2', title='time scan'),
                 DerivedPlot(func3, xlabel='elapsed time (seconds)', ylabel='dtc3', title='time scan')]
+    elif detector == 'Ic1':
+        plot = [DerivedPlot(func,  xlabel='elapsed time (seconds)', ylabel='Ita', title='time scan'),
+                DerivedPlot(func3, xlabel='elapsed time (seconds)', ylabel='Itb', title='time scan')]
     else:
         plot = DerivedPlot(func,
                            xlabel='elapsed time (seconds)',
@@ -262,6 +270,10 @@ def ts2dat(datafile, key):
         el = dataframe.start['XDI']['Scan']['element']
         column_list = ['time', 'I0', 'It', 'Ir', f'{el}1', f'{el}2', f'{el}3', f'{el}4']
         template = "  %.3f  %.6f  %.6f  %.6f  %.2f  %.2f  %.2f  %.2f\n"        
+    elif 'Ic1' in devices:
+        el = dataframe.start['XDI']['Scan']['element']
+        column_list = ['time', 'I0', 'It', 'Ir', 'Ita', 'Itb']
+        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"        
     else:
         column_list = ['time', 'I0', 'It', 'Ir']
         template = "  %.3f  %.6f  %.6f  %.6f\n"

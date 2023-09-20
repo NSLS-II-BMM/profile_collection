@@ -74,9 +74,9 @@ class LockedDwellTimes(PseudoPositioner):
         #if hasattr(self, 'dualem_dwell_time'):
         #    self.dualem_dwell_time.settle_time = val
         if hasattr(self, 'ic0_dwell_time'):
-            self.ic0_dwell_time.settle_time = val/2
+            self.ic0_dwell_time.settle_time = val
         if hasattr(self, 'ic1_dwell_time'):
-            self.ic1_dwell_time.settle_time = val/2
+            self.ic1_dwell_time.settle_time = val
         if hasattr(self, 'ic2_dwell_time'):
             self.ic2_dwell_time.settle_time = val
         if hasattr(self, 'xspress3_dwell_time'):
@@ -99,9 +99,9 @@ class LockedDwellTimes(PseudoPositioner):
         #if hasattr(self, 'dualem_dwell_time'):
         #    signal_chains['dualem_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic0_dwell_time'):
-            signal_chains['ic0_dwell_time'] = pseudo_pos.dwell_time/2
+            signal_chains['ic0_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic1_dwell_time'):
-            signal_chains['ic1_dwell_time'] = pseudo_pos.dwell_time/2
+            signal_chains['ic1_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic2_dwliell_time'):
             signal_chains['ic2_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'xspress3_dwell_time'):

@@ -23,7 +23,7 @@ from BMM.workspace         import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs, ic0
+from BMM.user_ns.detectors   import quadem1, vor, xs, ic0, ic1
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -123,12 +123,15 @@ def areascan(detector,
         elif detector in ('Random', 'Noisy', 'Noisy_det'):
             dets.append(noisy_det)
             detector = 'noisy_det'
-        elif detector == 'I0a':
-            dets.append(ic0)
-            detector = ic0.Ia.name
-        elif detector == 'I0a':
-            dets.append(ic0)
-            detector = ic0.Ib.name
+        # elif detector == 'I0a':
+        #     dets.append(ic0)
+        #     detector = ic0.Ia.name
+        # elif detector == 'I0a':
+        #     dets.append(ic0)
+        #     detector = ic0.Ib.name
+        elif detector == 'Ic1':
+            dets.append(ic1)
+            detector = ic1.Ia.name
         
         line1 = f'slow motor: {slow.name}, {startslow}, {stopslow}, {nslow} -- starting at {slow.position:.3f}\n'
         line2 = f'fast motor: {fast.name}, {startfast}, {stopfast}, {nfast} -- starting at {fast.position:.3f}\n'
@@ -298,7 +301,7 @@ def fetch_areaplot(uid=None, signal=None, log=False, contour=False):
     el = df.metadata['start']['plan_name'].split(" ")[-1][:-1]
     if signal is None:
         z = numpy.array(df.primary.read()[el+'1']) + numpy.array(df.primary.read()[el+'2']) + numpy.array(df.primary.read()[el+'3']) + numpy.array(df.primary.read()[el+'4'])
-    elif signal.lower() in ('it', 'i0a', 'i0b'):
+    elif signal.lower() in ('it', 'i0a', 'i0b', 'ita', 'itb'):
         z = numpy.array(df.primary.read()[signal.capitalize()])
     (nslow, nfast) = df.metadata['start']['shape']
     if log is True:

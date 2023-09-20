@@ -37,7 +37,8 @@ def units(label):
 
 
 quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
-_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+#_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
+_ionchambers = [ic0.Ia, quadem1.It, quadem1.Ir]
 if with_ic0:
     _ic0         = [ic0.Ia, ic0.Ib]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
