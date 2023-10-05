@@ -267,3 +267,99 @@ def initialize_ssh():
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws3: {CHECK}')
     else:
         print(BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
+
+
+def ping(host):
+    a=subprocess.run(["ping", "-c", '2', host], capture_output=True)
+    if a.returncode == 0:
+        return True
+    else:
+        return False
+
+def check_linkam(linkam):
+    if linkam.model == 'T96-S':
+        print(f'{TAB}Linkam stage is available {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}Linkam stage is powered dawn or out of communication with IOC2'))
+    return
+    
+def check_lakeshore(lakeshore):
+    #print(BMM.functions.whisper(f'{TAB}No test yet for LakeShore 331.'))
+    was = lakeshore.units_sel.get()
+    lakeshore.units_sel.put(0)
+    if lakeshore.sample_a.get() == 0.0:
+        print(BMM.functions.error_msg(f'{TAB}LakeShore 331 is powered dawn or out of communication with IOC2'))
+    else:
+        print(f'{TAB}LakeShore 331 is available {CHECK}')
+    lakeshore.units_sel.put(was)
+    return
+    
+def check_biologic():
+    ret = ping('xf06bm-biologic')
+    if ret is True:
+        print(f'{TAB}BioLogic potentiostat is available {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}BioLogic is powered dawn or not on the network'))
+    return
+    
+def check_electrometers():
+    hosts = {'em1': 'quadem (old ion chamber signals)',
+             'ic1': 'ic0, the I0 detector',
+             #'ic2': 'ic1, the It detector',
+             #'ic3': 'ic2, the Ir detector',
+    }
+    for h in hosts.keys():
+        ret = ping(f'xf06bm-{h}')
+        if ret is True:
+            print(f'{TAB}{hosts[h]} is available {CHECK}')
+        else:
+            print(BMM.functions.error_msg(f'{TAB}{hosts[h]} is not available'))
+    return
+    
+def check_xspress3(xs):
+    ret = ping('xf06bm-xspress3')
+    if ret is False:
+        print(BMM.functions.error_msg(f'{TAB}Xspress3 is not on the network'))
+        return
+    if xs.hdf5.run_time.get() == 0.0:
+        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is not running'))
+        return
+    print(f'{TAB}XSpress3 is available {CHECK}')
+    return
+    
+def check_instruments(linkam, lakeshore, xs):
+    '''Run simple tests to see if connectivity exists to various
+    instruments at BMM.  This is intended to be run very late in
+    profile startup.
+    
+    linkam
+       Probe for value of linkam.model, should be 'T96-S' if stage is connected,
+       IOC is on, and ophyd device is connected.  This will help notice is kernel
+       module on xf06bm-ioc2 allowing communication with Moxa ports is compiled 
+       and loaded after a reboot or update.
+
+    lakeshore (todo)
+       Probe for value of lakeshore.<something>, ... if  controller is connected,
+       IOC is on, and ophyd device is connected.  This will help notice is kernel
+       module on xf06bm-ioc2 allowing communication with Moxa ports is compiled 
+       and loaded after a reboot or update.
+       
+    biologic
+       Ping the potentiostat at xf06bm-biologic. This will verify that the
+       potentiostat is powered up and on the network
+
+    quadem1, ic0, ic1, ic2
+       Ping these devices at xf06bm-em1, xf06bm-ic1, etc.  This will verify which 
+       electrometer devices are on the network
+
+    xspress3
+       ping xf06bm-xspress3 and check that the detector has been warmed up by seeing if
+       xs.hdf5.run_time.get() is non-zero
+    '''
+    print(BMM.functions.verbosebold_msg(f'\t\tverifying availability of instruments ...'))
+    check_linkam(linkam)
+    check_lakeshore(lakeshore)
+    check_biologic()
+    check_electrometers()
+    check_xspress3(xs)
+    

@@ -470,6 +470,8 @@ def check_for_synaxis():
         boxedtext('Disconnected motors', text, 'red', width=74)
 check_for_synaxis()
 examine_diagnostics()
+from BMM.workspace import check_instruments
+check_instruments(user_ns['linkam'], user_ns['lakeshore'], user_ns['xs'])
 resting_state()
 
 try:
