@@ -4,6 +4,7 @@ import redis
 import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
 from BMM.user_ns.base import startup_dir
 
+
 if not os.environ.get('AZURE_TESTING'):
     redis_host = 'xf06bm-ioc2'
 else:
@@ -299,33 +300,52 @@ def check_biologic():
     if ret is True:
         print(f'{TAB}BioLogic potentiostat is available {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}BioLogic is powered dawn or not on the network'))
+        print(BMM.functions.error_msg(f'{TAB}BioLogic is not responding to pings (powered down or not on the network)'))
     return
     
 def check_electrometers():
-    hosts = {'em1': 'quadem (old ion chamber signals)',
-             'ic1': 'ic0, the I0 detector',
-             #'ic2': 'ic1, the It detector',
-             #'ic3': 'ic2, the Ir detector',
+    from BMM.user_ns.dwelltime import with_quadem, with_ic0, with_ic1, with_ic2
+    hosts = {
+        'em1': ['quadem1, old ion chamber signals,', with_quadem],
+        # 'em2': ['quadem2, old ion chamber signals,', with_quadem],
+        'ic1': ['ic0, the I0 detector,', with_ic0],
+        'ic2': ['ic1, the It detector,', with_ic1],
+        'ic3': ['ic2, the Ir detector,', with_ic2],
     }
     for h in hosts.keys():
-        ret = ping(f'xf06bm-{h}')
-        if ret is True:
-            print(f'{TAB}{hosts[h]} is available {CHECK}')
-        else:
-            print(BMM.functions.error_msg(f'{TAB}{hosts[h]} is not available'))
+        if hosts[h][1] is True:
+            ret = ping(f'xf06bm-{h}')
+            if ret is True:
+                print(f'{TAB}{hosts[h][0]} is available {CHECK}')
+            else:
+                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} is not available'))
     return
     
 def check_xspress3(xs):
     ret = ping('xf06bm-xspress3')
     if ret is False:
-        print(BMM.functions.error_msg(f'{TAB}Xspress3 is not on the network'))
+        print(BMM.functions.error_msg(f'{TAB}Xspress3 is not responding to pings'))
         return
-    if xs.hdf5.run_time.get() == 0.0:
-        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is not running'))
+    try:
+        if xs.hdf5.run_time.get() == 0.0:
+            print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
+            return
+    except:
+        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
         return
     print(f'{TAB}XSpress3 is available {CHECK}')
     return
+
+def check_diode():
+    remote_sts = EpicsSignalRO('XF:06BM-CT{DIODE}RemoteIO-Sts', name='remote')
+    local_sts  = EpicsSignalRO('XF:06BM-CT{DIODE}LocalBus-Sts', name='local')
+    #heartbeat  = EpicsSignalRO('XF:06BM-CT{DIODE}CPU-Sts', name='heartbeat')
+    ok = remote_sts.get() == 1 and local_sts.get() == 1
+    if ok is True:
+        print(f'{TAB}DIODE (sample spinners, XRD filters) is available {CHECK}')
+    else:
+        print(BMM.functions.error_msg(f'{TAB}DIODE (sample spinners, XRD filters) is not available'))
+        
     
 def check_instruments(linkam, lakeshore, xs):
     '''Run simple tests to see if connectivity exists to various
@@ -338,11 +358,12 @@ def check_instruments(linkam, lakeshore, xs):
        module on xf06bm-ioc2 allowing communication with Moxa ports is compiled 
        and loaded after a reboot or update.
 
-    lakeshore (todo)
-       Probe for value of lakeshore.<something>, ... if  controller is connected,
-       IOC is on, and ophyd device is connected.  This will help notice is kernel
-       module on xf06bm-ioc2 allowing communication with Moxa ports is compiled 
-       and loaded after a reboot or update.
+    lakeshore
+       Probe the temperature value of sensor A on the LakeShore 331
+       with units set to K. If the result is non-zero, then IOC is on,
+       and ophyd device is connected.  This will help notice is kernel
+       module on xf06bm-ioc2 allowing communication with Moxa ports is
+       compiled and loaded after a reboot or update.
        
     biologic
        Ping the potentiostat at xf06bm-biologic. This will verify that the
@@ -355,6 +376,10 @@ def check_instruments(linkam, lakeshore, xs):
     xspress3
        ping xf06bm-xspress3 and check that the detector has been warmed up by seeing if
        xs.hdf5.run_time.get() is non-zero
+
+    diode
+       check that the local and remote buses report being up
+
     '''
     print(BMM.functions.verbosebold_msg(f'\t\tverifying availability of instruments ...'))
     check_linkam(linkam)
@@ -362,4 +387,5 @@ def check_instruments(linkam, lakeshore, xs):
     check_biologic()
     check_electrometers()
     check_xspress3(xs)
+    check_diode()
     
