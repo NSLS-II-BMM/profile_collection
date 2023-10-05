@@ -201,7 +201,8 @@ try:                            # might not be in use
     
     set_precision(ic0.current2.mean_value, 3)
     toss = ic0.Ib.describe()
-except:    
+except Exception as E:
+    print(E)
     print(whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det'))
     ic0 = noisy_det
 

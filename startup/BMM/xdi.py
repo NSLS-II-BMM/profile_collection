@@ -3,6 +3,7 @@ import re, pathlib, sys, datetime, pandas, numpy
 
 from BMM.functions import plotting_mode
 
+from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1
 from BMM.user_ns.dwelltime import with_ic0
 
 from BMM import user_ns as user_ns_module
@@ -36,7 +37,7 @@ def units(label):
         return ''
 
 
-quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
+#quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
 #_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
 _ionchambers = [ic0.Ia, quadem1.It, quadem1.Ir]
 if with_ic0:

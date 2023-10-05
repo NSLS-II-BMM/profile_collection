@@ -125,7 +125,7 @@ def pluck(suggested_motor=None):
         unset_mouse_click()
         return(yield from null())
         
-    action = input(f'\nMove {motor_name} to {position:.3f}? ' + PROMPT)
+    action = input(f'\nMove {motor_name} to {position:.3f} ? ' + PROMPT)
     if action != '':
         if action[0].lower() == 'n' or action[0].lower() == 'q':
             print('Skipping...')

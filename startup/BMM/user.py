@@ -783,8 +783,8 @@ class BMM_User(Borg):
             return()
         pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
         if pattern.fullmatch(date) is None:
-            print(error_msg('The start date must be in the form YYYY-MM-DD'))
-            return()
+            print(error_msg(f'The start date {date} was not in the form YYYY-MM-DD'))
+            #return()
         if gup == 0:
             print(error_msg('You did not supply the GUP number'))
             return()

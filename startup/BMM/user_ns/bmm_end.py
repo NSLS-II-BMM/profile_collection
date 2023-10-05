@@ -229,9 +229,6 @@ run_report('\t'+'mono calibration')
 from BMM.mono_calibration import calibrate, calibrate_high_end, calibrate_low_end, calibrate_mono, calibrate_pitch
 
 
-
-
-
 ###############################################################
 #  _____ _____   ___   _   _   _______   _______ _____ _____  #
 # /  ___/  __ \ / _ \ | \ | | |_   _\ \ / / ___ \  ___/  ___| #

@@ -67,7 +67,7 @@ def run_report(thisfile, text=None):
     importing = 'Importing'
     if thisfile[0] == '\t':
         importing = '\t'
-    print(colored(f'{importing} {prepend}{thisfile.split("/")[-1]} {add}', 'lightcyan'))
+    print(colored(f'{importing} {prepend}{thisfile.split("/")[-1]} {add}', 'lightcyan'), flush=True)
 
 
 def error_msg(text):

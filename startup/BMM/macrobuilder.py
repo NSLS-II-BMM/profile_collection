@@ -69,7 +69,7 @@ class BMMMacroBuilder():
     def __init__(self, folder=None):
         self.basename         = None
         self.folder           = None
-        self.joiner           = '-'
+        self.joiner           = '_'
 
         self.source           = None
         self.wb               = None

@@ -219,7 +219,7 @@ class BMMDualEM(QuadEM):
 
 
 class IntegratedIC(BMMDualEM):
-    bias = Cpt(EpicsSignal, 'BiasVoltage', egu='volts')
+    bias = Cpt(EpicsSignal, 'BiasVoltage')
     capacitor_range = Cpt(EpicsSignal, 'Range')
 
     def enable_electrometer(self):
@@ -242,7 +242,7 @@ class IntegratedIC(BMMDualEM):
                      self.prefix + 'PosY:EnableCallbacks')
         for pv in stats_pvs:
             EpicsSignal(pv, name='').put(1)
-        EpicsSignal(self.prefix + 'Range', name='').put(6)
+        EpicsSignal(self.prefix + 'Range', name='').put(7)
         EpicsSignal(self.prefix + 'AveragingTime', name='').put(0.5)
         EpicsSignal(self.prefix + 'Acquire', name='').put(1)
         EpicsSignal(self.prefix + 'BiasVoltage', name='').put(200)

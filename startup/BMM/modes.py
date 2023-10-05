@@ -171,6 +171,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                count += 1
                report('\nMirror amplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
                yield from sleep(2)
+               m2_bender.kill()
                user_ns['ks'].cycle('m2')
                user_ns['ks'].cycle('m3')
                yield from sleep(2)
