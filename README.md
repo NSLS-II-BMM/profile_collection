@@ -15,6 +15,12 @@ Technology](http://www.nist.gov).
 
 This profile is used with [Bluesky](https://blueskyproject.io).
 
+Useful links:
+
++ [Beamline manual](https://nsls-ii-bmm.github.io/BeamlineManual/index.html)
++ [Beamline wiki](https://wiki-nsls2.bnl.gov/beamline6BM/index.php?Main_Page)
+
+
 A clarification about licensing
 -------------------------------
 
