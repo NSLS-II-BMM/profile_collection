@@ -203,6 +203,12 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             if problem_is_dcm is True:
                 user_ns['ks'].cycle('dcm')
 
+            problem_is_dm3 = False
+            if dm3_bct.amfe.get() or dm3_bct.amfae.get():
+                problem_is_dm3 = True
+            if problem_is_dm3 is True:
+                user_ns['ks'].cycle('dm3')
+
             if ready_count > 5:
                 report('Failed to fix an amplifier fault.')
                 yield from null()
@@ -382,10 +388,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             #return
         BMMuser.motor_fault = None
 
-        if mode in ('A', 'C'):
-            latpos = m2_lateral_position(energy+target)
-            print(f'Moving M2 lateral to {latpos:.3f}')
-            yield from mv(m2.lateral, latpos)
+        # if mode in ('A', 'C'):
+        #     latpos = m2_lateral_position(energy+target)
+        #     print(f'Moving M2 lateral to {latpos:.3f}')
+        #     yield from mv(m2.lateral, latpos)
 
         ############################
         # run a rocking curve scan #
@@ -406,6 +412,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ##########################
         if slits:
             print('Optimizing slits height...')
+            if dm3_bct.amfe.get() or dm3_bct.amfae.get():
+                user_ns['ks'].cycle('dm3')
             yield from slit_height(move=True)
             close_last_plot()
             kafka_message({'close': 'last'})
@@ -447,6 +455,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
+    dm3_bct = user_ns['dm3_bct']
     yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

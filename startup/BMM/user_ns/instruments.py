@@ -6,6 +6,9 @@ run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
+WITH_LAKESHORE = False
+WITH_LINKAM = True
+
 ########################################################################
 # Note: the use of SynAxis in this file is so that every motor-related #
 # symbol gets set to `something' at startup.  This allows bsui to      #
@@ -550,15 +553,16 @@ busy = Busy(name='busy')
 # \_____/\___/\_| \_/\_| \_/\_| |_/\_|  |_/ #
 #############################################
 
+linkam, lmb = None, None
+if WITH_LINKAM:
+    run_report('\tLinkam controller')
+    from BMM.linkam import Linkam, LinkamMacroBuilder
+    linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,560.0))
 
-run_report('\tLinkam controller')
-from BMM.linkam import Linkam, LinkamMacroBuilder
-linkam = Linkam('XF:06BM-ES:{LINKAM}:', name='linkam', egu='°C', settle_time=10, limits=(-169.0,560.0))
-
-lmb = LinkamMacroBuilder()
-lmb.description = 'the Linkam stage'
-lmb.instrument='Linkam'
-lmb.folder = BMMuser.folder
+    lmb = LinkamMacroBuilder()
+    lmb.description = 'the Linkam stage'
+    lmb.instrument='Linkam'
+    lmb.folder = BMMuser.folder
 
 
 
@@ -571,17 +575,19 @@ lmb.folder = BMMuser.folder
 # \_____/\_| |_/\_| \_/\____/\____/\_| |_/\___/\_| \_\____/  #
 ##############################################################
 
-run_report('\tLakeShore 331 controller')
-from BMM.lakeshore import LakeShore, LakeShoreMacroBuilder
-lakeshore = LakeShore('XF:06BM-BI{LS:331-1}:', name='LakeShore 331', egu='K', settle_time=10, limits=(5,400.0))
-## 1 second updates on scan and ctrl
-lakeshore.temp_scan_rate.put(6)
-lakeshore.ctrl_scan_rate.put(6)
+lakeshore, lsmb = None, None
+if WITH_LAKESHORE:
+    run_report('\tLakeShore 331 controller')
+    from BMM.lakeshore import LakeShore, LakeShoreMacroBuilder
+    lakeshore = LakeShore('XF:06BM-BI{LS:331-1}:', name='LakeShore 331', egu='K', settle_time=10, limits=(5,400.0))
+    ## 1 second updates on scan and ctrl
+    lakeshore.temp_scan_rate.put(6)
+    lakeshore.ctrl_scan_rate.put(6)
 
-lsmb = LakeShoreMacroBuilder()
-lsmb.description = 'the LakeShore 331 temperature controller'
-lsmb.instrument='LakeShore'
-lsmb.folder = BMMuser.folder
+    lsmb = LakeShoreMacroBuilder()
+    lsmb.description = 'the LakeShore 331 temperature controller'
+    lsmb.instrument='LakeShore'
+    lsmb.folder = BMMuser.folder
 
 
 

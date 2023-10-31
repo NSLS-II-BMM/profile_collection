@@ -174,6 +174,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                m2_bender.kill()
                user_ns['ks'].cycle('m2')
                user_ns['ks'].cycle('m3')
+               user_ns['ks'].cycle('dm3')
                yield from sleep(2)
                if count == 5:
                     report('\nFailed to correct the problem. Giving up.)', level='error', slack=True)

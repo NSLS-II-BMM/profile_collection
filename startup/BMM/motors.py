@@ -77,7 +77,7 @@ class DeadbandEpicsMotor(DeadbandMixin, EpicsMotor):
     pass
 
 class EpicsMotorWithDial(EpicsMotor):
-    dial = Cpt(EpicsSignal, '.DVAL', kind='normal')
+    dial = Cpt(EpicsSignal, '.DVAL', kind='config')
     def dmv(self, absolute_value):
         yield from mv(self.dial, absolute_value)
     def dmvr(self, relative_value):
@@ -87,7 +87,7 @@ class EpicsMotorWithDial(EpicsMotor):
     
 class FMBOEpicsMotor(EpicsMotor):
 #class FMBOEpicsMotor(DeadbandEpicsMotor):
-    resolution = Cpt(EpicsSignal, '.MRES', kind = 'normal')
+    resolution = Cpt(EpicsSignal, '.MRES', kind = 'config')
     encoder = Cpt(EpicsSignal, '.REP', kind = 'omitted')
     
     ###################################################################
@@ -155,12 +155,12 @@ class FMBOEpicsMotor(EpicsMotor):
     #inpos      = Cpt(EpicsSignal, '_INPOS_STS',      kind = 'omitted')
     # inpos_desc = Cpt(EpicsSignal, '_INPOS_STS.DESC', kind = 'omitted')
 
-    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'normal')
-    # enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'normal')
-    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'normal')
+    enc_lss       = Cpt(EpicsSignal, '_ENC_LSS_STS', kind = 'config')
+    # enc_lss_desc  = Cpt(EpicsSignal, '_ENC_LSS_STS.DESC', kind = 'config')
+    clear_enc_lss = Cpt(EpicsSignal, '_ENC_LSS_CLR_CMD.PROC', kind = 'config')
     
-    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'normal')
-    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'normal') # how homing velocity gets set for an FMBO SAI
+    home_signal = Cpt(EpicsSignal, '_HOME_CMD.PROC', kind = 'config')
+    hvel_sp     = Cpt(EpicsSignal, '_HVEL_SP.A', kind = 'config') # how homing velocity gets set for an FMBO SAI
 
     @required_for_connection
     @EpicsMotor.motor_done_move.sub_value
@@ -339,10 +339,10 @@ class FMBOThinEpicsMotor(EpicsMotor):
         
     
 class XAFSEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
-    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='normal')
-    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='normal')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
 
 
     @required_for_connection
@@ -422,10 +422,10 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
 
     
 class VacuumEpicsMotor(FMBOEpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
-    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
-    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='normal')
-    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='normal')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, '_KILL_CMD.PROC', kind='config')
+    enable_cmd = Cpt(EpicsSignal, '_ENA_CMD.PROC', kind='config')
 
     #def wh(self):
     #    return(round(self.user_readback.get(), 3))
@@ -446,9 +446,9 @@ class VacuumEpicsMotor(FMBOEpicsMotor):
         self.kill_cmd.put(1)
 
 class EndStationEpicsMotor(EpicsMotor):
-    hlm = Cpt(EpicsSignal, '.HLM', kind='normal')
-    llm = Cpt(EpicsSignal, '.LLM', kind='normal')
-    kill_cmd = Cpt(EpicsSignal, ':KILL', kind='normal')
+    hlm = Cpt(EpicsSignal, '.HLM', kind='config')
+    llm = Cpt(EpicsSignal, '.LLM', kind='config')
+    kill_cmd = Cpt(EpicsSignal, ':KILL', kind='config')
 
     def wh(self):
         return(round(self.user_readback.get(), 3))

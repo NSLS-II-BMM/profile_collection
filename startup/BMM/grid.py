@@ -17,8 +17,10 @@ class GridMacroBuilder(BMMMacroBuilder):
     macro_type = 'Grid'
     motor1     = None
     motor2     = None
+    motor3     = None
     position1  = None
     position2  = None
+    position3  = None
 
     
     def _write_macro(self):
@@ -60,7 +62,7 @@ class GridMacroBuilder(BMMMacroBuilder):
             #######################################
             # default element/edge(/focus) values #
             #######################################
-            for k in ('element', 'edge', 'focus', 'motor1', 'motor2'):
+            for k in ('element', 'edge', 'focus', 'motor1', 'motor2', 'motor3'):
                 if m[k] is None:
                     m[k] = self.measurements[0][k]
 
@@ -73,7 +75,6 @@ class GridMacroBuilder(BMMMacroBuilder):
             if m['position1'] is not None and m['position2'] is not None:
                 if self.check_limit(m['motor1'], m['position1']) is False: return(False)
                 if self.check_limit(m['motor2'], m['position2']) is False: return(False)
-                
                 self.content += self.tab + f'gmb.motor1, gmb.motor2, gmb.position1, gmb.position2 = {m["motor1"]}, {m["motor2"]}, {m["position1"]}, {m["position2"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
                 self.motor1    = m["motor1"]
@@ -93,6 +94,12 @@ class GridMacroBuilder(BMMMacroBuilder):
                     self.position2 = m["position1"]
                     self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
+
+            if type(m['position3']) is not int:
+                if self.check_limit(m['motor3'], m['position3']) is False: return(False)
+                self.content += self.tab + f'gmb.motor3, gmb.position3 = {m["motor3"]}, {m["position3"]}\n'
+                self.content += self.tab + f'yield from mv({m["motor3"]}, {m["position3"]:.3f})\n'
+                
 
             
             ##########################
@@ -172,6 +179,8 @@ class GridMacroBuilder(BMMMacroBuilder):
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Motor 1:</b> {self.motor1.name} = {self.position1:.3f}</li>\n'
         thistext += f'               <li><b>Motor 2:</b> {self.motor2.name} = {self.position2:.3f}</li>\n'
+        if type(self.position3) is not int:
+            thistext += f'               <li><b>Motor 3:</b> {self.motor3.name} = {self.position3:.3f}</li>\n'
         thistext +=  '	      </ul>\n'
         thistext +=  '	    </div>\n'
         return thistext
@@ -191,6 +200,9 @@ class GridMacroBuilder(BMMMacroBuilder):
         type.
 
         '''
+        motor3 = 0
+        if 'detector' not in str(self.ws['U5'].value).lower():
+            motor3 = 2
         this = {'default':     defaultline,
                 'measure':     self.truefalse(row[2].value, 'measure'), # filename and visualization
                 'filename':    str(row[3].value),
@@ -210,14 +222,19 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'position1':   self.nonezero(row[17].value),
                 'motor2':      row[18].value,
                 'position2':   self.nonezero(row[19].value),
-                'detectorx':   row[20].value,
-                'snapshots':   self.truefalse(row[21].value, 'snapshots' ),  # flags
-                'htmlpage':    self.truefalse(row[22].value, 'htmlpage'  ),
-                'usbstick':    self.truefalse(row[23].value, 'usbstick'  ),
-                'bothways':    self.truefalse(row[24].value, 'bothways'  ),
-                'channelcut':  self.truefalse(row[25].value, 'channelcut'),
-                'ththth':      self.truefalse(row[26].value, 'ththth'    ),
-                'url':         row[27].value,
-                'doi':         row[28].value,
-                'cif':         row[29].value, }
+                'detectorx':   row[20+motor3].value,
+                'snapshots':   self.truefalse(row[21+motor3].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[22+motor3].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[23+motor3].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[24+motor3].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[25+motor3].value, 'channelcut'),
+                'ththth':      self.truefalse(row[26+motor3].value, 'ththth'    ),
+                'url':         row[27+motor3].value,
+                'doi':         row[28+motor3].value,
+                'cif':         row[29+motor3].value, }
+        if motor3 == 2:
+            this['motor3']    = row[20].value
+            this['position3'] = self.nonezero(row[21].value)
+        if this['position3'] == 0.0:
+            this['position3'] = int(this['position3'])
         return this

@@ -206,7 +206,7 @@ class ExternalFileReference(Signal):
 
 
 class BMMSnapshot(Device):
-    image = Component(ExternalFileReference, value="", kind="normal", shape=[])
+    image = Component(ExternalFileReference, value="", kind="normal", shape=(1080, 1920, 3))
 
     def __init__(self, *args, root, which, **kwargs):
         super().__init__(*args, **kwargs)

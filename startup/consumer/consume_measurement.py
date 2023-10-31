@@ -29,7 +29,7 @@ ga = GlancingAngle()
 from align_wheel import AlignWheel
 aw = AlignWheel()
 
-
+be_verbose = False
 doing = None
 
 from bmm_live import LineScan, XAFSScan
@@ -54,12 +54,17 @@ def plot_from_kafka_messages(beamline_acronym):
 
     def examine_message(consumer, doctype, doc):
         #global xafsviz_window
-        global doing
+        global doing, be_verbose
         # print(
         #     f"\n[{datetime.datetime.now().isoformat(timespec='seconds')}] document topic: {doctype}\n"
         #     f"contents: {pprint.pformat(doc)}\n"
         # )
         name, message = doc
+
+        if be_verbose is True:
+            print('\n\nVerbose mode is on:')
+            pprint.pprint(message)
+            print('\n')
 
         if name == 'bmm':
             print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
@@ -141,6 +146,9 @@ def plot_from_kafka_messages(beamline_acronym):
             elif 'areascan' in message:
                 pass
 
+            elif 'verbose' in message:
+                be_verbose = message['verbose']
+            
             elif 'close' in message:
                 if message['close'] == 'all':
                     plt.close('all')

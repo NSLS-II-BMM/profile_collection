@@ -232,6 +232,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from mv(quadem1.averaging_time, 0.1)
             yield from mv(motor.velocity, 0.4)
             yield from mv(motor.kill_cmd, 1)
+            if motor.amfe.get() or motor.amfae.get():
+                user_ns['ks'].cycle('dm3')
+            
 
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,

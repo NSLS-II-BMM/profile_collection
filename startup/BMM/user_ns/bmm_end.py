@@ -388,12 +388,13 @@ if all_connected(True) is False:
 run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
 from BMM.user_ns.instruments import wmb, lmb, gmb, lsmb
-wmb.folder = BMMuser.folder      # single or double wheel
-gawheel.folder = BMMuser.folder  # glancing angle stage
-lmb.folder = BMMuser.folder      # Linkam stage
-lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
-gmb.folder = BMMuser.folder      # generic motor grid
-gawheel.description = 'the glancing angle stage'
+if wmb is not None: wmb.folder = BMMuser.folder      # single or double wheel
+if gawheel is not None:
+    gawheel.folder = BMMuser.folder  # glancing angle stage
+    gawheel.description = 'the glancing angle stage'
+if lmb is not None: lmb.folder = BMMuser.folder      # Linkam stage
+if lsmb is not None: lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
+if gmb is not None: gmb.folder = BMMuser.folder      # generic motor grid
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook

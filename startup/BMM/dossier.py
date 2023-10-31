@@ -339,6 +339,7 @@ class BMMDossier():
         xascam._annotation_string = annotation
         print(bold_msg('XAS webcam snapshot'))
         self.webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        #yield from sleep(0.5)
         im = Image.fromarray(numpy.array(bmm_catalog[self.webuid].primary.read()['xascam_image'])[0])
         im.save(image_web, 'JPEG')
         if BMMuser.post_webcam:
@@ -355,6 +356,7 @@ class BMMDossier():
             anacam._annotation_string = stub
             print(bold_msg('analog camera snapshot'))
             self.anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            #yield from sleep(0.5)
             try:
                 im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
                 im.save(image_ana, 'JPEG')
@@ -372,6 +374,7 @@ class BMMDossier():
         usbcam1._annotation_string = stub
         print(bold_msg('USB camera #1 snapshot'))
         self.usb1uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        #yield from sleep(0.5)
         im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
         im.save(image_usb1, 'JPEG')
         if BMMuser.post_usbcam1:
@@ -384,6 +387,7 @@ class BMMDossier():
         usbcam2._annotation_string = stub
         print(bold_msg('USB camera #2 snapshot'))
         self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        #yield from sleep(0.5)
         im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
         im.save(image_usb2, 'JPEG')
         if BMMuser.post_usbcam2:

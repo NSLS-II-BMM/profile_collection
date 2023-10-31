@@ -32,3 +32,7 @@ def close_line_plots():
 
 def close_plots():
     kafka_message({'close': 'all'})
+
+def kafka_verbose(onoff=False):
+    kafka_message({'verbose': onoff})
+    

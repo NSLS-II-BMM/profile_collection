@@ -251,8 +251,10 @@ from BMM.user_ns.bmm import nas_path
 xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
 xrdcam = BMMSnapshot(root=nas_path, which='XRD',    name='xrdcam')
 anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
+anacam.image.shape = (480, 640, 3)
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
+run_report('\t\t'+'initializing analog camera')
 
 from BMM.webcam_device import AxisWebcam
 from BMM.handler import WEBCAM_JPEG_HANDLER

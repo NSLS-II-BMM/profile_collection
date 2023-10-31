@@ -22,7 +22,7 @@ from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l
 from BMM.functions       import PROMPT, DEFAULT_INI
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
-from BMM.kafka           import kafka_message
+from BMM.kafka           import kafka_message, close_plots
 from BMM.linescans       import rocking_curve
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
 from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
@@ -478,6 +478,7 @@ def xafs(inifile=None, **kwargs):
             return(yield from null())
 
         
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
         if plotting_mode(p['mode']) == 'xs' and use_4element is True:
@@ -660,7 +661,8 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
-            yield from dossier.capture_xrf(p['folder'], p['filename'], p['mode'], md)
+            #yield from dossier.capture_xrf(p['folder'], p['filename'], p['mode'], md)
+            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -772,12 +774,25 @@ def xafs(inifile=None, **kwargs):
             ## compute energy and dwell grids
             print(bold_msg('computing energy and dwell time grids'))
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
+
+
+            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+            ## make sure XSpress3 IOC knows how many data points to measure
             if plotting_mode(p['mode']) == 'xs':
                 yield from mv(xs.total_points, len(energy_grid))
             if plotting_mode(p['mode']) == 'xs1':
                 yield from mv(xs1.total_points, len(energy_grid))
+
+                
+            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+            ## sanity checks
             if energy_grid is None or time_grid is None or approx_time is None:
                 print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
+                BMMuser.final_log_entry = False
+                yield from null()
+                return
+            if p['element'] != BMMuser.element or p['edge'] != BMMuser.edge:
+                print(error_msg(f'The photon delivery system is not configured for the {p["element"]} {p["edge"]} edge.  You need to run the "change_edge()" command.  Bailing out....'))
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
@@ -821,6 +836,7 @@ def xafs(inifile=None, **kwargs):
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
+            close_plots()
             if BMMuser.enable_live_plots: close_last_plot()
             dossier.rid = str(uuid.uuid4())[:8]
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
@@ -1074,7 +1090,8 @@ def xafs(inifile=None, **kwargs):
             if htmlout is not None:
                 report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
         kafka_message({'xafsscan': 'stop',})
-        kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
+        if dossier.basename is not None:
+            kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
         if not is_re_worker_active():
             rsync_to_gdrive()
             synch_gdrive_folder()

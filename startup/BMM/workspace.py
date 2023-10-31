@@ -94,7 +94,7 @@ Verifying workspace on this computer ...'''))
     check_lan()
     check_profile_branch()
     initialize_data_directories()
-    initialize_lustre()
+    #initialize_lustre()
     initialize_secrets()
     initialize_redis()
     #initialize_gdrive()
@@ -277,22 +277,30 @@ def ping(host):
     else:
         return False
 
-def check_linkam(linkam):
-    if linkam.model == 'T96-S':
-        print(f'{TAB}Linkam stage is available {CHECK}')
-    else:
-        print(BMM.functions.error_msg(f'{TAB}Linkam stage is powered dawn or out of communication with IOC2'))
-    return
     
-def check_lakeshore(lakeshore):
-    #print(BMM.functions.whisper(f'{TAB}No test yet for LakeShore 331.'))
-    was = lakeshore.units_sel.get()
-    lakeshore.units_sel.put(0)
-    if lakeshore.sample_a.get() == 0.0:
-        print(BMM.functions.error_msg(f'{TAB}LakeShore 331 is powered dawn or out of communication with IOC2'))
+def check_linkam(linkam):
+    from BMM.user_ns.instruments import WITH_LINKAM
+    if WITH_LINKAM:
+        if linkam.model == 'T96-S':
+            print(f'{TAB}Linkam stage is available {CHECK}')
+        else:
+            print(BMM.functions.error_msg(f'{TAB}Linkam stage is powered dawn or out of communication with IOC2'))
     else:
-        print(f'{TAB}LakeShore 331 is available {CHECK}')
-    lakeshore.units_sel.put(was)
+        print(f'{TAB}Linkam stage is available {CHECK}')
+    return
+
+def check_lakeshore(lakeshore):
+    from BMM.user_ns.instruments import WITH_LAKESHORE
+    if WITH_LAKESHORE:
+        was = lakeshore.units_sel.get()
+        lakeshore.units_sel.put(0)
+        if lakeshore.sample_a.get() == 0.0:
+            print(BMM.functions.error_msg(f'{TAB}LakeShore 331 is powered dawn or out of communication with IOC2'))
+        else:
+            print(f'{TAB}LakeShore 331 is available {CHECK}')
+        lakeshore.units_sel.put(was)
+    else:
+        print(BMM.functions.whisper(f'{TAB}LakeShore 331 is unavailable'))
     return
     
 def check_biologic():
@@ -316,9 +324,9 @@ def check_electrometers():
         if hosts[h][1] is True:
             ret = ping(f'xf06bm-{h}')
             if ret is True:
-                print(f'{TAB}{hosts[h][0]} is available {CHECK}')
+                print(f'{TAB}{hosts[h][0]} are available {CHECK}')
             else:
-                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} is not available'))
+                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} are not available'))
     return
     
 def check_xspress3(xs):
@@ -333,7 +341,7 @@ def check_xspress3(xs):
     except:
         print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
         return
-    print(f'{TAB}XSpress3 is available {CHECK}')
+    print(f'{TAB}XSpress3 server and IOC are available {CHECK}')
     return
 
 def check_diode():

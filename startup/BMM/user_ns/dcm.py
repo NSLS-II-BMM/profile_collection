@@ -38,7 +38,7 @@ if dcm.connected is True:
         dcm_bragg.tolerance.put(0.0001)
     dcm_bragg.encoder.kind = 'hinted'
     dcm_bragg.user_readback.kind = 'hinted'
-    dcm_bragg.user_setpoint.kind = 'normal'
+    dcm_bragg.user_setpoint.kind = 'config'
     dcm_bragg.velocity.put(0.4)
     from BMM.user_ns.bmm import BMMuser
     dcm_bragg.acceleration.put(BMMuser.acc_fast)
