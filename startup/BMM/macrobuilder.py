@@ -99,7 +99,15 @@ class BMMMacroBuilder():
         self.cleanup          = ''
         self.initialize       = ''
 
-        self.experiment       = ('default', 'slot', 'ring', 'temperature', 'focus', 'measure', 'spin', 'angle', 'method', 'settle', 'power', 'motor1', 'position1', 'motor2', 'position2', 'optimize')
+        # parameters that spreadsheets put into .ini files but which are not arguments of the xafs() plan
+        self.experiment       = ('default',
+                                 'focus', 'measure',
+                                 'slot', 'ring',  # ex situ sample wheel
+                                 'temperature', 'settle', 'power',  # Linkam, Lakeshore
+                                 'spin', 'angle',  # glancing angle stage
+                                 'motor1', 'position1', 'motor2', 'position2', 'motor3', 'position3',  # grid automation
+                                 'method', 'optimize'  # ???
+        )
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'slitheight', 'detectorx')
         self.science_metadata = ('url', 'doi', 'cif')
@@ -222,6 +230,15 @@ class BMMMacroBuilder():
             return(0)
         elif type(value) == str:
             return(0)
+        else:
+            return(float(value))
+
+    def zeronone(self, value):
+        '''Interpret None as being None valued'''
+        if value is None:
+            return(None)
+        elif type(value) == str:
+            return(None)
         else:
             return(float(value))
 
@@ -548,9 +565,15 @@ class BMMMacroBuilder():
         self.totaltime += at * nsc * self.nreps
         self.deltatime += delta*delta * self.nreps
         tele = user_ns['tele']
-        self.metadatatime += tele.value(el, 'visual')
-        if m['mode'] in ('fluorescence', 'flourescence', 'both', 'xs', 'xs1'):
-            self.metadatatime += tele.value(el, 'xrf')
+        try:
+            self.metadatatime += tele.value(el, 'visual')
+        except:
+            pass
+        try:
+            if m['mode'] in ('fluorescence', 'flourescence', 'both', 'xs', 'xs1'):
+                self.metadatatime += tele.value(el, 'xrf')
+        except:
+            pass
         #print(at, nsc, self.nreps, tele.value(el, 'visual'), tele.value(el, 'xrf'))
         
     def write_ini_and_plan(self):
