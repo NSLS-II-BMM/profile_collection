@@ -187,11 +187,12 @@ class LakeShore(PVPositioner):
             print(warning_msg('Not attempting to change temperature.'))
             yield from mv(user_ns['busy'], 10)
         else:
+            deltat = int(1.3 * (abs(self.setpoint - self.readback.get()) / self.ramp_rate.get())) * 60
             yield from mv(self.setpoint, target)
             yield from mv(self.power, self.level(heater))
             #yield from mv(self, target)
-            print('Waiting two minutes to arrive at temperature.')
-            yield from mv(user_ns['busy'], 120)
+            print(f'Waiting {deltat/60.0:.1f} minutes to arrive at temperature.')
+            yield from mv(user_ns['busy'], deltat)
         
 
     def units(self, unit):
