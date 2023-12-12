@@ -159,5 +159,13 @@ cython_debug/
 # VScode settings
 .vscode/
 
+## stuff to ignore, local to WS3
 existing_plans_and_devices.yaml
+.#bmm_plot.py
+startup/BMM/attic/
+startup/consumer/attic/
 
+## stuff to ignore, local to WS3, needs attention
+startup/BMM_common/xdi.py
+startup/consumer/larch_interface.py
+startup/testing/
