@@ -123,30 +123,33 @@ def agent_move_and_measure(
             >>> 'steps': '10 2 0.3 0.05k',
             >>> 'times': '0.5 0.5 0.5 0.5'}
     """
+    fname = kwargs['filename']
 
     def elem1_plan():
+        kwargs['filename'] = f"{elements[0]}_{fname}"
         yield from bps.mv(motor_x, elem1_x_position)
         _md = {f"{elements[0]}_position": motor_x.position}
         yield from bps.mv(motor_y, elem1_y_position)
         yield from bps.mv(xafs_det, elem1_det_position)
         _md[f"{elements[0]}_det_position"] = xafs_det.position
         _md.update(md or {})
-        yield from bps.mv(slits3.vsize, 0.1)
+        #yield from bps.mv(slits3.vsize, 0.1)
         if rkvs.get("BMM:pds:element").decode("utf-8") != elements[0]:
-            yield from change_edge(elements[0], focus=True)
+            yield from change_edge(elements[0], focus=True, slits=False)  # slits=False uses special knowledge 12/12/23
         # xafs doesn't take md, so stuff it into a comment string to be ast.literal_eval()
         yield from xafs(element=elements[0], edge=edges[0], comment=str(_md), **kwargs)
 
     def elem2_plan():
+        kwargs['filename'] = f"{elements[1]}_{fname}"
         yield from bps.mv(motor_x, elem2_x_position)
         _md = {f"{elements[1]}_position": motor_x.position}
         yield from bps.mv(motor_y, elem2_y_position)
         yield from bps.mv(xafs_det, elem2_det_position)
         _md[f"{elements[1]}_det_position"] = xafs_det.position
         _md.update(md or {})
-        yield from bps.mv(slits3.vsize, 0.3)
+        #yield from bps.mv(slits3.vsize, 0.3)
         if rkvs.get("BMM:pds:element").decode("utf-8") != elements[1]:
-            yield from change_edge(elements[1], focus=True)
+            yield from change_edge(elements[1], focus=True, slits=False)  # slits=False uses special knowledge 12/12/23
         yield from xafs(element=elements[1], edge=edges[1], comment=str(_md), **kwargs)
 
     rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
