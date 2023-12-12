@@ -50,6 +50,7 @@ def resting_state():
     _locked_dwell_time.move(0.5)
     dcm.kill()
     dcm.mode = 'fixed'
+    user_ns['m2_bender'].kill()
     kafka_message({'resting_state': True,})
     #user_ns['RE'].msg_hook = BMM_msg_hook
     if is_re_worker_active() is False:
@@ -75,6 +76,7 @@ def resting_state_plan():
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     yield from dcm.kill_plan()
+    user_ns['m2_bender'].kill()
     dcm.mode = 'fixed'
     kafka_message({'resting_state': True,})
     #user_ns['RE'].msg_hook = BMM_msg_hook
@@ -104,6 +106,7 @@ def end_of_macro():
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     yield from dcm.kill_plan()
+    user_ns['m2_bender'].kill()
     yield from xafs_wheel.recenter()
     dcm.mode = 'fixed'
     user_ns['RE'].msg_hook = BMM_msg_hook

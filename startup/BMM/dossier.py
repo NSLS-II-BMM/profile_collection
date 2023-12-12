@@ -1,4 +1,4 @@
-import os, re
+import os, re, socket
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
@@ -330,7 +330,8 @@ class BMMDossier():
         '''
         ahora = now()
         BMMuser, xascam, anacam, usbcam1, usbcam2 = user_ns['BMMuser'], user_ns['xascam'], user_ns['anacam'], user_ns['usbcam1'], user_ns['usbcam2']
-
+        image_ana, image_web, image_usb1, image_usb2 = '','','',''
+        
         ### --- XAS webcam ---------------------------------------------------------------
         annotation = stub
         self.websnap = "%s_XASwebcam_%s.jpg" % (stub, ahora)
@@ -347,7 +348,8 @@ class BMMDossier():
 
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
-        if is_re_worker_active() is False:
+        thishost = socket.gethostname()
+        if is_re_worker_active() is False and 'ws3' in thishost:
             print(whisper('The error text below saying "Error opening file for output:"'))
             print(whisper('happens every time and does not indicate a problem of any sort.'))
             self.anasnap = "%s_analog_%s.jpg" % (stub, ahora)
@@ -380,18 +382,18 @@ class BMMDossier():
         if BMMuser.post_usbcam1:
             img_to_slack(image_usb1)
 
-        ### --- USB camera #2 --------------------------------------------------------------
-        self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
-        image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
-        md['_filename'] = image_usb2
-        usbcam2._annotation_string = stub
-        print(bold_msg('USB camera #2 snapshot'))
-        self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        #yield from sleep(0.5)
-        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        im.save(image_usb2, 'JPEG')
-        if BMMuser.post_usbcam2:
-            img_to_slack(image_usb2)
+        # ### --- USB camera #2 --------------------------------------------------------------
+        # self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+        # image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
+        # md['_filename'] = image_usb2
+        # usbcam2._annotation_string = stub
+        # print(bold_msg('USB camera #2 snapshot'))
+        # self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        # #yield from sleep(0.5)
+        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        # im.save(image_usb2, 'JPEG')
+        # if BMMuser.post_usbcam2:
+        #     img_to_slack(image_usb2)
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': self.webuid,
@@ -519,7 +521,7 @@ class BMMDossier():
                                                        uid         = self.webuid,
                                                        camera      = 'webcam',
                                                        description = 'XAS web camera', )
-            if self.anauid is not None:
+            if self.anauid is not None and self.usb2uid != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.anasnap),
@@ -533,7 +535,7 @@ class BMMDossier():
                                                        uid         = self.usb1uid,
                                                        camera      = 'usb1cam',
                                                        description = 'USB camera #1', )
-            if self.usb2uid is not None:
+            if self.usb2uid is not None and self.usb2uid != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+self.usb2snap),

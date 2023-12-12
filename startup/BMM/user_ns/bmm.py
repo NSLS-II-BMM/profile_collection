@@ -1,7 +1,7 @@
 
 import logging
 logger = logging.getLogger('ophyd')
-logger.setLevel('WARNING')
+logger.setLevel('INFO')
 logger = logging.getLogger('bluesky')
 logger.setLevel('WARNING')
 

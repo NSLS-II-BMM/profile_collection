@@ -591,9 +591,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
 
     Examples
     --------
-    >>> mb = GlancingAngleMacroBuilder()
-    >>> mb.spreadsheet('wheel1.xlsx')
-    >>> mb.write_macro()
+    >>> gawheel = GlancingAngleMacroBuilder()
+    >>> gawheel.spreadsheet('ga.xlsx')
+    >>> gawheel.write_macro()
 
     '''
     macro_type = 'Glancing angle'
@@ -682,7 +682,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             if m['detectorx'] is not None:
                 if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
-            self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
+            self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
             if self.orientation == "parallel":
@@ -695,9 +695,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             #############################################################
             fname = self.make_filename(m)
             self.content += self.tab + 'if ref is True:\n'
-            self.content += self.tab + self.tab + f'yield from mvr({motor}, -5)\n'
+            self.content += self.tab + self.tab + f'yield from mvr({motor}, -{self.retract})\n'
             self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}foil_{fname}", nscans=1, sample="{m["element"]} foil", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
-            self.content += self.tab + self.tab + f'yield from mvr({motor}, 5)\n'
+            self.content += self.tab + self.tab + f'yield from mvr({motor}, {self.retract})\n'
 
             ####################################
             # move to correct height and pitch #
@@ -717,7 +717,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
             ############################################################
-            self.content += self.tab + 'yield from mvr(xafs_det, -5)\n'
+            self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -744,9 +744,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             command += ')\n'
             self.content += command
             if m['method'].lower() == 'automatic':
-                self.content += self.tab + 'yield from mvr(xafs_det, 5)\n'
+                self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
                 self.content += self.tab + 'yield from ga.flatten()\n'
-                self.content += self.tab + 'yield from mvr(xafs_det, -5)\n'
+                self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
             self.content += self.tab + 'close_last_plot()\n\n'
 
 
@@ -760,10 +760,10 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             self.tab = ' ' * 8
 
         if self.close_shutters:
-            self.content += self.tab + 'if not dryrun:\n'
-            self.content += self.tab + '    BMMuser.running_macro = False\n'
-            self.content += self.tab + '    BMM_clear_suspenders()\n'
-            self.content += self.tab + '    yield from shb.close_plan()\n'
+            self.content += self.tab +  'if not dryrun:\n'
+            self.content += self.tab +  '    BMMuser.running_macro = False\n'
+            self.content += self.tab +  '    BMM_clear_suspenders()\n'
+            self.content += self.tab +  '    yield from shb.close_plan()\n'
 
             
 

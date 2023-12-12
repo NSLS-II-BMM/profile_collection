@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-from mpl_multitab import MplTabs
+#from mpl_multitab import MplTabs
 import numpy
 
 #from nslsii.kafka_utils import _read_bluesky_kafka_config_file
@@ -226,7 +226,8 @@ class LineScan():
         if 'fname' in kwargs:
             self.figure.savefig(kwargs['fname'])
             img_to_slack(kwargs['fname'])
-            
+
+        #self.figure.show(block=False)
         self.ongoing     = False
         self.xdata       = []
         self.ydata       = []
@@ -293,6 +294,7 @@ class LineScan():
             self.line2.set_data(self.xdata, self.y2data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)
+        #self.figure.show()      # in case the user has closed the window
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
 
@@ -459,6 +461,7 @@ class XAFSScan():
     def stop(self, **kwargs):
         '''Done with a sequence of XAFS live plots.
         '''
+        #self.figure.show(block=False)
         self.ongoing     = False
         # self.xdata       = []
         # self.ydata       = []
@@ -506,6 +509,7 @@ class XAFSScan():
         for ax in self.axis_list:
             ax.relim()
             ax.autoscale_view(True,True,True)
+        #self.fig.show()         # in case the user has closed the window
         ## redraw and flush the canvas 
         ## Tom's explanation for how to do multiple plots: https://stackoverflow.com/a/31686953
         self.fig.canvas.draw()

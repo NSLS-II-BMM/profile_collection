@@ -115,6 +115,7 @@ class BMMMacroBuilder():
         self.do_opt           = False
         self.optimize         = None
         self.orientation      = 'parallel'
+        self.retract          = 10
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.
@@ -488,8 +489,20 @@ class BMMMacroBuilder():
         return False
 
     def make_filename(self, m):
-        '''Construct a filename with element and edge symbols, if required.'''
+        '''Construct a filename with element and edge symbols, if required.
+
+        Also remove troublesome characters from the filename.
+             * / \ ? % : | " < >
+
+        Simply removing those characters makes many things simpler,
+        including stuff from os.path and any shell interactions.  Also
+        makes it possible to put data files onto a DOS formatted USB
+        stick (for the old skool cool).
+
+        '''
         fname = m['filename']
+        #bad_chars = ('*', '/', '\\', '?', '%', ':', '|', '"', '<', '>')
+        fname = re.sub('[*/<>%?:"|\\\\]', self.joiner, fname)
         el = self.measurements[0]['element']
         ed = self.measurements[0]['edge']
         t = ''

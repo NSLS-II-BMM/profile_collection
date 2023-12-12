@@ -326,7 +326,7 @@ if with_pilatus is True:
 # JL: debugging xspress3 IOC crash
 from ophyd.log import config_ophyd_logging
 import logging
-config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
+#config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
 
 xs = False

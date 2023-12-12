@@ -18,11 +18,9 @@ class XAFSSequence():
 
     Future features
     ===============
-    (1) Post figure to Slack on some interval, for example when 
-        scan_number % 3 == 1
-    (2) Evaluate noise level in data, for instance as epsilon_R, establish 
+    (1) Evaluate noise level in data, for instance as epsilon_R, establish 
         a criterion for leaving the repetition loop 
-    (3) More & configurable plot types.  Some kind of representation of all 
+    (2) More & configurable plot types.  Some kind of representation of all 
         the views of the data, a la bluesky-widgets, maybe tabs
 
     '''

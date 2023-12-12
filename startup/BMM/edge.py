@@ -57,7 +57,31 @@ def all_connected(with_m2=False):
             print(whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})'))
             ok = False
     return ok
+
+def wiggle_mirrors():
+    motors3 = [m3_yu, m3_ydo, m3_ydi, m3_xu, m3_xd]
+    motors2 = [m2_yu, m2_ydo, m2_ydi, m2_bender]
+
+    trouble = False
+    for m in motors2:
+        if "bender" in m.name:
+            yield from mvr(m, -10)
+        else:
+            yield from mvr(m, 0.01)
+        if m.amfe.get() or m.amfae.get():
+            trouble = True
+    if trouble is True:
+        user_ns['ks'].cycle('m2')
+    trouble = False
     
+    for m in motors3:
+        yield from mvr(m, 0.01)
+        if m.amfe.get() or m.amfae.get():
+            trouble = True
+    if trouble is True:
+        user_ns['ks'].cycle('m3')
+        
+            
 def arrived_in_mode(mode=None):
     motors = [dm3_bct,
               xafs_yu, xafs_ydo, xafs_ydi,
@@ -178,8 +202,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             return
         ######################################################################
 
+        ## try to trigger an amplifier failure before getting into the meat of the edge change
+        #yield from wiggle_mirrors()
+        
         ready_count = 0
         while pds_motors_ready() is False:
+            print(whisper('Pausing 5 seconds before trying kill switches.'))
+            yield from mv(user_ns['busy'], 5)
             ready_count += 1
             report('\nOne or more motors are showing amplifier faults. Attempting to correct the problem.', level='error', slack=True)
             problem_is_m2 = False
@@ -213,6 +242,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 report('Failed to fix an amplifier fault.')
                 yield from null()
                 return
+
 
         (ok, text) = BMM_clear_to_start()
         if ok is False:

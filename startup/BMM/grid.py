@@ -79,8 +79,8 @@ class GridMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
                 self.motor1    = m["motor1"]
                 self.position1 = m["position1"]
-                self.motor2    = m["motor1"]
-                self.position2 = m["position1"]
+                self.motor2    = m["motor2"]
+                self.position2 = m["position2"]
             else:
                 if m['position1'] is not None:
                     if self.check_limit(m['motor1'], m['position1']) is False: return(False)
@@ -90,15 +90,17 @@ class GridMacroBuilder(BMMMacroBuilder):
                     self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
                 if m['position2'] is not None:
                     if self.check_limit(m['motor2'], m['position2']) is False: return(False)
-                    self.motor2    = m["motor1"]
-                    self.position2 = m["position1"]
+                    self.motor2    = m["motor2"]
+                    self.position2 = m["position2"]
                     self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
 
-            if type(m['position3']) is not int:
+            if type(m['position3']) is not int and m['position3'] is not None:
                 if self.check_limit(m['motor3'], m['position3']) is False: return(False)
                 self.content += self.tab + f'gmb.motor3, gmb.position3 = {m["motor3"]}, {m["position3"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor3"]}, {m["position3"]:.3f})\n'
+                self.motor3    = m["motor3"]
+                self.position3 = m["position3"]
                 
 
             
@@ -179,7 +181,7 @@ class GridMacroBuilder(BMMMacroBuilder):
         thistext +=  '	      <ul>\n'
         thistext += f'               <li><b>Motor 1:</b> {self.motor1.name} = {self.position1:.3f}</li>\n'
         thistext += f'               <li><b>Motor 2:</b> {self.motor2.name} = {self.position2:.3f}</li>\n'
-        if type(self.position3) is not int:
+        if type(self.position3) is not int and self.position3 is not None:
             thistext += f'               <li><b>Motor 3:</b> {self.motor3.name} = {self.position3:.3f}</li>\n'
         thistext +=  '	      </ul>\n'
         thistext +=  '	    </div>\n'

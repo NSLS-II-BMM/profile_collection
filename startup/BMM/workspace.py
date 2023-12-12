@@ -324,9 +324,9 @@ def check_electrometers():
         if hosts[h][1] is True:
             ret = ping(f'xf06bm-{h}')
             if ret is True:
-                print(f'{TAB}{hosts[h][0]} are available {CHECK}')
+                print(f'{TAB}{hosts[h][0]} is available {CHECK}')
             else:
-                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} are not available'))
+                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} is not available'))
     return
     
 def check_xspress3(xs):
@@ -341,7 +341,7 @@ def check_xspress3(xs):
     except:
         print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
         return
-    print(f'{TAB}XSpress3 server and IOC are available {CHECK}')
+    print(f'{TAB}XSpress3 server and its IOC are available {CHECK}')
     return
 
 def check_diode():
