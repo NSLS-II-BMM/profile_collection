@@ -17,7 +17,7 @@ from PIL import Image
 
 from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import countdown, isfloat, present_options, now
+from BMM.functions      import countdown, isfloat, present_options, now, PROMPT
 from BMM.kafka          import kafka_message
 from BMM.logging        import report, img_to_slack, post_to_slack
 from BMM.linescans      import linescan
@@ -219,34 +219,6 @@ class GlancingAngle(Device):
         if self.spin is True:
             this = getattr(self, f'spinner{number}')
             yield from mv(this, 1)
-
-    def clean_img(self):
-        '''Kill any outstanding "display" processes (i.e. ImageMagick's
-        display).  Then remove any .PNG files PIL has left lying
-        around in /tmp.  Finally, explicitly close the previous
-        filehandle.
-
-        This takes no care to verify neither that PIL launched the
-        display process nor that PIL wrote the .PNG file in /tmp.
-
-        Note that this will kill any other "display" processes
-        running.  At NSLS-II, the centrally managed screen locker is
-        configured to use feh to show a transparent png when the
-        screen is locked.  Thus, display was chosen as the viewer
-        rather than feh (although ownership would likely preclude
-        terminating the screenlocker process).
-
-        '''
-        for proc in psutil.process_iter():
-            if proc.name() == "display":
-                proc.kill()
-        for f in glob.glob('/tmp/tmp*.PNG'):
-            try:
-                os.remove(f)
-            except:
-                print(whisper(f'unable to delete {f} while cleaning up /tmp'))
-            if self.img is not None:
-                self.img.close()
 
 
     def align_pitch(self, force=False):
@@ -454,133 +426,6 @@ class GlancingAngle(Device):
         thistext +=  '	    </div>\n'
         return thistext
 
-
-    def pitch_plot(self, pitch, signal, filename=None):
-        thisagg = matplotlib.get_backend()
-        matplotlib.use('Agg') # produce a plot without screen display
-        target = signal.idxmax()
-        close_all_plots()
-        #plt.cla()
-        plt.plot(pitch, signal)
-        plt.scatter(pitch[target], signal.max(), s=160, marker='x', color='green')
-        plt.xlabel('xafs_pitch (deg)')
-        plt.ylabel('It/I0')
-        plt.title(f'pitch scan, spinner {self.current()}')
-        plt.plot()
-        self.toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-        plt.savefig(self.toss)
-        matplotlib.use(thisagg) # return to screen display
-        self.clean_img()
-        self.img = Image.open(self.toss)
-        self.img.show()
-        #plt.draw()
-        #plt.show()
-        #plt.figure().canvas.draw_idle()
-        #plt.pause(0.05)
-        
-            
-    def y_plot(self, yy, out, filename=None):
-        #plt.cla()
-        thisagg = matplotlib.get_backend()
-        matplotlib.use('Agg') # produce a plot without screen display
-        close_all_plots()
-        plt.scatter(yy, out.data)
-        plt.plot(yy, out.best_fit, color='red')
-        plt.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=160, marker='x', color='green')
-        if self.orientation == 'parallel':
-            plt.xlabel('xafs_y (mm)')
-            direction = 'Y'
-        else:
-            plt.xlabel('xafs_x (mm)')
-            direction = 'X'
-        plt.ylabel(f'{self.inverted}data and error function')
-        plt.title(f'fit to {direction} scan, spinner {self.current()}')
-        plt.plot()
-        self.toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-        plt.savefig(self.toss)
-        matplotlib.use(thisagg) # return to screen display
-        self.clean_img()
-        self.img = Image.open(self.toss)
-        self.img.show()
-        #plt.draw()
-        #plt.show()
-        #plt.figure().canvas.draw_idle()
-        #plt.pause(0.05)
-
-
-    # def alignment_plot(self, yt, pitch, yf):
-    #     '''Make a pretty, three-panel plot at the end of an auto-alignment'''
-    #     BMMuser = user_ns['BMMuser']
-    #     thisagg = matplotlib.get_backend()
-    #     matplotlib.use('Agg') # produce a plot without screen display
-    #     close_all_plots()
-    #     fig = plt.figure(tight_layout=True) #, figsize=(9,6))
-    #     gs = gridspec.GridSpec(1,3)
-
-    #     if self.orientation == 'parallel':
-    #         motor = 'xafs_y'
-    #     else:
-    #         motor =  'xafs_x'
-
-    #     t  = fig.add_subplot(gs[0, 0])
-    #     tt = user_ns['db'][yt].table()
-    #     yy = tt[motor]
-    #     signal = tt['It']/tt['I0']
-    #     if float(signal[2]) > list(signal)[-2] :
-    #         ss     = -(signal - signal[2])
-    #         self.inverted = 'inverted '
-    #     else:
-    #         ss     = signal - signal[2]
-    #         self.inverted    = ''
-    #     mod    = StepModel(form='erf')
-    #     pars   = mod.guess(ss, x=numpy.array(yy))
-    #     out    = mod.fit(ss, pars, x=numpy.array(yy))
-    #     t.scatter(yy, out.data)
-    #     t.plot(yy, out.best_fit, color='red')
-    #     t.scatter(out.params['center'].value, out.params['amplitude'].value/2, s=120, marker='x', color='green')
-    #     t.set_xlabel(f'{motor} (mm)')
-    #     t.set_ylabel(f'{self.inverted}data and error function')
-
-    #     p  = fig.add_subplot(gs[0, 1])
-    #     tp = user_ns['db'][pitch].table()
-    #     xp = tp['xafs_pitch']
-    #     signal = tp['It']/tp['I0']
-    #     target = signal.idxmax()
-    #     p.plot(xp, signal)
-    #     p.scatter(xp[target], signal.max(), s=120, marker='x', color='green')
-    #     p.set_xlabel('xafs_pitch (deg)')
-    #     p.set_ylabel('It/I0')
-    #     p.set_title(f'alignment of spinner {self.current()}')
-
-    #     f = fig.add_subplot(gs[0, 2])
-    #     tf = user_ns['db'][yf].table()
-    #     yy = tf[motor]
-    #     signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
-    #     #if BMMuser.element in ('Zr', 'Sc', 'Nb'):
-    #     com = signal.idxmax()
-    #     centroid = yy[com]
-    #     #else:
-    #     #com = int(center_of_mass(signal)[0])+1
-    #     #centroid = yy[com]
-    #     f.plot(yy, signal)
-    #     f.scatter(centroid, signal[com], s=120, marker='x', color='green')
-    #     f.set_xlabel(f'{motor} (mm)')
-    #     f.set_ylabel('If/I0')
-
-    #     fig.canvas.draw()
-    #     fig.canvas.flush_events()
-    #     self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
-    #     plt.savefig(self.alignment_filename)
-    #     matplotlib.use(thisagg) # return to screen display
-    #     shutil.copyfile(self.alignment_filename,  self.toss)
-    #     self.clean_img()
-    #     self.img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
-    #     self.img.show()
-    #     #plt.show()
-    #     #fig.canvas.draw_idle()
-    #     #plt.pause(0.05)
-
-        
 
     
 
