@@ -37,7 +37,7 @@ from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import quadem1, ic0, ic1, vor, xs, xs1
+from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, vor, xs, xs1, ION_CHAMBERS
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
@@ -229,7 +229,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             #if slit_height < 0.5:
             #    yield from mv(slits3.vsize, 0.5)
             
-            yield from mv(quadem1.averaging_time, 0.1)
+            yield from mv(_locked_dwell_time, 0.1)
             yield from mv(motor.velocity, 0.4)
             yield from mv(motor.kill_cmd, 1)
             if motor.amfe.get() or motor.amfae.get():
@@ -239,7 +239,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
                            'detector' : 'I0',})
-            uid = yield from rel_scan([quadem1, ic0], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            uid = yield from rel_scan([*ION_CHAMBERS], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
             
             user_ns['RE'].msg_hook = BMM_msg_hook
@@ -270,7 +270,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 yield from sleep(slp)
                 yield from pluck(suggested_motor=motor)
                 #yield from move_after_scan(motor)
-            yield from mv(quadem1.averaging_time, 0.5)
+            yield from mv(_locked_dwell_time, 0.5)
         yield from scan_slit(slp)
 
     def cleanup_plan(slp):
@@ -280,8 +280,6 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
         yield from mv(motor.kill_cmd, 1)
         yield from resting_state_plan()
 
-    #RE, BMMuser, db, slits3, quadem1 = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['slits3'], user_ns['quadem1']
-    #rkvs = user_ns['rkvs']
     #######################################################################
     # this is a tool for verifying a macro.  this replaces this slit      #
     # height scan with a sleep, allowing the user to easily map out motor #
@@ -341,7 +339,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             titl = 'Bicron signal vs. DCM 2nd crystal pitch'
         else:
             func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-            dets = [quadem1, ic0,]
+            dets = [*ION_CHAMBERS]
             sgnl = 'I0'
             titl = 'I0 signal vs. DCM 2nd crystal pitch'
 
@@ -414,8 +412,6 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         yield from resting_state_plan()
 
     
-    #RE, BMMuser, db, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['db'], user_ns['rkvs']
-    #dcm, slits3, slitsg, quadem1 = user_ns['dcm'], user_ns['slits3'], user_ns['slitsg'], user_ns['quadem1']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces this rocking  #
     # curve scan with a sleep, allowing the user to easily map out motor #
@@ -483,7 +479,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = [user_ns['quadem1'], user_ns['ic0'], ]
+        dets = ION_CHAMBERS
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -605,7 +601,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = [user_ns['quadem1'], user_ns['ic0'],]
+        dets = ION_CHAMBERS
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -620,9 +616,12 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
                                  doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps)
         elif detector.lower() == 'it':
+            dets.append(user_ns['ic1'])
             sgnl = 'transmission'
             func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
         elif detector.lower() == 'ir':
+            dets.append(user_ns['ic1'])
+            dets.append(user_ns['ic2'])
             sgnl = 'reference'
             func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
 
@@ -826,7 +825,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         if detector == 'Xs':
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
-        dets  = [quadem1, ic0, ]
+        dets  = ION_CHAMBERS
         denominator = ''
         detname = ''
 
@@ -840,12 +839,10 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             detname = 'transmission'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
         elif detector == 'I0a' and ic0 is not None:
-            dets.append(ic0)
             denominator = ' / I0'
             detname = 'I0a'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a']/doc['data']['I0'])
         elif detector == 'I0b' and ic0 is not None:
-            dets.append(ic0)
             denominator = ' / I0'
             detname = 'I0b'
             func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b']/doc['data']['I0'])

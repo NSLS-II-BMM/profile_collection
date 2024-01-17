@@ -32,7 +32,7 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xafs          import scan_metadata
 from BMM.xdi           import write_XDI
 
-from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1
+from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, vor, xs, xs1, ION_CHAMBERS
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -72,7 +72,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
 
     '''
 
-    RE, BMMuser, quadem1, xs, dcm, db = user_ns['RE'], user_ns['BMMuser'], user_ns['quadem1'], user_ns['xs'], user_ns['dcm'], user_ns['db']
+    RE, BMMuser, dcm, db = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['db']
     rkvs = user_ns['rkvs']
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
@@ -102,7 +102,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
         return None
 
     yield from mv(_locked_dwell_time, dwell)
-    dets  = [quadem1, ic0,]
+    dets  = ION_CHAMBERS
     denominator = ''
 
     epoch_offset = pandas.Timestamp.now(tz='UTC').value/10**9
@@ -124,7 +124,6 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     elif detector == 'Test':
         func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
     elif detector == 'Ic1':
-        dets.append(ic1)
         denominator = ' / I0'
         func  = lambda doc: (doc['time']-epoch_offset, doc['data']['Ita']/doc['data']['I0'])
         func3 = lambda doc: (doc['time']-epoch_offset, doc['data']['Itb']/doc['data']['I0'])

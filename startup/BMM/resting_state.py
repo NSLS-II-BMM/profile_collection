@@ -48,6 +48,9 @@ def resting_state():
     #vor.on()
     _locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
+    for electrometer in ('ic0', 'quadem1'):
+        user_ns[electrometer].acquire.put(1)
+        user_ns[electrometer].acquire_mode.put(0)
     dcm.kill()
     dcm.mode = 'fixed'
     user_ns['m2_bender'].kill()
@@ -73,6 +76,9 @@ def resting_state_plan():
     quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
+    for electrometer in ('ic0', 'quadem1'):
+        yield from mv(user_ns[electrometer].acquire, 1)
+        yield from mv(user_ns[electrometer].acquire_mode, 0)
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     yield from dcm.kill_plan()

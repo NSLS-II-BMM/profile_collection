@@ -52,6 +52,14 @@ class WheelMotor(EndStationEpicsMotor):
         return the wheel to 0
 
     '''
+    def describe(self):
+        res = super().describe()
+        try:
+            res['xafs_wheel_user_setpoint']['dtype_str'] = '<f8'
+        except:
+            pass
+        return res
+    
     def current_slot(self, value=None):
         '''Return the current slot number for a sample wheel.'''
         if value is not None:

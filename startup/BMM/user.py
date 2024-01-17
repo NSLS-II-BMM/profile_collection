@@ -295,6 +295,7 @@ class BMM_User(Borg):
         
         self.tweak_xas_time = 24.0
         self.enable_live_plots = False
+        self.do_gdrive      = True
         
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "filename",
@@ -309,7 +310,7 @@ class BMM_User(Borg):
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
-                             "doi", "cif", "syns", "enable_live_plots",
+                             "doi", "cif", "syns", "enable_live_plots", "do_gdrive",
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",

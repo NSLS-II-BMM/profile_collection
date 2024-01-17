@@ -20,8 +20,10 @@ class NoRedis():
 ###################################################################
 # things that are configurable                                    #
 ###################################################################
-rkvs = redis.Redis(host=redis_host, port=6379, db=0)
-#rkvs = NoRedis()
+try:
+    rkvs = redis.Redis(host=redis_host, port=6379, db=0)
+except:
+    rkvs = NoRedis()
 NAS = '/mnt/nfs/nas1'
 LUSTRE_ROOT = '/nsls2/data'
 LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
@@ -334,12 +336,8 @@ def check_xspress3(xs):
     if ret is False:
         print(BMM.functions.error_msg(f'{TAB}Xspress3 is not responding to pings'))
         return
-    try:
-        if xs.hdf5.run_time.get() == 0.0:
-            print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
-            return
-    except:
-        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is somehow unavailable'))
+    if xs.connected is False:
+        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is unavailable'))
         return
     print(f'{TAB}XSpress3 server and its IOC are available {CHECK}')
     return
@@ -362,7 +360,7 @@ def check_instruments(linkam, lakeshore, xs):
     
     linkam
        Probe for value of linkam.model, should be 'T96-S' if stage is connected,
-       IOC is on, and ophyd device is connected.  This will help notice is kernel
+       IOC is on, and ophyd device is connected.  This will help notice if kernel
        module on xf06bm-ioc2 allowing communication with Moxa ports is compiled 
        and loaded after a reboot or update.
 
@@ -382,8 +380,7 @@ def check_instruments(linkam, lakeshore, xs):
        electrometer devices are on the network
 
     xspress3
-       ping xf06bm-xspress3 and check that the detector has been warmed up by seeing if
-       xs.hdf5.run_time.get() is non-zero
+       ping xf06bm-xspress3 and check xs.connected is True
 
     diode
        check that the local and remote buses report being up

@@ -64,7 +64,9 @@ gawheel.description = 'the glancing angle stage'
 gawheel.instrument  = 'glancing angle'
 gawheel.folder = BMMuser.folder
 gawheel.cleanup = 'yield from mv(xafs_x, samx, xafs_y, samy, xafs_pitch, samp, xafs_det, 205)\n        yield from ga.reset()'
-gawheel.initialize = 'samx, samy, samp = xafs_x.position, xafs_y.position, xafs_pitch.position'
+gawheel.initialize = '''samx, samy, samp = xafs_x.position, xafs_y.position, xafs_pitch.position
+    if ga.ready_to_start() is not True:
+        return(yield from null())'''
 
 
 #########################################################################################

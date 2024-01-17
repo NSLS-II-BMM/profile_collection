@@ -8,7 +8,7 @@ from ophyd.sim import noisy_det
 run_report(__file__, text='detectors and cameras')
 
 with_pilatus = False
-
+with_cam1 = True
 
 ##########################################
 #  _____ ___________ _   _ _____  _   __ #
@@ -19,11 +19,13 @@ with_pilatus = False
 # \____/  \_/ \_| \_|\___/ \____/\_| \_/ #
 ##########################################
                                       
-## use of Struck is largely DEPRECATED.  Code remains in case there is
-## ever a need to return to the analog signal chain for the SDD.  At
-## this point (Sep 2023), it is no longer an easy switch between
-## XSpress3 and analog.  Work will be required to get the analog
-## solution fully integrated into data acquisition.
+## use of Struck is largely DEPRECATED.
+##
+##Code remains in case there is ever a need to return to the analog
+## signal chain for the SDD.  At this point (Sep 2023), it is no
+## longer an easy switch between XSpress3 and analog.  Work will be
+## required to get the analog solution fully integrated into data
+## acquisition.
 ##
 ## that is work that would be greatly exacerbated by the fact that the
 ## only known way to visualize the XRF spectrum and the ROI settings
@@ -144,18 +146,32 @@ bicron.channels.chan26.name = 'APD'
 run_report('\t'+'electrometer and ion chambers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
-i0_is = 'ic' # 'quadem'
+ION_CHAMBERS = []
+
+# configure signal chains for I0/It/Ir, configuration flags from BMM.user_ns.dwelltime
+from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.enable_electrometer()
 print(whisper('\t\t\t'+'instantiated quadem1'))
-if i0_is == 'quadem':
-    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'hinted', 'hinted', 'hinted', 'omitted'
-    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0', 'It', 'Ir', 'Iy'
-else: #is_is == 'ic'
-    quadem1.I0.kind, quadem1.It.kind, quadem1.Ir.kind, quadem1.Iy.kind = 'omitted', 'hinted', 'hinted', 'omitted'
-    quadem1.I0.name, quadem1.It.name, quadem1.Ir.name, quadem1.Iy.name = 'I0q', 'It', 'Ir', 'Iy'
-    
+if with_ic0 is False:
+    quadem1.I0.kind, quadem1.I0.name = 'hinted', 'I0'
+else:
+    quadem1.I0.kind, quadem1.I0.name = 'omitted', 'I0q'
+
+if with_ic1 is False:
+    quadem1.It.kind, quadem1.It.name = 'hinted', 'It'
+else:
+    quadem1.It.kind, quadem1.It.name = 'omitted', 'Itq'
+
+if with_ic2 is False:
+    quadem1.Ir.kind, quadem1.Ir.name = 'hinted', 'Ir'
+else:
+    quadem1.Ir.kind, quadem1.Ir.name = 'omitted', 'Irq'
+
+quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
+
+ION_CHAMBERS.append(quadem1)
 
 ## need to do something like this:
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
@@ -187,20 +203,17 @@ try:                            # might not be in use
     ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
     ic0.enable_electrometer()
     print(whisper('\t\t\t'+'instantiated ic0'))
-    if i0_is == 'quadem':
-        ic0.Ia.kind = 'omitted'
-        ic0.Ia.name = 'I0a'
+    if with_ic0 is False:
+        ic0.Ia.kind, ic0.Ia.name = 'omitted', 'I0a'
     else:
-        ic0.Ia.kind = 'hinted'
-        ic0.Ia.name = 'I0'
+        ic0.Ia.kind, ic0.Ia.name = 'hinted', 'I0'
         
-    ic0.Ib.kind = 'omitted'
-    ic0.Ib.name = 'I0b'
+    ic0.Ib.kind, ic0.Ib.name = 'omitted', 'I0b'
     set_precision(ic0.current1.mean_value, 3)
     toss = ic0.Ia.describe()
-    
     set_precision(ic0.current2.mean_value, 3)
     toss = ic0.Ib.describe()
+    ION_CHAMBERS.append(ic0)
 except Exception as E:
     print(E)
     print(whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det'))
@@ -210,18 +223,41 @@ try:                            # might not be in use
     ic1 = IntegratedIC('XF:06BM-BI{IC:1}EM180:', name='Ic1')
     ic1.enable_electrometer()
     print(whisper('\t\t\t'+'instantiated ic1'))
-    ic1.Ia.kind = 'hinted'
-    ic1.Ib.kind = 'hinted'
-    ic1.Ia.name = 'Ita'
-    ic1.Ib.name = 'Itb'
+    if with_ic1 is False:
+        ic1.Ia.kind, ic1.Ia.name = 'omitted', 'Ita'
+    else:
+        ic1.Ia.kind, ic1.Ia.name = 'hinted', 'It'
+    ic1.Ib.kind, ic1.Ib.name = 'omitted', 'Itb'
     set_precision(ic1.current1.mean_value, 3)
     toss = ic1.Ia.describe()
     set_precision(ic1.current2.mean_value, 3)
     toss = ic1.Ib.describe()
+    ION_CHAMBERS.append(ic1)
 except:    
     print(whisper('\t\t\t'+'ic1 is not available, falling back to ophyd.sim.noisy_det'))
     ic1 = noisy_det
 
+
+try:                            # might not be in use
+    ic2 = IntegratedIC('XF:06BM-BI{IC:2}EM180:', name='Ic2')
+    ic1.enable_electrometer()
+    print(whisper('\t\t\t'+'instantiated ic2'))
+    if with_ic2 is False:
+        ic2.Ia.kind, ic2.Ia.name = 'omitted', 'Ira'
+    else:
+        ic2.Ia.kind, ic2.Ia.name = 'hinted', 'Ir'
+    ic2.Ib.kind, ic2.Ib.name = 'omitted', 'Irb'
+    set_precision(ic2.current1.mean_value, 3)
+    toss = ic2.Ia.describe()
+    set_precision(ic2.current2.mean_value, 3)
+    toss = ic2.Ib.describe()
+    ION_CHAMBERS.append(ic2)
+except:    
+    print(whisper('\t\t\t'+'ic2 is not available, falling back to ophyd.sim.noisy_det'))
+    ic2 = noisy_det
+
+
+    
 #set_precision(ic0.current1.mean_value, 3)
 #toss = ic0.Ia.describe()
 #set_precision(ic0.current2.mean_value, 3)
@@ -286,9 +322,12 @@ base = os.path.join(BMMuser.folder, 'raw')
 
 
 from BMM.usb_camera import CAMERA
-usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
-usbcam1 = BMMSnapshot(root=nas_path, which='usb', name='usbcam1')
-#usb1.image.shaped_image.kind = 'normal'
+if with_cam1 is True:
+    usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
+    usbcam1 = BMMSnapshot(root=nas_path, which='usb', name='usbcam1')
+    #usb1.image.shaped_image.kind = 'normal'
+else:
+    usb1, usbcam1 = None, None
 
 usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
 usbcam2 = BMMSnapshot(root=nas_path, which='usb', name='usbcam2')

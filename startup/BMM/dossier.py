@@ -382,18 +382,18 @@ class BMMDossier():
         if BMMuser.post_usbcam1:
             img_to_slack(image_usb1)
 
-        # ### --- USB camera #2 --------------------------------------------------------------
-        # self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
-        # image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
-        # md['_filename'] = image_usb2
-        # usbcam2._annotation_string = stub
-        # print(bold_msg('USB camera #2 snapshot'))
-        # self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        # #yield from sleep(0.5)
-        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        # im.save(image_usb2, 'JPEG')
-        # if BMMuser.post_usbcam2:
-        #     img_to_slack(image_usb2)
+        ### --- USB camera #2 --------------------------------------------------------------
+        self.usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+        image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
+        md['_filename'] = image_usb2
+        usbcam2._annotation_string = stub
+        print(bold_msg('USB camera #2 snapshot'))
+        self.usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        #yield from sleep(0.5)
+        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        im.save(image_usb2, 'JPEG')
+        if BMMuser.post_usbcam2:
+            img_to_slack(image_usb2)
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': self.webuid,

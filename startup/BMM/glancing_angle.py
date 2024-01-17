@@ -1,3 +1,9 @@
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 from bluesky.plan_stubs import sleep, mv, mvr, null
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device
@@ -68,41 +74,6 @@ class GlancingAngle(Device):
     alloff_plan : turn off all spinners as a plan
     to : move to the specified spinner, turn off all other spinners, turn on this spinner
     auto_align : perform an automated alignment for the current spinner
-
-    Notes
-    =====
-
-    The auto_align plan does some ugly shit to plot the results of
-    each individual step in the alignment procedure.  It uses
-    matplotlib to fashion the plot, but switches to a headless backend
-    before plotting.  It then saves the plot to throw-away png file.
-    PIL is then used to funnel the display of the plot out to
-    xdg-open.
-
-    On xf06bm-ws3, the desktop is configured to have ImageMagick's
-    display be the default view for a png file.  Thus, PIL is forking
-    a process and running display to show the plot to the user.
-
-    Care is taken to clean up after PIL (which leaves png files in
-    /tmp/) and to close any running display processes (that is, a
-    process running ImageMagick's display).
-
-    The reason this is needed is that the user needs visual feedback
-    to know whether the alignment procedure is proceeding
-    successfully.
-
-    This plotting solution presents images of the alignment steps
-    which are non-interactive -- the user cannot query the plot to
-    obtain a motor position, for example.
-
-    However, it has the great advantage of not running afoul of the
-    fact that ipython and Qt are running on different threads.  Thus
-    the full plot will be shown to the user and interacting with the
-    plot window (for example, resizing it) will not crash bsui.
-
-    See the clean_img() method to details of the clean up process.
-
-    Sigh....
 
     '''
     spinner1 = Cpt(EpicsSignal, 'OutPt08:Data-Sel')
@@ -426,8 +397,16 @@ class GlancingAngle(Device):
         thistext +=  '	    </div>\n'
         return thistext
 
-
-    
+    def ready_to_start(self):
+        ## NEVER prompt when using queue server
+        if is_re_worker_active() is True:
+            user_ns['BMMuser'].prompt = False
+        if user_ns['BMMuser'].prompt:
+            action = input("\nIs the glancing angle stage currently flat? " + PROMPT)
+            if action != '':
+                if action[0].lower() != 'y':
+                    return False
+        return True
 
 class GlancingAngleMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and

@@ -23,7 +23,7 @@ from BMM.workspace         import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs, ic0, ic1
+from BMM.user_ns.detectors   import quadem1, vor, xs, ic0, ic1, ic2, ION_CHAMBERS
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -108,14 +108,18 @@ def areascan(detector,
 
         detector = detector.capitalize()
         yield from mv(_locked_dwell_time, dwell)
-        dets = [quadem1, ic0,]
+        dets = ION_CHAMBERS
 
         if with_xspress3 and detector == 'If':
             detector = 'Xs'
 
         if detector == 'If':
-            dets.append(vor)
+            dets.append(xs)  # vor)
             detector = 'ROI1'
+        elif detector == 'It':
+            detector = 'It'
+        elif detector == 'Ir':
+            detector = 'Ir'
         elif detector.lower() == 'xs':
             dets.append(xs)
             detector = BMMuser.xs1
@@ -130,7 +134,6 @@ def areascan(detector,
         #     dets.append(ic0)
         #     detector = ic0.Ib.name
         elif detector == 'Ic1':
-            dets.append(ic1)
             detector = ic1.Ia.name
         
         line1 = f'slow motor: {slow.name}, {startslow}, {stopslow}, {nslow} -- starting at {slow.position:.3f}\n'

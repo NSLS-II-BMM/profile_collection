@@ -40,7 +40,7 @@ user_ns = vars(user_ns_module)
 #from __main__ import db
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
-from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0
+from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -791,6 +791,8 @@ def xafs(inifile=None, **kwargs):
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
+            BMMuser.element = rkvs.get('BMM:user:element').decode('utf-8')
+            BMMuser.edge    = rkvs.get('BMM:user:edge').decode('utf-8')
             if p['element'] != BMMuser.element or p['edge'] != BMMuser.edge:
                 print(error_msg(f'The photon delivery system is not configured for the {p["element"]} {p["edge"]} edge.  You need to run the "change_edge()" command.  Bailing out....'))
                 BMMuser.final_log_entry = False
@@ -973,23 +975,23 @@ def xafs(inifile=None, **kwargs):
                 kafka_message({'xafsscan': 'next',
                                'count': cnt })
                 if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
-                    uid = yield from scan_nd([quadem1, ic0], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif any(md in p['mode'] for md in ('icit', 'ici0')):
-                    uid = yield from scan_nd([quadem1, ic0], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':
-                    uid = yield from scan_nd([quadem1, ic0, xs], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
                 elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs1':
-                    uid = yield from scan_nd([quadem1, ic0, xs1], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS, xs1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs1', **more_kafka }})
                 else:
-                    uid = yield from scan_nd([quadem1, ic0, vor], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS, vor], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
 

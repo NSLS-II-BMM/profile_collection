@@ -15,7 +15,7 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 # |___/  \/  \/\____/\_____/\_____/\_/  \___/\_|  |_/\____/  #
 ##############################################################
 
-# These turn on/off the OG detector systemss at BMM
+# These turn on/off the OG detector systems at BMM
 with_quadem, with_struck = True, False
 
 # use these two line to entirely turn on/off use of the Xspress3 or to turn on/off either individual detector
@@ -23,13 +23,12 @@ with_xspress3, use_4element, use_1element = True, True, True
 #with_xspress3, use_4element, use_1element = False, False, False
 
 # use these to turn on/off the monolithic ion chambers
-with_ic0, with_ic1, with_ic2 = True, False, False
+with_ic0, with_ic1, with_ic2 = True, True, False
 with_dualem = False             # deprecated, prototype
 
 # An error gets triggered during Azure CI testing that does not get triggered when
 # running under IPython. This disables the Xspress3 during testing.
 # This is a crude stopgap.
-# See https://dev.azure.com/nsls2/profile_collections/_build/results?buildId=2609&view=results
 if os.environ.get('AZURE_TESTING'):
     with_xspress3, use_4element, use_1element = False, False, False
 
