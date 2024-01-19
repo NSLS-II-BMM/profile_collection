@@ -245,6 +245,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             user_ns['RE'].msg_hook = BMM_msg_hook
             BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %
                          (line1, uid, user_ns['db'][-1].start['scan_id']))
+            if motor.amfe.get() or motor.amfae.get():
+                user_ns['ks'].cycle('dm3')
             if move:
                 t  = user_ns['db'][-1].table()
                 signal = t['I0']

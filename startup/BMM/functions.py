@@ -126,12 +126,12 @@ def approximate_pitch(energy):
     '''Updated 11 Sep 2023
     '''
     if user_ns['dcm']._crystal == '111':
-        m = -4.7016e-06
-        b = 4.35425732
+        m = -4.6945e-06
+        b = 4.36629998
         return(m*energy + b)
     else:
-        m = -3.2580e-06
-        b = 2.38318997
+        m = -3.2775e-06
+        b = 2.38488057
         return(m*energy + b)
         
 

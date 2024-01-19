@@ -61,35 +61,35 @@ def calibrate_low_end(mono='111', focus=False):
     
         yield from change_edge('Fe', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='fecal', element='Fe', sample='Fe foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='fecal', element='Fe', sample='Fe foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('fe = 11111.11,    7110.75,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Co', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cocal', element='Co', sample='Co foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cocal', element='Co', sample='Co foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('co = 11111.11,    7708.78,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Ni', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nical', element='Ni', sample='Ni foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nical', element='Ni', sample='Ni foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('ni = 11111.11,    8331.49,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Cu', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cucal', element='Cu', sample='Cu foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='cucal', element='Cu', sample='Cu foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('cu = 11111.11,    8980.48,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Zn', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='zncal', element='Zn', sample='Zn foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='zncal', element='Zn', sample='Zn foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('zn = 11111.11,    9660.76,    22222.22,   %.5f\n' % pitch)
 
@@ -123,35 +123,35 @@ def calibrate_high_end(mono='111', focus=False):
 
         yield from change_edge('Pt', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', element='Pt', edge='L3', sample='Pt foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='ptcal', element='Pt', edge='L3', sample='Pt foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('pt = 11111.11,    11562.76,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Au', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='aucal', element='Au', edge='L3', sample='Au foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='aucal', element='Au', edge='L3', sample='Au foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('au = 11111.11,    11919.70,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Pb', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='pbcal', element='Pb', edge='L3', sample='Pb foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='pbcal', element='Pb', edge='L3', sample='Pb foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('pb = 11111.11,    13035.07,    22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Nb', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nbcal', element='Nb', sample='Nb foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='nbcal', element='Nb', sample='Nb foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('nb = 11111.11,     18982.97,   22222.22,   %.5f\n' % pitch)
         handle.flush()
 
         yield from change_edge('Mo', target=0, focus=focus)
         pitch = dcm_pitch.user_readback.get()
-        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='mocal', element='Mo', sample='Mo foil')
+        yield from xafs('/home/xf06bm/Data/Staff/mono_calibration/cal.ini', folder=BMMuser.DATA, filename='mocal', element='Mo', sample='Mo foil', comment=f'calibrating Si{mono}')
         close_last_plot()
         handle.write('mo = 11111.11,    20000.36,    22222.22,   %.5f\n' % pitch)
 
@@ -179,6 +179,9 @@ def calibrate(focus=False):
         yield from resting_state_plan()
     def cleanup_plan():
         yield from resting_state_plan()
+    if type(focus) is not bool:
+        print(error_msg('The argument for calibrate is a boolean -- True means to use focused beam, False is default.'))
+        return()
     yield from finalize_wrapper(main_plan(), cleanup_plan())    
 
 
@@ -237,8 +240,11 @@ def calibrate_mono(mono='111'):
     tt = list()
     for el in ordered:
         ee.append(edges[el][1])
-        tt.append(edges[el][2])
-
+        tt.append(dcm.e2a(edges[el][0]))
+        #tt.append(edges[el][2])
+        #print(tt[-1], dcm.e2a(edges[el][0]))
+        
+              
     # working arrays
     e      = array(ee)
     th     = array(tt)

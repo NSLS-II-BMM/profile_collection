@@ -142,6 +142,13 @@ bicron.channels.chan26.name = 'APD'
 # \____/\_____/\____/ \____/ \_/ \_| \_|\___/\_|  |_/\____/  \_/ \____/\_| \_|\____/  #
 #######################################################################################
 
+# It is important that the /name/ of the signal being used for I0 be 'I0',
+# the signal for It be 'It', and Ir be 'Ir'.  That allows the kafka
+# consumer and other Tiled clients to correctly interpret the columns of the
+# data table.
+#
+# omitted signals should get names related to what they /could/ be, but are
+# distinct from the main signal names.
 
 run_report('\t'+'electrometer and ion chambers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC

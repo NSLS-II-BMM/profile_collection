@@ -410,7 +410,7 @@ class XAFSScan():
         self.mut.set_title(f'data: {self.sample}')
 
         #self.line_i0, = self.i0.plot([],[], label='I0')
-        self.i0.set_ylabel('I0 (nanoamp.seconds)')
+        self.i0.set_ylabel('I0 (nanoamps)')
         self.i0.set_xlabel('energy (eV)')
         self.i0.set_title('I0')
 
@@ -485,7 +485,7 @@ class XAFSScan():
 
         ## primary event document, append to data arrays
         self.energy.append(kwargs['data']['dcm_energy'])
-        self.i0sig.append(kwargs['data']['I0'])
+        self.i0sig.append(kwargs['data']['I0']/kwargs['data']['dwti_dwell_time'])  # this should be the same number as cadashboard....
         if self.mode == 'icit':
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
         else:                   # normal quadem transmission

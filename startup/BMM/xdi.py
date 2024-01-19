@@ -3,7 +3,7 @@ import re, pathlib, sys, datetime, pandas, numpy
 
 from BMM.functions import plotting_mode
 
-from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1
+from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1, ic2, ION_CHAMBERS
 from BMM.user_ns.dwelltime import with_ic0
 
 from BMM import user_ns as user_ns_module
@@ -37,9 +37,22 @@ def units(label):
         return ''
 
 
-#quadem1, vor, ic0 = user_ns['quadem1'], user_ns['vor'], user_ns['ic0']
-#_ionchambers = [quadem1.I0, quadem1.It, quadem1.Ir]
-_ionchambers = [ic0.Ia, quadem1.It, quadem1.Ir]
+#_ionchambers = [ic0.Ia, ic1.Ia, quadem1.Ir]
+_ionchambers = []
+ics = (x.name for x in ION_CHAMBERS)
+if 'Ic0' in ics:
+    _ionchambers.append(ic0.Ia)
+else:
+    _ionchambers.append(quadem1.I0)
+if 'Ic1' in ics:
+    _ionchambers.append(ic1.Ia)
+else:
+    _ionchambers.append(quadem1.It)
+if 'Ic2' in ics:
+    _ionchambers.append(ic2.Ia)
+else:
+    _ionchambers.append(quadem1.Ir)
+
 if with_ic0:
     _ic0         = [ic0.Ia, ic0.Ib]
 _vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
@@ -50,7 +63,7 @@ _vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
 _deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
 
 transmission = _ionchambers
-eyield       = [quadem1.I0, quadem1.It, quadem1.Ir, quadem1.Iy]
+eyield       = [*_ionchambers, quadem1.Iy]
 fluorescence = _ionchambers + _deadtime_corrected + _vortex
 fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 #xspress      = _ionchambers + [user_ns['quadem1'].xschannel1]
@@ -135,24 +148,28 @@ def write_XDI(datafile, dataframe):
     # grab the detector list #
     ##########################
     mm = plotting_mode(mode)
-    if 'trans' in mm:
-        detectors = transmission
-    elif 'test' in mm:
-        detectors = transmission
-    elif 'ref' in mm:
-        detectors = transmission
-    elif 'yield' in mm:
-        detectors = eyield
+    detectors = transmission
+    if 'yield' in mm:
+        detectors = _ionchambers + [quadem.Iy]
     elif 'xs1' in mm:
         detectors = _ionchambers + [BMMuser.xschannel8,]
     elif 'xs' in mm:
         detectors = _ionchambers + [BMMuser.xschannel1, BMMuser.xschannel2, BMMuser.xschannel3, BMMuser.xschannel4]
-    elif mm in ('icit', 'ici0'):
-        detectors = _ionchambers + _ic0
-    else:
-        detectors = fluorescence
-        if BMMuser.detector == 1:
-            detectors = fluorescence_1ch
+
+    # if 'trans' in mm:
+    #     detectors = transmission
+    # elif 'test' in mm:
+    #     detectors = transmission
+    # elif 'ref' in mm:
+    #     detectors = transmission
+    
+    ## deprecated Struck readout system
+    # elif mm in ('icit', 'ici0'):
+    #     detectors = _ionchambers + _ic0
+    # else:
+    #     detectors = fluorescence
+    #     if BMMuser.detector == 1:
+    #         detectors = fluorescence_1ch
             
         
 

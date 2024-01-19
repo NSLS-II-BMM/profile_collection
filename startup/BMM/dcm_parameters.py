@@ -17,9 +17,9 @@ class dcm_parameters():
     '''
 
     def __init__(self):
-        self.dspacing_111 = 3.1354368  # 11 September 2023
-        self.dspacing_311 = 1.6376068  # 11 September 2023
+        self.dspacing_111 = 3.1354173  # 11 September 2023
+        self.dspacing_311 = 1.6376417  # 11 September 2023
 
-        self.offset_111 = 16.0891568   # 11 September 2023
-        self.offset_311 = 16.0023959   # 11 September 2023
+        self.offset_111 = 16.0891518   # 11 September 2023
+        self.offset_311 = 16.0010050   # 11 September 2023
         

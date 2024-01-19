@@ -169,17 +169,17 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           count = 0
           while pds_motors_ready() is False:
                count += 1
-               report('\nMirror amplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
-               yield from sleep(2)
-               m2_bender.kill()
-               user_ns['ks'].cycle('m2')
-               user_ns['ks'].cycle('m3')
-               user_ns['ks'].cycle('dm3')
-               yield from sleep(2)
                if count == 5:
                     report('\nFailed to correct the problem. Giving up.)', level='error', slack=True)
                     yield from null()
                     return
+               report('\nMirror amplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
+               yield from sleep(1)
+               m2_bender.kill()
+               user_ns['ks'].cycle('m2')
+               user_ns['ks'].cycle('m3')
+               user_ns['ks'].cycle('dm3')
+               yield from sleep(1)
           #raise ChangeModeException('One or more motors are showing amplifier faults. (in BMM/modes.py)')
           #return(yield from null())
 
@@ -310,10 +310,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                                 level='error', slack=True)
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
-                    yield from sleep(2)
+                    yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
-                    yield from sleep(2)
+                    yield from sleep(1)
                     try:
                          yield from mv(*base)
                     except:
@@ -332,10 +332,10 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                                 level='error', slack=True)
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
-                    yield from sleep(2)
+                    yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
-                    yield from sleep(2)
+                    yield from sleep(1)
                     try:
                          yield from mv(*base)
                     except:
@@ -369,10 +369,11 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                                 level='error', slack=True)
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
-                    yield from sleep(2)
+                    yield from sleep(1)
+                    m2_bender.kill()
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
-                    yield from sleep(2)
+                    yield from sleep(1)
                     try:
                          yield from mv(*base)
                     except:
@@ -380,7 +381,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
      #print(base)
                     
-     yield from sleep(2.0)
+     yield from sleep(1.0)
      yield from mv(m2_bender.kill_cmd, 1)
      yield from mv(dm3_bct.kill_cmd, 1)
      yield from m2.kill_jacks()
@@ -465,8 +466,8 @@ def describe_mode():
 
 def change_xtals(xtal=None):
      '''Move between the Si(111) and Si(311) monochromators, also moving
-     2nd crystal pitch and roll to approximate positions.  Then do a
-     rocking curve scan.
+     2nd crystal pitch and roll to approximate positions.  Return to
+     the starting energy.  Then do a rocking curve scan.
      '''
      if xtal is None:
           print('No crystal set specified')
@@ -528,7 +529,7 @@ def change_xtals(xtal=None):
      #yield from mv(dcm_pitch.kill_cmd, 1)
      #yield from mv(dcm_roll.kill_cmd, 1)
      yield from dcm.kill_plan()
-     yield from sleep(2.0) 
+     yield from sleep(1.0) 
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.3,
                         dcm_roll, -4.5608,  # new value May 4, 2023
@@ -542,7 +543,7 @@ def change_xtals(xtal=None):
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
           
-     yield from sleep(2.0) 
+     yield from sleep(1.0) 
      yield from dcm.kill_plan()
      #yield from mv(dcm_roll.kill_cmd, 1)
 
@@ -555,7 +556,7 @@ def change_xtals(xtal=None):
      yield from sleep(1)
      yield from mv(dcm_pitch.kill_cmd, 1)
      yield from rocking_curve()
-     yield from sleep(2.0)
+     yield from sleep(1.0)
      yield from mv(dcm_pitch.kill_cmd, 1)
      kafka_message({'close': 'line'})
      yield from slit_height(move=True)
@@ -565,7 +566,7 @@ def change_xtals(xtal=None):
      kafka_message({'close': 'line'})
      end = time.time()
      print('\n\nTime elapsed: %.1f min' % ((end-start)/60))
-     yield from sleep(2.0)
+     yield from sleep(1.0)
      yield from resting_state_plan()
      report(f'Done moving to {xtal} crystals', level='bold', slack=True)
      

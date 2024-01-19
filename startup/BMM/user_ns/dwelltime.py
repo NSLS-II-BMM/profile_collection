@@ -6,6 +6,26 @@ from BMM.user_ns.bmm import BMMuser
 
 run_report(__file__, text='dwelltime + selecting detectors for use')
 
+
+################################################################################
+# Configure detector selection here, False to exclude a detector from consideration in bsui
+
+# Ion chambers
+with_quadem   = True            # currently used for Ir, available for Iy and other signals
+with_ic0      = True            # new I0 chamber
+with_ic1      = True            # new It chamber
+with_ic2      = False           # new Ir chamber
+with_dualem   = False           # deprecated, prototype
+
+# fluorescence detectors and readout systems
+with_struck   = False           # deprecated OG fluorescence read out
+with_xspress3 = True
+use_4element  = True
+use_1element  = True
+
+################################################################################
+
+
 ##############################################################
 # ______ _    _ _____ _      _    _____ ________  ___ _____  #
 # |  _  \ |  | |  ___| |    | |  |_   _|_   _|  \/  ||  ___| #
@@ -15,16 +35,6 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 # |___/  \/  \/\____/\_____/\_____/\_/  \___/\_|  |_/\____/  #
 ##############################################################
 
-# These turn on/off the OG detector systems at BMM
-with_quadem, with_struck = True, False
-
-# use these two line to entirely turn on/off use of the Xspress3 or to turn on/off either individual detector
-with_xspress3, use_4element, use_1element = True, True, True
-#with_xspress3, use_4element, use_1element = False, False, False
-
-# use these to turn on/off the monolithic ion chambers
-with_ic0, with_ic1, with_ic2 = True, True, False
-with_dualem = False             # deprecated, prototype
 
 # An error gets triggered during Azure CI testing that does not get triggered when
 # running under IPython. This disables the Xspress3 during testing.

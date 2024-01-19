@@ -21,7 +21,7 @@ from BMM.workspace  import rkvs
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor
+from BMM.user_ns.detectors   import quadem1, vor, ION_CHAMBERS
 from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
@@ -34,10 +34,13 @@ def resting_state():
     '''
     Command line tool to bring controls into their resting state:
 
-    - quadEM and Struck scaler enabled and measuring
+    - quadEM enabled and measuring
     - dwell time set to 1/2 second
     - electron yield channel (quadEM channel 4) hinted as 'omitted'
-    - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
+    - all electrometers set to continuous mode and acquiring
+    - user prompt set to True (False is using QS). macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
+    - restaing state values set in redis
+    _ kafka sent resting state message
     '''
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
@@ -46,11 +49,11 @@ def resting_state():
         BMMuser.prompt = False
     quadem1.on(quiet=True)
     #vor.on()
-    _locked_dwell_time.move(0.3)
+    #_locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
-    for electrometer in ('ic0', 'quadem1'):
-        user_ns[electrometer].acquire.put(1)
-        user_ns[electrometer].acquire_mode.put(0)
+    for electrometer in ION_CHAMBERS:
+        electrometer.acquire.put(1)
+        electrometer.acquire_mode.put(0)
     dcm.kill()
     dcm.mode = 'fixed'
     user_ns['m2_bender'].kill()
@@ -76,9 +79,9 @@ def resting_state_plan():
     quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
-    for electrometer in ('ic0', 'quadem1'):
-        yield from mv(user_ns[electrometer].acquire, 1)
-        yield from mv(user_ns[electrometer].acquire_mode, 0)
+    for electrometer in ION_CHAMBERS:
+        yield from mv(electrometer.acquire, 1)
+        yield from mv(electrometer.acquire_mode, 0)
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)
     yield from dcm.kill_plan()

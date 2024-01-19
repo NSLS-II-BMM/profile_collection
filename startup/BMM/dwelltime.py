@@ -5,6 +5,8 @@ from ophyd.pseudopos import (pseudo_position_argument, real_position_argument)
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+
+
 class QuadEMDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'AveragingTime')
     readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
@@ -13,21 +15,18 @@ class StruckDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'TP')
     readback = Cpt(EpicsSignalRO, 'TP')
 
-class DualEMDwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'AveragingTime')
-    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
+class DualEMDwellTime(QuadEMDwellTime):
+    ...
     
-class IC0DwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'AveragingTime')
-    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
+class IC0DwellTime(QuadEMDwellTime):
+    ...
+
+class IC1DwellTime(QuadEMDwellTime):
+    ...
+
+class IC2DwellTime(QuadEMDwellTime):
+    ...
     
-class IC1DwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'AveragingTime')
-    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
-    
-class IC2DwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'AveragingTime')
-    readback = Cpt(EpicsSignalRO, 'AveragingTime_RBV')
     
 class Xspress3DwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'det1:AcquireTime')
@@ -38,10 +37,10 @@ from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
 
 
 class LockedDwellTimes(PseudoPositioner):
-    '''Sync QuadEM, Struck, DualEM, and Xspress3 dwell times to one
-    pseudo-axis dwell time.  These signal chains are enabled/disabled
-    in BMM/user_ns/dwelltime.py.  Those global parameters are imported
-    just above and used to set attributes of the class.  in this way,
+    '''Sync QuadEM, Xspress3, and other dwell times to one pseudo-axis
+    dwell time.  These signal chains are enabled/disabled in
+    BMM/user_ns/dwelltime.py.  Those global parameters are imported
+    just above and used to set attributes of the class.  In this way,
     only the enabled signal chains will be set, but ALL of the enabled
     signal chains will be set.
     '''
