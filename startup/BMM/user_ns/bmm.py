@@ -27,6 +27,7 @@ run_report(__file__, text='functions and other basics')
 run_report('\t'+'logging')
 from BMM.logging             import report, BMM_log_info, BMM_msg_hook
 
+
 from bluesky.preprocessors   import finalize_wrapper
 
 run_report('\t'+'user')

@@ -1091,9 +1091,12 @@ def xafs(inifile=None, **kwargs):
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
-        kafka_message({'xafsscan': 'stop',})
-        if dossier.basename is not None:
-            kafka_message({'xafs_sequence':'stop', 'filename':os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
+
+        if dossier.basename is None:
+            kafka_message({'xafsscan': 'stop', 'filename': None})
+        else:
+            kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}_liveplot.png')})
+            kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
         if not is_re_worker_active():
             rsync_to_gdrive()
             synch_gdrive_folder()

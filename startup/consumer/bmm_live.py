@@ -461,6 +461,7 @@ class XAFSScan():
     def stop(self, **kwargs):
         '''Done with a sequence of XAFS live plots.
         '''
+        filename = kwargs['filename']
         #self.figure.show(block=False)
         self.ongoing     = False
         # self.xdata       = []
@@ -474,7 +475,10 @@ class XAFSScan():
         # self.description = None
         # self.xs1, self.xs2, self.xs3, self.xs4, xs8 = None, None, None, None, None
         # self.initial     = 0
-        
+        if filename is not None:
+            self.fig.savefig(filename)
+            img_to_slack(filename)
+            
 
 
     def add(self, **kwargs):

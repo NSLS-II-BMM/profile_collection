@@ -198,12 +198,13 @@ def countdown(t):
     print('Done!', end='\r')
 
 
-def elapsed_time(start):
+def elapsed_time(start, slack=None):
     end = time.time()
     hours, rest = divmod(end-start, 3600)
     minutes, seconds = divmod(rest, 60)
     print(f'\n\nThat took {hours} hours, {minutes} minutes, {seconds:.0f} seconds')
-    
+    return(hours, minutes, seconds)
+        
 
 def present_options(suffix='xlsx'):
     options = [x for x in os.listdir(user_ns['BMMuser'].folder) if x.endswith(suffix)]

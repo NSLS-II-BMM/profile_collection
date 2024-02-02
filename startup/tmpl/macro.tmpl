@@ -46,7 +46,8 @@ def {base}_macro(dryrun=False, ref=False):
     def cleanup_plan():
         yield from end_of_macro()
         {cleanup}
-        elapsed_time(start)
+        (hours, minutes, seconds) = elapsed_time(start)
+        report(f'{{BMMuser.instrument}} macro finished ({{hours}} hours, {{minutes}} minutes)', level='bold', slack=True)
         print(bold_msg('[Hint] to start Athena:\t\t') + '%athena')
 
 

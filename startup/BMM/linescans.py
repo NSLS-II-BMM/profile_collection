@@ -481,7 +481,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = ION_CHAMBERS
+        dets = ION_CHAMBERS.copy()
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -603,7 +603,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
         user_ns['RE'].msg_hook = None
         BMMuser.motor = motor
 
-        dets = ION_CHAMBERS
+        dets = ION_CHAMBERS.copy()
 
         sgnl = 'fluorescence (Xspress3)'
 
@@ -827,7 +827,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         if detector == 'Xs':
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
-        dets  = ION_CHAMBERS
+        dets  = ION_CHAMBERS.copy()
         denominator = ''
         detname = ''
 

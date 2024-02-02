@@ -24,6 +24,26 @@ BMM_logger.handlers = []
 
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
 
+
+#------------------------------------------------------------------------------------------
+# stolen from QAS, see message from Max, #discuss-bluesky, thread starting 8:28 am Thursday January 25th 2024
+# Try to capture 'core dump' reasons.
+import faulthandler, sys
+from pprint import pprint, pformat
+faulthandler.enable()
+
+
+def audit(event, args):
+    if event == "open":
+        BMM_logger.debug(f"Opening file: {args}")
+
+sys.addaudithook(audit)        
+#------------------------------------------------------------------------------------------
+
+
+
+
+
 ## how to get hostname: os.uname()[1]
 
 BMM_log_master_file = os.path.join(os.environ['HOME'], 'Data', 'BMM_master.log')
@@ -67,7 +87,7 @@ if os.path.isdir(LUSTRE_ROOT_BMM):
 #         BMM_log_nas.setFormatter(BMM_formatter)
 #         BMM_logger.addHandler(BMM_log_nas)
 
-BMM_logger.setLevel(logging.WARNING)
+BMM_logger.setLevel(logging.WARNING) # DEBUG
 
 BMM_log_user = None
 

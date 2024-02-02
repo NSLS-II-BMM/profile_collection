@@ -189,6 +189,11 @@ class BMMMacroBuilder():
             self.close_shutters  = self.truefalse(self.ws['J2'].value, 'closeshutters')
             self.append_element  = str(self.ws['L2'].value)
             self.nreps           = self.ws['N2'].value
+            if str(self.ws['G3'].value) == 'perp':
+                self.orientation = 'perpendicular' # only GA
+            else:
+                self.orientation = 'parallel' # only GA                
+            self.retract         = self.ws['N3'].value      # only GA
         if self.nreps is None:
             self.nreps = 1
         else:

@@ -299,7 +299,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from null()
             return
 
+        ## trouble with MC06
+        #slits = False
 
+        
         ################################
         # confirm configuration change #
         ################################
