@@ -189,7 +189,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
 
     def main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist):
         el = el.capitalize()
-
         ######################################################################
         # this is a tool for verifying a macro.  this replaces an xafsmod scan  #
         # with a sleep, allowing the user to easily map out motor motions in #
@@ -371,6 +370,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ################################################
         # if not calibrating and mode != current_mode:
         #     print('Moving to photon delivery mode %s...' % mode)
+        if mode == 'XRD':
+            yield from mv(slits3.hsize, 2)
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
         yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
@@ -455,18 +456,19 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ##################################
         # set reference and roi channels #
         ##################################
-        if not xrd:
-            ## reference channel
-            print('Moving reference foil...')
-            yield from rois.select_plan(el)
-            ## Xspress3
-            if with_xspress3:
-                BMMuser.verify_roi(xs, el, edge)
-                BMMuser.verify_roi(xs1, el, edge)
-            ## feedback
-            show_edges()
+        #if not xrd:
+        ## reference channel
+        print('Moving reference foil...')
+        yield from rois.select_plan(el)
+        ## Xspress3
+        if with_xspress3:
+            BMMuser.verify_roi(xs, el, edge)
+            BMMuser.verify_roi(xs1, el, edge)
+        ## feedback
+        show_edges()
 
         if mode == 'XRD':
+            yield from mv(slits3.hsize, 7)
             report('Finished configuring for XRD', level='bold', slack=True)
         else:
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
@@ -488,7 +490,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     m3, m2, m2_bender, dm3_bct = user_ns['m3'], user_ns['m2'], user_ns['m2_bender'], user_ns['dm3_bct']
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
-    dm3_bct = user_ns['dm3_bct']
+    dm3_bct, slits3 = user_ns['dm3_bct'], user_ns['slits3']
     yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

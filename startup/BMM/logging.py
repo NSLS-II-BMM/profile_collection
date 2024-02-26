@@ -25,23 +25,6 @@ BMM_logger.handlers = []
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
 
 
-#------------------------------------------------------------------------------------------
-# stolen from QAS, see message from Max, #discuss-bluesky, thread starting 8:28 am Thursday January 25th 2024
-# Try to capture 'core dump' reasons.
-import faulthandler, sys
-from pprint import pprint, pformat
-faulthandler.enable()
-
-
-def audit(event, args):
-    if event == "open":
-        BMM_logger.debug(f"Opening file: {args}")
-
-sys.addaudithook(audit)        
-#------------------------------------------------------------------------------------------
-
-
-
 
 
 ## how to get hostname: os.uname()[1]
@@ -58,7 +41,7 @@ if os.path.isfile(BMM_log_master_file):
     BMM_logger.addHandler(BMM_log_master)
     chmod(BMM_log_master_file, 0o444)
 
-LUSTRE_ROOT_BMM = '/nsls2/data/bmm'
+LUSTRE_ROOT_BMM = '/nsls2/data3/bmm'
 BMM_lustre_log_file = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'BMM_master.log')
 if os.path.isdir(LUSTRE_ROOT_BMM):
     if not os.path.isfile(BMM_lustre_log_file):
@@ -86,6 +69,23 @@ if os.path.isdir(LUSTRE_ROOT_BMM):
 #         BMM_log_nas = logging.FileHandler(BMM_nas_log_file)
 #         BMM_log_nas.setFormatter(BMM_formatter)
 #         BMM_logger.addHandler(BMM_log_nas)
+
+
+#------------------------------------------------------------------------------------------
+# stolen from QAS, see message from Max, #discuss-bluesky, thread starting 8:28 am Thursday January 25th 2024
+# Try to capture 'core dump' reasons.
+import faulthandler, sys
+from pprint import pprint, pformat
+faulthandler.enable()
+
+
+def audit(event, args):
+    if event == "open":
+        BMM_logger.debug(f"Opening file: {args}")
+
+sys.addaudithook(audit)        
+#------------------------------------------------------------------------------------------
+
 
 BMM_logger.setLevel(logging.WARNING) # DEBUG
 

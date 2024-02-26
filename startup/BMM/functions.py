@@ -13,11 +13,11 @@ os.environ['PAGER'] = 'most'
 ## some global parameters
 BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
-LUSTRE_XAS = os.path.join('/nsls2', 'data', 'bmm', 'XAS')
+LUSTRE_XAS = os.path.join('/nsls2', 'data3', 'bmm', 'XAS')
 
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 
-DEFAULT_INI = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
+DEFAULT_INI = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
 
 # Black, Blue, Brown, Cyan, DarkGray, Green, NoColor, Normal, Purple,
 # Red, White, Yellow,

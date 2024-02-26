@@ -43,7 +43,6 @@ run_report('\t'+'recovering user configuration')
 BMMuser = BMM_User()
 BMMuser.start_experiment_from_serialization()
 
-
 if BMMuser.pds_mode is None:
     try:                        # do the right then when "%run -i"-ed
         BMMuser.pds_mode = get_mode()

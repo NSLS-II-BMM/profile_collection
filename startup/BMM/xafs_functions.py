@@ -285,6 +285,8 @@ def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):
       this value.
 
     '''
+    if type(energy) is int or type(energy) is float:
+        energy = [energy, ]
     if xrffile is not None:
         if not xrffile.endswith('.xrf'):
             xrffile = xrffile + '.xrf'

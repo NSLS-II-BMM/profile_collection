@@ -298,14 +298,14 @@ def xrfat(**kwargs):
     uid : UID string
       The UID of the XAFS scan from which to extract the XRF spectrum
 
-    energy : int or float
-      The incident energy of the XRF spectrum. If energy is 0 the
-      first data point will be displayed.  If energy is a negative
-      integer, the point that many steps from the end of the scan will
-      be used. If energy is a positive integer less than the length of
-      the scan, the point that many steps from the start of the scan
-      will be used.  Otherwise, the data point with energy closest in 
-      value to the given energy will be displayed.
+    energy : list of int or float
+      The incident energies at which to plot the XRF spectra. If
+      energy is 0 the first data point will be displayed.  If energy
+      is a negative integer, the point that many steps from the end of
+      the scan will be used. If energy is a positive integer less than
+      the length of the scan, the point that many steps from the start
+      of the scan will be used.  Otherwise, the data point with energy
+      closest in value to the given energy will be displayed.
 
     xrffile : str
       The filename stub for an output XDI-style file containing the
@@ -364,74 +364,84 @@ def xrfat(**kwargs):
         return()
         
     dcm = numpy.array(xafs['dcm_energy'])
-    if energy <= 0:
-        position = energy
-        energy = float(dcm[position])
-    elif energy < dcm[0] and energy < len(dcm):
-        position = energy
-        energy = float(dcm[position])
-    elif energy < dcm[0] and energy > len(dcm):
-        position = 0
-        energy = float(dcm[position])
-    else:
-        position = numpy.abs(dcm - energy).argmin()
-        energy = float(dcm[position])
-
-    s1 = f['entry']['data']['data'][position][0]
-    if is_4elem is True:
-        s2 = f['entry']['data']['data'][position][1]
-        s3 = f['entry']['data']['data'][position][2]
-        s4 = f['entry']['data']['data'][position][3]
-    else:
-        add, only = False, 8
-    ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
-
+    fig = plt.figure()
+    ax = fig.gca()
     # thisname = record.metadata["start"]["XDI"]["Sample"]["name"]
     # if len(thisname) > 30:
     #     thisname = thisname[:30].strip() + ' ...'
     thisname = os.path.splitext(os.path.basename(record.metadata["start"]["XDI"]['_filename']))[0]
-    fig = plt.figure()
-    ax = fig.gca()
-    ax.set_title(f'{thisname} at {energy:.1f} eV')
-    ax.set_xlabel('Energy  (eV)')
-    ax.set_ylabel('counts')
-    ax.grid(which='major', axis='both')
-    ax.set_facecolor((0.95, 0.95, 0.95))
-    ax.set_xlim(2500, energy+xmax)
-    if only is not None and only in (1, 2, 3, 4, 8):
-        if only == 1:
-            ax.plot(ee, s1, label='channel1')
-        elif only == 8:         #  1 element SDD
-            ax.plot(ee, s1, label='channel1')
-        elif only == 2:
-            ax.plot(ee, s2, label='channel2')
-        elif only == 3:
-            ax.plot(ee, s3, label='channel3')
-        elif only == 4:
-            ax.plot(ee, s4, label='channel4')
-    elif add is True:
-        ax.plot(ee, s1+s2+s3+s4, label='sum of four channels')
-    else:
-        ax.plot(ee, s1, label='channel1')
-        ax.plot(ee, s2, label='channel2')
-        ax.plot(ee, s3, label='channel3')
-        ax.plot(ee, s4, label='channel4')
-        
-    z = element(el).atomic_number
-    if ed.lower() == 'k':
-        label = f'{el} Kα1'
-        ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
-        ax.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
-    elif ed.lower() == 'l3':
-        label = f'{el} Lα1'
-        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
-    elif ed.lower() == 'l2':
-        label = f'{el} Kβ1'
-        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
-    elif ed.lower() == 'l1':
-        label = f'{el} Kβ3'
-        ax.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
-    ax.legend()
+    title = f'{thisname} at '
+    if len(energy) > 1:
+        xrffile = None
+    for i,e in enumerate(energy):
+        if e <= 0:
+            position = e
+            en = float(dcm[position])
+        elif e < dcm[0] and e < len(dcm):
+            position = e
+            en = float(dcm[position])
+        elif e < dcm[0] and e > len(dcm):
+            position = 0
+            en = float(dcm[position])
+        else:
+            position = numpy.abs(dcm - e).argmin()
+            en = float(dcm[position])
+
+        s1 = f['entry']['data']['data'][position][0]
+        if is_4elem is True:
+            s2 = f['entry']['data']['data'][position][1]
+            s3 = f['entry']['data']['data'][position][2]
+            s4 = f['entry']['data']['data'][position][3]
+        else:
+            add, only = False, 8
+        ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
+
+        title += f'{en:.1f}, '
+
+        if i == 0:
+            ax.set_xlabel('Energy  (eV)')
+            ax.set_ylabel('counts')
+            ax.grid(which='major', axis='both')
+            ax.set_facecolor((0.95, 0.95, 0.95))
+            ax.set_xlim(2500, en+xmax)
+        if only is not None and only in (1, 2, 3, 4, 8):
+            if only == 1:
+                ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
+            elif only == 8:         #  1 element SDD
+                ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
+            elif only == 2:
+                ax.plot(ee, s2, label=f'channel2, {en:.1f} eV')
+            elif only == 3:
+                ax.plot(ee, s3, label=f'channel3, {en:.1f} eV')
+            elif only == 4:
+                ax.plot(ee, s4, label=f'channel4, {en:.1f} eV')
+        elif add is True:
+            ax.plot(ee, s1+s2+s3+s4, label=f'sum, {en:.1f} eV')
+        else:
+            ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
+            ax.plot(ee, s2, label=f'channel2, {en:.1f} eV')
+            ax.plot(ee, s3, label=f'channel3, {en:.1f} eV')
+            ax.plot(ee, s4, label=f'channel4, {en:.1f} eV')
+
+        if i == 0:
+            z = element(el).atomic_number
+            if ed.lower() == 'k':
+                label = f'{el} Kα1'
+                ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                ax.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
+            elif ed.lower() == 'l3':
+                label = f'{el} Lα1'
+                ax.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif ed.lower() == 'l2':
+                label = f'{el} Kβ1'
+                ax.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif ed.lower() == 'l1':
+                label = f'{el} Kβ3'
+                ax.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+        ax.legend()
+    title  = title[0:-2]
+    title += ' eV'
+    ax.set_title(title)
 
     if xrffile is not None:
         thistime = float(record.primary.read()['time'][position])

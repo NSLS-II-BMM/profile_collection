@@ -156,17 +156,17 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     # if sys.version_info[1] < 10:
     #     ## HDF5 storage semantics prior to January 2023
     #     hdf5 = Cpt(Xspress3FileStoreFlyable, 'HDF1:',
-    #                read_path_template='/nsls2/data/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
-    #                root='/nsls2/data/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
-    #                write_path_template='/nsls2/data/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
+    #                read_path_template='/nsls2/data3/bmm/assets/xspress3/2022',  # path to data folder, as mounted on client (i.e. Lustre) 
+    #                root='/nsls2/data3/bmm/',                                    # path to root, as mounted on client (i.e. Lustre)
+    #                write_path_template='/nsls2/data3/bmm/assets/xspress3/2022', # full path on IOC server (i.e. xf06bm-xspress3)
     #                )
     # else:
         ## new HDF5 storage semantics as of January 2023
     hdf5 = Cpt(BMMXspress3HDF5Plugin,
                "HDF1:", 
                name="h5p",
-               root_path='/nsls2/data/bmm/',
-               path_template='/nsls2/data/bmm/assets/xspress3/%Y/%m/%d/',
+               root_path='/nsls2/data3/bmm/',
+               path_template='/nsls2/data3/bmm/assets/xspress3/%Y/%m/%d/',
                resource_kwargs={},
     )
 

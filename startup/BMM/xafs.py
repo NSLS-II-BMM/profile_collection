@@ -1202,7 +1202,7 @@ def howlong(inifile=None, interactive=True, **kwargs):
     ## try inifile as given then DATA + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     if is_re_worker_active():
-        inifile = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
+        inifile = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
     BMMuser = user_ns['BMMuser']
     if inifile is None:
         inifile = present_options('ini')
@@ -1302,6 +1302,6 @@ def xafs_grid(inifile=None, **kwargs):
 
 # def xanes():
 #     BMMuser = user_ns['BMMuser']
-#     defaul_ini = '/nsls2/data/bmm/shared/config/xafs/scan.ini'
+#     defaul_ini = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
 #     el = BMMuser.element
 #     yield from xafs(defaul_ini, filename=el+'_test', )

@@ -637,12 +637,12 @@ ks = KillSwitch('XF:06BMB-CT{DIODE-Local:4}', name='amplifier kill switches')
 run_report('\tvideo recording via USB cameras')
 from BMM.video import USBVideo
 usbvideo1 = USBVideo('XF:06BM-ES{UVC-Cam:1}CV1:', name='usbvideo1')
-usbvideo1.path = '/nsls2/data/bmm/assets/usbcam/'
+usbvideo1.path = '/nsls2/data3/bmm/assets/usbcam/'
 usbvideo1.initialize()
 
 # usbvideo2 = USBVideo('XF:06BM-ES{UVC-Cam:1}CV2:', name='usbvideo2')
 # usbvideo2.enable.put(0)
 # usbvideo2.visionfunction3.put(4)
-# usbvideo2.path.put('/nsls2/data/bmm/assets/usbcam/')
+# usbvideo2.path.put('/nsls2/data3/bmm/assets/usbcam/')
 # usbvideo2.framerate.put(60)
 # usbvideo2.startstop.put(0)
