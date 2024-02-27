@@ -268,6 +268,9 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
         self.tab = ' '*8
         count = 0
         
+        self.content = ""
+        self.content += self.check_edge()
+
         self.content += self.tab + 'yield from mv(lakeshore.setpoint, lakeshore.readback.get())\n\n'
 
         for m in self.measurements:

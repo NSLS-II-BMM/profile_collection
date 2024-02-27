@@ -36,9 +36,12 @@ class GridMacroBuilder(BMMMacroBuilder):
         element, edge, focus = (None, None, None)
         self.tab = ' '*8
         count = 0
-        
+
+        self.content = ""
+        self.content += self.check_edge()
+
         if self.nreps > 1:
-            self.content = self.tab + f'for rep in range({self.nreps}):\n\n'
+            self.content = +self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
             self.do_first_change = True
         

@@ -268,7 +268,27 @@ def examine_xafs_motor_group(motor_group, TAB='\t\t\t\t'):
             print(disconnected_msg(f'{TAB}{m.name} is not connected.'))
         else:
             print(f'{TAB}{m.name} {CHECK}')
-      
+
+
+def not_at_edge(element, edge):
+    '''Check to see if the beamline is currently configured for a
+    specified element and edge, using Redis as the authority.
+
+    This is a bit confusing, so an explanation:
+
+    Return True if element & edge are /not/ the same as the values in
+    Redis.  I.e. a change-edge command /is/ needed.
+
+    Return False if element & edge are the same as the values in
+    Redis.  I.e. a change_edge is /not/ needed.
+
+    '''
+    rkvs = user_ns['rkvs']
+    if element != rkvs.get('BMM:user:element').decode('utf-8') or edge != rkvs.get('BMM:user:edge').decode('utf-8'):
+        return True
+    else:
+        return False
+
 
 def clean_img():
     '''Kill any outstanding "display" processes (i.e. ImageMagick's

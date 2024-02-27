@@ -8,6 +8,7 @@ from BMM.functions      import isfloat, present_options
 from BMM.gdrive         import copy_to_gdrive, rsync_to_gdrive
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
+from BMM.workspace      import rkvs
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -552,6 +553,28 @@ class BMMMacroBuilder():
             print('You probably have the edge set incorrectly in your spreadsheet.\n')
             inrange = False
         return(text, time, inrange)
+
+    def check_edge(self):
+        first_element, first_edge = self.measurements[1]['element'], self.measurements[1]['edge']
+        first_focus = self.measurements[1]['focus']
+        if first_element is None:
+            first_element = self.measurements[0]['element']
+        if first_edge is None:
+            first_edge = self.measurements[0]['edge']
+        if first_focus is None:
+            first_focus = self.measurements[0]['focus']
+        if first_focus == 'focused':
+            first_focus = 'True'
+        else:
+            first_focus = 'False'
+        #current_element = rkvs.get('BMM:user:element').decode('utf-8')
+        #current_edge    = rkvs.get('BMM:user:edge').decode('utf-8')
+
+        text  = self.tab + "## change edge before starting, if needed...\n"
+        text += self.tab + f"if not_at_edge('{first_element}', '{first_edge}'):\n"
+        text += self.tab + f"    yield from change_edge('{first_element}', edge='{first_edge}', focus={first_focus})\n\n"
+
+        return text
 
     
     def estimate_time(self, m, el, ed):

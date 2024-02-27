@@ -183,6 +183,10 @@ class LinkamMacroBuilder(BMMMacroBuilder):
         previous = 25
         self.tab = ' '*8
         count = 0
+
+        self.content = ""
+        self.content += self.check_edge()
+
         
         self.content += self.tab + 'yield from mv(linkam.setpoint, linkam.readback.get())\n\n'
         self.content += self.tab + 'yield from linkam.on_plan()\n'
