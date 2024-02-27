@@ -2,6 +2,7 @@ from bluesky import __version__ as bluesky_version
 import re, pathlib, sys, datetime, pandas, numpy
 
 from BMM.functions import plotting_mode
+from BMM.db        import file_resource
 
 from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1, ic2, ION_CHAMBERS
 from BMM.user_ns.dwelltime import with_ic0
@@ -256,6 +257,11 @@ def write_XDI(datafile, dataframe):
     metadata.insert_line('# Scan.end_time: %s'     % end_time)
     metadata.insert_line('# Scan.transient_id: %s' % dataframe.start['scan_id'])
     metadata.insert_line('# Scan.uid: %s'          % dataframe.start['uid'])
+    hdf5file = file_resource(dataframe.start['uid'])
+    if hdf5file is None:
+        metadata.insert_line('# Scan.hdf5file: %s' % 'None')
+    else:
+        metadata.insert_line('# Scan.hdf5file: %s' % '/'.join(hdf5file.split('/')[-4:]))
 
     if kind == 'sead':
         metadata.start_doc('# Beamline.energy: %.3f eV',      'XDI.Beamline.energy')
