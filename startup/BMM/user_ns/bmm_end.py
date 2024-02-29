@@ -106,7 +106,19 @@ def xlsx():
         print(error_msg('No spreadsheet specified!'))
         return None
 
-    wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True);
+    wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True, data_only=True)
+
+
+    version    = int(str(wb[wb.sheetnames[0]]['B2'].value).split(" ")[1])
+    if version < 13:
+        text = f'''\nHey! That spreadsheet is too old! (found v{version}, must be v13 or greater)
+
+Recreate {spreadsheet} using an example from
+the templates folder of your data directory.
+'''
+        boxedtext(f'{spreadsheet} is too old', text, 'red', width=77)
+        return
+
     #ws = wb.active
     sheets = wb.sheetnames
     if len(sheets) == 1:
