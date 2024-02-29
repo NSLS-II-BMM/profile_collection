@@ -443,7 +443,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
         if self.nreps > 1:
             self.content += self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
-            self.do_first_change = True
+            #self.do_first_change = True
 
         for m in self.measurements:
 
@@ -476,10 +476,10 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
             if inrange is False: return(False)
 
-            if self.do_first_change is True:
-                self.do_first_change = False
-                self.content += text
-                self.totaltime += time
+            # if self.do_first_change is True:
+            #     self.do_first_change = False
+            #     self.content += text
+            #     self.totaltime += time
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
@@ -497,12 +497,15 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             #######################
             self.content += self.tab + f'ga.spin = {m["spin"]}\n'
 
-            ###############################
-            # move to correct slit height #
-            ###############################
+            ###################################
+            # move to correct slit dimensions #
+            ###################################
             if m['slitheight'] is not None:
                 if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
                 self.content += self.tab + f'yield from mv(slits3.vsize, {m["slitheight"]})\n'
+            if m['slitwidth'] is not None:
+                if self.check_limit(user_ns['slits3'].vsize, m['slitwidth']) is False: return(False)
+                self.content += self.tab + f'yield from mv(slits3.hsize, {m["slitwidth"]})\n'
 
             #####################################
             # move to correct detector position #
@@ -628,19 +631,20 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 'bounds':     row[14].value,     # scan parameters
                 'steps':      row[15].value,
                 'times':      row[16].value,
-                'method':     row[17].value,
-                'samplep':    row[18].value,     # other motors
-                'sampley':    row[19].value,
-                'slitheight': row[20].value,
-                'detectorx':  row[21].value,
-                'snapshots':  self.truefalse(row[22].value, 'snapshots' ),  # flags
-                'htmlpage':   self.truefalse(row[23].value, 'htmlpage'  ),
-                'usbstick':   self.truefalse(row[24].value, 'usbstick'  ),
-                'bothways':   self.truefalse(row[25].value, 'bothways'  ),
-                'channelcut': self.truefalse(row[26].value, 'channelcut'),
-                'ththth':     self.truefalse(row[27].value, 'ththth'    ),
-                'url':        row[28].value,
-                'doi':        row[29].value,
-                'cif':        row[30].value, }
+                'detectorx':  row[17].value,
+                'method':     row[18].value,
+                'samplep':    row[19].value,     # other motors
+                'sampley':    row[20].value,
+                'slitwidth':  row[21].value,
+                'slitheight': row[22].value,
+                'snapshots':  self.truefalse(row[23].value, 'snapshots' ),  # flags
+                'htmlpage':   self.truefalse(row[24].value, 'htmlpage'  ),
+                'usbstick':   self.truefalse(row[25].value, 'usbstick'  ),
+                'bothways':   self.truefalse(row[26].value, 'bothways'  ),
+                'channelcut': self.truefalse(row[27].value, 'channelcut'),
+                'ththth':     self.truefalse(row[28].value, 'ththth'    ),
+                'url':        row[29].value,
+                'doi':        row[30].value,
+                'cif':        row[31].value, }
         return this
 

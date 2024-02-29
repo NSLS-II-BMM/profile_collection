@@ -48,8 +48,6 @@ class BMMMacroBuilder():
        True is need to begin with a change_edge()
     has_e0_column : bool
        True is this is a very old wheel spreadsheet
-    offset : int
-       1 if this is a very old wheel spreadsheet
     verbose : bool
        True for more comment lines in  the plan 
     totaltime : float
@@ -83,7 +81,6 @@ class BMMMacroBuilder():
         self.content          = ''
         self.do_first_change  = False
         self.has_e0_column    = False
-        self.offset           = 0
         self.verbose          = False
         self.nreps            = 1
 
@@ -171,9 +168,9 @@ class BMMMacroBuilder():
         self.macro    = os.path.join(self.folder, self.basename+'_macro.py')
 
         ## this is looking for presence/absence of a column labeled "optimize", which is experimental on 13 January 2023
-        self.do_opt = False
-        if 'wheel' in str(type(self)) and 'Optimize' in self.ws['U5'].value:
-            self.do_opt = True
+        #self.do_opt = False
+        #if 'wheel' in str(type(self)) and 'Optimize' in self.ws['U5'].value:
+        #    self.do_opt = True
 
         ## this is trying to deal with very early spreadsheets which had an e0 column which no longer exists 
         if self.ws['H5'].value.lower() == 'e0': 
@@ -181,12 +178,12 @@ class BMMMacroBuilder():
 
         ## this is dealing with single and double ring sample wheels
         if double is True:
-            self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
+            #self.do_first_change = self.truefalse(self.ws['H2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['K2'].value, 'closeshutters')
             self.append_element  = str(self.ws['M2'].value)
             self.nreps           = self.ws['O2'].value
         else:
-            self.do_first_change = self.truefalse(self.ws['G2'].value, 'firstchange')
+            #self.do_first_change = self.truefalse(self.ws['G2'].value, 'firstchange')
             self.close_shutters  = self.truefalse(self.ws['J2'].value, 'closeshutters')
             self.append_element  = str(self.ws['L2'].value)
             self.nreps           = self.ws['N2'].value
@@ -220,13 +217,15 @@ class BMMMacroBuilder():
                 return False
             else:
                 return True  # self.measurements[0]['measure']
-        if str(value).lower() == '=true()':
+        if type(value) is bool:
+            return value
+        elif str(value).lower() == '=true()':
             return True
         elif str(value).lower() == 'true':
             return True
         elif str(value).lower() == 'yes':
             return True
-        elif value == 1:
+        elif type(value) is int and value == 1:
             return True
         else:
             return False
@@ -393,10 +392,7 @@ class BMMMacroBuilder():
         '''
         print('Reading spreadsheet: %s' % self.source)
         count = 0
-        self.offset = 0
         isok, explanation = True, ''
-        if self.has_e0_column:  # deal with older xlsx that have e0 in column H
-            self.offset = 1
 
         for row in self.ws.rows:
             count += 1

@@ -244,6 +244,14 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
 
+            if m['slitwidth'] is not None:
+                if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)
+                self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
+            if m['slitheight'] is not None:
+                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
+                self.content += self.tab + 'yield from mv(slits3.vsize, %.2f)\n' % m['slitheight']
+                
+                
             
             ##########################
             # change edge, if needed #
@@ -254,10 +262,10 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
             if inrange is False: return(False)
                 
-            if self.do_first_change is True:
-                self.do_first_change = False
-                self.content += text
-                self.totaltime += time
+            # if self.do_first_change is True:
+            #     self.do_first_change = False
+            #     self.content += text
+            #     self.totaltime += time
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
@@ -350,18 +358,20 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 'bounds':      row[14].value,     # scan parameters
                 'steps':       row[15].value,
                 'times':       row[16].value,
-                'samplex':     row[17].value,     # other motors
-                'sampley':     row[18].value,
-                'detectorx':   row[19].value,
-                'snapshots':   self.truefalse(row[20].value, 'snapshots' ),  # flags
-                'htmlpage':    self.truefalse(row[21].value, 'htmlpage'  ),
-                'usbstick':    self.truefalse(row[22].value, 'usbstick'  ),
-                'bothways':    self.truefalse(row[23].value, 'bothways'  ),
-                'channelcut':  self.truefalse(row[24].value, 'channelcut'),
-                'ththth':      self.truefalse(row[25].value, 'ththth'    ),
-                'url':         row[26].value,
-                'doi':         row[27].value,
-                'cif':         row[28].value, }
+                'detectorx':   row[17].value,
+                'samplex':     row[18].value,     # other motors
+                'sampley':     row[19].value,
+                'slitwidth':   row[20].value,
+                'slitheight':  row[21].value,
+                'snapshots':   self.truefalse(row[22].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[23].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[24].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[25].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[26].value, 'channelcut'),
+                'ththth':      self.truefalse(row[27].value, 'ththth'    ),
+                'url':         row[28].value,
+                'doi':         row[29].value,
+                'cif':         row[30].value, }
         return this
 
         

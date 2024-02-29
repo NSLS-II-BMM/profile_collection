@@ -43,7 +43,7 @@ class GridMacroBuilder(BMMMacroBuilder):
         if self.nreps > 1:
             self.content = +self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
-            self.do_first_change = True
+            #self.do_first_change = True
         
         for m in self.measurements:
 
@@ -104,6 +104,13 @@ class GridMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from mv({m["motor3"]}, {m["position3"]:.3f})\n'
                 self.motor3    = m["motor3"]
                 self.position3 = m["position3"]
+
+            if m['slitwidth'] is not None:
+                if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)
+                self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
+            if m['slitheight'] is not None:
+                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
+                self.content += self.tab + 'yield from mv(slits3.vsize, %.2f)\n' % m['slitheight']
                 
 
             
@@ -116,10 +123,10 @@ class GridMacroBuilder(BMMMacroBuilder):
             text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
             if inrange is False: return(False)
                             
-            if self.do_first_change is True:
-                self.do_first_change = False
-                self.content += text
-                self.totaltime += time
+            # if self.do_first_change is True:
+            #     self.do_first_change = False
+            #     self.content += text
+            #     self.totaltime += time
                 
             elif m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
@@ -223,23 +230,25 @@ class GridMacroBuilder(BMMMacroBuilder):
                 'bounds':      str(row[13].value),     # scan parameters
                 'steps':       str(row[14].value),
                 'times':       str(row[15].value),
-                'motor1':      row[16].value,     # motor names and positions 
-                'position1':   self.nonezero(row[17].value),
-                'motor2':      row[18].value,
-                'position2':   self.nonezero(row[19].value),
-                'detectorx':   row[20+motor3].value,
-                'snapshots':   self.truefalse(row[21+motor3].value, 'snapshots' ),  # flags
-                'htmlpage':    self.truefalse(row[22+motor3].value, 'htmlpage'  ),
-                'usbstick':    self.truefalse(row[23+motor3].value, 'usbstick'  ),
-                'bothways':    self.truefalse(row[24+motor3].value, 'bothways'  ),
-                'channelcut':  self.truefalse(row[25+motor3].value, 'channelcut'),
-                'ththth':      self.truefalse(row[26+motor3].value, 'ththth'    ),
-                'url':         row[27+motor3].value,
-                'doi':         row[28+motor3].value,
-                'cif':         row[29+motor3].value, }
+                'detectorx':   row[16].value,
+                'motor1':      row[17].value,     # motor names and positions 
+                'position1':   self.nonezero(row[18].value),
+                'motor2':      row[19].value,
+                'position2':   self.nonezero(row[20].value),
+                'slitwidth':   row[21+motor3].value,
+                'slitheight':  row[22+motor3].value,
+                'snapshots':   self.truefalse(row[23+motor3].value, 'snapshots' ),  # flags
+                'htmlpage':    self.truefalse(row[24+motor3].value, 'htmlpage'  ),
+                'usbstick':    self.truefalse(row[25+motor3].value, 'usbstick'  ),
+                'bothways':    self.truefalse(row[26+motor3].value, 'bothways'  ),
+                'channelcut':  self.truefalse(row[27+motor3].value, 'channelcut'),
+                'ththth':      self.truefalse(row[28+motor3].value, 'ththth'    ),
+                'url':         row[29+motor3].value,
+                'doi':         row[30+motor3].value,
+                'cif':         row[31+motor3].value, }
         if motor3 == 2:
-            this['motor3']    = row[20].value
-            this['position3'] = self.nonezero(row[21].value)
+            this['motor3']    = row[21].value
+            this['position3'] = self.nonezero(row[22].value)
         if this['position3'] == 0.0:
             this['position3'] = int(this['position3'])
         return this

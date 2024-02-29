@@ -87,6 +87,12 @@ def xlsx():
 
     if cell B1 is "Glancing angle" --> build a glancing angle macro
 
+    if cell B1 is "Linkam" --> build a Linkam stage macro
+
+    if cell B1 is "Lakeshore" --> build a Lakeshore + Displex macro
+
+    if cell B1 is "Grid" --> build a generic grid macro
+
     if cell B1 is "Sample wheel" --> build a sample wheel macro
 
     if cell B1 is empty --> build a sample wheel macro
@@ -150,10 +156,15 @@ def xlsx():
         print(bold_msg('This is a motor grid spreadsheet'))
         gmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'motor grid'
+    elif instrument.lower() == 'sample wheel':
+        print(bold_msg('This is a single wheel spreadsheet'))
+        print(error_msg('Single wheel spreadsheets have been retired.'))
+        print(error_msg('Use a double wheel spreadsheet, instead.'))
     else:
-        print(bold_msg('This is a sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet, sheet, double=False)
-        BMMuser.instrument = 'sample wheel'
+        print(bold_msg('This is a double sample wheel spreadsheet'))
+        wmb.spreadsheet(spreadsheet, sheet, double=True)
+        BMMuser.instrument = 'double wheel'
+
     rkvs.set('BMM:automation:type', instrument)
 
 

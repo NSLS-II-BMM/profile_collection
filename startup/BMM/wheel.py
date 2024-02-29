@@ -291,7 +291,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
         if self.nreps > 1:
             self.content += self.tab + f'for rep in range({self.nreps}):\n\n'
             self.tab = ' '*12
-            self.do_first_change = True
+            #self.do_first_change = True
             
         for m in self.measurements:
 
@@ -341,15 +341,18 @@ class WheelMacroBuilder(BMMMacroBuilder):
             if m['slitwidth'] is not None:
                 if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
+            if m['slitheight'] is not None:
+                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
+                self.content += self.tab + 'yield from mv(slits3.vsize, %.2f)\n' % m['slitheight']
             if m['detectorx'] is not None:
                 if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
-            if m['optimize'] is not None:  # parse optimize string, which is something like "max fluo(X)"
-                do_max = 'max' if 'max'  in m['optimize'] else 'min'
-                optdet = 'If'  if 'fluo' in m['optimize'] else 'It'
-                (optmotor, startstop) = ('xafs_x', 3) if '(X)' in m['optimize'] else ('xafs_y', 10)
-                self.content += self.tab + f'yield from peak_scan(motor={optmotor}, start=-{startstop}, stop={startstop}, nsteps=41, detector={optdet}, find=\'{do_max}\')\n'
-                self.totaltime += 1.0
+            # if m['optimize'] is not None:  # parse optimize xfstring, which is something like "max fluo(X)"
+            #     do_max = 'max' if 'max'  in m['optimize'] else 'min'
+            #     optdet = 'If'  if 'fluo' in m['optimize'] else 'It'
+            #     (optmotor, startstop) = ('xafs_x', 3) if '(X)' in m['optimize'] else ('xafs_y', 10)
+            #     self.content += self.tab + f'yield from peak_scan(motor={optmotor}, start=-{startstop}, stop={startstop}, nsteps=41, detector={optdet}, find=\'{do_max}\')\n'
+            #     self.totaltime += 1.0
 
             
             ##########################
@@ -361,12 +364,12 @@ class WheelMacroBuilder(BMMMacroBuilder):
             text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
             if inrange is False: return(False)
             
-            if self.do_first_change is True:
-                self.do_first_change = False
-                self.content += text
-                self.totaltime += time
+            # if self.do_first_change is True:
+            #     self.do_first_change = False
+            #     self.content += text
+            #     self.totaltime += time
                 
-            elif m['element'] != element or m['edge'] != edge: # focus...
+            if m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += text
@@ -429,54 +432,62 @@ class WheelMacroBuilder(BMMMacroBuilder):
 
 
     def get_keywords(self, row, defaultline):
-        plus = 0
-        if self.double is True:  # make room for column denoting inner and outer ring
-            plus = 1
+        ## self.offset would be 1 for a very old spreadsheet that has
+        ## an explicit e0 column.  This should be deprecated.
         this = {'default' :   defaultline,
                 'slot':       row[1].value,      # sample location
-                'measure':    self.truefalse(row[2+plus].value, 'measure'),  # filename and visualization
-                'filename':   str(row[3+plus].value),
-                'nscans':     row[4+plus].value,
-                'start':      row[5+plus].value,
-                'mode':       row[6+plus].value,
-                #'e0':         row[7].value,      
-                'element':    row[7+plus+self.offset].value,      # energy range
-                'edge':       row[8+plus+self.offset].value,
-                'focus':      row[9+plus+self.offset].value,
-                'sample':     self.escape_quotes(str(row[10+plus+self.offset].value)),     # scan metadata
-                'prep':       self.escape_quotes(str(row[11+plus+self.offset].value)),
-                'comment':    self.escape_quotes(str(row[12+plus+self.offset].value)),
-                'bounds':     row[13+plus+self.offset].value,     # scan parameters
-                'steps':      row[14+plus+self.offset].value,
-                'times':      row[15+plus+self.offset].value,
-                'samplex':    row[16+plus+self.offset].value,     # other motors 
-                'sampley':    row[17+plus+self.offset].value,
-                'slitwidth':  row[18+plus+self.offset].value,
-                'detectorx':  row[19+plus+self.offset].value}
-        if self.do_opt:
-            rightend = {'optimize':   row[20+plus+self.offset].value,
-                        'snapshots':  self.truefalse(row[21+plus+self.offset].value, 'snapshots' ), # flags
-                        'htmlpage':   self.truefalse(row[22+plus+self.offset].value, 'htmlpage'  ),
-                        'usbstick':   self.truefalse(row[23+plus+self.offset].value, 'usbstick'  ),
-                        'bothways':   self.truefalse(row[24+plus+self.offset].value, 'bothways'  ),
-                        'channelcut': self.truefalse(row[25+plus+self.offset].value, 'channelcut'),
-                        'ththth':     self.truefalse(row[26+plus+self.offset].value, 'ththth'    ),
-                        'url':        row[27+plus+self.offset].value,
-                        'doi':        row[28+plus+self.offset].value,
-                        'cif':        row[29+plus+self.offset].value, }
-        else:
-            rightend = {'optimize' :  None,
-                        'snapshots':  self.truefalse(row[20+plus+self.offset].value, 'snapshots' ), # flags
-                        'htmlpage':   self.truefalse(row[21+plus+self.offset].value, 'htmlpage'  ),
-                        'usbstick':   self.truefalse(row[22+plus+self.offset].value, 'usbstick'  ),
-                        'bothways':   self.truefalse(row[23+plus+self.offset].value, 'bothways'  ),
-                        'channelcut': self.truefalse(row[24+plus+self.offset].value, 'channelcut'),
-                        'ththth':     self.truefalse(row[25+plus+self.offset].value, 'ththth'    ),
-                        'url':        row[26+plus+self.offset].value,
-                        'doi':        row[27+plus+self.offset].value,
-                        'cif':        row[28+plus+self.offset].value, }
-        if self.double is True:
-            this['ring'] = row[2].value
-        return {**this, **rightend}
+                'ring':       row[2].value,
+                'measure':    self.truefalse(row[3].value, 'measure'),  # filename and visualization
+                'filename':   str(row[4].value),
+                'nscans':     row[5].value,
+                'start':      row[6].value,
+                'mode':       row[7].value,
+                'element':    row[8].value,      # energy range
+                'edge':       row[9].value,
+                'focus':      row[10].value,
+                'sample':     self.escape_quotes(str(row[11].value)),     # scan metadata
+                'prep':       self.escape_quotes(str(row[12].value)),
+                'comment':    self.escape_quotes(str(row[13].value)),
+                'bounds':     row[14].value,     # scan parameters
+                'steps':      row[15].value,
+                'times':      row[16].value,
+                'detectorx':  row[17].value,
+                'samplex':    row[18].value,     # other motors 
+                'sampley':    row[19].value,
+                'slitwidth':  row[20].value,
+                'slitheight': row[21].value,
+                'snapshots':  self.truefalse(row[22].value, 'snapshots' ), # flags
+                'htmlpage':   self.truefalse(row[23].value, 'htmlpage'  ),
+                'usbstick':   self.truefalse(row[24].value, 'usbstick'  ),
+                'bothways':   self.truefalse(row[25].value, 'bothways'  ),
+                'channelcut': self.truefalse(row[26].value, 'channelcut'),
+                'ththth':     self.truefalse(row[27].value, 'ththth'    ),
+                'url':        row[28].value,
+                'doi':        row[29].value,
+                'cif':        row[30].value, }
+        return {**this}
+        # if self.do_opt:
+        #     rightend = {'optimize':   row[22].value,
+        #                 'snapshots':  self.truefalse(row[23].value, 'snapshots' ), # flags
+        #                 'htmlpage':   self.truefalse(row[24].value, 'htmlpage'  ),
+        #                 'usbstick':   self.truefalse(row[25].value, 'usbstick'  ),
+        #                 'bothways':   self.truefalse(row[26].value, 'bothways'  ),
+        #                 'channelcut': self.truefalse(row[27].value, 'channelcut'),
+        #                 'ththth':     self.truefalse(row[28].value, 'ththth'    ),
+        #                 'url':        row[29].value,
+        #                 'doi':        row[30].value,
+        #                 'cif':        row[31].value, }
+        # else:
+        #     rightend = {'optimize' :  None,
+        #                 'snapshots':  self.truefalse(row[22], 'snapshots' ), # flags
+        #                 'htmlpage':   self.truefalse(row[23], 'htmlpage'  ),
+        #                 'usbstick':   self.truefalse(row[24], 'usbstick'  ),
+        #                 'bothways':   self.truefalse(row[25], 'bothways'  ),
+        #                 'channelcut': self.truefalse(row[26], 'channelcut'),
+        #                 'ththth':     self.truefalse(row[27], 'ththth'    ),
+        #                 'url':        row[28].value,
+        #                 'doi':        row[29].value,
+        #                 'cif':        row[30].value, }
+        # return {**this, **rightend}
                          
             

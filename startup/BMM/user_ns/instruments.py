@@ -6,7 +6,7 @@ run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
-WITH_LAKESHORE = False
+WITH_LAKESHORE = True
 WITH_LINKAM = True
 
 ########################################################################
