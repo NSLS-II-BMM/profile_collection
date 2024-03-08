@@ -78,6 +78,7 @@ gawheel.initialize = '''samx, samy, samp = xafs_x.position, xafs_y.position, xaf
 # \_|  |_/\_| |_/\____/\_| \_|\___/  \____/ \___/ \___/\_____/___/ \____/\_| \_|\____/  #
 #########################################################################################
 
+run_report('\tspreadsheet/instrument support functions')
 from BMM.functions import present_options, bold_msg
 from openpyxl import load_workbook
 
@@ -97,9 +98,10 @@ def xlsx():
 
     if cell B1 is empty --> build a sample wheel macro
 
-    Then prompt for the sheet, if there are more than 1 sheet in the
-    spreadsheet file.
-    
+    Then prompt for the sheet, if there is more than 1 sheet in the
+    spreadsheet file.  Finally prompt for the tab, if there is more
+    than 1 tab in the selected spreadsheet.
+
     '''
     spreadsheet = present_options('xlsx')
     if spreadsheet is None:
@@ -116,7 +118,7 @@ def xlsx():
 Recreate {spreadsheet} using an example from
 the templates folder of your data directory.
 '''
-        boxedtext(f'{spreadsheet} is too old', text, 'red', width=77)
+        boxedtext(f'{spreadsheet} cannot be imported', text, 'red', width=77)
         return
 
     #ws = wb.active
@@ -183,16 +185,15 @@ the templates folder of your data directory.
 def set_instrument(instrument=None):
     if instrument is None:
         print('''
-  1: Double wheel
-  2: Single wheel
-  3: Glancing angle stage
-  4: Linkam stage
-  5: Displex and LakeShore
-  6: Motor grid
+  1: Sample wheel
+  2: Glancing angle stage
+  3: Linkam stage
+  4: Displex and LakeShore
+  5: Motor grid
 
   r: return
 ''')
-        actual = ['', 'double wheel', 'sample wheel', 'glancing angle', 'linkam', 'lakeshore', 'grid']
+        actual = ['', 'sample wheel', 'glancing angle', 'linkam', 'lakeshore', 'grid']
         choice = input("\nSelect an instrument > ")
         try:
             if int(choice) > 0 and int(choice) <= 6:
@@ -205,7 +206,7 @@ def set_instrument(instrument=None):
     if instrument.lower() == 'glancing angle':
         print(bold_msg('Setting instrument as glancing angle stage'))
         BMMuser.instrument = 'glancing angle stage'
-    elif instrument.lower() == 'double wheel':
+    elif instrument.lower() == 'sample wheel':
         print(bold_msg('Setting instrument as double sample wheel'))
         BMMuser.instrument = 'double wheel'
     elif instrument.lower() == 'linkam':
@@ -219,7 +220,7 @@ def set_instrument(instrument=None):
         BMMuser.instrument = 'motor grid'
     else:
         print(bold_msg('Default instrument choice: sample wheel'))
-        BMMuser.instrument = 'sample wheel'
+        BMMuser.instrument = 'double wheel'
     rkvs.set('BMM:automation:type', BMMuser.instrument)
     
     
