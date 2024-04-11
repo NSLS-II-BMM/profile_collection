@@ -36,6 +36,20 @@ from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3 #with_
 from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
 
 
+
+#######################################################################
+## A note about PV nomenclature for the ion chambers:
+##
+## The prefixes are:
+##   I0: XF:06BM-BI{IC:0}EM180:
+##   It: XF:06BM-BI{IC:1}EM180:
+##   Ir: XF:06BM-BI{IC:3}EM180:
+##
+## That's right, 2 got skipped. This was an error in provisioning the
+## ion chambers.  It was easier to configure bsui correctly than
+## to fix the functioning ion chamber.
+#######################################################################
+
 class LockedDwellTimes(PseudoPositioner):
     '''Sync QuadEM, Xspress3, and other dwell times to one pseudo-axis
     dwell time.  These signal chains are enabled/disabled in
@@ -56,7 +70,7 @@ class LockedDwellTimes(PseudoPositioner):
     if with_ic1 is True:
         ic1_dwell_time = Cpt(IC1DwellTime, 'XF:06BM-BI{IC:1}EM180:', egu='seconds') # new It chamber
     if with_ic2 is True:
-        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:2}EM180:', egu='seconds') # new Ir chamber
+        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:3}EM180:', egu='seconds') # new Ir chamber
     if with_xspress3 is True:
         xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
     
@@ -101,7 +115,7 @@ class LockedDwellTimes(PseudoPositioner):
             signal_chains['ic0_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic1_dwell_time'):
             signal_chains['ic1_dwell_time'] = pseudo_pos.dwell_time
-        if hasattr(self, 'ic2_dwliell_time'):
+        if hasattr(self, 'ic2_dwell_time'):
             signal_chains['ic2_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'xspress3_dwell_time'):
             signal_chains['xspress3_dwell_time'] = pseudo_pos.dwell_time

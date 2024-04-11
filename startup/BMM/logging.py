@@ -25,6 +25,12 @@ BMM_logger.handlers = []
 BMM_formatter       = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s')
 
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
 
 
 ## how to get hostname: os.uname()[1]
@@ -74,16 +80,17 @@ if os.path.isdir(LUSTRE_ROOT_BMM):
 #------------------------------------------------------------------------------------------
 # stolen from QAS, see message from Max, #discuss-bluesky, thread starting 8:28 am Thursday January 25th 2024
 # Try to capture 'core dump' reasons.
-import faulthandler, sys
-from pprint import pprint, pformat
-faulthandler.enable()
+if not is_re_worker_active():
+    import faulthandler, sys
+    from pprint import pprint, pformat
+    faulthandler.enable()
 
 
-def audit(event, args):
-    if event == "open":
-        BMM_logger.debug(f"Opening file: {args}")
+    def audit(event, args):
+        if event == "open":
+            BMM_logger.debug(f"Opening file: {args}")
 
-sys.addaudithook(audit)        
+    sys.addaudithook(audit)        
 #------------------------------------------------------------------------------------------
 
 

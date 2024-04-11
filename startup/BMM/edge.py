@@ -131,7 +131,7 @@ def m2_lateral_position(energy=None):
 
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300.,
-                xrd=False, bender=True, insist=False):
+                xrd=False, bender=True, insist=False, no_ref=False):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
@@ -187,7 +187,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
 
     '''
 
-    def main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist):
+    def main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist, no_ref):
         el = el.capitalize()
         ######################################################################
         # this is a tool for verifying a macro.  this replaces an xafsmod scan  #
@@ -373,7 +373,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         if mode == 'XRD':
             yield from mv(slits3.hsize, 2)
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
-        yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist)
+        yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist, no_ref=no_ref)
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
 
         ## verify that dcm_para has arrived in place.  if not, presume
@@ -491,6 +491,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
     dm3_bct, slits3 = user_ns['dm3_bct'], user_ns['slits3']
-    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist),
+    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist, no_ref),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

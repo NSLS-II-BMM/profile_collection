@@ -6,7 +6,7 @@ run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
-WITH_LAKESHORE = True
+WITH_LAKESHORE = False
 WITH_LINKAM = True
 
 ########################################################################
@@ -303,10 +303,10 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -77.31
+    xafs_ref.outer_position = -79.884
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = -50.9 # xafs_ref.outer_position + ~26.5
+xafs_ref.inner_position = -53.384 # xafs_ref.outer_position + ~26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 #xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',

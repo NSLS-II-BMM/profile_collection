@@ -11,10 +11,10 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 # Configure detector selection here, False to exclude a detector from consideration in bsui
 
 # Ion chambers
-with_quadem   = True            # currently used for Ir, available for Iy and other signals
+with_quadem   = True            # available for Iy and other signals
 with_ic0      = True            # new I0 chamber
 with_ic1      = True            # new It chamber
-with_ic2      = False           # new Ir chamber
+with_ic2      = True            # new Ir chamber
 with_dualem   = False           # deprecated, prototype
 
 # fluorescence detectors and readout systems

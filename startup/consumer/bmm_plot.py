@@ -387,12 +387,13 @@ def xrfat(**kwargs):
             position = numpy.abs(dcm - e).argmin()
             en = float(dcm[position])
 
-        s1 = f['entry']['data']['data'][position][0]
         if is_4elem is True:
+            s1 = f['entry']['data']['data'][position][0]
             s2 = f['entry']['data']['data'][position][1]
             s3 = f['entry']['data']['data'][position][2]
             s4 = f['entry']['data']['data'][position][3]
         else:
+            s1 = f['entry']['data']['data'][position][7]
             add, only = False, 8
         ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
 

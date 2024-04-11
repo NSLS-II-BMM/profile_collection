@@ -102,7 +102,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
         return None
 
     yield from mv(_locked_dwell_time, dwell)
-    dets  = ION_CHAMBERS
+    dets  = ION_CHAMBERS.copy()
     denominator = ''
 
     epoch_offset = pandas.Timestamp.now(tz='UTC').value/10**9

@@ -206,6 +206,19 @@ toss = quadem1.Iy.describe()
 #     dualio = None
 
 
+#######################################################################
+## A note about PV nomenclature for the ion chambers:
+##
+## The prefixes are:
+##   I0: XF:06BM-BI{IC:0}EM180:
+##   It: XF:06BM-BI{IC:1}EM180:
+##   Ir: XF:06BM-BI{IC:3}EM180:
+##
+## That's right, 2 got skipped. This was an error in provisioning the
+## ion chambers.  It was easier to configure bsui correctly than
+## to fix the functioning ion chamber.
+#######################################################################
+
 try:                            # might not be in use
     ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
     ic0.enable_electrometer()
@@ -246,8 +259,8 @@ except:
 
 
 try:                            # might not be in use
-    ic2 = IntegratedIC('XF:06BM-BI{IC:2}EM180:', name='Ic2')
-    ic1.enable_electrometer()
+    ic2 = IntegratedIC('XF:06BM-BI{IC:3}EM180:', name='Ic2')
+    ic2.enable_electrometer()
     print(whisper('\t\t\t'+'instantiated ic2'))
     if with_ic2 is False:
         ic2.Ia.kind, ic2.Ia.name = 'omitted', 'Ira'

@@ -102,6 +102,7 @@ class LineScan():
     axes        = None
     line        = None
     line2       = None
+    line3       = None
     description = None
     xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
     plots       = []
@@ -114,6 +115,7 @@ class LineScan():
         self.xdata = []
         self.ydata = []
         self.y2data = []
+        self.y3data = []
         if 'motor' in kwargs: self.motor = kwargs['motor']
         self.numerator = kwargs['detector']
         self.denominator = None
@@ -169,7 +171,6 @@ class LineScan():
             self.description = 'split ion chamber (channel A)'
             self.denominator = 'I0'
             self.axes.set_ylabel(f'Ita/{self.denominator}')
-            self.axes.legend(loc='best', shadow=True)
             
 
         ## fluorescence (4 channel): plot sum(If)/I0
@@ -184,7 +185,8 @@ class LineScan():
         ## fluorescence (1 channel): plot If/I0
         ##xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
         elif self.numerator == 'Xs1':
-            self.line2, = self.axes.plot([],[], label='I0b')
+            self.line2, = self.axes.plot([],[], label='K8')
+            self.line3, = self.axes.plot([],[], label='OCR')
             self.description = 'fluorescence (1 channel)'
             self.denominator = 'I0'
             self.axes.set_ylabel('fluorescence (1 channel)')
@@ -239,6 +241,7 @@ class LineScan():
         self.axes        = None
         self.line        = None
         self.line2       = None
+        self.line3       = None
         self.description = None
         self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
         self.initial     = 0
@@ -267,6 +270,7 @@ class LineScan():
         elif self.numerator == 'Xs1':
             signal = kwargs['data'][self.xs8]
             signal2 = kwargs['data']['K8']
+            signal3 = kwargs['data']['OCR']
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
             signal = kwargs['data'][self.numerator]
         else:
@@ -284,14 +288,21 @@ class LineScan():
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
             if self.numerator in ('Ic0q', 'Ic1', 'Xs1', 'Xs', 'If'):
                 self.y2data.append(signal2)
+            if self.numerator == 'Xs1':
+                self.y3data.append(signal3)
+                
         else:
             self.ydata.append(signal/kwargs['data'][self.denominator])
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
             if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
+            if self.numerator == 'Xs1':
+                self.y3data.append(signal3/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
         if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
             self.line2.set_data(self.xdata, self.y2data)
+        if self.numerator == 'Xs1':
+            self.line3.set_data(self.xdata, self.y3data)
         self.axes.relim()
         self.axes.autoscale_view(True,True,True)
         #self.figure.show()      # in case the user has closed the window

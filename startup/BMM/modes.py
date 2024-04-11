@@ -133,7 +133,7 @@ def pds_motors_ready():
 #            return
      
      
-def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False):
+def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False, no_ref=False):
      '''Move the photon delivery system to a new mode. 
      A: focused at XAS end station, energy > 8000
      B: focused at XAS end station, energy < 6000
@@ -246,7 +246,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           else:
                slot = 1
                ring = xafs_ref.outer_position
-          base.extend([xafs_ref, xafs_ref.position_of_slot(slot), xafs_refx, ring])
+          if no_ref is False:
+               base.extend([xafs_ref, xafs_ref.position_of_slot(slot), xafs_refx, ring])
           #xafs_refx.user_setpoint.set(ring) # ick!!!
 
      if edge is not None:
@@ -301,7 +302,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                report('M2 remaining collimated', slack=True)
                yield from mv(*base)
-          except:
+          except Exception as E:
+               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
                count = 0
                while motors_in_position(mode) is False:
                     count += 1
@@ -323,7 +325,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                report('M2 remaining focused', slack=True)
                yield from mv(*base)
-          except:
+          except Exception as E:
+               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
                count = 0
                while motors_in_position(mode) is False:
                     count += 1
@@ -360,7 +363,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           try:
                report('Changing M2 setup', slack=True)
                yield from mv(*base)
-          except:
+          except Exception as E:
+               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
                count = 0
                while motors_in_position(mode) is False:
                     count += 1

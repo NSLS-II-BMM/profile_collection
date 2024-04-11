@@ -108,7 +108,7 @@ def areascan(detector,
 
         detector = detector.capitalize()
         yield from mv(_locked_dwell_time, dwell)
-        dets = ION_CHAMBERS
+        dets = ION_CHAMBERS.copy()
 
         if with_xspress3 and detector == 'If':
             detector = 'Xs'
