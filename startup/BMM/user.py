@@ -917,8 +917,9 @@ class BMM_User(Borg):
 
     def end_experiment(self, force=False):
         '''
-        Copy data from the experiment that just finished to the NAS, then
-        unset the logger and the DATA variable at the end of an experiment.
+        Terminate and experiment.
+
+        Unset the logger and the DATA variable at the end of an experiment.
         '''
 
         self.echem = False
@@ -946,23 +947,6 @@ class BMM_User(Borg):
                     if not os.path.ismount('/mnt/nfs/ws3'):
                         print(error_msg('\t/mnt/nfs/ws3 seems not to be mounted...'))
             
-            #######################################################################################
-            # create folder and sub-folders on NAS server for this user & experimental start date #
-            #######################################################################################
-            if False:
-                destination = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'user', self.name, self.date)
-                if not os.path.isdir(destination):
-                    os.makedirs(destination)
-                for d in ('dossier', 'prj', 'snapshots'):
-                    if not os.path.isdir(os.path.join(destination, d)):
-                        os.makedirs(os.path.join(destination, d))
-                try:
-                    copy_tree(self.DATA, destination)
-                    report('NAS data store: "%s"' % destination, 'bold')
-                except Exception as E:
-                    print(E)
-                    print(error_msg('Unable to write data to NAS server'))
-
         #####################################################################
         # remove the json serialization of the start_experiment() arguments #
         #####################################################################

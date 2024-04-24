@@ -24,7 +24,6 @@ try:
     rkvs = redis.Redis(host=redis_host, port=6379, db=0)
 except:
     rkvs = NoRedis()
-NAS = '/mnt/nfs/nas1'
 LUSTRE_ROOT = '/nsls2/data3'
 LUSTRE_ROOT_BMM = '/nsls2/data3/bmm'
 SECRETS = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'secrets')
@@ -103,7 +102,6 @@ Verifying workspace on this computer ...'''))
 
     ## deprecated steps
     #initialize_beamline_configuration()
-    #initialize_nas()
     #initialize_ssh()
     
 def check_workstation_access():
@@ -243,17 +241,6 @@ def initialize_beamline_configuration():
         subprocess.run(['git', 'clone', '-q', 'https://github.com/NSLS-II-BMM/BMM-beamline-configuration']) 
     os.chdir(here)
 
-def initialize_nas():
-    '''Check if a the NAS1 mount point is mounted.  If not, complain on
-    screen.
-
-    DEPRECATED
-
-    '''
-    if os.path.ismount(NAS):
-        print(f'{TAB}Found NAS1 mount point: {CHECK}')
-    else:
-        print(BMM.functions.error_msg(f'{TAB}NAS1 is not mounted!'))
 
 def initialize_ssh():
     '''Check to see if xf06bm-ws3 has an authorized ssh key from this

@@ -9,6 +9,7 @@ run_report(__file__, text='detectors and cameras')
 
 with_pilatus = False
 with_cam1 = True
+with_cam2 = False
 
 ##########################################
 #  _____ ___________ _   _ _____  _   __ #
@@ -300,13 +301,13 @@ from BMM.camera_device import BMMSnapshot, snap
 from BMM.db import file_resource, show_snapshot
 
 
-# this root location is deprecated for the camera devices.  the NAS devices were retired
-# in early 2023. The _root of the camera device will be reset when the user configuration
-# happens, so this initial configuration is harmless, if confusing
-from BMM.user_ns.bmm import nas_path
-xascam = BMMSnapshot(root=nas_path, which='XAS',    name='xascam')
-xrdcam = BMMSnapshot(root=nas_path, which='XRD',    name='xrdcam')
-anacam = BMMSnapshot(root=nas_path, which='analog', name='anacam')
+# this root location is deprecated for the camera devices.  The _root
+# of the camera device will be reset when the user configuration
+# happens, so this initial configuration is harmless and transitory
+temp_root = '/nsls2/data3/bmm/XAS/bucket'
+xascam = BMMSnapshot(root=temp_root, which='XAS',    name='xascam')
+xrdcam = BMMSnapshot(root=temp_root, which='XRD',    name='xrdcam')
+anacam = BMMSnapshot(root=temp_root, which='analog', name='anacam')
 anacam.image.shape = (480, 640, 3)
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
@@ -321,36 +322,21 @@ base = os.path.join(BMMuser.folder, 'raw')
 # testcam.beamline_id = 'BMM (NSLS-II 06BM)'
 # testcam.annotation_string = 'Welcome to BMM'
 
-# econcam = BMMSnapshot(root=nas_path, which='econ', name='econcam')
-# econcam.device = '/dev/v4l/by-id/usb-e-con_systems_See3CAM_CU55_1CD90500-video-index0'
-# econcam.x, econcam.y = 1280, 720 # width, height
-# econcam.brightness = 50
-
-## the output file names is hidden away in the dict returned by this: a.describe()['args']['get_resources']()
-#
-# a=db.v2[-1] 
-#
-# BMM XRD.111 [8] ▶ a.describe()['args']['get_resources']()[0]['root']                                                                                  
-# Out[8]: '/mnt/nfs/nas1/xf06bm/experiments/XAS/snapshots'
-#
-# BMM XRD.111 [9] ▶ a.describe()['args']['get_resources']()[0]['resource_path']                                                                         
-# Out[9]: '17f7c1e0-6796-49da-95aa-c3f2ccc3d5ca_%d.jpg'
-
-# img=db.v2[-1].primary.read()['anacam_image']
-# this gives a 3D array, [480,640,3], where the 3 are RGB values 0-to-255
-# how to export this as a jpg image???
 
 
 from BMM.usb_camera import CAMERA
 if with_cam1 is True:
     usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
-    usbcam1 = BMMSnapshot(root=nas_path, which='usb', name='usbcam1')
+    usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam1')
     #usb1.image.shaped_image.kind = 'normal'
 else:
     usb1, usbcam1 = None, None
 
-usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
-usbcam2 = BMMSnapshot(root=nas_path, which='usb', name='usbcam2')
+if with_cam2 is True:
+    usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
+    usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam2')
+else:
+    usb2, usbcam2 = None, None
 
 ###############################################
 # ______ _____ _       ___ _____ _   _ _____  #

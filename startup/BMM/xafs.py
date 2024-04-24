@@ -682,7 +682,40 @@ def xafs(inifile=None, **kwargs):
                         'bounds'    : ' '.join(map(str, p['bounds_given'])),
                         'steps'     : ' '.join(map(str, p['steps'])),
                         'times'     : ' '.join(map(str, p['times'])), }
+        ## bsui dossier
         dossier.prep_metadata(p, inifile, clargs, these_kwargs)
+
+        #kafka dossier
+        kafka_message({'dossier'   : 'set',
+                       'inifile'   : inifile,
+                       'filename'  : p['filename'],
+                       'experimenters' : p['experimenters'],
+                       'seqstart'  : now('%A, %B %d, %Y %I:%M %p'),
+                       'element'   : p['element'],
+                       'edge'      : p['edge'],
+                       'motors'    : motor_sidebar(), # this could be motor_sidebar(uid=uid)
+                       'sample'    : p['sample'].replace('<', '&lt;').replace('>', '&gt;'),
+                       'prep'      : p['prep'].replace('<', '&lt;').replace('>', '&gt;'),
+                       'comment'   : p['comment'].replace('<', '&lt;').replace('>', '&gt;'),
+                       'mode'      : p['mode'],
+                       'clargs'    : clargs,  # this has been stringified already
+                       'htmlpage'  : p['htmlpage'],
+                       'ththth'    : p['ththth'],
+                       'url'       : p['url'],
+                       'doi'       : p['doi'],
+                       'cif'       : p['cif'],
+
+        })
+        if 'energy' in p:
+            kafka_message({'dossier' : 'set', 'energy': p['energy']})
+        if 'e0' in p:
+            kafka_message({'dossier' : 'set', 'e0': p['e0']})
+        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            kafka_message({'dossier' : 'set', 'initext' : ''.join(f.readlines())})
+        for k in these_kwargs.keys():
+            kafka_message({'dossier' : 'set', k: these_kwargs[k]})
+        # end kafka dossier segment
+            
 
         with open(os.path.join(BMMuser.DATA, inifile)) as f:
             initext = ''.join(f.readlines())
@@ -840,9 +873,11 @@ def xafs(inifile=None, **kwargs):
             ## loop over scan count
             close_plots()
             if BMMuser.enable_live_plots: close_last_plot()
-            dossier.rid = str(uuid.uuid4())[:8]
+            rid = str(uuid.uuid4())[:8]
+            dossier.rid = rid
+            kafka_message({'dossier' : 'set', 'rid': rid})
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
-                   level='bold', slack=True, rid=dossier.rid)
+                   level='bold', slack=True, rid=rid)
             cnt = 0
             uidlist = []
             kafka_message({'xafs_sequence' : 'start',
@@ -865,6 +900,7 @@ def xafs(inifile=None, **kwargs):
                            'repetitions': p["nscans"],
                            'sample': sample,
                            'reference_material': refmat, })
+            scanlist = ''
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -879,26 +915,36 @@ def xafs(inifile=None, **kwargs):
                 
                 ## this block is in the wrong place.  should be outside the loop over repetitions
                 ## same is true of several more things below
-                slotno, ring = '', ''
+                slotno, ring, this_instrument = '', '', ''
                 if 'wheel' in BMMuser.instrument.lower():
                     slotno = f', slot {xafs_wheel.current_slot()}'
                     ring = f' {xafs_wheel.slot_ring()} ring'
-                    dossier.instrument = xafs_wheel.dossier_entry();
+                    this_instrument = xafs_wheel.dossier_entry();
                 elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
-                    dossier.instrument = ga.dossier_entry();
+                    this_instrument = ga.dossier_entry();
+                    kafka_message({'dossier'  : 'set',
+                                   'ga_align' : ga.alignment_filename,
+                                   'ga_yuid'  : ga.y_uid,
+                                   'ga_puid'  : ga.pitch_uid,
+                                   'ga_fuid'  : ga.f_uid,
+                    })
                 elif 'lakeshore' in BMMuser.instrument.lower():
                     slotno = f', temperature {lakeshore.readback.get():.1f}'
-                    dossier.instrument = lakeshore.dossier_entry();
+                    this_instrument = lakeshore.dossier_entry();
                 elif 'linkam' in BMMuser.instrument.lower():
                     slotno = f', temperature {linkam.readback.get():.1f}'
-                    dossier.instrument = linkam.dossier_entry();
+                    this_instrument = linkam.dossier_entry();
                 # this one is a bit different, get dossier entry from gmb object,
                 # there is no grid object....
                 elif 'grid' in BMMuser.instrument.lower():
                     slotno = f', motor grid {gmb.motor1.name}, {gmb.motor2.name} = {gmb.position1:.1f}, {gmb.position2:.1f}'
-                    dossier.instrument = gmb.dossier_entry();
+                    this_instrument = gmb.dossier_entry();
 
+                dossier.instrument = this_instrument
+                kafka_message({'dossier' : 'set', 'instrument': this_instrument})
+                
+                    
                     
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
@@ -951,7 +997,9 @@ def xafs(inifile=None, **kwargs):
                 md['_kind'] = 'xafs'
                 md['_pccenergy'] = round(eave, 3)
 
-                if p['ththth']: md['_kind'] = '333'
+                if p['ththth']:
+                    md['_kind'] = '333'
+                    kafka_message('dossier': 'set', 'mono': 'Si(333)'}
                 if plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
                 elif plotting_mode(p['mode']) == 'xs':
@@ -1040,18 +1088,24 @@ def xafs(inifile=None, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## generate left sidebar text for the static html page for this scan sequence
                 js_text = f'<a href="javascript:void(0)" onclick="toggle_visibility(\'{fname}\');" title="This is the scan number for {fname}, click to show/hide its UID">#{header.start["scan_id"]}</a><div id="{fname}" style="display:none;"><small>{uid}</small></div>'
-                ##% (fname, fname, header.start['scan_id'], fname, uid)
                 printedname = fname
                 if len(p['filename']) > 11:
                     printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
-                dossier.scanlist += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
-                #                  % (quote(fname), fname, printedname, js_text)
+                scanlist += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
+
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## finish up, close out
+            dossier.scanlist = scanlist
             dossier.uidlist = uidlist
             dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
+            kafka_message({'dossier' : 'set',
+                           'scanlist': scanlist,
+                           'uidlist' : uidlist,
+                           'seqend'  : now('%A, %B %d, %Y %I:%M %p')
+            })
+            
             print('Returning to fixed exit mode') #  and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
             #yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
@@ -1084,6 +1138,7 @@ def xafs(inifile=None, **kwargs):
             #if dossier.htmlpage:
             try:
                 htmlout = dossier.write_dossier()
+                kafka_message({'dossier' : 'write'})                
             except Exception as E:
                 report('Failed to write dossier', level='error', slack=True)
                 print(error_msg('Here is the exception message:'))
@@ -1135,6 +1190,17 @@ def xafs(inifile=None, **kwargs):
     ######################################################################
     dossier = BMMDossier()
     dossier.measurement = 'XAFS'
+    kafka_message({'dossier': 'start'})
+    kafka_message({'dossier'    : 'set',
+                   'measurement': 'XAFS',
+                   'folder'     : BMMuser.folder,
+                   'date'       : BMMuser.date,
+                   'instrument' : BMMuser.instrument,
+                   'gup'        : BMMuser.gup,
+                   'saf'        : BMMuser.saf,
+                   'pdstext'    : f'{get_mode()} ({describe_mode()})',
+                   'mono'       : f'Si({dcm._crystal})',
+    })
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:

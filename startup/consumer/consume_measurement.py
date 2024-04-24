@@ -237,7 +237,7 @@ def plot_from_kafka_messages(beamline_acronym):
     try:
         kafka_consumer.start_polling(work_during_wait=lambda : plt.pause(.1))
     except KeyboardInterrupt:
-        print('\n\nExiting Kafka consumer')
+        print('\n\nExiting Kafka consumer (plotting tool)')
         return()
 
 print('Ready to receive documents...')

@@ -6,6 +6,10 @@ except ImportError:
     def is_re_worker_active():
         return False
 
+# Top level bluesky plans to ensure available in the queueserver environment
+from bluesky.plans import  count, scan
+from bluesky.plan_stubs import mv, mvr
+
 # basic Bluesky/Ophyd/Databroker functionality, deal with QS vs. bsui
 from .base import *
 

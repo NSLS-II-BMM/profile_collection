@@ -61,21 +61,6 @@ if os.path.isdir(LUSTRE_ROOT_BMM):
         BMM_log_lustre.setFormatter(BMM_formatter)
         BMM_logger.addHandler(BMM_log_lustre)
     
-# from BMM.user_ns.bmm import nas_mount_point
-# #BMM_nas_log_file = os.path.join(user_ns['nas_mount_point'], 'xf06bm', 'data', 'BMM_master.log')
-# BMM_nas_log_file = os.path.join(nas_mount_point, 'xf06bm', 'data', 'BMM_master.log')
-# if os.path.isdir('/mnt/nfs/nas1'):
-#     if not os.path.isfile(BMM_nas_log_file):
-#         basedir = os.path.dirname(BMM_nas_log_file)
-#         if not os.path.exists(basedir):
-#             os.makedirs(basedir)
-#         os.mknod(BMM_nas_log_file)
-#     if os.path.isfile(BMM_nas_log_file):
-#         chmod(BMM_nas_log_file, 0o644)
-#         BMM_log_nas = logging.FileHandler(BMM_nas_log_file)
-#         BMM_log_nas.setFormatter(BMM_formatter)
-#         BMM_logger.addHandler(BMM_log_nas)
-
 
 #------------------------------------------------------------------------------------------
 # stolen from QAS, see message from Max, #discuss-bluesky, thread starting 8:28 am Thursday January 25th 2024
@@ -110,7 +95,6 @@ def BMM_user_log(filename):
 def BMM_unset_user_log():
     BMM_logger.handlers = []
     BMM_logger.addHandler(BMM_log_master)
-    #BMM_logger.addHandler(BMM_log_nas)
 
 ## use this command to properly format the log message, manage file permissions, etc
 def BMM_log_info(message):

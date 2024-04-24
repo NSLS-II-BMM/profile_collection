@@ -8,7 +8,8 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 
 
 ################################################################################
-# Configure detector selection here, False to exclude a detector from consideration in bsui
+# Configure detector selection here,
+# False to exclude a detector from consideration in bsui
 
 # Ion chambers
 with_quadem   = True            # available for Iy and other signals
