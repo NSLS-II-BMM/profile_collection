@@ -320,7 +320,9 @@ class BMMDossier():
         plt.savefig(xrfimage)
         matplotlib.use(thisagg) # return to screen display
         if BMMuser.post_xrf:
-            img_to_slack(xrfimage)
+            kafka_message({'echoslack': True,
+                           'img': xrfimage})
+            #img_to_slack(xrfimage)
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.xrf_md = {'xrf_uid'   : self.xrfuid, 'xrf_image': xrfimage,}
@@ -357,7 +359,9 @@ class BMMDossier():
         im = Image.fromarray(numpy.array(bmm_catalog[webuid].primary.read()['xascam_image'])[0])
         im.save(image_web, 'JPEG')
         if BMMuser.post_webcam:
-            img_to_slack(image_web)
+            kafka_message({'echoslack': True,
+                           'img': image_web})
+            #img_to_slack(image_web)
 
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
@@ -377,7 +381,9 @@ class BMMDossier():
                 im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
                 im.save(image_ana, 'JPEG')
                 if BMMuser.post_anacam:
-                    img_to_slack(image_ana)
+                    kafka_message({'echoslack': True,
+                                   'img': image_ana})
+                    #img_to_slack(image_ana)
             except:
                 print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
                 anacam_uid = False
@@ -395,7 +401,9 @@ class BMMDossier():
         im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
         im.save(image_usb1, 'JPEG')
         if BMMuser.post_usbcam1:
-            img_to_slack(image_usb1)
+            kafka_message({'echoslack': True,
+                           'img': image_usb1})
+            #img_to_slack(image_usb1)
 
         ### --- USB camera #2 --------------------------------------------------------------
         usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
@@ -409,7 +417,9 @@ class BMMDossier():
         im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
         im.save(image_usb2, 'JPEG')
         if BMMuser.post_usbcam2:
-            img_to_slack(image_usb2)
+            kafka_message({'echoslack': True,
+                           'img': image_usb2})
+            #img_to_slack(image_usb2)
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': webuid,
@@ -624,13 +634,6 @@ class BMMDossier():
         manifest.write(f'xafs␣{htmlfilename}\n')
         manifest.close()
         self.write_manifest()
-
-        #if pngfilename is not None and os.path.isfile(pngfilename):
-        #    try:
-        #        img_to_slack(pngfilename)
-        #    except:
-        #        post_to_slack(f'failed to post image: {pngfilename}')
-        #        pass
 
         return htmlfilename
 

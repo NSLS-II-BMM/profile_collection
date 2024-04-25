@@ -1,10 +1,6 @@
 import os, re, socket, ast, datetime
 from urllib.parse import quote
 import numpy
-import logging
-
-logger = logging.getLogger('BMM file manager logger')
-logger.handlers = []
 
 
 import redis
@@ -49,124 +45,17 @@ class BMMDossier():
 
     attributes
     ==========
-    anacam_uid : str or None
-      UID for the analog camera image
-    analog_file : str
-      fully resolved path/filename for the analog camera image
-    anasnap : str
-      filename without path for analog file image
-    bounds : str
-      stringified list of XAFS scan boundaries
-    cif : str
-      DOI or URL for relevant CIF file
-    clargs : str
-      stringification of arguments to the xafs() plan
-    comment : str 
-      user-supplied comment text
     date : str
-      start date of experiment
-    doi : str
-      DOI for relevant publication
-    edge : str
-      edge symbol
-    element : str
-      1- or 2-letter element symbol
-    end : str
-      last scan number in sequence
-    experimenters : str
-      names of experiments written as First1 Last1, First2 Last2, etc
-    filename : str
-      filename stub for XAFS data files
+      start date of experiment as YYYY-MM-DD
     folder : str
-      target data folder
-    gup : str
-      general (partner) user proposal number
-    htmlpage : str
-      True is the dossier is to be written
-    inifile : str
-      fully resolved path and name of INI file in use
-    initext : str
-      string with concatination of the lines of inifile
+      target data folder, if None use folder recorded in start doc
     instrument : str
       html text for instrument DIV, supplied by instrument class
-    measurement : str
-      XAFS, raster, time
-    mode : str
-      XAFS measurement mode, usually fluorescence, transmission, or reference
-    mono : str
-      string describing mono Si(111), Si(311), or Si(333)
-    motors : str
-      outout of motor_sidebar function
-    ocrs : str
-      stringification of OCR values for the detector elements
-    pccenergy : str
-      pseudo channel-cut energy value
-    pdstext : str
-      text describing PDS mode, usually concatination of get_mode() and describe_mode()
-    post_anacam : str
-      True to post anacam image to Slack
-    post_usbcam1 : str
-      True to post usbcam1 image to Slack
-    post_usbcam2 : str
-      True to post usbcam2 image to Slack
-    post_webcam : str
-      True to post webcam image to Slack
-    post_xrf : str
-      True to post XRF plot to Slack
-    prep : str
-      user-supplied sample preparation text
+      if None, call self.instrument_default() for a placeholder
     rid : str
       reference ID number for link to Slack message log capture
-    rois : str
-      stringification of ROI values for the detector elements
-    saf : str
-      safety approval form number for the experiment
-    sample : str
-      user-supplied sample description
-    scanlist : str
-      generated HTML text for the sample list sidebar
-    seqend : str
-      end time for scan sequence
-    seqstart : str
-      start time for scan sequence      
-    start : str
-      initial scan number
-    steps : str
-      stringified list of XAFS scan step sizes      
-    ththth : str
-      True if using the Si(333) mono
-    times : str
-      stringified list of XAFS scan dwell times      
     uidlist : list of str
       generated list of XAFS scan UIDs in the scan sequence
-    url : str
-      URL relevant to the sample or experiment
-    usbcam1_file : str
-      fully resolved path/filename for the USB1 image
-    usbcam1_uid : str
-      UID for the USB1 image
-    usb1snap : str
-      filename without path for USB1 image
-    usbcam2_file : str
-      fully resolved path/filename for the USB2 image
-    usbcam2_uid : str
-      UID for the USB2 image
-    usb2snap : str
-      filename without path for USB2 image
-    webcam_file : str
-      fully resolved path/filename for the webcam image
-    webcam_uid : str
-      UID for the webcam image
-    websnap : str
-      filename without path for webcam image
-    xrf_image : str
-      fully resolved path/filename for the image of the XRF plot
-    xrf_uid : str
-      UID for the XRF measurement before the scan sequence      
-    xrffile : str
-      fully resolved path/filename for the XRF data file
-    xrfsnap : str
-      filename without path for the XRF data file
 
     methods
     =======
@@ -236,65 +125,11 @@ class BMMDossier():
     ## these default values should still allow a dossier to be written
     ## even if parameters were not provided by the process sending the
     ## kafka message
-    anacam_uid = None
-    anacam_file = ''
-    anasnap = ''
-    bounds = ''
-    cif = ''
-    clargs = ''
-    comment = ''
     date = ''
-    doi = ''
-    edge = 'K'
-    element = 'Fe'
-    end = 1
-    experimenters = ''
-    filename = ''
-    folder = ''
-    gup = ''
-    htmlpage = True
-    inifile = ''
-    initext = ''
-    instrument = ''
-    measurement = 'XAFS'
-    mode = 'fluorescence'
-    mono = ''
-    motors = ''
-    ocrs = ''
-    pccenergy = 10000
-    pdstext = ''
-    post_anacam = False
-    post_usbcam1 = False
-    post_usbcam2 = False
-    post_webcam = False
-    post_xrf = False
-    prep = ''
+    folder = None
+    instrument = None
     rid = ''
-    rois = ''
-    saf = ''
-    sample = ''
-    scanlist = ''
-    seqend = ''
-    seqstart = ''
-    start = 1
-    steps = ''
-    ththth = False
-    times = ''
     uidlist = []
-    url = ''
-    usbcam1_file =''
-    usbcam1_uid = None
-    usb1snap = ''
-    usbcam2_file = ''
-    usbcam2_uid = None
-    usb2snap = ''
-    webcam_file = ''
-    webcam_uid = None
-    websnap = ''
-    xrf_image = ''
-    xrf_uid = None
-    xrffile = ''
-    xrfsnap = ''
 
 
     ## another dossier type...?
@@ -309,17 +144,6 @@ class BMMDossier():
         #self.motors        = motor_sidebar()
         #self.manifest_file = os.path.join(user_ns['BMMuser'].folder, 'dossier', 'MANIFEST')
 
-    def clear_logger(self):
-        logger.handlers = []
-            
-    def establish_logger(self):
-        folder = rkvs.get('BMM:user:folder').decode('UTF8')
-        log_master_file = os.path.join(folder, 'file_manager.log')
-        if not os.path.isfile(log_master_file):
-            os.mknod(log_master_file)
-        logging.basicConfig(filename=log_master_file, encoding='utf-8', level=logging.INFO,
-                            format='%(asctime)s - %(name)s - %(levelname)s\n%(message)s\n')
-        print(f'established a logging handler for experiment in {folder}')
 
         
     def set_parameters(self, **kwargs):
@@ -329,15 +153,16 @@ class BMMDossier():
             else:
                 setattr(self, k, kwargs[k])
 
-    def log_entry(self, message):
+    def log_entry(self, logger, message):
+        #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
         print(message)
         logger.info(message)
 
 
-    def write_dossier(self, bmm_catalog):
+    def write_dossier(self, bmm_catalog, logger):
 
         if len(self.uidlist) == 0:
-            self.log_entry('*** cannot write dossier, uidlist is empty')
+            self.log_entry(logger, '*** cannot write dossier, uidlist is empty')
             return None
 
         ## gather information for the dossier from the start document
@@ -349,34 +174,38 @@ class BMMDossier():
         else:
             snapshots = {}
         
-        
-        
+
+        folder = self.folder
+        if folder is None or folder == '':
+            folder = XDI["_user"]["folder"]
+        self.folder = folder
+            
         ## test if XAS data file can be found
-        if self.filename is None or self.start is None:
-            self.log_entry('*** Filename and/or start number not given.  (xafs_dossier).')
+        if XDI['_user']['filename'] is None or XDI["_user"]["start"] is None:
+            self.log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
             return None
         firstfile = f'{XDI["_user"]["filename"]}.{XDI["_user"]["start"]:03d}'
-        if not os.path.isfile(os.path.join(self.folder, firstfile)):
-            self.log_entry(f'*** Could not find {os.path.join(self.folder, firstfile)}')
+        if not os.path.isfile(os.path.join(folder, firstfile)):
+            self.log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
             return None
 
         ## determine names of output dossier files
-        basename     = self.filename
-        htmlfilename = os.path.join(self.folder, 'dossier/', self.filename+'-01.html')
+        basename     = XDI['_user']['filename']
+        htmlfilename = os.path.join(folder, 'dossier/', XDI['_user']['filename']+'-01.html')
         seqnumber = 1
         if os.path.isfile(htmlfilename):
             seqnumber = 2
-            while os.path.isfile(os.path.join(self.folder, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))):
+            while os.path.isfile(os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))):
                 seqnumber += 1
-            basename     = "%s-%2.2d" % (self.filename,seqnumber)
-            htmlfilename = os.path.join(self.folder, 'dossier', "%s-%2.2d.html" % (self.filename,seqnumber))
+            basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
+            htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
 
         ## generate triplot as a png image (or fail gracefully)
         prjfilename, pngfilename = None, None
         try:
             if self.uidlist is not None:
-                pngfilename = os.path.join(self.folder, 'snapshots', f"{basename}.png")
-                #prjfilename = os.path.join(self.folder, 'prj', f"{basename}.prj")
+                pngfilename = os.path.join(folder, 'snapshots', f"{basename}.png")
+                #prjfilename = os.path.join(folder, 'prj', f"{basename}.prj")
                 self.make_merged_triplot(self.uidlist, pngfilename, XDI['_user']['mode'])
         except Exception as e:
             logger.info('*** failure to make triplot\n' + str(e))
@@ -396,22 +225,22 @@ class BMMDossier():
                                                   seqnumber     = seqnumber, )
 
             # left sidebar, entry for XRF file in the case of fluorescence data
-            thismode = self.plotting_mode()
+            thismode = self.plotting_mode(XDI['_user']['mode'])
             if thismode == 'xs' or thismode == 'xs1':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
                                                        xrffile       = quote('../XRF/'+os.path.basename(XDI['_xrffile'])),
-                                                       xrfuid        = self.xrf_uid, )
+                                                       xrfuid        = snapshots['xrf_uid'], )
 
             # middle part of dossier
-            if self.instrument == '':
-                self.instrument = '<div></div>'
+            if self.instrument is None or self.instrument == '':
+                self.instrument = self.instrument_default()
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
             thiscontent += ''.join(content).format(basename      = basename,
-                                                   scanlist      = generate_scanlist(self, bmm_catalog),  # uses self.uidlist
-                                                   motors        = self.motors,
+                                                   scanlist      = self.generate_scanlist(bmm_catalog),  # uses self.uidlist
+                                                   motors        = self.motor_sidebar(bmm_catalog),
                                                    sample        = XDI['Sample']['name'],
                                                    prep          = XDI['Sample']['prep'],
                                                    comment       = XDI['_user']['comment'],
@@ -419,28 +248,28 @@ class BMMDossier():
             
 
             # middle part, cameras, one at a time and only if actually snapped
-            if 'webcam_uid' in snapshots:
+            if 'webcam_uid' in snapshots and snapshots['webcam_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
-                                                       uid         = _snapshots['webcam_uid'],
+                                                       uid         = snapshots['webcam_uid'],
                                                        camera      = 'webcam',
                                                        description = 'XAS web camera', )
-            if 'anacam_uid' in snapshots:
+            if 'anacam_uid' in snapshots and snapshots['anacam_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
                                                        uid         = snapshots['anacam_uid'],
                                                        camera      = 'anacam',
                                                        description = 'analog pinhole camera', )
-            if 'usbcam1_uid' in snapshots:
+            if 'usbcam1_uid' in snapshots and snapshots['usbcam1_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
                                                        uid         = snapshots['usbcam1_uid'],
                                                        camera      = 'usbcam1',
                                                        description = 'USB camera #1', )
-            if 'usbcam2_uid' in snapshots:
+            if 'usbcam2_uid' in snapshots and snapshots['usbcam2_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
@@ -450,38 +279,72 @@ class BMMDossier():
             
             # middle part, XRF and glancing angle alignment images
             if thismode == 'xs' or thismode == 'xs1':
+                el = XDI['Element']['symbol']
+                rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
+                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
+                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
+                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0])]
+                ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel01_xrf']).sum()),
+                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel02_xrf']).sum()),
+                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel03_xrf']).sum()),
+                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel04_xrf']).sum()) ]
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(xrfsnap       = quote('../XRF/'+os.path.basename(snapshots['xrf_image'])),
-                                                       pccenergy     = '%.1f' % XDI['_user']['_pccenergy'],
-                                                       ocrs          = self.ocrs,
-                                                       rois          = self.rois,
-                                                       symbol        = XDI['Element']['symbol'],)
-                if 'glancing' in self.instrument:
+                thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+os.path.basename(snapshots['xrf_image'])),
+                                                       pccenergy = '%.1f' % XDI['_user']['pccenergy'],
+                                                       ocrs      = ', '.join(map(str,ocrs)),
+                                                       rois      = ', '.join(map(str,rois)),
+                                                       symbol    = XDI['Element']['symbol'],)
+                if 'ga_filename' in snapshots:
                     with open(os.path.join(startup_dir, 'tmpl', 'dossier_ga.tmpl')) as f:
                         content = f.readlines()
-                    thiscontent += ''.join(content).format(ga_align      = ga.alignment_filename,
-                                                           ga_yuid       = ga.y_uid,
-                                                           ga_puid       = ga.pitch_uid,
-                                                           ga_fuid       = ga.f_uid, )
+                    thiscontent += ''.join(content).format(ga_align = snapshots['ga_filename'],
+                                                           ga_yuid  = snapshots['ga_yuid'],
+                                                           ga_puid  = snapshots['ga_pitchuid'],
+                                                           ga_fuid  = snapshots['ga_fuid'], )
 
             # end of dossier
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_bottom.tmpl')) as f:
                 content = f.readlines()
             this_ref = all_references[XDI['Element']['symbol']][3]
+
+            # print('e0'            , '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']))
+            # print('edge'          , XDI['Element']['edge'],)
+            # print('element'       , self.element_text(XDI['Element']['symbol']),)
+            # print('mode'          , XDI['_user']['mode'],)
+            # print('bounds'        , ", ".join(map(str, XDI['_user']['bounds_given'])),)
+            # print('steps'         , XDI['_user']['steps'],)
+            # print('times'         , XDI['_user']['times'],)
+            # print('reference'     , re.sub(r'(\d+)', r'<sub>\1</sub>', this_ref),)
+            # print('seqstart'      , datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),)
+            # print('seqend'        , datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[-1]].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p'),)
+            # print('mono'          , self.mono,)
+            # print('pdsmode'       , self.pdstext,)
+            # print('pccenergy'     , '%.1f' % XDI['_user']['pccenergy'],)
+            # print('experimenters' , XDI['_user']['experimenters'],)
+            # print('gup'           , XDI['Facility']['GUP'],)
+            # print('saf'           , XDI['Facility']['GUP'],)
+            # print('url'           , XDI['_user']['url'],)
+            # print('doi'           , XDI['_user']['doi'],)
+            # print('cif'           , XDI['_user']['cif'],)
+            # print('initext'       , highlight(XDI['_user']['initext'], IniLexer(),    HtmlFormatter()),)
+            # print('clargs'        , highlight(XDI['_user']['clargs'],  PythonLexer(), HtmlFormatter()),)
+            # print('filename'      , XDI['_user']['filename'],)
+
+            
             thiscontent += ''.join(content).format(e0            = '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']),
                                                    edge          = XDI['Element']['edge'],
                                                    element       = self.element_text(XDI['Element']['symbol']),
                                                    mode          = XDI['_user']['mode'],
-                                                   bounds        = ", ".join(XDI['_user']['bounds_given']),
+                                                   bounds        = ", ".join(map(str, XDI['_user']['bounds_given'])),
                                                    steps         = XDI['_user']['steps'],
                                                    times         = XDI['_user']['times'],
                                                    reference     = re.sub(r'(\d+)', r'<sub>\1</sub>', this_ref),
-                                                   seqstart      = datetime.datetime.fromtimestamp(startdoc['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                                   seqstart      = datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
                                                    seqend        = datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[-1]].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
-                                                   mono          = self.mono,
-                                                   pdsmode       = self.pdstext,
-                                                   pccenergy     = '%.1f' % XDI['_user']['_pccenergy'],
+                                                   mono          = self.mono_text(bmm_catalog),
+                                                   pdsmode       = '%s  (%s)' % self.pdstext(bmm_catalog),
+                                                   pccenergy     = '%.1f' % XDI['_user']['pccenergy'],
                                                    experimenters = XDI['_user']['experimenters'],
                                                    gup           = XDI['Facility']['GUP'],
                                                    saf           = XDI['Facility']['GUP'],
@@ -495,33 +358,58 @@ class BMMDossier():
             with open(htmlfilename, 'a') as o:
                 o.write(thiscontent)
 
-            self.log_entry(f'wrote dossier: {htmlfilename}')
+            self.log_entry(logger, f'wrote dossier: {htmlfilename}')
         except Exception as E:
-            self.log_entry(f'failed to write dossier file {htmlfilename}\n' + E)
+            self.log_entry(logger, f'failed to write dossier file {htmlfilename}\n' + str(E))
+
+
+        self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
+        manifest = open(self.manifest_file, 'a')
+        manifest.write(f'xafs␣{htmlfilename}\n')
+        manifest.close()
+        self.write_manifest('XAFS')
+
+
+    def write_manifest(self, scantype='XAFS'):
+        '''Update the scan manifest and the corresponding static html file.'''
+        with open(self.manifest_file) as f:
+            lines = [line.rstrip('\n') for line in f]
+
+        experimentlist = ''
+        for l in lines:
+            (scantype, fname) = l.split('␣')
+            if not os.path.isfile(fname):
+                continue
+            this = os.path.basename(fname)
+            experimentlist += f'<li>{scantype}: <a href="./{this}">{this}</a></li>\n'
+
+        with open(os.path.join(startup_dir, 'tmpl', 'manifest.tmpl')) as f:
+            content = f.readlines()
+        indexfile = os.path.join(self.folder, 'dossier', '00INDEX.html')
+        o = open(indexfile, 'w')
+        o.write(''.join(content).format(date           = self.date,
+                                        experimentlist = experimentlist,))
+        o.close()
 
 
 
-
-
-
-
-    def plotting_mode(self):
-        self.mode = self.mode.lower()
-        if self.mode == 'xs1':
+    def plotting_mode(self, mode):
+        mode = mode.lower()
+        if mode == 'xs1':
             return 'xs1'
-        elif any(x in self.mode for x in ('xs', 'fluo', 'flou', 'both')):
+        elif any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
             return 'xs'
-        #elif any(x in self.mode for x in ('fluo', 'flou', 'both')):
+        #elif any(x in mode for x in ('fluo', 'flou', 'both')):
         #    return 'fluo'  # deprecated analog fluo detection
-        elif self.mode == 'ref':
+        elif mode == 'ref':
             return 'ref'
-        elif self.mode == 'yield':
+        elif mode == 'yield':
             return 'yield'
-        elif self.mode == 'test':
+        elif mode == 'test':
             return 'test'
-        elif self.mode == 'icit':
+        elif mode == 'icit':
             return 'icit'
-        elif self.mode == 'ici0':
+        elif mode == 'ici0':
             return 'ici0'
         else:
             return 'trans'
@@ -537,7 +425,7 @@ class BMMDossier():
             return thistext
         
     def generate_scanlist(self, bmm_catalog):
-        template = '<li><a href="../{filename}.{ext}" title="Click to see the text of {filename}.{ext}">{filename}.{ext}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext}\');" title="This is the scan number for {filename}.{ext}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext}" style="display:none;"><small>{uid}</small></div></li>\n'
+        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{filename}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
 
         text = ''
         ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
@@ -549,37 +437,86 @@ class BMMDossier():
             ext = ext + 1
         return text
 
+    def mono_text(self, bmm_catalog):
+        dcmx = bmm_catalog[self.uidlist[0]].baseline.data['dcm_x'][0]
+        if dcmx > 10:
+            return 'Si(311)'
+        elif bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['ththth'] is True:
+            return 'Si(333)'
+        else:
+            return 'Si(111)'
 
+
+    def pdstext(self, bmm_catalog):
+        m2v = bmm_catalog[self.uidlist[0]].baseline.data['m2_vertical'][0]
+        m2p = bmm_catalog[self.uidlist[0]].baseline.data['m2_pitch'][0]
+        m3p = bmm_catalog[self.uidlist[0]].baseline.data['m3_pitch'][0]
+        m3v = bmm_catalog[self.uidlist[0]].baseline.data['m3_vertical'][0]
+        m3l = bmm_catalog[self.uidlist[0]].baseline.data['m3_lateral'][0]
+        if m2v < 0: # this is a focused mode
+            if m2p > 3:
+                return ('XRD', 'focused at goniometer, >8 keV')
+            else:
+                if m3v > -2:
+                    return ('A', 'focused, >8 keV')
+                elif m3v > -7:
+                    return ('B', 'focused, <6 keV')
+                else:
+                    return ('C', 'focused, 6 to 8 keV')
+        else:
+            if m3p < 3:
+                return ('F', 'unfocused, <6 keV')
+            elif m3l > 0:
+                return ('D', 'unfocused, >8 keV')
+            else:
+                return ('E', 'unfocused, 6 to 8 keV')
+
+
+            
+        
+
+    def wheel_slot(self, value):
+        '''Return the current slot number for a sample wheel.'''
+        slotone = -30
+        angle = round(value)
+        this = round((-1*slotone-15+angle) / (-15)) % 24
+        if this == 0: this = 24
+        return this
+
+    def spinner(self, pos):
+        '''Return the current spinner number as an integer'''
+        cur = pos % 360
+        here = (9-round(cur/45)) % 8
+        if here == 0:
+            here = 8
+        return here
+
+
+    
     def motor_sidebar(self, bmm_catalog):
         baseline = bmm_catalog[self.uidlist[0]].baseline.read()
 
-        '''Generate a list of motor positions to be used in the static html page for a scan sequence.
-        Return value is a long string with html tags and entities embedded in the string.
+        '''Generate a list of motor positions for the sidebar of the static
+        html page for a scan sequence.  Return value is a long string
+        with html tags and entities embedded in the string.
+
+        All motor positions are taken from the first entry in the
+        record's baseline stream.
 
         Parameters
         ----------
-        md : dict
-            dict with motor positions keyed by <motor>.name
+        bmm_catalog : Tiled catalog
+            catalog in which to find the record for a UID string
 
-        If md is not provided, the current motor positions will be used.
-        If taking a record from Data Broker, the motor positions have been
-        recorded in the baseline.  If generating a dossier from a Data
-        Broker record, do:
+        >>> text = dossier.motor_sidebar(bmm_catalog)
 
-        >>> text = motor_sidebar(uid=uid)
-
-        where uid is the ID of the scan.
         '''
-        if type(md) == str:
-            md = motor_metadata(md)
-        if md is None or type(md) is not dict:
-            md = motor_metadata()
         motors = ''
 
         motors +=  '<span class="motorheading">XAFS stages:</span>\n'
         motors +=  '            <div id="motorgrid">\n'
-        motors += f'              <div>xafs_x, {baseline["xafs_linx"][0]:.3f}</div>\n'
-        motors += f'              <div>xafs_y, {baseline["xafs_liny"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_x, {baseline["xafs_x"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_y, {baseline["xafs_y"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_pitch, {baseline["xafs_pitch"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_roll, {baseline["xafs_roll"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_wheel, {baseline["xafs_wheel"][0]:.3f}</div>\n'
@@ -592,8 +529,8 @@ class BMMDossier():
 
         motors +=  '            <span class="motorheading">Instruments:</span>\n'
         motors +=  '            <div id="motorgrid">\n'
-        motors += f'              <div>slot, {user_ns["xafs_wheel"].current_slot():.3f}</div>\n'
-        motors += f'              <div>spinner, {user_ns["ga"].current():.3f}</div>\n'
+        motors += f'              <div>slot, {self.wheel_slot(float(baseline["xafs_wheel"][0]))}</div>\n'
+        motors += f'              <div>spinner, {self.spinner(float(baseline["xafs_garot"][0]))}</div>\n'
         motors += f'              <div>dm3_bct, {baseline["dm3_bct"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
 
@@ -621,7 +558,7 @@ class BMMDossier():
         motors += f'              <div>m2_ydi, {baseline["m2_ydi"][0]:.3f}</div>\n'
         motors += f'              <div>m2_xu, {baseline["m2_xu"][0]:.3f}</div>\n'
         motors += f'              <div>m2_xd, {baseline["m2_xd"][0]:.3f}</div>\n'
-        motors += f'              <div>m2_bender, {baseline["m2_bender"]"][0]:.3f}</div>\n'
+        motors += f'              <div>m2_bender, {baseline["m2_bender"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
 
         stripe = '(Rh/Pt stripe)'
@@ -670,3 +607,13 @@ class BMMDossier():
         motors += f'              <div>dm2_fs, {baseline["dm2_fs"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
         
+        return motors
+    
+    def instrument_default(self):
+        thistext  =  '	    <div>\n'
+        thistext +=  '	      <h3>Instrument</h3>\n'
+        thistext +=  '	      <ul>\n'
+        thistext +=  '               <li>(no instrument information)</li>\n'
+        thistext +=  '	      </ul>\n'
+        thistext +=  '	    </div>\n'
+        return thistext

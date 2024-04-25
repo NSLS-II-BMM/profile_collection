@@ -3,7 +3,7 @@ import json, os, datetime
 from urllib import request, parse
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from BMM_common.echo_slack import echo_slack
+from echo_slack import echo_slack
 
 import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)

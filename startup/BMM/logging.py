@@ -8,6 +8,7 @@ from slack_sdk.errors import SlackApiError
 from IPython.utils.coloransi import TermColors as color
 
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka import kafka_message
 
 from BMM_common.echo_slack import echo_slack
 
@@ -140,6 +141,10 @@ def post_to_slack(text):
 ## Simple but useful guide to configuring a slack app:        
 ## https://hamzaafridi.com/2019/11/03/sending-a-file-to-a-slack-channel-using-api/
 def img_to_slack(imagefile):
+    ''' DEPRECATED
+    
+    images should be posted via the kafka filemanager  April 2024
+    '''
     token_file = os.path.join(startup_dir, 'BMM', 'image_uploader_token')
     try:
         with open(token_file, "r") as f:
@@ -216,62 +221,14 @@ def report(text, level=None, slack=False, rid=None):
         print(screen)
     if BMMuser.use_slack and slack:
         post_to_slack(text)
-        echo_slack(text=text, img=None, icon='message', rid=rid)
+        kafka_message({'echoslack': True,
+                       'text': text,
+                       'img': None,
+                       'icon': 'message',
+                       'rid': rid})
+        #echo_slack(text=text, img=None, icon='message', rid=rid)
 
 
-# def echo_slack(text='', img=None, icon='message', rid=None):
-#     BMMuser = user_ns['BMMuser']
-#     rawlogfile = os.path.join(BMMuser.folder, 'dossier', '.rawlog')
-#     rawlog = open(rawlogfile, 'a')
-#     rawlog.write(message_div(text, img, icon, rid))
-#     rawlog.close()
-
-#     with open(os.path.join(startup_dir, 'tmpl', 'messagelog.tmpl')) as f:
-#         content = f.readlines()
-
-#     with open(rawlogfile, 'r') as fd:
-#         allmessages = fd.read()
-        
-#     messagelog = os.path.join(BMMuser.DATA, 'dossier', 'messagelog.html')
-#     o = open(messagelog, 'w')
-#     o.write(''.join(content).format(text = allmessages, channel = 'BMM #beamtime'))
-#     o.close()
-        
-# # this bit of html+css is derived from https://www.w3schools.com/howto/howto_css_chat.asp
-# def message_div(text='', img=None, icon='message', rid=None):
-#     if icon == 'message':
-#         avatar = 'message.png'
-#         image  = ''
-#         words  = f'<p>{emojis.encode(text)}</p>'
-#     elif icon == 'plot':
-#         avatar = 'plot.png'
-#         image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
-#         words  = f'<span class="figuretitle">{text}</span>'
-#     elif icon == 'camera':
-#         avatar = 'camera.png'
-#         image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
-#         words  = f'<span class="figuretitle">{text}</span>'
-#     else:
-#         return
-    
-#     thisrid, clss, style = '', 'left', ''
-#     if rid is None:
-#         avatar = 'blank.png'
-#     elif rid is True:
-#         clss = 'top'
-#         style = ' style="border-top: 1px solid #000;"'  # horizontal line to demark groupings of comments
-#     else:
-#         thisrid = f' id="{rid}"'
-#         clss = 'top'
-#         style = ' style="border-top: 1px solid #000;"'
-        
-#     this = f'''    <div class="container"{thisrid}{style}>
-#       <div class="left"><img src="{avatar}" style="width:30px;" /></div>
-#       <span class="time-right">{datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")}</span>
-#       {words}{image}
-#     </div>
-# '''
-#     return this
         
 
 ######################################################################################

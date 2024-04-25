@@ -24,7 +24,7 @@ from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_ms
 from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.kafka           import kafka_message, close_plots
 from BMM.linescans       import rocking_curve
-from BMM.logging         import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.logging         import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.modes           import get_mode, describe_mode
 from BMM.motor_status    import motor_sidebar, motor_status
@@ -683,39 +683,7 @@ def xafs(inifile=None, **kwargs):
                         'steps'     : ' '.join(map(str, p['steps'])),
                         'times'     : ' '.join(map(str, p['times'])), }
         ## bsui dossier
-        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
-
-        #kafka dossier
-        kafka_message({'dossier'   : 'set',
-                       'inifile'   : inifile,
-                       'filename'  : p['filename'],
-                       'experimenters' : p['experimenters'],
-                       'seqstart'  : now('%A, %B %d, %Y %I:%M %p'),
-                       'element'   : p['element'],
-                       'edge'      : p['edge'],
-                       'motors'    : motor_sidebar(), # this could be motor_sidebar(uid=uid)
-                       'sample'    : p['sample'].replace('<', '&lt;').replace('>', '&gt;'),
-                       'prep'      : p['prep'].replace('<', '&lt;').replace('>', '&gt;'),
-                       'comment'   : p['comment'].replace('<', '&lt;').replace('>', '&gt;'),
-                       'mode'      : p['mode'],
-                       'clargs'    : clargs,  # this has been stringified already
-                       'htmlpage'  : p['htmlpage'],
-                       'ththth'    : p['ththth'],
-                       'url'       : p['url'],
-                       'doi'       : p['doi'],
-                       'cif'       : p['cif'],
-
-        })
-        if 'energy' in p:
-            kafka_message({'dossier' : 'set', 'energy': p['energy']})
-        if 'e0' in p:
-            kafka_message({'dossier' : 'set', 'e0': p['e0']})
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
-            kafka_message({'dossier' : 'set', 'initext' : ''.join(f.readlines())})
-        for k in these_kwargs.keys():
-            kafka_message({'dossier' : 'set', k: these_kwargs[k]})
-        # end kafka dossier segment
-            
+        dossier.prep_metadata(p, inifile, clargs, these_kwargs)            
 
         with open(os.path.join(BMMuser.DATA, inifile)) as f:
             initext = ''.join(f.readlines())
@@ -929,6 +897,10 @@ def xafs(inifile=None, **kwargs):
                                    'ga_puid'  : ga.pitch_uid,
                                    'ga_fuid'  : ga.f_uid,
                     })
+                    md['_snapshots']['ga_filename'] = ga.alignment_filename
+                    md['_snapshots']['ga_yuid']     = ga.y_uid
+                    md['_snapshots']['ga_pitchuid'] = ga.pitch_uid
+                    md['_snapshots']['ga_fuid']     = ga.f_uid
                 elif 'lakeshore' in BMMuser.instrument.lower():
                     slotno = f', temperature {lakeshore.readback.get():.1f}'
                     this_instrument = lakeshore.dossier_entry();
@@ -999,7 +971,6 @@ def xafs(inifile=None, **kwargs):
 
                 if p['ththth']:
                     md['_kind'] = '333'
-                    kafka_message('dossier': 'set', 'mono': 'Si(333)'}
                 if plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
                 elif plotting_mode(p['mode']) == 'xs':
@@ -1100,11 +1071,6 @@ def xafs(inifile=None, **kwargs):
             dossier.scanlist = scanlist
             dossier.uidlist = uidlist
             dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
-            kafka_message({'dossier' : 'set',
-                           'scanlist': scanlist,
-                           'uidlist' : uidlist,
-                           'seqend'  : now('%A, %B %d, %Y %I:%M %p')
-            })
             
             print('Returning to fixed exit mode') #  and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
@@ -1195,11 +1161,6 @@ def xafs(inifile=None, **kwargs):
                    'measurement': 'XAFS',
                    'folder'     : BMMuser.folder,
                    'date'       : BMMuser.date,
-                   'instrument' : BMMuser.instrument,
-                   'gup'        : BMMuser.gup,
-                   'saf'        : BMMuser.saf,
-                   'pdstext'    : f'{get_mode()} ({describe_mode()})',
-                   'mono'       : f'Si({dcm._crystal})',
     })
     BMMuser.final_log_entry = True
     RE.msg_hook = None

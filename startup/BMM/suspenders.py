@@ -6,6 +6,7 @@ from BMM.user_ns.detectors   import quadem1
 from BMM.user_ns.metadata    import ring
 from BMM.user_ns.instruments import bmps, idps
 from BMM.functions import bold_msg, PROMPT, error_msg, warning_msg, whisper
+from BMM.kafka import kafka_message
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -39,10 +40,14 @@ beam_dump_screen_message = warning_msg('''
 
 def beamdown_message():
     print(beam_dump_screen_message)
-    post_to_slack(':skull_and_crossbones: Beam has dumped! :skull_and_crossbones:')
+    kafka_message({'echoslack': True,
+                   'text': ':skull_and_crossbones: Beam has dumped! :skull_and_crossbones:'})
+    #post_to_slack(':skull_and_crossbones: Beam has dumped! :skull_and_crossbones:')
     yield from null()
 def beamup_message():
-    post_to_slack(':sunrise: Beam has returned! :sunrise:')
+    kafka_message({'echoslack': True,
+                   'text': ':sunrise: Beam has returned! :sunrise:'})
+    #post_to_slack(':sunrise: Beam has returned! :sunrise:')
     yield from null()
 
 try:
@@ -78,16 +83,20 @@ except Exception as e:
 ## ----------------------------------------------------------------------------------
 ## suspend if the experimental photon shutter closes, resume 5 seconds after opening
 from bluesky.plan_stubs import null
-from BMM.logging import post_to_slack
+#from BMM.logging import post_to_slack
 
 
 def tell_slack_shb_closed():
     print(beam_dump_screen_message)
-    post_to_slack('B shutter closed')
+    kafka_message({'echoslack': True,
+                   'text': 'B shutter closed'})
+    #post_to_slack('B shutter closed')
     yield from null()
 def tell_slack_shb_opened():
     #print('triggering opened message')
-    post_to_slack('B shutter opened')
+    kafka_message({'echoslack': True,
+                   'text': 'B shutter opened'})
+    #post_to_slack('B shutter opened')
     yield from null() 
 try:
     suspender_shb = SuspendBoolHigh(user_ns['shb'].state, sleep=5)

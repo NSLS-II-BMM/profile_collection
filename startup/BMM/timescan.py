@@ -24,7 +24,7 @@ from BMM.dossier       import BMMDossier
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka           import kafka_message
-from BMM.logging       import BMM_log_info, BMM_msg_hook, report, img_to_slack, post_to_slack
+from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar #, motor_status
 from BMM.resting_state import resting_state, resting_state_plan
@@ -534,9 +534,6 @@ def sead(inifile=None, force=False, **kwargs):
 
         ahora = now()
         dossier.seadimage = os.path.basename(pngout)
-        # plt.savefig(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
-        # matplotlib.use(thisagg) # return to screen display
-        # img_to_slack(os.path.join(BMMuser.folder, 'snapshots', dossier.seadimage))
 
         
         if dossier.seaduid is not None:

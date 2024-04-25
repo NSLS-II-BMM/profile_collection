@@ -25,7 +25,7 @@ from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import countdown, isfloat, present_options, now, PROMPT
 from BMM.kafka          import kafka_message
-from BMM.logging        import report, img_to_slack, post_to_slack
+from BMM.logging        import report
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
@@ -360,13 +360,6 @@ class GlancingAngle(Device):
         kafka_message({'close': 'last'})
         kafka_message({'glancing_angle' : 'stop'})
          
-        ## make a pretty picture, post it to slack
-        # self.alignment_plot(self.y_uid, self.pitch_uid, self.f_uid)
-        # try:
-        #     img_to_slack(self.alignment_filename)
-        # except:
-        #     post_to_slack(f'failed to post image: {self.alignment_filename}')
-        #     pass
         BMM_clear_suspenders()
  
         
