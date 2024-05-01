@@ -226,25 +226,25 @@ def metadata_at_this_moment():
     if rightnow['Facility']['mode'] == 'Operations':
         rightnow['Facility']['mode'] = 'top-off'
 
-    if BMMuser.extra_metadata is not None:
-        rightnow['Sample'] = dict()
-        rightnow['Sample']['extra_metadata'] = BMMuser.extra_metadata
-    elif 'linkam' in BMMuser.instrument.lower():
-        rightnow['Sample'] = dict()
+    rightnow['Sample'] = dict()
+    rightnow['Sample']['SDD_position'] = user_ns['xafs_det'].position
+    rightnow['Sample']['x'] = user_ns['xafs_x'].position
+    rightnow['Sample']['y'] = user_ns['xafs_y'].position
+        
+    #if BMMuser.extra_metadata is not None:
+    #    rightnow['Sample'] = dict()
+    #    rightnow['Sample']['extra_metadata'] = BMMuser.extra_metadata
+    if 'linkam' in BMMuser.instrument.lower():
         rightnow['Sample']['temperature'] = user_ns['linkam'].readback.get()
     elif 'lakeshore' in BMMuser.instrument.lower():
-        rightnow['Sample'] = dict()
         rightnow['Sample']['temperature_a'] = user_ns['lakeshore'].sample_a.get()
         rightnow['Sample']['temperature_b'] = user_ns['lakeshore'].sample_b.get()
     elif BMMuser.instrument.lower() == 'sample wheel':
-        rightnow['Sample'] = dict()
         rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number()
     elif 'double' in BMMuser.instrument.lower():
-        rightnow['Sample'] = dict()
         rightnow['Sample']['wheel_slot'] = user_ns['xafs_wheel'].slot_number()
         rightnow['Sample']['wheel_ring'] = user_ns['xafs_wheel'].slot_ring()
     elif 'glancing' in BMMuser.instrument.lower():
-        rightnow['Sample'] = dict()
         rightnow['Sample']['spinner'] = user_ns['ga'].current()
 
     return rightnow

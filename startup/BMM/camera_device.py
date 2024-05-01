@@ -233,7 +233,8 @@ class BMMSnapshot(Device):
             self._url = None
 
     def current_folder(self):
-        folder = os.path.join(BMMuser.folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
+        #folder = os.path.join(BMMuser.folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
+        folder = os.path.join(BMMuser.folder, 'assets', '', self.name, datetime.datetime.now().strftime("%Y/%m/%d"))
         if not os.path.isdir(folder):
             os.makedirs(folder)
         return folder

@@ -29,13 +29,14 @@ ga = GlancingAngle()
 from align_wheel import AlignWheel
 aw = AlignWheel()
 
-be_verbose = False
+be_verbose = True
 doing = None
 
-from bmm_live import LineScan, XAFSScan
+from bmm_live import LineScan, XAFSScan, XRF
 ls = LineScan()
 xs = XAFSScan()
 ts = LineScan()
+xrf = XRF()
 
 # these two lines allow a stale plot to remain interactive and prevent
 # the current plot from stealing focus.  thanks to Tom:
@@ -61,13 +62,18 @@ def plot_from_kafka_messages(beamline_acronym):
         # )
         name, message = doc
 
-        if be_verbose is True:
-            print('\n\nVerbose mode is on:')
-            pprint.pprint(message)
-            print('\n')
+        # if be_verbose is True:
+        #     print('\n\nVerbose mode is on:')
+        #     pprint.pprint(message)
+        #     print('\n')
 
         if name == 'bmm':
-            print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
+            if any(x in message for x in ('xafs_sequence', 'glancing_angle', 'align_wheel', 'wafer', 'mono_calibration',
+                                          'xrfat', 'linescan', 'xafsscan', 'timescan', 'xrf', 'areascan', 'close')) :
+                if be_verbose is True:
+                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
+                else:
+                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]') # \ndossier : {message["dossier"]}')
 
             if 'xafs_sequence' in message:
                 if message['xafs_sequence'] == 'start':
@@ -112,8 +118,8 @@ def plot_from_kafka_messages(beamline_acronym):
             elif 'xrfat' in message:
                 bmm_plot.xrfat(catalog=bmm_catalog, **message)
 
-            elif 'xrfplot' in message:
-                bmm_plot.xrfplot(catalog=bmm_catalog, **message)
+            #elif 'xrfplot' in message:
+            #    bmm_plot.xrfplot(catalog=bmm_catalog, **message)
 
             elif 'linescan' in message:
                 if message['linescan'] == 'start':
@@ -142,6 +148,12 @@ def plot_from_kafka_messages(beamline_acronym):
                     ts.stop(**message)
                     doing = None
 
+            elif 'xrf' in message:
+                if message['xrf'] == 'plot':
+                    xrf.plot(catalog=bmm_catalog, **message)
+                elif message['xrf'] == 'write':
+                    xrf.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
+                    
             ## todo...
             elif 'areascan' in message:
                 pass

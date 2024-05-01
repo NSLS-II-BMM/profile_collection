@@ -10,6 +10,7 @@ import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.gdrive    import make_gdrive_folder, copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
+from BMM.kafka     import kafka_message
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
 from BMM.workspace import rkvs
@@ -1027,3 +1028,18 @@ class BMM_User(Borg):
         self.channelcut = True
         self.ththth = False
         self.lims = True
+
+
+    def set_assets_folder(self, folder=None):
+        if folder is None:
+            folder = self.folder
+        assets = os.path.join(folder, 'assets')
+        if os.path.exists(assets) is False:
+            print(error_msg(f'Assets folder {assets} does not exist!'))
+            return
+        kafka_message({'mkdir': os.path.join(assets, 'xspress3')})
+        kafka_message({'mkdir': os.path.join(assets, 'webcam')})
+        kafka_message({'mkdir': os.path.join(assets, 'anacam')})
+        kafka_message({'mkdir': os.path.join(assets, 'usbcam1')})
+        kafka_message({'mkdir': os.path.join(assets, 'usbcam2')})
+        

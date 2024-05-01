@@ -292,50 +292,49 @@ class BMMDossier():
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-            ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-                    int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            rois = [int(BMMuser.xschannel1.get()),
-                    int(BMMuser.xschannel2.get()),
-                    int(BMMuser.xschannel3.get()),
-                    int(BMMuser.xschannel4.get()),]
-            xs.plot(uid=self.xrfuid)
-            xs.to_xdi(xrffile)
+            
+            # ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+            #         int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+            #         int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
+            #         int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+            # rois = [int(BMMuser.xschannel1.get()),
+            #         int(BMMuser.xschannel2.get()),
+            #         int(BMMuser.xschannel3.get()),
+            #         int(BMMuser.xschannel4.get()),]
+            # xs.plot(uid=self.xrfuid)
+            # xs.to_xdi(xrffile)
         if use_1element and plotting_mode(mode) == 'xs1':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-            ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            rois = [int(BMMuser.xschannel8.get()),]
-            xs1.plot(uid=self.xrfuid)
-            xs1.to_xdi(xrffile)
+            # ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
+            # rois = [int(BMMuser.xschannel8.get()),]
+            # xs1.plot(uid=self.xrfuid)
+            # xs1.to_xdi(xrffile)
 
+
+        kafka_message({'xrf' : 'plot',
+                       'uid' : self.xrfuid,
+                       'add' : False,
+                       'filename' : xrfsnap,
+                       'post' : BMMuser.post_xrf, })
+        kafka_message({'xrf' : 'write',
+                       'uid' : self.xrfuid,
+                       'filename' : xrffile, })
+
+            
         ## capture OCR and target ROI values at Eave to report in dossier
         self.ocrs = ", ".join(map(str,ocrs))
         self.rois = ", ".join(map(str,rois))
 
         ## save XRF plot
-        plt.savefig(xrfimage)
-        matplotlib.use(thisagg) # return to screen display
-        if BMMuser.post_xrf:
-            kafka_message({'echoslack': True,
-                           'img': xrfimage})
-            #img_to_slack(xrfimage)
+        #plt.savefig(xrfimage)
+        #matplotlib.use(thisagg) # return to screen display
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.xrf_md = {'xrf_uid'   : self.xrfuid, 'xrf_image': xrfimage,}
-        kafka_message({'dossier'   : 'set',
-                       'ocrs'      : ", ".join(map(str,ocrs)),
-                       'rois'      : ", ".join(map(str,rois)),
-                       'post_xrf'  : BMMuser.post_xrf,
-                       'xrf_uid'   : self.xrfuid,
-                       'xrf_image' : xrfimage,
-                       'xrffile'   : f"{stub}_{ahora}.xrf",
-                       'xrfsnap'   : f"{stub}_XRF_{ahora}.png",
                        
-        })
         
 
     def cameras(self, folder, stub, md):

@@ -1,6 +1,7 @@
-import os, re, socket, ast, datetime
+import os, sys, re, socket, ast, datetime, pathlib
 from urllib.parse import quote
-import numpy
+import numpy, pandas
+from bluesky import __version__ as bluesky_version
 
 
 import redis
@@ -25,6 +26,7 @@ from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 
 from BMM.periodictable import edge_energy, Z_number, element_symbol, element_name
+from echo_slack import echo_slack
 
 startup_dir = os.path.dirname(__file__)
 
@@ -201,14 +203,14 @@ class BMMDossier():
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
 
         ## generate triplot as a png image (or fail gracefully)
-        prjfilename, pngfilename = None, None
-        try:
-            if self.uidlist is not None:
-                pngfilename = os.path.join(folder, 'snapshots', f"{basename}.png")
-                #prjfilename = os.path.join(folder, 'prj', f"{basename}.prj")
-                self.make_merged_triplot(self.uidlist, pngfilename, XDI['_user']['mode'])
-        except Exception as e:
-            logger.info('*** failure to make triplot\n' + str(e))
+        # prjfilename, pngfilename = None, None
+        # try:
+        #     if self.uidlist is not None:
+        #         pngfilename = os.path.join(folder, 'snapshots', f"{basename}.png")
+        #         #prjfilename = os.path.join(folder, 'prj', f"{basename}.prj")
+        #         self.make_merged_triplot(self.uidlist, pngfilename, XDI['_user']['mode'])
+        # except Exception as e:
+        #     logger.info('*** failure to make triplot\n' + str(e))
 
 
         ## sanity check the "report ID" (used to link to correct position in messagelog.html
@@ -347,7 +349,7 @@ class BMMDossier():
                                                    pccenergy     = '%.1f' % XDI['_user']['pccenergy'],
                                                    experimenters = XDI['_user']['experimenters'],
                                                    gup           = XDI['Facility']['GUP'],
-                                                   saf           = XDI['Facility']['GUP'],
+                                                   saf           = XDI['Facility']['SAF'],
                                                    url           = XDI['_user']['url'],
                                                    doi           = XDI['_user']['doi'],
                                                    cif           = XDI['_user']['cif'],
@@ -361,6 +363,11 @@ class BMMDossier():
             self.log_entry(logger, f'wrote dossier: {htmlfilename}')
         except Exception as E:
             self.log_entry(logger, f'failed to write dossier file {htmlfilename}\n' + str(E))
+
+        print(f'wrote {htmlfilename}')
+        echo_slack(text = f'wrote XAFS dossier to {htmlfilename}',
+                   icon = 'message',
+                   rid  = None )
 
 
         self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
@@ -610,10 +617,331 @@ class BMMDossier():
         return motors
     
     def instrument_default(self):
-        thistext  =  '	    <div>\n'
-        thistext +=  '	      <h3>Instrument</h3>\n'
-        thistext +=  '	      <ul>\n'
-        thistext +=  '               <li>(no instrument information)</li>\n'
-        thistext +=  '	      </ul>\n'
-        thistext +=  '	    </div>\n'
+        thistext  =  '''
+	    <div>
+	      <h3>Instrument</h3>
+	      <ul>
+               <li>(no instrument information)</li>
+	      </ul>
+	    </div>
+'''
         return thistext
+
+
+
+    def sead_instrument_entry(self, seadimage, seaduid):
+        thistext  =  '      <div>\n'
+        thistext +=  '        <h3>Instrument: SEAD scan</h3>\n'
+        thistext += f'          <a href="../snapshots/{seadimage}">\n'
+        thistext += f'                        <img src="../snapshots/{seadimage}" width="300" alt="" /></a>\n'
+        thistext +=  '          <br>'
+        thistext += f'          <a href="javascript:void(0)" onclick="toggle_visibility(\'areascan\');" title="Click to show/hide the UID of this areascan">(uid)</a><div id="areascan" style="display:none;"><small>{seaduid}</small></div>\n'
+        thistext +=  '      </div>\n'
+        return thistext
+
+    
+    def sead_dossier(self, catalog, logger):
+
+        if len(self.uidlist) == 0:
+            self.log_entry(logger, '*** cannot write SEAD dossier, uidlist is empty')
+            return None
+
+        ## gather information for the dossier from the start document
+        ## of the first scan in the sequence
+        startdoc = catalog[self.uidlist[0]].metadata['start']
+        XDI = startdoc['XDI']
+        if '_snapshots' in XDI:
+            snapshots = XDI['_snapshots']
+        else:
+            snapshots = {}
+        
+
+        folder = self.folder
+        if folder is None or folder == '':
+            folder = XDI["_user"]["folder"]
+        self.folder = folder
+            
+        ## test if XAS data file can be found
+        if XDI['_user']['filename'] is None or XDI["_user"]["start"] is None:
+            self.log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
+            return None
+        firstfile = f'{XDI["_user"]["filename"]}.{XDI["_user"]["start"]:03d}'
+        if not os.path.isfile(os.path.join(folder, firstfile)):
+            self.log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
+            return None
+
+
+        ## determine names of output dossier files
+        basename     = XDI['_user']['filename']
+        htmlfilename = os.path.join(folder, 'dossier/', XDI['_user']['filename']+'-01.html')
+        seqnumber = 1
+        if os.path.isfile(htmlfilename):
+            seqnumber = 2
+            while os.path.isfile(os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))):
+                seqnumber += 1
+            basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
+            htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
+
+
+        with open(os.path.join(startup_dir, 'tmpl', 'sead_dossier.tmpl')) as f:
+                content = f.readlines()
+        thiscontent = ''.join(content).format(measurement   = 'SEAD',
+                                              filename      = XDI['_user']['filename'],
+                                              sead          = os.path.basename(XDI['_filename']),
+                                              date          = self.date,
+                                              seqnumber     = seqnumber,  # need to replicate from above
+                                              rid           = self.rid,
+                                              energy        = f'{XDI["Scan"]["edge_energy"]:1f}',
+                                              edge          = f'{XDI["Element"]["edge"]}',
+                                              element       = self.element_text(XDI['Element']['symbol']),
+                                              sample        = XDI['Sample']['name'],
+                                              prep          = XDI['Sample']['prep'],
+                                              comment       = XDI['_user']['comment'],
+                                              instrument    = self.sead_instrument_entry(os.path.basename(XDI['_user']['pngfile']), self.uidlist[0]),
+                                              npoints       = len(catalog[self.uidlist[0]].primary.data["time"]),
+                                              dwell         = XDI['Scan']['dwell_time'],
+                                              delay         = XDI['Scan']['delay'],
+                                              shutter       = XDI['_user']['shutter'],
+                                              websnap       = 'x', # quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                                              webuid        = 'x', # snapshots['webcam_uid'],
+                                              anasnap       = 'x', # quote('../snapshots/'+os.path.basename(snapshots['anacam_file'])),
+                                              anauid        = 'x', # snapshots['anacam_uid'],
+                                              usb1snap      = 'x', # quote('../snapshots/'+os.path.basename(snapshots['usbcam1_file'])),
+                                              usb1uid       = 'x', # snapshots['usbcam2_uid'],
+                                              usb2snap      = 'x', # quote('../snapshots/'+os.path.basename(snapshots['usbcam2_file'])),
+                                              usb2uid       = 'x', # snapshots['usbcam2_uid'],
+                                              mode          = XDI['_user']['mode'],
+                                              motors        = self.motor_sidebar(catalog),
+                                              seqstart      = datetime.datetime.fromtimestamp(catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                              seqend        = datetime.datetime.fromtimestamp(catalog[self.uidlist[-1]].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                              mono          = self.mono_text(catalog),
+                                              pdsmode       = '%s  (%s)' % self.pdstext(catalog),
+                                              experimenters = XDI['_user']['experimenters'],
+                                              gup           = XDI['Facility']['GUP'],
+                                              saf           = XDI['Facility']['SAF'],
+                                              url           = XDI['_user']['url'],
+                                              doi           = XDI['_user']['doi'],
+                                              cif           = XDI['_user']['cif'],
+                                              initext       = highlight(XDI['_user']['initext'], IniLexer(), HtmlFormatter()),
+                                              clargs        = highlight(XDI['_user']['clargs'], PythonLexer(), HtmlFormatter()),
+        )
+        with open(htmlfilename, 'a') as o:
+            o.write(thiscontent)
+
+        print(f'wrote {htmlfilename}')
+        echo_slack(text = f'wrote SEAD dossier to {htmlfilename}',
+                   icon = 'message',
+                   rid  = None )
+
+
+        
+        
+    
+        self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
+        manifest = open(self.manifest_file, 'a')
+        manifest.write(f'sead␣{htmlfilename}\n')
+        manifest.close()
+        self.write_manifest('SEAD')
+
+class XASFile():
+
+    def plot_hint(self, catalog=None, uid=None):
+        text = 'ln(I0/It)  --  ln($5/$6)'
+        el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+        
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            text = f'{el}8/I0  --  $8/$5'
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            text = f'({el}1+{el}2+{el}3+{el}4)/I0  --  ($8+$9+$10+$11)/$5'
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            text = f'({el}1+{el}2+{el}3+{el}4+{el}5+{el}6+{el}7)/I0  --  ($8+$9+$10+$11+$12+$13+$14)/$5'
+        elif 'reference' in catalog[uid].metadata['start']['plan_name']:
+            text = 'ln(It/Ir)  --  ln($6/$7)'
+        elif 'yield' in catalog[uid].metadata['start']['plan_name']:
+            text = 'ln(It/Ir)  --  ln($8/$5)'
+        elif 'test' in catalog[uid].metadata['start']['plan_name']:
+            text = 'I0  --  $5'
+        return text
+    
+    def to_xdi(self, catalog=None, uid=None, filename=None):
+        '''Write an XDI-style file for an XAS scan.
+
+        '''
+        
+        xdi = catalog[uid].metadata["start"]["XDI"]
+        handle = open(filename, 'w')
+        handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
+
+        ## header lines with metadata from the XDi dictionary
+        for family in ('Beamline', 'Detector', 'Element', 'Facility', 'Mono', 'Sample', 'Scan'):
+            for k in xdi[family].keys():
+                if family == 'Sample' and k == 'comment':
+                    continue
+                if family == 'Sample' and k == 'extra_metadata':
+                    continue
+                handle.write(f'# {family}.{k}: {xdi[family][k]}\n')
+        start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
+        end   = datetime.datetime.fromtimestamp(catalog[uid].metadata['stop']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
+        handle.write(f'# Scan.start_time: {start}\n')
+        handle.write(f'# Scan.end_time: {end}\n')
+        handle.write(f'# Scan.uid: {uid}\n')
+        handle.write(f'# Scan.transient_id: {catalog[uid].metadata["start"]["scan_id"]}\n')
+        handle.write(f'# Scan.plot_hint: {self.plot_hint(catalog=catalog, uid=uid)}\n')
+        handle.write( '# Column.1: energy eV\n')
+        handle.write( '# Column.2: requested_energy eV\n')
+        handle.write( '# Column.3: measurement_time seconds\n')
+        handle.write( '# Column.4: xmu\n')
+        handle.write( '# Column.5: I0 nA\n')
+        handle.write( '# Column.6: It nA\n')
+        handle.write( '# Column.7: Ir nA\n')
+
+        ## Column.N header lines
+        column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
+        column_labels = ['energy', 'requested_energy', 'measurement_time', 'xmu', 'I0', 'It', 'Ir']
+        
+        el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+        nchan = 0
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 1
+            column_list.append(f'{el}8')
+            column_labels.append(f'{el}8')
+            handle.write(f'# Column.8: {el}8\n')
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            nchan = 4
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            nchan = 7
+        if nchan > 0:
+            for i in range(1, nchan+1):
+                handle.write(f'# Column.{i+7}: {el}{i}\n')
+
+        ## prepare data table and insert xmu column
+        xa = catalog[uid].primary.read(column_list)
+        p = xa.to_pandas()
+        column_list.insert(3, 'xmu')
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            p['xmu'] = p[f'{el}8']/p['I0']
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            p['xmu'] = (p[f'{el}1']+p[f'{el}2']+p[f'{el}3']+p[f'{el}4'])/p['I0']
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            p['xmu'] = (p[f'{el}1']+p[f'{el}2']+p[f'{el}3']+p[f'{el}4']+p[f'{el}5']+p[f'{el}6']+p[f'{el}7'])/p['I0']
+        elif 'transmission' in catalog[uid].metadata['start']['plan_name']:
+            p['xmu'] = numpy.log(p['It']/p['I0'])
+        elif 'reference' in catalog[uid].metadata['start']['plan_name']:
+            p['xmu'] = numpy.log(p['Ir']/p['It'])
+        elif 'yield' in catalog[uid].metadata['start']['plan_name']:
+            p['xmu'] = p['Iy']/p['It']
+        elif 'test' in catalog[uid].metadata['start']['plan_name']:
+            p['xmu'] = p['I0']
+        else:
+            p['xmu'] = numpy.log(p['It']/p['I0'])
+
+        ## use energy as the pandas index
+        p.set_index('dcm_energy')
+        
+        ## comment and separator lines
+        handle.write('# //////////////////////////////////////////////////////////\n')
+        for l in xdi["_comment"]:
+            handle.write(f'# {l}\n')
+        handle.write('# ----------------------------------------------------------\n')
+        handle.write('# ')
+
+        ## dump the data table and close the file
+        handle.write(p.to_csv(None, sep=' ', columns=column_list, index=False, header=column_labels, float_format='%.6f'))
+        handle.flush()
+        handle.close()
+        print(f'wrote XAS data to {filename}')
+        echo_slack(text = f'wrote XAFS data to {filename}',
+                   icon = 'message',
+                   rid  = None )
+
+
+
+class SEADFile():
+
+    
+    def to_xdi(self, catalog=None, uid=None, filename=None):
+        '''Write a single energy absorption detection (SEAD) scan file for an
+        XAS scan, which is a timescan at a specific energy.
+
+        '''
+        xdi = catalog[uid].metadata["start"]["XDI"]
+        handle = open(filename, 'w')
+        handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
+
+        ## header lines with metadata from the XDi dictionary
+        for family in ('Beamline', 'Detector', 'Element', 'Facility', 'Mono', 'Sample', 'Scan'):
+            for k in xdi[family].keys():
+                if family == 'Sample' and k == 'comment':
+                    continue
+                if family == 'Sample' and k == 'extra_metadata':
+                    continue
+                if family == 'Scan' and k == 'edge_energy':
+                    handle.write(f'# {family}.mono_energy: {xdi[family][k]}\n')
+                else:
+                    handle.write(f'# {family}.{k}: {xdi[family][k]}\n')
+        start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
+        end   = datetime.datetime.fromtimestamp(catalog[uid].metadata['stop']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
+        handle.write(f'# Scan.start_time: {start}\n')
+        handle.write(f'# Scan.end_time: {end}\n')
+        handle.write(f'# Scan.uid: {uid}\n')
+        handle.write(f'# Scan.transient_id: {catalog[uid].metadata["start"]["scan_id"]}\n')
+        handle.write( '# Column.1: energy eV\n')
+        handle.write( '# Column.2: requested_energy eV\n')
+        handle.write( '# Column.3: measurement_time seconds\n')
+        handle.write( '# Column.4: xmu\n')
+        handle.write( '# Column.5: I0 nA\n')
+        handle.write( '# Column.6: It nA\n')
+        handle.write( '# Column.7: Ir nA\n')
+
+        ## Column.N header lines
+        column_list = ['I0', 'It', 'Ir']
+        column_labels = ['time', 'I0', 'It', 'Ir']
+        
+        el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+        nchan = 0
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 1
+            column_list.append(f'{el}8')
+            column_labels.append(f'{el}8')
+            handle.write(f'# Column.8: {el}8\n')
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            nchan = 4
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            nchan = 7
+        if nchan > 0:
+            for i in range(1, nchan+1):
+                handle.write(f'# Column.{i+7}: {el}{i}\n')
+
+        ## prepare data table and insert reltime column
+        xa = catalog[uid].primary.read(column_list)
+        p = xa.to_pandas()
+        t = numpy.array(catalog[uid].primary.data['time'])
+        p['time'] = t - t[0]
+        column_list.insert(0, 'time')
+
+        ## use time as the pandas index
+        p.set_index('time')
+        
+        ## comment and separator lines
+        handle.write('# //////////////////////////////////////////////////////////\n')
+        for l in xdi["_comment"]:
+            handle.write(f'# {l}\n')
+        handle.write('# ----------------------------------------------------------\n')
+        handle.write('# ')
+
+        ## dump the data table and close the file
+        handle.write(p.to_csv(None, sep=' ', columns=column_list, index=False, header=column_labels, float_format='%.6f'))
+        handle.flush()
+        handle.close()
+        print(f'wrote SEAD data to {filename}')
+        echo_slack(text = f'wrote SEAD data to {filename}',
+                   icon = 'message',
+                   rid  = None )

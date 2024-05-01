@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 #from mpl_multitab import MplTabs
-import numpy
+import numpy, pandas
+import xraylib
+import datetime
+from bluesky import __version__ as bluesky_version
 
 #from nslsii.kafka_utils import _read_bluesky_kafka_config_file
 #from bluesky_kafka.produce import BasicProducer
@@ -11,6 +14,10 @@ import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
 from slack import img_to_slack
+
+from BMM.periodictable import Z_number, edge_number
+
+from BMM_common.xdi    import xdi_xrf_header
 
 class LineScan():
     '''Manage the live plot for a motor scan or a time scan.
@@ -117,7 +124,7 @@ class LineScan():
         self.y2data = []
         self.y3data = []
         if 'motor' in kwargs: self.motor = kwargs['motor']
-        self.numerator = kwargs['detector']
+        self.numerator = kwargs['detector'].capitalize()
         self.denominator = None
         self.figure = plt.figure()
         if self.motor is not None:
@@ -531,3 +538,184 @@ class XAFSScan():
         self.fig.canvas.flush_events()
         
             
+
+class XRF():
+    '''Manage the plotting of an XRF spectrum
+
+    This:
+
+         uid = RE(count([xs], 1))
+         kafka_message({'xrf': True, 'uid': uid})
+
+    will plot an XRF spectrum to screen.
+
+    parameters
+    ==========
+    xrf : 'plot'
+      flag to Kafka consumer that an XRF spectrum is to be plotted
+    uid : str
+      UID string from the XRF measurement
+    add : bool
+      True to add the sum of channels, false to overplot all channels
+    only : int
+      Channel number to plot
+    filename : str
+      fully resolved path and filename for output PNG image
+    post : bool
+      True means to post the saved image file to Slack
+
+    '''
+    def plot(self, catalog, **kwargs):
+        uid=None
+        add=True
+        only=None
+        filename = None
+        post = False
+
+        uid  = kwargs['uid']
+        if 'add'      in kwargs: add      = kwargs['add']
+        if 'only'     in kwargs: only     = kwargs['only']
+        if 'filename' in kwargs: filename = kwargs['filename']
+        if 'post'     in kwargs: post     = kwargs['post']
+
+        self.figure = plt.figure()
+        self.axes = self.figure.add_subplot(111)
+        self.axes.set_facecolor((0.95, 0.95, 0.95))
+        self.axes.set_xlabel('Energy (eV)')
+        title = 'counts'
+        if 'Sample' in catalog[uid].metadata['start']['XDI'] and 'name' in catalog[uid].metadata['start']['XDI']['Sample']:
+            title = catalog[uid].metadata['start']['XDI']['Sample']['name']
+        self.axes.set_title(title)
+        self.axes.grid(which='major', axis='both')
+        
+        s = []
+        nelem = 4
+        channels = tuple(range(1, 5))
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nelem = 1
+            channels = (1, )
+            only = 1
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nelem = 7
+            channels = tuple(range(1, 8))
+
+        if nelem == 1:
+            s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
+            only = 1
+            add = False
+        else:
+            for i in channels:
+                s.append(catalog[uid].primary.data[f'{nelem}-element SDD_channel0{i}_xrf'][0])
+
+
+        e = numpy.arange(0, len(s[0])) * 10
+
+        if only is not None and only in channels:
+            plt.plot(e, s[only-1], label=f'channel {only}')
+        elif add is True and nelem > 1:
+            ss = numpy.zeros((len(s[0])))
+            for i in channels:
+                ss = ss + s[i-1]
+            plt.plot(e, ss, label=f'sum of {nelem} channels')
+        else:
+            for i in channels:
+                plt.plot(e, s[i-1], label=f'channel {i}')
+
+        if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
+            el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+            ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
+            z = Z_number(el)
+            if ed.lower() == 'k':
+                label = f'{el} Kα1'
+                eline = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+            elif ed.lower() == 'l3':
+                label = f'{el} Lα1'
+                eline = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000
+            elif ed.lower() == 'l2':
+                label = f'{el} Kβ1'
+                eline = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000
+            elif ed.lower() == 'l1':
+                label = f'{el} Kβ3'
+                eline = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000
+
+            self.axes.axvline(x = eline, color = 'brown', linewidth=1, label=label)
+
+        self.axes.set_xlim(2500, eline+2000)
+        self.axes.legend(loc='best', shadow=True)
+
+        if filename is not None:
+            self.figure.savefig(filename)
+            if post is True:
+                img_to_slack(filename)
+            
+
+
+
+    def to_xdi(self, catalog=None, uid=None, filename=None):
+        '''Write an XDI-style file with bin energy in the first column and the
+        waveform of each of the channels in the other columns.
+
+        '''
+        
+        xdi = catalog[uid].metadata["start"]["XDI"]
+        handle = open(filename, 'w')
+        handle.write(f'# XDI/1.0 BlueSky/{bluesky_version}\n')
+        handle.write(f'# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement\n')
+        handle.write(f'# Beamline.xray_source: NSLS-II three-pole wiggler\n')
+        handle.write(f'# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
+        handle.write(f'# Beamline.focusing: {xdi["Beamline"]["focusing"]}\n')
+        handle.write(f'# Beamline.harmonic_rejection: {xdi["Beamline"]["harmonic_rejection"]}\n')
+        handle.write(f'# Beamline.energy: {xdi["_pccenergy"]}\n')
+        handle.write(f'# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
+        handle.write(f'# Sample.name: {xdi["Sample"]["name"]}\n')
+        handle.write(f'# Sample.prep: {xdi["Sample"]["prep"]}\n')
+        start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p')
+        #end   = datetime.datetime.fromtimestamp(catalog[uid].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p')
+        handle.write(f'# Scan.time: {start}\n')
+        #handle.write(f'# Scan.stop: {end}\n')
+        handle.write(f'# Scan.uid: {uid}\n')
+        handle.write(f'# Facility.name: NSLS-II\n')
+        handle.write(f'# Facility.energy: {xdi["Facility"]["energy"]}\n')
+        handle.write(f'# Facility.cycle: {xdi["Facility"]["cycle"]}\n')
+        handle.write(f'# Facility.GUP: {xdi["Facility"]["GUP"]}\n')
+        handle.write(f'# Facility.SAF: {xdi["Facility"]["SAF"]}\n')
+        handle.write('# Column.1: energy (eV)\n')
+
+        column_list = []
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 1
+            column_list.append('MCA8')
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 4
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 7
+        for c in range(1, nchan+1):
+            handle.write(f'# Column.{c+1}: MCA{c} (counts)\n')
+            if nchan > 1:
+                column_list.append(f'MCA{c}')
+                
+        handle.write('# //////////////////////////////////////////////////////////\n')
+        for l in xdi["_comment"]:
+            handle.write(f'# {l}\n')
+        handle.write('# ----------------------------------------------------------\n')
+        handle.write('# energy ')
+
+        ## data table
+        s = []
+        if nchan == 1:
+            s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
+            datatable = numpy.array([s,])
+        else:
+            for i in range(1, nchan+1):
+                s.append(catalog[uid].primary.data[f'{nchan}-element SDD_channel0{i}_xrf'][0])
+            datatable = numpy.vstack(s)
+                
+        e=numpy.arange(0, len(s[0])) * 10
+        ndt=numpy.vstack(datatable)
+        b=pandas.DataFrame(ndt.transpose(), index=e, columns=column_list)
+        handle.write(b.to_csv(sep=' '))
+
+        handle.flush()
+        handle.close()
+        print('wrote XRF spectra to %s' % filename)
+                

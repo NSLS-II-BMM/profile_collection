@@ -20,7 +20,6 @@ import matplotlib.pyplot as plt
 
 
 from BMM.derivedplot   import DerivedPlot
-from BMM.dossier       import BMMDossier
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka           import kafka_message
@@ -103,74 +102,15 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
 
     yield from mv(_locked_dwell_time, dwell)
     dets  = ION_CHAMBERS.copy()
-    denominator = ''
 
-    epoch_offset = pandas.Timestamp.now(tz='UTC').value/10**9
     ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
-    if detector == 'It':
-        denominator = ''
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['It'])
-    elif detector == 'Transmission':
-        denominator = ' / It'
-        func = lambda doc: (doc['time']-epoch_offset, numpy.log(doc['data']['I0']/doc['data']['It']))
-    elif detector == 'Ir':
-        denominator = ''
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['Ir'])
-    elif detector == 'I0':
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
-    elif detector == 'Iy':
-        denominator = ' / I0'
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['Iy']/doc['data']['I0'])
-    elif detector == 'Test':
-        func = lambda doc: (doc['time']-epoch_offset, doc['data']['I0'])
-    elif detector == 'Ic1':
-        denominator = ' / I0'
-        func  = lambda doc: (doc['time']-epoch_offset, doc['data']['Ita']/doc['data']['I0'])
-        func3 = lambda doc: (doc['time']-epoch_offset, doc['data']['Itb']/doc['data']['I0'])
-    elif detector == 'Dtc':
-        dets.append(vor)
-        denominator = ' / I0'
-        func  = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc2]/doc['data']['I0'])
-        func3 = lambda doc: (doc['time']-epoch_offset, doc['data'][BMMuser.dtc3]/doc['data']['I0'])
-    elif detector == 'Fluorescence' or detector == 'Flourescence':
-        dets.append(xs)
+    if detector == 'Fluorescence' or detector == 'Flourescence':
         yield from mv(xs.cam.acquire_time, dwell)
         yield from mv(xs.total_points, readings)
-        denominator = ' / I0'
-        func = lambda doc: (doc['time']-epoch_offset, (doc['data'][BMMuser.xs1] +
-                                                       doc['data'][BMMuser.xs2] +
-                                                       doc['data'][BMMuser.xs3] +
-                                                       doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
-    elif detector == 'If':
-        dets.append(xs)
-        yield from mv(xs.cam.acquire_time, dwell)
-        yield from mv(xs.total_points, readings)
-        denominator = ''
-        func = lambda doc: (doc['time']-epoch_offset, (doc['data'][BMMuser.xs1] +
-                                                       doc['data'][BMMuser.xs2] +
-                                                       doc['data'][BMMuser.xs3] +
-                                                       doc['data'][BMMuser.xs4] ))
-        
-        # dets.append(vor)
-        # denominator = ' / I0'
-        # func = lambda doc: (doc['time']-epoch_offset,
-        #                     (doc['data'][BMMuser.dtc1] +
-        #                      doc['data'][BMMuser.dtc2] +
-        #                      doc['data'][BMMuser.dtc3] +
-        #                      doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
+    elif detector == 'Xs1':
+        yield from mv(xs1.cam.acquire_time, dwell)
+        yield from mv(xs1.total_points, readings)
 
-    ## and this is the appropriate way to plot this linescan
-    if detector == 'Dtc':
-        plot = [DerivedPlot(func,  xlabel='elapsed time (seconds)', ylabel='dtc2', title='time scan'),
-                DerivedPlot(func3, xlabel='elapsed time (seconds)', ylabel='dtc3', title='time scan')]
-    elif detector == 'Ic1':
-        plot = [DerivedPlot(func,  xlabel='elapsed time (seconds)', ylabel='Ita', title='time scan'),
-                DerivedPlot(func3, xlabel='elapsed time (seconds)', ylabel='Itb', title='time scan')]
-    else:
-        plot = DerivedPlot(func,
-                           xlabel='elapsed time (seconds)',
-                           ylabel=detector+denominator,
-                           title='time scan')
 
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     
@@ -191,15 +131,6 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     if 'hint' not in md['BMM_kafka']:
         md['BMM_kafka']['hint'] = f'timescan {detector}'
         
-    ## This helped Bruce understand how to make a decorator conditional:
-    ## https://stackoverflow.com/a/49204061
-    def conditional_subs_decorator(function):
-        if user_ns['BMMuser'].enable_live_plots is True:
-            return subs_decorator(plot)(function)
-        else:
-            return function
-
-    @conditional_subs_decorator
     def count_scan(dets, readings, delay, md):
         #if 'purpose' not in md:
         #    md['purpose'] = 'measurement'
@@ -377,6 +308,7 @@ def sead(inifile=None, force=False, **kwargs):
             detector = 'transmission'
         elif 'fluo' in p['mode'].lower() or 'flou' in p['mode'].lower():
             detector = 'fluorescence'
+            
         elif 'test' in p['mode'].lower():
             detector = 'Test'
 
@@ -388,8 +320,9 @@ def sead(inifile=None, force=False, **kwargs):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 
-        dossier.rid = str(uuid.uuid4())[:8]
-        report(f'== starting single energy absorption detection scan', level='bold', slack=True, rid=dossier.rid)
+        kafka_message({'dossier': 'start'})
+        rid = str(uuid.uuid4())[:8]
+        report(f'== starting single energy absorption detection scan', level='bold', slack=True, rid=rid)
 
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -442,19 +375,34 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
-        if p['snapshots']:
-            yield from dossier.cameras(p['folder'], p['filename'], md)
+        #if p['snapshots']:
+        #    yield from dossier.cameras(p['folder'], p['filename'], md)
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## capture dossier metadata for start document
-        md['_snapshots'] = {**dossier.cameras_md}
+        #md['_snapshots'] = {**dossier.cameras_md}
 
+        pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
+        these_kwargs = {'start'     : p['start'],
+                        'end'       : p['start']+p['nscans']-1,
+                        'bounds'    : ' '.join(map(str, p['bounds_given'])),
+                        'steps'     : ' '.join(map(str, p['steps'])),
+                        'times'     : ' '.join(map(str, p['times'])),
+                        'pngfile'   : pngout,
+        }
+        ## for dossier
+        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+            initext = ''.join(f.readlines())
+        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
+        md['_user'] = user_metadata
+        md['_filename'] = outfile
+
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## populate the static html page for this scan 
         these_kwargs = {'npoints': p['npoints'], 'dwell': p['dwell'], 'delay': p['delay'], 'shutter': p['shutter']}
-        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
 
-        rightnow = metadata_at_this_moment() # see 62-metadata.py
+        rightnow = metadata_at_this_moment()
         for family in rightnow.keys():       # transfer rightnow to md
             if type(rightnow[family]) is dict:
                 if family not in md:
@@ -484,92 +432,39 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## perform the actual time scan
-        pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
-        dossier.seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'],
-                                              outfile=pngout,
-                                              force=force, md={**xdi})
+        seaduid = yield from timescan(detector, p['npoints'], p['dwell'], p['delay'],
+                                      outfile=pngout,
+                                      force=force, md={**xdi})
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## close the shutters again
         if p['shutter'] is True:
             yield from shb.close_plan()
 
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## save a mode-specific plot
-        # thisagg = matplotlib.get_backend()
-        # matplotlib.use('Agg') # produce a plot without screen display
-        # table = db.v2[dossier.seaduid].primary.read()
-        # if detector == 'Test':
-        #     plt.plot(table['time']-table['time'][0], table['I0'])
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('I0 signal')
-        # elif detector == 'I0':
-        #     plt.plot(table['time']-table['time'][0], table['I0'])
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('I0 signal')
-        # elif detector == 'It':
-        #     plt.plot(table['time']-table['time'][0], table['It'])
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('It signal')
-        # elif 'Trans' in detector:
-        #     signal = numpy.log(table['I0'] / table['It'])
-        #     plt.plot(table['time']-table['time'][0], signal)
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('It signal')
-        # elif detector == 'If':
-        #     signal = table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]
-        #     plt.plot(table['time']-table['time'][0], signal)
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('If signal')
-        # elif 'Fluo' in detector or 'Flour' in detector:
-        #     signal = (table[BMMuser.xs1]+table[BMMuser.xs2]+table[BMMuser.xs3]+table[BMMuser.xs4]) / table['I0']
-        #     plt.plot(table['time']-table['time'][0], signal)
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('If signal')
-        # elif detector == 'Ir':
-        #     plt.plot(table['time']-table['time'][0], table['Ir'])
-        #     plt.xlabel('time (seconds)')
-        #     plt.ylabel('Ir signal')
-        # plt.show()
-
-        ahora = now()
-        dossier.seadimage = os.path.basename(pngout)
-
-        
-        if dossier.seaduid is not None:
-            ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-            ## write the output file
-            header = db[dossier.seaduid]
-            write_XDI(outfile, header) # yield from ?
-            report('wrote time scan to %s' % outfile)
-            dossier.sead = os.path.basename(outfile)
-            #BMM_log_info('wrote time scan to %s' % outfile)
-            #print(bold_msg('wrote %s' % outfile))
-
+        kafka_message({'seadxdi': True, 'uid' : seaduid, 'filename': outfile})
+        kafka_message({'dossier' : 'set',
+                       'rid'     : rid,
+                       'folder'  : BMMuser.folder,
+                       'date'    : BMMuser.date,
+                       'uidlist' : [seaduid,],
+                       'seadpng' : pngout,
+                       })
+        kafka_message({'dossier' : 'sead', })
+                   
     def cleanup_plan():
         print('Cleaning up after single energy absorption detection measurement')
         BMM_clear_suspenders()
+        how = 'finished  :tada:'
         try:
-            dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
-            how = 'finished  :tada:'
-            try:
-                if 'primary' not in db[-1].stop['num_events']:
-                    how = '*stopped*'
-                elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
-                    how = '*stopped*'
-            except:
+            if 'primary' not in db[-1].stop['num_events']:
                 how = '*stopped*'
-            report(f'== SEAD scan {how}', level='bold', slack=True)
-            try:
-                htmlout = dossier.sead_dossier()
-                report('wrote dossier %s' % htmlout, 'bold')
-            except Exception as E:
-                print(error_msg('Failed to write SEAD dossier.  Here is the exception message:'))
-                print(E)
-                htmlout, prjout, pngout = None, None, None
-            rsync_to_gdrive()
-            synch_gdrive_folder()
+            elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+                how = '*stopped*'
         except:
+            how = '*stopped*'
+        if how != 'stopped':
+            report(f'== SEAD scan {how}', level='bold', slack=True)
+        else:
             print(whisper('Quitting SEAD scan.'))
 
         yield from resting_state_plan()
@@ -580,8 +475,8 @@ def sead(inifile=None, force=False, **kwargs):
     #if openclose is True:
     #    shb.close_plan()
     RE.msg_hook = None
-    dossier = BMMDossier()
-    dossier.measurement = 'SEAD'
+    #dossier = BMMDossier()
+    #dossier.measurement = 'SEAD'
 
     if is_re_worker_active():
         inifile = '/home/xf06bm/Data/bucket/sead.ini'

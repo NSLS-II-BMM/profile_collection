@@ -33,7 +33,9 @@ from pygments import highlight
 from pygments.lexers import PythonLexer, HtmlLexer
 from pygments.formatters import Terminal256Formatter
 
-from dossier_kafka import BMMDossier, startup_dir
+from dossier_kafka import BMMDossier, startup_dir, XASFile, SEADFile
+xdi  = XASFile()
+sead = SEADFile()
 
 # capture Ctrl-c to exit kafka polling loop semi-gracefully
 def handler(signal, frame):
@@ -97,21 +99,24 @@ def manage_files_from_kafka_messages(beamline_acronym):
             print('\n')
 
         if name == 'bmm':
-            if be_verbose is True:
-                print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
-            else:
-                print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]') # \ndossier : {message["dossier"]}')
+            if any(x in message for x in ('dossier', 'mkdir', 'echoslack', 'xasxdi', 'seadxdi')) :
+                if be_verbose is True:
+                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
+                else:
+                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]') # \ndossier : {message["dossier"]}')
 
             if 'dossier' in message:
                 if message['dossier'] == 'start':
                     dossier = BMMDossier()
-                    print(startup_dir)
+                    print(f'start dossier\nstartup dir: {startup_dir}')
 
                 elif message['dossier'] == 'logger':
                     establish_logger(logger)
+                    print('established dossier logger')
 
                 elif message['dossier'] == 'clear_logger':
                     clear_logger(logger)
+                    print('cleared dossier logger')
 
                 elif message['dossier'] == 'set':
                     dossier.set_parameters(**message)
@@ -131,6 +136,9 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 elif message['dossier'] == 'write':
                     dossier.write_dossier(bmm_catalog, logger)
 
+                elif message['dossier'] == 'sead':
+                    dossier.sead_dossier(bmm_catalog, logger)
+
             elif 'echoslack' in message:
                 if 'img' not in message or  message['img'] is None:
                     print(f'seding message "{message["text"]}" to slack')
@@ -142,7 +150,18 @@ def manage_files_from_kafka_messages(beamline_acronym):
 
                 elif 'img' in message and os.path.exists(message['img']):
                     img_to_slack(message['img'])
+
+            elif 'mkdir' in message:
+                if os.path.exists(message['mkdir']) is False:
+                    os.mkdir(message['mkdir'])
+                    print(f'made directory {message["mkdir"]}')
+
+            elif 'xasxdi' in message:
+                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
                     
+            elif 'seadxdi' in message:
+                sead.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
+                
                     
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
