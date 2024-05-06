@@ -1,4 +1,4 @@
-import sys, os, re, shutil, socket, datetime
+import sys, os, re, shutil, socket, datetime, time
 from distutils.dir_util import copy_tree
 import json, pprint, copy
 from subprocess import run
@@ -299,7 +299,7 @@ class BMM_User(Borg):
         self.do_gdrive      = True
         
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
-                             "readout_mode", "folder", "folder_link", "filename",
+                             "readout_mode", "folder", "folder_link", "workspace", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
                              "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode", "roi1",
                              "roi2", "roi3", "roi4", "dtc1", "dtc2", "dtc3", "dtc4")
@@ -501,7 +501,7 @@ class BMM_User(Borg):
 
         if scan:
             print('\nScan control attributes:')
-            for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'filename',
+            for att in ('pds_mode', 'bounds', 'steps', 'times', 'folder', 'workspace', 'filename',
                         'experimenters', 'element', 'edge', 'sample', 'prep', 'comment', 'nscans', 'start', 'inttime',
                         'snapshots', 'usbstick', 'rockingcurve', 'htmlpage', 'bothways', 'channelcut', 'ththth', 'mode', 'npoints',
                         'dwell', 'delay'):
@@ -512,7 +512,8 @@ class BMM_User(Borg):
         '''Locate or create the folders we need for this user.
         '''
         if not os.path.isdir(folder):
-            os.makedirs(folder)
+            kafka_message({'mkdir': folder})
+            #os.makedirs(folder)
             verb, pad = 'Created', ''
         else:
             verb, pad = 'Found', '  '
@@ -521,12 +522,16 @@ class BMM_User(Borg):
 
     def find_or_copy_file(self, i, text, fname):
         src     = os.path.join(startup_dir, fname)
-        dst     = os.path.join(self.folder, fname)
+        #dst     = os.path.join(self.folder, fname)
+        dst     = self.folder
+        wsp     = self.workspace
         if 'xlsx' in fname:
             src = os.path.join(startup_dir, 'xlsx', fname)
-            dst     = os.path.join(self.folder, TEMPLATES_FOLDER, fname)
+            dst = os.path.join(self.folder, "templates")
+            wsp = os.path.join(self.workspace, "templates")
         if not os.path.isfile(dst):
-            shutil.copyfile(src,  dst)
+            kafka_message({'copy' : True, 'file': src, 'target': dst})
+            shutil.copy(src, wsp)
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
@@ -587,7 +592,7 @@ class BMM_User(Borg):
         imagefolder    = os.path.join(data_folder, 'snapshots')
         prjfolder      = os.path.join(data_folder, 'prj')
         htmlfolder     = os.path.join(data_folder, 'dossier')
-        templatefolder = os.path.join(data_folder, TEMPLATES_FOLDER)
+        templatefolder = os.path.join(data_folder, "templates")
         self.establish_folder(step, 'Lustre folder', folder)
         self.establish_folder(0,    'data folder', data_folder)
         self.establish_folder(0,    'snapshot folder', imagefolder)
@@ -596,9 +601,13 @@ class BMM_User(Borg):
             # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
             for f in ('manifest.tmpl', 'logo.png', 'message.png', 'plot.png', 'camera.png', 'blank.png',
                       'style.css', 'trac.css', 'messagelog.css'):
-                shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
-            manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
-            manifest.close()
+                kafka_message({'copy': True,
+                               'file': os.path.join(startup_dir, 'dossier', f),
+                               'target': htmlfolder, })
+                #shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
+            kafka_message({'touch': os.path.join(self.folder, 'dossier', 'MANIFEST')})
+            #manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
+            #manifest.close()
             print('    copied html generation files, touched MANIFEST')
         self.establish_folder(0,    'templates folder', templatefolder)
      
@@ -606,14 +615,14 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## setup logger
-        BMM_user_log(os.path.join(data_folder, 'experiment.log'))
-        print('%2d. Set up experimental log file:          %-75s' % (step, os.path.join(data_folder, 'experiment.log')))
-        step += 1
+        # BMM_user_log(os.path.join(data_folder, 'experiment.log'))
+        # print('%2d. Set up experimental log file:          %-75s' % (step, os.path.join(data_folder, 'experiment.log')))
+        # step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## scan.ini template, macro template & wheel/ga spreadsheets
         initmpl = os.path.join(startup_dir, 'tmpl', 'xafs.tmpl')
-        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'xafs.ini')
+        scanini = os.path.join(self.workspace, "templates", 'xafs.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -624,9 +633,12 @@ class BMM_User(Borg):
         else:
             verb, pad = 'Found', '  '
         self.print_verb_message(step, verb, 'XAFS INI file', pad, scanini)
+        kafka_message({'copy': True,
+                       'file': scanini,
+                       'target': os.path.join(self.folder, "templates")})
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'rasterscan.tmpl')
-        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'raster.ini')
+        scanini = os.path.join(self.workspace, "templates", 'raster.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -637,9 +649,12 @@ class BMM_User(Borg):
         else:
             verb, pad = 'Found', '  '
         self.print_verb_message(0, verb, 'raster INI file', pad, scanini)
+        kafka_message({'copy': True,
+                       'file': scanini,
+                       'target': os.path.join(self.folder, "templates")})
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'sead.tmpl')
-        scanini = os.path.join(data_folder, TEMPLATES_FOLDER, 'sead.ini')
+        scanini = os.path.join(self.workspace, "templates", 'sead.ini')
         if not os.path.isfile(scanini):
             with open(initmpl) as f:
                 content = f.readlines()
@@ -649,17 +664,21 @@ class BMM_User(Borg):
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
+        kafka_message({'copy': True,
+                       'file': scanini,
+                       'target': os.path.join(self.folder, "templates")})
+                      
         self.print_verb_message(0, verb, 'sead INI file', pad, scanini)
 
-        
+
         macrotmpl = os.path.join(startup_dir, 'tmpl', 'macro.tmpl')
-        macropy = os.path.join(data_folder, TEMPLATES_FOLDER, 'sample_macro.py')
+        macropy = os.path.join(self.workspace, 'templates', 'sample_macro.py')
         commands = '''
         ## sample 1
         yield from slot(1)
         yield from xafs('scan.ini', filename='samp1', sample='first sample')
         close_last_plot()
-    
+
         ## sample 2
         yield from slot(2)
         ## yield from mvr(xafs_x, 0.5)
@@ -670,11 +689,12 @@ class BMM_User(Borg):
         yield from slot(3)
         yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
         close_last_plot()'''
+
         if not os.path.isfile(macropy):
             with open(macrotmpl) as f:
                 content = f.readlines()
             o = open(macropy, 'w')
-            o.write(''.join(content).format(folder=data_folder,
+            o.write(''.join(content).format(folder=self.workspace,
                                             base='sample',
                                             content=commands,
                                             description='(example...)',
@@ -686,6 +706,9 @@ class BMM_User(Borg):
         else:
             verb, pad = 'Found', '  '
         self.print_verb_message(0, verb, 'macro template', pad, macropy)
+        kafka_message({'copy': True,
+                       'file': macropy,
+                       'target': os.path.join(self.folder, "templates")})
 
         #self.find_or_copy_file(0, 'wheel macro spreadsheet',    'wheel.xlsx')
         self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle.xlsx')
@@ -727,12 +750,12 @@ class BMM_User(Borg):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## GDrive folder
-        user_folder = make_gdrive_folder(prefix='    ', update=False)
-        for f in ('logo.png', 'style.css', 'trac.css'):
-            shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(user_folder, 'dossier', f))
-        print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
-        print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
-        step += 1
+        # user_folder = make_gdrive_folder(prefix='    ', update=False)
+        # for f in ('logo.png', 'style.css', 'trac.css'):
+        #     shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(user_folder, 'dossier', f))
+        # print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
+        # print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
+        # step += 1
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## SAF and GUP
@@ -808,6 +831,22 @@ class BMM_User(Borg):
             local_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name, date)
         self.name = name
         self.date = date
+
+
+        if name in BMM_STAFF:
+            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name)
+            user_workspace = os.path.join(os.getenv('HOME'), 'Workspace', 'Staff', name, date)
+        else:
+            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
+            user_workspace = os.path.join(os.getenv('HOME'), 'Workspace', 'Visitors', name, date)
+        if not os.path.isdir(user_folder):
+            os.makedirs(user_folder)
+        if not os.path.isdir(user_workspace):
+            os.makedirs(user_workspace)
+        if not os.path.isdir(os.path.join(user_workspace, 'templates')):
+            os.makedirs(os.path.join(user_workspace, 'templates'))
+        self.workspace = user_workspace
+
         
         self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
@@ -827,19 +866,10 @@ class BMM_User(Borg):
             json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
         os.chmod(jsonfile, 0o444)
 
-        if name in BMM_STAFF:
-            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name)
-        else:
-            user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
-        if not os.path.isdir(user_folder):
-            os.makedirs(user_folder)
         if not os.path.islink(local_folder):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(f'    Made symbolic link to data folder at {local_folder}')
         self.folder_link = local_folder
-        if not is_re_worker_active() and do_sync is True:
-            rsync_to_gdrive()
-            synch_gdrive_folder()
         
         # if 'xf06bm-ws1' in self.host:
         #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]

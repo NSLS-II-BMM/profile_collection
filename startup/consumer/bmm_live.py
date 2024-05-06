@@ -17,8 +17,6 @@ from slack import img_to_slack
 
 from BMM.periodictable import Z_number, edge_number
 
-from BMM_common.xdi    import xdi_xrf_header
-
 class LineScan():
     '''Manage the live plot for a motor scan or a time scan.
 

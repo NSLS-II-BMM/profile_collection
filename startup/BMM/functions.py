@@ -207,7 +207,7 @@ def elapsed_time(start, slack=None):
         
 
 def present_options(suffix='xlsx'):
-    options = [x for x in os.listdir(user_ns['BMMuser'].folder) if x.endswith(suffix)]
+    options = [x for x in os.listdir(user_ns['BMMuser'].workspace) if x.endswith(suffix)]
     options = sorted(options)
     print(bold_msg(f'Looking in {user_ns["BMMuser"].folder}\n'))
     

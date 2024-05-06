@@ -63,23 +63,6 @@ def kmvr(*args):
     yield from mvr(*args)
 
 
-# def set_integration_time(time=0.5):
-#     '''
-#     set integration times for electrometers and Struck from the command line
-#     '''
-#     user_ns['vor'].auto_count_time.value = time
-#     user_ns['quadem1'].averaging_time.value = time
-#     user_ns['dualio'].averaging_time.value = time
-
-# def set_integration_plan(time=0.5):
-#     '''
-#     set integration times for electrometers and Struck from a plan
-#     '''
-#     yield from mv(user_ns['vor'].auto_count_time, time)
-#     yield from mv(user_ns['quadem1'].averaging_time, time)
-#     yield from mv(user_ns['dualio'].averaging_time, time)
-
-
 
 def recover_slits2():
     inb  = user_ns['dm2_slits_i']

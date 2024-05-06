@@ -372,7 +372,7 @@ def raster(inifile=None, **kwargs):
                 while os.path.isfile(os.path.join(p['folder'], 'maps', "%s-%2.2d.png" % (p['filename'],seqnumber))):
                     seqnumber += 1
                 basename = "%s-%2.2d" % (p['filename'],seqnumber)
-                pngout = os.path.join(BMMuser.DATA, 'maps', "%s-%2.2d.png" % (p['filename'],seqnumber))
+                pngout = os.path.join(BMMuser.workspace, 'maps', "%s-%2.2d.png" % (p['filename'],seqnumber))
 
             dossier.pngout = os.path.basename(pngout)
             dossier.xlsxout = f"{basename}.xlsx"

@@ -413,7 +413,7 @@ def setup_wheel():
 wmb = WheelMacroBuilder()
 wmb.description = 'a standard sample wheel'
 wmb.instrument  = 'sample wheel'
-wmb.folder      = BMMuser.folder
+wmb.folder      = BMMuser.workspace
 wmb.cleanup     = 'yield from xafs_wheel.reset()' 
 
 
@@ -562,7 +562,7 @@ if WITH_LINKAM:
     lmb = LinkamMacroBuilder()
     lmb.description = 'the Linkam stage'
     lmb.instrument='Linkam'
-    lmb.folder = BMMuser.folder
+    lmb.folder = BMMuser.workspace
 
 
 
@@ -587,7 +587,7 @@ if WITH_LAKESHORE:
     lsmb = LakeShoreMacroBuilder()
     lsmb.description = 'the LakeShore 331 temperature controller'
     lsmb.instrument='LakeShore'
-    lsmb.folder = BMMuser.folder
+    lsmb.folder = BMMuser.workspace
 
 
 
@@ -607,7 +607,7 @@ from BMM.grid import GridMacroBuilder
 gmb = GridMacroBuilder()
 gmb.description = 'a motor grid'
 gmb.instrument = 'grid'
-gmb.folder = BMMuser.folder
+gmb.folder = BMMuser.workspace
 
 
 ####################################################################################

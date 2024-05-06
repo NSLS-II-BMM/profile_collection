@@ -27,17 +27,17 @@ from BMM.workspace     import rkvs
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.bmm         import BMMuser, rois
+from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.detectors   import xs, xs1, with_xspress3
 from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks, m2_ydi, m2_ydo, m2_yu
 from BMM.user_ns.motors      import *
 
 def show_edges():
-    if with_xspress3 is True:
-        text = show_reference_wheel() + '\n' + xs.show_rois()
-    else:
-        text = show_reference_wheel() + '\n' + rois.show()
+    #if with_xspress3 is True:
+    text = show_reference_wheel() + '\n' + xs.show_rois()
+    #else:
+    #    text = show_reference_wheel() + '\n' + rois.show()   # DEPRECATED
     boxedtext('Foils and ROIs configuration', text[:-1], 'brown', width=85)
 
 
@@ -459,7 +459,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         #if not xrd:
         ## reference channel
         print('Moving reference foil...')
-        yield from rois.select_plan(el)
+        #yield from rois.select_plan(el)   # DEPRECATED
         ## Xspress3
         if with_xspress3:
             BMMuser.verify_roi(xs, el, edge)
@@ -479,7 +479,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         BMM_clear_suspenders()
         #yield from dcm.kill_plan()
         yield from mv(m2_bender.kill_cmd, 1)
-        BMMuser.state_to_redis(filename=os.path.join(BMMuser.DATA, '.BMMuser'), prefix='')
+        BMMuser.state_to_redis(filename=os.path.join(BMMuser.workspace, '.BMMuser'), prefix='')
         yield from resting_state_plan()
         end = time.time()
         print(f'\n\nThat took {(end-start)/60:.1f} min')

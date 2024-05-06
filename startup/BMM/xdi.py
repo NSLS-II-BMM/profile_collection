@@ -4,7 +4,7 @@ import re, pathlib, sys, datetime, pandas, numpy
 from BMM.functions import plotting_mode
 from BMM.db        import file_resource
 
-from BMM.user_ns.detectors import quadem1, ic0, ic1, vor, xs, xs1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, ic0, ic1, xs, xs1, ic2, ION_CHAMBERS
 from BMM.user_ns.dwelltime import with_ic0
 
 from BMM import user_ns as user_ns_module
@@ -56,17 +56,9 @@ else:
 
 if with_ic0:
     _ic0         = [ic0.Ia, ic0.Ib]
-_vortex_ch1  = [vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
-_vortex_ch2  = [vor.channels.chan4, vor.channels.chan8,  vor.channels.chan12]
-_vortex_ch3  = [vor.channels.chan5, vor.channels.chan9,  vor.channels.chan13]
-_vortex_ch4  = [vor.channels.chan6, vor.channels.chan10, vor.channels.chan14]
-_vortex      = _vortex_ch1 + _vortex_ch2 + _vortex_ch3 + _vortex_ch4
-_deadtime_corrected = [vor.dtcorr1, vor.dtcorr2, vor.dtcorr3, vor.dtcorr4]
 
 transmission = _ionchambers
 eyield       = [*_ionchambers, quadem1.Iy]
-fluorescence = _ionchambers + _deadtime_corrected + _vortex
-fluorescence_1ch = [quadem1.I0, quadem1.It, quadem1.Ir, vor.dtcorr1, vor.channels.chan3, vor.channels.chan7,  vor.channels.chan11]
 #xspress      = _ionchambers + [user_ns['quadem1'].xschannel1]
 #xspress      = _ionchambers + [xs.channel1.rois.roi02.value]
 
@@ -305,11 +297,6 @@ def write_XDI(datafile, dataframe):
     for i, d in enumerate(detectors, start=len(abscissa_columns)+1):
         if 'quadem1' in d.name:
             this = re.sub('quadem1_', '', d.name)
-        # elif 'vor_channels_chan' in d.name:
-        #     this = re.sub('vor_channels_chan', '', d.name)
-        #     this = name_map[this]
-        elif 'vor_' in d.name:
-            this = re.sub('vor_', '', d.name)
         else:
             this = d.name
         labels.append(this)

@@ -22,16 +22,15 @@ import matplotlib.pyplot as plt
 from BMM.derivedplot   import DerivedPlot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.kafka           import kafka_message
+from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.motor_status  import motor_sidebar #, motor_status
 from BMM.resting_state import resting_state, resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
-from BMM.xdi           import write_XDI
 
-from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, vor, xs, xs1, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -171,89 +170,12 @@ def ts2dat(datafile, key):
     key : str
         UID of record in database
 
-    Examples
-    --------
+    Example
+    -------
     >>> ts2dat('/path/to/myfile.dat', '42447313-46a5-42ef-bf8a-46fedc2c2bd1')
-
-    
-
-    >>> ts2dat('/path/to/myfile.dat', 2948)
-
     '''
-
-    BMMuser, db = user_ns['BMMuser'], user_ns['db']
-    if os.path.isfile(datafile):
-        print(error_msg('%s already exists!  Bailing out....' % datafile))
-        return
-    dataframe = db[key]
-
-    devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
-    if 'vor' in devices:
-        column_list = ['time', 'I0', 'It', 'Ir',
-                       BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4,
-                       BMMuser.roi1, 'ICR1', 'OCR1',
-                       BMMuser.roi2, 'ICR2', 'OCR2',
-                       BMMuser.roi3, 'ICR3', 'OCR3',
-                       BMMuser.roi4, 'ICR4', 'OCR4']
-        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
-    elif '4-element SDD' in devices:
-        el = dataframe.start['XDI']['Scan']['element']
-        column_list = ['time', 'I0', 'It', 'Ir', f'{el}1', f'{el}2', f'{el}3', f'{el}4']
-        template = "  %.3f  %.6f  %.6f  %.6f  %.2f  %.2f  %.2f  %.2f\n"        
-    elif 'Ic1' in devices:
-        el = dataframe.start['XDI']['Scan']['element']
-        column_list = ['time', 'I0', 'It', 'Ir', 'Ita', 'Itb']
-        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f\n"        
-    else:
-        column_list = ['time', 'I0', 'It', 'Ir']
-        template = "  %.3f  %.6f  %.6f  %.6f\n"
-
-
-    ## set Scan.start_time & Scan.end_time ... this is how it is done
-    d=datetime.datetime.fromtimestamp(round(dataframe.start['time']))
-    start_time = datetime.datetime.isoformat(d)
-    d=datetime.datetime.fromtimestamp(round(dataframe.stop['time']))
-    end_time   = datetime.datetime.isoformat(d)
-
-    st = pandas.Timestamp(start_time) # this is a UTC problem
-        
-    table = dataframe.table()
-    this = table.loc[:,column_list]
-
-        
-    handle = open(datafile, 'w')
-    handle.write('# XDI/1.0 BlueSky/%s\n'    % bluesky_version)
-    handle.write('# Scan.start_time: %s\n'   % start_time)
-    handle.write('# Scan.end_time: %s\n'     % end_time)
-    handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
-    handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-    handle.write('# Beamline.energy: %.3f\n' % dataframe['start']['XDI']['Beamline']['energy'])
-    handle.write('# Scan.dwell_time: %.3f\n' % dataframe['start']['XDI']['Scan']['dwell_time'])
-    handle.write('# Scan.delay: %.3f\n'      % dataframe['start']['XDI']['Scan']['delay'])
-    handle.write('# Scan.element: %s\n'      % dataframe['start']['XDI']['Scan']['element'])
-    try:
-        handle.write('# Facility.GUP: %d\n'  % dataframe['start']['XDI']['Facility']['GUP'])
-    except:
-        pass
-    try:
-        handle.write('# Facility.SAF: %d\n'  % dataframe['start']['XDI']['Facility']['SAF'])
-    except:
-        pass
-    handle.write('# ==========================================================\n')
-    handle.write('# ' + '  '.join(column_list) + '\n')
-    slowval = None
-    for i in range(0,len(this)):
-        ti = this.iloc[i, 0]
-        #elapsed =  (ti.value - st.value)/10**9
-        elapsed = (ti.value - this.iloc[0, 0].value)/10**9
-        datapoint = list(this.iloc[i])
-        datapoint[0] = elapsed
-        handle.write(template % tuple(datapoint))
-
-    handle.flush()
-    handle.close()
+    kafka_message({'seadxdi': True, 'uid': key, 'filename': datafile})
     print(bold_msg('wrote timescan to %s' % datafile))
-
 
 
 ###############################################################################
@@ -385,13 +307,14 @@ def sead(inifile=None, force=False, **kwargs):
         pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
         these_kwargs = {'start'     : p['start'],
                         'end'       : p['start']+p['nscans']-1,
+                        'startdate' : BMMuser.date,
                         'bounds'    : ' '.join(map(str, p['bounds_given'])),
                         'steps'     : ' '.join(map(str, p['steps'])),
                         'times'     : ' '.join(map(str, p['times'])),
                         'pngfile'   : pngout,
         }
         ## for dossier
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+        with open(os.path.join(BMMuser.workspace, inifile)) as f:
             initext = ''.join(f.readlines())
         user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
         md['_user'] = user_metadata

@@ -194,10 +194,7 @@ def bmm_metadata(measurement   = 'transmission',
     if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement or 'xs' in measurement:
         md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
         md['Detector']['deadtime_correction'] = 'Xspress3'
-
-    #     md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'
-    # if 'xs' in measurement:
-    #     md['Detector']['fluorescence'] = 'SII Vortex (4-element silicon drift)'
+    #     md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'  # DEPRECATED
         
     if 'yield' in measurement:
         #md['Detector']['yield'] = 'Leeds multi-sample electron yield detector'

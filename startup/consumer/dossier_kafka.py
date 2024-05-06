@@ -30,20 +30,36 @@ from echo_slack import echo_slack
 
 startup_dir = os.path.dirname(__file__)
 
+def log_entry(logger, message):
+    #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
+    print(message)
+    echo_slack(text = message,
+               icon = 'message',
+               rid  = None )
+    logger.info(message)
+
+
 class BMMDossier():
     '''A class for generating a static HTML file for documenting an XAS
     measurement at BMM.
 
-    The concept is that the (many, many) attributes of this class will
-    be accumulated as the scan plan is executed.  At the end of the
-    scan sequence, the static HTML file will be generated.
+    The concept is that most of the metadata needed for the dossier
+    will be accumulated in the start document of each scan in the
+    sequence.  At the end of the scan sequence, the static HTML file
+    will be generated.
+
+    A small number of things are accumulated as objects of the class
+    as the scan sequence progresses.  Thus there are some small
+    differences between a dossier generated at the time of measurement
+    and one made after the fact.
 
     That static HTML file is made using a set of simple text templates
-    which are filled in, the concatenated in a way that suitable for
+    which are filled in, then concatenated in a way that suitable for
     the current XAS measurement.
 
     It is the responsibility of the process sending the kafka messages
-    to supply EVERY SINGLE ONE of the attributes.  
+    to supply each of the attributes listed below.  All other metadata
+    will be found in the start document.
 
     attributes
     ==========
@@ -82,11 +98,6 @@ class BMMDossier():
     write_manifest
        update the manifest and the 00INDEX.html file
 
-    make_merged_triplot
-       merge the scans and generate a triplot
-
-    simple_plot
-       simple, fallback plot
 
     instrument state
     ================
@@ -155,16 +166,11 @@ class BMMDossier():
             else:
                 setattr(self, k, kwargs[k])
 
-    def log_entry(self, logger, message):
-        #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
-        print(message)
-        logger.info(message)
-
 
     def write_dossier(self, bmm_catalog, logger):
 
         if len(self.uidlist) == 0:
-            self.log_entry(logger, '*** cannot write dossier, uidlist is empty')
+            log_entry(logger, '*** cannot write dossier, uidlist is empty')
             return None
 
         ## gather information for the dossier from the start document
@@ -184,11 +190,11 @@ class BMMDossier():
             
         ## test if XAS data file can be found
         if XDI['_user']['filename'] is None or XDI["_user"]["start"] is None:
-            self.log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
+            log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
             return None
         firstfile = f'{XDI["_user"]["filename"]}.{XDI["_user"]["start"]:03d}'
         if not os.path.isfile(os.path.join(folder, firstfile)):
-            self.log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
+            log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
             return None
 
         ## determine names of output dossier files
@@ -222,7 +228,7 @@ class BMMDossier():
                 content = f.readlines()
             thiscontent = ''.join(content).format(measurement   = 'XAFS',
                                                   filename      = XDI['_user']['filename'],
-                                                  date          = self.date,
+                                                  date          = XDI['_user']['startdate'],
                                                   rid           = self.rid,
                                                   seqnumber     = seqnumber, )
 
@@ -236,8 +242,9 @@ class BMMDossier():
                                                        xrfuid        = snapshots['xrf_uid'], )
 
             # middle part of dossier
-            if self.instrument is None or self.instrument == '':
-                self.instrument = self.instrument_default()
+            instrument = XDI['_user']['instrument']
+            if instrument is None or instrument == '':
+                instrument = self.instrument_default()
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
             thiscontent += ''.join(content).format(basename      = basename,
@@ -246,7 +253,7 @@ class BMMDossier():
                                                    sample        = XDI['Sample']['name'],
                                                    prep          = XDI['Sample']['prep'],
                                                    comment       = XDI['_user']['comment'],
-                                                   instrument    = self.instrument,)
+                                                   instrument    = instrument,)
             
 
             # middle part, cameras, one at a time and only if actually snapped
@@ -282,14 +289,21 @@ class BMMDossier():
             # middle part, XRF and glancing angle alignment images
             if thismode == 'xs' or thismode == 'xs1':
                 el = XDI['Element']['symbol']
-                rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
-                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
-                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
-                        int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0])]
-                ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel01_xrf']).sum()),
-                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel02_xrf']).sum()),
-                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel03_xrf']).sum()),
-                        int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel04_xrf']).sum()) ]
+                if '4-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0])]
+                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel01_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel02_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel03_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel04_xrf']).sum()) ]
+                elif '1-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'8'][0]),]
+                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['1-element SDD_channel08_xrf']).sum()),]
+                elif '7-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                    pass
+
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+os.path.basename(snapshots['xrf_image'])),
@@ -310,30 +324,6 @@ class BMMDossier():
                 content = f.readlines()
             this_ref = all_references[XDI['Element']['symbol']][3]
 
-            # print('e0'            , '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']))
-            # print('edge'          , XDI['Element']['edge'],)
-            # print('element'       , self.element_text(XDI['Element']['symbol']),)
-            # print('mode'          , XDI['_user']['mode'],)
-            # print('bounds'        , ", ".join(map(str, XDI['_user']['bounds_given'])),)
-            # print('steps'         , XDI['_user']['steps'],)
-            # print('times'         , XDI['_user']['times'],)
-            # print('reference'     , re.sub(r'(\d+)', r'<sub>\1</sub>', this_ref),)
-            # print('seqstart'      , datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),)
-            # print('seqend'        , datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[-1]].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p'),)
-            # print('mono'          , self.mono,)
-            # print('pdsmode'       , self.pdstext,)
-            # print('pccenergy'     , '%.1f' % XDI['_user']['pccenergy'],)
-            # print('experimenters' , XDI['_user']['experimenters'],)
-            # print('gup'           , XDI['Facility']['GUP'],)
-            # print('saf'           , XDI['Facility']['GUP'],)
-            # print('url'           , XDI['_user']['url'],)
-            # print('doi'           , XDI['_user']['doi'],)
-            # print('cif'           , XDI['_user']['cif'],)
-            # print('initext'       , highlight(XDI['_user']['initext'], IniLexer(),    HtmlFormatter()),)
-            # print('clargs'        , highlight(XDI['_user']['clargs'],  PythonLexer(), HtmlFormatter()),)
-            # print('filename'      , XDI['_user']['filename'],)
-
-            
             thiscontent += ''.join(content).format(e0            = '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']),
                                                    edge          = XDI['Element']['edge'],
                                                    element       = self.element_text(XDI['Element']['symbol']),
@@ -360,24 +350,19 @@ class BMMDossier():
             with open(htmlfilename, 'a') as o:
                 o.write(thiscontent)
 
-            self.log_entry(logger, f'wrote dossier: {htmlfilename}')
+            log_entry(logger, f'wrote XAFS dossier: {htmlfilename}')
         except Exception as E:
-            self.log_entry(logger, f'failed to write dossier file {htmlfilename}\n' + str(E))
-
-        print(f'wrote {htmlfilename}')
-        echo_slack(text = f'wrote XAFS dossier to {htmlfilename}',
-                   icon = 'message',
-                   rid  = None )
+            log_entry(logger, f'failed to write dossier file {htmlfilename}\n' + str(E))
 
 
         self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
         manifest = open(self.manifest_file, 'a')
         manifest.write(f'xafs␣{htmlfilename}\n')
         manifest.close()
-        self.write_manifest('XAFS')
+        self.write_manifest(scantype='XAFS', startdate=XDI['_user']['startdate'])
 
 
-    def write_manifest(self, scantype='XAFS'):
+    def write_manifest(self, scantype='XAFS', startdate=''):
         '''Update the scan manifest and the corresponding static html file.'''
         with open(self.manifest_file) as f:
             lines = [line.rstrip('\n') for line in f]
@@ -394,7 +379,7 @@ class BMMDossier():
             content = f.readlines()
         indexfile = os.path.join(self.folder, 'dossier', '00INDEX.html')
         o = open(indexfile, 'w')
-        o.write(''.join(content).format(date           = self.date,
+        o.write(''.join(content).format(date           = startdate,
                                         experimentlist = experimentlist,))
         o.close()
 
@@ -428,19 +413,24 @@ class BMMDossier():
             thistext  = f'{element} '
             thistext += f'(<a href="https://en.wikipedia.org/wiki/{element_name(element)}">'
             thistext += f'{element_name(element)}</a>, '
-            thistext += f'{Z_number(element)})'
+            thistext += f'Z={Z_number(element)})'
             return thistext
         
     def generate_scanlist(self, bmm_catalog):
-        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{filename}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
+        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{printedname}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
 
         text = ''
-        ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
         for u in self.uidlist:
-            text += template.format(filename = bmm_catalog[u].metadata['start']['XDI']['_user']['filename'],
-                                    ext      = ext,
-                                    scanid   = bmm_catalog[u].metadata['start']['scan_id'],
-                                    uid      = u)
+            filename = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['filename']
+            ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
+            printedname = filename
+            if len(filename) > 11:
+                printedname = filename[0:6] + '&middot;&middot;&middot;' + filename[-5:]
+            text += template.format(filename    = filename,
+                                    printedname = printedname,
+                                    ext         = ext,
+                                    scanid      = bmm_catalog[u].metadata['start']['scan_id'],
+                                    uid         = u)
             ext = ext + 1
         return text
 
@@ -643,7 +633,7 @@ class BMMDossier():
     def sead_dossier(self, catalog, logger):
 
         if len(self.uidlist) == 0:
-            self.log_entry(logger, '*** cannot write SEAD dossier, uidlist is empty')
+            log_entry(logger, '*** cannot write SEAD dossier, uidlist is empty')
             return None
 
         ## gather information for the dossier from the start document
@@ -663,11 +653,11 @@ class BMMDossier():
             
         ## test if XAS data file can be found
         if XDI['_user']['filename'] is None or XDI["_user"]["start"] is None:
-            self.log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
+            log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
             return None
         firstfile = f'{XDI["_user"]["filename"]}.{XDI["_user"]["start"]:03d}'
         if not os.path.isfile(os.path.join(folder, firstfile)):
-            self.log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
+            log_entry(logger, f'*** Could not find {os.path.join(folder, firstfile)}')
             return None
 
 
@@ -728,20 +718,13 @@ class BMMDossier():
         with open(htmlfilename, 'a') as o:
             o.write(thiscontent)
 
-        print(f'wrote {htmlfilename}')
-        echo_slack(text = f'wrote SEAD dossier to {htmlfilename}',
-                   icon = 'message',
-                   rid  = None )
+        log_entry(logger, f'wrote SEAD dossier: {htmlfilename}')
 
-
-        
-        
-    
         self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
         manifest = open(self.manifest_file, 'a')
         manifest.write(f'sead␣{htmlfilename}\n')
         manifest.close()
-        self.write_manifest('SEAD')
+        self.write_manifest(scantype='SEAD', startdate=XDI['_user']['startdate'])
 
 class XASFile():
 
@@ -763,7 +746,7 @@ class XASFile():
             text = 'I0  --  $5'
         return text
     
-    def to_xdi(self, catalog=None, uid=None, filename=None):
+    def to_xdi(self, catalog=None, uid=None, filename=None, logger=None):
         '''Write an XDI-style file for an XAS scan.
 
         '''
@@ -853,19 +836,16 @@ class XASFile():
         handle.write(p.to_csv(None, sep=' ', columns=column_list, index=False, header=column_labels, float_format='%.6f'))
         handle.flush()
         handle.close()
-        print(f'wrote XAS data to {filename}')
-        echo_slack(text = f'wrote XAFS data to {filename}',
-                   icon = 'message',
-                   rid  = None )
+
+        log_entry(logger, f'wrote XAS data to {filename}')
 
 
 
 class SEADFile():
 
-    
-    def to_xdi(self, catalog=None, uid=None, filename=None):
-        '''Write a single energy absorption detection (SEAD) scan file for an
-        XAS scan, which is a timescan at a specific energy.
+    def to_xdi(self, catalog=None, uid=None, filename=None, logger=None):
+        '''Write a single energy absorption detection (SEAD) scan file in XDI
+        format, which is a timescan at a specific energy.
 
         '''
         xdi = catalog[uid].metadata["start"]["XDI"]
@@ -941,7 +921,74 @@ class SEADFile():
         handle.write(p.to_csv(None, sep=' ', columns=column_list, index=False, header=column_labels, float_format='%.6f'))
         handle.flush()
         handle.close()
-        print(f'wrote SEAD data to {filename}')
-        echo_slack(text = f'wrote SEAD data to {filename}',
-                   icon = 'message',
-                   rid  = None )
+
+        log_entry(logger, f'wrote SEAD data to {filename}')
+
+
+
+class LSFile():
+
+    def determine_element(self, catalog, uid):
+        labels = list(catalog[uid].primary.read().keys())
+        for l in labels:
+            m = re.match('^[A-Z][a-z]?[1-7]', l)
+            if m is not None:
+                return(m.string[:-1])
+        return 'MCA'
+        
+    def to_xdi(self, catalog=None, uid=None, filename=None, logger=None):
+        startdoc = catalog[uid].metadata["start"]
+        handle = open(filename, 'w')
+        handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
+
+        start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
+        handle.write(f'# Scan.start_time: {start}\n')
+        handle.write(f'# Scan.uid: {uid}\n')
+        handle.write(f'# Scan.transient_id: {catalog[uid].metadata["start"]["scan_id"]}\n')
+
+        motor = startdoc["motors"][0]
+        column_list = [motor, 'I0', 'It', 'Ir']
+        column_labels = [motor, 'I0', 'It', 'Ir']
+        
+        el = self.determine_element(catalog, uid)
+        handle.write(f'# Column.1: {motor}\n')
+        handle.write( '# Column.2: I0 nA\n')
+        handle.write( '# Column.3: It nA\n')
+        handle.write( '# Column.4: Ir nA\n')
+        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+            nchan = 1
+            column_list.append(f'{el}8')
+            column_labels.append(f'{el}8')
+            handle.write(f'# Column.5: {el}8\n')
+        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
+            nchan = 4
+        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+            column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
+            nchan = 7
+        if nchan > 0:
+            for i in range(1, nchan+1):
+                handle.write(f'# Column.{i+4}: {el}{i}\n')
+
+        ## prepare data table and insert reltime column
+        xa = catalog[uid].primary.read(column_list)
+        p = xa.to_pandas()
+        t = numpy.array(catalog[uid].primary.data['time'])
+
+        ## use time as the pandas index
+        p.set_index(motor)
+        
+        ## comment and separator lines
+        handle.write( '# //////////////////////////////////////////////////////////\n')
+        handle.write(f'# linescan on {motor}\n')
+        handle.write( '# ----------------------------------------------------------\n')
+        handle.write( '# ')
+
+        ## dump the data table and close the file
+        handle.write(p.to_csv(None, sep=' ', columns=column_list, index=False, header=column_labels, float_format='%.6f'))
+        handle.flush()
+        handle.close()
+
+        log_entry(logger, f'wrote linescan data to {filename}')

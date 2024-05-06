@@ -31,9 +31,9 @@ run_report('\t'+'user')
 from BMM.user import BMM_User
 
 
-run_report('\t'+'detector ROIs')
-from BMM.rois import ROI
-rois = ROI()
+# run_report('\t'+'detector ROIs')
+# from BMM.rois import ROI
+# rois = ROI()
 
 
 run_report('\t'+'recovering user configuration')
@@ -53,9 +53,9 @@ end_experiment   = BMMuser.end_experiment
 import atexit, os
 
 def teardown():
-    fname = os.path.join(BMMuser.DATA, '.BMMuser')
+    fname = os.path.join(BMMuser.workspace, '.BMMuser')
     print("Shutting down: ", end=' ')
-    BMMuser.state_to_redis(filename=os.path.join(BMMuser.DATA, '.BMMuser'), prefix='')
+    BMMuser.state_to_redis(filename=os.path.join(BMMuser.workspace, '.BMMuser'), prefix='')
 
 atexit.register(teardown)
 

@@ -12,7 +12,7 @@ from BMM.workspace import rkvs
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser, rois
+from BMM.user_ns.bmm import BMM_CONFIGURATION_LOCATION, BMMuser
 from BMM.user_ns.motors import mcs8_motors, xafs_motors
 
 run_report(__file__, text='import the rest of the things')
@@ -39,6 +39,9 @@ from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspend
 run_report('\t'+'linescan, rocking curve, slit_height, find_slot, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
+run_report('\t'+'kafka')
+from BMM.kafka import close_line_plots, close_plots, kafka_message
+
 run_report('\t'+'support for wafer samples')
 from BMM.wafer import Wafer
 wafer = Wafer()
@@ -62,7 +65,7 @@ ga = GlancingAngle('XF:06BMB-CT{DIODE-Local:1}', name='glancing angle stage')
 gawheel = GlancingAngleMacroBuilder()
 gawheel.description = 'the glancing angle stage'
 gawheel.instrument  = 'glancing angle'
-gawheel.folder = BMMuser.folder
+gawheel.folder = BMMuser.workspace
 gawheel.cleanup = 'yield from mv(xafs_x, samx, xafs_y, samy, xafs_pitch, samp, xafs_det, 205)\n        yield from ga.reset()'
 gawheel.initialize = '''samx, samy, samp = xafs_x.position, xafs_y.position, xafs_pitch.position
     if ga.ready_to_start() is not True:
@@ -108,7 +111,7 @@ def xlsx():
         print(error_msg('No spreadsheet specified!'))
         return None
 
-    wb = load_workbook(os.path.join(BMMuser.folder, spreadsheet), read_only=True, data_only=True)
+    wb = load_workbook(os.path.join(BMMuser.workspace, spreadsheet), read_only=True, data_only=True)
 
 
     version    = int(str(wb[wb.sheetnames[0]]['B2'].value).split(" ")[1])
@@ -180,6 +183,15 @@ the templates folder of your data directory.
         BMMuser.instrument = 'double wheel'
 
     rkvs.set('BMM:automation:type', instrument)
+    kafka_message({'copy': True,
+                   'file': os.path.join(BMMuser.workspace, spreadsheet),
+                   'target': BMMuser.folder, })
+    kafka_message({'copy': True,
+                   'file': os.path.join(BMMuser.workspace, f'{sheet}.ini'),
+                   'target': BMMuser.folder, })
+    kafka_message({'copy': True,
+                   'file': os.path.join(BMMuser.workspace, f'{sheet}_macro.py'),
+                   'target': BMMuser.folder, })
 
 
 def set_instrument(instrument=None):
@@ -290,14 +302,12 @@ XDI_record = {'xafs_linx'                        : (True,  'Sample.x'),
               'monotc_downstream_temperature'    : (False, 'BMM.mono_tc_downstream'),
               'monotc_upstream_low_temperature'  : (False, 'BMM.mono_tc_upstream_low'),
               }
-run_report('\t'+'XDI')
-from BMM.xdi import write_XDI
 
 # suppress some uninteresting messages from lib/python3.7/site-packages/hdf5plugin/__init__.py
 # import logging
 # logging.getLogger("hdf5plugin").setLevel(logging.ERROR) # no longer needed, I guess...
 run_report('\t'+'xafs')
-from BMM.xafs import howlong, xafs, xanes, db2xdi
+from BMM.xafs import howlong, xafs, xanes
 from BMM.xafs_functions import xrfat
 from BMM.dossier import lims
 
@@ -307,8 +317,8 @@ from BMM.areascan import areascan, as2dat, fetch_areaplot
 run_report('\t'+'timescan')
 from BMM.timescan import timescan, ts2dat, sead
 
-run_report('\t'+'energystep')
-from BMM.energystep import energystep
+# run_report('\t'+'energystep')
+# from BMM.energystep import energystep
 
 run_report('\t'+'raster scans')
 from BMM.raster import raster, difference_data
@@ -339,7 +349,7 @@ from BMM.larch_interface import Pandrosus, Kekropidai
 # bunch.add(seo)
 
 run_report('\t'+'Demeter')
-from BMM.demeter import run_athena, run_hephaestus, toprj
+from BMM.demeter import run_athena, run_hephaestus
 
 run_report('\t'+'machine learning and data evaluation')
 from BMM.ml import BMMDataEvaluation
@@ -348,9 +358,6 @@ clf = BMMDataEvaluation()
 run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelemetry
 tele = BMMTelemetry()
-
-run_report('\t'+'kafka')
-from BMM.kafka import close_line_plots, close_plots
 
 
 if not is_re_worker_active():
@@ -361,11 +368,11 @@ if not is_re_worker_active():
     setup_xrd = _do.do_SetupXRD
 
 
-if rois.trigger is True:        # set Struck rois from persistent user information
-     if len(BMMuser.rois) == 3:
-          rois.set(BMMuser.rois)
-          rois.select(BMMuser.element)
-     rois.trigger = False
+# if rois.trigger is True:        # set Struck rois from persistent user information
+#      if len(BMMuser.rois) == 3:
+#           rois.set(BMMuser.rois)
+#           rois.select(BMMuser.element)
+#      rois.trigger = False
 
 if BMMuser.element is None:
      try:

@@ -21,7 +21,7 @@ from BMM.workspace  import rkvs
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, ION_CHAMBERS
+from BMM.user_ns.detectors   import quadem1, ION_CHAMBERS
 from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
@@ -48,8 +48,6 @@ def resting_state():
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     quadem1.on(quiet=True)
-    #vor.on()
-    #_locked_dwell_time.move(0.3)
     _locked_dwell_time.move(0.5)
     for electrometer in ION_CHAMBERS:
         electrometer.acquire.put(1)
@@ -78,7 +76,6 @@ def resting_state_plan():
     #BMMuser.prompt = True
     #BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     #yield from quadem1.on_plan()
-    #yield from vor.on_plan()
     quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
@@ -116,7 +113,6 @@ def end_of_macro():
         BMMuser.prompt = False
     BMMuser.running_macro, BMMuser.lims = False, True
     yield from quadem1.on_plan()
-    #yield from vor.on_plan()
     yield from mv(_locked_dwell_time, 0.5)
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)

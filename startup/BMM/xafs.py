@@ -15,7 +15,6 @@ from tiled.client import from_profile
 from urllib.parse import quote
 
 from BMM.db              import file_resource
-from BMM.demeter         import toprj
 from BMM.derivedplot     import DerivedPlot, close_all_plots, close_last_plot
 from BMM.dossier         import BMMDossier
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
@@ -31,7 +30,6 @@ from BMM.motor_status    import motor_sidebar, motor_status
 from BMM.periodictable   import edge_energy, Z_number, element_name
 from BMM.resting_state   import resting_state_plan
 from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.xdi             import write_XDI
 from BMM.xafs_functions  import conventional_grid, sanitize_step_scan_parameters
 
 from BMM import user_ns as user_ns_module
@@ -40,7 +38,7 @@ user_ns = vars(user_ns_module)
 #from __main__ import db
 from BMM.user_ns.base      import db, startup_dir, bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
-from BMM.user_ns.detectors import quadem1, vor, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -51,9 +49,6 @@ except ImportError:
 
 
 
-# p = scan_metadata(inifile='/home/bravel/commissioning/scan.ini', filename='humbleblat.flarg', start=10)
-# (energy_grid, time_grid, approx_time) = conventional_grid(p['bounds'],p['steps'],p['times'],e0=p['e0'])
-# then call bmm_metadata() to get metadata in an XDI-ready format
 
 
 
@@ -364,12 +359,32 @@ def ini_sanity(found):
             missing.append(a)
     return (ok, missing)
 
+def mono_sanity():
+    '''Verify that the physical position of the mono matches its
+    configuration.
+
+    '''
+    dcm   = user_ns['dcm']
+    dcm_x = user_ns['dcm_x']
+    msg, isok = '', True
+    if '311' in dcm._crystal and dcm_x.user_readback.get() < 10:
+        BMMuser.final_log_entry = False
+        msg = 'The DCM is in the 111 position, configured as 311'
+        isok = False
+    if '111' in dcm._crystal and dcm_x.user_readback.get() > 10:
+        BMMuser.final_log_entry = False
+        msg = 'The DCM is in the 311 position, configured as 111'
+        isok = False
+    if isok is False:
+        msg += '\n\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.get(), dcm._crystal)
+    return(isok, msg)
+
 
 
 ##########################################################
 # --- export a database energy scan entry to an XDI file #
 ##########################################################
-def db2xdi(datafile, key):
+def xas2xdi(datafile, key):
     '''
     Export a database entry for an XAFS scan to an XDI file.
 
@@ -383,23 +398,10 @@ def db2xdi(datafile, key):
 
     Examples
     --------
-
-    >>> db2xdi('/path/to/myfile.xdi', 1533)
-
-    >>> db2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+    >>> xas2xdi('/path/to/myfile.xdi', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
     '''
-    BMMuser = user_ns['BMMuser']
-    dfile = datafile
-    if BMMuser.DATA not in dfile:
-        if 'bucket' not in BMMuser.DATA:
-            dfile = os.path.join(BMMuser.DATA, datafile)
-    if os.path.isfile(dfile):
-        print(error_msg('%s already exists!  Bailing out....' % dfile))
-        return
-    header = db[key]
-    ## sanity check, make sure that db returned a header AND that the header was an xafs scan
-    write_XDI(dfile, header)
+    kafka_message({'xasxdi': True, 'uid' : key, 'filename': datafile})
     print(bold_msg('wrote %s' % dfile))
 
 
@@ -412,19 +414,13 @@ def xafs(inifile=None, **kwargs):
     Read an INI file for scan matadata, then perform an XAFS scan sequence.
     '''
     def main_plan(inifile, **kwargs):
-        if '311' in dcm._crystal and dcm_x.user_readback.get() < 10:
-            BMMuser.final_log_entry = False
-            print(error_msg('The DCM is in the 111 position, configured as 311'))
-            print(error_msg('\tdcm.x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.get(), dcm._crystal)))
-            yield from null()
-            return
-        if '111' in dcm._crystal and dcm_x.user_readback.get() > 10:
-            BMMuser.final_log_entry = False
-            print(error_msg('The DCM is in the 311 position, configured as 111'))
-            print(error_msg('\tdcm_x: %.2f mm\t dcm._crystal: %s' % (dcm_x.user_readback.get(), dcm._crystal)))
-            yield from null()
-            return
 
+        ## verify mono position and configuration are consistent
+        isok, msg = mono_sanity()
+        if isok is False:
+            print(error_msg(msg))
+            yield from null()
+            return
         
         verbose = False
         if 'verbose' in kwargs and kwargs['verbose'] is True:
@@ -433,14 +429,12 @@ def xafs(inifile=None, **kwargs):
         supplied_metadata = dict()
         if 'md' in kwargs and type(kwargs['md']) == dict:
             supplied_metadata = kwargs['md']
-        #if 'purpose' not in supplied_metadata:
-        #    this_purpose = purpose('xafs', 'scan_nd', )
-        #    supplied_metadata['purpose'] = 'xafs'
 
         if is_re_worker_active():
             BMMuser.prompt = False
             kwargs['force'] = True
 
+        ## verify that it is OK to start the scan
         if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text) = (True, '')
@@ -449,15 +443,10 @@ def xafs(inifile=None, **kwargs):
             if ok is False:
                 BMMuser.final_log_entry = False
                 print(error_msg('\n'+text))
-                print(bold_msg('Quitting scan sequence....\n'))
+                print(bold_msg('Not clear to start scan sequence....\n'))
                 yield from null()
                 return
-
-        ## make sure we are ready to scan
-        #yield from mv(_locked_dwell_time.quadem_dwell_time.settle_time, 0)
-        #yield from mv(_locked_dwell_time.struck_dwell_time.settle_time, 0)
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
-        #_locked_dwell_time.struck_dwell_time.settle_time = 0
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -580,9 +569,9 @@ def xafs(inifile=None, **kwargs):
 
             if not dcm.suppress_channel_cut:
                 if p['ththth']:
-                    print('\nSi(111) pseudo-channel-cut energy = %.1f ; %.1f on the Si(333)' % (eave,eave*3))
+                    print(f'\nSi(111) pseudo-channel-cut energy = {eave:1f} ; {eave*3:1f} on the Si(333)')
                 else:
-                    print('\nPseudo-channel-cut energy = %.1f' % eave)
+                    print(f'\nPseudo-channel-cut energy = {eave:1f}')
 
             action = input("\nBegin scan sequence? " + PROMPT)
             if action != '':
@@ -601,37 +590,18 @@ def xafs(inifile=None, **kwargs):
         BMM_log_info(motor_status())
 
         ## perhaps enter pseudo-channel-cut mode
-        ## need to do this define defining the plotting lambda otherwise
-        ## BlueSky gets confused about the plotting window
-        #if not dcm.suppress_channel_cut:
-        if p['channelcut'] is True:
-            report('entering pseudo-channel-cut mode at %.1f eV' % eave, 'bold')
-        dcm.mode = 'fixed'
-        yield from attain_energy_position(eave)
-
-        # dcm_bragg.clear_encoder_loss()
-        # #if 'noreturn' in kwargs and kwargs['noreturn'] is not True:
-        # yield from mv(dcm.energy, eave)
-        # count = 0
-        # while abs(dcm.energy.position - eave) > 0.1 :
-        #     if count > 3:
-        #         print(error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.'))
-        #         BMMuser.final_log_entry = False
-        #         yield from null()
-        #         return
-        #     print('Clearing encoder loss and re-trying to move to pseudo-channel-cut energy...')
-        #     dcm_bragg.clear_encoder_loss()
-        #     yield from mv(dcm.energy, eave)
-        #     count = count + 1
-            
         if p['rockingcurve']:
-            report('running rocking curve at pseudo-channel-cut energy %.1f eV' % eave, 'bold')
+            report(f'running rocking curve at pseudo-channel-cut energy {eave:1f} eV', 'bold')
+            yield from attain_energy_position(eave)
             yield from rocking_curve()
             close_last_plot()
             RE.msg_hook = None
         if p['channelcut'] is True:
+            yield from attain_energy_position(eave)
+            report(f'entering pseudo-channel-cut mode at {eave:1f} eV', 'bold')
             dcm.mode = 'channelcut'
-
+        else:
+            dcm.mode = 'fixed'
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -644,8 +614,8 @@ def xafs(inifile=None, **kwargs):
                           edge_energy   = p['e0'],
                           direction     = 1,
                           scantype      = 'step',
-                          channelcut    = True, # p['channelcut'],
-                          mono          = 'Si(%s)' % dcm._crystal,
+                          channelcut    = True, # p['channelcut'],  ???
+                          mono          = f'Si({dcm._crystal})',
                           i0_gas        = 'N2', #\
                           it_gas        = 'N2', # > these three need to go into INI file
                           ir_gas        = 'N2', #/
@@ -661,7 +631,6 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
-            #yield from dossier.capture_xrf(p['folder'], p['filename'], p['mode'], md)
             yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -679,13 +648,12 @@ def xafs(inifile=None, **kwargs):
         these_kwargs = {'start'     : p['start'],
                         'end'       : p['start']+p['nscans']-1,
                         'pccenergy' : eave,
+                        'startdate' : BMMuser.date,
                         'bounds'    : ' '.join(map(str, p['bounds_given'])),
                         'steps'     : ' '.join(map(str, p['steps'])),
                         'times'     : ' '.join(map(str, p['times'])), }
-        ## bsui dossier
-        dossier.prep_metadata(p, inifile, clargs, these_kwargs)            
 
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+        with open(os.path.join(BMMuser.workspace, inifile)) as f:
             initext = ''.join(f.readlines())
         user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
         md['_user'] = user_metadata
@@ -698,58 +666,15 @@ def xafs(inifile=None, **kwargs):
         i0 = 'I0' # 'I0a' or 'I0b'
         it = 'It' # 'Ita' or 'Itb'
         ir = 'Ir' # 'Ira' or 'Irb'
-        
-        test  = lambda doc: (doc['data']['dcm_energy'], doc['data'][i0])
-        trans = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data'][i0] / doc['data'][it]))
-        ref   = lambda doc: (doc['data']['dcm_energy'], numpy.log(doc['data'][it] / doc['data'][ir]))
-        Yield = lambda doc: (doc['data']['dcm_energy'], doc['data']['Iy'] / doc['data'][i0])
-        if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs':
-            xspress3_4 = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.xs1] +
-                                                                  doc['data'][BMMuser.xs2] +
-                                                                  doc['data'][BMMuser.xs3] +
-                                                                  doc['data'][BMMuser.xs4] ) / doc['data'][i0])
-        if user_ns['with_xspress3'] and plotting_mode(p['mode']) == 'xs1':
-            xspress3_1 = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.xs8] / doc['data'][i0])
-            
-        if BMMuser.detector == 1:
-            fluo  = lambda doc: (doc['data']['dcm_energy'], doc['data'][BMMuser.dtc1] / doc['data'][i0])
-        else:
-            fluo  = lambda doc: (doc['data']['dcm_energy'], (doc['data'][BMMuser.dtc1] +
-                                                             doc['data'][BMMuser.dtc2] + # removed doc['data'][BMMuser.dtc3] +
-                                                             doc['data'][BMMuser.dtc4]) / doc['data'][i0])
-        if 'fluo'    in p['mode'] or 'flou' in p['mode']:
-            if user_ns['with_xspress3']:
-                yield from mv(xs.cam.acquire_time, 0.5)
-                plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3)',   title=p['filename'])
-            else:
-                plot =  DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)', title=p['filename'])
-        elif 'trans' in p['mode']:
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',     title=p['filename'])
-        elif 'ref'   in p['mode']:
-            plot =  DerivedPlot(ref,   xlabel='energy (eV)', ylabel='absorption (reference)',        title=p['filename'])
-        elif 'yield' in p['mode']:
+
+        if 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-            plot = [DerivedPlot(Yield, xlabel='energy (eV)', ylabel='absorption (electron yield)',   title=p['filename']),
-                    DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',     title=p['filename'])]
-        elif 'test'  in p['mode']:
-            plot =  DerivedPlot(test,  xlabel='energy (eV)', ylabel='I0 (test)',                     title=p['filename'])
-        elif 'both'  in p['mode']:
-            if user_ns['with_xspress3']:
-                yield from mv(xs.cam.acquire_time, 0.5)
-                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',      title=p['filename']),
-                        DerivedPlot(xspress3_4,  xlabel='energy (eV)', ylabel='absorption (Xspress3)',    title=p['filename'])]
-            else:
-                plot = [DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',      title=p['filename']),
-                        DerivedPlot(fluo,  xlabel='energy (eV)', ylabel='absorption (fluorescence)',      title=p['filename'])]
-        elif 'xs1'   in p['mode']:
+        elif 'xs1' in p['mode']:
             yield from mv(xs1.cam.acquire_time, 0.5)
-            plot =  DerivedPlot(xspress3_1, xlabel='energy (eV)', ylabel='If / I0 (Xspress3, 1-element)', title=p['filename'])
-        elif 'xs'    in p['mode']:
+        elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
-            plot =  DerivedPlot(xspress3_4, xlabel='energy (eV)', ylabel='If / I0 (Xspress3, 4-element)', title=p['filename'])
-        else:
-            print(error_msg('Plotting mode not specified, falling back to a transmission plot'))
-            plot =  DerivedPlot(trans, xlabel='energy (eV)', ylabel='absorption (transmission)',          title=p['filename'])
+            
+
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -759,17 +684,6 @@ def xafs(inifile=None, **kwargs):
         else:
             BMM_suspenders()
 
-        ## This helped Bruce understand how to make a decorator conditional:
-        ## https://stackoverflow.com/a/49204061
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## begin the scan sequence with the plotting subscription
-        @conditional_subs_decorator
         def scan_sequence(clargs): #, noreturn=False):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
@@ -842,12 +756,10 @@ def xafs(inifile=None, **kwargs):
             close_plots()
             if BMMuser.enable_live_plots: close_last_plot()
             rid = str(uuid.uuid4())[:8]
-            dossier.rid = rid
             kafka_message({'dossier' : 'set', 'rid': rid})
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True, rid=rid)
             cnt = 0
-            uidlist = []
             kafka_message({'xafs_sequence' : 'start',
                            'element'       : p["element"],
                            'edge'          : p["edge"],
@@ -868,7 +780,6 @@ def xafs(inifile=None, **kwargs):
                            'repetitions': p["nscans"],
                            'sample': sample,
                            'reference_material': refmat, })
-            scanlist = ''
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -891,12 +802,12 @@ def xafs(inifile=None, **kwargs):
                 elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
                     this_instrument = ga.dossier_entry();
-                    kafka_message({'dossier'  : 'set',
-                                   'ga_align' : ga.alignment_filename,
-                                   'ga_yuid'  : ga.y_uid,
-                                   'ga_puid'  : ga.pitch_uid,
-                                   'ga_fuid'  : ga.f_uid,
-                    })
+                    # kafka_message({'dossier'  : 'set',
+                    #                'ga_align' : ga.alignment_filename,
+                    #                'ga_yuid'  : ga.y_uid,
+                    #                'ga_puid'  : ga.pitch_uid,
+                    #                'ga_fuid'  : ga.f_uid,
+                    # })
                     md['_snapshots']['ga_filename'] = ga.alignment_filename
                     md['_snapshots']['ga_yuid']     = ga.y_uid
                     md['_snapshots']['ga_pitchuid'] = ga.pitch_uid
@@ -913,13 +824,13 @@ def xafs(inifile=None, **kwargs):
                     slotno = f', motor grid {gmb.motor1.name}, {gmb.motor2.name} = {gmb.position1:.1f}, {gmb.position2:.1f}'
                     this_instrument = gmb.dossier_entry();
 
-                dossier.instrument = this_instrument
-                kafka_message({'dossier' : 'set', 'instrument': this_instrument})
+                #kafka_message({'dossier' : 'set', 'instrument': this_instrument})
                 
                     
                     
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
+                md['_user']['instrument'] = this_instrument
 
                 if plotting_mode(p['mode']) == 'xs':
                     yield from mv(xs.spectra_per_point, 1) 
@@ -997,25 +908,16 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
-                elif any(md in p['mode'] for md in ('icit', 'ici0')):
-                    uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
-                                                 'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
-                elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs':
+                elif plotting_mode(p['mode']) == 'xs':
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
-                elif user_ns['with_xspress3'] is True and plotting_mode(p['mode']) == 'xs1':
+                elif plotting_mode(p['mode']) == 'xs1':
                     uid = yield from scan_nd([*ION_CHAMBERS, xs1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs1', **more_kafka }})
                 else:
-                    uid = yield from scan_nd([*ION_CHAMBERS, vor], energy_trajectory + dwelltime_trajectory,
-                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
-                                                 'BMM_kafka': { 'hint':  'xafs analog', **more_kafka }})
-
-                ## here is where we would use the new SingleRunCache solution in databroker v1.0.3
-                ## see #64 at https://github.com/bluesky/tutorials
+                    print(error_msg('No valid plotting mode provided!'))
 
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
@@ -1029,10 +931,9 @@ def xafs(inifile=None, **kwargs):
                     hdf5_uid = xs.hdf5.file_name.value
                     
                 uidlist.append(uid)
-                header = db[uid]
-                write_XDI(datafile, header)
+                kafka_message({'xasxdi': True, 'uid' : uid, 'filename': datafile})
                 print(bold_msg('wrote %s' % datafile))
-                BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {header.start["scan_id"]}\ndata file written to {datafile}')
+                BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')
 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation + message to Slack
@@ -1056,21 +957,11 @@ def xafs(inifile=None, **kwargs):
                             print(error_msg(e))
                             report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
                         
-                ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-                ## generate left sidebar text for the static html page for this scan sequence
-                js_text = f'<a href="javascript:void(0)" onclick="toggle_visibility(\'{fname}\');" title="This is the scan number for {fname}, click to show/hide its UID">#{header.start["scan_id"]}</a><div id="{fname}" style="display:none;"><small>{uid}</small></div>'
-                printedname = fname
-                if len(p['filename']) > 11:
-                    printedname = fname[0:6] + '&middot;&middot;&middot;' + fname[-5:]
-                scanlist += f'<li><a href="../{quote(fname)}" title="Click to see the text of {fname}">{printedname}</a>&nbsp;&nbsp;&nbsp;&nbsp;{js_text}</li>\n' 
 
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## finish up, close out
-            dossier.scanlist = scanlist
-            dossier.uidlist = uidlist
-            dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
             
             print('Returning to fixed exit mode') #  and returning DCM to %1.f' % eave)
             dcm.mode = 'fixed'
@@ -1100,31 +991,25 @@ def xafs(inifile=None, **kwargs):
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
             BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
-            ## FYI: db.v2[-1].metadata['start']['scan_id']
-            #if dossier.htmlpage:
-            try:
-                htmlout = dossier.write_dossier()
-                kafka_message({'dossier' : 'write'})                
-            except Exception as E:
-                report('Failed to write dossier', level='error', slack=True)
-                print(error_msg('Here is the exception message:'))
-                print(E)
-                htmlout, prjout, pngout = None, None, None
-            if htmlout is not None:
-                report(f'wrote dossier {os.path.basename(htmlout)}', level='bold', slack=True)
 
-        if dossier.basename is None:
-            kafka_message({'xafsscan': 'stop', 'filename': None})
-        else:
-            kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}_liveplot.png')})
-            kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{dossier.basename}.png')})
+
+            kafka_message({'dossier' : 'set', 'uidlist' : uidlist, })
+            kafka_message({'dossier' : 'write', })
+
+        if len(uidlist) > 0:
+            basename = bmm_catalog[uidlist[0]].metadata['start']['XDI']['_user']['filename']
+            if basename is None:
+                kafka_message({'xafsscan': 'stop', 'filename': None})
+            else:
+                kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}_liveplot.png')})
+                kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}.png')})
         if not is_re_worker_active():
             rsync_to_gdrive()
             synch_gdrive_folder()
                     
         dcm.mode = 'fixed'
         yield from resting_state_plan()
-        yield from sleep(2.0)
+        yield from sleep(1.0)
         yield from mv(dcm_pitch.kill_cmd, 1)
         yield from mv(dcm_roll.kill_cmd, 1)
 
@@ -1156,11 +1041,11 @@ def xafs(inifile=None, **kwargs):
     ######################################################################
     dossier = BMMDossier()
     dossier.measurement = 'XAFS'
+    uidlist = []
     kafka_message({'dossier': 'start'})
-    kafka_message({'dossier'    : 'set',
-                   'measurement': 'XAFS',
-                   'folder'     : BMMuser.folder,
-                   'date'       : BMMuser.date,
+    kafka_message({'dossier': 'set',
+                   'folder' : BMMuser.folder,
+                   'date'   : BMMuser.date,
     })
     BMMuser.final_log_entry = True
     RE.msg_hook = None
@@ -1239,7 +1124,7 @@ def howlong(inifile=None, interactive=True, **kwargs):
         inifile = inifile+'.ini'
     orig = inifile
     if not os.path.isfile(inifile):
-        inifile = os.path.join(BMMuser.DATA, inifile)
+        inifile = os.path.join(BMMuser.workspace, inifile)
         if not os.path.isfile(inifile):
             print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
             return(orig, -1)
@@ -1308,7 +1193,7 @@ def xafs_grid(inifile=None, **kwargs):
         inifile = inifile+'.ini'
     orig = inifile
     if not os.path.isfile(inifile):
-        inifile = os.path.join(BMMuser.DATA, inifile)
+        inifile = os.path.join(BMMuser.workspace, inifile)
         if not os.path.isfile(inifile):
             print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
             return(orig, -1)

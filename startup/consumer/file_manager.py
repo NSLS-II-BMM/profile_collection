@@ -1,4 +1,11 @@
-import datetime, signal, pprint, uuid, sys, os, time
+import datetime
+import signal
+import pprint
+import uuid
+import sys
+import os
+import time
+import shutil
 sys.path.append('/home/xf06bm/.ipython/profile_collection/startup')
 
 from bluesky_kafka.consume import BasicConsumer
@@ -33,9 +40,11 @@ from pygments import highlight
 from pygments.lexers import PythonLexer, HtmlLexer
 from pygments.formatters import Terminal256Formatter
 
-from dossier_kafka import BMMDossier, startup_dir, XASFile, SEADFile
+from dossier_kafka import BMMDossier, startup_dir, XASFile, SEADFile, LSFile
+dossier = BMMDossier()
 xdi  = XASFile()
 sead = SEADFile()
+ls   = LSFile()
 
 # capture Ctrl-c to exit kafka polling loop semi-gracefully
 def handler(signal, frame):
@@ -49,7 +58,6 @@ logger = logging.getLogger('BMM file manager logger')
 logger.handlers = []
 
 be_verbose = False
-dossier = BMMDossier()
 
 
 def pobj(text, style='monokai'):
@@ -99,11 +107,11 @@ def manage_files_from_kafka_messages(beamline_acronym):
             print('\n')
 
         if name == 'bmm':
-            if any(x in message for x in ('dossier', 'mkdir', 'echoslack', 'xasxdi', 'seadxdi')) :
+            if any(x in message for x in ('dossier', 'mkdir', 'copy', 'copyini', 'touch', 'echoslack', 'xasxdi', 'seadxdi', 'lsxdi')) :
                 if be_verbose is True:
                     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
                 else:
-                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]') # \ndossier : {message["dossier"]}')
+                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]')
 
             if 'dossier' in message:
                 if message['dossier'] == 'start':
@@ -120,7 +128,10 @@ def manage_files_from_kafka_messages(beamline_acronym):
 
                 elif message['dossier'] == 'set':
                     dossier.set_parameters(**message)
-                    print(f'set {len(message)-1} parameters')
+                    if len(message) > 2:
+                        print(f'set {len(message)-1} parameters')
+                    else:
+                        print('set 1 parameter')
 
                 elif message['dossier'] == 'show':
                     pobj(dossier)
@@ -156,11 +167,27 @@ def manage_files_from_kafka_messages(beamline_acronym):
                     os.mkdir(message['mkdir'])
                     print(f'made directory {message["mkdir"]}')
 
+            elif 'copy' in message:
+                source = message['file']
+                target = message['target']
+                shutil.copy(source, target)
+                print(f'copied {source} to {target}')
+
+                
+            elif 'touch' in message:
+                target = message['touch']
+                this = open(target, 'a')
+                this.close()
+                print(f'touched {target}')
+                
             elif 'xasxdi' in message:
-                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
+                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)
                     
             elif 'seadxdi' in message:
-                sead.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
+                sead.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)
+                
+            elif 'lsxdi' in message:
+                ls.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)
                 
                     
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")

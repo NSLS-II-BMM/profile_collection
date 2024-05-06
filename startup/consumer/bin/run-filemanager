@@ -1,6 +1,7 @@
 #!/bin/env bash
 ######################################################################
-## Start BMM's kafka consumer in a correctly configured environment
+## Start BMM's kafka consumer for file management in a correctly
+## configured environment
 ## This uses some concepts swiped from bsui's start-up script
 ######################################################################
 
@@ -14,28 +15,28 @@ cat << EOL
 $(tput smul; tput bold)BMM's kafka consumer for data secure file namagement$(tput sgr0)
 
 Using the following software:
-    - Conda      : ${BS_ENV}
+    - Conda         : ${BS_ENV}
 $(python -c '\
 msg = "Not installed"
 try:
-    import bluesky
-    bluesky_version = "v{}".format(bluesky.__version__)
+    import tiled
+    tiled_version = "v{}".format(tiled.__version__)
 except ImportError:
-    bluesky_version = msg
+    tiled_version = msg
+try:
+    import bluesky_kafka
+    bluesky_kafka_version = "v{}".format(bluesky_kafka.__version__)
+except ImportError:
+    bluesky_kafka_version = msg
 try:
     import databroker
     databroker_version = "v{}".format(databroker.__version__)
 except ImportError:
     databroker_version = msg
-try:
-    import larch
-    larch_version = "v{}".format(larch.__version__)
-except ImportError:
-    ophyd_version = msg
 
-print("    - Bluesky    : {}".format(bluesky_version))
-print("    - Databroker : {}".format(databroker_version))
-print("    - Larch      : {}".format(larch_version))
+print("    - Tiled         : {}".format(tiled_version))
+print("    - Bluesky_kafka : {}".format(bluesky_version))
+print("    - Databroker    : {}".format(databroker_version))
 ')
 
 EOL

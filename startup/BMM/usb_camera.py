@@ -44,7 +44,12 @@ class CAMERA(SingleTrigger, AreaDetector):
     # image = Cpt(ImagePlugin_V33, 'image1:')
     image = Cpt(ParsimoniousImage, 'image1:')    
     #tiff1 = Cpt(TIFFPlugin, 'TIFF1:')
-
+    jpeg_filepath = Cpt(EpicsSignal, 'JPEG1:FilePath')
+    jpeg_filename = Cpt(EpicsSignal, 'JPEG1:FileName')
+    jpeg_autoincrement = Cpt(EpicsSignal, 'JPEG1:AutoIncrement')
+    jpeg_fileformat = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
+    jpeg_writefile = Cpt(EpicsSignal, 'JPEG1:WriteFile')
+    
     def snap(self, filename, annotation_string=''):
         if self.cam.detector_state.get() == 0:
             self.cam.acquire.put(1)

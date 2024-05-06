@@ -141,7 +141,7 @@ class BMMMacroBuilder():
             return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
-        self.folder   = BMMuser.folder
+        self.folder   = BMMuser.workspace
         self.source   = os.path.join(self.folder, spreadsheet)
         self.basename = os.path.splitext(spreadsheet)[0]
         self.wb       = load_workbook(self.source, data_only=True, read_only=True);

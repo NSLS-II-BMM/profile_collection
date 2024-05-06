@@ -23,7 +23,7 @@ from BMM.workspace         import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, vor, xs, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors   import quadem1, xs, ic0, ic1, ic2, ION_CHAMBERS
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -114,7 +114,7 @@ def areascan(detector,
             detector = 'Xs'
 
         if detector == 'If':
-            dets.append(xs)  # vor)
+            dets.append(xs)
             detector = 'ROI1'
         elif detector == 'It':
             detector = 'It'
@@ -336,55 +336,5 @@ def as2dat(datafile, key):
 
     The arguments are a data file name and the database key.
     '''
-
-    if os.path.isfile(datafile):
-        print(error_msg('%s already exists!  Bailing out....' % datafile))
-        return
-    dataframe = user_ns['db'][key]
-    if 'slow_motor' not in dataframe['start']:
-        print(error_msg('That database entry does not seem to be a an areascan (missing slow_motor)'))
-        return
-    if 'fast_motor' not in dataframe['start']:
-        print(error_msg('That database entry does not seem to be a an areascan (missing fast_motor)'))
-        return
-
-    devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
-
-    if 'vor' in devices:
-        column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'],
-                       'I0', 'It', 'Ir',
-                       BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4,
-                       BMMuser.roi1, 'ICR1', 'OCR1',
-                       BMMuser.roi2, 'ICR2', 'OCR2',
-                       BMMuser.roi3, 'ICR3', 'OCR3',
-                       BMMuser.roi4, 'ICR4', 'OCR4']
-        template = "  %.3f  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
-    else:
-        column_list = [dataframe['start']['slow_motor'], dataframe['start']['fast_motor'], 'I0', 'It', 'Ir']
-        template = "  %.3f  %.3f  %.6f  %.6f  %.6f\n"
-
-    table = dataframe.table()
-    this = table.loc[:,column_list]
-
-    handle = open(datafile, 'w')
-    handle.write('# Scan.uid: %s\n' % dataframe['start']['uid'])
-    handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-    try:
-        handle.write('# Facility.GUP: %d\n' % dataframe['start']['XDI']['Facility']['GUP'])
-    except:
-        pass
-    try:
-        handle.write('# Facility.SAF: %d\n' % dataframe['start']['XDI']['Facility']['SAF'])
-    except:
-        pass
-    handle.write('# ==========================================================\n')
-    handle.write('# ' + '  '.join(column_list) + '\n')
-    slowval = None
-    for i in range(0,len(this)):
-        if i>0 and this.iloc[i,0] != slowval:
-            handle.write('\n')
-        handle.write(template % tuple(this.iloc[i]))
-        slowval = this.iloc[i,0]
-    handle.flush()
-    handle.close()
-    print(bold_msg('wrote areascan to %s' % datafile))
+    pass
+    #print(bold_msg('wrote areascan to %s' % datafile))

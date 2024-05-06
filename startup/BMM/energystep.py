@@ -54,7 +54,7 @@ def energystep(filename = None,
     '''
 
     BMM_log_info("energystep(filename=%s, start=%.1f, end=%.1f, nsteps=%d, delay=%.1f, dosteps=%s)" % (filename, start, end, nsteps, delay, str(dosteps)))
-    datafile = BMMuser.DATA + filename
+    datafile = BMMuser.workspace + filename
     handle = open(datafile, 'w')
     handle.write('# energy steps from %.1f to %.1f in %d steps\n' % (start, end, nsteps))
     handle.write('#----------------------------------------------------\n')

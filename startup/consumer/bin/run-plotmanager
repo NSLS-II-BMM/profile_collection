@@ -1,6 +1,7 @@
 #!/bin/env bash
 ######################################################################
-## Start BMM's kafka consumer in a correctly configured environment
+## Start BMM's kafka consumer for plot management in a correctly
+## configured environment
 ## This uses some concepts swiped from bsui's start-up script
 ######################################################################
 
@@ -23,6 +24,11 @@ try:
 except ImportError:
     bluesky_version = msg
 try:
+    import tiled
+    tiled_version = "v{}".format(tiled.__version__)
+except ImportError:
+    tiled_version = msg
+try:
     import databroker
     databroker_version = "v{}".format(databroker.__version__)
 except ImportError:
@@ -34,6 +40,7 @@ except ImportError:
     ophyd_version = msg
 
 print("    - Bluesky    : {}".format(bluesky_version))
+print("    - Tiled      : {}".format(tiled_version))
 print("    - Databroker : {}".format(databroker_version))
 print("    - Larch      : {}".format(larch_version))
 ')

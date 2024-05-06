@@ -37,7 +37,7 @@ from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, vor, xs, xs1, ION_CHAMBERS
+from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
@@ -209,21 +209,12 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
 
         user_ns['RE'].msg_hook = None
         BMMuser.motor = dm3_bct
-        func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel='I0', title='I0 signal vs. slit height')
         line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                 (motor.name, 'i0', start, stop, nsteps, motor.user_readback.get())
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-        
-        @conditional_subs_decorator
         def scan_slit(slp):
 
             #if slit_height < 0.5:
@@ -335,29 +326,17 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         BMMuser.motor = motor
     
         if detector.lower() == 'bicron':
-            func = lambda doc: (doc['data'][motor.name], doc['data']['Bicron'])
-            dets = [bicron,]
             sgnl = 'Bicron'
             titl = 'Bicron signal vs. DCM 2nd crystal pitch'
         else:
-            func = lambda doc: (doc['data'][motor.name], doc['data']['I0'])
-            dets = [*ION_CHAMBERS]
             sgnl = 'I0'
             titl = 'I0 signal vs. DCM 2nd crystal pitch'
 
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-
-        @conditional_subs_decorator
         def scan_dcmpitch(sgnl):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -487,35 +466,19 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
 
         if detector.lower() == 'if':
             dets.append(user_ns['xs'])
-            denominator = ' / I0'
             sgnl = 'fluorescence (Xspress3)'
-            func = lambda doc: (doc['data'][motor.name],
-                                (doc['data'][BMMuser.xs1] +
-                                 doc['data'][BMMuser.xs2] +
-                                 doc['data'][BMMuser.xs3] +
-                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps)
         elif detector.lower() == 'it':
             sgnl = 'transmission'
-            func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
         elif detector.lower() == 'ir':
             sgnl = 'reference'
-            func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
 
         titl = f'{sgnl} vs. {motor.name}'
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
         
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-            
-        @conditional_subs_decorator
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -563,17 +526,6 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
                                'amplitude'   : out.params['amplitude'].value,
                                'uid'         : uid})
 
-            # thisagg = matplotlib.get_backend()
-            # matplotlib.use('Agg') # produce a plot without screen display
-            # out.plot(xlabel=motor.name, ylabel=detector)
-            # if filename is None:
-            #     filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-            # plt.savefig(filename)
-            # matplotlib.use(thisagg) # return to screen display
-            # clean_img()
-            # BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
-            # BMMuser.display_img.show()
-
             if move is True:
                 yield from mv(motor, out.params['midpoint'].value)
             print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
@@ -592,7 +544,8 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
 
 
 def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='max', how='peak', filename=None):
-
+    ''' Deprecated. needs to be updated for the kafka/data seucrity agent_change_edge
+    '''
     def main_plan(motor, start, stop, nsteps, detector, find, how, filename):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
@@ -609,38 +562,22 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
 
         if detector.lower() == 'if':
             dets.append(user_ns['xs'])
-            denominator = ' / I0'
             sgnl = 'fluorescence (Xspress3)'
-            func = lambda doc: (doc['data'][motor.name],
-                                (doc['data'][BMMuser.xs1] +
-                                 doc['data'][BMMuser.xs2] +
-                                 doc['data'][BMMuser.xs3] +
-                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps)
         elif detector.lower() == 'it':
             dets.append(user_ns['ic1'])
             sgnl = 'transmission'
-            func = lambda doc: (doc['data'][motor.name], doc['data']['It']/ doc['data']['I0'])
         elif detector.lower() == 'ir':
             dets.append(user_ns['ic1'])
             dets.append(user_ns['ic2'])
             sgnl = 'reference'
-            func = lambda doc: (doc['data'][motor.name], doc['data']['Ir']/ doc['data']['It'])
 
         titl = f'{sgnl} vs. {motor.name}'
-        plot = DerivedPlot(func, xlabel=motor.name, ylabel=sgnl, title=titl)
 
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-        
-        @conditional_subs_decorator
         def doscan(filename):
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
@@ -686,9 +623,6 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
                 filename = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
             plt.savefig(filename)
             matplotlib.use(thisagg) # return to screen display
-            clean_img()
-            BMMuser.display_img = Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
-            BMMuser.display_img.show()
             
             yield from mv(motor, top)
             print(bold_msg(f'Found peak at {motor.name} = {motor.position}'))
@@ -828,7 +762,6 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             yield from mv(xs.cam.acquire_time, inttime)
             yield from mv(xs.total_points, nsteps)
         dets  = ION_CHAMBERS.copy()
-        denominator = ''
         detname = ''
 
         # If should be xs when using Xspress3
@@ -837,96 +770,41 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         
         # func is an anonymous function, built on the fly, for feeding to DerivedPlot
         if detector == 'It':
-            denominator = ' / I0'
             detname = 'transmission'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
         elif detector == 'I0a' and ic0 is not None:
-            denominator = ' / I0'
             detname = 'I0a'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a']/doc['data']['I0'])
         elif detector == 'I0b' and ic0 is not None:
-            denominator = ' / I0'
             detname = 'I0b'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b']/doc['data']['I0'])
         elif detector == 'Ir':
-            #denominator = ' / It'
             detname = 'reference'
-            #func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir']/doc['data']['It'])
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Ir'])
         elif detector == 'I0':
             detname = 'I0'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['I0'])
         elif detector == 'Bicron':
-            dets.append(vor)
+            dets.append(bicron)
             detname = 'Bicron'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Bicron'])
         elif detector == 'Iy':
             denominator = ' / I0'
             detname = 'electron yield'
-            func = lambda doc: (doc['data'][thismotor.name], doc['data']['Iy']/doc['data']['I0'])
         elif detector == 'If':
-            dets.append(vor)
-            denominator = ' / I0'
+            dets.append(xs)
             detname = 'fluorescence'
-            func = lambda doc: (doc['data'][thismotor.name],
-                                (doc['data'][BMMuser.dtc1] +
-                                 doc['data'][BMMuser.dtc2] +
-                                 doc['data'][BMMuser.dtc3] +
-                                 doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
         elif detector == 'Xs':
             dets.append(xs)
-            denominator = ' / I0'
             detname = 'fluorescence'
-            func = lambda doc: (doc['data'][thismotor.name],
-                                (doc['data'][BMMuser.xs1] +
-                                 doc['data'][BMMuser.xs2] +
-                                 doc['data'][BMMuser.xs3] +
-                                 doc['data'][BMMuser.xs4] ) / doc['data']['I0'])
             yield from mv(xs.total_points, nsteps) # Xspress3 demands that this be set up front
 
         elif detector == 'Xs1':
             dets.append(xs1)
-            denominator = ' / I0'
             detname = 'fluorescence'
-            func = lambda doc: (doc['data'][thismotor.name],
-                                doc['data'][BMMuser.xs8] / doc['data']['I0'])
             yield from mv(xs1.total_points, nsteps) # Xspress3 demands that this be set up front
 
         elif detector == 'Ic0':
-            funcia = lambda doc: (doc['data'][thismotor.name], doc['data']['I0a'])
-            funcib = lambda doc: (doc['data'][thismotor.name], doc['data']['I0b'])
-
+            pass
         elif detector == 'Ic1':
             dets.append(ic1)
-            funcia = lambda doc: (doc['data'][thismotor.name], doc['data']['Ita'])
-            funcib = lambda doc: (doc['data'][thismotor.name], doc['data']['Itb'])
+            pass
+            
 
-        ## need a "Both" for trans + xs !!!!!!!!!!
-        elif detector == 'Both':
-            dets.append(vor)
-            functr = lambda doc: (doc['data'][thismotor.name], doc['data']['It']/doc['data']['I0'])
-            funcfl = lambda doc: (doc['data'][thismotor.name],
-                                  (doc['data'][BMMuser.dtc1] +
-                                   doc['data'][BMMuser.dtc2] +
-                                   doc['data'][BMMuser.dtc3] +
-                                   doc['data'][BMMuser.dtc4]   ) / doc['data']['I0'])
-        ## and this is the appropriate way to plot this linescan
-
-        #mv(_locked_dwell_time, 0.5)
-        if detector == 'Both':
-            plot = [DerivedPlot(funcfl, xlabel=thismotor.name, ylabel='If/I0', title='fluorescence vs. %s' % thismotor.name),
-                    DerivedPlot(functr, xlabel=thismotor.name, ylabel='It/I0', title='transmission vs. %s' % thismotor.name)]
-        elif detector == 'Ic0':
-            plot = [DerivedPlot(funcia, xlabel=thismotor.name, ylabel='I0a', title='I0a vs. %s' % thismotor.name),
-                    DerivedPlot(funcib, xlabel=thismotor.name, ylabel='I0b', title='I0b vs. %s' % thismotor.name)]
-        elif detector == 'Ic1':
-            plot = [DerivedPlot(funcia, xlabel=thismotor.name, ylabel='Ita', title='Ita vs. %s' % thismotor.name),
-                    DerivedPlot(funcib, xlabel=thismotor.name, ylabel='Itb', title='Itb vs. %s' % thismotor.name)]
-        else:
-            plot = DerivedPlot(func,
-                               xlabel=thismotor.name,
-                               ylabel=detector+denominator,
-                               title='%s vs. %s' % (detname, thismotor.name))
         if 'PseudoSingle' in str(type(axis)):
             value = thismotor.readback.get()
         else:
@@ -1025,83 +903,8 @@ def ls2dat(datafile, key):
 
       ls2dat('/path/to/myfile.dat', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
-    or
-
-      ls2dat('/path/to/myfile.dat', 1533)
-
     The arguments are a data file name and the database key.
     '''
     #BMMuser, db = user_ns['BMMuser'], user_ns['db']
-    if os.path.isfile(datafile):
-        print(error_msg('%s already exists!  Bailing out....' % datafile))
-        return
-    handle = open(datafile, 'w')
-    dataframe = user_ns['db'][key]
-    devices = dataframe.devices() # note: this is a _set_ (this is helpful: https://snakify.org/en/lessons/sets/)
-    if 'vor' in devices:
-        abscissa = dataframe['start']['motors'][0]
-        column_list = [abscissa, 'I0', 'It', 'Ir',
-                       BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4,
-                       BMMuser.roi1, 'ICR1', 'OCR1',
-                       BMMuser.roi2, 'ICR2', 'OCR2',
-                       BMMuser.roi3, 'ICR3', 'OCR3',
-                       BMMuser.roi4, 'ICR4', 'OCR4']
-        template = "  %.3f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.6f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f  %.1f\n"
-    elif 'DualI0' in devices:
-        abscissa = dataframe['start']['motors'][0]
-        column_list = [abscissa, 'Ia', 'Ib',]
-        template = "  %.3f  %.6f  %.6f\n"
-    elif 'Ic0' in devices:
-        abscissa = dataframe['start']['motors'][0]
-        column_list = [abscissa, 'I0a', 'I0b',]
-        template = "  %.3f  %.6f  %.6f\n"
-    else:
-        abscissa = dataframe['start']['motors'][0]
-        template = "  %.3f  %.6f  %.6f  %.6f\n"
-        column_list = [abscissa, 'I0', 'It', 'Ir']
-
-    #print(column_list)
-    table = dataframe.table()
-    this = table.loc[:,column_list]
-
-    handle.write('# XDI/1.0 BlueSky/%s\n'    % bluesky_version)
-    handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
-    handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-    try:
-        handle.write('# Facility.GUP: %s\n'  % dataframe['start']['XDI']['Facility']['GUP'])
-    except:
-        pass
-    try:
-        handle.write('# Facility.SAF: %s\n'  % dataframe['start']['XDI']['Facility']['SAF'])
-    except:
-        pass
-    handle.write('# ==========================================================\n')
-    handle.write('# ' + '  '.join(column_list) + '\n')
-    for i in range(0,len(this)):
-        handle.write(template % tuple(this.iloc[i]))
-    handle.flush()
-    handle.close()
+    kafka_message({'lsxdi': True, 'uid': key, 'filename': datafile})
     print(bold_msg('wrote linescan to %s' % datafile))
-
-
-# def center_sample_y():
-#     yield from linescan('it', xafs_liny, -1.5, 1.5, 61, pluck=False)
-#     table = user_ns['db'][-1].table()
-#     diff = -1 * table['It'].diff()
-#     inflection = table['xafs_liny'][diff.idxmax()]
-#     yield from mv(xafs_liny, inflection)
-#     print(bold_msg('Optimal position in y at %.3f' % inflection))
-
-# def center_sample_roll():
-#     yield from linescan('it', xafs_roll, -3, 3, 61, pluck=False)
-#     table = user_ns['db'][-1].table()
-#     peak = table['xafs_roll'][table['It'].idxmax()]
-#     yield from mv(xafs_roll, peak)
-#     print(bold_msg('Optimal position in roll at %.3f' % peak))
-
-# def align_flat_sample(angle=0):
-#     yield from center_sample_y()
-#     yield from center_sample_roll()
-#     yield from center_sample_y()
-#     yield from center_sample_roll()
-#     yield from mvr(xafs_roll, angle)

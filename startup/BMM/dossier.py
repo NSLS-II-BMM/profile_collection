@@ -293,26 +293,11 @@ class BMMDossier():
             yield from mv(xs.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
             
-            # ocrs = [int(xs.get_channel(channel_number=1).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-            #         int(xs.get_channel(channel_number=2).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-            #         int(xs.get_channel(channel_number=3).get_mcaroi(mcaroi_number=16).total_rbv.get()),
-            #         int(xs.get_channel(channel_number=4).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            # rois = [int(BMMuser.xschannel1.get()),
-            #         int(BMMuser.xschannel2.get()),
-            #         int(BMMuser.xschannel3.get()),
-            #         int(BMMuser.xschannel4.get()),]
-            # xs.plot(uid=self.xrfuid)
-            # xs.to_xdi(xrffile)
         if use_1element and plotting_mode(mode) == 'xs1':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-            # ocrs = [int(xs1.get_channel(channel_number=8).get_mcaroi(mcaroi_number=16).total_rbv.get()),]
-            # rois = [int(BMMuser.xschannel8.get()),]
-            # xs1.plot(uid=self.xrfuid)
-            # xs1.to_xdi(xrffile)
-
 
         kafka_message({'xrf' : 'plot',
                        'uid' : self.xrfuid,
@@ -348,7 +333,7 @@ class BMMDossier():
         ### --- XAS webcam ---------------------------------------------------------------
         annotation = stub
         websnap = "%s_XASwebcam_%s.jpg" % (stub, ahora)
-        image_web = os.path.join(folder, 'snapshots', self.websnap)
+        image_web = os.path.join(folder, 'snapshots', websnap)
         md['_filename'] = image_web
         xascam._annotation_string = annotation
         print(bold_msg('XAS webcam snapshot'))
@@ -369,7 +354,7 @@ class BMMDossier():
             print(whisper('The error text below saying "Error opening file for output:"'))
             print(whisper('happens every time and does not indicate a problem of any sort.'))
             anasnap = "%s_analog_%s.jpg" % (stub, ahora)
-            image_ana = os.path.join(folder, 'snapshots', self.anasnap)
+            image_ana = os.path.join(folder, 'snapshots', anasnap)
             md['_filename'] = image_ana
             anacam._annotation_string = stub
             print(bold_msg('analog camera snapshot'))
@@ -390,7 +375,7 @@ class BMMDossier():
 
         ### --- USB camera #1 --------------------------------------------------------------
         usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
-        image_usb1 = os.path.join(folder, 'snapshots', self.usb1snap)
+        image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
         md['_filename'] = image_usb1
         usbcam1._annotation_string = stub
         print(bold_msg('USB camera #1 snapshot'))
@@ -405,36 +390,39 @@ class BMMDossier():
             #img_to_slack(image_usb1)
 
         ### --- USB camera #2 --------------------------------------------------------------
-        usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
-        image_usb2 = os.path.join(folder, 'snapshots', self.usb2snap)
-        md['_filename'] = image_usb2
-        usbcam2._annotation_string = stub
-        print(bold_msg('USB camera #2 snapshot'))
-        usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        self.usb2snap, self.usb2uid = usb2snap, usb2uid
-        #yield from sleep(0.5)
-        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        im.save(image_usb2, 'JPEG')
-        if BMMuser.post_usbcam2:
-            kafka_message({'echoslack': True,
-                           'img': image_usb2})
-            #img_to_slack(image_usb2)
+        # usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+        # image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
+        # md['_filename'] = image_usb2
+        # usbcam2._annotation_string = stub
+        # print(bold_msg('USB camera #2 snapshot'))
+        # usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        # self.usb2snap, self.usb2uid = usb2snap, usb2uid
+        # #yield from sleep(0.5)
+        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        # im.save(image_usb2, 'JPEG')
+        # if BMMuser.post_usbcam2:
+        #     kafka_message({'echoslack': True,
+        #                    'img': image_usb2})
+        #     #img_to_slack(image_usb2)
+        usb2snap, usb2uid = 'x', 'x'
+        self.usb2snap, self.usb2uid = 'x', 'x'
+        image_usb2, usb2uid = 'x', 'x'
         
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': webuid,
                            'analog_file': image_ana,  'anacam_uid': anauid,
                            'usb1_file':   image_usb1, 'usbcam1_uid': usb1uid,
                            'usb2_file':   image_usb2, 'usbcam2_uid': usb2uid, }
-        kafka_message({'dossier'      : 'set',
-                       'post_webcam'  : BMMuser.post_webcam,
-                       'post_anacam'  : BMMuser.post_anacam,
-                       'post_usbcam1' : BMMuser.post_usbcam1,
-                       'post_usbcam2' : BMMuser.post_usbcam2,
-                       'webcam_file'  : image_web,  'webcam_uid' : webuid,  'websnap'  : websnap,
-                       'analog_file'  : image_ana,  'anacam_uid' : anauid,  'anasnap'  : anasnap,
-                       'usb1_file'    : image_usb1, 'usbcam1_uid': usb1uid, 'usb1snap' : usb1snap,
-                       'usb2_file'    : image_usb2, 'usbcam2_uid': usb2uid, 'usb2snap' : usb2snap,
-        })
+        # kafka_message({'dossier'      : 'set',
+        #                'post_webcam'  : BMMuser.post_webcam,
+        #                'post_anacam'  : BMMuser.post_anacam,
+        #                'post_usbcam1' : BMMuser.post_usbcam1,
+        #                'post_usbcam2' : BMMuser.post_usbcam2,
+        #                'webcam_file'  : image_web,  'webcam_uid' : webuid,  'websnap'  : websnap,
+        #                'analog_file'  : image_ana,  'anacam_uid' : anauid,  'anasnap'  : anasnap,
+        #                'usb1_file'    : image_usb1, 'usbcam1_uid': usb1uid, 'usb1snap' : usb1snap,
+        #                'usb2_file'    : image_usb2, 'usbcam2_uid': usb2uid, 'usb2snap' : usb2snap,
+        # })
         
 
         
@@ -461,7 +449,7 @@ class BMMDossier():
         self.url           = p['url']
         self.doi           = p['doi']
         self.cif           = p['cif']
-        with open(os.path.join(BMMuser.DATA, inifile)) as f:
+        with open(os.path.join(BMMuser.workspace, inifile)) as f:
             self.initext = ''.join(f.readlines())
         for k in kwargs.keys():
             setattr(self, k, kwargs[k])

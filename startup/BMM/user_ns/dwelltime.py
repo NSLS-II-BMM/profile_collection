@@ -17,6 +17,7 @@ with_ic0      = True            # new I0 chamber
 with_ic1      = True            # new It chamber
 with_ic2      = True            # new Ir chamber
 with_dualem   = False           # deprecated, prototype
+with_iy       = False           # begin planning for yield detector
 
 # fluorescence detectors and readout systems
 with_struck   = False           # deprecated OG fluorescence read out
