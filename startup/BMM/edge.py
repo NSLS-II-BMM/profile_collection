@@ -20,7 +20,6 @@ from BMM.kafka         import kafka_message
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
 from BMM.linescans     import rocking_curve, slit_height
-from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.resting_state import resting_state_plan
 from BMM.workspace     import rkvs
 
@@ -438,7 +437,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from mv(dcm_pitch.kill_cmd, 1)
             yield from sleep(1)
             yield from rocking_curve()
-            close_last_plot()
             kafka_message({'close': 'last'})
 
         ##########################
@@ -449,7 +447,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             if dm3_bct.amfe.get() or dm3_bct.amfae.get():
                 user_ns['ks'].cycle('dm3')
             yield from slit_height(move=True)
-            close_last_plot()
             kafka_message({'close': 'last'})
             ## redo rocking curve?
 

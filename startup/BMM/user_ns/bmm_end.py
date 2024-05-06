@@ -30,9 +30,6 @@ run_report('\t'+'Setting motor description strings')
 from BMM.desc_string import set_desc_strings
 set_desc_strings()
 
-run_report('\t'+'derived plot')
-from BMM.derivedplot import close_all_plots, close_last_plot, interpret_click
-
 run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
@@ -358,14 +355,6 @@ clf = BMMDataEvaluation()
 run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelemetry
 tele = BMMTelemetry()
-
-
-if not is_re_worker_active():
-    run_report('\t'+'user interaction')
-    from BMM.wdywtd import WDYWTD
-    _do = WDYWTD()
-    do = _do.wdywtd
-    setup_xrd = _do.do_SetupXRD
 
 
 # if rois.trigger is True:        # set Struck rois from persistent user information

@@ -18,20 +18,16 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
-## see 65-derivedplot.py for DerivedPlot class
-## see 10-motors.py and 20-dcm.py for motor definitions
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, clean_img, PROMPT, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.derivedplot   import DerivedPlot, interpret_click
 #from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
 
@@ -139,33 +135,6 @@ def pluck(suggested_motor=None):
     
 
         
-# def move_after_scan(thismotor):
-#     '''
-#     Call this to pluck a point from a plot and move the plotted motor to that x-value.
-#     '''
-#     if BMMuser.motor is None:
-#         print(error_msg('\nThere\'s not a current plot on screen.\n'))
-#         return(yield from null())
-#     if thismotor is not BMMuser.motor:
-#         print(error_msg('\nThe motor you are asking to move is not the motor in the current plot.\n'))
-#         return(yield from null())
-#     print('Single click the left mouse button on the plot to pluck a point...')
-#     cid = BMMuser.fig.canvas.mpl_connect('button_press_event', interpret_click) # see derivedplot.py and
-#     while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
-#         yield from sleep(0.5)
-#     if BMMuser.motor2 is None:
-#         yield from mv(thismotor, BMMuser.x)
-#     else:
-#         print('%.3f  %.3f' % (BMMuser.x, BMMuser.y))
-#         #yield from mv(BMMuser.motor, BMMuser.x, BMMuser.motor2, BMMuser.y)
-#     cid = BMMuser.fig.canvas.mpl_disconnect(cid)
-#     BMMuser.x = BMMuser.y = None
-
-# def pluck():
-#     '''
-#     Call this to pluck a point from the most recent plot and move the motor to that point.
-#     '''
-#     yield from move_after_scan(BMMuser.motor)
 
 from scipy.ndimage import center_of_mass
 def com(signal):
@@ -429,14 +398,13 @@ def find_slot(shape='slot'):
         yield from rectangle_scan(motor=xafs_y, start=-10,  stop=10,  nsteps=31, detector='It', chore='find_slot')
     else:
         yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
-                              #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_y notnegated'}})
-    close_all_plots()
+    kafka_message({'close': 'all'})
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
     kafka_message({'align_wheel' : 'stop'})
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
-    close_all_plots()
+    kafka_message({'close': 'all'})
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
@@ -768,7 +736,6 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         if with_xspress3 and detector == 'If':
             detector = 'Xs'
         
-        # func is an anonymous function, built on the fly, for feeding to DerivedPlot
         if detector == 'It':
             detname = 'transmission'
         elif detector == 'I0a' and ic0 is not None:

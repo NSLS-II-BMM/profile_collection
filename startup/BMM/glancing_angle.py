@@ -21,7 +21,6 @@ from lmfit.models import StepModel
 from scipy.ndimage import center_of_mass
 from PIL import Image
 
-from BMM.derivedplot    import close_all_plots, close_last_plot
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import countdown, isfloat, present_options, now, PROMPT
 from BMM.kafka          import kafka_message
@@ -198,7 +197,7 @@ class GlancingAngle(Device):
         kafka_message({'close': 'last'})
         xafs_pitch = user_ns['xafs_pitch']
         uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, dopluck=False, force=force)
-        close_last_plot()
+        kafka_message({'close': 'last'})
         table  = user_ns['db'][-1].table()
         pitch  = table['xafs_pitch']
         signal = table['It']/table['I0']
@@ -224,7 +223,7 @@ class GlancingAngle(Device):
         else:
             motor = user_ns['xafs_linx']
         uid = yield from linescan(motor, 'it', -2.3, 2.3, 51, dopluck=False)
-        close_last_plot()
+        kafka_message({'close': 'last'})
         table  = user_ns['db'][-1].table()
         yy     = table[motor.name]
         signal = table['It']/table['I0']
@@ -569,9 +568,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             self.content += command
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
-                self.content += self.tab + 'yield from ga.flatten()\n'
+                self.content += self.tab +  'yield from ga.flatten()\n'
                 self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
-            self.content += self.tab + 'close_last_plot()\n\n'
+            #self.content += self.tab + 'close_last_plot()\n\n'
 
 
             ########################################

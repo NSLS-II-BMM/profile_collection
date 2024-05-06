@@ -4,7 +4,6 @@ from openpyxl import load_workbook
 
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
-from BMM.derivedplot   import close_all_plots, close_last_plot
 from BMM.exceptions    import ChangeModeException
 from BMM.functions     import approximate_pitch, countdown, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -566,7 +565,6 @@ def change_xtals(xtal=None):
      yield from slit_height(move=True)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
-     close_last_plot()
      kafka_message({'close': 'line'})
      end = time.time()
      print('\n\nTime elapsed: %.1f min' % ((end-start)/60))

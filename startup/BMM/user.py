@@ -203,15 +203,6 @@ class BMM_User(Borg):
 
         self.readout_mode    = 'struck' ## 'analog'  'xspress3'  'digital'
         self.rois            = list(),
-        self.roi_channel     = None   ##################################################################
-        self.roi1            = 'ROI1' # in 76-edge.py, the ROI class is defined for managing changes   #
-        self.roi2            = 'ROI2' # of configured detector channels. the names of the channels are #
-        self.roi3            = 'ROI3' # are stored here for use in the various calls to DerivedPlot    #
-        self.roi4            = 'ROI4' # and for writing column labels to output files                  #
-        self.dtc1            = 'DTC1' ##################################################################
-        self.dtc2            = 'DTC2'
-        self.dtc3            = 'DTC3'
-        self.dtc4            = 'DTC4'
 
         self.xs1             = None
         self.xs2             = None
@@ -301,8 +292,7 @@ class BMM_User(Borg):
         self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "workspace", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
-                             "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode", "roi1",
-                             "roi2", "roi3", "roi4", "dtc1", "dtc2", "dtc3", "dtc4")
+                             "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode")
         self.bmm_ints     = ("gup", "saf", "detector", "npoints", "bender_xas", "bender_xrd",
                              "bender_margin", "filter_state", "nscans", "start")
         self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
@@ -316,7 +306,9 @@ class BMM_User(Borg):
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
-        self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel")
+        self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel",
+                             'roi1', 'roi2', 'roi3', 'roi4',
+                             'dtc1', 'dtc2', 'dtc3', 'dtc4',)
 
 
     def state_to_redis(self, filename=None, prefix='', verbose=False):
@@ -486,8 +478,7 @@ class BMM_User(Borg):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
-        for att in (#'roi_channel', 'roi1', 'roi2', 'roi3', 'roi4', 'dtc1', 'dtc2', 'dtc3', 'dtc4',
-                    'xs1', 'xs2', 'xs3', 'xs4',
+        for att in ('xs1', 'xs2', 'xs3', 'xs4',
                     'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 

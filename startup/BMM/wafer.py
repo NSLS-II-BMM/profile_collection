@@ -10,7 +10,6 @@ from sympy import geometry
 
 from BMM.kafka import kafka_message
 from BMM.linescans   import linescan
-from BMM.derivedplot import close_all_plots, close_last_plot
 from BMM.functions   import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.resting_state import resting_state_plan
 
@@ -55,7 +54,7 @@ class Wafer():
         else:
             motor = user_ns['xafs_liny']
         uid = yield from linescan(motor, 'it', -2, 2, 41, dopluck=False)
-        close_last_plot()
+        kafka_message({'close': 'last'})
         table  = user_ns['db'][-1].table()
         yy     = table[motor.name]
         signal = table['It']/table['I0']

@@ -15,7 +15,6 @@ from tiled.client import from_profile
 from urllib.parse import quote
 
 from BMM.db              import file_resource
-from BMM.derivedplot     import DerivedPlot, close_all_plots, close_last_plot
 from BMM.dossier         import BMMDossier
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions       import PROMPT, DEFAULT_INI
@@ -594,7 +593,7 @@ def xafs(inifile=None, **kwargs):
             report(f'running rocking curve at pseudo-channel-cut energy {eave:1f} eV', 'bold')
             yield from attain_energy_position(eave)
             yield from rocking_curve()
-            close_last_plot()
+            kafka_message({'close': 'last'})
             RE.msg_hook = None
         if p['channelcut'] is True:
             yield from attain_energy_position(eave)
@@ -754,7 +753,6 @@ def xafs(inifile=None, **kwargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## loop over scan count
             close_plots()
-            if BMMuser.enable_live_plots: close_last_plot()
             rid = str(uuid.uuid4())[:8]
             kafka_message({'dossier' : 'set', 'rid': rid})
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',

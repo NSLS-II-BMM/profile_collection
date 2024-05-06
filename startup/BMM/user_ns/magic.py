@@ -68,11 +68,11 @@ def w(arg):
     except:
         print(f'{arg} is not a thing that can be probed for position')
 
-from BMM.derivedplot import close_all_plots
+from BMM.kafka import kafka_message
 @register_line_magic
 def ca(arg):
     '''close all plots'''
-    close_all_plots()
+    kafka_message({'close': 'all'})
     return None
 
 from BMM.user_ns.detectors import xs

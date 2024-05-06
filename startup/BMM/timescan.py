@@ -19,7 +19,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 
-from BMM.derivedplot   import DerivedPlot
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
@@ -102,7 +101,6 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     yield from mv(_locked_dwell_time, dwell)
     dets  = ION_CHAMBERS.copy()
 
-    ## func is an anonymous function, built on the fly, for feeding to DerivedPlot
     if detector == 'Fluorescence' or detector == 'Flourescence':
         yield from mv(xs.cam.acquire_time, dwell)
         yield from mv(xs.total_points, readings)
