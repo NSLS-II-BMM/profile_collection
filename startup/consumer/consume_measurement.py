@@ -1,4 +1,4 @@
-import datetime, signal, pprint, uuid, sys, os
+import datetime, signal, pprint, uuid, sys, os, time
 sys.path.append('/home/xf06bm/.ipython/profile_collection/startup')
 
 #from bluesky_kafka import RemoteDispatcher
@@ -32,11 +32,12 @@ aw = AlignWheel()
 be_verbose = True
 doing = None
 
-from bmm_live import LineScan, XAFSScan, XRF
-ls = LineScan()
-xs = XAFSScan()
-ts = LineScan()
+from bmm_live import LineScan, XAFSScan, XRF, AreaScan
+ls  = LineScan()
+xs  = XAFSScan()
+ts  = LineScan()
 xrf = XRF()
+asc = AreaScan()
 
 # these two lines allow a stale plot to remain interactive and prevent
 # the current plot from stealing focus.  thanks to Tom:
@@ -118,9 +119,6 @@ def plot_from_kafka_messages(beamline_acronym):
             elif 'xrfat' in message:
                 bmm_plot.xrfat(catalog=bmm_catalog, **message)
 
-            #elif 'xrfplot' in message:
-            #    bmm_plot.xrfplot(catalog=bmm_catalog, **message)
-
             elif 'linescan' in message:
                 if message['linescan'] == 'start':
                     ls.start(**message)
@@ -148,16 +146,22 @@ def plot_from_kafka_messages(beamline_acronym):
                     ts.stop(**message)
                     doing = None
 
+            elif 'areascan' in message:
+                if message['areascan'] == 'start':
+                    asc.motor = None
+                    asc.start(**message)
+                    doing = 'areascan'
+                elif message['areascan'] == 'stop':
+                    asc.stop(**message)
+                    bmm_plot.plot_areascan(bmm_catalog, message['uid'])
+                    doing = None
+
             elif 'xrf' in message:
                 if message['xrf'] == 'plot':
                     xrf.plot(catalog=bmm_catalog, **message)
                 elif message['xrf'] == 'write':
                     xrf.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'])
                     
-            ## todo...
-            elif 'areascan' in message:
-                pass
-
             elif 'verbose' in message:
                 be_verbose = message['verbose']
             
@@ -194,6 +198,9 @@ def plot_from_kafka_messages(beamline_acronym):
                 #pprint.pprint(message)
                 ts.add(**message)
             elif doing == 'areascan':
+                #pprint.pprint(message)
+                asc.add(**message)
+            else:
                 pass
                 
         if name == 'stop':
@@ -208,15 +215,15 @@ def plot_from_kafka_messages(beamline_acronym):
             if 'BMM_kafka' in record.metadata['start']:
                 hint = record.metadata['start']['BMM_kafka']['hint']
                 #print(f'[{datetime.datetime.now().isoformat(timespec="seconds")}]   {uid}')
-                for k in record.metadata['start']['BMM_kafka'].keys():
-                    if k == 'hint':
-                        continue
-                    print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
+                # for k in record.metadata['start']['BMM_kafka'].keys():
+                #     if k == 'hint':
+                #         continue
+                #     print(f"\t\t{k}: {record.metadata['start']['BMM_kafka'][k]}")
 
-                if hint.startswith('areascan'):
-                    if verbose: print('saw a areascan stop doc')
-                    print(f"{datetime.datetime.now().isoformat()} document: {name}\n")
-                    bmm_plot.plot_areascan(bmm_catalog, uid)
+        #        if hint.startswith('areascan'):
+        #            if verbose: print('saw a areascan stop doc')
+        #            print(f"{datetime.datetime.now().isoformat()} areascan stop document: {name}\n")
+        #            bmm_plot.plot_areascan(bmm_catalog, uid)
         #         elif hint.startswith('linescan'):
         #             if verbose: print('saw a linescan stop doc')
         #             #bmm_plot.plot_linescan(bmm_catalog, uid)

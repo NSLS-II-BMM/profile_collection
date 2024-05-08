@@ -72,7 +72,8 @@ class XAFSSequence():
                     post_to_slack('(Posting a plot every third scan in a sequence...)')
                     tossfile = os.path.join(this.folder, 'snapshots', 'toss.png')
                     self.fig.savefig(tossfile)
-                    img_to_slack(tossfile)
+                    name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+                    img_to_slack(tossfile, title=name, measurement='xafs')
                 
 
     def merge(self):
@@ -103,6 +104,7 @@ class XAFSSequence():
         ok = self.merge()
         if ok == 1:
             self.fig.savefig(filename)
-            img_to_slack(filename)
+            name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+            img_to_slack(filename, title=name, measurement='xafs')
         
 

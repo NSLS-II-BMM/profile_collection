@@ -10,8 +10,6 @@ from IPython.utils.coloransi import TermColors as color
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka import kafka_message
 
-from BMM_common.echo_slack import echo_slack
-
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
@@ -138,38 +136,40 @@ def post_to_slack(text):
         print(f'slack_secret = {slack_secret}')
 
 
+## DEPRECATED, now in kafka consumer
+        
 ## Simple but useful guide to configuring a slack app:        
 ## https://hamzaafridi.com/2019/11/03/sending-a-file-to-a-slack-channel-using-api/
-def img_to_slack(imagefile):
-    ''' DEPRECATED
+# def img_to_slack(imagefile):
+#     ''' DEPRECATED
     
-    images should be posted via the kafka filemanager  April 2024
-    '''
-    token_file = os.path.join(startup_dir, 'BMM', 'image_uploader_token')
-    try:
-        with open(token_file, "r") as f:
-            token = f.read().replace('\n','')
-    except:
-        post_to_slack(f'failed to post image (token failure): {imagefile}')
-        return()
-    client = WebClient(token=token)
-    #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
-    try:
-        response = client.files_upload(channels='#beamtime', file=imagefile)
-        # #beamtime channel ID: C016GHBFHTM
-        assert response["file"]  # the uploaded file
-        icon = 'plot'
-        if imagefile.endswith('.jpg.'): icon = 'camera'
-        echo_slack(text=os.path.basename(imagefile), img=os.path.basename(imagefile), icon=icon)
-    except SlackApiError as e:
-        post_to_slack(f'failed to post image (SlackApiError): {imagefile}')
-        # You will get a SlackApiError if "ok" is False
-        assert e.response["ok"] is False
-        assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-        print(f"Got an error: {e.response['error']}")
-    except Exception as em:
-        print("EXCEPTION: " + str(em))
-        report(f'failed to post image (other exception): {imagefile}', level='bold', slack=True)
+#     images should be posted via the kafka filemanager  April 2024
+#     '''
+#     token_file = os.path.join(startup_dir, 'BMM', 'image_uploader_token')
+#     try:
+#         with open(token_file, "r") as f:
+#             token = f.read().replace('\n','')
+#     except:
+#         post_to_slack(f'failed to post image (token failure): {imagefile}')
+#         return()
+#     client = WebClient(token=token)
+#     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
+#     try:
+#         response = client.files_upload(channels='#beamtime', file=imagefile)
+#         # #beamtime channel ID: C016GHBFHTM
+#         assert response["file"]  # the uploaded file
+#         icon = 'plot'
+#         if imagefile.endswith('.jpg'): icon = 'camera'
+#         echo_slack(text=os.path.basename(imagefile), img=os.path.basename(imagefile), icon=icon)
+#     except SlackApiError as e:
+#         post_to_slack(f'failed to post image (SlackApiError): {imagefile}')
+#         # You will get a SlackApiError if "ok" is False
+#         assert e.response["ok"] is False
+#         assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+#         print(f"Got an error: {e.response['error']}")
+#     except Exception as em:
+#         print("EXCEPTION: " + str(em))
+#         report(f'failed to post image (other exception): {imagefile}', level='bold', slack=True)
 
 
         

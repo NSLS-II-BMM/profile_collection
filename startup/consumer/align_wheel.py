@@ -6,6 +6,8 @@ import matplotlib.gridspec as gridspec
 from slack import img_to_slack
 
 class AlignWheel():
+    '''Manage plotting of the results of the RE(find_slot()) plan.
+    '''
     fig = None
     ongoing = False
     
@@ -101,4 +103,4 @@ class AlignWheel():
         self.fig.canvas.flush_events()
         
         #self.fig.savefig(self.filename)
-        #img_to_slack(self.filename)
+        #img_to_slack(self.filename, measurement='line')

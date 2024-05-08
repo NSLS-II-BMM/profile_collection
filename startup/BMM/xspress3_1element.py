@@ -160,53 +160,6 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
                     print(f"  {int(val):7}  ", end='')
                 print('')
 
-    def to_xdi(self, filename=None):
-        '''Write an XDI-style file with bin energy in the first column and the
-        waveform of the measurement channel in the second column.
-
-        '''
-
-        dcm, BMMuser, ring = user_ns['dcm'], user_ns['BMMuser'], user_ns['ring']
-
-        column_list = ['MCA8']
-        #template = "  %.3f  %.6f  %.6f  %.6f  %.6f\n"
-        m2state, m3state = mirror_state()
-
-        handle = open(filename, 'w')
-        handle.write('# XDI/1.0 BlueSky/%s\n'                % bluesky_version)
-        #handle.write('# Scan.uid: %s\n'          % dataframe['start']['uid'])
-        #handle.write('# Scan.transient_id: %d\n' % dataframe['start']['scan_id'])
-        handle.write('# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement')
-        handle.write('# Beamline.xray_source: NSLS-II three-pole wiggler\n')
-        handle.write('# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
-        handle.write('# Beamline.focusing: %s\n'             % m2state)
-        handle.write('# Beamline.harmonic_rejection: %s\n'   % m3state)
-        handle.write('# Beamline.energy: %.3f\n'             % dcm.energy.position)
-        handle.write('# Detector.fluorescence: SII Vortex (1-element silicon drift)\n')
-        handle.write('# Scan.end_time: %s\n'                 % now())
-        handle.write('# Scan.dwell_time: %.2f\n'             % self.cam.acquire_time.value)
-        handle.write('# Facility.name: NSLS-II\n')
-        handle.write('# Facility.current: %.1f mA\n'         % ring.current.value)
-        handle.write('# Facility.mode: %s\n'                 % ring.mode.value)
-        handle.write('# Facility.cycle: %s\n'                % BMMuser.cycle)
-        handle.write('# Facility.GUP: %d\n'                  % BMMuser.gup)
-        handle.write('# Facility.SAF: %d\n'                  % BMMuser.saf)
-        handle.write('# Column.1: energy (eV)\n')
-        handle.write('# Column.2: MCA1 (counts)\n')
-        handle.write('# ==========================================================\n')
-        handle.write('# energy ')
-
-        ## data table
-        e=numpy.arange(0, len(self.channel08.mca.array_data.get())) * 10
-        mca_data_array_list = [channel.mca.array_data.get() for channel in self.iterate_channels()]
-        a=numpy.vstack(mca_data_array_list)
-        b=pd.DataFrame(a.transpose(), index=e, columns=column_list)
-        handle.write(b.to_csv(sep=' '))
-
-        handle.flush()
-        handle.close()
-        print(bold_msg('wrote XRF spectra to %s' % filename))
-        
 
 if sys.version_info[1] == 9:
     BMMXspress3Detector_1Element = build_detector_class(

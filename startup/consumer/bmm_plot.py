@@ -211,9 +211,9 @@ def plot_areascan(bmm_catalog, uid):
     else:
         plt.pcolormesh(x[:nfast], y[::nfast], z, cmap=plt.cm.viridis)
     plt.colorbar()
-    if pngout is not None and pngout.strip() != '':
-        plt.savefig(pngout)
-        img_to_slack(pngout)
+    # if pngout is not None and pngout.strip() != '':
+    #     plt.savefig(pngout)
+    #     img_to_slack(pngout, measurement='raster')
     plt.show()
 
 

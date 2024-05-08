@@ -6,12 +6,12 @@ rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
 startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 
-def echo_slack(text='', img=None, icon='message', rid=None):
+def echo_slack(text='', img=None, icon='message', rid=None, measurement='xafs'):
     #BMMuser = user_ns['BMMuser']
     folder = rkvs.get('BMM:user:folder').decode('utf-8')
     rawlogfile = os.path.join(folder, 'dossier', '.rawlog')
     rawlog = open(rawlogfile, 'a')
-    rawlog.write(message_div(text, img, icon, rid))
+    rawlog.write(message_div(text, img=img, icon=icon, rid=rid, measurement=measurement))
     rawlog.close()
 
     with open(os.path.join(startup_dir, 'tmpl', 'messagelog.tmpl')) as f:
@@ -26,18 +26,25 @@ def echo_slack(text='', img=None, icon='message', rid=None):
     o.close()
         
 # this bit of html+css is derived from https://www.w3schools.com/howto/howto_css_chat.asp
-def message_div(text='', img=None, icon='message', rid=None):
+def message_div(text='', img=None, icon='message', rid=None, measurement='xafs'):
+    if measurement == 'raster':
+        folder = 'maps'
+    elif measurement == 'xrf':
+        folder = 'XRF'
+    else:
+        folder = 'snapshots'
+        
     if icon == 'message':
         avatar = 'message.png'
         image  = ''
         words  = f'<p>{emojis.encode(text)}</p>'
     elif icon == 'plot':
         avatar = 'plot.png'
-        image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
+        image  = f'<br><a href="../{folder}/{img}"><img class="left" src="../{folder}/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
         words  = f'<span class="figuretitle">{text}</span>'
     elif icon == 'camera':
         avatar = 'camera.png'
-        image  = f'<br><a href="../snapshots/{img}"><img class="left" src="../snapshots/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
+        image  = f'<br><a href="../{folder}/{img}"><img class="left" src="../{folder}/{img}" style="height:240px;max-width:320px;width: auto;" alt="" /></a>'
         words  = f'<span class="figuretitle">{text}</span>'
     else:
         return

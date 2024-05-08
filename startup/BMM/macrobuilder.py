@@ -5,7 +5,6 @@ from openpyxl import load_workbook
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import isfloat, present_options
-from BMM.gdrive         import copy_to_gdrive, rsync_to_gdrive
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.xafs_functions import conventional_grid, sanitize_step_scan_parameters
 from BMM.workspace      import rkvs
@@ -206,8 +205,6 @@ class BMMMacroBuilder():
             print(f'See: {reference}')
             return None
         self.write_macro()
-        rsync_to_gdrive()
-        #copy_to_gdrive(spreadsheet)
         return 0
 
     def truefalse(self, value, keyword):
@@ -638,13 +635,17 @@ class BMMMacroBuilder():
             return
         # print(default)
         config.read_dict({'scan': default})
+
+        ## write ini file and macro script to workspace
+        ## both will be copied to storage later
+        ## see xlsx() in user_ns/bmm_end.py
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
         print(whisper('Wrote default INI file: %s' % self.ini))
 
-        ########################################################
-        # write the full macro to a file and %run -i that file #
-        ########################################################
+        #########################################################
+        # write the full macro to a file and %run -i that file  #
+        #########################################################
         with open(self.tmpl) as f:
             text = f.readlines()
         fullmacro = ''.join(text).format(folder      = self.folder,

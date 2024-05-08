@@ -16,6 +16,7 @@ rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 from slack import img_to_slack
 
 from BMM.periodictable import Z_number, edge_number
+from echo_slack import echo_slack
 
 class LineScan():
     '''Manage the live plot for a motor scan or a time scan.
@@ -232,7 +233,7 @@ class LineScan():
     def stop(self, **kwargs):
         if 'fname' in kwargs:
             self.figure.savefig(kwargs['fname'])
-            img_to_slack(kwargs['fname'])
+            img_to_slack(kwargs['fname'], title=f'{self.description} vs. {self.motor}', measurement='line')
 
         #self.figure.show(block=False)
         self.ongoing     = False
@@ -493,7 +494,7 @@ class XAFSScan():
         # self.initial     = 0
         if filename is not None:
             self.fig.savefig(filename)
-            img_to_slack(filename)
+            img_to_slack(filename, title=self.sample, measurement='xafs')
             
 
 
@@ -576,14 +577,15 @@ class XRF():
         if 'filename' in kwargs: filename = kwargs['filename']
         if 'post'     in kwargs: post     = kwargs['post']
 
+        self.title = ''
         self.figure = plt.figure()
         self.axes = self.figure.add_subplot(111)
         self.axes.set_facecolor((0.95, 0.95, 0.95))
         self.axes.set_xlabel('Energy (eV)')
         title = 'counts'
         if 'Sample' in catalog[uid].metadata['start']['XDI'] and 'name' in catalog[uid].metadata['start']['XDI']['Sample']:
-            title = catalog[uid].metadata['start']['XDI']['Sample']['name']
-        self.axes.set_title(title)
+            self.title = catalog[uid].metadata['start']['XDI']['Sample']['name']
+        self.axes.set_title(self.title)
         self.axes.grid(which='major', axis='both')
         
         s = []
@@ -644,7 +646,7 @@ class XRF():
         if filename is not None:
             self.figure.savefig(filename)
             if post is True:
-                img_to_slack(filename)
+                img_to_slack(filename, title=self.title, measurement='xrf')
             
 
 
@@ -717,3 +719,132 @@ class XRF():
         handle.close()
         print('wrote XRF spectra to %s' % filename)
                 
+class AreaScan():
+    '''Manage the live plot for a motor scan or a time scan.
+    '''
+
+    ongoing     = False
+    xdata       = []
+    ydata       = []
+    cdata       = []
+    count       = 0 
+
+    detector    = None
+    element     = 'H'
+
+    figure      = None
+    axes        = None
+    area        = None
+
+    description = None
+    xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
+    plots       = []
+
+    slow_motor  = None
+    slow_start  = -1
+    slow_steps  = 3
+    slow_stop   = 1
+    slow_initial = 0
+    
+    fast_motor  = None
+    fast_start  = -1
+    fast_steps  = 3
+    fast_stop   = 1
+    fast_initial = 0
+    
+    def start(self, **kwargs):
+        #if self.figure is not None:
+        #    plt.close(self.figure.number)
+        self.ongoing = True
+        self.xdata = []
+        self.ydata = []
+
+        self.slow_motor   = kwargs['slow_motor']
+        self.slow_start   = kwargs['slow_start']
+        self.slow_stop    = kwargs['slow_stop']
+        self.slow_steps   = kwargs['slow_steps']
+        self.slow_initial = kwargs['slow_initial']
+
+        self.fast_motor   = kwargs['fast_motor']
+        self.fast_start   = kwargs['fast_start']
+        self.fast_stop    = kwargs['fast_stop']
+        self.fast_steps   = kwargs['fast_steps']
+        self.fast_initial = kwargs['fast_initial']
+
+        self.energy       = kwargs['energy']
+
+        self.slow = self.slow_initial + numpy.linspace(self.slow_start, self.slow_stop, self.slow_steps)
+        self.fast = self.fast_initial + numpy.linspace(self.fast_start, self.fast_stop, self.fast_steps)
+
+        
+        self.detector     = kwargs['detector']
+        self.cdata        = numpy.zeros(self.fast_steps * self.slow_steps)
+        self.count        = 0
+        
+        self.figure = plt.figure()
+        #if self.motor is not None:
+        #    cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
+        
+        self.plots.append(self.figure.number)
+        self.axes = self.figure.add_subplot(111)
+        self.axes.set_facecolor((0.95, 0.95, 0.95))
+        self.im = self.axes.pcolormesh(self.fast, self.slow, self.cdata.reshape(self.slow_steps, self.fast_steps), cmap=plt.cm.viridis)
+        self.figure.gca().invert_yaxis()  # plot an xafs_x/xafs_y plot upright
+        self.cb = self.figure.colorbar(self.im)
+
+        self.axes.set_xlabel(f'fast axis ({self.fast_motor}) position (mm)')
+        self.axes.set_ylabel(f'slow axis ({self.slow_motor}) position (mm)')
+        self.axes.set_title(f'{self.detector}   Energy = {self.energy:.1f}')
+
+        
+        self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
+        self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
+        self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
+        self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
+        self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
+
+    def stop(self, **kwargs):
+        if 'filename' in kwargs:
+            self.figure.savefig(kwargs['filename'])
+            img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
+
+        self.ongoing     = False
+        self.xdata       = []
+        self.ydata       = []
+        self.y2data      = []
+        self.motor       = None
+        self.element     = 'H'
+        self.figure      = None
+        self.axes        = None
+        self.line        = None
+        self.line2       = None
+        self.line3       = None
+        self.description = None
+        self.xs1, self.xs2, self.xs3, self.xs4, self.xs8 = None, None, None, None, None
+        self.initial     = 0
+
+
+    def add(self, **kwargs):
+        
+        if 'dcm_roll' in kwargs['data']:
+            return              # this is a baseline event document, dcm_roll is almost never scanned
+
+        if self.detector == 'noisy_det':
+            signal  = kwargs['data']['noisy_det']
+        elif self.detector == 'I0':
+            signal  = kwargs['data']['I0']
+        elif self.detector == 'It':
+            signal  = kwargs['data']['It'] / kwargs['data']['I0']
+        elif self.detector == 'Iy':
+            signal  = kwargs['data']['Iy'] / kwargs['data']['I0']
+        elif self.detector == 'Ir':
+            signal  = kwargs['data']['Ir'] / kwargs['data']['It']
+        elif self.detector == 'Xs1':
+            signal  = kwargs['data'][f'{self.element}8'] / kwargs['data']['I0']
+        elif self.detector == 'Xs':
+            signal  = (kwargs['data'][f'{self.element}1']+kwargs['data'][f'{self.element}2']+kwargs['data'][f'{self.element}3']+kwargs['data'][f'{self.element}4']) / kwargs['data']['I0']
+            
+        self.cdata[self.count] = signal
+        self.axes.pcolormesh(self.fast, self.slow, self.cdata.reshape(self.slow_steps, self.fast_steps), cmap=plt.cm.viridis)
+        self.im.set_clim(self.cdata.min(), self.cdata.max())
+        self.count += 1

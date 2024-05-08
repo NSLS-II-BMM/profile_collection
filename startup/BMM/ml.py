@@ -348,7 +348,7 @@ class BMMDataEvaluation():
         h5 = h5py.File(h5file, 'w')
 
         count = 0
-        faillist = '/home/xf06bm/Data/bucket/failed_data_evaluation.txt'
+        faillist = '/home/xf06bm/Workspace/logs/failed_data_evaluation.txt'
         with open(faillist, 'r') as fl:
             allstr = fl.read()
         a = allstr.replace('\t', '')

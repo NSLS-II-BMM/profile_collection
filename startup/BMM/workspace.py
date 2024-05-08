@@ -98,9 +98,9 @@ Verifying workspace on this computer ...'''))
     #initialize_lustre()
     initialize_secrets()
     initialize_redis()
-    #initialize_gdrive()
 
     ## deprecated steps
+    #initialize_gdrive()
     #initialize_beamline_configuration()
     #initialize_ssh()
     

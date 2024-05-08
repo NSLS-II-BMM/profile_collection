@@ -28,7 +28,6 @@ from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
 from BMM.functions     import countdown, clean_img, PROMPT, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-#from BMM.purpose       import purpose
 from BMM.workspace     import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
@@ -785,8 +784,6 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         thismd['XDI']['Facility'] = dict()
         thismd['XDI']['Facility']['GUP'] = BMMuser.gup
         thismd['XDI']['Facility']['SAF'] = BMMuser.saf
-        #if 'purpose' not in md:
-        #    md['purpose'] = 'alignment'
 
         if 'BMM_kafka' not in md:
             md['BMM_kafka'] = dict()
@@ -800,15 +797,6 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
         rkvs.set('BMM:scan:estimated', 0)
 
-        ## This helped Bruce understand how to make a decorator conditional:
-        ## https://stackoverflow.com/a/49204061
-        def conditional_subs_decorator(function):
-            if user_ns['BMMuser'].enable_live_plots is True:
-                return subs_decorator(plot)(function)
-            else:
-                return function
-        
-        @conditional_subs_decorator
         def scan_xafs_motor(dets, motor, start, stop, nsteps):
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**thismd, **md, 'plan_name' : f'rel_scan linescan {motor.name} {detector}'})
             return uid
@@ -827,7 +815,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             #yield from move_after_scan(thismotor)
             ## right here... put UID and plucked value in a store of some sort
             if user_ns["BMMuser"].mouse_click is not None:
-                with open('/home/xf06bm/Data/bucket/linescan_evaluation.txt', 'a') as f:
+                with open('/home/xf06bm/Workspace/logs/linescan_evaluation.txt', 'a') as f:
                     f.write(f'''{now()}
      mode = {thismotor.name}/{detector}
      uid = {uid}

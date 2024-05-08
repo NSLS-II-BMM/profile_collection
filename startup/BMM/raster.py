@@ -8,7 +8,6 @@ except ImportError:
 
 import numpy, os, re, shutil, openpyxl, uuid
 import textwrap, configparser, datetime
-from scipy.io import savemat
 import matplotlib.pyplot as plt
 
 from bluesky.plans import count
@@ -20,13 +19,13 @@ from tiled.client import from_profile
 
 from BMM.areascan        import areascan
 from BMM.db              import file_resource
-from BMM.dossier         import BMMDossier
+from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
+from BMM.kafka           import kafka_message, close_plots
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
-from BMM.motor_status    import motor_sidebar, motor_status
+from BMM.motor_status    import motor_status
 from BMM.resting_state   import resting_state_plan
 from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
@@ -148,44 +147,6 @@ def read_ini(inifile, **kwargs):
     return parameters, found
 
 
-def preserve_data(uid, label, xlsxout, matout):
-    '''Save the data from an areascan as a .xlsx file (a simple spreadsheet
-    which can be ingested by many plotting programs) and as a .mat
-    file (which can be ingested by Matlab).
-    '''
-    motors = db.v2[uid].metadata['start']['motors']
-    print('Reading data set...')
-    datatable = db.v2[uid].primary.read()
-    
-    slow = numpy.array(datatable[motors[0]])
-    fast = numpy.array(datatable[motors[1]])
-    i0   = numpy.array(datatable['I0'])
-
-    if '4-element SDD' in db.v2[uid].metadata['start']['detectors'] or 'if' in db.v2[uid].metadata['start']['detectors'] or 'xs' in db.v2[uid].metadata['start']['detectors']:
-        det_name = db.v2[uid].metadata['start']['plan_name'].split()[-1]
-        det_name = det_name[:-1]
-        z = numpy.array(datatable[det_name+'1'])+numpy.array(datatable[det_name+'2'])+numpy.array(datatable[det_name+'3'])+numpy.array(datatable[det_name+'4'])
-    elif 'noisy_det' in db.v2[uid].metadata['start']['detectors']:
-        det_name = 'noisy_det'
-        z = numpy.array(datatable['noisy_det'])
-
-    ## save map in xlsx format
-    wb = openpyxl.Workbook()
-    ws1 = wb.active
-    ws1.title = label
-    ws1.append((user_ns[motors[0]].name, user_ns[motors[1]].name, f'{det_name}/I0', det_name, 'I0'))
-    for i in range(len(slow)):
-        ws1.append((slow[i], fast[i], z[i]/i0[i], z[i], i0[i]))
-    wb.save(filename=os.path.join(user_ns['BMMuser'].folder, 'maps', xlsxout))
-    print(f'wrote {user_ns["BMMuser"].folder}/maps/{xlsxout}')
-    
-    ## save map in matlab format 
-    savemat(os.path.join(user_ns['BMMuser'].folder, 'maps', matout), {'label'   : label,
-                                                                      motors[0] : list(slow),
-                                                                      motors[1] : list(fast),
-                                                                      'I0'      : list(i0),
-                                                                      'signal'  : list(z),})
-    print(f'wrote {user_ns["BMMuser"].folder}/maps/{matout}')
 
 def difference_data(uid1, uid2, tag):
     '''Given two UIDs, make a difference map.  The assumption here is that
@@ -219,14 +180,14 @@ def difference_data(uid1, uid2, tag):
     ## bkg: 7afeb391-782a-4240-a676-4373fdbee301
     
     ## get motor names and image shape
-    motors = db.v2[uid1].metadata['start']['motors']
-    [nslow, nfast] = db.v2[uid1].metadata['start']['shape']
+    motors = bmm_catalog[uid1].metadata['start']['motors']
+    [nslow, nfast] = bmm_catalog[uid1].metadata['start']['shape']
 
     ## slurp in data
     print('Reading primary data set...')
-    datatable1 = db.v2[uid1].primary.read()
+    datatable1 = bmm_catalog[uid1].primary.read()
     print('Reading secondary data set...')
-    datatable2 = db.v2[uid2].primary.read()
+    datatable2 = bmm_catalog[uid2].primary.read()
 
     ## common arrays and I0 arrays
     slow = numpy.array(datatable1[motors[0]])
@@ -235,12 +196,12 @@ def difference_data(uid1, uid2, tag):
     i02  = numpy.array(datatable2['I0'])
 
     ## grab the signal based on what is listed in 'detectors' in the start document
-    if 'xs' in db.v2[uid1].metadata['start']['detectors']:
-        det_name = db.v2[uid1].metadata['start']['plan_name'].split()[-1]
+    if 'xs' in bmm_catalog[uid1].metadata['start']['detectors']:
+        det_name = bmm_catalog[uid1].metadata['start']['plan_name'].split()[-1]
         det_name = det_name[:-1]
         z1 = numpy.array(datatable1[det_name+'1'])+numpy.array(datatable1[det_name+'2'])+numpy.array(datatable1[det_name+'3'])+numpy.array(datatable1[det_name+'4'])
         z2 = numpy.array(datatable2[det_name+'1'])+numpy.array(datatable2[det_name+'2'])+numpy.array(datatable2[det_name+'3'])+numpy.array(datatable2[det_name+'4'])
-    elif 'noisy_det' in db.v2[uid1].metadata['start']['detectors']:
+    elif 'noisy_det' in bmm_catalog[uid1].metadata['start']['detectors']:
         z1 = numpy.array(datatable1['noisy_det'])
         z2 = numpy.array(datatable2['noisy_det'])
 
@@ -324,7 +285,7 @@ def raster(inifile=None, **kwargs):
                 return
         
         _locked_dwell_time.quadem_dwell_time.settle_time = 0
-        inifile = os.path.join(BMMuser.folder, inifile)
+        inifile = os.path.join(BMMuser.workspace, inifile)
 
 
         if inifile is None:
@@ -334,8 +295,11 @@ def raster(inifile=None, **kwargs):
             print(error_msg('\ninifile does not exist\n'))
             return(yield from null())
 
-        dossier.rid = str(uuid.uuid4())[:8]
-        report(f'== starting raster scan', level='bold', slack=True, rid=dossier.rid)
+        close_plots()
+        rid = str(uuid.uuid4())[:8]
+        kafka_message({'dossier': 'start'})
+        kafka_message({'dossier' : 'set', 'rid': rid})
+        report(f'== starting raster scan', level='bold', slack=True, rid=rid)
 
         p, f = read_ini(inifile, **kwargs)
         #print(f)
@@ -369,15 +333,15 @@ def raster(inifile=None, **kwargs):
             seqnumber = 1
             if os.path.isfile(pngout):
                 seqnumber = 2
-                while os.path.isfile(os.path.join(p['folder'], 'maps', "%s-%2.2d.png" % (p['filename'],seqnumber))):
+                while os.path.isfile(os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")):
                     seqnumber += 1
                 basename = "%s-%2.2d" % (p['filename'],seqnumber)
-                pngout = os.path.join(BMMuser.workspace, 'maps', "%s-%2.2d.png" % (p['filename'],seqnumber))
+                pngout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")
 
-            dossier.pngout = os.path.basename(pngout)
-            dossier.xlsxout = f"{basename}.xlsx"
-            dossier.matout  = f"{basename}.mat"
-            print(f'\nImage data to be written to {pngout}, .xslx, and .mat')
+            #pngout = os.path.basename(pngout)
+            xlsxout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.xlsx")
+            matout  = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.mat")
+            print(f'\nImage data to be written to {pngout}, .xlsx, and .mat')
             estimate = float(p['fast_steps'])*float(p['slow_steps']) * (float(p['dwelltime'])+0.43)
             minutes = int(estimate/60)
             #seconds = int(estimate - minutes*60)
@@ -434,20 +398,31 @@ def raster(inifile=None, **kwargs):
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## capture dossier metadata for start document
-        md['_snapshots'] = {**dossier.cameras_md}
+        md['_snapshots'] = {**dossier.cameras_md, 'pngout':pngout, 'xlsxout': xlsxout, 'matout': matout}
 
+        md['Beamline']['energy'] = dcm.energy.position
+
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## show the metadata to the user
         display_XDI_metadata(md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## populate the static html page for this scan 
-        these_kwargs = {'fast': fast, 'slow': slow,
+        these_kwargs = {#'fast': fast, 'slow': slow,
                         'fast_motor': f'{fast.name} [{p["fast_start"]}:{p["fast_stop"]}], {p["fast_steps"]} steps',
                         'slow_motor': f'{slow.name} [{p["slow_start"]}:{p["slow_stop"]}], {p["slow_steps"]} steps',
-                        'fast_init': f'{fast.position:7.3f}', 'slow_init': f'{slow.position:7.3f}' }
-        dossier.prep_metadata(p, inifile, clargs, these_kwargs)
-
+                        'fast_init': f'{fast.position:7.3f}', 'slow_init': f'{slow.position:7.3f}',
+                        'pccenergy' : dcm.energy.position,
+                        'startdate' : BMMuser.date,
+                        
+        }
+        with open(os.path.join(BMMuser.workspace, inifile)) as f:
+            initext = ''.join(f.readlines())
+        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
+        md['_user'] = user_metadata
+        xdi = {'XDI': md}
+        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## engage suspenders right before starting scan sequence
         if 'force' in kwargs and kwargs['force'] is True:
@@ -456,13 +431,22 @@ def raster(inifile=None, **kwargs):
         else:
             force = False
             BMM_suspenders()
-        yield from areascan(p['detector'],
-                            slow, p['slow_start'], p['slow_stop'], p['slow_steps'],
-                            fast, p['fast_start'], p['fast_stop'], p['fast_steps'],
-                            pluck=False, force=force, dwell=p['dwelltime'],
-                            fname=pngout, contour=p['contour'], log=p['log'], md=md)
-        dossier.scanuid = db.v2[-1].metadata['start']['uid']
-        preserve_data(dossier.scanuid, f'{dossier.filename} {dossier.energy} eV', dossier.xlsxout, dossier.matout)
+        uid = yield from areascan(p['detector'],
+                                  slow, p['slow_start'], p['slow_stop'], p['slow_steps'],
+                                  fast, p['fast_start'], p['fast_stop'], p['fast_steps'],
+                                  pluck=False, force=force, dwell=p['dwelltime'],
+                                  fname=pngout, contour=p['contour'], log=p['log'], md=xdi)
+        #preserve_data(uid, f'{p["filename"]} {dcm.energy.position} eV', xlsxout, matout)
+
+        thisuid = bmm_catalog[-1].metadata['start']['uid']  # not sure why this is necessary....
+        kafka_message({'raster': True, 'uid': thisuid})
+
+        kafka_message({'dossier' : 'set',
+                       'folder'  : BMMuser.folder,
+                       'uidlist' : [thisuid,],
+                       })
+        kafka_message({'dossier' : 'raster', })
+
         
     def cleanup_plan(inifile):
         BMM_clear_suspenders()
@@ -488,9 +472,6 @@ def raster(inifile=None, **kwargs):
             if htmlout is not None:
                 htmlout = dossier.raster_dossier()
                 report('wrote dossier %s' % htmlout, 'bold')
-            if not is_re_worker_active():
-                rsync_to_gdrive()
-                synch_gdrive_folder()
         except:
             print(whisper('Quitting raster scan. Not returning to start position or writing dossier.'))
         yield from resting_state_plan()
@@ -501,8 +482,7 @@ def raster(inifile=None, **kwargs):
     xascam, anacam = user_ns['xascam'], user_ns['anacam']
     usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     RE.msg_hook = None
-    dossier = BMMDossier()
-    dossier.measurement = 'raster'
+    dossier = DossierTools()
 
     if is_re_worker_active():
         inifile = '/home/xf06bm/Data/bucket/raster.ini'

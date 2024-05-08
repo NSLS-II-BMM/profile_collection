@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 from ophyd.sim import noisy_det
 
-from BMM.user_ns.dwelltime import with_xspress3
+from BMM.user_ns.dwelltime import use_1element, use_4element
 from BMM.resting_state     import resting_state_plan
 from BMM.suspenders        import BMM_clear_to_start
 from BMM.kafka             import kafka_message
@@ -18,7 +18,6 @@ from BMM.functions         import countdown, plotting_mode, now, PROMPT
 from BMM.functions         import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.attic.derivedplot       import DerivedPlot, interpret_click, close_all_plots
 from BMM.suspenders        import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-#from BMM.purpose       import purpose
 from BMM.workspace         import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
@@ -33,7 +32,7 @@ def areascan(detector,
              slow, startslow, stopslow, nslow,
              fast, startfast, stopfast, nfast,
              pluck=True, force=False, dwell=0.1, fname=None,
-             contour=False, log=True, md={}):
+             contour=True, log=False, md={}):
     '''
     Generic areascan plan.  This is a RELATIVE scan, relative to the
     current positions of the selected motors.
@@ -42,28 +41,24 @@ def areascan(detector,
        RE(areascan('it', 'x', -1, 1, 21, 'y', -0.5, 0.5, 11))
 
        detector: detector to display -- if, it, ir, or i0
-       slow:     slow axis motor or nickname
-       sl1:      starting value for slow axis of a relative scan
-       sl2:      ending value for slow axis of a relative scan
-       nsl:      number of steps in slow axis
-       fast:     fast axis motor or nickname
-       fa1:      starting value for fast axis of a relative scan
-       fa2:      ending value for fast axis of a relative scan
-       nfa:      number of steps in fast axis
-       pluck:    optional flag for whether to offer to pluck & move motor
-       force:    optional flag for forcing a scan even if not clear to start
-       dwell:    dwell time at each point (0.1 sec default)
-       contour:  True=plot with filled-in countours, False=plot with pcolormesh
-       log:      True=plot log of signal in color scale
-       md:       composable dictionary of metadata
+       slow:      slow axis motor or nickname
+       startslow: starting value for slow axis of a relative scan
+       stopslow:  ending value for slow axis of a relative scan
+       nslow:     number of steps in slow axis
+       fast:      fast axis motor or nickname
+       startfast: starting value for fast axis of a relative scan
+       stopfast:  ending value for fast axis of a relative scan
+       nfast:     number of steps in fast axis
+       pluck:     optional flag for whether to offer to pluck & move motor
+       force:     optional flag for forcing a scan even if not clear to start
+       dwell:     dwell time at each point (0.1 sec default)
+       contour:   True=plot with filled-in contours, False=plot with pcolormesh
+       log:       True=plot log of signal in color scale
+       md:        composable dictionary of metadata
 
-    slow and fast are either the BlueSky name for a motor (e.g. xafs_linx)
-    or a nickname for an XAFS sample motor (e.g. 'x' for xafs_linx).
+    slow and fast are the BlueSky name for a motor (e.g. xafs_linx)
 
-    This does not write an ASCII data file, but it does make a log entry.
-
-    Use the as2dat() function to extract the areascan from the
-    database and write it to a file.
+    Plotting and file output are handled by kafka clients.
     '''
 
     def main_plan(detector,
@@ -110,31 +105,25 @@ def areascan(detector,
         yield from mv(_locked_dwell_time, dwell)
         dets = ION_CHAMBERS.copy()
 
-        if with_xspress3 and detector == 'If':
+        if use_4element and detector == 'If':
             detector = 'Xs'
-
-        if detector == 'If':
+        elif use_1element and detector == 'If':
+            detector = 'Xs1'
+            
+        if detector == 'Xs':
             dets.append(xs)
-            detector = 'ROI1'
         elif detector == 'It':
             detector = 'It'
         elif detector == 'Ir':
             detector = 'Ir'
-        elif detector.lower() == 'xs':
-            dets.append(xs)
-            detector = BMMuser.xs1
+        elif detector == 'I0':
+            detector = 'I0'
+        elif detector == 'Xs1':
+            dets.append(xs1)
             yield from mv(xs.total_points, nslow*nfast)
         elif detector in ('Random', 'Noisy', 'Noisy_det'):
             dets.append(noisy_det)
             detector = 'noisy_det'
-        # elif detector == 'I0a':
-        #     dets.append(ic0)
-        #     detector = ic0.Ia.name
-        # elif detector == 'I0a':
-        #     dets.append(ic0)
-        #     detector = ic0.Ib.name
-        elif detector == 'Ic1':
-            detector = ic1.Ia.name
         
         line1 = f'slow motor: {slow.name}, {startslow}, {stopslow}, {nslow} -- starting at {slow.position:.3f}\n'
         line2 = f'fast motor: {fast.name}, {startfast}, {stopfast}, {nfast} -- starting at {fast.position:.3f}\n'
@@ -142,36 +131,8 @@ def areascan(detector,
         npoints = nfast * nslow
         estimate = int(npoints*(dwell+0.43))
     
-        # extent = (
-        #     valuefast + startfast,
-        #     valueslow + startslow,
-        #     valuefast + stopfast,
-        #     valueslow + stopslow,
-        # )
-        # extent = (
-        #     0,
-        #     nfast-1,
-        #     0,
-        #     nslow-1
-        # )
-        # print(extent)
-        # return(yield from null())
-    
-
-        # areaplot = LiveScatter(fast.name, slow.name, detector,
-        #                        xlim=(startfast, stopfast), ylim=(startslow, stopslow))
-
         close_all_plots()
     
-        areaplot = LiveGrid((nslow, nfast), detector, #aspect='equal', #aspect=float(nslow/nfast), extent=extent,
-                            xlabel='fast motor: %s' % fast.name,
-                            ylabel='slow motor: %s' % slow.name)
-        #BMMuser.ax     = areaplot.ax
-        #BMMuser.fig    = areaplot.ax.figure
-        BMMuser.motor  = fast
-        BMMuser.motor2 = slow
-        #BMMuser.fig.canvas.mpl_connect('close_event', handle_close)
-
         thismd = dict()
         thismd['XDI'] = dict()
         thismd['XDI']['Facility'] = dict()
@@ -180,20 +141,28 @@ def areascan(detector,
         thismd['slow_motor'] = slow.name
         thismd['fast_motor'] = fast.name
 
-
-        if fname is None:
-            fname = os.path.join(BMMuser.folder, 'map-'+now()+'.png')
-        elif fname.endswith('.png'):
-            fname = os.path.join(BMMuser.folder, fname)
-        else:
-            fname = os.path.join(BMMuser.folder, fname+'.png')
-
+        ini_f, ini_s = fast.position, slow.position
         report(f'Starting areascan at x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=True)
+        kafka_message({'areascan'     : 'start',
+                       'slow_motor'   : slow.name,
+                       'slow_start'   : startslow,
+                       'slow_stop'    : stopslow,
+                       'slow_steps'   : nslow,
+                       'slow_initial' : slow.position,
+                       'fast_motor'   : fast.name,
+                       'fast_start'   : startfast,
+                       'fast_stop'    : stopfast,
+                       'fast_steps'   : nfast,
+                       'fast_initial' : fast.position,
+                       'detector'     : detector,
+                       'element'      : BMMuser.element,
+                       'energy'       : user_ns['dcm'].energy.position})
+        
 
         ## engage suspenders right before starting scan sequence
         if force is False: BMM_suspenders()
     
-        @subs_decorator(areaplot)
+        #@subs_decorator(areaplot)
         def make_areascan(dets,
                           slow, startslow, stopslow, nslow,
                           fast, startfast, stopfast, nfast,
@@ -203,9 +172,10 @@ def areascan(detector,
             uid = yield from grid_scan(dets,
                                        slow, startslow, stopslow, nslow,
                                        fast, startfast, stopfast, nfast,
-                                       snake, md={'plan_name' : f'grid_scan measurement {slow.name} {fast.name} {detector}',
+                                       snake, md={**md, 'plan_name' : f'grid_scan measurement {slow.name} {fast.name} {detector}',
                                                   'BMM_kafka' : {'hint': f'areascan {detector.capitalize()} {slow.name} {fast.name} {contour} {log} {user_ns["dcm"].energy.position:.1f}',
                                                                  'pngout': fname}})
+            yield from mv(slow, ini_s, fast, ini_f)  # return to starting position
             BMMuser.final_log_entry = True
             return uid
 
@@ -214,41 +184,14 @@ def areascan(detector,
         rkvs.set('BMM:scan:estimated', estimate)
         
         BMM_log_info('begin areascan observing: %s\n%s%s' % (detector, line1, line2))
-        uid = yield from make_areascan(dets,
+        asuid = yield from make_areascan(dets,
                                        slow, slow.position+startslow, slow.position+stopslow, nslow,
                                        fast, fast.position+startfast, fast.position+stopfast, nfast,
                                        fname, snake=False)
-        report(f'map uid = {uid}', level='bold', slack=True)
-        
+        kafka_message({'areascan': 'stop', 'uid' : asuid, 'filename': fname})
+        report(f'map uid = {asuid}', level='bold', slack=True)
 
-        #     BMMuser.x = None
-        #     figs = list(map(plt.figure, plt.get_fignums()))
-        #     canvas = figs[0].canvas
-        #     action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
-        #        if action != '':
-        #            if action[0].lower() == 'n' or action[0].lower() == 'q':
-        #                return(yield from null())
-        #     print('Single click the left mouse button on the plot to pluck a point...')
-        #     cid = canvas.mpl_connect('button_press_event', interpret_click) # see 65-derivedplot.py and
-        #     while BMMuser.x is None:                            #  https://matplotlib.org/users/event_handling.html
-        #         yield from sleep(0.5)
-
-        #     # print('Converting plot coordinates to real coordinates...')
-        #     # begin = valuefast + startfast
-        #     # stepsize = (stopfast - startfast) / (nfast - 1)
-        #     # pointfast = begin + stepsize * BMMuser.x
-        #     # #print(BMMuser.x, pointfast)
-        
-        #     # begin = valueslow + startslow
-        #     # stepsize = (stopslow - startslow) / (nslow - 1)
-        #     # pointslow = begin + stepsize * BMMuser.y
-        #     # #print(BMMuser.y, pointslow)
-
-        #     # print('That translates to x=%.3f, y=%.3f' % (pointfast, pointslow))
-        #     yield from mv(fast, BMMuser.x, slow, BMMuser.y)
-        #     report(f'Moved to position x,y = {fast.position:.3f}, {slow.position:.3f}', level='bold', slack=False)
-            
-            
+        # write .png, .mat, .xlsx with kafka here
         
     def cleanup_plan():
         print('Cleaning up after an area scan')
@@ -258,18 +201,7 @@ def areascan(detector,
             BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
         yield from resting_state_plan()
         user_ns['RE'].msg_hook = BMM_msg_hook
-
-        print('Disabling plot for re-plucking.')
-        try:
-            cid = BMMuser.fig.canvas.mpl_disconnect(cid)
-        except:
-            pass
-        BMMuser.x      = None
-        BMMuser.y      = None
-        BMMuser.motor  = None
-        BMMuser.motor2 = None
-        BMMuser.fig    = None
-        BMMuser.ax     = None
+        BMMuser.x, BMMuser.y, BMMuser.motor, BMMuser.motor2, BMMuser.fig, BMMuser.ax = [None] * 6
 
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #

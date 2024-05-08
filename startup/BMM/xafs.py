@@ -15,17 +15,16 @@ from tiled.client import from_profile
 from urllib.parse import quote
 
 from BMM.db              import file_resource
-from BMM.dossier         import BMMDossier
+from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions       import PROMPT, DEFAULT_INI
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive          import copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.kafka           import kafka_message, close_plots
 from BMM.linescans       import rocking_curve
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.modes           import get_mode, describe_mode
-from BMM.motor_status    import motor_sidebar, motor_status
+from BMM.motor_status    import motor_status
 from BMM.periodictable   import edge_energy, Z_number, element_name
 from BMM.resting_state   import resting_state_plan
 from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
@@ -586,7 +585,7 @@ def xafs(inifile=None, **kwargs):
         output = re.sub(r'\n+', '\n', re.sub(r'\#.*\n', '\n', content)) # remove comment and blank lines
         clargs = textwrap.fill(str(kwargs), width=50) # .replace('\n', '<br>')
         BMM_log_info('starting XAFS scan using %s:\n%s\ncommand line arguments = %s' % (inifile, output, str(kwargs)))
-        BMM_log_info(motor_status())
+        #BMM_log_info(motor_status())
 
         ## perhaps enter pseudo-channel-cut mode
         if p['rockingcurve']:
@@ -885,7 +884,8 @@ def xafs(inifile=None, **kwargs):
                 elif plotting_mode(p['mode']) == 'xs':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
-                    md['_dtc'] = (BMMuser.dtc1, BMMuser.dtc2, BMMuser.dtc3, BMMuser.dtc4)
+                    md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
+
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## metadata for XDI entry in start document
@@ -942,18 +942,10 @@ def xafs(inifile=None, **kwargs):
                         report(f"ML data evaluation model: {emoji}", level='bold', slack=True)
                         if score == 0:
                             report(f'An {emoji} may not mean that there is anything wrong with your data. See https://tinyurl.com/yrnrhshj', level='whisper', slack=True)
-                            with open('/home/xf06bm/Data/bucket/failed_data_evaluation.txt', 'a') as f:
+                            with open('/home/xf06bm/Workspace/logs/failed_data_evaluation.txt', 'a') as f:
                                 f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:
                         pass
-                    if p['lims'] is True:
-                        try:
-                            if not is_re_worker_active():
-                                rsync_to_gdrive()
-                                synch_gdrive_folder()
-                        except Exception as e:
-                            print(error_msg(e))
-                            report(f'Failed to push {fname} to Google drive...', level='bold', slack=True)
                         
 
 
@@ -1001,10 +993,7 @@ def xafs(inifile=None, **kwargs):
             else:
                 kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}_liveplot.png')})
                 kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}.png')})
-        if not is_re_worker_active():
-            rsync_to_gdrive()
-            synch_gdrive_folder()
-                    
+                
         dcm.mode = 'fixed'
         yield from resting_state_plan()
         yield from sleep(1.0)
@@ -1037,8 +1026,7 @@ def xafs(inifile=None, **kwargs):
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
-    dossier = BMMDossier()
-    dossier.measurement = 'XAFS'
+    dossier = DossierTools()
     uidlist = []
     kafka_message({'dossier': 'start'})
     kafka_message({'dossier': 'set',

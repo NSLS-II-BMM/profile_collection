@@ -28,7 +28,6 @@ from BMM.logging        import report
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
-#from BMM.purpose        import purpose
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid
 
@@ -97,7 +96,7 @@ class GlancingAngle(Device):
     alignment_filename = ''
     _orientation = 'parallel'
     toss = os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png')
-    img = None  # Image.open(os.path.join(user_ns['BMMuser'].folder, 'snapshots', 'toss.png'))
+    img = None
 
     @property
     def orientation(self):

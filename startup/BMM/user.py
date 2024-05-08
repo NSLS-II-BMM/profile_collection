@@ -9,7 +9,6 @@ user_ns = vars(user_ns_module)
 import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.gdrive    import make_gdrive_folder, copy_to_gdrive, synch_gdrive_folder, rsync_to_gdrive
 from BMM.kafka     import kafka_message
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
@@ -167,7 +166,6 @@ class BMM_User(Borg):
     def __init__(self):
         ## experiment attributes
         self.DATA            = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
-        self.gdrive          = None
         self.prompt          = True
         self.final_log_entry = True
         self.date            = ''
@@ -287,9 +285,8 @@ class BMM_User(Borg):
         
         self.tweak_xas_time = 24.0  # this is a fudge factor to get XAS time approximation to work, see xafs_functions.py l.221
         self.enable_live_plots = False
-        self.do_gdrive      = True
         
-        self.bmm_strings  = ("DATA", "gdrive", "date", "host", "name", "instrument",
+        self.bmm_strings  = ("DATA", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "workspace", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
                              "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode")
@@ -301,12 +298,13 @@ class BMM_User(Borg):
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
-                             "doi", "cif", "syns", "enable_live_plots", "do_gdrive",
+                             "doi", "cif", "syns", "enable_live_plots",
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
         self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
-        self.bmm_obsolete = ("read_rois", "e0", "rois", "roi_channel",
+        self.bmm_obsolete = ("read_rois", "e0", "gdrive", "do_gdrive",
+                             "rois", "roi_channel",
                              'roi1', 'roi2', 'roi3', 'roi4',
                              'dtc1', 'dtc2', 'dtc3', 'dtc4',)
 
@@ -415,19 +413,7 @@ class BMM_User(Borg):
             print(error_msg(E))
 
             
-    def state_from_redis(self): #, filename):
-        # if os.path.isfile(filename):
-        #     with open(filename, 'r') as jsonfile:
-        #         config = json.load(jsonfile)
-        #     for k in config.keys():
-        #         ## deal with things that may be floating around in a
-        #         ## .BMMuser, but which need not be initialized
-        #         if k in ('cycle', 'read_rois', 'e0', 'bounds', 'steps', 'times',
-        #                  'motor', 'motor2', 'fig', 'ax', 'x', 'y', 'prev_fig', 'prev_ax',
-        #                  'bmm_strings', 'bmm_ints', 'bmm_floats', 'bmm_booleans', 'bmm_none'):
-        #             continue
-        #         setattr(self, k, config[k])
-        #     #rois.trigger = True
+    def state_from_redis(self):
         from BMM.workspace import rkvs
         verbose = False
         for k in self.bmm_strings:
@@ -597,8 +583,6 @@ class BMM_User(Borg):
                                'target': htmlfolder, })
                 #shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
             kafka_message({'touch': os.path.join(self.folder, 'dossier', 'MANIFEST')})
-            #manifest = open(os.path.join(self.DATA, 'dossier', 'MANIFEST'), 'a')
-            #manifest.close()
             print('    copied html generation files, touched MANIFEST')
         self.establish_folder(0,    'templates folder', templatefolder)
      
@@ -739,15 +723,6 @@ class BMM_User(Borg):
             
         step += 1
 
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## GDrive folder
-        # user_folder = make_gdrive_folder(prefix='    ', update=False)
-        # for f in ('logo.png', 'style.css', 'trac.css'):
-        #     shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(user_folder, 'dossier', f))
-        # print('%2d. Established Google Drive folder:       %-75s' % (step, user_folder))
-        # print(whisper(f'    Don\'t foget to share Google Drive folder and Slack channel with {name}'))
-        # step += 1
-            
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## SAF and GUP
         self.gup = gup
@@ -980,13 +955,6 @@ class BMM_User(Borg):
             os.chmod(jsonfile, 0o644)
             os.remove(jsonfile)
 
-        ######################
-        # final sync of data #
-        ######################
-        if not is_re_worker_active():
-            rsync_to_gdrive()
-            synch_gdrive_folder()
-        
             
         ###############################################################
         # unset self attributes, DATA, and experiment specific logger #

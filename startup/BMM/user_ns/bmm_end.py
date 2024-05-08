@@ -21,7 +21,7 @@ run_report('\t'+'resting state')
 from BMM.resting_state import resting_state, resting_state_plan, end_of_macro
 
 run_report('\t'+'motor status reporting')
-from BMM.motor_status import motor_metadata, motor_status, ms, motor_sidebar, xrd_motors, xrdm
+from BMM.motor_status import motor_status, ms # , motor_metadata, xrd_motors, xrdm
 
 run_report('\t'+'FMBO motor tools')
 from BMM.fmbo import FMBO_status

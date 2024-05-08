@@ -1,6 +1,7 @@
 import os, sys, re, socket, ast, datetime, pathlib
 from urllib.parse import quote
-import numpy, pandas
+import numpy, pandas, openpyxl
+from scipy.io import savemat
 from bluesky import __version__ as bluesky_version
 
 
@@ -152,13 +153,6 @@ class BMMDossier():
     scanuid       = None
 
 
-    def __init__(self):
-        self.scanlist      = ''
-        #self.motors        = motor_sidebar()
-        #self.manifest_file = os.path.join(user_ns['BMMuser'].folder, 'dossier', 'MANIFEST')
-
-
-        
     def set_parameters(self, **kwargs):
         for k in kwargs.keys():
             if k == 'dossier':
@@ -651,9 +645,9 @@ class BMMDossier():
             folder = XDI["_user"]["folder"]
         self.folder = folder
             
-        ## test if XAS data file can be found
+        ## test if SEAD data file can be found
         if XDI['_user']['filename'] is None or XDI["_user"]["start"] is None:
-            log_entry(logger, '*** Filename and/or start number not given.  (xafs_dossier).')
+            log_entry(logger, '*** Filename and/or start number not given.  (sead_dossier).')
             return None
         firstfile = f'{XDI["_user"]["filename"]}.{XDI["_user"]["start"]:03d}'
         if not os.path.isfile(os.path.join(folder, firstfile)):
@@ -725,6 +719,117 @@ class BMMDossier():
         manifest.write(f'sead␣{htmlfilename}\n')
         manifest.close()
         self.write_manifest(scantype='SEAD', startdate=XDI['_user']['startdate'])
+
+
+
+
+
+    def raster_instrument_entry(self, rasterimage, rasteruid):
+        thistext  =  '      <div>\n'
+        thistext +=  '        <h3>Instrument: Raster scan</h3>\n'
+        thistext += f'          <a href="../maps/{rasterimage}">\n'
+        thistext += f'                        <img src="../maps/{rasterimage}" width="300" alt="" /></a>\n'
+        thistext +=  '          <br>'
+        thistext += f'          <a href="javascript:void(0)" onclick="toggle_visibility(\'areascan\');" title="Click to show/hide the UID of this areascan">(uid)</a><div id="areascan" style="display:none;"><small>{rasteruid}</small></div>\n'
+        thistext +=  '      </div>\n'
+        return thistext
+
+    def raster_dossier(self, catalog, logger):
+
+        if len(self.uidlist) == 0:
+            log_entry(logger, '*** cannot write dossier, uidlist is empty')
+            return None
+
+        ## gather information for the dossier from the start document
+        ## of the first scan in the sequence
+        startdoc = catalog[self.uidlist[0]].metadata['start']
+        XDI = startdoc['XDI']
+        if '_snapshots' in XDI:
+            snapshots = XDI['_snapshots']
+        else:
+            snapshots = {}
+
+
+        folder = self.folder
+        if folder is None or folder == '':
+            folder = XDI["_user"]["folder"]
+        self.folder = folder
+            
+
+        ## check for filename stub
+        if XDI['_user']['filename'] is None:
+            log_entry(logger, '*** Filename not given.  (raster_dossier).')
+            return None
+
+
+        ## determine names of output dossier files
+        basename     = XDI['_user']['filename']
+        htmlfilename = os.path.join(folder, 'dossier/', XDI['_user']['filename']+'-01.html')
+        seqnumber = 1
+        if os.path.isfile(htmlfilename):
+            seqnumber = 2
+            while os.path.isfile(os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))):
+                seqnumber += 1
+            basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
+            htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
+
+        with open(os.path.join(startup_dir, 'tmpl', 'raster_dossier.tmpl')) as f:
+                content = f.readlines()
+        thiscontent = ''.join(content).format(measurement   = 'RASTER',
+                                              filename      = XDI['_user']['filename'],
+                                              basename      = basename,
+                                              date          = XDI['_user']['startdate'],
+                                              seqnumber     = seqnumber,
+                                              rid           = self.rid,
+                                              energy        = f'{XDI["Beamline"]["energy"]:1f}',
+                                              edge          = f'{XDI["Element"]["edge"]}',
+                                              element       = self.element_text(XDI['Element']['symbol']),
+                                              sample        = XDI['Sample']['name'],
+                                              prep          = XDI['Sample']['prep'],
+                                              comment       = XDI['_user']['comment'],
+                                              instrument    = self.raster_instrument_entry(os.path.basename(XDI['_snapshots']['pngout']), self.uidlist[0]),
+                                              fast_motor    = XDI['_user']['fast_motor'],
+                                              slow_motor    = XDI['_user']['slow_motor'],
+                                              fast_init     = XDI['_user']['fast_init'],
+                                              slow_init     = XDI['_user']['slow_init'],
+                                              websnap       = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                                              webuid        = snapshots['webcam_uid'],
+                                              anasnap       = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
+                                              anauid        = snapshots['anacam_uid'],
+                                              usb1snap      = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
+                                              usb1uid       = snapshots['usbcam1_uid'],
+                                              usb2snap      = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
+                                              usb2uid       = snapshots['usbcam2_uid'],
+                                              xlsxout       = os.path.basename(XDI['_snapshots']['xlsxout']),
+                                              matout        = os.path.basename(XDI['_snapshots']['matout']),
+                                              mode          = XDI['_user']['mode'],
+                                              motors        = self.motor_sidebar(catalog),
+                                              seqstart      = datetime.datetime.fromtimestamp(catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                              seqend        = datetime.datetime.fromtimestamp(catalog[self.uidlist[-1]].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                              mono          = self.mono_text(catalog),
+                                              pdsmode       = '%s  (%s)' % self.pdstext(catalog),
+                                              experimenters = XDI['_user']['experimenters'],
+                                              gup           = XDI['Facility']['GUP'],
+                                              saf           = XDI['Facility']['SAF'],
+                                              url           = XDI['_user']['url'],
+                                              doi           = XDI['_user']['doi'],
+                                              cif           = XDI['_user']['cif'],
+                                              initext       = highlight(XDI['_user']['initext'], IniLexer(), HtmlFormatter()),
+                                              clargs        = highlight(XDI['_user']['clargs'], PythonLexer(), HtmlFormatter()),
+        )
+        with open(htmlfilename, 'a') as o:
+            o.write(thiscontent)
+
+        print(f'wrote {htmlfilename}')
+
+        self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
+        manifest = open(self.manifest_file, 'a')
+        manifest.write(f'raster␣{htmlfilename}\n')
+        manifest.close()
+        self.write_manifest()
+
+
+        
 
 class XASFile():
 
@@ -840,6 +945,11 @@ class XASFile():
         log_entry(logger, f'wrote XAS data to {filename}')
 
 
+
+
+
+
+        
 
 class SEADFile():
 
@@ -992,3 +1102,62 @@ class LSFile():
         handle.close()
 
         log_entry(logger, f'wrote linescan data to {filename}')
+
+
+
+class RasterFiles():
+
+    def preserve_data(self, catalog, uid, logger):
+        '''Save the data from an areascan as a .xlsx file (a simple spreadsheet
+        which can be ingested by many plotting programs) and as a .mat
+        file (which can be ingested by Matlab).
+
+        to do:
+        1. save all Xspress3 columns
+        2. 1- and 7-element detectors
+        '''
+
+        record  = catalog[uid]
+        xlsxout = record.metadata['start']['XDI']['_snapshots']['xlsxout']
+        matout  = record.metadata['start']['XDI']['_snapshots']['matout']
+
+        
+        motors = record.metadata['start']['motors']
+        print('Reading data set...')
+        datatable = record.primary.read()
+
+        slow = numpy.array(datatable[motors[0]])
+        fast = numpy.array(datatable[motors[1]])
+        i0   = numpy.array(datatable['I0'])
+        it   = numpy.array(datatable['It'])
+        ir   = numpy.array(datatable['Ir'])
+
+        if '4-element SDD' in catalog[uid].metadata['start']['detectors'] or 'if' in catalog[uid].metadata['start']['detectors'] or 'xs' in catalog[uid].metadata['start']['detectors']:
+            det_name = catalog[uid].metadata['start']['plan_name'].split()[-1]
+            det_name = det_name[:-1]
+            z = numpy.array(datatable[det_name+'1'])+numpy.array(datatable[det_name+'2'])+numpy.array(datatable[det_name+'3'])+numpy.array(datatable[det_name+'4'])
+        elif 'noisy_det' in catalog[uid].metadata['start']['detectors']:
+            det_name = 'noisy_det'
+            z = numpy.array(datatable['noisy_det'])
+        else:
+            z = numpy.zeros(len(slow))
+            
+        ## save map in xlsx format
+        wb = openpyxl.Workbook()
+        ws1 = wb.active
+        ws1.title = record.metadata['start']['XDI']['Sample']['name']
+        ws1.append((motors[0], motors[1], f'{det_name}/I0', det_name, 'I0', 'It', 'Ir'))
+        for i in range(len(slow)):
+            ws1.append((slow[i], fast[i], z[i]/i0[i], z[i], i0[i], it[i], ir[i]))
+        wb.save(xlsxout)
+        print(f'wrote {xlsxout}')
+
+        ## save map in matlab format 
+        savemat(matout, {'label'   : record.metadata['start']['XDI']['Sample']['name'],
+                         motors[0] : list(slow),
+                         motors[1] : list(fast),
+                         'I0'      : list(i0),
+                         'It'      : list(it),
+                         'Ir'      : list(ir),
+                         'signal'  : list(z),})
+        print(f'wrote {matout}')

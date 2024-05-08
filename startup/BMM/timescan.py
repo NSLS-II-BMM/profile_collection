@@ -24,7 +24,6 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
-from BMM.motor_status  import motor_sidebar #, motor_status
 from BMM.resting_state import resting_state, resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
@@ -93,7 +92,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     RE.msg_hook = None
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
-    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Ic1', 'Test', 'Transmission', 'Fluorescence', 'Flourescence') and 'Dtc' not in detector:
+    if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Ic1', 'Test', 'Transmission', 'Fluorescence', 'Flourescence'):
         print(error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, ic1, transmission, fluorescence)\n'))
         yield from null()
         return None
@@ -129,8 +128,6 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
         md['BMM_kafka']['hint'] = f'timescan {detector}'
         
     def count_scan(dets, readings, delay, md):
-        #if 'purpose' not in md:
-        #    md['purpose'] = 'measurement'
         uid = yield from count(dets, num=readings, delay=delay, md={**thismd, **md, 'plan_name' : f'count measurement {detector}'})
         return uid
         
@@ -295,12 +292,12 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
-        #if p['snapshots']:
-        #    yield from dossier.cameras(p['folder'], p['filename'], md)
+        if p['snapshots']:
+            yield from dossier.cameras(p['folder'], p['filename'], md)
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## capture dossier metadata for start document
-        #md['_snapshots'] = {**dossier.cameras_md}
+        md['_snapshots'] = {**dossier.cameras_md}
 
         pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
         these_kwargs = {'start'     : p['start'],
@@ -396,8 +393,7 @@ def sead(inifile=None, force=False, **kwargs):
     #if openclose is True:
     #    shb.close_plan()
     RE.msg_hook = None
-    #dossier = BMMDossier()
-    #dossier.measurement = 'SEAD'
+    dossier = DossierTools()
 
     if is_re_worker_active():
         inifile = '/home/xf06bm/Data/bucket/sead.ini'

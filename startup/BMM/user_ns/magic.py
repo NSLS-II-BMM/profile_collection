@@ -43,12 +43,12 @@ def h2o(line):
     sw()
     return None
 
-from BMM.motor_status import ms, xrdm
-@register_line_magic
-def m(line):
-    '''show BMM motor status'''
-    ms()
-    return None
+# from BMM.motor_status import ms, xrdm
+# @register_line_magic
+# def m(line):
+#     '''show BMM motor status'''
+#     ms()
+#     return None
 
 @register_line_magic
 def xm(line):
