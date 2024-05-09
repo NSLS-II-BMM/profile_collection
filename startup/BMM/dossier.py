@@ -20,7 +20,7 @@ from BMM.logging           import report
 from BMM.modes             import get_mode, describe_mode
 from BMM.periodictable     import edge_energy, Z_number, element_name
 
-from BMM.user_ns.base      import db, startup_dir, bmm_catalog
+from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.dwelltime import use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -90,9 +90,6 @@ class DossierTools():
 
     cameras
       take a snapshot with each camera and capture metadata for use in a dossier
-
-    simple_plot
-       simple, fallback plot
 
     instrument state
     ================
@@ -294,42 +291,42 @@ class DossierTools():
     ## DEPRECATED from here down. The below will be moved to kafka consumers.
         
 
-    def simple_plot(self, uidlist, filename, mode):
-        '''If the triplot cannot be made for some reason, make a fallback,
-        much simpler plot so that something is available for Slack and
-        the dossier.
+    # def simple_plot(self, uidlist, filename, mode):
+    #     '''If the triplot cannot be made for some reason, make a fallback,
+    #     much simpler plot so that something is available for Slack and
+    #     the dossier.
 
-        '''
-        BMMuser = user_ns['BMMuser']
-        this = db.v2[uidlist[0]].primary.read()
-        if mode == 'test':
-            title, ylab = 'XAS test scan', 'I0 (nA)'
-            signal = this['I0']
-        elif mode == 'transmission':
-            title, ylab = '', 'transmission'
-            signal = numpy.log(numpy.abs(this['I0']/this['It']))
-        elif mode == 'reference':
-            title, ylab = '', 'reference'
-            signal = numpy.log(numpy.abs(this['It']/this['Ir']))
-        elif mode == 'yield':
-            title, ylab = '', 'yield'
-            signal = this['Iy']/this['I0']
-        elif mode == 'xs1':
-            title, ylab = '', 'fluorescence'
-            signal = (this[BMMuser.xs8]+0.001)/(this['I0']+1)
-        else:
-            title, ylab = '', 'fluorescence'
-            signal = (this[BMMuser.xs1]+this[BMMuser.xs2]+this[BMMuser.xs3]+this[BMMuser.xs4]+0.001)/(this['I0']+1)
+    #     '''
+    #     BMMuser = user_ns['BMMuser']
+    #     this = db.v2[uidlist[0]].primary.read()
+    #     if mode == 'test':
+    #         title, ylab = 'XAS test scan', 'I0 (nA)'
+    #         signal = this['I0']
+    #     elif mode == 'transmission':
+    #         title, ylab = '', 'transmission'
+    #         signal = numpy.log(numpy.abs(this['I0']/this['It']))
+    #     elif mode == 'reference':
+    #         title, ylab = '', 'reference'
+    #         signal = numpy.log(numpy.abs(this['It']/this['Ir']))
+    #     elif mode == 'yield':
+    #         title, ylab = '', 'yield'
+    #         signal = this['Iy']/this['I0']
+    #     elif mode == 'xs1':
+    #         title, ylab = '', 'fluorescence'
+    #         signal = (this[BMMuser.xs8]+0.001)/(this['I0']+1)
+    #     else:
+    #         title, ylab = '', 'fluorescence'
+    #         signal = (this[BMMuser.xs1]+this[BMMuser.xs2]+this[BMMuser.xs3]+this[BMMuser.xs4]+0.001)/(this['I0']+1)
             
-        thisagg = matplotlib.get_backend()
-        matplotlib.use('Agg') # produce a plot without screen display
-        plt.cla()
-        plt.title(title)
-        plt.xlabel('energy (eV)')
-        plt.ylabel(ylab)
-        plt.plot(this['dcm_energy'], signal)
-        plt.savefig(filename)
-        matplotlib.use(thisagg) # return to screen display
-        print(whisper(f'Wrote simple plot to {filename}'))
+    #     thisagg = matplotlib.get_backend()
+    #     matplotlib.use('Agg') # produce a plot without screen display
+    #     plt.cla()
+    #     plt.title(title)
+    #     plt.xlabel('energy (eV)')
+    #     plt.ylabel(ylab)
+    #     plt.plot(this['dcm_energy'], signal)
+    #     plt.savefig(filename)
+    #     matplotlib.use(thisagg) # return to screen display
+    #     print(whisper(f'Wrote simple plot to {filename}'))
             
 

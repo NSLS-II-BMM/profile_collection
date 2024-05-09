@@ -222,8 +222,6 @@ run_report('\t\t'+'initializing analog camera')
 
 from BMM.webcam_device import AxisWebcam
 from BMM.handler import WEBCAM_JPEG_HANDLER
-from BMM.user_ns.base import db
-#db.reg.register_handler("BEAMLINE_WEBCAM", WEBCAM_JPEG_HANDLER)
 base = os.path.join(BMMuser.folder, 'raw')
 # testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
 # testcam.beamline_id = 'BMM (NSLS-II 06BM)'

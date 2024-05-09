@@ -13,14 +13,14 @@ def file_resource(record):
     - the HDF5 file associated with an XRF measurement or a 
       fluorescence XAFS scan
 
-    Argument is either a uid string or db.v2 (databroker.core.BlueskyRun) object.
+    Argument is either a uid string or Tiled catalog.
 
     Anything that cannot be interpreted to return a path will return None.
 
     '''
     if type(record) is str:
         try:
-            record = user_ns['db'].v2[record]
+            record = user_ns['bmm_catalog'][record]
         except:
             return(None)
     if 'databroker.core.BlueskyRunFromGenerator' in str(type(record)) :

@@ -31,7 +31,7 @@ def motor_metadata(uid=None):
     md = dict()
     table = None
     try:
-        table = db[uid].table('baseline')
+        table = bmm_catalog[uid].baseline.read()
     except:
         pass
     for m in biglist:
@@ -41,7 +41,7 @@ def motor_metadata(uid=None):
             except:
                 pass
         else:
-            md[m.name] = table[m.name][1]
+            md[m.name] = float(table[m.name][1])
     return(md)
 
 def motor_status():

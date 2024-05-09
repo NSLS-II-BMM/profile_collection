@@ -672,7 +672,7 @@ class BMMDossier():
         thiscontent = ''.join(content).format(measurement   = 'SEAD',
                                               filename      = XDI['_user']['filename'],
                                               sead          = os.path.basename(XDI['_filename']),
-                                              date          = self.date,
+                                              date          = XDI['_user']['startdate'],
                                               seqnumber     = seqnumber,  # need to replicate from above
                                               rid           = self.rid,
                                               energy        = f'{XDI["Scan"]["edge_energy"]:1f}',

@@ -14,7 +14,6 @@ from tiled.client import from_profile
 
 from urllib.parse import quote
 
-from BMM.db              import file_resource
 from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
 from BMM.functions       import PROMPT, DEFAULT_INI
@@ -33,8 +32,7 @@ from BMM.xafs_functions  import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from __main__ import db
-from BMM.user_ns.base      import db, startup_dir, bmm_catalog
+from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 from BMM.user_ns.detectors import quadem1, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
 
@@ -799,12 +797,6 @@ def xafs(inifile=None, **kwargs):
                 elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
                     this_instrument = ga.dossier_entry();
-                    # kafka_message({'dossier'  : 'set',
-                    #                'ga_align' : ga.alignment_filename,
-                    #                'ga_yuid'  : ga.y_uid,
-                    #                'ga_puid'  : ga.pitch_uid,
-                    #                'ga_fuid'  : ga.f_uid,
-                    # })
                     md['_snapshots']['ga_filename'] = ga.alignment_filename
                     md['_snapshots']['ga_yuid']     = ga.y_uid
                     md['_snapshots']['ga_pitchuid'] = ga.pitch_uid
@@ -821,9 +813,6 @@ def xafs(inifile=None, **kwargs):
                     slotno = f', motor grid {gmb.motor1.name}, {gmb.motor2.name} = {gmb.position1:.1f}, {gmb.position2:.1f}'
                     this_instrument = gmb.dossier_entry();
 
-                #kafka_message({'dossier' : 'set', 'instrument': this_instrument})
-                
-                    
                     
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
@@ -968,19 +957,17 @@ def xafs(inifile=None, **kwargs):
         print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
-        #db = user_ns['db']
-        ## db[-1].stop['num_events']['primary'] should equal db[-1].start['num_points'] for a complete scan
         how = 'finished  :tada:'
         try:
-            if 'primary' not in db[-1].stop['num_events']:
+            if 'primary' not in bmm_catalog[-1].metadata['stop']['num_events']:
                 how = '*stopped*  :warning:'
-            elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+            elif bmm_catalog[-1].metadata['stop']['num_events']['primary'] != bmm_catalog[-1].metadata['start']['num_points']:
                 how = '*stopped*  :warning:'
         except:
             how = '*stopped*  :warning:'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
-            BMM_log_info(f'most recent uid = {db[-1].start["uid"]}, scan_id = {db[-1].start["scan_id"]}')
+            BMM_log_info(f'most recent uid = {bmm_catalog[-1].metadata["start"]["uid"]}, scan_id = {bmm_catalog[-1].metadata["start"]["scan_id"]}')
 
 
             kafka_message({'dossier' : 'set', 'uidlist' : uidlist, })
@@ -1031,7 +1018,6 @@ def xafs(inifile=None, **kwargs):
     kafka_message({'dossier': 'start'})
     kafka_message({'dossier': 'set',
                    'folder' : BMMuser.folder,
-                   'date'   : BMMuser.date,
     })
     BMMuser.final_log_entry = True
     RE.msg_hook = None

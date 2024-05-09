@@ -163,9 +163,9 @@ class Pandrosus():
 
         '''
         if 'v1' in str(type(self.db)):  # v1 databroker
-            header = self.db[uid]
-            start = header.start
-            table  = header.table()
+            print('Pandrosus requires use of the Tiled interface.')
+            print('The V1 interface to databroker is deprecated.')
+            return
         else:                               # tiled catalog
             header = self.db[uid].metadata
             start = header['start']
@@ -251,18 +251,10 @@ class Pandrosus():
         if name is not None:
             self.name = name
         else:
-            if 'Broker' in str(type(self.db)):  # v1 databroker
-                self.name = self.db.v2[uid].metadata['start']['XDI']['_filename']
-            else:
-                self.name = self.db[uid].metadata['start']['XDI']['_filename']
-            #self.name = uid[-6:]
+            self.name = self.db[uid].metadata['start']['XDI']['_filename']
         self.group = Group(__name__=self.name)
-        if 'Broker' in str(type(self.db)):  # v1 databroker
-            self.title = self.db.v2[uid].metadata['start']['XDI']['Sample']['name']
-            self.mode  = self.db.v2[uid].metadata['start']['XDI']['_user']['mode']
-        else:                               # tiled catalog
-            self.title = self.db[uid].metadata['start']['XDI']['Sample']['name']
-            self.mode  = self.db[uid].metadata['start']['XDI']['_user']['mode']
+        self.title = self.db[uid].metadata['start']['XDI']['Sample']['name']
+        self.mode  = self.db[uid].metadata['start']['XDI']['_user']['mode']
 
         self.make_xmu(uid, mode=mode)
         self.make_ref(uid)
@@ -272,10 +264,7 @@ class Pandrosus():
         toss.save()
         os.remove(os.path.join(self.folder, 'prj', 'toss.prj'))
         toss = None
-        if 'Broker' in str(type(self.db)):  # v1 databroker
-            self.group.args['label'] = self.db.v2[uid].metadata['start']['XDI']['_filename']
-        else:                               # tiled catalog
-            self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
+        self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
 
             
     def put(self, energy, mu, name):

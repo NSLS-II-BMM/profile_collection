@@ -18,9 +18,9 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
+from BMM.kafka         import kafka_message
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number, edge_number
 from BMM.xspress3      import BMMXspress3DetectorBase, BMMXspress3Channel
@@ -69,46 +69,35 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
             ignored, included for consistency with 4-element interface
         
         '''
-        dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
-        plt.clf()
-        plt.xlabel('Energy  (eV)')
-        plt.ylabel('counts')
-        plt.grid(which='major', axis='both')
-        plt.xlim(2500, round(dcm.energy.position, -2)+500)
-        try:
-            record = bmm_catalog[uid]
-            #print(f'{uid}')
-            # fname = file_resource(uid)
-            # db = user_ns['db']
-            # plt.title(db.v2[uid].metadata['start']['XDI']['Sample']['name'])
-            # f = h5py.File(fname,'r')
-            # g = f['entry']['instrument']['detector']['data']
-            # data_array = g.value
-            # s1 = data_array[0][0]
-            plt.title(record.metadata['start']['XDI']['Sample']['name'])
-            s1 = record['primary']['data']['xs_channels_channel08'][0]
-        except Exception as e:
-            if uid is not None: print(e)
+        if uid is not None:
+            kafka_message({'xrf': 'plot', 'uid': uid, 'add': add, 'only': only})
+        else:
+            dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
+            plt.clf()
+            plt.xlabel('Energy  (eV)')
+            plt.ylabel('counts')
+            plt.grid(which='major', axis='both')
+            plt.xlim(2500, round(dcm.energy.position, -2)+500)
             plt.title('XRF Spectrum')
             s1 = self.channel08.mca.array_data.get()
-        e = numpy.arange(0, len(s1)) * 10
-        plt.ion()
-        plt.plot(e, s1, label='channel 8')
-        z = Z_number(BMMuser.element)
-        if BMMuser.edge.lower() == 'k':
-            label = f'{BMMuser.element} Kα1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l3':
-            label = f'{BMMuser.element} Lα1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l2':
-            label = f'{BMMuser.element} Kβ1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l1':
-            label = f'{BMMuser.element} Kβ3'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        plt.legend()
-        #plt.show()
+            e = numpy.arange(0, len(s1)) * 10
+            plt.ion()
+            plt.plot(e, s1, label='channel 8')
+            z = Z_number(BMMuser.element)
+            if BMMuser.edge.lower() == 'k':
+                label = f'{BMMuser.element} Kα1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.KL3_LINE)*1000,  color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l3':
+                label = f'{BMMuser.element} Lα1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l2':
+                label = f'{BMMuser.element} Kβ1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l1':
+                label = f'{BMMuser.element} Kβ3'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            plt.legend()
+            #plt.show()
 
     def table(self):
         '''Pretty print a table of values for each ROI.

@@ -318,7 +318,7 @@ from BMM.timescan import timescan, ts2dat, sead
 # from BMM.energystep import energystep
 
 run_report('\t'+'raster scans')
-from BMM.raster import raster, difference_data
+from BMM.raster import raster #, difference_data
 
 
 ################################################################################################################

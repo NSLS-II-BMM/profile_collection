@@ -18,7 +18,6 @@ from PIL import Image
 from tiled.client import from_profile
 
 from BMM.areascan        import areascan
-from BMM.db              import file_resource
 from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
@@ -32,7 +31,7 @@ from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_su
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.base      import db, startup_dir, bmm_catalog
+from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.dwelltime import _locked_dwell_time
 
 def read_ini(inifile, **kwargs):
@@ -302,8 +301,6 @@ def raster(inifile=None, **kwargs):
         report(f'== starting raster scan', level='bold', slack=True, rid=rid)
 
         p, f = read_ini(inifile, **kwargs)
-        #print(f)
-        #print(p)
 
         fast  = user_ns[p['fast_motor']]
         slow  = user_ns[p['slow_motor']]
@@ -456,9 +453,9 @@ def raster(inifile=None, **kwargs):
             dossier.seqend = now('%A, %B %d, %Y %I:%M %p')
             how = 'finished  :tada:'
             try:
-                if 'primary' not in db[-1].stop['num_events']:
+                if 'primary' not in bmm_catalog[-1].metadata['stop']['num_events']:
                     how = '*stopped*'
-                elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+                elif bmm_catalog[-1].metadata['stop']['num_events']['primary'] != bmm_catalog[-1].metadata['start']['num_points']:
                     how = '*stopped*'
             except:
                 how = '*stopped*'

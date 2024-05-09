@@ -28,6 +28,7 @@ from BMM.resting_state import resting_state, resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs          import scan_metadata
 
+from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
@@ -145,7 +146,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
                    'fname' : outfile, })
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
-                 (line1, uid, db[-1].start['scan_id']))
+                 (line1, uid, bmm_catalog[uid].metadata['start']['scan_id']))
 
     yield from mv(_locked_dwell_time, 0.5)
     RE.msg_hook = BMM_msg_hook
@@ -363,9 +364,7 @@ def sead(inifile=None, force=False, **kwargs):
         kafka_message({'dossier' : 'set',
                        'rid'     : rid,
                        'folder'  : BMMuser.folder,
-                       'date'    : BMMuser.date,
                        'uidlist' : [seaduid,],
-                       'seadpng' : pngout,
                        })
         kafka_message({'dossier' : 'sead', })
                    
@@ -374,9 +373,9 @@ def sead(inifile=None, force=False, **kwargs):
         BMM_clear_suspenders()
         how = 'finished  :tada:'
         try:
-            if 'primary' not in db[-1].stop['num_events']:
+            if 'primary' not in bmm_catalog[-1].metadata['stop']['num_events']:
                 how = '*stopped*'
-            elif db[-1].stop['num_events']['primary'] != db[-1].start['num_points']:
+            elif bmm_catalog[-1].metadata['stop']['num_events']['primary'] != bmm_catalog[-1].metadata['start']['num_points']:
                 how = '*stopped*'
         except:
             how = '*stopped*'

@@ -18,10 +18,9 @@ import matplotlib.pyplot as plt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-#from BMM.db            import file_resource
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions     import now
-#from BMM.kafka         import kafka_message
+from BMM.kafka         import kafka_message
 from BMM.metadata      import mirror_state
 from BMM.periodictable import Z_number, edge_number
 from BMM.xspress3      import BMMXspress3DetectorBase, BMMXspress3Channel
@@ -69,55 +68,49 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
             plot only the signal channel 1, 2, 3, or 4
         
         '''
-        dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
-        plt.clf()
-        plt.xlabel('Energy  (eV)')
-        plt.ylabel('counts')
-        plt.grid(which='major', axis='both')
-        plt.xlim(2500, round(dcm.energy.position, -2)+500)
-        try:
-            record = bmm_catalog[uid]
-            plt.title(record.metadata['start']['XDI']['Sample']['name'])
-            s1 = record['primary']['data']['xs_channels_channel01'][0]
-            s2 = record['primary']['data']['xs_channels_channel02'][0]
-            s3 = record['primary']['data']['xs_channels_channel03'][0]
-            s4 = record['primary']['data']['xs_channels_channel04'][0]
-        except Exception as e:
-            if uid is not None: print(e)
+        if uid is not None:
+            kafka_message({'xrf': 'plot', 'uid': uid, 'add': add, 'only': only})
+        else:
+            dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
+            plt.clf()
+            plt.xlabel('Energy  (eV)')
+            plt.ylabel('counts')
+            plt.grid(which='major', axis='both')
+            plt.xlim(2500, round(dcm.energy.position, -2)+500)
             plt.title(f'XRF Spectrum {BMMuser.element} {BMMuser.edge}')
             s1 = self.channel01.mca.array_data.get()
             s2 = self.channel02.mca.array_data.get()
             s3 = self.channel03.mca.array_data.get()
             s4 = self.channel04.mca.array_data.get()
-        e = numpy.arange(0, len(s1)) * 10
-        plt.ion()
-        if only is not None and only in (1, 2, 3, 4):
-            channel = self.get_channel(number=only)
-            this = channel.mca.array_data
-            plt.plot(e, this.get(), label=f'channel {only}')
-        elif add is True:
-            plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
-        else:
-            plt.plot(e, s1, label='channel 1')
-            plt.plot(e, s2, label='channel 2')
-            plt.plot(e, s3, label='channel 3')
-            plt.plot(e, s4, label='channel 4')
-        z = Z_number(BMMuser.element)
-        if BMMuser.edge.lower() == 'k':
-            label = f'{BMMuser.element} Kα1'
-            ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
-            plt.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l3':
-            label = f'{BMMuser.element} Lα1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l2':
-            label = f'{BMMuser.element} Kβ1'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        elif BMMuser.edge.lower() == 'l1':
-            label = f'{BMMuser.element} Kβ3'
-            plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
-        plt.legend()
-        #plt.show()
+            e = numpy.arange(0, len(s1)) * 10
+            plt.ion()
+            if only is not None and only in (1, 2, 3, 4):
+                channel = self.get_channel(number=only)
+                this = channel.mca.array_data
+                plt.plot(e, this.get(), label=f'channel {only}')
+            elif add is True:
+                plt.plot(e, s1+s2+s3+s4, label='sum of four channels')
+            else:
+                plt.plot(e, s1, label='channel 1')
+                plt.plot(e, s2, label='channel 2')
+                plt.plot(e, s3, label='channel 3')
+                plt.plot(e, s4, label='channel 4')
+            z = Z_number(BMMuser.element)
+            if BMMuser.edge.lower() == 'k':
+                label = f'{BMMuser.element} Kα1'
+                ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                plt.axvline(x = ke,  color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l3':
+                label = f'{BMMuser.element} Lα1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l2':
+                label = f'{BMMuser.element} Kβ1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l1':
+                label = f'{BMMuser.element} Kβ3'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            plt.legend()
+            #plt.show()
             
     def table(self):
         '''Pretty print a table of values for each ROI and for all four channels.

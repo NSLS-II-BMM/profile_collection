@@ -20,9 +20,10 @@ from BMM.attic.derivedplot       import DerivedPlot, interpret_click, close_all_
 from BMM.suspenders        import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.workspace         import rkvs
 
-from BMM.user_ns.bmm         import BMMuser
-from BMM.user_ns.dwelltime   import _locked_dwell_time
-from BMM.user_ns.detectors   import quadem1, xs, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.base      import bmm_catalog
+from BMM.user_ns.bmm       import BMMuser
+from BMM.user_ns.dwelltime import _locked_dwell_time
+from BMM.user_ns.detectors import quadem1, xs, ic0, ic1, ic2, ION_CHAMBERS
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -198,7 +199,8 @@ def areascan(detector,
         db = user_ns['db']
         BMM_clear_suspenders()
         if BMMuser.final_log_entry is True:
-            BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (db[-1].start['uid'], db[-1].start['scan_id']))
+            BMM_log_info('areascan finished\n\tuid = %s, scan_id = %d' % (bmm_catalog[-1].metadata['start']['uid'],
+                                                                          bmm_catalog[-1].metadata['start']['scan_id']))
         yield from resting_state_plan()
         user_ns['RE'].msg_hook = BMM_msg_hook
         BMMuser.x, BMMuser.y, BMMuser.motor, BMMuser.motor2, BMMuser.fig, BMMuser.ax = [None] * 6
