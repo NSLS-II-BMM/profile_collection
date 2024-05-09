@@ -18,7 +18,7 @@ import pandas
 import matplotlib
 import matplotlib.pyplot as plt
 
-
+from BMM.dossier       import DossierTools
 from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
@@ -203,7 +203,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## read and check INI content
         orig = inifile
         if not os.path.isfile(inifile):
-            inifile = os.path.join(BMMuser.folder, inifile)
+            inifile = os.path.join(BMMuser.workspace, inifile)
             if not os.path.isfile(inifile):
                 print(inifile)
                 print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))

@@ -54,9 +54,16 @@ def handler(signal, frame):
 signal.signal(signal.SIGINT, handler)
 
 import logging
-
 logger = logging.getLogger('BMM file manager logger')
-logger.handlers = []
+logger.setLevel(logging.INFO)
+
+def add_handler(this):
+    this.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s\n')
+    this.setFormatter(formatter)
+    logger.addHandler(this)
+ch = logging.StreamHandler()
+add_handler(ch)
 
 be_verbose = False
 
@@ -74,21 +81,21 @@ def pobj(text, style='monokai'):
     
 
 def clear_logger(logger):
-    logger.handlers = []
-
-def establish_logger(logger):
-    folder = rkvs.get('BMM:user:folder').decode('UTF8')
+    '''Remove file handler and copy log to central storage
+    '''
+    pass
+    
+def establish_logger(logger, folder=None):
+    if folder is None:
+        print('No folder provided for experiment log')
+        return
+        
     log_master_file = os.path.join(folder, 'file_manager.log')
     if not os.path.isfile(log_master_file):
         os.mknod(log_master_file)
     fh = logging.FileHandler(log_master_file)
-    fh.setLevel(logging.INFO) 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s\n')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    #logging.basicConfig(filename=log_master_file, encoding='utf-8', level=logging.INFO,
-    #                    format='%(asctime)s - %(name)s - %(levelname)s\n%(message)s\n')
-    print(f'established a logging handler for experiment in {folder}')
+    add_handler(fh)
+    logger.info(f'established a logging file handler for experiment in {folder}')
 
 
     
@@ -117,22 +124,14 @@ def manage_files_from_kafka_messages(beamline_acronym):
             if 'dossier' in message:
                 if message['dossier'] == 'start':
                     dossier = BMMDossier()
-                    print(f'start dossier\nstartup dir: {startup_dir}')
-
-                elif message['dossier'] == 'logger':
-                    establish_logger(logger)
-                    print('established dossier logger')
-
-                elif message['dossier'] == 'clear_logger':
-                    clear_logger(logger)
-                    print('cleared dossier logger')
+                    logger.info(f'start dossier\nstartup dir: {startup_dir}')
 
                 elif message['dossier'] == 'set':
                     dossier.set_parameters(**message)
                     if len(message) > 2:
-                        print(f'set {len(message)-1} parameters')
+                        logger.info(f'set {len(message)-1} parameters')
                     else:
-                        print('set 1 parameter')
+                        logger.info('set 1 parameter')
 
                 elif message['dossier'] == 'show':
                     pobj(dossier)
@@ -154,6 +153,21 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 elif message['dossier'] == 'raster':
                     dossier.raster_dossier(bmm_catalog, logger)
 
+
+            elif 'logger' in message:
+                if message['logger'] == 'start':
+                    establish_logger(logger, folder=message['folder'])
+                    print('established dossier logger')
+
+                elif message['logger'] == 'clear':
+                    logger.info('clearing filehandler from logger')
+                    clear_logger(logger)
+
+                elif message['logger'] == 'entry':
+                    logger.info(message['text'])
+
+
+                    
             elif 'echoslack' in message:
                 if 'img' not in message or  message['img'] is None:
                     print(f'sending message "{message["text"]}" to slack')
@@ -169,20 +183,20 @@ def manage_files_from_kafka_messages(beamline_acronym):
             elif 'mkdir' in message:
                 if os.path.exists(message['mkdir']) is False:
                     os.mkdir(message['mkdir'])
-                    print(f'made directory {message["mkdir"]}')
+                    logger.info(f'made directory {message["mkdir"]}')
 
             elif 'copy' in message:
                 source = message['file']
                 target = message['target']
                 shutil.copy(source, target)
-                print(f'copied {source} to {target}')
+                logger.info(f'copied {source} to {target}')
 
                 
             elif 'touch' in message:
                 target = message['touch']
                 this = open(target, 'a')
                 this.close()
-                print(f'touched {target}')
+                logger.info(f'touched {target}')
                 
             elif 'xasxdi' in message:
                 xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)

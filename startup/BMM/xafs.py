@@ -739,7 +739,7 @@ def xafs(inifile=None, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## show the metadata to the user
-            display_XDI_metadata(md)
+            #display_XDI_metadata(md)
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## store data in redis, used by cadashboard
@@ -1181,11 +1181,3 @@ def xafs_grid(inifile=None, **kwargs):
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     print(f'{p["element"]} {p["edge"]}')
     return(energy_grid, time_grid)
-
-
-
-# def xanes():
-#     BMMuser = user_ns['BMMuser']
-#     defaul_ini = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
-#     el = BMMuser.element
-#     yield from xafs(defaul_ini, filename=el+'_test', )

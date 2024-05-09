@@ -58,8 +58,10 @@ def get_mode():
             return 'E'
 
 def unset_mouse_click():
-    rkvs.set('BMM:mouse_event:value', '')
-    rkvs.set('BMM:mouse_event:motor', '')
+    rkvs.set('BMM:mouse_event:value',  '')
+    rkvs.set('BMM:mouse_event:motor',  '')
+    rkvs.set('BMM:mouse_event:value2', '')
+    rkvs.set('BMM:mouse_event:motor2', '')
 
         
 def pluck(suggested_motor=None):
@@ -100,9 +102,22 @@ def pluck(suggested_motor=None):
             return(yield from null())
     
     yield from sleep(0.25)
-    position = float(rkvs.get('BMM:mouse_event:value').decode('utf-8'))
-    motor_name = rkvs.get('BMM:mouse_event:motor').decode('utf-8')
-    motor = None
+    position    = float(rkvs.get('BMM:mouse_event:value').decode('utf-8'))
+    motor_name  = rkvs.get('BMM:mouse_event:motor').decode('utf-8')
+    position2   = ''
+    motor_name2 = ''
+    if rkvs.get('BMM:mouse_event:value2').decode('utf-8') != '':
+        position2   = float(rkvs.get('BMM:mouse_event:value2').decode('utf-8'))
+        motor_name2 = rkvs.get('BMM:mouse_event:motor2').decode('utf-8')
+    motor  = None
+    motor2 = None
+
+    # need to parse areascan axis labels
+    if 'fast axis' in motor_name:
+        motor_name = motor_name.split()[2][1:-1]
+    if 'slow axis' in motor_name2:
+        motor_name2 = motor_name2.split()[2][1:-1]
+
     
     if suggested_motor is not None and suggested_motor.name != motor_name:
         print(warning_msg(f'You seem to have clicked on the wrong plot.'))
@@ -114,20 +129,34 @@ def pluck(suggested_motor=None):
         if m.name == motor_name:
             motor = m
             break
+    if motor_name2 != '':
+        for m in user_ns['sd'].baseline:
+            if m.name == motor_name2:
+                motor2 = m
+                break
 
     if motor == None:
         print(warning_msg(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....'))
         unset_mouse_click()
         return(yield from null())
+    ## if x-axis motor is ok, presume that y-axis will also be sensible
+
+    question = f'\nMove {motor_name} to {position:.3f} ? '
+    if motor2 is not None:
+        question = f'\nMove ({motor_name}, {motor_name2}) to ({position:.3f}, {position2:.3f}) ? '
         
-    action = input(f'\nMove {motor_name} to {position:.3f} ? ' + PROMPT)
+    
+    action = input(question + PROMPT)
     if action != '':
         if action[0].lower() == 'n' or action[0].lower() == 'q':
             print('Skipping...')
             unset_mouse_click()
             return(yield from null())
     #print(motor.name, motor_name, position)
-    yield from mv(motor, position)
+    if motor2 is None:
+        yield from mv(motor, position)
+    else:
+        yield from mv(motor, position, motor2, position2)
     user_ns['BMMuser'].mouse_click = position
     unset_mouse_click()
     print(whisper('\nRE(pluck()) to grab a different point from the plot.\n'))

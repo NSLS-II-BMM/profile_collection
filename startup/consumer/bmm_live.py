@@ -782,8 +782,9 @@ class AreaScan():
         self.count        = 0
         
         self.figure = plt.figure()
-        #if self.motor is not None:
-        #    cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
+        if self.fast_motor is not None:
+            cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
+        
         
         self.plots.append(self.figure.number)
         self.axes = self.figure.add_subplot(111)
@@ -803,8 +804,22 @@ class AreaScan():
         self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
         self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
 
+    def interpret_click(self, ev):
+        '''Grab location of mouse click.  Identify motor by grabbing the
+        x-axis label from the canvas clicked upon.
+
+        Stash those in Redis.
+        '''
+        x,y = ev.xdata, ev.ydata
+        print(x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
+        print(y, ev.canvas.figure.axes[0].get_ylabel(), ev.canvas.figure.number)
+        rkvs.set('BMM:mouse_event:value', x)
+        rkvs.set('BMM:mouse_event:motor', ev.canvas.figure.axes[0].get_xlabel())
+        rkvs.set('BMM:mouse_event:value2', y)
+        rkvs.set('BMM:mouse_event:motor2', ev.canvas.figure.axes[0].get_ylabel())
+        
     def stop(self, **kwargs):
-        if 'filename' in kwargs:
+        if 'filename' in kwargs and kwargs['filename'] is not None and kwargs['filename'] != '':
             self.figure.savefig(kwargs['filename'])
             img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
 

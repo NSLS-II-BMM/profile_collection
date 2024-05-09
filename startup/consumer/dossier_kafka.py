@@ -64,29 +64,23 @@ class BMMDossier():
 
     attributes
     ==========
-    date : str
-      start date of experiment as YYYY-MM-DD
     folder : str
       target data folder, if None use folder recorded in start doc
-    instrument : str
-      html text for instrument DIV, supplied by instrument class
-      if None, call self.instrument_default() for a placeholder
+      if provided, this is the base folder on central storage for 
+      this experiment
     rid : str
-      reference ID number for link to Slack message log capture
-    uidlist : list of str
-      generated list of XAFS scan UIDs in the scan sequence
+      reference ID number for the link to Slack message log capture. 
+      This is only relevant during an experiment when Slack messages 
+      are being captured in the timeline file.
+    uidlist : list of str (or str)
+      list of XAFS scan UIDs in the scan sequence
+      if a string is provided, it will be converted in a list of length 1
+    uid : str
+      XAFS scan UID.  If provided this way, it will be appended to 
+      self.uidlist
 
     methods
     =======
-    capture_xrf
-      measure an XRF spectrum and capture its metadata for use in a dossier
-
-    cameras
-      take a snapshot with each camera and capture metadata for use in a dossier
-
-    prep_metadata
-      organize metadata common to any dossier
-
     write_dossier
        generate the sample specific dossier file for an XAFS measurement
 
@@ -136,32 +130,33 @@ class BMMDossier():
 
     '''
 
-    ## these default values should still allow a dossier to be written
-    ## even if parameters were not provided by the process sending the
-    ## kafka message
-    date = ''
-    folder = None
     instrument = None
-    rid = ''
+    rid = None
     uidlist = []
 
-
-    ## another dossier type...?
-    npoints       = 0
-    dwell         = 0
-    delay         = 0
-    scanuid       = None
-
-
     def set_parameters(self, **kwargs):
+        '''Set dossier parameters from strings in the Kafka message.
+
+        Take care with "uid" / "uidlist" to be sure that strings are
+        turned into lists of strings.  All dossier methods expect that
+        self.uidlist is a list of strings, even if it is a list of one.
+
+        '''
         for k in kwargs.keys():
             if k == 'dossier':
                 continue
+            elif k == 'uid':
+                self.uidlist.append(kwargs['uid'])
+            elif k == 'uidlist' and type(kwargs['uidlist']) is str:
+                self.uidlist = [kwargs['uidlist'],]
             else:
                 setattr(self, k, kwargs[k])
 
 
     def write_dossier(self, bmm_catalog, logger):
+        '''
+        Write a dossier for an XAFS scan sequence.
+        '''
 
         if len(self.uidlist) == 0:
             log_entry(logger, '*** cannot write dossier, uidlist is empty')
@@ -201,17 +196,6 @@ class BMMDossier():
                 seqnumber += 1
             basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
-
-        ## generate triplot as a png image (or fail gracefully)
-        # prjfilename, pngfilename = None, None
-        # try:
-        #     if self.uidlist is not None:
-        #         pngfilename = os.path.join(folder, 'snapshots', f"{basename}.png")
-        #         #prjfilename = os.path.join(folder, 'prj', f"{basename}.prj")
-        #         self.make_merged_triplot(self.uidlist, pngfilename, XDI['_user']['mode'])
-        # except Exception as e:
-        #     logger.info('*** failure to make triplot\n' + str(e))
-
 
         ## sanity check the "report ID" (used to link to correct position in messagelog.html
         if self.rid is None: self.rid=''
@@ -380,6 +364,7 @@ class BMMDossier():
 
 
     def plotting_mode(self, mode):
+        '''Return a sane string to describe the plotting mode.'''
         mode = mode.lower()
         if mode == 'xs1':
             return 'xs1'
@@ -401,6 +386,8 @@ class BMMDossier():
             return 'trans'
 
     def element_text(self, element='Po'):
+        '''Return a string describing the element.  Returns Po if not
+        specified or not specified correctly.'''
         if Z_number(element) is None:
             return ''
         else:
@@ -411,24 +398,56 @@ class BMMDossier():
             return thistext
         
     def generate_scanlist(self, bmm_catalog):
-        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{printedname}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
+        '''Generate the html text for the XAS scan side bar for the XAFS
+        dossier from the uidlist.'''
+        template = '''
+<li>
+  <a href="../{filename}.{ext:03d}"
+     title="Click to see the text of {filename}.{ext:03d}">
+         {printedname}.{ext:03d}
+  </a>
+  <br>&nbsp;&nbsp;
+  <a href="javascript:void(0)"
+     onclick="toggle_visibility(\'{filename}.{ext:03d}\');"
+     title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">
+         #{scanid}
+  </a>
+  <div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div>
+  <br>&nbsp;&nbsp;'''
+        hdf5template = '''<a href="javascript:void(0)"
+     onclick="toggle_visibility(\'{filename}.{ext:03d}.h5\');"
+     title="This is HDF5 file associated with {filename}.{ext:03d}, click to show/hide the HDF5 filename">
+         HDF5
+  </a>
+  <div id="{filename}.{ext:03d}.h5" style="display:none;"><small>{hdf5file}</small></div>
+</li>\n
+'''
+        
+#        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{printedname}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
 
         text = ''
         for u in self.uidlist:
             filename = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['filename']
             ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
             printedname = filename
+            hdf5file = self.hdf5_filename(bmm_catalog, u)
             if len(filename) > 11:
                 printedname = filename[0:6] + '&middot;&middot;&middot;' + filename[-5:]
             text += template.format(filename    = filename,
                                     printedname = printedname,
                                     ext         = ext,
                                     scanid      = bmm_catalog[u].metadata['start']['scan_id'],
-                                    uid         = u)
+                                    uid         = u,)
+            if hdf5file is not None:
+                text += hdf5template.format(filename    = filename,
+                                            ext         = ext,
+                                            hdf5file    = hdf5file,)
             ext = ext + 1
         return text
 
     def mono_text(self, bmm_catalog):
+        '''Text explaining the monochromator used for the measurement.  This
+        is computed from motor values in the baseline.'''
         dcmx = bmm_catalog[self.uidlist[0]].baseline.data['dcm_x'][0]
         if dcmx > 10:
             return 'Si(311)'
@@ -439,6 +458,8 @@ class BMMDossier():
 
 
     def pdstext(self, bmm_catalog):
+        '''Text explaining the photon delivery mode used for the measurement.
+        This is computed from motor values in the baseline.'''
         m2v = bmm_catalog[self.uidlist[0]].baseline.data['m2_vertical'][0]
         m2p = bmm_catalog[self.uidlist[0]].baseline.data['m2_pitch'][0]
         m3p = bmm_catalog[self.uidlist[0]].baseline.data['m3_pitch'][0]
@@ -467,7 +488,8 @@ class BMMDossier():
         
 
     def wheel_slot(self, value):
-        '''Return the current slot number for a sample wheel.'''
+        '''Return the current slot number for a sample wheel computed from the
+        xafs_wheel motor position.'''
         slotone = -30
         angle = round(value)
         this = round((-1*slotone-15+angle) / (-15)) % 24
@@ -475,7 +497,8 @@ class BMMDossier():
         return this
 
     def spinner(self, pos):
-        '''Return the current spinner number as an integer'''
+        '''Return the current spinner number as an integer computed as the
+        xafs_garot motor position.'''
         cur = pos % 360
         here = (9-round(cur/45)) % 8
         if here == 0:
@@ -483,6 +506,17 @@ class BMMDossier():
         return here
 
 
+    def hdf5_filename(self, bmm_catalog, uid):
+        '''Find the path/name of the asset file associated with UID
+        '''
+        for d in bmm_catalog[uid].documents():
+            if d[0] == 'resource':
+                this = os.path.join(d[1]['root'], d[1]['resource_path'])
+                if '_%d' in this:
+                    this = this % 0
+                return(this)
+        return None
+    
     
     def motor_sidebar(self, bmm_catalog):
         baseline = bmm_catalog[self.uidlist[0]].baseline.read()
@@ -625,6 +659,7 @@ class BMMDossier():
 
     
     def sead_dossier(self, catalog, logger):
+        '''Write a dossier for a SEAD measurement. '''
 
         if len(self.uidlist) == 0:
             log_entry(logger, '*** cannot write SEAD dossier, uidlist is empty')
@@ -686,14 +721,14 @@ class BMMDossier():
                                               dwell         = XDI['Scan']['dwell_time'],
                                               delay         = XDI['Scan']['delay'],
                                               shutter       = XDI['_user']['shutter'],
-                                              websnap       = 'x', # quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
-                                              webuid        = 'x', # snapshots['webcam_uid'],
-                                              anasnap       = 'x', # quote('../snapshots/'+os.path.basename(snapshots['anacam_file'])),
-                                              anauid        = 'x', # snapshots['anacam_uid'],
-                                              usb1snap      = 'x', # quote('../snapshots/'+os.path.basename(snapshots['usbcam1_file'])),
-                                              usb1uid       = 'x', # snapshots['usbcam2_uid'],
-                                              usb2snap      = 'x', # quote('../snapshots/'+os.path.basename(snapshots['usbcam2_file'])),
-                                              usb2uid       = 'x', # snapshots['usbcam2_uid'],
+                                              websnap       = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                                              webuid        = snapshots['webcam_uid'],
+                                              anasnap       = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
+                                              anauid        = snapshots['anacam_uid'],
+                                              usb1snap      = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
+                                              usb1uid       = snapshots['usbcam1_uid'],
+                                              usb2snap      = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
+                                              usb2uid       = snapshots['usbcam2_uid'],
                                               mode          = XDI['_user']['mode'],
                                               motors        = self.motor_sidebar(catalog),
                                               seqstart      = datetime.datetime.fromtimestamp(catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
@@ -708,6 +743,7 @@ class BMMDossier():
                                               cif           = XDI['_user']['cif'],
                                               initext       = highlight(XDI['_user']['initext'], IniLexer(), HtmlFormatter()),
                                               clargs        = highlight(XDI['_user']['clargs'], PythonLexer(), HtmlFormatter()),
+                                              hdf5file      = self.hdf5_filename(catalog, self.uidlist[0]),
         )
         with open(htmlfilename, 'a') as o:
             o.write(thiscontent)
@@ -735,6 +771,7 @@ class BMMDossier():
         return thistext
 
     def raster_dossier(self, catalog, logger):
+        '''Write a dossier for a raster measurement. '''
 
         if len(self.uidlist) == 0:
             log_entry(logger, '*** cannot write dossier, uidlist is empty')
@@ -816,6 +853,7 @@ class BMMDossier():
                                               cif           = XDI['_user']['cif'],
                                               initext       = highlight(XDI['_user']['initext'], IniLexer(), HtmlFormatter()),
                                               clargs        = highlight(XDI['_user']['clargs'], PythonLexer(), HtmlFormatter()),
+                                              hdf5file      = self.hdf5_filename(catalog, self.uidlist[0]),
         )
         with open(htmlfilename, 'a') as o:
             o.write(thiscontent)

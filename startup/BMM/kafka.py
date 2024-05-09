@@ -35,4 +35,18 @@ def close_plots():
 
 def kafka_verbose(onoff=False):
     kafka_message({'verbose': onoff})
-    
+
+# this is awkward.  it only works on fully qualified paths to
+# something in Workspace or on a filename relative to user's Workspace
+# This needs a file selection dialog!
+def preserve(fname):
+    short = fname
+    if os.path.isabs(fname):
+        short = fname.replace(BMMuser.workspace, '')
+    else:
+        fname = os.path.join(BMMuser.workspace, fname)
+    target = os.path.join(BMMuser.folder, short)
+    print(f'Attempting to copy {fname} to {target}')
+    kafka_message({'copy': True,
+                   'file': fname,
+                   'target': target})

@@ -819,11 +819,11 @@ class BMM_User(Borg):
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
-        self.state_to_redis(filename=os.path.join(self.DATA, '.BMMuser'), prefix=' >> ')
-        slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
-        if os.path.isfile(slink):
-            os.remove(slink)
-        os.symlink(os.path.join(self.DATA, '.BMMuser'), slink)
+        self.state_to_redis(filename=os.path.join(self.workspace, '.BMMuser'), prefix=' >> ')
+        # slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
+        # if os.path.isfile(slink):
+        #     os.remove(slink)
+        # os.symlink(os.path.join(self.DATA, '.BMMuser'), slink)
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):

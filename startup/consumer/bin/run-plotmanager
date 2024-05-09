@@ -29,20 +29,20 @@ try:
 except ImportError:
     tiled_version = msg
 try:
-    import databroker
-    databroker_version = "v{}".format(databroker.__version__)
+    import bluesky_kafka
+    bluesky_kafka_version = "v{}".format(bluesky_kafka.__version__)
 except ImportError:
-    databroker_version = msg
+    bluesky_kafka_version = msg
 try:
     import larch
     larch_version = "v{}".format(larch.__version__)
 except ImportError:
     ophyd_version = msg
 
-print("    - Bluesky    : {}".format(bluesky_version))
-print("    - Tiled      : {}".format(tiled_version))
-print("    - Databroker : {}".format(databroker_version))
-print("    - Larch      : {}".format(larch_version))
+print("    - Bluesky       : {}".format(bluesky_version))
+print("    - Tiled         : {}".format(tiled_version))
+print("    - Bluesky_kafka : {}".format(bluesky_kafka_version))
+print("    - Larch         : {}".format(larch_version))
 ')
 
 EOL

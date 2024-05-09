@@ -19,6 +19,11 @@ Using the following software:
 $(python -c '\
 msg = "Not installed"
 try:
+    import bluesky
+    bluesky_version = "v{}".format(bluesky.__version__)
+except ImportError:
+    bluesky_version = msg
+try:
     import tiled
     tiled_version = "v{}".format(tiled.__version__)
 except ImportError:
@@ -28,15 +33,10 @@ try:
     bluesky_kafka_version = "v{}".format(bluesky_kafka.__version__)
 except ImportError:
     bluesky_kafka_version = msg
-try:
-    import databroker
-    databroker_version = "v{}".format(databroker.__version__)
-except ImportError:
-    databroker_version = msg
 
+print("    - Bluesky       : {}".format(bluesky_version))
 print("    - Tiled         : {}".format(tiled_version))
-print("    - Bluesky_kafka : {}".format(bluesky_version))
-print("    - Databroker    : {}".format(databroker_version))
+print("    - Bluesky_kafka : {}".format(bluesky_kafka_version))
 ')
 
 EOL
