@@ -482,7 +482,7 @@ class Pandrosus():
         plt.legend(loc='best', shadow=True)
         if self.reuse is False:
             plt.close()
-            return fig
+        return fig
 
     def plot_signals(self):
         '''Make a plot of mu(E) for a single data set with I0 and the signal
@@ -808,7 +808,7 @@ class Pandrosus():
             #plt.show()
             fig.canvas.manager.show()
             fig.canvas.flush_events()
-        return(fig)
+        return fig 
         
     pe  = plot_xmu
     ps  = plot_signals

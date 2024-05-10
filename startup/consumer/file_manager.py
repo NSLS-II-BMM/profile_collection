@@ -81,9 +81,18 @@ def pobj(text, style='monokai'):
     
 
 def clear_logger(logger):
-    '''Remove file handler and copy log to central storage
+    '''Reset the logger to have only the stream handler.  
+
+    Copy log to central storage as a permanent part of the record of
+    the experiment.
+
     '''
-    pass
+    logger.handlers.clear()
+    logger = logging.getLogger('BMM file manager logger')
+    logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler()
+    add_handler(ch)
+    ## copy it....
     
 def establish_logger(logger, folder=None):
     if folder is None:
@@ -91,8 +100,6 @@ def establish_logger(logger, folder=None):
         return
         
     log_master_file = os.path.join(folder, 'file_manager.log')
-    if not os.path.isfile(log_master_file):
-        os.mknod(log_master_file)
     fh = logging.FileHandler(log_master_file)
     add_handler(fh)
     logger.info(f'established a logging file handler for experiment in {folder}')
@@ -115,25 +122,29 @@ def manage_files_from_kafka_messages(beamline_acronym):
             print('\n')
 
         if name == 'bmm':
-            if any(x in message for x in ('dossier', 'mkdir', 'copy', 'copyini', 'touch', 'echoslack', 'xasxdi', 'seadxdi', 'lsxdi')) :
+            if any(x in message for x in ('dossier', 'mkdir', 'copy', 'touch', 'echoslack',
+                                          'xasxdi', 'seadxdi', 'lsxdi', 'raster')) :
                 if be_verbose is True:
-                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
-                else:
-                    print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]')
+                    print(f'\n{pprint.pformat(message, compact=True)}')
+                # if be_verbose is True:
+                #     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
+                # else:
+                #     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]')
 
             if 'dossier' in message:
                 if message['dossier'] == 'start':
                     dossier = BMMDossier()
-                    logger.info(f'start dossier\nstartup dir: {startup_dir}')
+                    logger.info(f'starting dossier')
 
                 elif message['dossier'] == 'set':
                     dossier.set_parameters(**message)
-                    if len(message) > 2:
-                        logger.info(f'set {len(message)-1} parameters')
-                    else:
-                        logger.info('set 1 parameter')
+                    # if len(message) > 2:
+                    #     logger.info(f'set {len(message)-1} parameters')
+                    # else:
+                    #     logger.info('set 1 parameter')
 
                 elif message['dossier'] == 'show':
+                    logger.info(pprint.pformat(dossier.__dict__))
                     pobj(dossier)
                     
                 elif message['dossier'] == 'motors':

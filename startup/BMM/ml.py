@@ -35,7 +35,7 @@ from BMM.user_ns.bmm import BMMuser
 
 from BMM.user_ns.base import startup_dir
 
-class BMMDataEvaluation():
+class BMMDataEvaluation:
     '''A very simple machine learning model for recognizing when an XAS
     scan goes horribly awry.
 
@@ -57,11 +57,21 @@ class BMMDataEvaluation():
         self.matrix   = os.path.join(self.folder, 'scaler.joblib')
         self.good_emoji = ':heavy_check_mark:'
         self.bad_emoji  = ':heavy_multiplication_x:'
-        if os.path.isfile(self.model):
+        self.tab = ''
+        try:
+            if os.path.isfile(self.model):
+                self.clf = load(self.model)
+            if os.path.isfile(self.matrix):
+                self.scaler = load(self.matrix)
+        except Exception as E:  # regenerate joblib files if python or pickle version has changed
+            print(str(E))
+            self.tab = '\t'*4
+            print(self.tab+"regenerating joblib files")
+            self.import_training_set()
+            self.train()
             self.clf = load(self.model)
-        if os.path.isfile(self.matrix):
             self.scaler = load(self.matrix)
-        
+                
 
     def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True):
         '''Slurp a record from Databroker, contruct transmission or
@@ -219,7 +229,7 @@ class BMMDataEvaluation():
         data = list()
         for h5file in self.hdf5:
             if os.path.isfile(h5file):
-                print(f'reading data from {h5file}')
+                print(f'{self.tab}reading data from {h5file}')
                 f = h5py.File(h5file,'r')
                 for uid in f.keys():
                     try:
@@ -233,7 +243,7 @@ class BMMDataEvaluation():
         self.trainX, self.X, self.trainy, self.y = train_test_split(data, scores, random_state=0)
         self.scaler.fit(self.trainX)
         dump(self.scaler, self.matrix)
-        print(f'wrote scaling matrix to {self.matrix}')
+        print(f'{self.tab}wrote scaling matrix to {self.matrix}')
         
         #self.X = self.scaler.transform(self.X)
         
@@ -243,7 +253,7 @@ class BMMDataEvaluation():
 
         '''
 
-        print(f"training {model.upper()} model...")
+        print(f"{self.tab}training {model.upper()} model...")
         if model.lower() == 'knn':
             self.clf = KNeighborsClassifier(n_neighbors=1)
         elif model.lower() == 'rf':
@@ -255,7 +265,7 @@ class BMMDataEvaluation():
         
         self.clf.fit(self.scaler.transform(self.trainX), self.trainy)
         dump(self.clf, self.model)
-        print(f'wrote model to {self.model}')
+        print(f'{self.tab}wrote model to {self.model}')
         #self.X = X_test
         #self.y = y_test
         return()

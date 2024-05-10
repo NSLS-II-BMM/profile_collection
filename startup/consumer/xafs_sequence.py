@@ -90,7 +90,10 @@ class XAFSSequence():
             toplot.title = f"Sequence: {name}  {len(self.uidlist)}/{self.repetitions}"
         else:
             toplot.title = f"Sequence ended: {name}  {len(self.uidlist)} scans"
-        self.fig = toplot.triplot()
+        if len(toplot.group.energy) > 100:
+            self.fig = toplot.triplot()
+        else:
+            self.fig = toplot.plot_xmu()
         self.fig.canvas.manager.window.setGeometry(1237, 856, 640, 584)
         return 1
 

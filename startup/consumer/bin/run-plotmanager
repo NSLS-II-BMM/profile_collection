@@ -15,7 +15,7 @@ cat << EOL
 $(tput smul; tput bold)BMM's data consumer for real-time data visualization$(tput sgr0)
 
 Using the following software:
-    - Conda      : ${BS_ENV}
+    - Conda         : ${BS_ENV}
 $(python -c '\
 msg = "Not installed"
 try:

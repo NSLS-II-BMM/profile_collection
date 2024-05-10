@@ -351,17 +351,12 @@ from BMM.demeter import run_athena, run_hephaestus
 run_report('\t'+'machine learning and data evaluation')
 from BMM.ml import BMMDataEvaluation
 clf = BMMDataEvaluation()
-
+    
+    
 run_report('\t'+'telemetry')
 from BMM.telemetry import BMMTelemetry
 tele = BMMTelemetry()
 
-
-# if rois.trigger is True:        # set Struck rois from persistent user information
-#      if len(BMMuser.rois) == 3:
-#           rois.set(BMMuser.rois)
-#           rois.select(BMMuser.element)
-#      rois.trigger = False
 
 if BMMuser.element is None:
      try:
@@ -410,13 +405,13 @@ if all_connected(True) is False:
 run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
 from BMM.user_ns.instruments import wmb, lmb, gmb, lsmb
-if wmb is not None: wmb.folder = BMMuser.folder      # single or double wheel
+if wmb  is not None: wmb.folder  = BMMuser.folder     # single or double wheel
 if gawheel is not None:
     gawheel.folder = BMMuser.folder  # glancing angle stage
     gawheel.description = 'the glancing angle stage'
-if lmb is not None: lmb.folder = BMMuser.folder      # Linkam stage
+if lmb  is not None: lmb.folder  = BMMuser.folder     # Linkam stage
 if lsmb is not None: lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
-if gmb is not None: gmb.folder = BMMuser.folder      # generic motor grid
+if gmb  is not None: gmb.folder  = BMMuser.folder     # generic motor grid
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook

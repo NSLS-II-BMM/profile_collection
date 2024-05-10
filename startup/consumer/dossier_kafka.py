@@ -33,7 +33,7 @@ startup_dir = os.path.dirname(__file__)
 
 def log_entry(logger, message):
     #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
-    print(message)
+    #print(message)
     echo_slack(text = message,
                icon = 'message',
                rid  = None )
@@ -858,7 +858,7 @@ class BMMDossier():
         with open(htmlfilename, 'a') as o:
             o.write(thiscontent)
 
-        print(f'wrote {htmlfilename}')
+        log_entry(logger, f'wrote raster dossier: {htmlfilename}')
 
         self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
         manifest = open(self.manifest_file, 'a')
@@ -1161,7 +1161,7 @@ class RasterFiles():
 
         
         motors = record.metadata['start']['motors']
-        print('Reading data set...')
+        #print('Reading data set...')
         datatable = record.primary.read()
 
         slow = numpy.array(datatable[motors[0]])
@@ -1188,7 +1188,7 @@ class RasterFiles():
         for i in range(len(slow)):
             ws1.append((slow[i], fast[i], z[i]/i0[i], z[i], i0[i], it[i], ir[i]))
         wb.save(xlsxout)
-        print(f'wrote {xlsxout}')
+        log_entry(logger, f'wrote {xlsxout}')
 
         ## save map in matlab format 
         savemat(matout, {'label'   : record.metadata['start']['XDI']['Sample']['name'],
@@ -1198,4 +1198,5 @@ class RasterFiles():
                          'It'      : list(it),
                          'Ir'      : list(ir),
                          'signal'  : list(z),})
-        print(f'wrote {matout}')
+        log_entry(logger, f'wrote {matout}')
+
