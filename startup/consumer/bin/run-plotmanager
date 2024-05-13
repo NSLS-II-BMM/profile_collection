@@ -10,6 +10,12 @@
 cd /home/xf06bm/.ipython/profile_collection/startup/consumer
 conda activate $BS_ENV
 
+. bin/set-konsole-tab-title.sh
+terminal=`ps -o 'cmd=' -p $(ps -o 'ppid=' -p $$)`
+if command_exists qdbus-qt5; then # set tab title if using Konsole
+    set-konsole-tab-title "Plot manager"
+fi
+
 cat << EOL
 
 $(tput smul; tput bold)BMM's data consumer for real-time data visualization$(tput sgr0)
@@ -49,3 +55,7 @@ EOL
 
 
 ipython -i 'consume_measurement.py'
+
+if command_exists qdbus-qt5; then # reset Konsole tab title
+    set-konsole-tab-title "%d : %n"
+fi

@@ -10,6 +10,12 @@
 cd /home/xf06bm/.ipython/profile_collection/startup/consumer
 conda activate $BS_ENV
 
+. bin/set-konsole-tab-title.sh
+terminal=`ps -o 'cmd=' -p $(ps -o 'ppid=' -p $$)`
+if command_exists qdbus-qt5; then # set tab title if using Konsole
+    set-konsole-tab-title "File manager"
+fi
+
 cat << EOL
 
 $(tput smul; tput bold)BMM's kafka consumer for data secure file namagement$(tput sgr0)
@@ -41,5 +47,8 @@ print("    - Bluesky_kafka : {}".format(bluesky_kafka_version))
 
 EOL
 
-
 ipython -i 'file_manager.py'
+
+if command_exists qdbus-qt5; then # reset Konsole tab title
+    set-konsole-tab-title "%d : %n"
+fi

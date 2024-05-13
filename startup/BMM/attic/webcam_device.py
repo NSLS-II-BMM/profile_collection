@@ -1,3 +1,13 @@
+## this was an abortive effor to encapsulate multiple web cams in a single base object
+# from BMM.webcam_device import AxisWebcam
+# base = os.path.join(BMMuser.folder, 'raw')
+# testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
+# testcam.beamline_id = 'BMM (NSLS-II 06BM)'
+# testcam.annotation_string = 'Welcome to BMM'
+
+
+
+
 import os, uuid, threading, itertools, datetime, time
 import numpy
 

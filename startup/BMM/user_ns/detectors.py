@@ -220,13 +220,6 @@ anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
 run_report('\t\t'+'initializing analog camera')
 
-from BMM.webcam_device import AxisWebcam
-from BMM.handler import WEBCAM_JPEG_HANDLER
-base = os.path.join(BMMuser.folder, 'raw')
-# testcam = AxisWebcam(base=base, address='xf06bm-cam6', name='XAS webcam')
-# testcam.beamline_id = 'BMM (NSLS-II 06BM)'
-# testcam.annotation_string = 'Welcome to BMM'
-
 
 
 from BMM.usb_camera import CAMERA
