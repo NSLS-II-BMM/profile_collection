@@ -9,7 +9,7 @@ run_report(__file__, text='detectors and cameras')
 
 with_pilatus = False
 with_cam1 = True
-with_cam2 = False
+with_cam2 = True
 
 from ophyd.scaler import EpicsScaler
 
@@ -226,7 +226,6 @@ from BMM.usb_camera import CAMERA
 if with_cam1 is True:
     usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
     usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam1')
-    #usb1.image.shaped_image.kind = 'normal'
 else:
     usb1, usbcam1 = None, None
 

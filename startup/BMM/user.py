@@ -885,13 +885,6 @@ class BMM_User(Borg):
         #    self.state_from_redis(jsonfile)
         self.suspenders_engaged = False
         self.trigger = True
-            #user = json.load(open(jsonfile))
-            # try:
-            #     self.element    = rkvs.get('BMM:pds:element').decode('utf-8')
-            #     self.edge       = rkvs.get('BMM:pds:edge').decode('utf-8')
-            #     self.instrument = rkvs.get('BMM:automation:type').decode('utf-8')
-            # except:
-            #     self.element, self.edge, self.instrument = None, 'K', ''
         if self.name is not None:
             self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
 

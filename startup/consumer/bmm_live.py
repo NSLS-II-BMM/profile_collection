@@ -233,6 +233,7 @@ class LineScan():
     def stop(self, **kwargs):
         if 'fname' in kwargs:
             self.figure.savefig(kwargs['fname'])
+            self.logger.info(f'saved linescan figure {kwargs["fname"]}')
             img_to_slack(kwargs['fname'], title=f'{self.description} vs. {self.motor}', measurement='line')
 
         #self.figure.show(block=False)
@@ -494,6 +495,7 @@ class XAFSScan():
         # self.initial     = 0
         if filename is not None:
             self.fig.savefig(filename)
+            self.logger.info(f'saved XAFS sequence figure {filename}')
             img_to_slack(filename, title=self.sample, measurement='xafs')
             
 
@@ -645,6 +647,7 @@ class XRF():
 
         if filename is not None:
             self.figure.savefig(filename)
+            self.logger.info(f'saved XRF figure {filename}')
             if post is True:
                 img_to_slack(filename, title=self.title, measurement='xrf')
             
@@ -821,6 +824,7 @@ class AreaScan():
     def stop(self, **kwargs):
         if 'filename' in kwargs and kwargs['filename'] is not None and kwargs['filename'] != '':
             self.figure.savefig(kwargs['filename'])
+            self.logger.info(f'saved areascan figure {kwargs["filename"]}')
             img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
 
         self.ongoing     = False

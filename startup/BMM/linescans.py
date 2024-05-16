@@ -30,6 +30,7 @@ from BMM.functions     import countdown, clean_img, PROMPT, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.workspace     import rkvs
 
+from BMM.user_ns.base        import WORKSPACE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
@@ -844,7 +845,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             #yield from move_after_scan(thismotor)
             ## right here... put UID and plucked value in a store of some sort
             if user_ns["BMMuser"].mouse_click is not None:
-                with open('/home/xf06bm/Workspace/logs/linescan_evaluation.txt', 'a') as f:
+                with open(os.path.join(WORKSPACE, 'logs', 'linescan_evaluation.txt'), 'a') as f:
                     f.write(f'''{now()}
      mode = {thismotor.name}/{detector}
      uid = {uid}

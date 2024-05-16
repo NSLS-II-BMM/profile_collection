@@ -32,7 +32,7 @@ from BMM.xafs_functions  import conventional_grid, sanitize_step_scan_parameters
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.base      import bmm_catalog
+from BMM.user_ns.base      import bmm_catalog, WORKSPACE
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 from BMM.user_ns.detectors import quadem1, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
 
@@ -751,7 +751,10 @@ def xafs(inifile=None, **kwargs):
             ## loop over scan count
             close_plots()
             rid = str(uuid.uuid4())[:8]
-            kafka_message({'dossier' : 'set', 'rid': rid})
+            kafka_message({'dossier': 'start', 'stub': p['filename']})
+            kafka_message({'dossier': 'set',
+                           'folder' : BMMuser.folder,
+                           'rid'    : rid})
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True, rid=rid)
             cnt = 0
@@ -931,7 +934,7 @@ def xafs(inifile=None, **kwargs):
                         report(f"ML data evaluation model: {emoji}", level='bold', slack=True)
                         if score == 0:
                             report(f'An {emoji} may not mean that there is anything wrong with your data. See https://tinyurl.com/yrnrhshj', level='whisper', slack=True)
-                            with open('/home/xf06bm/Workspace/logs/failed_data_evaluation.txt', 'a') as f:
+                            with open(os.path.join(WORKSPACE, 'logs', 'failed_data_evaluation.txt'), 'a') as f:
                                 f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:
                         pass
@@ -1015,10 +1018,6 @@ def xafs(inifile=None, **kwargs):
     ######################################################################
     dossier = DossierTools()
     uidlist = []
-    kafka_message({'dossier': 'start'})
-    kafka_message({'dossier': 'set',
-                   'folder' : BMMuser.folder,
-    })
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:

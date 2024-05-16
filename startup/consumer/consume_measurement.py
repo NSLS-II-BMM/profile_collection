@@ -19,37 +19,55 @@ matplotlib.use('Qt5Agg')
 #import xafs_visualization
 #xafsviz_window=None
 
+# capture Ctrl-c to exit kafka polling loop semi-gracefully
+def handler(signal, frame):
+    print('Exiting Kafka consumer')
+    sys.exit(0)
+signal.signal(signal.SIGINT, handler)
+
+import logging
+logger = logging.getLogger('BMM plot manager logger')
+logger.setLevel(logging.INFO)
+
+from file_logger import add_handler, clear_logger, establish_logger
+sh = logging.StreamHandler()
+add_handler(sh, logger)
+
+
+
 from xafs_sequence import XAFSSequence
 xafsseq = XAFSSequence()
 xafsseq.catalog = bmm_catalog
+xafsseq.logger = logger
 
 from glancing_angle_stage import GlancingAngle
 ga = GlancingAngle()
+ga.logger = logger
 
 from align_wheel import AlignWheel
 aw = AlignWheel()
+aw.logger = logger
 
 be_verbose = True
 doing = None
 
 from bmm_live import LineScan, XAFSScan, XRF, AreaScan
 ls  = LineScan()
+ls.logger = logger
 xs  = XAFSScan()
+xs.logger = logger
 ts  = LineScan()
+ts.logger = logger
 xrf = XRF()
+xrf.logger = logger
 asc = AreaScan()
+asc.logger = logger
 
 # these two lines allow a stale plot to remain interactive and prevent
 # the current plot from stealing focus.  thanks to Tom:
 # https://nsls2.slack.com/archives/C02D9V72QH1/p1674589090772499
 plt.ion()
 plt.rcParams["figure.raise_window"] = False
-
-# capture Ctrl-c to exit kafka polling loop semi-gracefully
-def handler(signal, frame):
-    print('Exiting Kafka consumer')
-    sys.exit(0)
-signal.signal(signal.SIGINT, handler)
 
 
 def plot_from_kafka_messages(beamline_acronym):
@@ -70,7 +88,7 @@ def plot_from_kafka_messages(beamline_acronym):
 
         if name == 'bmm':
             if any(x in message for x in ('xafs_sequence', 'glancing_angle', 'align_wheel', 'wafer', 'mono_calibration',
-                                          'xrfat', 'linescan', 'xafsscan', 'timescan', 'xrf', 'areascan', 'close')) :
+                                          'xrfat', 'linescan', 'xafsscan', 'timescan', 'xrf', 'areascan', 'close', 'logger')) :
                 if be_verbose is True:
                     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
                 else:
@@ -173,6 +191,21 @@ def plot_from_kafka_messages(beamline_acronym):
                 elif message['close'] == 'last':
                     plt.close(ls.plots[-1])
 
+
+            elif 'logger' in message:
+                if message['logger'] == 'start':
+                    establish_logger(logger, folder=message['folder'])
+                    #logger.info('established dossier logger')
+
+                elif message['logger'] == 'clear':
+                    #logger.info('clearing filehandler from logger')
+                    clear_logger(logger)
+
+                #elif message['logger'] == 'entry':
+                #    logger.info(message['text'])
+
+
+                    
             # elif 'resting_state' in message:
             #     if doing == 'timescan':
             #         ts.stop()

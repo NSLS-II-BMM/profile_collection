@@ -50,7 +50,7 @@ import matplotlib.pyplot as plt
 def show_snapshot(uid):
     '''Quickly plot a snapshot image from DataBroker given its UID.
     '''
-    this = user_ns['db'].v2[uid].primary.read()
+    this = user_ns['bmm_catalog'][uid].primary.read()
     if 'usbcam1_image' in this:
         key = 'usbcam1_image'
     elif 'usbcam2_image' in this:

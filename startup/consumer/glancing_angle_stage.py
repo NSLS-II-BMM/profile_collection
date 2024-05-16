@@ -144,4 +144,5 @@ class GlancingAngle():
         self.fig.canvas.flush_events()
         
         self.fig.savefig(self.filename)
+        self.logger.info(f'saved spinner alignment figure {filename}')
         img_to_slack(self.filename, title=f'Alignment of spinner {self.spinner}', measurement='xafs')

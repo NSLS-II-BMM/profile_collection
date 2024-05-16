@@ -21,7 +21,8 @@ user_ns = vars(user_ns_module)
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.larch_interface import Pandrosus
 #from BMM.functions import plotting_mode
-from BMM.user_ns.bmm import BMMuser
+from BMM.user_ns.base import WORKSPACE
+from BMM.user_ns.bmm  import BMMuser
 
 # when pickle changes version number, this error message will happen twice:
 # /opt/conda_envs/collection-2021-1.2/lib/python3.7/site-packages/sklearn/base.py:315:
@@ -358,7 +359,7 @@ class BMMDataEvaluation:
         h5 = h5py.File(h5file, 'w')
 
         count = 0
-        faillist = '/home/xf06bm/Workspace/logs/failed_data_evaluation.txt'
+        faillist = os.path.join(WORKSPACE, 'logs', 'failed_data_evaluation.txt')
         with open(faillist, 'r') as fl:
             allstr = fl.read()
         a = allstr.replace('\t', '')

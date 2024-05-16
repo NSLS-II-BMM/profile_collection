@@ -103,4 +103,5 @@ class AlignWheel():
         self.fig.canvas.flush_events()
         
         #self.fig.savefig(self.filename)
+        #self.logger.info(f'saved wheel alignment figure (filename)')
         #img_to_slack(self.filename, measurement='line')

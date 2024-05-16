@@ -57,13 +57,9 @@ import logging
 logger = logging.getLogger('BMM file manager logger')
 logger.setLevel(logging.INFO)
 
-def add_handler(this):
-    this.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s\n%(message)s\n')
-    this.setFormatter(formatter)
-    logger.addHandler(this)
-ch = logging.StreamHandler()
-add_handler(ch)
+from file_logger import add_handler, clear_logger, establish_logger
+sh = logging.StreamHandler()
+add_handler(sh, logger)
 
 be_verbose = False
 
@@ -79,31 +75,6 @@ def pobj(text, style='monokai'):
                     PythonLexer(),
                     Terminal256Formatter(style=style)))
     
-
-def clear_logger(logger):
-    '''Reset the logger to have only the stream handler.  
-
-    Copy log to central storage as a permanent part of the record of
-    the experiment.
-
-    '''
-    logger.handlers.clear()
-    logger = logging.getLogger('BMM file manager logger')
-    logger.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    add_handler(ch)
-    ## copy it....
-    
-def establish_logger(logger, folder=None):
-    if folder is None:
-        print('No folder provided for experiment log')
-        return
-        
-    log_master_file = os.path.join(folder, 'file_manager.log')
-    fh = logging.FileHandler(log_master_file)
-    add_handler(fh)
-    logger.info(f'established a logging file handler for experiment in {folder}')
-
 
     
 def manage_files_from_kafka_messages(beamline_acronym):
@@ -134,7 +105,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
             if 'dossier' in message:
                 if message['dossier'] == 'start':
                     dossier = BMMDossier()
-                    logger.info(f'starting dossier')
+                    logger.info(f'starting dossier for {message["stub"]}')
 
                 elif message['dossier'] == 'set':
                     dossier.set_parameters(**message)
@@ -168,7 +139,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
             elif 'logger' in message:
                 if message['logger'] == 'start':
                     establish_logger(logger, folder=message['folder'])
-                    print('established dossier logger')
+                    logger.info('established file logger')
 
                 elif message['logger'] == 'clear':
                     logger.info('clearing filehandler from logger')
@@ -193,7 +164,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
 
             elif 'mkdir' in message:
                 if os.path.exists(message['mkdir']) is False:
-                    os.mkdir(message['mkdir'])
+                    os.makedirs(message['mkdir'])
                     logger.info(f'made directory {message["mkdir"]}')
 
             elif 'copy' in message:

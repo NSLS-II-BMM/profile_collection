@@ -108,6 +108,7 @@ class XAFSSequence():
         if ok == 1:
             self.fig.savefig(filename)
             name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+            self.logger.info(f'saved XAFS summary figure {filename}')
             img_to_slack(filename, title=name, measurement='xafs')
         
 
