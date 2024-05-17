@@ -18,7 +18,7 @@ fi
 
 cat << EOL
 
-$(tput smul; tput bold)BMM's kafka consumer for data secure file namagement$(tput sgr0)
+$(tput smul; tput bold)BMM's kafka consumer for file management with data security$(tput sgr0)
 
 Using the following software:
     - Conda         : ${BS_ENV}
