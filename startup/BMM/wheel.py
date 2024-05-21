@@ -409,7 +409,7 @@ class WheelMacroBuilder(BMMMacroBuilder):
                         command += ', %s=\'%s\'' % (k, m[k])
             command += ')\n'
             self.content += command
-            self.content += self.tab + 'close_last_plot()\n\n'
+            self.content += self.tab + 'close_plots()\n\n'
 
             ########################################
             # approximate time cost of this sample #

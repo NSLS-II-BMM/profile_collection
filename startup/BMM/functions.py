@@ -123,11 +123,11 @@ l2e = e2l
 
 ## see calibrate_pitch in BMM/mono_calibration.py
 def approximate_pitch(energy):
-    '''Updated 11 Sep 2023
+    '''Updated 20 May 2024
     '''
     if user_ns['dcm']._crystal == '111':
-        m = -4.6945e-06
-        b = 4.36629998
+        m = -5.0871e-06
+        b = 4.41381875
         return(m*energy + b)
     else:
         m = -3.2775e-06
@@ -209,7 +209,7 @@ def elapsed_time(start, slack=None):
 def present_options(suffix='xlsx'):
     options = [x for x in os.listdir(user_ns['BMMuser'].workspace) if x.endswith(suffix)]
     options = sorted(options)
-    print(bold_msg(f'Looking in {user_ns["BMMuser"].folder}\n'))
+    print(bold_msg(f'Looking in {user_ns["BMMuser"].workspace}\n'))
     
     print(f'Select your {suffix} file:\n')
     for i,x in enumerate(options):

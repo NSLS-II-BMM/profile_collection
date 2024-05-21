@@ -410,7 +410,7 @@ class XAFSScan():
             self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
         ## 1x3 grid if no fluorescence (transmission, reference, test)
         else:
-            self.fig.canvas.manager.window.setGeometry(760, 2259, 1800, 593)
+            self.fig.canvas.manager.window.setGeometry(1640, 2259, 1800, 624)
             self.gs = gridspec.GridSpec(1,3)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[0, 1])
@@ -585,8 +585,9 @@ class XRF():
         self.axes.set_facecolor((0.95, 0.95, 0.95))
         self.axes.set_xlabel('Energy (eV)')
         title = 'counts'
-        if 'Sample' in catalog[uid].metadata['start']['XDI'] and 'name' in catalog[uid].metadata['start']['XDI']['Sample']:
-            self.title = catalog[uid].metadata['start']['XDI']['Sample']['name']
+        if 'XDI' in catalog[uid].metadata['start']:
+            if 'Sample' in catalog[uid].metadata['start']['XDI'] and 'name' in catalog[uid].metadata['start']['XDI']['Sample']:
+                self.title = catalog[uid].metadata['start']['XDI']['Sample']['name']
         self.axes.set_title(self.title)
         self.axes.grid(which='major', axis='both')
         
@@ -623,24 +624,25 @@ class XRF():
             for i in channels:
                 plt.plot(e, s[i-1], label=f'channel {i}')
 
-        if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
-            el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
-            ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
-            z = Z_number(el)
-            if ed.lower() == 'k':
-                label = f'{el} Kα1'
-                eline = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
-            elif ed.lower() == 'l3':
-                label = f'{el} Lα1'
-                eline = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000
-            elif ed.lower() == 'l2':
-                label = f'{el} Kβ1'
-                eline = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000
-            elif ed.lower() == 'l1':
-                label = f'{el} Kβ3'
-                eline = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000
+        if 'XDI' in catalog[uid].metadata['start']:
+            if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
+                el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+                ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
+                z = Z_number(el)
+                if ed.lower() == 'k':
+                    label = f'{el} Kα1'
+                    eline = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                elif ed.lower() == 'l3':
+                    label = f'{el} Lα1'
+                    eline = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000
+                elif ed.lower() == 'l2':
+                    label = f'{el} Kβ1'
+                    eline = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000
+                elif ed.lower() == 'l1':
+                    label = f'{el} Kβ3'
+                    eline = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000
 
-            self.axes.axvline(x = eline, color = 'brown', linewidth=1, label=label)
+                self.axes.axvline(x = eline, color = 'brown', linewidth=1, label=label)
 
         self.axes.set_xlim(2500, eline+2000)
         self.axes.legend(loc='best', shadow=True)

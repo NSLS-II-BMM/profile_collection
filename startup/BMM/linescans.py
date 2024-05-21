@@ -288,7 +288,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
-def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak'):
+def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='peak', height=3):
     '''Perform a relative scan of the DCM 2nd crystal pitch around the current
     position to find the peak of the crystal rocking curve.  Begin by opening
     the hutch slits to 3 mm. At the end, move to the position of maximum 
@@ -306,6 +306,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
         'I0' or 'Bicron' ['I0']
     choice : (string)
         'peak', fit' or 'com' (center of mass) ['peak']
+    height : float
+        slit3 height during rocking curve scan [3]
 
     If choice is fit, the fit is performed using the
     SkewedGaussianModel from lmfit, which works pretty well for this
@@ -313,7 +315,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     convolution with the slightly misaligned entrance slits.
 
     '''
-    def main_plan(start, stop, nsteps, detector):
+    def main_plan(start, stop, nsteps, detector, height):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(error_msg(text))
@@ -342,10 +344,11 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             yield from mv(_locked_dwell_time, 0.1)
             yield from dcm.kill_plan()
 
-            yield from mv(slits3.top, 1.5, slits3.bottom, -1.5)
+            yield from mv(slits3.top, height/2.0, slits3.bottom, -1*height/2.0)
             #if sgnl == 'Bicron':
             #    yield from mv(slitsg.vsize, 5)
                 
+            dets = ION_CHAMBERS.copy()
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
                            'detector' : 'I0',})
@@ -408,7 +411,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     # except:
     #     gonio_slit_height = 1
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(start, stop, nsteps, detector), cleanup_plan())
+    yield from finalize_wrapper(main_plan(start, stop, nsteps, detector, height), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
@@ -431,9 +434,9 @@ def find_slot(shape='slot'):
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
+    kafka_message({'close': 'all'})
     kafka_message({'align_wheel' : 'stop'})
     print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
-    kafka_message({'close': 'all'})
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')

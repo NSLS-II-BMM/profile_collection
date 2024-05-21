@@ -232,6 +232,7 @@ else:
 if with_cam2 is True:
     usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
     usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam2')
+    usbcam2.image.shape = (600, 800, 3)
 else:
     usb2, usbcam2 = None, None
 

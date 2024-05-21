@@ -282,7 +282,7 @@ class BMMSnapshot(Device):
                 if self.name == 'usbcam1':
                     u=user_ns['usb1'].image.array_data.get().reshape((1080,1920,3))
                 else: 
-                    u=user_ns['usb2'].image.array_data.get().reshape((1080,1920,3))
+                    u=user_ns['usb2'].image.array_data.get().reshape((600,800,3))
                 im = Image.fromarray(u)
                 im.save(filename, 'JPEG')
                 self.image.shape = (im.height, im.width, 3)

@@ -385,7 +385,7 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                         command += ', %s=\'%s\'' % (k, m[k])
             command += ')\n'
             self.content += command
-            self.content += self.tab + 'close_last_plot()\n\n'
+            self.content += self.tab + 'close_plots()\n\n'
             #self.content += self.tab + 'yield from lakeshore.off_plan()\n\n'
 
             ########################################

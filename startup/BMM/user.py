@@ -652,18 +652,18 @@ class BMM_User(Borg):
         ## sample 1
         yield from slot(1)
         yield from xafs('scan.ini', filename='samp1', sample='first sample')
-        close_last_plot()
+        close_plots()
 
         ## sample 2
         yield from slot(2)
         ## yield from mvr(xafs_x, 0.5)
         yield from xafs('scan.ini', filename='samp2', sample='another sample', comment='my comment')
-        close_last_plot()
+        close_plots()
 
         ## sample 3
         yield from slot(3)
         yield from xafs('scan.ini', filename='samp3', sample='a different sample', prep='this sample prep', nscans=4)
-        close_last_plot()'''
+        close_plots()'''
 
         if not os.path.isfile(macropy):
             with open(macrotmpl) as f:
@@ -813,17 +813,13 @@ class BMM_User(Borg):
             os.makedirs(os.path.join(user_workspace, 'templates'))
         self.workspace = user_workspace
 
-        
+
         self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
         self.state_to_redis(filename=os.path.join(self.workspace, '.BMMuser'), prefix=' >> ')
-        # slink = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
-        # if os.path.isfile(slink):
-        #     os.remove(slink)
-        # os.symlink(os.path.join(self.DATA, '.BMMuser'), slink)
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')
         if os.path.isfile(jsonfile):
@@ -836,22 +832,7 @@ class BMM_User(Borg):
             os.symlink(self.DATA, local_folder, target_is_directory=True)
         print(f'    Made symbolic link to data folder at {local_folder}')
         self.folder_link = local_folder
-        
-        # if 'xf06bm-ws1' in self.host:
-        #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"mkdir -p '{user_folder}'"]
-        #     symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws3', f"ln -s {lustre_root}/{date} '{local_folder}'"]
-        #     other_machine = 'xf06bm-ws3'
-        # elif 'xf06bm-ws3' in self.host:
-        #     mkdir_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"mkdir -p '{user_folder}'"]
-        #     symlink_command = ['ssh', '-q', 'xf06bm@xf06bm-ws1', f"ln -s {lustre_root}/{date} '{local_folder}'"]
-        #     other_machine = 'xf06bm-ws1'
 
-        # #print(mkdir_command)
-        # #print(symlink_command)
-        # run(mkdir_command)
-        # run(symlink_command)
-        # print(whisper(f'    Made symbolic link to data folder on {other_machine}'))
-        
         try:
             xascam._root = os.path.join(self.folder, 'snapshots')
             xrdcam._root = os.path.join(self.folder, 'snapshots')
@@ -861,7 +842,7 @@ class BMM_User(Borg):
         except:
             pass
 
-            
+
 
     def start_experiment_from_serialization(self):
         '''In the situation where bsui needs to be stopped (or crashes) before

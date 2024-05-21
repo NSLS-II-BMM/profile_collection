@@ -569,7 +569,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
                 self.content += self.tab +  'yield from ga.flatten()\n'
                 self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
-            #self.content += self.tab + 'close_last_plot()\n\n'
+            #self.content += self.tab + 'close_plots()\n\n'
 
 
             ########################################

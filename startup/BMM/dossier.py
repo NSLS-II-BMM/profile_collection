@@ -183,7 +183,7 @@ class DossierTools():
         kafka_message({'xrf' : 'plot',
                        'uid' : self.xrfuid,
                        'add' : False,
-                       'filename' : xrfsnap,
+                       'filename' : xrfimage,
                        'post' : BMMuser.post_xrf, })
         kafka_message({'xrf' : 'write',
                        'uid' : self.xrfuid,
@@ -264,23 +264,23 @@ class DossierTools():
                            'img': image_usb1})
 
         ### --- USB camera #2 --------------------------------------------------------------
-        # usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
-        # image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
-        # md['_filename'] = image_usb2
-        # usbcam2._annotation_string = stub
-        # print(bold_msg('USB camera #2 snapshot'))
-        # usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        # self.usb2snap, self.usb2uid = usb2snap, usb2uid
-        # #yield from sleep(0.5)
-        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        # im.save(image_usb2, 'JPEG')
-        # if BMMuser.post_usbcam2:
-        #     kafka_message({'echoslack': True,
-        #                    'img': image_usb2})
+        usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+        image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
+        md['_filename'] = image_usb2
+        usbcam2._annotation_string = stub
+        print(bold_msg('USB camera #2 snapshot'))
+        usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        self.usb2snap, self.usb2uid = usb2snap, usb2uid
+        #yield from sleep(0.5)
+        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        im.save(image_usb2, 'JPEG')
+        if BMMuser.post_usbcam2:
+            kafka_message({'echoslack': True,
+                           'img': image_usb2})
         usb2snap, usb2uid = 'x', 'x'
         self.usb2snap, self.usb2uid = 'x', 'x'
         image_usb2, usb2uid = 'x', 'x'
-        
+       
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': image_web,  'webcam_uid': webuid,
                            'analog_file': image_ana,  'anacam_uid': anauid,
