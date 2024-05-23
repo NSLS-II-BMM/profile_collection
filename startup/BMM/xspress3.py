@@ -65,6 +65,31 @@ from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF
 #class Xspress3FileStoreFlyable(Xspress3FileStore):
 class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if kwargs["root_path"] is None or kwargs["path_template"] is None:
+            self._update_paths()
+
+    def _update_paths(self):
+        self.root_path.put(self.root_path_str)
+        self.path_template.put(self.path_template_str)
+
+    @property
+    def root_path_str(self):
+        data_session = md["data_session"]
+        cycle = md["cycle"]
+        root_path = f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/xspress3-1/"
+        return root_path
+
+    @property
+    def path_template_str(self):
+        path_template = "%Y/%m/%d"
+        return path_template
+
+    def stage(self, *args, **kwargs):
+        self._update_paths()
+        super().stage(*args, **kwargs)
+
     def warmup(self):
         """
         A convenience method for 'priming' the plugin.
@@ -170,12 +195,11 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     hdf5 = Cpt(BMMXspress3HDF5Plugin,
                "HDF1:", 
                name="h5p",
-               root_path='/nsls2/data3/bmm/proposals/',
-               path_template=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/xspress3-1/%Y/%m/%d",
+               root_path=None,
+               path_template=None,
                resource_kwargs={},
     )
 
-        
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if configuration_attrs is None:
