@@ -52,6 +52,21 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
         super().__init__(prefix, configuration_attrs=None,
                          read_attrs=read_attrs, **kwargs)
         self.hdf5.num_extra_dims.put(0)
+
+        ## May 22, 2024: this PV suppresses the EraseOnStart function
+        ## of the Xspress3 IOC.  When on and used in the way BMM uses
+        ## the IOC, this leads to trouble in the form of a "ghost
+        ## frame" whenever the Xspress3 is counted.  This confuses a
+        ## simple count, and also adss considerable overhead to an
+        ## XAFS scan.  These two lines force that PV to off in a way
+        ## that is intentionally hidden.
+        erase_on_start = EpicsSignal('XF:06BM-ES{Xsp:1}:det1:EraseOnStart', name='erase_on_start')
+        erase_on_start.put(0)
+
+
+
+        
+    
         
     def plot(self, uid=None, add=False, only=None): 
         '''Make a plot appropriate for the 4-element detector.
