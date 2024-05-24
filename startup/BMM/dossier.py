@@ -14,7 +14,8 @@ from larch.io import create_athena
 
 from PIL import Image
 
-from BMM.functions         import error_msg, bold_msg, whisper, plotting_mode, now
+from BMM.db                import file_resource
+from BMM.functions         import error_msg, bold_msg, whisper, plotting_mode, now, proposal_base
 from BMM.kafka             import kafka_message
 from BMM.logging           import report
 from BMM.modes             import get_mode, describe_mode
@@ -163,11 +164,13 @@ class DossierTools():
         ahora = now()
         self.xrffile = "%s_%s.xrf" % (stub, ahora)
         self.xrfsnap = "%s_XRF_%s.png" % (stub, ahora)
-        xrffile  = os.path.join(folder, 'XRF', self.xrffile)
-        xrfimage = os.path.join(folder, 'XRF', self.xrfsnap)
-        md['_xrffile']  = xrffile
-        md['_xrfimage'] = xrfimage
+        #xrffile  = os.path.join('XRF', self.xrffile)
+        #xrfimage = os.path.join('XRF', self.xrfsnap)
+        md['_xrffile']  = self.xrffile
+        md['_xrfimage'] = self.xrfsnap
         md['_pccenergy'] = f'{dcm.energy.position:.2f}'
+        md['_user'] = dict()
+        md['_user']['startdate'] = BMMuser.date
         if use_4element and plotting_mode(mode) == 'xs':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
@@ -183,18 +186,18 @@ class DossierTools():
         kafka_message({'xrf' : 'plot',
                        'uid' : self.xrfuid,
                        'add' : False,
-                       'filename' : xrfimage,
+                       'filename' : self.xrfsnap,
                        'post' : BMMuser.post_xrf, })
         kafka_message({'xrf' : 'write',
                        'uid' : self.xrfuid,
-                       'filename' : xrffile, })
+                       'filename' : self.xrffile, })
 
         ## capture OCR and target ROI values at Eave to report in dossier
         #self.ocrs = ", ".join(map(str,ocrs))
         #self.rois = ", ".join(map(str,rois))
 
         ### --- capture metadata for dossier -----------------------------------------------
-        self.xrf_md = {'xrf_uid'   : self.xrfuid, 'xrf_image': xrfimage,}
+        self.xrf_md = {'xrf_uid'   : self.xrfuid, 'xrf_image': self.xrfsnap,}
                        
         
 
@@ -216,11 +219,15 @@ class DossierTools():
         webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.websnap, self.webuid = websnap, webuid
         #yield from sleep(0.5)
-        im = Image.fromarray(numpy.array(bmm_catalog[webuid].primary.read()['xascam_image'])[0])
-        im.save(image_web, 'JPEG')
+        #im = Image.fromarray(numpy.array(bmm_catalog[webuid].primary.read()['xascam_image'])[0])
+        #im.save(image_web, 'JPEG')
+        kafka_message({'copy': True,
+                       'file': file_resource(webuid),
+                       'target': os.path.join(proposal_base(), 'snapshots', websnap), })
+
         if BMMuser.post_webcam:
             kafka_message({'echoslack': True,
-                           'img': image_web})
+                           'img': os.path.join(proposal_base(), 'snapshots', websnap)})
 
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
@@ -237,17 +244,24 @@ class DossierTools():
             print(whisper('The error text above saying "Error opening file for output:"'))
             print(whisper('happens every time and does not indicate a problem of any sort.\n'))
             self.anasnap, self.anauid = anasnap, anauid
-            try:
-                im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
-                im.save(image_ana, 'JPEG')
-                if BMMuser.post_anacam:
-                    kafka_message({'echoslack': True,
-                                   'img': image_ana})
-            except:
-                print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-                anacam_uid = False
-                pass
+            # try:
+            #     im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
+            #     im.save(image_ana, 'JPEG')
+            #     if BMMuser.post_anacam:
+            #         kafka_message({'echoslack': True,
+            #                        'img': image_ana})
+            # except:
+            #     print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
+            #     anacam_uid = False
+            #     pass
+            kafka_message({'copy': True,
+                       'file': file_resource(anauid),
+                       'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
+            if BMMuser.post_anacam:
+                kafka_message({'echoslack': True,
+                               'img': os.path.join(proposal_base(), 'snapshots', anasnap)})
 
+            
         ### --- USB camera #1 --------------------------------------------------------------
         usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
         image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
@@ -257,11 +271,14 @@ class DossierTools():
         usb1uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb1snap, self.usb1uid = usb1snap, usb1uid
         #yield from sleep(0.5)
-        im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
-        im.save(image_usb1, 'JPEG')
+        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
+        # im.save(image_usb1, 'JPEG')
+        kafka_message({'copy': True,
+                       'file': file_resource(usb1uid),
+                       'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
         if BMMuser.post_usbcam1:
             kafka_message({'echoslack': True,
-                           'img': image_usb1})
+                           'img': os.path.join(proposal_base(), 'snapshots', usb1snap)})
 
         ### --- USB camera #2 --------------------------------------------------------------
         usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
@@ -272,61 +289,17 @@ class DossierTools():
         usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb2snap, self.usb2uid = usb2snap, usb2uid
         #yield from sleep(0.5)
-        im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        im.save(image_usb2, 'JPEG')
+        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
+        # im.save(image_usb2, 'JPEG')
+        kafka_message({'copy': True,
+                       'file': file_resource(usb2uid),
+                       'target': os.path.join(proposal_base(), 'snapshots', usb2snap), })
         if BMMuser.post_usbcam2:
             kafka_message({'echoslack': True,
-                           'img': image_usb2})
-        usb2snap, usb2uid = 'x', 'x'
-        self.usb2snap, self.usb2uid = 'x', 'x'
-        image_usb2, usb2uid = 'x', 'x'
+                           'img': os.path.join(proposal_base(), 'snapshots', usb2snap)})
        
         ### --- capture metadata for dossier -----------------------------------------------
-        self.cameras_md = {'webcam_file': image_web,  'webcam_uid': webuid,
-                           'analog_file': image_ana,  'anacam_uid': anauid,
-                           'usb1_file':   image_usb1, 'usbcam1_uid': usb1uid,
-                           'usb2_file':   image_usb2, 'usbcam2_uid': usb2uid, }
-        
-
-    ## DEPRECATED from here down. The below will be moved to kafka consumers.
-        
-
-    # def simple_plot(self, uidlist, filename, mode):
-    #     '''If the triplot cannot be made for some reason, make a fallback,
-    #     much simpler plot so that something is available for Slack and
-    #     the dossier.
-
-    #     '''
-    #     BMMuser = user_ns['BMMuser']
-    #     this = db.v2[uidlist[0]].primary.read()
-    #     if mode == 'test':
-    #         title, ylab = 'XAS test scan', 'I0 (nA)'
-    #         signal = this['I0']
-    #     elif mode == 'transmission':
-    #         title, ylab = '', 'transmission'
-    #         signal = numpy.log(numpy.abs(this['I0']/this['It']))
-    #     elif mode == 'reference':
-    #         title, ylab = '', 'reference'
-    #         signal = numpy.log(numpy.abs(this['It']/this['Ir']))
-    #     elif mode == 'yield':
-    #         title, ylab = '', 'yield'
-    #         signal = this['Iy']/this['I0']
-    #     elif mode == 'xs1':
-    #         title, ylab = '', 'fluorescence'
-    #         signal = (this[BMMuser.xs8]+0.001)/(this['I0']+1)
-    #     else:
-    #         title, ylab = '', 'fluorescence'
-    #         signal = (this[BMMuser.xs1]+this[BMMuser.xs2]+this[BMMuser.xs3]+this[BMMuser.xs4]+0.001)/(this['I0']+1)
-            
-    #     thisagg = matplotlib.get_backend()
-    #     matplotlib.use('Agg') # produce a plot without screen display
-    #     plt.cla()
-    #     plt.title(title)
-    #     plt.xlabel('energy (eV)')
-    #     plt.ylabel(ylab)
-    #     plt.plot(this['dcm_energy'], signal)
-    #     plt.savefig(filename)
-    #     matplotlib.use(thisagg) # return to screen display
-    #     print(whisper(f'Wrote simple plot to {filename}'))
-            
-
+        self.cameras_md = {'webcam_file': websnap,  'webcam_uid': webuid,
+                           'analog_file': anasnap,  'anacam_uid': anauid,
+                           'usb1_file':   usb1snap, 'usbcam1_uid': usb1uid,
+                           'usb2_file':   usb2snap, 'usbcam2_uid': usb2uid, }

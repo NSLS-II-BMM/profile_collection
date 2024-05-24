@@ -143,7 +143,8 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     uid = yield from count_scan(dets, readings, delay, md)
 
     kafka_message({'timescan': 'stop',
-                   'fname' : outfile, })
+                   'fname' : outfile,
+                   'uid' : uid, })
     
     BMM_log_info('timescan: %s\tuid = %s, scan_id = %d' %
                  (line1, uid, bmm_catalog[uid].metadata['start']['scan_id']))
@@ -200,7 +201,7 @@ def sead(inifile=None, force=False, **kwargs):
         #         return
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## read and check INI content
+        ## read and check INI content205
         orig = inifile
         if not os.path.isfile(inifile):
             inifile = os.path.join(BMMuser.workspace, inifile)
@@ -233,12 +234,12 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## verify output file name won't be overwritten
-        outfile = '%s.%3.3d' % (os.path.join(p['folder'], p['filename']), p['start'])
+        outfile = f"{p['filename']}.{int(p['start']):03d}"
         if os.path.isfile(outfile):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 
-        kafka_message({'dossier': 'start'})
+        kafka_message({'dossier': 'start', 'stub': p['filename']})
         rid = str(uuid.uuid4())[:8]
         report(f'== starting single energy absorption detection scan', level='bold', slack=True, rid=rid)
 
@@ -246,8 +247,8 @@ def sead(inifile=None, force=False, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## prompt user and verify that we are clear to start
         text = '\n'
-        for k in ('folder', 'filename', 'experimenters', 'energy', 'npoints', 'dwell', 'delay',
-                  'sample', 'prep', 'comment', 'mode', 'shutter', 'snapshots'):
+        for k in ('folder', 'filename', 'energy', 'npoints', 'dwell', 'delay',
+                  'sample', 'prep', 'comment', 'mode', 'shutter', 'snapshots'):  # , 'experimenters'
             text = text + '      %-13s : %-50s\n' % (k,p[k])
         ## NEVER prompt when using queue server
         if is_re_worker_active() is True:
@@ -270,7 +271,7 @@ def sead(inifile=None, force=False, **kwargs):
         # organize metadata for injection into database and XDI output
         print(bold_msg('gathering metadata'))
         md = bmm_metadata(measurement   = p['mode'],
-                          experimenters = p['experimenters'],
+                          experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
                           element       = p['element'],
                           edge_energy   = p['energy'],
@@ -300,7 +301,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## capture dossier metadata for start document
         md['_snapshots'] = {**dossier.cameras_md}
 
-        pngout = os.path.join(BMMuser.folder, 'snapshots', f"{p['filename']}_sead_{now()}.png")
+        pngout = f"{p['filename']}_sead_{now()}.png"
         these_kwargs = {'start'     : p['start'],
                         'end'       : p['start']+p['nscans']-1,
                         'startdate' : BMMuser.date,

@@ -12,8 +12,7 @@ bmm_catalog = from_profile('bmm')
 import matplotlib.pyplot as plt
 import bmm_plot
 
-import matplotlib
-matplotlib.use('Qt5Agg')
+import matplotlib               # trust environment to set backend correctly
 
 #from plotWindow import plotWindow
 #import xafs_visualization
@@ -97,6 +96,7 @@ def plot_from_kafka_messages(beamline_acronym):
             if 'xafs_sequence' in message:
                 if message['xafs_sequence'] == 'start':
                     xafsseq.start(element=message['element'], edge=message['edge'], folder=message['folder'],
+                                  workspace=message['workspace'],
                                   repetitions=message['repetitions'], mode=message['mode'])
                 elif message['xafs_sequence'] == 'stop':
                     xafsseq.stop(filename=message['filename'])
@@ -152,7 +152,7 @@ def plot_from_kafka_messages(beamline_acronym):
                 elif message['xafsscan'] == 'next':
                     xs.Next(**message)
                 elif message['xafsscan'] == 'stop':
-                    xs.stop(**message)
+                    xs.stop(catalog=bmm_catalog, **message)
                     doing = None
 
             elif 'timescan' in message:
@@ -161,7 +161,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     ts.start(**message)
                     doing = 'timescan'
                 elif message['timescan'] == 'stop':
-                    ts.stop(**message)
+                    ts.stop(catalog=bmm_catalog, **message)
                     doing = None
 
             elif 'areascan' in message:

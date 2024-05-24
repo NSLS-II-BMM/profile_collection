@@ -47,7 +47,7 @@ def read_ini(inifile, **kwargs):
     parameters['url'], parameters['doi'], parameters['cif'] = '', '', ''
     
     ## strings
-    for a in ('experimenters', 'detector', 'filename', 'edge', 'element', 'sample', 'prep', 'comment'):
+    for a in ('detector', 'filename', 'edge', 'element', 'sample', 'prep', 'comment'):  # 'experimenters'
         found[a] = False
         if a in kwargs:
             parameters[a] = str(kwargs[a])
@@ -57,7 +57,7 @@ def read_ini(inifile, **kwargs):
                 parameters[a] = config.get('scan', a)
                 found[a] = True
             except:
-                if a in ('experimenters', 'edge', 'element'):
+                if a in ('edge', 'element'):  # 'experimenters'
                     parameters[a] = getattr(BMMuser, a)
                 elif a == 'detector':
                     parameters[a] = 'If'
@@ -325,7 +325,7 @@ def raster(inifile=None, **kwargs):
                 if len(addition) > length: length = len(addition)
             boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
 
-            pngout  = os.path.join(p['folder'], 'maps', f"{p['filename']}.png")
+            pngout  = f"{p['filename']}.png"
             basename = p['filename']
             seqnumber = 1
             if os.path.isfile(pngout):
@@ -336,8 +336,10 @@ def raster(inifile=None, **kwargs):
                 pngout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")
 
             #pngout = os.path.basename(pngout)
-            xlsxout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.xlsx")
-            matout  = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.mat")
+            #xlsxout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.xlsx")
+            #matout  = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.mat")
+            xlsxout = f"maps/{p['filename']}-{seqnumber:02d}.xlsx"
+            matout  = f"maps/{p['filename']}-{seqnumber:02d}.mat"
             print(f'\nImage data to be written to {pngout}, .xlsx, and .mat')
             estimate = float(p['fast_steps'])*float(p['slow_steps']) * (float(p['dwelltime'])+0.43)
             minutes = int(estimate/60)
@@ -364,7 +366,7 @@ def raster(inifile=None, **kwargs):
         ## organize metadata for injection into database and XDI output
         print(bold_msg('gathering metadata'))
         md = bmm_metadata(measurement   = p['mode'],
-                          experimenters = p['experimenters'],
+                          experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
                           element       = p['element'],
                           edge_energy   = p['energy'],

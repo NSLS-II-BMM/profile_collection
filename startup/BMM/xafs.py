@@ -3,7 +3,7 @@ from bluesky.plan_stubs import sleep, mv, null
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 #from databroker.core import SingleRunCache
 
-import numpy, os, re, shutil, uuid
+import numpy, os, re, shutil, uuid, time
 import textwrap, configparser, datetime
 from cycler import cycler
 import matplotlib
@@ -47,15 +47,30 @@ except ImportError:
 
 
 
+    # listing = os.listdir(folder)
+    # r = re.compile(re.escape(stub) + '\.\d+')
+    # results = sorted(list(filter(r.match, listing)))
+    # if len(results) == 0:
+    #     return 1
+    # return int(results[-1][-3:]) + 1
 
 def next_index(folder, stub):
     '''Find the next numeric filename extension for a filename stub in folder.'''
-    listing = os.listdir(folder)
-    r = re.compile(re.escape(stub) + '\.\d+')
-    results = sorted(list(filter(r.match, listing)))
-    if len(results) == 0:
-        return 1
-    return int(results[-1][-3:]) + 1
+    return 1
+
+    rkvs = user_ns['rkvs']
+    rkvs.set('BMM:next_index', 'None')
+    kafka_message({'next_index': True, 'folder': folder, 'stub': stub})
+    answer = rkvs.get('BMM:next_index').decode('utf8')
+    count = 0
+    while answer == 'None':
+        time.sleep(0.25)
+        answer = rkvs.get('BMM:next_index').decode('utf8')
+        count += 1
+        if count > 10:
+            break
+    return int(answer)
+
 
 ## need more error checking:
 ##   * k^2 times
@@ -188,8 +203,8 @@ def scan_metadata(inifile=None, **kwargs):
         return {}, {}
 
     ## ----- strings
-    for a in ('folder', 'experimenters', 'element', 'edge', 'filename', 'comment',
-              'mode', 'sample', 'prep', 'url', 'doi', 'cif'):
+    for a in ('folder', 'element', 'edge', 'filename', 'comment',
+              'mode', 'sample', 'prep', 'url', 'doi', 'cif'): # , 'experimenters'
         found[a] = False
         if a not in kwargs:
             try:
@@ -201,9 +216,6 @@ def scan_metadata(inifile=None, **kwargs):
             parameters[a] = str(kwargs[a])
             found[a] = True
 
-    if not os.path.isdir(parameters['folder']):
-        print(error_msg('\nfolder %s does not exist\n' % parameters['folder']))
-        return {}, {}
     parameters['mode'] = parameters['mode'].lower()
     
     ## ----- start value
@@ -604,7 +616,7 @@ def xafs(inifile=None, **kwargs):
         ## organize metadata for injection into database and XDI output
         print(bold_msg('gathering metadata'))
         md = bmm_metadata(measurement   = p['mode'],
-                          experimenters = p['experimenters'],
+                          experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
                           element       = p['element'],
                           edge_energy   = p['e0'],
@@ -669,7 +681,7 @@ def xafs(inifile=None, **kwargs):
             yield from mv(xs1.cam.acquire_time, 0.5)
         elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
-            
+
 
 
 
@@ -735,6 +747,14 @@ def xafs(inifile=None, **kwargs):
                 yield from null()
                 return
 
+            # if 'xs1' in p['mode']:
+            #     yield from mv(xs1.erase.put, 1)
+            #     yield from mv(xs1.cam.acquire_time, time_grid[0])
+            #     yield from mv(xs1.Acquire, 1)
+            # elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
+            #     yield from mv(xs.erase, 1)
+            #     yield from mv(xs.cam.acquire_time, time_grid[0])
+            #     yield from mv(xs.Acquire, 1)
 
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -762,6 +782,7 @@ def xafs(inifile=None, **kwargs):
                            'element'       : p["element"],
                            'edge'          : p["edge"],
                            'folder'        : BMMuser.folder,
+                           'workspace'     : BMMuser.workspace,
                            'repetitions'   : p["nscans"],
                            'mode'          : p['mode']})
             refmat = 'none'
@@ -899,6 +920,7 @@ def xafs(inifile=None, **kwargs):
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif plotting_mode(p['mode']) == 'xs':
+                    
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
@@ -911,17 +933,12 @@ def xafs(inifile=None, **kwargs):
 
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
-                #kafka_message({'xafs_visualization' : uid,
-                #               'element'            : p["element"],
-                #               'edge'               : p["edge"],
-                #               'folder'             : BMMuser.folder,
-                #               'mode'               : p['mode']})
                 
                 if 'xs' in plotting_mode(p['mode']):
                     hdf5_uid = xs.hdf5.file_name.value
                     
                 uidlist.append(uid)
-                kafka_message({'xasxdi': True, 'uid' : uid, 'filename': datafile})
+                kafka_message({'xasxdi': True, 'uid' : uid, 'filename': os.path.basename(datafile)})
                 print(bold_msg('wrote %s' % datafile))
                 BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')
 
@@ -981,8 +998,10 @@ def xafs(inifile=None, **kwargs):
             if basename is None:
                 kafka_message({'xafsscan': 'stop', 'filename': None})
             else:
-                kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}_liveplot.png')})
-                kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}.png')})
+                #kafka_message({'xafsscan': 'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}_liveplot.png')})
+                #kafka_message({'xafs_sequence':'stop', 'filename': os.path.join(BMMuser.folder, 'snapshots', f'{basename}.png')})
+                kafka_message({'xafsscan': 'stop', 'filename': f'snapshots/{basename}_liveplot.png', 'uid': uidlist[0]})
+                kafka_message({'xafs_sequence':'stop', 'filename': f'snapshots/{basename}.png'})
                 
         dcm.mode = 'fixed'
         yield from resting_state_plan()
@@ -1060,7 +1079,7 @@ def xanes(filename=None, step=2):
         filename = f'{el}-{ed}-testXANES'
     comment = 'quick-n-dirty XANES scan'
     yield from xafs(DEFAULT_INI, filename=filename, element=el, sample=comment, prep=comment, comment=comment,
-                    mode='both', edge=ed, experimenters='', snapshots=False, **params)
+                    mode='both', edge=ed, experimenters=BMMuser.experimenters, snapshots=False, **params)
     
 
 def howlong(inifile=None, interactive=True, **kwargs):

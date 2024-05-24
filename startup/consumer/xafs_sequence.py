@@ -1,9 +1,11 @@
 
 import os
+from matplotlib import get_backend
 
 from BMM.larch_interface import Pandrosus, Kekropidai, plt
 
 from slack import img_to_slack, post_to_slack
+from tools import experiment_folder
 
 class XAFSSequence():
     '''Class for managing the specific plotting chore required for an
@@ -37,7 +39,7 @@ class XAFSSequence():
     kek      = None
     fig      = None
     
-    def start(self, element=None, edge=None, folder=None, repetitions=0, mode='transmission', tossfile=None):
+    def start(self, element=None, edge=None, folder=None, workspace=None, repetitions=0, mode='transmission', tossfile=None):
         self.ongoing = True
         self.uidlist = []
         self.panlist = []
@@ -45,6 +47,7 @@ class XAFSSequence():
         self.element = element
         self.edge = edge
         self.folder = folder
+        self.workspace = workspace
         self.repetitions = repetitions
         self.mode = mode
         self.tossfile = os.path.join(folder, 'snapshots', 'toss.png')
@@ -59,7 +62,11 @@ class XAFSSequence():
             return
         self.uidlist.append(uid)
         this = Pandrosus()
-        this.element, this.edge, this.folder, this.db = self.element, self.edge, self.folder, self.catalog
+        this.element, this.edge, this.db = self.element, self.edge, self.catalog
+        if get_backend().lower() == 'agg':
+            this.folder = experiment_folder(self.catalog, uid)
+        else:
+            this.folder = self.workspace
         this.fetch(uid, mode=self.mode)
         self.panlist.append(this)
         self.kek.add(this)
@@ -69,11 +76,13 @@ class XAFSSequence():
             ok = self.merge()
             if ok == 1:
                 if self.repetitions > 5 and len(self.uidlist) % 3 == 0:
-                    post_to_slack('(Posting a plot every third scan in a sequence...)')
-                    tossfile = os.path.join(this.folder, 'snapshots', 'toss.png')
-                    self.fig.savefig(tossfile)
-                    name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
-                    img_to_slack(tossfile, title=name, measurement='xafs')
+                    if get_backend().lower() == 'agg':
+                        post_to_slack('(Posting a plot every third scan in a sequence...)')
+                        #tossfile = os.path.join(this.folder, 'snapshots', 'toss.png')
+                        tossfile = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), 'snapshots', 'toss.png')
+                        self.fig.savefig(tossfile)
+                        name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+                        img_to_slack(tossfile, title=name, measurement='xafs')
                 
 
     def merge(self):
@@ -94,7 +103,8 @@ class XAFSSequence():
             self.fig = toplot.triplot()
         else:
             self.fig = toplot.plot_xmu()
-        self.fig.canvas.manager.window.setGeometry(1237, 856, 640, 584)
+        if get_backend().lower() != 'agg':
+            self.fig.canvas.manager.window.setGeometry(2040, 865, 640, 552)
         return 1
 
     def stop(self, filename):
@@ -106,9 +116,11 @@ class XAFSSequence():
         #plt.close('all')
         ok = self.merge()
         if ok == 1:
-            self.fig.savefig(filename)
-            name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
-            self.logger.info(f'saved XAFS summary figure {filename}')
-            img_to_slack(filename, title=name, measurement='xafs')
+            if get_backend().lower() == 'agg':
+                fname = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
+                self.fig.savefig(fname)
+                name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
+                self.logger.info(f'saved XAFS summary figure {fname}')
+                img_to_slack(fname, title=name, measurement='xafs')
         
 

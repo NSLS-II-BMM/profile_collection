@@ -1,18 +1,31 @@
 import os, datetime, emojis, re
 
+import redis
+from redis_json_dict import RedisJSONDict
+redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+
+
 DATA_SECURITY = True
 
 def experiment_folder(catalog, uid):
-    proposal  = catalog[uid].metadata['start']['XDI']['Facility']['GUP']
-    #proposal  = catalog[uid].metadata['start']['data_session'][5:]
-    cycle     = catalog[uid].metadata['start']['XDI']['Facility']['cycle']
+
+    facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+    if 'data_session' in catalog[uid].metadata['start']['data_session']:
+        proposal = catalog[uid].metadata['start']['data_session'][5:]
+    else:
+        proposal = facility_dict['data_session']
+    if 'XDI' in catalog[uid].metadata['start'] and 'Facility' in catalog[uid].metadata['start']['XDI']:
+        cycle = catalog[uid].metadata['start']['XDI']['Facility']['cycle']
+    else:
+        cycle = facility_dict['cycle']
+        
     if DATA_SECURITY:
-        folder    = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', cycle, f'pass-{proposal}')
+        folder    = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', cycle, f'{proposal}')
     else:
         proposal  = catalog[uid].metadata['start']['XDI']['Facility']['SAF']
         startdate = catalog[uid].metadata['start']['XDI']['_user']['startdate']
         folder = os.path.join('/nsls2', 'data3', 'bmm', 'XAS', cycle, str(proposal), startdate)
-    print(f'folder is {folder}')
+    #print(f'folder is {folder}')
     return folder
 
 
@@ -24,9 +37,9 @@ startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/
 
 def echo_slack(text='', img=None, icon='message', rid=None, measurement='xafs'):
     #BMMuser = user_ns['BMMuser']
-    folder = rkvs.get('BMM:user:folder').decode('utf-8')
+    #folder = rkvs.get('BMM:user:folder').decode('utf-8')
     proposal = '301027'
-    base   = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', '2024-2', f'pass-{proposal}')
+    base   = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', '2024-2', f'pass-{proposal}')  # FIX ME!
     rawlogfile = os.path.join(base, 'dossier', '.rawlog')
     rawlog = open(rawlogfile, 'a')
     rawlog.write(message_div(text, img=img, icon=icon, rid=rid, measurement=measurement))

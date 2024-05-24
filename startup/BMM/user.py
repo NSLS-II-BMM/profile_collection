@@ -1,13 +1,16 @@
 import sys, os, re, shutil, socket, datetime, time
 from distutils.dir_util import copy_tree
-import json, pprint, copy
+import json, pprint, copy, textwrap
 from subprocess import run
+
+import start_experiment.start_experiment
+
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 import BMM.functions
-from BMM.functions import BMM_STAFF, LUSTRE_XAS
+from BMM.functions import BMM_STAFF, LUSTRE_XAS, LUSTRE_DATA_ROOT, proposal_base
 from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka     import kafka_message
 from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
@@ -17,6 +20,13 @@ from BMM.workspace import rkvs
 from BMM.user_ns.base import startup_dir
 
 TEMPLATES_FOLDER = 'templates'
+
+import redis
+from redis_json_dict import RedisJSONDict
+redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+
+
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -489,29 +499,32 @@ class BMM_User(Borg):
         '''Locate or create the folders we need for this user.
         '''
         if not os.path.isdir(folder):
-            kafka_message({'mkdir': folder})
-            #os.makedirs(folder)
+            os.makedirs(folder)
             verb, pad = 'Created', ''
         else:
             verb, pad = 'Found', '  '
         self.print_verb_message(i, verb, text, pad, folder)
         return(verb)
 
+    def kafka_establish_folder(self, i, text, folder):
+        base = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', facility_dict['cycle'], facility_dict['data_session'])
+        kafka_message({'mkdir': os.path.join(base, folder)}) 
+        self.print_verb_message(i, 'Verifed', text, '', folder)
+        return('Verified')
+        
+
     def find_or_copy_file(self, i, text, fname):
         src     = os.path.join(startup_dir, fname)
-        #dst     = os.path.join(self.folder, fname)
-        dst     = self.folder
+        dst     = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', facility_dict['cycle'], facility_dict['data_session'])
         wsp     = self.workspace
         if 'xlsx' in fname:
             src = os.path.join(startup_dir, 'xlsx', fname)
-            dst = os.path.join(self.folder, "templates")
+            dst = os.path.join(dst, "templates")
             wsp = os.path.join(self.workspace, "templates")
-        if not os.path.isfile(dst):
-            kafka_message({'copy' : True, 'file': src, 'target': dst})
-            shutil.copy(src, wsp)
-            verb, pad = 'Copied', ' '
-        else:
-            verb, pad = 'Found', '  '
+
+        kafka_message({'copy' : True, 'file': src, 'target': dst})
+        shutil.copyfile(src, os.path.join(wsp, fname))
+        verb, pad = 'Copied', ' '
         self.print_verb_message(i, verb, text, pad, dst)
         
     def print_verb_message(self, i, verb, text, pad, result):
@@ -550,7 +563,7 @@ class BMM_User(Borg):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Main folders, point BMMuser and wmb objects at data folder
         data_folder = os.path.join(folder, self.date)
-        user_ns['DATA'] = self.DATA = self.folder = data_folder + '/'
+        user_ns['DATA'] = self.folder = data_folder + '/'
         try:
             hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *self.date.split('-'))
             user_ns['xs'].hdf5.read_path_template = hdf5folder
@@ -565,26 +578,32 @@ class BMM_User(Borg):
             user_ns['wmb'].folder = data_folder + '/'
         except:
             pass
+
+
+        base = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', facility_dict['cycle'], facility_dict['data_session'])
         
-        imagefolder    = os.path.join(data_folder, 'snapshots')
-        prjfolder      = os.path.join(data_folder, 'prj')
-        htmlfolder     = os.path.join(data_folder, 'dossier')
-        templatefolder = os.path.join(data_folder, "templates")
-        self.establish_folder(step, 'Lustre folder', folder)
-        self.establish_folder(0,    'data folder', data_folder)
-        self.establish_folder(0,    'snapshot folder', imagefolder)
-        self.establish_folder(0,    'Athena prj folder', prjfolder)
-        if self.establish_folder(0, 'dossier folder', htmlfolder) == 'Created':
-            # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
-            for f in ('manifest.tmpl', 'logo.png', 'message.png', 'plot.png', 'camera.png', 'blank.png',
-                      'style.css', 'trac.css', 'messagelog.css'):
-                kafka_message({'copy': True,
-                               'file': os.path.join(startup_dir, 'dossier', f),
-                               'target': htmlfolder, })
-                #shutil.copyfile(os.path.join(startup_dir, 'dossier', f),  os.path.join(htmlfolder, f))
-            kafka_message({'touch': os.path.join(self.folder, 'dossier', 'MANIFEST')})
-            print('    copied html generation files, touched MANIFEST')
-        self.establish_folder(0,    'templates folder', templatefolder)
+        imagefolder    = 'snapshots'
+        prjfolder      = 'prj'
+        htmlfolder     = 'dossier'
+        templatefolder = "templates"
+        self.kafka_establish_folder(step, 'Lustre folder', folder)
+        #self.kafka_establish_folder(0,    'data folder', data_folder)
+        self.kafka_establish_folder(0,    'snapshot folder', imagefolder)
+        self.establish_folder(0,          'snapshot folder', os.path.join(self.workspace, imagefolder))
+        self.kafka_establish_folder(0,    'Athena prj folder', prjfolder)
+        self.establish_folder(0,          'Athena prj folder', os.path.join(self.workspace, prjfolder))
+        self.kafka_establish_folder(0,    'dossier folder', htmlfolder)
+        # 'sample.tmpl', 'sample_xs.tmpl', 'sample_ga.tmpl'
+
+        for f in ('manifest.tmpl', 'logo.png', 'message.png', 'plot.png', 'camera.png', 'blank.png',
+                  'style.css', 'trac.css', 'messagelog.css'):
+            kafka_message({'copy': True,
+                           'file': os.path.join(startup_dir, 'dossier', f),
+                           'target': os.path.join(base, 'dossier'), })
+        kafka_message({'touch': os.path.join(base, 'dossier', 'MANIFEST')})
+        print('    copied html generation files, touched MANIFEST')
+        self.kafka_establish_folder(0,    'templates folder', templatefolder)
+        self.establish_folder(0,         'templates folder', os.path.join(self.workspace, templatefolder))
      
         step += 1
 
@@ -602,7 +621,7 @@ class BMM_User(Borg):
             with open(initmpl) as f:
                 content = f.readlines()
             o = open(scanini, 'w')
-            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.write(''.join(content).format(folder=data_folder, name=self.experimenters))
             o.close()
             verb, pad = 'Copied', ' '
         else:
@@ -610,7 +629,7 @@ class BMM_User(Borg):
         self.print_verb_message(step, verb, 'XAFS INI file', pad, scanini)
         kafka_message({'copy': True,
                        'file': scanini,
-                       'target': os.path.join(self.folder, "templates")})
+                       'target': os.path.join(base, "templates")})
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'rasterscan.tmpl')
         scanini = os.path.join(self.workspace, "templates", 'raster.ini')
@@ -618,7 +637,7 @@ class BMM_User(Borg):
             with open(initmpl) as f:
                 content = f.readlines()
             o = open(scanini, 'w')
-            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.write(''.join(content).format(folder=data_folder, name=self.experimenters))
             o.close()
             verb, pad = 'Copied', ' '
         else:
@@ -626,7 +645,7 @@ class BMM_User(Borg):
         self.print_verb_message(0, verb, 'raster INI file', pad, scanini)
         kafka_message({'copy': True,
                        'file': scanini,
-                       'target': os.path.join(self.folder, "templates")})
+                       'target': os.path.join(base, "templates")})
 
         initmpl = os.path.join(startup_dir, 'tmpl', 'sead.tmpl')
         scanini = os.path.join(self.workspace, "templates", 'sead.ini')
@@ -634,14 +653,14 @@ class BMM_User(Borg):
             with open(initmpl) as f:
                 content = f.readlines()
             o = open(scanini, 'w')
-            o.write(''.join(content).format(folder=data_folder, name=name))
+            o.write(''.join(content).format(folder=data_folder, name=self.experimenters))
             o.close()
             verb, pad = 'Copied', ' '
         else:
             verb, pad = 'Found', '  '
         kafka_message({'copy': True,
                        'file': scanini,
-                       'target': os.path.join(self.folder, "templates")})
+                       'target': os.path.join(base, "templates")})
                       
         self.print_verb_message(0, verb, 'sead INI file', pad, scanini)
 
@@ -683,7 +702,7 @@ class BMM_User(Borg):
         self.print_verb_message(0, verb, 'macro template', pad, macropy)
         kafka_message({'copy': True,
                        'file': macropy,
-                       'target': os.path.join(self.folder, "templates")})
+                       'target': os.path.join(base, "templates")})
 
         #self.find_or_copy_file(0, 'wheel macro spreadsheet',    'wheel.xlsx')
         self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle.xlsx')
@@ -695,8 +714,8 @@ class BMM_User(Borg):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## XRF & HDF5folders
-        xrffolder = os.path.join(data_folder, 'XRF')
-        self.establish_folder(step, 'XRF spectra folder', xrffolder)
+        xrffolder = os.path.join(base, 'XRF')
+        self.kafka_establish_folder(step, 'XRF spectra folder', xrffolder)
         #hdf5folder = os.path.join(data_folder, 'raw', 'HDF5')
         #hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *self.date.split('-'))
         #self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
@@ -704,22 +723,22 @@ class BMM_User(Borg):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Pilatus folder
-        if use_pilatus:
-            pilfolder = os.path.join(data_folder, 'raw', 'Pilatus')
-            self.establish_folder(0, 'Pilatus folder', pilfolder)
+        # if use_pilatus:
+        #     pilfolder = os.path.join(data_folder, 'raw', 'Pilatus')
+        #     self.establish_folder(0, 'Pilatus folder', pilfolder)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## echem folder
-        if echem:
-            self.echem = True
-            ecfolder = os.path.join(data_folder, 'raw', 'electrochemistry')
-            self.establish_folder(0, 'electrochemistry folder', ecfolder)
-            #self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
-            #if not os.path.isdir(self.echem_remote):
-            #    os.makedirs(self.echem_remote)
-            #    print('   Created remote echem folder:       %-75s' % (self.echem_remote))
-            #else:
-            #    print('   Found remote echem folder:         %-75s' % (self.echem_remote))
+        # if echem:
+        #     self.echem = True
+        #     ecfolder = os.path.join(data_folder, 'raw', 'electrochemistry')
+        #     self.establish_folder(0, 'electrochemistry folder', ecfolder)
+        #     #self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
+        #     #if not os.path.isdir(self.echem_remote):
+        #     #    os.makedirs(self.echem_remote)
+        #     #    print('   Created remote echem folder:       %-75s' % (self.echem_remote))
+        #     #else:
+        #     #    print('   Found remote echem folder:         %-75s' % (self.echem_remote))
             
         step += 1
 
@@ -736,7 +755,7 @@ class BMM_User(Borg):
     
         return None
 
-    def start_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False, echem=False):
+    def begin_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False, echem=False):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
@@ -782,11 +801,23 @@ class BMM_User(Borg):
         if saf == 0:
             print(error_msg('You did not supply the SAF number'))
             return()
+
+
+        ## NSLS-II start experiment infrastructure
+        start_experiment.start_experiment.start_experiment(gup, 'bmm', verbose=False)
         
-        lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
-        if not os.path.isdir(lustre_root):
-            os.makedirs(lustre_root)
-            do_sync = True
+        # from redis_json_dict import RedisJSONDict
+        # import redis
+        # redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+        # RedisJSONDict(redis_client=redis_client, prefix='')
+        self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in start_experiment.start_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
+
+        
+        # lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
+        lustre_root = os.path.join(LUSTRE_DATA_ROOT, f'{self.cycle}', f'pass-{gup}')
+        # if not os.path.isdir(lustre_root):
+        #     os.makedirs(lustre_root)
+        #     do_sync = True
         if name in BMM_STAFF:
             self.staff = True
             local_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name, date)
@@ -813,7 +844,7 @@ class BMM_User(Borg):
             os.makedirs(os.path.join(user_workspace, 'templates'))
         self.workspace = user_workspace
 
-
+        
         self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
 
         # preserve BMMuser state to a json string #
@@ -867,14 +898,16 @@ class BMM_User(Borg):
         self.suspenders_engaged = False
         self.trigger = True
         if self.name is not None:
-            self.start_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
+            self.begin_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''
-        print('Name          = %s' % self.name)
+        experimenters = textwrap.wrap(self.experimenters, subsequent_indent='                ')
+        print('PI            = %s' % self.name)
+        print('Experimenters = %s' % '\n'.join(experimenters))
         print('Date          = %s' % self.date)
-        print('Lustre folder = %s' % self.folder)
-        print('Local folder  = %s' % self.folder_link)
+        print('Data folder   = %s' % proposal_base())
+        print('Work space    = %s' % self.workspace)
         print('GUP           = %s' % self.gup)
         print('SAF           = %s' % self.saf)
         #print('foils = %s' % ' '.join(map(str, user_ns['foils'].slots)))
@@ -935,8 +968,7 @@ class BMM_User(Borg):
         ###############################################################
         BMM_unset_user_log()
         DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
-        self.DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
-        self.folder = self.DATA
+        self.folder = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         user_ns["wmb"].folder = self.folder
         self.date = ''
         self.gup = 0

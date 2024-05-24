@@ -886,12 +886,14 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
 # extract a linescan from the database, write an ascii file #
 #############################################################
 def ls2dat(datafile, key):
-    '''
-    Export a linescan database entry to a simple column data file.
+    '''Export a linescan database entry to a simple column data file.
 
-      ls2dat('/path/to/myfile.dat', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
+      ls2dat('myfile.dat', '0783ac3a-658b-44b0-bba5-ed4e0c4e7216')
 
-    The arguments are a data file name and the database key.
+    The arguments are a data file name and the database key.  The
+    folder to which to write the file will be determined from the
+    record's start document, so the file name is just the basename.
+
     '''
     #BMMuser, db = user_ns['BMMuser'], user_ns['db']
     kafka_message({'lsxdi': True, 'uid': key, 'filename': datafile})

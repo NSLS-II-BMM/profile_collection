@@ -47,7 +47,7 @@ if BMMuser.pds_mode is None:
         pass
 ## some backwards compatibility....
 whoami           = BMMuser.show_experiment
-start_experiment = BMMuser.start_experiment
+begin_experiment = BMMuser.begin_experiment
 end_experiment   = BMMuser.end_experiment
 
 import atexit, os

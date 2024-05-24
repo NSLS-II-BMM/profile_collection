@@ -43,6 +43,7 @@ from BMM.user_ns.base import startup_dir, bmm_catalog
 class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 1-element interface.
     '''
+    erase = Cpt(EpicsSignal, 'det1:ERASE')
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):

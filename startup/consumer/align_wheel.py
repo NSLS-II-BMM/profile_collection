@@ -102,6 +102,7 @@ class AlignWheel():
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
         
-        #self.fig.savefig(self.filename)
-        #self.logger.info(f'saved wheel alignment figure (filename)')
-        #img_to_slack(self.filename, measurement='line')
+        # if matplotlib.get_backend().lower() == 'agg':
+        #     self.fig.savefig(self.filename)
+        #     self.logger.info(f'saved wheel alignment figure (filename)')
+        #     img_to_slack(self.filename, measurement='line')

@@ -27,7 +27,8 @@ from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 
 from BMM.periodictable import edge_energy, Z_number, element_symbol, element_name
-from echo_slack import echo_slack
+from tools import echo_slack, experiment_folder
+from slack import img_to_slack, post_to_slack
 
 startup_dir = os.path.dirname(__file__)
 
@@ -175,6 +176,9 @@ class BMMDossier():
         folder = self.folder
         if folder is None or folder == '':
             folder = XDI["_user"]["folder"]
+        ## determine folder from content of start doc.
+        ## What about past scans?
+        folder = experiment_folder(bmm_catalog, self.uidlist[0])
         self.folder = folder
             
         ## test if XAS data file can be found
@@ -216,7 +220,7 @@ class BMMDossier():
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
-                                                       xrffile       = quote('../XRF/'+os.path.basename(XDI['_xrffile'])),
+                                                       xrffile       = quote('../XRF/'+XDI['_xrffile']),
                                                        xrfuid        = snapshots['xrf_uid'], )
 
             # middle part of dossier
@@ -238,28 +242,28 @@ class BMMDossier():
             if 'webcam_uid' in snapshots and snapshots['webcam_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['webcam_file']),
                                                        uid         = snapshots['webcam_uid'],
                                                        camera      = 'webcam',
                                                        description = 'XAS web camera', )
             if 'anacam_uid' in snapshots and snapshots['anacam_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['analog_file']),
                                                        uid         = snapshots['anacam_uid'],
                                                        camera      = 'anacam',
                                                        description = 'analog pinhole camera', )
             if 'usbcam1_uid' in snapshots and snapshots['usbcam1_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['usb1_file']),
                                                        uid         = snapshots['usbcam1_uid'],
                                                        camera      = 'usbcam1',
                                                        description = 'USB camera #1', )
             if 'usbcam2_uid' in snapshots and snapshots['usbcam2_uid'] != '':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
+                thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['usb2_file']),
                                                        uid         = snapshots['usbcam2_uid'],
                                                        camera      = 'usb2cam',
                                                        description = 'USB camera #2', )
@@ -284,7 +288,7 @@ class BMMDossier():
 
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()
-                thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+os.path.basename(snapshots['xrf_image'])),
+                thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+snapshots['xrf_image']),
                                                        pccenergy = '%.1f' % XDI['_user']['pccenergy'],
                                                        ocrs      = ', '.join(map(str,ocrs)),
                                                        rois      = ', '.join(map(str,rois)),
@@ -292,7 +296,7 @@ class BMMDossier():
                 if 'ga_filename' in snapshots:
                     with open(os.path.join(startup_dir, 'tmpl', 'dossier_ga.tmpl')) as f:
                         content = f.readlines()
-                    thiscontent += ''.join(content).format(ga_align = snapshots['ga_filename'],
+                    thiscontent += ''.join(content).format(ga_align = quote('../snapshots/'+ snapshots['ga_filename']),
                                                            ga_yuid  = snapshots['ga_yuid'],
                                                            ga_puid  = snapshots['ga_pitchuid'],
                                                            ga_fuid  = snapshots['ga_fuid'], )
@@ -315,7 +319,7 @@ class BMMDossier():
                                                    mono          = self.mono_text(bmm_catalog),
                                                    pdsmode       = '%s  (%s)' % self.pdstext(bmm_catalog),
                                                    pccenergy     = '%.1f' % XDI['_user']['pccenergy'],
-                                                   experimenters = XDI['_user']['experimenters'],
+                                                   experimenters = XDI['Scan']['experimenters'],
                                                    gup           = XDI['Facility']['GUP'],
                                                    saf           = XDI['Facility']['SAF'],
                                                    url           = XDI['_user']['url'],
@@ -678,6 +682,9 @@ class BMMDossier():
         folder = self.folder
         if folder is None or folder == '':
             folder = XDI["_user"]["folder"]
+        ## determine folder from content of start doc.
+        ## What about past scans?
+        folder = experiment_folder(catalog, self.uidlist[0])
         self.folder = folder
             
         ## test if SEAD data file can be found
@@ -716,18 +723,18 @@ class BMMDossier():
                                               sample        = XDI['Sample']['name'],
                                               prep          = XDI['Sample']['prep'],
                                               comment       = XDI['_user']['comment'],
-                                              instrument    = self.sead_instrument_entry(os.path.basename(XDI['_user']['pngfile']), self.uidlist[0]),
+                                              instrument    = self.sead_instrument_entry(XDI['_user']['pngfile'], self.uidlist[0]),
                                               npoints       = len(catalog[self.uidlist[0]].primary.data["time"]),
                                               dwell         = XDI['Scan']['dwell_time'],
                                               delay         = XDI['Scan']['delay'],
                                               shutter       = XDI['_user']['shutter'],
-                                              websnap       = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                                              websnap       = quote('../snapshots/'+snapshots['webcam_file']),
                                               webuid        = snapshots['webcam_uid'],
-                                              anasnap       = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
+                                              anasnap       = quote('../snapshots/'+snapshots['analog_file']),
                                               anauid        = snapshots['anacam_uid'],
-                                              usb1snap      = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
+                                              usb1snap      = quote('../snapshots/'+snapshots['usb1_file']),
                                               usb1uid       = snapshots['usbcam1_uid'],
-                                              usb2snap      = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
+                                              usb2snap      = quote('../snapshots/'+snapshots['usb2_file']),
                                               usb2uid       = snapshots['usbcam2_uid'],
                                               mode          = XDI['_user']['mode'],
                                               motors        = self.motor_sidebar(catalog),
@@ -790,6 +797,9 @@ class BMMDossier():
         folder = self.folder
         if folder is None or folder == '':
             folder = XDI["_user"]["folder"]
+        ## determine folder from content of start doc.
+        ## What about past scans?
+        folder = experiment_folder(bmm_catalog, self.uidlist[0])
         self.folder = folder
             
 
@@ -824,21 +834,21 @@ class BMMDossier():
                                               sample        = XDI['Sample']['name'],
                                               prep          = XDI['Sample']['prep'],
                                               comment       = XDI['_user']['comment'],
-                                              instrument    = self.raster_instrument_entry(os.path.basename(XDI['_snapshots']['pngout']), self.uidlist[0]),
+                                              instrument    = self.raster_instrument_entry(XDI['_snapshots']['pngout'], self.uidlist[0]),
                                               fast_motor    = XDI['_user']['fast_motor'],
                                               slow_motor    = XDI['_user']['slow_motor'],
                                               fast_init     = XDI['_user']['fast_init'],
                                               slow_init     = XDI['_user']['slow_init'],
-                                              websnap       = quote('../snapshots/'+os.path.basename(snapshots['webcam_file'])),
+                                              websnap       = quote('../snapshots/'+snapshots['webcam_file']),
                                               webuid        = snapshots['webcam_uid'],
-                                              anasnap       = quote('../snapshots/'+os.path.basename(snapshots['analog_file'])),
+                                              anasnap       = quote('../snapshots/'+snapshots['analog_file']),
                                               anauid        = snapshots['anacam_uid'],
-                                              usb1snap      = quote('../snapshots/'+os.path.basename(snapshots['usb1_file'])),
+                                              usb1snap      = quote('../snapshots/'+snapshots['usb1_file']),
                                               usb1uid       = snapshots['usbcam1_uid'],
-                                              usb2snap      = quote('../snapshots/'+os.path.basename(snapshots['usb2_file'])),
+                                              usb2snap      = quote('../snapshots/'+snapshots['usb2_file']),
                                               usb2uid       = snapshots['usbcam2_uid'],
-                                              xlsxout       = os.path.basename(XDI['_snapshots']['xlsxout']),
-                                              matout        = os.path.basename(XDI['_snapshots']['matout']),
+                                              xlsxout       = XDI['_snapshots']['xlsxout'],
+                                              matout        = XDI['_snapshots']['matout'],
                                               mode          = XDI['_user']['mode'],
                                               motors        = self.motor_sidebar(catalog),
                                               seqstart      = datetime.datetime.fromtimestamp(catalog[self.uidlist[0]].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p'),
@@ -895,7 +905,8 @@ class XASFile():
         '''
         
         xdi = catalog[uid].metadata["start"]["XDI"]
-        handle = open(filename, 'w')
+        fname = os.path.join(experiment_folder(catalog, uid), filename)
+        handle = open(fname, 'w')
         handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
 
         ## header lines with metadata from the XDi dictionary
@@ -980,8 +991,8 @@ class XASFile():
         handle.flush()
         handle.close()
 
-        log_entry(logger, f'wrote XAS data to {filename}')
-
+        log_entry(logger, f'wrote XAS data to {fname}')
+        #post_to_slack(f'wrote XAS data to {fname}')
 
 
 
@@ -997,7 +1008,8 @@ class SEADFile():
 
         '''
         xdi = catalog[uid].metadata["start"]["XDI"]
-        handle = open(filename, 'w')
+        fname = os.path.join(experiment_folder(catalog, uid), filename)
+        handle = open(fname, 'w')
         handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
 
         ## header lines with metadata from the XDi dictionary
@@ -1070,7 +1082,7 @@ class SEADFile():
         handle.flush()
         handle.close()
 
-        log_entry(logger, f'wrote SEAD data to {filename}')
+        log_entry(logger, f'wrote SEAD data to {fname}')
 
 
 
@@ -1086,7 +1098,8 @@ class LSFile():
         
     def to_xdi(self, catalog=None, uid=None, filename=None, logger=None):
         startdoc = catalog[uid].metadata["start"]
-        handle = open(filename, 'w')
+        fname = os.path.join(experiment_folder(catalog, uid), filename)
+        handle = open(fname, 'w')
         handle.write(f'# XDI/1.0 BlueSky/{bluesky_version} BMM/{pathlib.Path(sys.executable).parts[-3]}\n')
 
         start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime("%Y-%m-%dT%H:%M:%S") # '%A, %d %B, %Y %I:%M %p')
@@ -1139,7 +1152,7 @@ class LSFile():
         handle.flush()
         handle.close()
 
-        log_entry(logger, f'wrote linescan data to {filename}')
+        log_entry(logger, f'wrote linescan data to {fname}')
 
 
 
@@ -1156,8 +1169,8 @@ class RasterFiles():
         '''
 
         record  = catalog[uid]
-        xlsxout = record.metadata['start']['XDI']['_snapshots']['xlsxout']
-        matout  = record.metadata['start']['XDI']['_snapshots']['matout']
+        xlsxout = os.path.join(experiment_folder(catalog, uid), record.metadata['start']['XDI']['_snapshots']['xlsxout'])
+        matout  = os.path.join(experiment_folder(catalog, uid), record.metadata['start']['XDI']['_snapshots']['matout'])
 
         
         motors = record.metadata['start']['motors']

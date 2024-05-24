@@ -326,8 +326,8 @@ class BMMMacroBuilder():
         if default['filename'] is None or str(default['filename']).strip() == '':
             default['filename'] = 'filename'
 
-        if default['experimenters'] is None or str(default['experimenters']).strip() == '':
-            default['experimenters'] = BMMuser.name
+        #if default['experimenters'] is None or str(default['experimenters']).strip() == '':
+        default['experimenters'] = BMMuser.experimenters
 
         defaultdefaults = {'bounds': '-200  -30  -10 15.5  570', 'steps': '10  2  0.25  0.05k', 'times': '1 1 1 1'}
         for k in ('bounds', 'steps', 'times'):
@@ -625,10 +625,10 @@ class BMMMacroBuilder():
         default['url'] = '...'
         default['doi'] = '...'
         default['cif'] = '...'
-        if 'double' in self.instrument.lower():
-            default['experimenters'] = self.ws['F1'].value  # top line of xlsx file
-        else:
-            default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
+        # if 'double' in self.instrument.lower():
+        #     default['experimenters'] = self.ws['F1'].value  # top line of xlsx file
+        # else:
+        #     default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
         default = self.ini_sanity(default)
         if default is None:
             print(error_msg(f'Could not interpret {self.source} as a wheel macro.'))

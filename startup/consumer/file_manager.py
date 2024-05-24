@@ -32,7 +32,7 @@ except:
     rkvs = NoRedis()
 
 
-from echo_slack import echo_slack
+from tools import echo_slack, next_index
 from slack import img_to_slack
 
 # legible screen output
@@ -94,7 +94,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
 
         if name == 'bmm':
             if any(x in message for x in ('dossier', 'mkdir', 'copy', 'touch', 'echoslack',
-                                          'xasxdi', 'seadxdi', 'lsxdi', 'raster')) :
+                                          'xasxdi', 'seadxdi', 'lsxdi', 'raster', 'next_index')) :
                 if be_verbose is True:
                     print(f'\n{pprint.pformat(message, compact=True)}')
                 # if be_verbose is True:
@@ -192,7 +192,10 @@ def manage_files_from_kafka_messages(beamline_acronym):
             elif 'raster' in message:
                 raster.preserve_data(catalog=bmm_catalog, uid=message['uid'], logger=logger)
                 
-                    
+            elif 'next_index' in message:
+                next_index(message['folder'], message['stub'])
+
+                
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
     # this consumer should not be in a group with other consumers

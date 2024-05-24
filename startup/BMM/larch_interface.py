@@ -245,7 +245,7 @@ class Pandrosus():
         self.group.reference = numpy.array(numpy.log(table['It']/table['Ir']))
 
             
-    def fetch(self, uid, name=None, mode='transmission'):
+    def fetch(self, uid, name=None, mode='transmission', working_folder=None):
         self.uid = uid
         self.mode = mode
         if name is not None:
@@ -259,10 +259,14 @@ class Pandrosus():
         self.make_xmu(uid, mode=mode)
         self.make_ref(uid)
         self.prep()
-        toss = create_athena(os.path.join(self.folder, 'prj', 'toss.prj'))
+        if working_folder is None:
+            location = os.path.join(self.folder, 'prj', 'toss.prj')
+        else:
+            location = os.path.join(self.workspace, 'prj', 'toss.prj')
+        toss = create_athena(location)
         toss.add_group(self.group)
         toss.save()
-        os.remove(os.path.join(self.folder, 'prj', 'toss.prj'))
+        os.remove(location)
         toss = None
         self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
 

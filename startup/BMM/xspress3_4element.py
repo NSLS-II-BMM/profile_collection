@@ -45,6 +45,9 @@ class BMMXspress3Detector_4Element_Base(BMMXspress3DetectorBase):
     '''Subclass of BMMXspress3DetectorBase with things specific to the 4-element interface.
     '''
 
+    erase = Cpt(EpicsSignal, 'det1:ERASE')
+    Acquire = Cpt(EpicsSignal, 'det1:Acquire')
+    
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if read_attrs is None:

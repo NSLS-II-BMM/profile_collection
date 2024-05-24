@@ -5,6 +5,10 @@ from numpy import pi, sin, cos, arcsin, sqrt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+import redis
+from redis_json_dict import RedisJSONDict
+
+
 ## trying "most".  It's a pager, like less, but has helpful hints in
 ## the bottom gutter.  Let's see how it goes....
 os.environ['PAGER'] = 'most'
@@ -14,6 +18,8 @@ os.environ['PAGER'] = 'most'
 BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
 LUSTRE_XAS = os.path.join('/nsls2', 'data3', 'bmm', 'XAS')
+
+LUSTRE_DATA_ROOT = os.path.join('/nsls2', 'data3', 'bmm', 'proposals')
 
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 
@@ -320,3 +326,14 @@ def clean_img():
             BMMuser.display_img.close()
     except:
         pass
+
+
+def facility_md():
+    redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+    the_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+    return the_dict
+
+
+def proposal_base():
+    base = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', user_ns['RE'].md['cycle'], user_ns['RE'].md['data_session'])
+    return base

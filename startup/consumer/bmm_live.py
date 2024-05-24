@@ -1,3 +1,5 @@
+import os
+from matplotlib import get_backend
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 #from mpl_multitab import MplTabs
@@ -14,9 +16,10 @@ import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
 from slack import img_to_slack
+from tools import experiment_folder, echo_slack
 
 from BMM.periodictable import Z_number, edge_number
-from echo_slack import echo_slack
+
 
 class LineScan():
     '''Manage the live plot for a motor scan or a time scan.
@@ -230,11 +233,13 @@ class LineScan():
         # producer.produce(['bmm', document])
 
         
-    def stop(self, **kwargs):
-        if 'fname' in kwargs:
-            self.figure.savefig(kwargs['fname'])
-            self.logger.info(f'saved linescan figure {kwargs["fname"]}')
-            img_to_slack(kwargs['fname'], title=f'{self.description} vs. {self.motor}', measurement='line')
+    def stop(self, catalog, **kwargs):
+        if get_backend().lower() == 'agg':
+            if 'fname' in kwargs and 'uid' in kwargs:
+                fname = os.path.join(experiment_folder(catalog, kwargs["uid"]), kwargs["fname"])
+                self.figure.savefig(fname)
+                self.logger.info(f'saved linescan figure {fname}')
+                img_to_slack(fname, title=f'{self.description} vs. {self.motor}', measurement='line')
 
         #self.figure.show(block=False)
         self.ongoing     = False
@@ -401,7 +406,8 @@ class XAFSScan():
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
             self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
             self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
-            self.fig.canvas.manager.window.setGeometry(1360, 1790, 1200, 1062)
+            if get_backend().lower() != 'agg':
+                self.fig.canvas.manager.window.setGeometry(2240, 1757, 1200, 1093)
             self.gs = gridspec.GridSpec(2,2)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.muf = self.fig.add_subplot(self.gs[0, 1])
@@ -410,7 +416,8 @@ class XAFSScan():
             self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
         ## 1x3 grid if no fluorescence (transmission, reference, test)
         else:
-            self.fig.canvas.manager.window.setGeometry(1640, 2259, 1800, 624)
+            if get_backend().lower() != 'agg':
+                self.fig.canvas.manager.window.setGeometry(1640, 2259, 1800, 624)
             self.gs = gridspec.GridSpec(1,3)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[0, 1])
@@ -476,10 +483,11 @@ class XAFSScan():
             else:
                 self.muf.legend.remove()
             
-    def stop(self, **kwargs):
+    def stop(self, catalog, **kwargs):
         '''Done with a sequence of XAFS live plots.
         '''
         filename = kwargs['filename']
+        uid = kwargs['uid']
         #self.figure.show(block=False)
         self.ongoing     = False
         # self.xdata       = []
@@ -493,10 +501,12 @@ class XAFSScan():
         # self.description = None
         # self.xs1, self.xs2, self.xs3, self.xs4, xs8 = None, None, None, None, None
         # self.initial     = 0
-        if filename is not None:
-            self.fig.savefig(filename)
-            self.logger.info(f'saved XAFS sequence figure {filename}')
-            img_to_slack(filename, title=self.sample, measurement='xafs')
+        if get_backend().lower() == 'agg':
+            if filename is not None:
+                fname = os.path.join(experiment_folder(catalog, uid), filename)
+                self.fig.savefig(fname)
+                self.logger.info(f'saved XAFS sequence figure {fname}')
+                img_to_slack(fname, title=self.sample, measurement='xafs')
             
 
 
@@ -566,6 +576,7 @@ class XRF():
       True means to post the saved image file to Slack
 
     '''
+
     def plot(self, catalog, **kwargs):
         uid=None
         add=True
@@ -625,33 +636,37 @@ class XRF():
                 plt.plot(e, s[i-1], label=f'channel {i}')
 
         if 'XDI' in catalog[uid].metadata['start']:
-            if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
-                el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
-                ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
-                z = Z_number(el)
-                if ed.lower() == 'k':
-                    label = f'{el} Kα1'
-                    eline = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
-                elif ed.lower() == 'l3':
-                    label = f'{el} Lα1'
-                    eline = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000
-                elif ed.lower() == 'l2':
-                    label = f'{el} Kβ1'
-                    eline = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000
-                elif ed.lower() == 'l1':
-                    label = f'{el} Kβ3'
-                    eline = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000
+            if 'Element' in catalog[uid].metadata['start']['XDI']:
+                if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
+                    el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
+                    ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
+                    z = Z_number(el)
+                    if ed.lower() == 'k':
+                        label = f'{el} Kα1'
+                        eline = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                    elif ed.lower() == 'l3':
+                        label = f'{el} Lα1'
+                        eline = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000
+                    elif ed.lower() == 'l2':
+                        label = f'{el} Kβ1'
+                        eline = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000
+                    elif ed.lower() == 'l1':
+                        label = f'{el} Kβ3'
+                        eline = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000
 
-                self.axes.axvline(x = eline, color = 'brown', linewidth=1, label=label)
-
-        self.axes.set_xlim(2500, eline+2000)
+                    self.axes.axvline(x = eline, color = 'brown', linewidth=1, label=label)
+                self.axes.set_xlim(2500, eline+2000)
+        else:
+            self.axes.set_xlim(2500, 20000)
         self.axes.legend(loc='best', shadow=True)
 
-        if filename is not None:
-            self.figure.savefig(filename)
-            self.logger.info(f'saved XRF figure {filename}')
-            if post is True:
-                img_to_slack(filename, title=self.title, measurement='xrf')
+        if get_backend().lower() == 'agg':
+            if filename is not None:
+                fname = os.path.join(experiment_folder(catalog, uid), 'XRF', filename)
+                self.figure.savefig(fname)
+                self.logger.info(f'saved XRF figure {fname}')
+                if post is True:
+                    img_to_slack(fname, title=self.title, measurement='xrf')
             
 
 
@@ -661,29 +676,39 @@ class XRF():
         waveform of each of the channels in the other columns.
 
         '''
-        
-        xdi = catalog[uid].metadata["start"]["XDI"]
-        handle = open(filename, 'w')
+        if get_backend().lower() != 'agg':
+            return()
+        xdi = None
+        if 'XDI' in catalog[uid].metadata["start"]:
+            xdi = catalog[uid].metadata["start"]["XDI"]
+        fname = os.path.join(experiment_folder(catalog, uid), 'XRF', filename)
+        handle = open(fname, 'w')
         handle.write(f'# XDI/1.0 BlueSky/{bluesky_version}\n')
         handle.write(f'# Beamline.name: BMM (06BM) -- Beamline for Materials Measurement\n')
         handle.write(f'# Beamline.xray_source: NSLS-II three-pole wiggler\n')
         handle.write(f'# Beamline.collimation: paraboloid mirror, 5 nm Rh on 30 nm Pt\n')
-        handle.write(f'# Beamline.focusing: {xdi["Beamline"]["focusing"]}\n')
-        handle.write(f'# Beamline.harmonic_rejection: {xdi["Beamline"]["harmonic_rejection"]}\n')
+        if xdi is not None:
+            if 'Beamline' in catalog[uid].metadata['start']['XDI']:
+                handle.write(f'# Beamline.focusing: {xdi["Beamline"]["focusing"]}\n')
+                handle.write(f'# Beamline.harmonic_rejection: {xdi["Beamline"]["harmonic_rejection"]}\n')
         handle.write(f'# Beamline.energy: {xdi["_pccenergy"]}\n')
         handle.write(f'# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
-        handle.write(f'# Sample.name: {xdi["Sample"]["name"]}\n')
-        handle.write(f'# Sample.prep: {xdi["Sample"]["prep"]}\n')
+        if xdi is not None:
+            if 'Sample' in catalog[uid].metadata['start']['XDI']:
+                handle.write(f'# Sample.name: {xdi["Sample"]["name"]}\n')
+                handle.write(f'# Sample.prep: {xdi["Sample"]["prep"]}\n')
         start = datetime.datetime.fromtimestamp(catalog[uid].metadata['start']['time']).strftime('%A, %B %d, %Y %I:%M %p')
         #end   = datetime.datetime.fromtimestamp(catalog[uid].metadata['stop']['time']).strftime('%A, %B %d, %Y %I:%M %p')
         handle.write(f'# Scan.time: {start}\n')
         #handle.write(f'# Scan.stop: {end}\n')
         handle.write(f'# Scan.uid: {uid}\n')
         handle.write(f'# Facility.name: NSLS-II\n')
-        handle.write(f'# Facility.energy: {xdi["Facility"]["energy"]}\n')
-        handle.write(f'# Facility.cycle: {xdi["Facility"]["cycle"]}\n')
-        handle.write(f'# Facility.GUP: {xdi["Facility"]["GUP"]}\n')
-        handle.write(f'# Facility.SAF: {xdi["Facility"]["SAF"]}\n')
+        if xdi is not None:
+            if 'Facility' in catalog[uid].metadata['start']['XDI']:
+                handle.write(f'# Facility.energy: {xdi["Facility"]["energy"]}\n')
+                handle.write(f'# Facility.cycle: {xdi["Facility"]["cycle"]}\n')
+                handle.write(f'# Facility.GUP: {xdi["Facility"]["GUP"]}\n')
+                handle.write(f'# Facility.SAF: {xdi["Facility"]["SAF"]}\n')
         handle.write('# Column.1: energy (eV)\n')
 
         column_list = []
@@ -700,8 +725,11 @@ class XRF():
                 column_list.append(f'MCA{c}')
                 
         handle.write('# //////////////////////////////////////////////////////////\n')
-        for l in xdi["_comment"]:
-            handle.write(f'# {l}\n')
+        if xdi is not None and "_comment" in xdi:
+            for l in xdi["_comment"]:
+                handle.write(f'# {l}\n')
+        else:
+            handle.write('# \n')
         handle.write('# ----------------------------------------------------------\n')
         handle.write('# energy ')
 
@@ -722,7 +750,7 @@ class XRF():
 
         handle.flush()
         handle.close()
-        print('wrote XRF spectra to %s' % filename)
+        print('wrote XRF spectra to %s' % fname)
                 
 class AreaScan():
     '''Manage the live plot for a motor scan or a time scan.
@@ -824,10 +852,11 @@ class AreaScan():
         rkvs.set('BMM:mouse_event:motor2', ev.canvas.figure.axes[0].get_ylabel())
         
     def stop(self, **kwargs):
-        if 'filename' in kwargs and kwargs['filename'] is not None and kwargs['filename'] != '':
-            self.figure.savefig(kwargs['filename'])
-            self.logger.info(f'saved areascan figure {kwargs["filename"]}')
-            img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
+        if get_backend().lower() == 'agg':
+            if 'filename' in kwargs and kwargs['filename'] is not None and kwargs['filename'] != '':
+                self.figure.savefig(kwargs['filename'])
+                self.logger.info(f'saved areascan figure {kwargs["filename"]}')
+                img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
 
         self.ongoing     = False
         self.xdata       = []

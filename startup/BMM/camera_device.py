@@ -3,7 +3,7 @@ import numpy
 
 import requests
 import bluesky
-from ophyd import Device, Component, Signal, DeviceStatus
+from ophyd import Device, Component, Signal, DeviceStatus, EpicsSignal, EpicsSignalRO
 from ophyd.areadetector.filestore_mixins import resource_factory
 
 # See for resource_factory docstring
@@ -18,6 +18,7 @@ import fcntl
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
+md = user_ns["RE"].md
 
 from BMM.functions import now
 from BMM.logging import report
@@ -234,7 +235,7 @@ class BMMSnapshot(Device):
 
     def current_folder(self):
         #folder = os.path.join(BMMuser.folder, 'raw', datetime.datetime.now().strftime("%Y/%m/%d/%H"))
-        folder = os.path.join(BMMuser.folder, 'assets', '', self.name, datetime.datetime.now().strftime("%Y/%m/%d"))
+        folder = os.path.join(BMMuser.workspace, 'snapshots')
         if not os.path.isdir(folder):
             os.makedirs(folder)
         return folder
@@ -321,4 +322,29 @@ def snap(which, filename=None, **kwargs):
         xas_webcam(filename=filename, **kwargs)
 
 
+class AxisCaprotoCam(Device):
+    write_dir = Component(EpicsSignal, "write_dir", string=True)
+    file_name = Component(EpicsSignal, "file_name", string=True)
+    full_file_path = Component(EpicsSignalRO, "full_file_path", string=True)
+    ioc_stage = Component(EpicsSignal, "stage", string=True)
+    acquire = Component(EpicsSignal, "acquire", string=True)
+
+
+axis_cam5 = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:5}:", name="axis_cam5")
+axis_cam6 = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:6}:", name="axis_cam6")
+
+def acquire_axis(cam=axis_cam5, write_dir=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/default/"):
+    cam.write_dir.put(write_dir)
+    cam.file_name.put(f"{cam.name}_{uuid.uuid4()}.jpeg")
+
+    cam.ioc_stage.put(0)
+    cam.ioc_stage.put(1)
+
+    cam.acquire.put(1)
+    
+    print(cam.full_file_path.get())
+
+user_ns["axis_cam5"] = axis_cam5
+user_ns["axis_cam6"] = axis_cam6
+user_ns["acquire_axis"] = acquire_axis
 

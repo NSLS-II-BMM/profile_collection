@@ -6,7 +6,7 @@ except ImportError:
         return False
 
 import os, textwrap
-from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg
+from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg, proposal_base
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -182,13 +182,13 @@ the templates folder of your data directory.
     rkvs.set('BMM:automation:type', instrument)
     kafka_message({'copy': True,
                    'file': os.path.join(BMMuser.workspace, spreadsheet),
-                   'target': BMMuser.folder, })
+                   'target': proposal_base(), })
     kafka_message({'copy': True,
                    'file': os.path.join(BMMuser.workspace, f'{sheet}.ini'),
-                   'target': BMMuser.folder, })
+                   'target': proposal_base(), })
     kafka_message({'copy': True,
                    'file': os.path.join(BMMuser.workspace, f'{sheet}_macro.py'),
-                   'target': BMMuser.folder, })
+                   'target': proposal_base(), })
 
 
 def set_instrument(instrument=None):
