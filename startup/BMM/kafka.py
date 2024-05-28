@@ -1,4 +1,6 @@
 
+import os
+
 try:
     from bluesky_queueserver import is_re_worker_active
 except ImportError:
@@ -12,6 +14,8 @@ except ImportError:
 from nslsii.kafka_utils import _read_bluesky_kafka_config_file
     
 from bluesky_kafka.produce import BasicProducer
+
+from BMM.functions import proposal_base, warning_msg
 
 kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
@@ -39,14 +43,16 @@ def kafka_verbose(onoff=False):
 # this is awkward.  it only works on fully qualified paths to
 # something in Workspace or on a filename relative to user's Workspace
 # This needs a file selection dialog!
-def preserve(fname):
-    short = fname
-    if os.path.isabs(fname):
-        short = fname.replace(BMMuser.workspace, '')
+def preserve(fname, target=None):
+    '''Safely copy a file from your workspace to your proposal folder.
+    '''
+    if target is None:
+        target = proposal_base()
+    fullname = os.path.join(BMMuser.workspace, fname)
+    if os.path.isfile(fullname):
+        print(f'Copying {fname} to {target}')
+        kafka_message({'copy': True,
+                       'file': fname,
+                       'target': target})
     else:
-        fname = os.path.join(BMMuser.workspace, fname)
-    target = os.path.join(BMMuser.folder, short)
-    print(f'Attempting to copy {fname} to {target}')
-    kafka_message({'copy': True,
-                   'file': fname,
-                   'target': target})
+        print(warning_msg(f"There is not a file called {fname} in {BMMuser.workspace}."))

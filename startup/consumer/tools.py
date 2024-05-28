@@ -36,10 +36,8 @@ rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 
 def echo_slack(text='', img=None, icon='message', rid=None, measurement='xafs'):
-    #BMMuser = user_ns['BMMuser']
-    #folder = rkvs.get('BMM:user:folder').decode('utf-8')
-    proposal = '301027'
-    base   = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', '2024-2', f'pass-{proposal}')  # FIX ME!
+    facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+    base   = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', facility_dict['cycle'], facility_dict['data_session'])
     rawlogfile = os.path.join(base, 'dossier', '.rawlog')
     rawlog = open(rawlogfile, 'a')
     rawlog.write(message_div(text, img=img, icon=icon, rid=rid, measurement=measurement))

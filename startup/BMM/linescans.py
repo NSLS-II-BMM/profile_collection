@@ -430,7 +430,7 @@ def find_slot(shape='slot'):
         yield from rectangle_scan(motor=xafs_y, start=-10,  stop=10,  nsteps=31, detector='It', chore='find_slot')
     else:
         yield from rectangle_scan(motor=xafs_y, start=-3,  stop=3,  nsteps=31, detector='It', chore='find_slot')
-    kafka_message({'close': 'all'})
+    #kafka_message({'close': 'all'})
     yield from rectangle_scan(motor=xafs_x, start=-10, stop=10, nsteps=31, detector='It', chore='find_slot')
                               #md={'BMM_kafka': {'hint': f'rectanglescan It xafs_x notnegated'}})
     user_ns['xafs_wheel'].in_place()
@@ -516,6 +516,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
             out      = mod.fit(signal, pars, x=pos)
             print(whisper(out.fit_report(min_correl=0)))
             if chore == 'find_slot':
+                kafka_message({'close': 'last'})
                 kafka_message({'align_wheel' : 'find_slot',
                                'motor'       : motor.name,
                                'detector'    : detector.lower(),

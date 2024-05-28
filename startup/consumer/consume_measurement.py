@@ -142,7 +142,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     ls.start(**message)
                     doing = 'linescan'
                 elif message['linescan'] == 'stop':
-                    ls.stop(**message)
+                    ls.stop(catalog=bmm_catalog, **message)
                     doing = None
 
             elif 'xafsscan' in message:

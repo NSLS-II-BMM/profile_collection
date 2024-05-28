@@ -406,7 +406,10 @@ class XAFSScan():
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
             self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
             self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
-            if get_backend().lower() != 'agg':
+            if get_backend().lower() == 'agg':
+                self.fig.set_figheight(9.5)
+                self.fig.set_figwidth(11)
+            else:
                 self.fig.canvas.manager.window.setGeometry(2240, 1757, 1200, 1093)
             self.gs = gridspec.GridSpec(2,2)
             self.mut = self.fig.add_subplot(self.gs[0, 0])
@@ -416,7 +419,9 @@ class XAFSScan():
             self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
         ## 1x3 grid if no fluorescence (transmission, reference, test)
         else:
-            if get_backend().lower() != 'agg':
+            if get_backend().lower() == 'agg':
+                self.fig.set_figwidth(16.5)
+            else:
                 self.fig.canvas.manager.window.setGeometry(1640, 2259, 1800, 624)
             self.gs = gridspec.GridSpec(1,3)
             self.mut = self.fig.add_subplot(self.gs[0, 0])

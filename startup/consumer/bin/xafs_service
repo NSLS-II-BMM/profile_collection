@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+	cat <<EOF 
+
+Start/restart the BMM file-manager or headless plot-manager
+and display the corresponding journal tail.
+
+   xafs_service [plot|file]
+
+You will be prompted for password and two-factor authentication.
+
+EOF
+	exit 1
+fi
+
+
+
+if [[ "$1" = "plot" ]]; then
+    dzdo systemctl restart kafka-consumer-plot-manager.service
+    dzdo journalctl -fu  kafka-consumer-plot-manager.service
+elif [[ "$1" = "file" ]]; then
+    dzdo systemctl restart kafka-consumer-file-manager.service
+    dzdo journalctl -fu  kafka-consumer-file-manager.service
+else
+    cat <<EOF
+
+"$1" is not an XAFS service.  Valid services are
+   - plot
+   - file
+
+EOF
+fi
