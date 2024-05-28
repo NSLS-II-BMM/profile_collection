@@ -16,7 +16,7 @@ from urllib.parse import quote
 
 from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
-from BMM.functions       import PROMPT, DEFAULT_INI
+from BMM.functions       import PROMPT, DEFAULT_INI, proposal_base
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka           import kafka_message, close_plots
 from BMM.linescans       import rocking_curve

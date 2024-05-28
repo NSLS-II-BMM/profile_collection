@@ -254,7 +254,7 @@ def sead(inifile=None, force=False, **kwargs):
         if is_re_worker_active() is True:
             BMMuser.prompt = False
         if BMMuser.prompt:
-            boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(outfile)+25) # see 05-functions
+            boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(p['folder'])+25)
             action = input("\nBegin time scan? " + PROMPT)
             if action != '':
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
@@ -313,7 +313,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## for dossier
         with open(os.path.join(BMMuser.workspace, inifile)) as f:
             initext = ''.join(f.readlines())
-        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
+        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs, 'experimenters': BMMuser.experimenters}
         md['_user'] = user_metadata
         md['_filename'] = outfile
 

@@ -19,7 +19,7 @@ from tiled.client import from_profile
 
 from BMM.areascan        import areascan
 from BMM.dossier         import DossierTools
-from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
+from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT, proposal_base
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka           import kafka_message, close_plots
 from BMM.logging         import BMM_log_info, BMM_msg_hook, report
@@ -87,15 +87,16 @@ def read_ini(inifile, **kwargs):
     ## booleans
     for a in ('snapshots', 'lims', 'htmlpage', 'usbstick', 'contour', 'log'):
         found[a] = False
-        if a in kwargs:
-            parameters[a] = kwargs[a]
-            found[a] = True
-        else:
+        if a not in kwargs:
             try:
-                parameters[a] = config.get('scan', a)
+                parameters[a] = config.getboolean('scan', a)
                 found[a] = True
-            except:
+            except configparser.NoOptionError:
                 parameters[a] = True
+        else:
+            parameters[a] = bool(kwargs[a])
+            found[a] = True
+                
     parameters['ththth'] = False
 
                     
@@ -323,7 +324,7 @@ def raster(inifile=None, **kwargs):
                 addition = f'{k:13} : {p[k]}'
                 text = text + addition.rstrip() + '\n'
                 if len(addition) > length: length = len(addition)
-            boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
+            boxedtext('How does this look?', text, 'green', width=length+4)
 
             pngout  = f"{p['filename']}.png"
             basename = p['filename']
@@ -385,9 +386,9 @@ def raster(inifile=None, **kwargs):
                           ththth        = p['ththth'],
         )
         
-        if not os.path.isdir(os.path.join(BMMuser.folder, 'maps')):
-            os.makedirs(os.path.join(BMMuser.folder, 'maps'))
-        
+        kafka_message({'mkdir': os.path.join(proposal_base(), 'maps')})
+
+            
         #if p['detector'].lower() in ('if', 'xs', 'xs1'):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -404,7 +405,7 @@ def raster(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## show the metadata to the user
-        display_XDI_metadata(md)
+        ##display_XDI_metadata(md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## populate the static html page for this scan 
@@ -418,7 +419,7 @@ def raster(inifile=None, **kwargs):
         }
         with open(os.path.join(BMMuser.workspace, inifile)) as f:
             initext = ''.join(f.readlines())
-        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
+        user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs, 'experimenters': BMMuser.experimenters}
         md['_user'] = user_metadata
         xdi = {'XDI': md}
         

@@ -236,7 +236,7 @@ class LineScan():
     def stop(self, catalog, **kwargs):
         if get_backend().lower() == 'agg':
             if 'fname' in kwargs and 'uid' in kwargs:
-                fname = os.path.join(experiment_folder(catalog, kwargs["uid"]), kwargs["fname"])
+                fname = os.path.join(experiment_folder(catalog, kwargs["uid"]), 'snapshots', kwargs["fname"])
                 self.figure.savefig(fname)
                 self.logger.info(f'saved linescan figure {fname}')
                 img_to_slack(fname, title=f'{self.description} vs. {self.motor}', measurement='line')
@@ -856,12 +856,13 @@ class AreaScan():
         rkvs.set('BMM:mouse_event:value2', y)
         rkvs.set('BMM:mouse_event:motor2', ev.canvas.figure.axes[0].get_ylabel())
         
-    def stop(self, **kwargs):
+    def stop(self, catalog, **kwargs):
         if get_backend().lower() == 'agg':
             if 'filename' in kwargs and kwargs['filename'] is not None and kwargs['filename'] != '':
-                self.figure.savefig(kwargs['filename'])
-                self.logger.info(f'saved areascan figure {kwargs["filename"]}')
-                img_to_slack(kwargs['filename'], title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
+                fname = os.path.join(experiment_folder(catalog, kwargs["uid"]), 'maps', kwargs["filename"])
+                self.figure.savefig(fname)
+                self.logger.info(f'saved areascan figure {fname}')
+                img_to_slack(fname, title=f'{self.detector}   Energy = {self.energy:.1f}', measurement='raster')
 
         self.ongoing     = False
         self.xdata       = []

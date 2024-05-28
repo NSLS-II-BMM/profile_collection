@@ -170,7 +170,7 @@ def plot_from_kafka_messages(beamline_acronym):
                     asc.start(**message)
                     doing = 'areascan'
                 elif message['areascan'] == 'stop':
-                    asc.stop(**message)
+                    asc.stop(catalog=bmm_catalog, **message)
                     bmm_plot.plot_areascan(bmm_catalog, message['uid'])
                     doing = None
 

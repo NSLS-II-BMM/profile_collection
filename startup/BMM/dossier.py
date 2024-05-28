@@ -130,7 +130,10 @@ class DossierTools():
 
     '''
     xrf_md        = {}
-    cameras_md    = {}
+    cameras_md    = {'webcam_file': '', 'webcam_uid':  '',
+                     'analog_file': '', 'anacam_uid':  '',
+                     'usb1_file':   '', 'usbcam1_uid': '',
+                     'usb2_file':   '', 'usbcam2_uid': '', }
     websnap       = ''
     webuid        = ''
     anasnap       = ''

@@ -799,7 +799,7 @@ class BMMDossier():
             folder = XDI["_user"]["folder"]
         ## determine folder from content of start doc.
         ## What about past scans?
-        folder = experiment_folder(bmm_catalog, self.uidlist[0])
+        folder = experiment_folder(catalog, self.uidlist[0])
         self.folder = folder
             
 
