@@ -520,7 +520,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             fname = self.make_filename(m)
             self.content += self.tab + 'if ref is True:\n'
             self.content += self.tab + self.tab + f'yield from mvr({motor}, -{self.retract})\n'
-            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}foil_{fname}", nscans=1, sample="{m["element"]} foil", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5")\n'
+            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}foil_{fname}", nscans=1, sample="{m["element"]} foil", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5", copy=False)\n'
             self.content += self.tab + self.tab + f'yield from mvr({motor}, {self.retract})\n'
 
             ####################################
@@ -565,7 +565,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                         command += ', %s=%.3f' % (k, m[k])
                     else:
                         command += ', %s=\'%s\'' % (k, m[k])
-            command += ')\n'
+            command += ', copy=False)\n'
             self.content += command
             if m['method'].lower() == 'automatic':
                 self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'

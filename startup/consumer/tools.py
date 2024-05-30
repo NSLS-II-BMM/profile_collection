@@ -112,4 +112,15 @@ def next_index(folder, stub):
         answer = int(results[-1][-3:]) + 1
     rkvs.set('BMM:next_index', answer)
     print(f"Next index for {stub} in {folder} is {answer}.")
-    
+
+
+def file_exists(folder, filename):
+    '''Return true is a file of the supplied name exists in the supplied folder.'''
+    target = os.path.join(folder, filename) 
+    if os.path.isfile(target):
+        rkvs.set('BMM:file_exists', 'true')
+        print(f"{filename} exists in {folder}.")
+    else:
+        rkvs.set('BMM:file_exists', 'false')
+        print(f"{filename} does not exist in {folder}.")
+        

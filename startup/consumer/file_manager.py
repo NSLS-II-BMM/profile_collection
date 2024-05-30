@@ -32,7 +32,7 @@ except:
     rkvs = NoRedis()
 
 
-from tools import echo_slack, next_index
+from tools import echo_slack, next_index, file_exists
 from slack import img_to_slack
 
 # legible screen output
@@ -194,6 +194,9 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 
             elif 'next_index' in message:
                 next_index(message['folder'], message['stub'])
+
+            elif 'file_exists' in message:
+                file_exists(message['folder'], message['filename'])
 
                 
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")

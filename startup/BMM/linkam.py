@@ -304,7 +304,7 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                         command += ', %s=%.3f' % (k, m[k])
                     else:
                         command += ', %s=\'%s\'' % (k, m[k])
-            command += ')\n'
+            command += ', copy=False)\n'
             self.content += command
             self.content += self.tab + 'close_plots()\n\n'
             #self.content += self.tab + 'yield from linkam.off_plan()\n\n'

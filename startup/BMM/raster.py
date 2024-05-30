@@ -28,6 +28,7 @@ from BMM.metadata        import bmm_metadata, display_XDI_metadata, metadata_at_
 from BMM.motor_status    import motor_status
 from BMM.resting_state   import resting_state_plan
 from BMM.suspenders      import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
+from BMM.xafs            import file_exists
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -330,9 +331,9 @@ def raster(inifile=None, **kwargs):
             pngout  = f"{p['filename']}.png"
             basename = p['filename']
             seqnumber = 1
-            if os.path.isfile(pngout):
+            if file_exists(filename=pngout):
                 seqnumber = 2
-                while os.path.isfile(os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")):
+                while file_exists(filename=os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")):
                     seqnumber += 1
                 basename = "%s-%2.2d" % (p['filename'],seqnumber)
                 pngout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")

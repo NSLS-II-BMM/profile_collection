@@ -27,7 +27,7 @@ from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.metadata      import bmm_metadata, display_XDI_metadata, metadata_at_this_moment
 from BMM.resting_state import resting_state, resting_state_plan
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
-from BMM.xafs          import scan_metadata
+from BMM.xafs          import scan_metadata, file_exists
 
 from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
@@ -236,7 +236,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## verify output file name won't be overwritten
         outfile = f"{p['filename']}.{int(p['start']):03d}"
-        if os.path.isfile(outfile):
+        if file_exists(filename=outfile):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 

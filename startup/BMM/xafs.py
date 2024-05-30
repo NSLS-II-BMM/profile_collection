@@ -47,17 +47,16 @@ except ImportError:
 
 
 
-    # listing = os.listdir(folder)
-    # r = re.compile(re.escape(stub) + '\.\d+')
-    # results = sorted(list(filter(r.match, listing)))
-    # if len(results) == 0:
-    #     return 1
-    # return int(results[-1][-3:]) + 1
 
 def next_index(folder=None, stub=None, maxtries=15, verbose=False):
     '''Find the next numeric filename extension for a filename stub in the
     specified folder in the proposals directory.
-    
+
+    This sends a message over kafka asking the file manager worker to
+    search for the next index.  The worker posts the value to redis.
+    This function sets that redis key to "None" and polls the
+    appropriate redis key for a value interpretable integer.
+   
     arguments
     =========
     folder: (str)
@@ -71,6 +70,7 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
 
     verbose: (bool)
       if True, be noisy as we wait for a result
+
     '''
     if folder is None:
         folder = proposal_base()
@@ -91,6 +91,55 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
         if count > maxtries:
             return(None)
     return int(answer)
+
+
+def file_exists(folder=None, filename=None, maxtries=15, verbose=False):
+    '''Determine if a file of the specified filename exists in specified
+    folder in the proposals directory.
+
+    This sends a message over kafka asking the file manager worker to
+    search for the file.  The worker posts "true" or "false" to redis.
+    This function sets that redis key to "None" and polls the
+    appropriate redis key for a "true"/"false" value.
+   
+    arguments
+    =========
+    folder: (str)
+      folder in proposal directory to probe [proposal_base()]
+
+    filename: (str)
+      filename to check, i.e. filename with extension but without path
+
+    maxtries: (int)
+      maximum number of attempts to read before giving up and returning None
+
+    verbose: (bool)
+      if True, be noisy as we wait for a result
+
+    '''
+    if folder is None:
+        folder = proposal_base()
+    if filename is None:
+        print(error_msg('No filename supplied to file_exists'))
+        return(None)
+    rkvs = user_ns['rkvs']
+    rkvs.set('BMM:file_exists', 'None')
+    kafka_message({'file_exists': True, 'folder': folder, 'filename': filename})
+    answer = rkvs.get('BMM:file_exists').decode('utf8')
+    count = 0
+    if verbose: print(f"{count = }, {answer = }")
+    while answer == 'None':
+        time.sleep(0.1)
+        answer = rkvs.get('BMM:file_exists').decode('utf8')
+        count += 1
+        if verbose: print(f"{count = }, {answer = }")
+        if count > maxtries:
+            return(None)
+    if answer == 'true':
+        return True
+    else:
+        return False
+    
 
 
 ## need more error checking:
@@ -479,6 +528,18 @@ def xafs(inifile=None, **kwargs):
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## decide whether to ask kafka worker to copy INI file to proposal folder
+        ## default is to copy the INI file, automation will usually not copy it
+        ## thus the user's INI file will get copied unless they explicitly ask that it not be
+        if 'copy' in kwargs:
+            if kwargs['copy'] is True:
+                copy_ini = True
+            else:
+                copy_ini = False
+        else:
+            copy_ini = True
+
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
         if verbose: print(verbosebold_msg('time estimate')) 
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
@@ -553,7 +614,7 @@ def xafs(inifile=None, **kwargs):
             if p['usbstick']:
                 fname = re.sub(r'[*:?"<>|/\\]', vfatify, fname)
             datafile = os.path.join(p['folder'], fname)
-            if os.path.isfile(datafile):
+            if file_exists(filename=datafile):
                 report('%s already exists!' % (datafile), 'error')
                 bail = True
         if bail:
@@ -706,6 +767,10 @@ def xafs(inifile=None, **kwargs):
             yield from mv(xs.cam.acquire_time, 0.5)
 
 
+        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
+        ## copy INI file to proposal folder
+        if copy_ini is True:
+            kafka_message({'copy' : True, 'file': inifile, 'target': proposal_base()})}
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -826,7 +891,7 @@ def xafs(inifile=None, **kwargs):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
                 datafile = os.path.join(p['folder'], fname)
-                if os.path.isfile(datafile):
+                if file_exists(filename=datafile):
                     ## shouldn't be able to get here, unless a file
                     ## was written since the scan sequence began....
                     report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')
@@ -1107,7 +1172,7 @@ def xanes(filename=None, step=2):
         filename = f'{el}-{ed}-testXANES'
     comment = 'quick-n-dirty XANES scan'
     yield from xafs(DEFAULT_INI, filename=filename, element=el, sample=comment, prep=comment, comment=comment,
-                    mode='both', edge=ed, experimenters=BMMuser.experimenters, snapshots=False, **params)
+                    mode='both', edge=ed, experimenters=BMMuser.experimenters, snapshots=False, copy=False, **params)
     
 
 def howlong(inifile=None, interactive=True, **kwargs):
