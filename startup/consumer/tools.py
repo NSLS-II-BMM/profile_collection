@@ -108,6 +108,8 @@ def next_index(folder, stub):
     results = sorted(list(filter(r.match, listing)))
     if len(results) == 0:
         answer = 1
-    answer = int(results[-1][-3:]) + 1
+    else:
+        answer = int(results[-1][-3:]) + 1
     rkvs.set('BMM:next_index', answer)
+    print(f"Next index for {stub} in {folder} is {answer}.")
     

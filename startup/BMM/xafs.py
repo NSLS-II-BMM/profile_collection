@@ -16,7 +16,7 @@ from urllib.parse import quote
 
 from BMM.dossier         import DossierTools
 from BMM.functions       import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
-from BMM.functions       import PROMPT, DEFAULT_INI, proposal_base
+from BMM.functions       import PROMPT, DEFAULT_INI, proposal_base, PROMPTNC, animated_prompt
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka           import kafka_message, close_plots
 from BMM.linescans       import rocking_curve
@@ -54,21 +54,42 @@ except ImportError:
     #     return 1
     # return int(results[-1][-3:]) + 1
 
-def next_index(folder, stub):
-    '''Find the next numeric filename extension for a filename stub in folder.'''
-    return 1
+def next_index(folder=None, stub=None, maxtries=15, verbose=False):
+    '''Find the next numeric filename extension for a filename stub in the
+    specified folder in the proposals directory.
+    
+    arguments
+    =========
+    folder: (str)
+      folder in proposal directory to probe [proposal_base()]
 
+    stub: (str)
+      filename stub to check, i.e. filename without extension
+
+    maxtries: (int)
+      maximum number of attempts to read before giving up and returning None
+
+    verbose: (bool)
+      if True, be noisy as we wait for a result
+    '''
+    if folder is None:
+        folder = proposal_base()
+    if stub is None:
+        print(error_msg('No stub supplied to next_index'))
+        return(None)
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:next_index', 'None')
     kafka_message({'next_index': True, 'folder': folder, 'stub': stub})
     answer = rkvs.get('BMM:next_index').decode('utf8')
     count = 0
+    if verbose: print(f"{count = }, {answer = }")
     while answer == 'None':
-        time.sleep(0.25)
+        time.sleep(0.1)
         answer = rkvs.get('BMM:next_index').decode('utf8')
         count += 1
-        if count > 10:
-            break
+        if verbose: print(f"{count = }, {answer = }")
+        if count > maxtries:
+            return(None)
     return int(answer)
 
 
@@ -230,7 +251,7 @@ def scan_metadata(inifile=None, **kwargs):
         found['start'] = True
     try:
         if parameters['start'] == 'next':
-            parameters['start'] = next_index(parameters['folder'],parameters['filename'])
+            parameters['start'] = next_index(stub=parameters['filename'])
         else:
             parameters['start'] = int(parameters['start'])
     except ValueError:
@@ -581,7 +602,9 @@ def xafs(inifile=None, **kwargs):
                 else:
                     print(f'\nPseudo-channel-cut energy = {eave:1f}')
 
-            action = input("\nBegin scan sequence? " + PROMPT)
+            #action = input("\nBegin scan sequence? " + PROMPT)
+            print()
+            action = animated_prompt('Begin scan sequence? ' + PROMPTNC)
             if action != '':
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
                     BMMuser.final_log_entry = False
@@ -842,15 +865,6 @@ def xafs(inifile=None, **kwargs):
                 md['_filename'] = fname
                 md['_user']['instrument'] = this_instrument
 
-                if plotting_mode(p['mode']) == 'xs':
-                    yield from mv(xs.spectra_per_point, 1) 
-                    yield from mv(xs.total_points, len(energy_grid))
-                    hdf5_uid = xs.hdf5.file_name.value
-                if plotting_mode(p['mode']) == 'xs1':
-                    yield from mv(xs1.spectra_per_point, 1) 
-                    yield from mv(xs1.total_points, len(energy_grid))
-                    hdf5_uid = xs1.hdf5.file_name.value
-                
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## compute trajectory
                 energy_trajectory    = cycler(dcm.energy, energy_grid)
@@ -878,7 +892,21 @@ def xafs(inifile=None, **kwargs):
                     #yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
-                    
+
+
+                if plotting_mode(p['mode']) == 'xs':
+                    yield from mv(xs.cam.acquire_time, time_grid[0])
+                    yield from mv(xs.Acquire, 1)
+                    yield from mv(xs.spectra_per_point, 1) 
+                    yield from mv(xs.total_points, len(energy_grid))
+                    hdf5_uid = xs.hdf5.file_name.value
+                if plotting_mode(p['mode']) == 'xs1':
+                    yield from mv(xs1.cam.acquire_time, time_grid[0])
+                    yield from mv(xs1.Acquire, 1)
+                    yield from mv(xs1.spectra_per_point, 1) 
+                    yield from mv(xs1.total_points, len(energy_grid))
+                    hdf5_uid = xs1.hdf5.file_name.value
+                
                 rightnow = metadata_at_this_moment() # see metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
                     if type(rightnow[family]) is dict:
