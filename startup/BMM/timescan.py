@@ -19,7 +19,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from BMM.dossier       import DossierTools
-from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode, PROMPT
+from BMM.functions     import countdown, boxedtext, now, isfloat, inflect, e2l, etok, ktoe, present_options, plotting_mode
+from BMM.functions     import PROMPT, PROMPTNC, animated_prompt
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
@@ -255,7 +256,9 @@ def sead(inifile=None, force=False, **kwargs):
             BMMuser.prompt = False
         if BMMuser.prompt:
             boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(p['folder'])+25)
-            action = input("\nBegin time scan? " + PROMPT)
+            #action = input("\nBegin time scan? " + PROMPT)
+            print()
+            action = animated_prompt('Begin time scan? ' + PROMPTNC)
             if action != '':
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
                     return(yield from null())

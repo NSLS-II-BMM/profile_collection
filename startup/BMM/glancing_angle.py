@@ -22,7 +22,7 @@ from scipy.ndimage import center_of_mass
 from PIL import Image
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import countdown, isfloat, present_options, now, PROMPT
+from BMM.functions      import countdown, isfloat, present_options, now, PROMPT, PROMPTNC, animated_prompt
 from BMM.kafka          import kafka_message
 from BMM.logging        import report
 from BMM.linescans      import linescan
@@ -393,7 +393,9 @@ class GlancingAngle(Device):
         if is_re_worker_active() is True:
             user_ns['BMMuser'].prompt = False
         if user_ns['BMMuser'].prompt:
-            action = input("\nIs the glancing angle stage currently flat? " + PROMPT)
+            #action = input("\nIs the glancing angle stage currently flat? " + PROMPT)
+            print()
+            action = animated_prompt('Is the glancing angle stage currently flat? ' + PROMPTNC)
             if action != '':
                 if action[0].lower() != 'y':
                     return False

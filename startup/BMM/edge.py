@@ -13,7 +13,7 @@ from bluesky.preprocessors import finalize_wrapper
 from BMM.exceptions    import FailedDCMParaException, ArrivedInModeException
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.periodictable import edge_energy, Z_number, element_symbol
-from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT
+from BMM.functions     import boxedtext, countdown, approximate_pitch, PROMPT, PROMPTNC, animated_prompt
 from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
@@ -322,7 +322,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         if is_re_worker_active() is True:
             BMMuser.prompt = False
         if BMMuser.prompt:
-            action = input("\nBegin energy change? " + PROMPT)
+            #action = input("\nBegin energy change? " + PROMPT)
+            print()
+            action = animated_prompt('Begin energy change? ' + PROMPTNC)
             if action != '':
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
                     return(yield from null())

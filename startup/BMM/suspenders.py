@@ -5,7 +5,7 @@ import uuid
 from BMM.user_ns.detectors   import quadem1
 from BMM.user_ns.metadata    import ring
 from BMM.user_ns.instruments import bmps, idps
-from BMM.functions import bold_msg, PROMPT, error_msg, warning_msg, whisper
+from BMM.functions import bold_msg, PROMPT, error_msg, warning_msg, whisper, PROMPTNC, animated_prompt
 from BMM.kafka import kafka_message
 
 from BMM import user_ns as user_ns_module
@@ -138,7 +138,9 @@ def BMM_clear_to_start():
         ok = False
         text += 'Front end shutter (sha) is closed. Solution: search the FOE then do sha.open()\n'
     if user_ns['shb'].state.get() == 1:
-        action = input(bold_msg("\nB shutter is closed.  Open shutter? " + PROMPT)).strip()
+        #action = input(bold_msg("\nB shutter is closed.  Open shutter? " + PROMPT)).strip()
+        print()
+        action = animated_prompt('B shutter is closed.  Open shutter? ' + PROMPTNC).strip()
         openit = False
         if action == '' or action[0].lower() == 'y':
             openit = True

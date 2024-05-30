@@ -221,9 +221,6 @@ class DossierTools():
         print(bold_msg('XAS webcam snapshot'))
         webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.websnap, self.webuid = websnap, webuid
-        #yield from sleep(0.5)
-        #im = Image.fromarray(numpy.array(bmm_catalog[webuid].primary.read()['xascam_image'])[0])
-        #im.save(image_web, 'JPEG')
         kafka_message({'copy': True,
                        'file': file_resource(webuid),
                        'target': os.path.join(proposal_base(), 'snapshots', websnap), })

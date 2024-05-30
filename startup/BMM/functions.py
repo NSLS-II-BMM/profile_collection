@@ -22,6 +22,27 @@ LUSTRE_XAS = os.path.join('/nsls2', 'data3', 'bmm', 'XAS')
 LUSTRE_DATA_ROOT = os.path.join('/nsls2', 'data3', 'bmm', 'proposals')
 
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
+PROMPTNC = "[YES: y then Enter (or just Enter) ● NO: n then Enter] "
+
+
+try:
+    from terminaltexteffects.effects.effect_wipe import Wipe
+    def animated_prompt(prompt_text: str) -> str:
+        effect = Wipe(prompt_text)
+        with effect.terminal_output(end_symbol=" ") as terminal:
+            for frame in effect:
+                terminal.print(frame)
+        return input()
+except:
+    ## fallback if terminaltexteffects is not installed
+    def animated_prompt(prompt_text: str) -> str:
+        ans = input(prompt_text).strip()
+        return ans
+    
+def example_prompt(text='This is an example prompt.  Type something > '):
+    foo = animated_prompt(text)
+    print(f"You answered {foo}")
+    
 
 DEFAULT_INI = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
 

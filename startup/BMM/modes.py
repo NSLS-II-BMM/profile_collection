@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.exceptions    import ChangeModeException
-from BMM.functions     import approximate_pitch, countdown, PROMPT
+from BMM.functions     import approximate_pitch, countdown, PROMPT, PROMPTNC, animated_prompt
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
 from BMM.linescans     import rocking_curve, slit_height
@@ -194,7 +194,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      ######################################################################
 
      if mode == 'B':
-          action = input("You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? " + PROMPT)
+          #action = input("You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? " + PROMPT)
+          print()
+          action = animated_prompt('You are entering Mode B -- focused beam below 6 keV cannot be properly configured for harmonic rejection. Continue? ' + PROMPTNC)
           if action !='' and action[0].lower() != 'y':
                return(yield from null())
 
@@ -214,7 +216,9 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
           description = 'focused at goniometer, >8 keV'
           print('Moving to mode %s (%s)' % (mode, description))
      if prompt:
-          action = input("Begin moving motors? " + PROMPT)
+          #action = input("Begin moving motors? " + PROMPT)
+          print()
+          action = animated_prompt('Begin moving motors? ' + PROMPTNC)
           if action != '':
                if action[0].lower() == 'n' or action[0].lower() == 'q':
                     return(yield from null())
@@ -511,7 +515,9 @@ def change_xtals(xtal=None):
      ######################################################################
 
      report(f'Moving to {xtal} crystals', level='bold', slack=True, rid=True)
-     action = input('Begin moving motors? ' + PROMPT)
+     #action = input('Begin moving motors? ' + PROMPT)
+     print()
+     action = animated_prompt('Begin moving motors? ' + PROMPTNC)
      if action != '':
           if action[0].lower() == 'n' or action[0].lower() == 'q':
                yield from null()

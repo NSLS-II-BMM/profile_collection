@@ -15,7 +15,8 @@ from lmfit.models import SkewedGaussianModel, RectangleModel
 #from databroker.core import SingleRunCache
 import matplotlib
 import matplotlib.pyplot as plt
-from PIL import Image
+
+
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
 
@@ -26,7 +27,7 @@ from BMM.resting_state import resting_state_plan
 from BMM.suspenders    import BMM_clear_to_start, BMM_clear_suspenders
 from BMM.kafka         import kafka_message
 from BMM.logging       import BMM_log_info, BMM_msg_hook
-from BMM.functions     import countdown, clean_img, PROMPT, now
+from BMM.functions     import countdown, clean_img, PROMPT, PROMPTNC, animated_prompt, now
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.workspace     import rkvs
 
@@ -147,7 +148,9 @@ def pluck(suggested_motor=None):
         question = f'\nMove ({motor_name}, {motor_name2}) to ({position:.3f}, {position2:.3f}) ? '
         
     
-    action = input(question + PROMPT)
+    #action = input(question + PROMPT)
+    print()
+    action = animated_prompt(question + PROMPTNC)
     if action != '':
         if action[0].lower() == 'n' or action[0].lower() == 'q':
             print('Skipping...')
@@ -251,7 +254,9 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                 yield from mv(motor, top)
 
             else:
-                action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+                #action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+                print()
+                action = animated_prompt('Pluck motor position from the plot? ' + PROMPTNC)
                 if action != '':
                     if action[0].lower() == 'n' or action[0].lower() == 'q':
                         return(yield from null())
@@ -420,7 +425,9 @@ def find_slot(shape='slot'):
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     if BMMuser.prompt:
-        action = input("\nIs the beam currently on a slot in the outer ring? " + PROMPT)
+        #action = input("\nIs the beam currently on a slot in the outer ring? " + PROMPT)
+        print()
+        action = animated_prompt('Is the beam currently on a slot in the outer ring? ' + PROMPTNC)
         if action != '':
             if action[0].lower() == 'n' or action[0].lower() == 'q':
                 return(yield from null())
@@ -841,7 +848,9 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         BMM_log_info('linescan: %s\tuid = %s, scan_id = %d' %
                      (line1, uid, user_ns['db'][-1].start['scan_id']))
         if dopluck is True:
-            action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+            #action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+            print()
+            action = animated_prompt('Pluck motor position from the plot? ' + PROMPTNC)
             if action != '':
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
                     return(yield from null())

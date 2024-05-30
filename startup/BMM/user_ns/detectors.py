@@ -1,6 +1,7 @@
 
 import os, json
 from BMM.functions import run_report, whisper
+from BMM.user_ns.base import RE
 from BMM.user_ns.bmm import BMMuser
 from ophyd import EpicsSignal
 from ophyd.sim import noisy_det
@@ -204,7 +205,7 @@ except:
 ####################################################
 
 run_report('\t'+'cameras')
-from BMM.camera_device import BMMSnapshot, snap
+from BMM.camera_device import BMMSnapshot, snap, AxisCaprotoCam
 from BMM.db import file_resource, show_snapshot
 
 
@@ -212,8 +213,10 @@ from BMM.db import file_resource, show_snapshot
 # of the camera device will be reset when the user configuration
 # happens, so this initial configuration is harmless and transitory
 temp_root = '/nsls2/data3/bmm/XAS/bucket'
-xascam = BMMSnapshot(root=temp_root, which='XAS',    name='xascam')
-xrdcam = BMMSnapshot(root=temp_root, which='XRD',    name='xrdcam')
+xascam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:6}:", name="webcam-1",
+                        root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
+xrdcam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:5}:", name="webcam-2",
+                        root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 anacam = BMMSnapshot(root=temp_root, which='analog', name='anacam')
 anacam.image.shape = (480, 640, 3)
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
