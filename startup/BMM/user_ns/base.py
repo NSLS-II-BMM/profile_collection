@@ -43,7 +43,21 @@ tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm
 
 def post_document(name, doc):
     #tz = time.monotonic()
-    tiled_writing_client.post_document(name, doc)
+    ATTEMPTS = 20
+    error = None
+    for attempt in range(ATTEMPTS):
+        try:
+            tiled_writing_client.post_document(name, doc)
+        except Exception as exc:
+            print("Document saving failure:", repr(exc))
+            error = exc
+        else:
+            break
+        time.sleep(2)
+    else:
+        # out of attempts
+        raise error
+
     #print(f"post_document timing: {time.monotonic() - tz:.3}\n")
     
 RE.subscribe(post_document)
