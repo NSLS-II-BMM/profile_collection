@@ -174,7 +174,7 @@ class DossierTools():
         md['_pccenergy'] = f'{dcm.energy.position:.2f}'
         md['_user'] = dict()
         md['_user']['startdate'] = BMMuser.date
-        if use_4element and plotting_mode(mode) == 'xs':
+        if use_4element and plotting_mode(mode) in ('xs', 'fluo+yield'):
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)

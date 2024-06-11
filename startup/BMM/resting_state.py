@@ -20,7 +20,7 @@ from BMM.workspace  import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.dwelltime   import _locked_dwell_time
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_iy
 from BMM.user_ns.detectors   import quadem1, ION_CHAMBERS
 from BMM.user_ns.instruments import xafs_wheel
 
@@ -42,8 +42,11 @@ def resting_state():
     - restaing state values set in redis
     _ kafka sent resting state message
     '''
-    
-    BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
+    BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument = True, False, ''
+    if with_iy is True:
+        quadem1.Iy.kind = 'hinted'
+    else:
+        quadem1.Iy.kind = 'omitted'
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -76,7 +79,10 @@ def resting_state_plan():
     #BMMuser.prompt = True
     #BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     #yield from quadem1.on_plan()
-    quadem1.Iy.kind = 'omitted'
+    if with_iy is True:
+        quadem1.Iy.kind = 'hinted'
+    else:
+        quadem1.Iy.kind = 'omitted'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     for electrometer in ION_CHAMBERS:
@@ -107,7 +113,11 @@ def end_of_macro():
     - user prompt set to True. macro dry-run set to False, RE.msg_hook set to BMM_msg_hook
     '''
     
-    BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
+    BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument = True, False, ''
+    if with_iy is True:
+        quadem1.Iy.kind = 'hinted'
+    else:
+        quadem1.Iy.kind = 'omitted'
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False

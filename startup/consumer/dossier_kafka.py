@@ -899,7 +899,7 @@ class XASFile():
             text = 'I0  --  $5'
         return text
     
-    def to_xdi(self, catalog=None, uid=None, filename=None, logger=None):
+    def to_xdi(self, catalog=None, uid=None, filename=None, logger=None, include_yield=False):
         '''Write an XDI-style file for an XAS scan.
 
         '''
@@ -935,6 +935,11 @@ class XASFile():
         ## Column.N header lines
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
         column_labels = ['energy', 'requested_energy', 'measurement_time', 'xmu', 'I0', 'It', 'Ir']
+        if 'yield' in catalog[uid].metadata['start']['plan_name'] or include_yield is True:
+            handle.write( '# Column.8: Iy nA\n')
+            column_list.append('Iy')
+            column_labels.append('Iy')
+
         
         el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
         nchan = 0
@@ -952,9 +957,14 @@ class XASFile():
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             nchan = 7
         if nchan > 0:
-            for i in range(1, nchan+1):
-                handle.write(f'# Column.{i+7}: {el}{i}\n')
+            if 'yield' in catalog[uid].metadata['start']['plan_name'] or include_yield is True:
+                for i in range(1, nchan+1):
+                    handle.write(f'# Column.{i+8}: {el}{i}\n')
+            else:
+                for i in range(1, nchan+1):
+                    handle.write(f'# Column.{i+7}: {el}{i}\n')
 
+                    
         ## prepare data table and insert xmu column
         xa = catalog[uid].primary.read(column_list)
         p = xa.to_pandas()
@@ -995,10 +1005,6 @@ class XASFile():
         #post_to_slack(f'wrote XAS data to {fname}')
 
 
-
-
-
-        
 
 class SEADFile():
 
@@ -1191,6 +1197,7 @@ class RasterFiles():
             det_name = 'noisy_det'
             z = numpy.array(datatable['noisy_det'])
         else:
+            det_name = catalog[uid].metadata['start']['plan_name'].split()[-1]
             z = numpy.zeros(len(slow))
             
         ## save map in xlsx format

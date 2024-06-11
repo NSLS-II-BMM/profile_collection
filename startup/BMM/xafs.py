@@ -560,7 +560,7 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if plotting_mode(p['mode']) == 'xs' and use_4element is True:
+        if plotting_mode(p['mode']) in ('xs', 'fluo+yield') and use_4element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
@@ -608,6 +608,24 @@ def xafs(inifile=None, **kwargs):
 
         bail = False
         cnt = 0
+
+        ## this is a crude hack .. FIXME!
+        if p['start'] is None:
+            p['start'] = 1
+            report(":bangbang: p['start'] found as None, setting to 1", slack=True)
+        if p['nscans'] is None:
+            if 'foil' in p['filename']:
+                p['nscans'] = 1
+            elif BMMuser.element == 'Nb':
+                p['nscans'] = 2
+            elif BMMuser.element == 'Sc':
+                p['nscans'] = 5
+            else:
+                p['nscans'] = 2
+            report(f":bangbang: p['nscans'] found as None, setting to {p['nscans']}", slack=True)
+
+
+        
         for i in range(p['start'], p['start']+p['nscans'], 1):
             cnt += 1
             fname = "%s.%3.3d" % (p['filename'], i)
@@ -724,6 +742,8 @@ def xafs(inifile=None, **kwargs):
         ## measure XRF spectrum at Eave
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
             yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
+        if plotting_mode(p['mode']) == 'fluo+yield' and BMMuser.lims is True:
+            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -761,7 +781,7 @@ def xafs(inifile=None, **kwargs):
 
         if 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-        elif 'xs1' in p['mode']:
+        if 'xs1' in p['mode']:
             yield from mv(xs1.cam.acquire_time, 0.5)
         elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
@@ -770,7 +790,7 @@ def xafs(inifile=None, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## copy INI file to proposal folder
         if copy_ini is True:
-            kafka_message({'copy' : True, 'file': inifile, 'target': proposal_base()})}
+            kafka_message({'copy' : True, 'file': inifile, 'target': proposal_base()})
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -789,7 +809,7 @@ def xafs(inifile=None, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## make sure XSpress3 IOC knows how many data points to measure
-            if plotting_mode(p['mode']) == 'xs':
+            if plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
                 yield from mv(xs.total_points, len(energy_grid))
             if plotting_mode(p['mode']) == 'xs1':
                 yield from mv(xs1.total_points, len(energy_grid))
@@ -866,13 +886,18 @@ def xafs(inifile=None, **kwargs):
             report(f'"{p["filename"]}", {p["element"]} {p["edge"]} edge, {inflect("scans", p["nscans"])}',
                    level='bold', slack=True, rid=rid)
             cnt = 0
+            if any('quadem' in x.name for x in ION_CHAMBERS):
+                with_yield = True
+            else:
+                with_yield = False
             kafka_message({'xafs_sequence' : 'start',
                            'element'       : p["element"],
                            'edge'          : p["edge"],
                            'folder'        : BMMuser.folder,
                            'workspace'     : BMMuser.workspace,
                            'repetitions'   : p["nscans"],
-                           'mode'          : p['mode']})
+                           'mode'          : p['mode'],
+                           'with_yield'    : with_yield })
             refmat = 'none'
             if p["element"] in user_ns['xafs_ref'].mapping:
                 refmat = user_ns['xafs_ref'].mapping[p["element"]][3]
@@ -959,15 +984,15 @@ def xafs(inifile=None, **kwargs):
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
 
 
-                if plotting_mode(p['mode']) == 'xs':
-                    yield from mv(xs.cam.acquire_time, time_grid[0])
-                    yield from mv(xs.Acquire, 1)
+                if plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
+                    #yield from mv(xs.cam.acquire_time, time_grid[0])
+                    #yield from mv(xs.Acquire, 1)
                     yield from mv(xs.spectra_per_point, 1) 
                     yield from mv(xs.total_points, len(energy_grid))
                     hdf5_uid = xs.hdf5.file_name.value
                 if plotting_mode(p['mode']) == 'xs1':
-                    yield from mv(xs1.cam.acquire_time, time_grid[0])
-                    yield from mv(xs1.Acquire, 1)
+                    #yield from mv(xs1.cam.acquire_time, time_grid[0])
+                    #yield from mv(xs1.Acquire, 1)
                     yield from mv(xs1.spectra_per_point, 1) 
                     yield from mv(xs1.total_points, len(energy_grid))
                     hdf5_uid = xs1.hdf5.file_name.value
@@ -987,7 +1012,7 @@ def xafs(inifile=None, **kwargs):
                     md['_kind'] = '333'
                 if plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
-                elif plotting_mode(p['mode']) == 'xs':
+                elif plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
@@ -1008,12 +1033,11 @@ def xafs(inifile=None, **kwargs):
                               'count': cnt, }
                 kafka_message({'xafsscan': 'next',
                                'count': cnt })
-                if any(md in p['mode'] for md in ('trans', 'ref', 'yield', 'test')):
+                if any(md in p['mode'] for md in ('trans', 'ref', 'test')):
                     uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 elif plotting_mode(p['mode']) == 'xs':
-                    
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
@@ -1021,13 +1045,22 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([*ION_CHAMBERS, xs1], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs xs1', **more_kafka }})
+                elif plotting_mode(p['mode']) == 'fluo+yield':
+                    uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs yield + fluorescence',
+                                                 'BMM_kafka': { 'hint':  'xafs yield', **more_kafka }})
+                elif plotting_mode(p['mode']) == 'yield':
+                    uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
+                                                 'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
+                
                 else:
                     print(error_msg('No valid plotting mode provided!'))
 
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
                 
-                if 'xs' in plotting_mode(p['mode']):
+                if plotting_mode(p['mode']) in ('xs', 'xs1', 'fluo+yield'):
                     hdf5_uid = xs.hdf5.file_name.value
                     
                 uidlist.append(uid)

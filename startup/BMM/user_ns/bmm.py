@@ -53,7 +53,6 @@ end_experiment   = BMMuser.end_experiment
 import atexit, os
 
 def teardown():
-    fname = os.path.join(BMMuser.workspace, '.BMMuser')
     print("Shutting down: ", end=' ')
     BMMuser.state_to_redis(filename=os.path.join(BMMuser.workspace, '.BMMuser'), prefix='')
     from BMM.kafka import producer

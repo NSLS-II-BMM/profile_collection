@@ -400,7 +400,7 @@ class XAFSScan():
 
 
         ## 2x2 grid if fluorescence
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield'):
             self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
             self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
@@ -444,19 +444,29 @@ class XAFSScan():
         self.i0.set_xlabel('energy (eV)')
         self.i0.set_title('I0')
 
-        #self.line_ref, = self.ref.plot([],[], label='reference')
-        self.ref.set_ylabel('reference $\mu(E)$')
-        self.ref.set_xlabel('energy (eV)')
-        self.ref.set_title(f'reference: {self.reference_material}')
-
+        if self.mode in ('fluo+yield'):
+            #self.line_ref, = self.ref.plot([],[], label='reference')
+            self.ref.set_ylabel('electron yield $\mu(E)$')
+            self.ref.set_xlabel('energy (eV)')
+            self.ref.set_title(f'electron yield')
+        else:
+            #self.line_ref, = self.ref.plot([],[], label='reference')
+            self.ref.set_ylabel('reference $\mu(E)$')
+            self.ref.set_xlabel('energy (eV)')
+            self.ref.set_title(f'reference: {self.reference_material}')
+            
         ## common appearance
         for ax in self.axis_list:
             ax.grid(which='major', axis='both')
             ax.set_facecolor((0.95, 0.95, 0.95))
         
         ## do all that for a fluorescence panel
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield'):
             self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
+            self.muf.set_xlabel('energy (eV)')
+            self.muf.set_title(f'data: {self.sample}')
+        elif self.mode in ('yield', 'eyield'):
+            self.muf.set_ylabel('$\mu(E)$ (electron yield)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
 
@@ -481,7 +491,7 @@ class XAFSScan():
                 ax.legend(loc='best', shadow=True)
             else:
                 ax.legend.remove()
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
             if self.count < 16:
                 self.muf.legend(loc='best', shadow=True)
@@ -528,19 +538,25 @@ class XAFSScan():
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
         else:                   # normal quadem transmission
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
-        self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
-
+        if self.mode in ('fluo+yield'):
+            self.refer.append(kwargs['data']['Iy']/kwargs['data']['I0'])
+        else:
+            self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
+            
         ## push the updated data arrays to the various lines
         self.line_mut.set_data(self.energy, self.trans)
         self.line_i0.set_data(self.energy, self.i0sig)
         self.line_ref.set_data(self.energy, self.refer)
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield'):
             if self.mode == 'xs1':
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
             else:
                 self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4])/kwargs['data']['I0'])
+            self.line_muf.set_data(self.energy, self.fluor)
+        if self.mode in ('yield', 'eyield'):
+            self.fluor.append( kwargs['data']['Iy'] / kwargs['data']['I0'] )
             self.line_muf.set_data(self.energy, self.fluor)
 
         ## rescale everything
@@ -810,6 +826,7 @@ class AreaScan():
         self.fast_initial = kwargs['fast_initial']
 
         self.energy       = kwargs['energy']
+        self.element      = kwargs['element']
 
         self.slow = self.slow_initial + numpy.linspace(self.slow_start, self.slow_stop, self.slow_steps)
         self.fast = self.fast_initial + numpy.linspace(self.fast_start, self.fast_stop, self.fast_steps)

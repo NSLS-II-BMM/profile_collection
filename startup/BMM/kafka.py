@@ -17,6 +17,9 @@ from bluesky_kafka.produce import BasicProducer
 
 from BMM.functions import proposal_base, warning_msg
 
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
 kafka_config = _read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")
 
 producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
@@ -27,6 +30,12 @@ producer = BasicProducer(bootstrap_servers=kafka_config['bootstrap_servers'],
 
 
 def kafka_message(message):
+    '''Broadcast a message to kafka on the private BMM channel.
+
+    For all BMM workers, the message is a dict.  See worker
+    documentation for details.
+
+    '''
     producer.produce(['bmm', message])
 
 
@@ -48,11 +57,11 @@ def preserve(fname, target=None):
     '''
     if target is None:
         target = proposal_base()
-    fullname = os.path.join(BMMuser.workspace, fname)
+    fullname = os.path.join(user_ns['BMMuser'].workspace, fname)
     if os.path.isfile(fullname):
         print(f'Copying {fname} to {target}')
         kafka_message({'copy': True,
-                       'file': fname,
+                       'file': fullname,
                        'target': target})
     else:
         print(warning_msg(f"There is not a file called {fname} in {BMMuser.workspace}."))

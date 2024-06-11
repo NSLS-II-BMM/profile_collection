@@ -181,7 +181,11 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 logger.info(f'touched {target}')
                 
             elif 'xasxdi' in message:
-                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)
+                if 'include_yield' in message:
+                    include_yield = True
+                else:
+                    include_yield = False
+                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger, include_yield=include_yield)
                     
             elif 'seadxdi' in message:
                 sead.to_xdi(catalog=bmm_catalog, uid=message['uid'], filename=message['filename'], logger=logger)

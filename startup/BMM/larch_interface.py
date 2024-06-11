@@ -183,6 +183,11 @@ class Pandrosus():
         # CAUTION!!  This only works when BMMuser is correctly set.  This is unlikely to work #
         # on data in past history.  See new '_dtc' element of start document.  9 Sep 2020     #
         #######################################################################################
+        elif mode in ('yield', 'fluo+yield'):
+            self.group.mu = numpy.array(table['Iy']/table['I0'])
+            self.group.i0 = numpy.array(table['I0'])
+            self.group.signal = numpy.array(table['Iy'])
+
         elif any(md in mode for md in ('fluo', 'flou', 'both')):
             columns = start['XDI']['_dtc']
             self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
@@ -215,11 +220,6 @@ class Pandrosus():
             self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
             self.group.i0 = numpy.array(table['It'])
             self.group.signal = numpy.array(table['Ir'])
-
-        elif mode == 'yield':
-            self.group.mu = numpy.array(table['Iy']/table['I0'])
-            self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table['Iy'])
 
         else:
             self.group.mu = numpy.array(numpy.log(table['I0']/table['It']))

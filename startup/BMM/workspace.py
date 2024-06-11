@@ -378,6 +378,6 @@ def check_instruments(linkam, lakeshore, xs):
     check_lakeshore(lakeshore)
     check_biologic()
     check_electrometers()
-    check_xspress3(xs)
+    #check_xspress3(xs)
     check_diode()
     

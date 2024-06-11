@@ -299,11 +299,11 @@ def raster(inifile=None, **kwargs):
 
         close_plots()
         rid = str(uuid.uuid4())[:8]
-        kafka_message({'dossier': 'start'})
-        kafka_message({'dossier' : 'set', 'rid': rid})
         report(f'== starting raster scan', level='bold', slack=True, rid=rid)
 
         p, f = read_ini(inifile, **kwargs)
+        kafka_message({'dossier': 'start', 'stub': p['filename']})
+        kafka_message({'dossier' : 'set', 'rid': rid})
 
         fast  = user_ns[p['fast_motor']]
         slow  = user_ns[p['slow_motor']]

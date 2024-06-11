@@ -88,6 +88,7 @@ quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
 
 if with_iy is True:
     ION_CHAMBERS.append(quadem1)
+    quadem1.Iy.kind, quadem1.Iy.name = 'hinted', 'Iy'
 
 ## need to do something like this:
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7

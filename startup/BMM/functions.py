@@ -24,15 +24,26 @@ LUSTRE_DATA_ROOT = os.path.join('/nsls2', 'data3', 'bmm', 'proposals')
 PROMPT = f"[{termcolor.colored('yes', attrs=['underline'])}: y then Enter (or just Enter) ● {termcolor.colored('no', attrs=['underline'])}: n then Enter] "
 PROMPTNC = "[YES: y then Enter (or just Enter) ● NO: n then Enter] "
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 
 try:
     from terminaltexteffects.effects.effect_wipe import Wipe
     def animated_prompt(prompt_text: str) -> str:
+        #if is_re_worker_active is False:
         effect = Wipe(prompt_text)
         with effect.terminal_output(end_symbol=" ") as terminal:
             for frame in effect:
                 terminal.print(frame)
         return input()
+        #else:
+        #    ans = input(prompt_text).strip()
+        #    return ans
 except:
     ## fallback if terminaltexteffects is not installed
     def animated_prompt(prompt_text: str) -> str:
@@ -254,7 +265,9 @@ def present_options(suffix='xlsx'):
 
 def plotting_mode(mode):
     mode = mode.lower()
-    if user_ns['with_xspress3'] and mode == 'xs1':
+    if mode == 'fluo+yield':
+        return 'fluo+yield'
+    elif user_ns['with_xspress3'] and mode == 'xs1':
         return 'xs1'
     elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
         return 'xs'

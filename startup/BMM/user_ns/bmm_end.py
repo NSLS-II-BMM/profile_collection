@@ -37,7 +37,7 @@ run_report('\t'+'linescan, rocking curve, slit_height, find_slot, pluck')
 from BMM.linescans import linescan, pluck, rocking_curve, slit_height, ls2dat, find_slot, rectangle_scan
 
 run_report('\t'+'kafka')
-from BMM.kafka import close_line_plots, close_plots, kafka_message
+from BMM.kafka import close_line_plots, close_plots, kafka_message, preserve
 
 run_report('\t'+'support for wafer samples')
 from BMM.wafer import Wafer
@@ -490,6 +490,7 @@ check_for_synaxis()
 examine_diagnostics()
 from BMM.workspace import check_instruments
 check_instruments(user_ns['linkam'], user_ns['lakeshore'], user_ns['xs'])
+run_report('\t\t'+'data folders and logging')
 resting_state()
 
 try:
