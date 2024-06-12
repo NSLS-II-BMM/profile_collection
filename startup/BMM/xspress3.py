@@ -198,6 +198,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                resource_kwargs={},
     )
 
+    acquire_busy = Cpt(EpicsSignal, "AcquireBusy")
+
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if configuration_attrs is None:
@@ -218,6 +220,24 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                       'Zn', 'Ge', 'As', 'Br',
                       'Nb', 'Mo', None, 'OCR']
         self.restart()
+
+    def new_acquire_status(self):
+        """
+        Create and return a Status object that will be marked
+        as `finished` when acquisition is done (see _acquire_changed). The
+        intention is that this Status will be used by another object,
+        for example a RunEngine.
+
+        This method is intended only to be used by the trigger method.
+
+        Override this method if a more complex status object is needed.
+
+        Returns
+        -------
+        DeviceStatus
+        """
+
+        return DeviceStatus(self, settle_time=0.05)
 
     # JL: trying to use Xspress3Trigger.trigger
     #     which is almost identical to this
