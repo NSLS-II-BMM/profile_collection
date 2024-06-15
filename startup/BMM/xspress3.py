@@ -237,7 +237,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         DeviceStatus
         """
 
-        return DeviceStatus(self, settle_time=0.05)
+        return DeviceStatus(self, settle_time=0.075)
 
     # JL: trying to use Xspress3Trigger.trigger
     #     which is almost identical to this

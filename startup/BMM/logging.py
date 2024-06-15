@@ -220,7 +220,7 @@ def report(text, level=None, slack=False, rid=None):
     else:
         print(screen)
     if BMMuser.use_slack and slack:
-        post_to_slack(text)
+        #post_to_slack(text)
         kafka_message({'echoslack': True,
                        'text': text,
                        'img': None,

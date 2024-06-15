@@ -33,7 +33,7 @@ except:
 
 
 from tools import echo_slack, next_index, file_exists
-from slack import img_to_slack
+from slack import img_to_slack, post_to_slack
 
 # legible screen output
 from pygments import highlight
@@ -153,6 +153,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
             elif 'echoslack' in message:
                 if 'img' not in message or  message['img'] is None:
                     print(f'sending message "{message["text"]}" to slack')
+                    post_to_slack(message['text'])
                     if 'icon' not in message: message['icon'] = 'message'
                     if 'rid'  not in message: message['rid']  = None
                     echo_slack(text = message['text'],

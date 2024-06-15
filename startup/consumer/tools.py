@@ -4,7 +4,6 @@ import redis
 from redis_json_dict import RedisJSONDict
 redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
 
-
 DATA_SECURITY = True
 
 def experiment_folder(catalog, uid):

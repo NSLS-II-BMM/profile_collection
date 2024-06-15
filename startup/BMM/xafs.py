@@ -606,26 +606,29 @@ def xafs(inifile=None, **kwargs):
             #     return
 
 
-        bail = False
-        cnt = 0
-
-        ## this is a crude hack .. FIXME!
-        if p['start'] is None:
-            p['start'] = 1
-            report(":bangbang: p['start'] found as None, setting to 1", slack=True)
+        ## sometimes the kafka-redis-while loop in next_index() fails, give it another go
+        nicount = 0
+        while p['start'] is None:
+            report(f":bangbang: p['start']=next_index() returned None, retrying ({nicount})", slack=True)
+            time.sleep(0.5)
+            p['start'] = next_index(stub=p['filename'])
+            nicount += 1
+            if nicount > 5:
+                p['start'] = 1
+                report(":bangbang: could not figure out starting index, setting to 1 :shrug:", slack=True)
+                break
+        ## probably not necessary....
         if p['nscans'] is None:
             if 'foil' in p['filename']:
                 p['nscans'] = 1
-            elif BMMuser.element == 'Nb':
-                p['nscans'] = 2
-            elif BMMuser.element == 'Sc':
-                p['nscans'] = 5
             else:
                 p['nscans'] = 2
             report(f":bangbang: p['nscans'] found as None, setting to {p['nscans']}", slack=True)
 
 
         
+        bail = False
+        cnt = 0
         for i in range(p['start'], p['start']+p['nscans'], 1):
             cnt += 1
             fname = "%s.%3.3d" % (p['filename'], i)
