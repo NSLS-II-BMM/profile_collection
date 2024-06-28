@@ -236,7 +236,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## verify output file name won't be overwritten
         outfile = f"{p['filename']}.{int(p['start']):03d}"
-        if file_exists(filename=outfile):
+        if file_exists(filename=outfile, number=False):
             print(error_msg('%s already exists!  Bailing out....' % outfile))
             return(yield from null())
 

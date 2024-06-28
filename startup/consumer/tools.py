@@ -113,16 +113,22 @@ def next_index(folder, stub):
     print(f"Next index for {stub} in {folder} is {answer}.")
 
 
-def file_exists(folder, filename, start, stop):
+def file_exists(folder, filename, start, stop, number):
     '''Return true is a file of the supplied name exists in the supplied folder.'''
     target = os.path.join(folder, filename) 
     found, text = False, []
-    for i in range(start, stop+1, 1):
-        this = f'{target}.{i:03d}'
-        #print(this)
-        if os.path.isfile(this):
+    if number is True:
+        for i in range(start, stop+1, 1):
+            this = f'{target}.{i:03d}'
+            #print(this)
+            if os.path.isfile(this):
+                found = True
+                text.append(f'{filename}.{i:03d}')
+    else:
+        if os.path.isfile(target):
             found = True
-            text.append(f'{filename}.{i:03d}')
+            text.append(filename)
+        
 
     if found is True:
         rkvs.set('BMM:file_exists', 'true')

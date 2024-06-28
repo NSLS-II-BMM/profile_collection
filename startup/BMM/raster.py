@@ -331,9 +331,9 @@ def raster(inifile=None, **kwargs):
             pngout  = f"{p['filename']}.png"
             basename = p['filename']
             seqnumber = 1
-            if file_exists(filename=pngout):
+            if file_exists(filename=pngout, number=False):
                 seqnumber = 2
-                while file_exists(filename=os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")):
+                while file_exists(filename=os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png"), number=False):
                     seqnumber += 1
                 basename = "%s-%2.2d" % (p['filename'],seqnumber)
                 pngout = os.path.join(BMMuser.folder, 'maps', f"{p['filename']}-{seqnumber:02d}.png")

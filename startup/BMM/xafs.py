@@ -93,7 +93,7 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
     return int(answer)
 
 
-def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, verbose=False):
+def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, number=True, verbose=False):
     '''Determine if a file of the specified filename exists in specified
     folder in the proposals directory.
 
@@ -110,8 +110,17 @@ def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, verbos
     filename: (str)
       filename to check, i.e. filename with extension but without path
 
+    start: (int)
+      start of extension number range to check
+
+    stop: (int)
+      end of extension number range to check
+
     maxtries: (int)
       maximum number of attempts to read before giving up and returning None
+
+    number: (bool)
+      if True, search for numbered extensions.  if False, search for filename as specified
 
     verbose: (bool)
       if True, be noisy as we wait for a result
@@ -124,7 +133,7 @@ def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, verbos
         return(None)
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:file_exists', 'None')
-    kafka_message({'file_exists': True, 'folder': folder, 'filename': filename, 'start': start, 'stop': stop})
+    kafka_message({'file_exists': True, 'folder': folder, 'filename': filename, 'start': start, 'stop': stop, 'number': number})
     answer = rkvs.get('BMM:file_exists').decode('utf8')
     count = 0
     if verbose: print(f"{count = }, {answer = }")
