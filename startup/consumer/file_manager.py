@@ -201,7 +201,8 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 next_index(message['folder'], message['stub'])
 
             elif 'file_exists' in message:
-                file_exists(message['folder'], message['filename'])
+                #pprint.pprint(message)
+                file_exists(message['folder'], message['filename'], message['start'], message['stop'])
 
                 
     kafka_config = nslsii.kafka_utils._read_bluesky_kafka_config_file(config_file_path="/etc/bluesky/kafka.yml")

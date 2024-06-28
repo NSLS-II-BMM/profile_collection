@@ -93,7 +93,7 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
     return int(answer)
 
 
-def file_exists(folder=None, filename=None, maxtries=15, verbose=False):
+def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, verbose=False):
     '''Determine if a file of the specified filename exists in specified
     folder in the proposals directory.
 
@@ -124,7 +124,7 @@ def file_exists(folder=None, filename=None, maxtries=15, verbose=False):
         return(None)
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:file_exists', 'None')
-    kafka_message({'file_exists': True, 'folder': folder, 'filename': filename})
+    kafka_message({'file_exists': True, 'folder': folder, 'filename': filename, 'start': start, 'stop': stop})
     answer = rkvs.get('BMM:file_exists').decode('utf8')
     count = 0
     if verbose: print(f"{count = }, {answer = }")
@@ -629,16 +629,14 @@ def xafs(inifile=None, **kwargs):
         
         bail = False
         cnt = 0
-        for i in range(p['start'], p['start']+p['nscans'], 1):
-            cnt += 1
-            fname = "%s.%3.3d" % (p['filename'], i)
-            if p['usbstick']:
-                fname = re.sub(r'[*:?"<>|/\\]', vfatify, fname)
-            datafile = os.path.join(p['folder'], fname)
-            if file_exists(filename=datafile):
-                report('%s already exists!' % (datafile), 'error')
-                bail = True
-        if bail:
+        #for i in range(p['start'], p['start']+p['nscans'], 1):
+        cnt += 1
+        fname = "%s.%3.3d" % (p['filename'], i)
+        if p['usbstick']:
+            fname = re.sub(r'[*:?"<>|/\\]', vfatify, fname)
+        datafile = os.path.join(p['folder'], fname)
+        if file_exists(filename=fname, start=p['start'], stop=p['start']+p['nscans']):
+            report(f'{datafile} in range {p["start"]} - {p["start"]+p["nscans"]}: file name conflict!', 'error')
             report('\nOne or more output files already exist!  Quitting scan sequence....\n', 'error')
             BMMuser.final_log_entry = False
             yield from null()
@@ -919,7 +917,7 @@ def xafs(inifile=None, **kwargs):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
                 datafile = os.path.join(p['folder'], fname)
-                if file_exists(filename=datafile):
+                if file_exists(filename=fname, start=i, stop=i):
                     ## shouldn't be able to get here, unless a file
                     ## was written since the scan sequence began....
                     report('%s already exists! (How did that happen?) Bailing out....' % (datafile), 'error')

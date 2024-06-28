@@ -249,7 +249,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr1 {} '.format(t))
         self._status = DeviceStatus(self)
-        self.cam.acquire.put(1, wait=False)
+        self.cam.acquire.put(1, wait=False, use_complete=True)
         trigger_time = ttime.time()
         #t = '{:%H:%M:%S.%f}'.format(datetime.datetime.now())
         #print('tr2 {} '.format(t))
