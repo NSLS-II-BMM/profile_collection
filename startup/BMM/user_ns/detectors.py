@@ -213,29 +213,37 @@ from BMM.db import file_resource, show_snapshot
 # this root location is deprecated for the camera devices.  The _root
 # of the camera device will be reset when the user configuration
 # happens, so this initial configuration is harmless and transitory
+run_report('\t\t'+'caproto IOCs for webcams')
 temp_root = '/nsls2/data3/bmm/XAS/bucket'
 xascam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:6}:", name="webcam-1",
                         root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 xrdcam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:5}:", name="webcam-2",
                         root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
+run_report('\t\t'+'initializing analog camera')
 anacam = BMMSnapshot(root=temp_root, which='analog', name='anacam')
 anacam.image.shape = (480, 640, 3)
 anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
 anacam.x, anacam.y = 640, 480    # width, height
-run_report('\t\t'+'initializing analog camera')
 
 
 
+run_report('\t\t'+'USB cameras')
 from BMM.usb_camera import CAMERA
 if with_cam1 is True:
-    usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usb1')
-    usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam1')
+    usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usbcam-1')
+    usb1.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
+    usb1.jpeg_autosave.put(1)
+    usb1.jpeg_create_dir_depth.put(-3)
+    usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-1')
 else:
     usb1, usbcam1 = None, None
 
 if with_cam2 is True:
-    usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usb2')
-    usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam2')
+    usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usbcam-2')
+    usb2.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
+    usb2.jpeg_autosave.put(1)
+    usb2.jpeg_create_dir_depth.put(-3)
+    usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-2')
     usbcam2.image.shape = (600, 800, 3)
 else:
     usb2, usbcam2 = None, None

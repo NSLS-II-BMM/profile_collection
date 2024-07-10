@@ -243,6 +243,7 @@ class BMMSnapshot(Device):
         folder = os.path.join(BMMuser.workspace, 'snapshots')
         if not os.path.isdir(folder):
             os.makedirs(folder)
+        #folder = f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/{self.name}/{datetime.datetime.now().strftime('%Y/%m/%d')}"
         return folder
             
     def stage(self):
@@ -285,7 +286,7 @@ class BMMSnapshot(Device):
                 annotation = 'NIST BMM (NSLS-II 06BM)      ' + self._annotation_string + '      ' + now()
                 annotate_image(filename, annotation)
             elif self._SPEC == "BMM_USBCAM":
-                if self.name == 'usbcam1':
+                if self.name == 'usbcam-1':
                     u=user_ns['usb1'].image.array_data.get().reshape((1080,1920,3))
                 else: 
                     u=user_ns['usb2'].image.array_data.get().reshape((600,800,3))

@@ -7,6 +7,9 @@ from BMM.larch_interface import Pandrosus, Kekropidai, plt
 from slack import img_to_slack, post_to_slack
 from tools import experiment_folder
 
+import redis
+rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
+
 class XAFSSequence():
     '''Class for managing the specific plotting chore required for an
     ongoing sequence of XAFS scans.  The concept is that the xafs()
@@ -117,6 +120,15 @@ class XAFSSequence():
         ok = self.merge()
         if ok == 1:
             if get_backend().lower() == 'agg':
+                ## dossier should have already been written, thus the
+                ## sequence number (i.e. the number of times a
+                ## sequence of repetitions using the same file) should
+                ## already be known.  This will align the sequence
+                ## numbering of the live plot and triplot images with
+                ## the sequence numbering of the dossier itself
+                sequnumber = rkvs.get('BMM:dossier:seqnumber').decode('utf-8')
+                if seqnumber is not None:
+                    filename = filename.replace('.png', f'-{seqnumber:02d}.png')
                 fname = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
                 self.fig.savefig(fname)
                 name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']

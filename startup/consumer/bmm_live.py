@@ -518,6 +518,15 @@ class XAFSScan():
         # self.initial     = 0
         if get_backend().lower() == 'agg':
             if filename is not None:
+                ## dossier should have already been written, thus the
+                ## sequence number (i.e. the number of times a
+                ## sequence of repetitions using the same file) should
+                ## already be known.  This will align the sequence
+                ## numbering of the live plot and triplot images with
+                ## the sequence numbering of the dossier itself
+                sequnumber = rkvs.get('BMM:dossier:seqnumber').decode('utf-8')
+                if seqnumber is not None:
+                    filename = filename.replace('.png', f'-{seqnumber:02d}.png')
                 fname = os.path.join(experiment_folder(catalog, uid), filename)
                 self.fig.savefig(fname)
                 self.logger.info(f'saved XAFS sequence figure {fname}')

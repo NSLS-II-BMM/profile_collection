@@ -200,7 +200,8 @@ class BMMDossier():
                 seqnumber += 1
             basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
-
+            rkvs.set('BMM:dossier:seqnumber', seqnumber)
+            
         ## sanity check the "report ID" (used to link to correct position in messagelog.html
         if self.rid is None: self.rid=''
 

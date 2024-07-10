@@ -640,7 +640,7 @@ def xafs(inifile=None, **kwargs):
         cnt = 0
         #for i in range(p['start'], p['start']+p['nscans'], 1):
         cnt += 1
-        fname = "%s.%3.3d" % (p['filename'], i)
+        fname = p['filename']
         if p['usbstick']:
             fname = re.sub(r'[*:?"<>|/\\]', vfatify, fname)
         datafile = os.path.join(p['folder'], fname)
