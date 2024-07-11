@@ -26,20 +26,20 @@ md = user_ns["RE"].md
 
 
 
-class ExternalFileReference(Signal):
-    """
-    A pure software Signal that describe()s an image in an external file.
-    """
+# class ExternalFileReference(Signal):
+#     """
+#     A pure software Signal that describe()s an image in an external file.
+#     """
 
-    def describe(self):
-        resource_document_data = super().describe()
-        resource_document_data[self.name].update(
-            {
-                "external": "FILESTORE:",
-                "dtype": "array",
-            }
-        )
-        return resource_document_data
+#     def describe(self):
+#         resource_document_data = super().describe()
+#         resource_document_data[self.name].update(
+#             {
+#                 "external": "FILESTORE:",
+#                 "dtype": "array",
+#             }
+#         )
+#         return resource_document_data
 
 
 
