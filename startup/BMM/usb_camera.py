@@ -3,8 +3,8 @@ from ophyd import SingleTrigger, AreaDetector, DetectorBase, Component as Cpt, D
 from ophyd import EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin
 from ophyd import DeviceStatus, Signal, Kind
 
-from ophyd.areadetector.plugins import ImagePlugin_V33, TIFFPlugin
-from ophyd.areadetector.filestore_mixins import resource_factory
+from ophyd.areadetector.plugins import ImagePlugin_V33, JPEGPlugin_V33
+from ophyd.areadetector.filestore_mixins import resource_factory, FileStoreIterativeWrite, FileStorePluginBase
 from ophyd.sim import new_uid
 from collections import deque
 from event_model import compose_resource
@@ -25,32 +25,6 @@ user_ns = vars(user_ns_module)
 md = user_ns["RE"].md
 
 
-class MyHack(NDDerivedSignal):
-    
-    def inverse(self, value):
-        """Shape the flat array to send as a result of ``.get``"""
-        array_shape = self.derived_shape[:self.derived_ndims]
-        if not any(array_shape):
-            raise RuntimeError(f"Invalid array size {self.derived_shape}")
-
-        array_len = np.prod(array_shape)
-        if len(value) < array_len:
-            raise RuntimeError(f"cannot reshape array of size {len(value)} "
-                               f"into shape {tuple(array_shape)}. Check IOC configuration.")
-
-        return np.array(value[:array_len]).reshape(array_shape)
-
-class MyImage(ImagePlugin_V33):
-    shaped_image = Cpt(MyHack, derived_from='array_data',
-                       shape=('array_size.depth',
-                              'array_size.height',
-                              'array_size.width'),
-                       num_dimensions='ndimensions',
-                       kind='omitted', lazy=True)
-
-class ParsimoniousImage(ImagePlugin_V33):
-    shaped_image = None 
-
 
 class ExternalFileReference(Signal):
     """
@@ -67,13 +41,85 @@ class ExternalFileReference(Signal):
         )
         return resource_document_data
 
-    
-class CAMERA(Device): #SingleTrigger, Device, AreaDetector
-    # image = Cpt(ImagePlugin_V33, 'image1:')
-    #image = Cpt(ParsimoniousImage, 'image1:')
-    image = Cpt(ExternalFileReference, kind=Kind.normal)
-    
-    #tiff1 = Cpt(TIFFPlugin, 'TIFF1:')
+
+
+
+class FileStoreJPEG(FileStorePluginBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.filestore_spec = "AD_JPEG"  # spec name stored in resource doc
+        self.stage_sigs.update(
+            [
+                ("file_template", "%s%s_%6.6d.jpeg"),
+                ("file_write_mode", "Single"),
+            ]
+        )
+        # 'Single' file_write_mode means one image : one file.
+        # It does NOT mean that 'num_images' is ignored.
+
+    def get_frames_per_point(self):
+        return self.parent.cam.num_images.get()
+
+    def stage(self):
+        super().stage()
+        # this over-rides the behavior is the base stage
+        self._fn = self._fp
+
+        resource_kwargs = {
+            "template": self.file_template.get(),
+            "filename": self.file_name.get(),
+            "frame_per_point": self.get_frames_per_point(),
+        }
+        self._generate_resource(resource_kwargs)
+
+
+
+class FileStoreJPEGIterativeWrite(FileStoreJPEG, FileStoreIterativeWrite):
+    pass
+
+
+class JPEGPluginWithFileStore(JPEGPlugin_V33, FileStoreJPEGIterativeWrite):
+    """Add this as a component to detectors that write JPEGs."""
+    def describe(self):
+        ret = super().describe()
+        key = self.parent._image_name
+        color_mode = self.parent.cam.color_mode.get(as_string=True)
+        ret[key]['shape'] = [
+            #self.parent.cam.num_images.get(),
+            self.array_size.height.get(),
+            self.array_size.width.get()
+        ]
+
+        cam_dtype = self.parent.cam.data_type.get(as_string=True)
+        type_map = {'UInt8': '|u1', 'UInt16': '<u2', 'Float32':'<f4', "Float64":'<f8'}
+        if cam_dtype in type_map:
+            ret[key].setdefault('dtype_str', type_map[cam_dtype])
+
+
+        return ret
+
+# class StandardCameraWithJPEG(AreaDetector):
+#     jpeg = Cpt(JPEGPluginWithFileStore,
+#                suffix='JPEG1:',
+#                write_path_template=f'/nsls2/data3/bmm/proposal/{md["cycle"]}/{md["data_session"]}assets/usbcam-1/%Y/%m/%d/',
+#                root=f'/nsls2/data3/bmm/proposal/{md["cycle"]}/{md["data_session"]}/assets')
+
+
+
+class JPEGPluginEnsuredOff(JPEGPluginWithFileStore):
+    """Add this as a component to detectors that do not write JPEGs."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stage_sigs.update([('auto_save', 'No')])
+
+
+class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
+    image = Cpt(ImagePlugin, 'image1:')
+    jpeg1 = Cpt(JPEGPluginEnsuredOff,# 'JPEG1:')
+                suffix='JPEG1:',
+                write_path_template=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets/usbcam-1',
+                root=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets')
+
     jpeg_filepath = Cpt(EpicsSignal, 'JPEG1:FilePath')
     jpeg_filetemplate = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
     jpeg_filename = Cpt(EpicsSignal, 'JPEG1:FileName')
@@ -142,14 +188,14 @@ class CAMERA(Device): #SingleTrigger, Device, AreaDetector
 
     def describe(self):
         res = super().describe()
-        if self.name == 'usbcam-1':
-            res[self.image.name].update(
-                {"shape": (1080, 1920), "dtype_str": "<f4"}
-            )
-        elif self.name == 'usbcam-2':
-            res[self.image.name].update(
-                {"shape": (600, 800), "dtype_str": "<f4"}
-            )
+        # if self.name == 'usbcam-1':
+        #     res[self.image.name].update(
+        #         {"shape": (1080, 1920), "dtype_str": "<f4"}
+        #     )
+        # elif self.name == 'usbcam-2':
+        #     res[self.image.name].update(
+        #         {"shape": (600, 800), "dtype_str": "<f4"}
+        #     )
         return res
 
     def unstage(self):
@@ -189,20 +235,4 @@ class CAMERA(Device): #SingleTrigger, Device, AreaDetector
     #     #     resource_path=str(Path(assets_dir) / Path(data_file_with_ext)),
     #     #     resource_kwargs={},
     #     # )
-
-
-        
-    
-    def snap(self, filename, annotation_string=''):
-        if self.cam.detector_state.get() == 0:
-            self.cam.acquire.put(1)
-            time.sleep(0.5)
-        u=self.image.array_data.get().reshape((1080,1920,3))
-        im = Image.fromarray(u)
-        im.save(filename, 'JPEG')
-        self.image.shape = (im.height, im.width, 3)
-        annotation = f'NIST BMM (NSLS-II 06BM)      camera {self.name}      {annotation_string}      {now()}'
-        annotate_image(filename, annotation)
-        
-
     
