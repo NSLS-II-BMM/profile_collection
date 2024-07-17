@@ -59,19 +59,20 @@ class FileStoreJPEG(FileStorePluginBase):
 
     def describe(self):
         ret = super().describe()
-        key = self.parent._image_name
+        key = self.name
         color_mode = self.parent.cam.color_mode.get(as_string=True)
         if not ret:
             ret = {key: {}}
         ret[key].update({
             "shape": [
                 #self.parent.cam.num_images.get(),
-                self.array_size.depth.get(),  # should be width, need a PR?
+                self.array_size.depth.get(),  # should be width, need a PR in the relevant AD repo?
                 self.array_size.height.get(),
+                3,  # number of channels (RGB)
             ],
             "dtype": "array",
             "source": self.parent.name,
-            # "external": "STREAM:",
+            "external": "STREAM:",
         })
 
         cam_dtype = self.parent.cam.data_type.get(as_string=True)
@@ -86,8 +87,6 @@ class FileStoreJPEG(FileStorePluginBase):
         # this over-rides the behavior is the base stage
         # self._fn = self._fp
 
-
-
         full_file_name = self.full_file_name.get()  # TODO: .replace("_000.jpg", "_%3.3d.jpg")
 
         hostname = "localhost"  # TODO: consider replacing with the IOC host.
@@ -96,21 +95,19 @@ class FileStoreJPEG(FileStorePluginBase):
         self._stream_resource_document, self._stream_datum_factory = compose_stream_resource(
             data_key=self.name,
             # For event-model<1.21.0:
-            spec=self.filestore_spec,
-            root="/",
-            resource_path=full_file_name,
-            resource_kwargs={"resource_path": full_file_name},
+            # spec=self.filestore_spec,
+            # root="/",
+            # resource_path=full_file_name,
+            # resource_kwargs={"resource_path": full_file_name},
             # For event-model>=1.21.0:
-            # mimetype="image/jpeg",
-            # uri=uri,
-            # parameters={},
+            mimetype="image/jpeg",
+            uri=uri,
+            parameters={},
         )
 
         self._asset_docs_cache.append(
             ("stream_resource", self._stream_resource_document)
         )
-
-
 
         # resource_kwargs = {
         #     "resource_path": resource_path
@@ -150,16 +147,16 @@ class JPEGPluginWithFileStore(JPEGPlugin_V33, FileStoreJPEG):
 
 
 
-class JPEGPluginEnsuredOn(JPEGPluginWithFileStore):
-    """Add this as a component to detectors that do not write JPEGs."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.stage_sigs.update([('auto_save', 'Yes')])
+# class JPEGPluginEnsuredOn(JPEGPluginWithFileStore):
+#     """Add this as a component to detectors that do not write JPEGs."""
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         # self.stage_sigs.update([('auto_save', 'No')])
 
 
 class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
     image = Cpt(ImagePlugin, 'image1:')
-    jpeg1 = Cpt(JPEGPluginEnsuredOn,# 'JPEG1:')
+    jpeg1 = Cpt(JPEGPluginWithFileStore,# 'JPEG1:')
                 suffix='JPEG1:',
                 write_path_template=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets/usbcam-1',
                 root=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets')
@@ -175,6 +172,11 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
 
     def __init__(self, *args, root_dir=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.stage_sigs.update(
+            [
+                ("cam.image_mode", "Single"),
+            ]
+        )
         self.kind = Kind.normal
         self.jpeg1.kind = Kind.normal
         if root_dir is None:
@@ -203,9 +205,10 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
     #     yield from items
         
 
-    # def stage(self):
-    #     self._update_paths()
-    #     super().stage()
+    def stage(self):
+        #self._update_paths()
+        self.jpeg1.auto_save.put(1)
+        super().stage()
 
     #     # Clear asset docs cache which may have some documents from the previous failed run.
     #     self._asset_docs_cache.clear()
@@ -248,7 +251,16 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
         # self._resource_document = None
         # self._datum_factory = None
         #self.ioc_stage.put(0)
+
+        ## turn off file saving and return the camera to continuous mode for viewing
         super().unstage()
+        self.jpeg1.auto_save.put(0)
+        self.cam.image_mode.put(2)
+
+    def stop(self, success=False):
+        self.jpeg1.auto_save.put(0)
+        return super().stop(success=success)
+
         
     # def _update_paths(self):
     #     self.jpeg_filepath.put(f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/{self.name}/{datetime.datetime.now().strftime('%Y/%m/%d')}")
