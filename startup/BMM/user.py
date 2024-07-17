@@ -3,8 +3,10 @@ from distutils.dir_util import copy_tree
 import json, pprint, copy, textwrap
 from subprocess import run
 
-import start_experiment.start_experiment
-# from nslsii.sync_experiment import sync_experiment
+try:
+    from start_experiment.start_experiment import start_experiment, validate_proposal
+except:
+    from nslsii.sync_experiment import sync_experiment as start_experiment, validate_proposal
 
 
 from BMM import user_ns as user_ns_module
@@ -806,7 +808,7 @@ class BMM_User(Borg):
 
 
         ## NSLS-II start experiment infrastructure
-        start_experiment.start_experiment.start_experiment(gup, 'bmm', verbose=False)
+        start_experiment(gup, 'bmm', verbose=False)
         # sync_experiment(gup, 'bmm', verbose=False)
         
         # from redis_json_dict import RedisJSONDict
@@ -816,7 +818,7 @@ class BMM_User(Borg):
         if md['data_session'] == 'pass-301027':
             self.experimenters = 'Bruce Ravel'
         else:
-            self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in start_experiment.start_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
+            self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in validate_proposal(f'pass-{gup}', 'bmm')['users'])))
             # self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in sync_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
         
         # lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
