@@ -234,7 +234,7 @@ if with_cam1 is True:
                   root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 
     usb1.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
-    usb1.jpeg_autosave.put(1)
+    usb1.jpeg_autosave.put(0)
     usb1.jpeg_create_dir_depth.put(-3)
     usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-1')
 else:
@@ -244,7 +244,7 @@ if with_cam2 is True:
     usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usbcam-2',
                   root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
     usb2.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
-    usb2.jpeg_autosave.put(1)
+    usb2.jpeg_autosave.put(0)
     usb2.jpeg_create_dir_depth.put(-3)
     usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-2')
     usbcam2.image.shape = (600, 800, 3)

@@ -524,10 +524,13 @@ class XAFSScan():
                 ## already be known.  This will align the sequence
                 ## numbering of the live plot and triplot images with
                 ## the sequence numbering of the dossier itself
-                sequnumber = rkvs.get('BMM:dossier:seqnumber').decode('utf-8')
+                seqnumber = rkvs.get('BMM:dossier:seqnumber').decode('utf-8')
                 if seqnumber is not None:
-                    filename = filename.replace('.png', f'-{seqnumber:02d}.png')
-                fname = os.path.join(experiment_folder(catalog, uid), filename)
+                    try:
+                        filename = filename.replace('.png', f'_{int(seqnumber):02d}.png')
+                    except:
+                        filename = filename.replace('.png', '_01.png')
+                    fname = os.path.join(experiment_folder(catalog, uid), filename)
                 self.fig.savefig(fname)
                 self.logger.info(f'saved XAFS sequence figure {fname}')
                 img_to_slack(fname, title=self.sample, measurement='xafs')

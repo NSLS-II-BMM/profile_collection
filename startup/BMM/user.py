@@ -811,7 +811,9 @@ class BMM_User(Borg):
         # redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
         # RedisJSONDict(redis_client=redis_client, prefix='')
         self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in start_experiment.start_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
-
+        if self.gup == 301027:
+            self.experimenters = 'Bruce Ravel'
+        
         
         # lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
         lustre_root = os.path.join(LUSTRE_DATA_ROOT, f'{self.cycle}', f'pass-{gup}')

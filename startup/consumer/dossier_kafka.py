@@ -200,7 +200,7 @@ class BMMDossier():
                 seqnumber += 1
             basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
-            rkvs.set('BMM:dossier:seqnumber', seqnumber)
+        rkvs.set('BMM:dossier:seqnumber', seqnumber)
             
         ## sanity check the "report ID" (used to link to correct position in messagelog.html
         if self.rid is None: self.rid=''
@@ -230,13 +230,14 @@ class BMMDossier():
                 instrument = self.instrument_default()
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
-            thiscontent += ''.join(content).format(basename      = basename,
+            thiscontent += ''.join(content).format(basename      = XDI['_user']['filename'], # awkward, wants un-numbered basename
                                                    scanlist      = self.generate_scanlist(bmm_catalog),  # uses self.uidlist
                                                    motors        = self.motor_sidebar(bmm_catalog),
                                                    sample        = XDI['Sample']['name'],
                                                    prep          = XDI['Sample']['prep'],
                                                    comment       = XDI['_user']['comment'],
-                                                   instrument    = instrument,)
+                                                   instrument    = instrument,
+                                                   seqnumber     = seqnumber)
             
 
             # middle part, cameras, one at a time and only if actually snapped

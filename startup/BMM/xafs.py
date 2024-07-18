@@ -1128,6 +1128,7 @@ def xafs(inifile=None, **kwargs):
 
             kafka_message({'dossier' : 'set', 'uidlist' : uidlist, })
             kafka_message({'dossier' : 'write', })
+            time.sleep(0.5)
 
         if len(uidlist) > 0:
             basename = bmm_catalog[uidlist[0]].metadata['start']['XDI']['_user']['filename']

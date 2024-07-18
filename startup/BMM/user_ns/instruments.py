@@ -8,7 +8,16 @@ TAB = '\t\t\t'
 
 WITH_LAKESHORE = False
 WITH_LINKAM = True
+WITH_ENCLOSURE = False
 
+if WITH_ENCLOSURE is True:
+    run_report('\tAir Science enclosure')
+    xafs_samx = xafs_refx
+    xafs_samy = xafs_refy
+    print(f'{TAB}defined xafs_samx/xafs_samy as xafs_refx/xafs_refy')
+    
+
+    
 ########################################################################
 # Note: the use of SynAxis in this file is so that every motor-related #
 # symbol gets set to `something' at startup.  This allows bsui to      #
@@ -303,10 +312,10 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -79.884
+    xafs_ref.outer_position = -61.102
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = -53.384 # xafs_ref.outer_position + ~26.5
+xafs_ref.inner_position = -34.602 # xafs_ref.outer_position + ~26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 #xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
