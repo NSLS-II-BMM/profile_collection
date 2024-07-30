@@ -181,7 +181,7 @@ try:                            # might not be in use
     toss = ic2.Ia.describe()
     set_precision(ic2.current2.mean_value, 3)
     toss = ic2.Ib.describe()
-    ION_CHAMBERS.append(ic2)
+    #ION_CHAMBERS.append(ic2)
 except:    
     print(whisper('\t\t\t'+'ic2 is not available, falling back to ophyd.sim.noisy_det'))
     ic2 = noisy_det
@@ -233,9 +233,9 @@ if with_cam1 is True:
     usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usbcam-1',
                   root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 
-    usb1.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
-    usb1.jpeg_autosave.put(1)
-    usb1.jpeg_create_dir_depth.put(-3)
+    #usb1.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
+    #usb1.jpeg_autosave.put(1)
+    #usb1.jpeg_create_dir_depth.put(-3)
     usbcam1 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-1')
 else:
     usb1, usbcam1 = None, None
@@ -243,9 +243,9 @@ else:
 if with_cam2 is True:
     usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usbcam-2',
                   root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
-    usb2.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
-    usb2.jpeg_autosave.put(1)
-    usb2.jpeg_create_dir_depth.put(-3)
+    #usb2.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
+    #usb2.jpeg_autosave.put(1)
+    #usb2.jpeg_create_dir_depth.put(-3)
     usbcam2 = BMMSnapshot(root=temp_root, which='usb', name='usbcam-2')
     usbcam2.image.shape = (600, 800, 3)
 else:

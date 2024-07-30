@@ -3,7 +3,7 @@ from ophyd import SingleTrigger, AreaDetector, DetectorBase, Component as Cpt, D
 from ophyd import EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin
 from ophyd import DeviceStatus, Signal, Kind
 
-from ophyd.areadetector.plugins import ImagePlugin_V33, JPEGPlugin_V33
+from ophyd.areadetector.plugins import ImagePlugin_V33, TIFFPlugin_V33
 from ophyd.areadetector.filestore_mixins import resource_factory, FileStoreIterativeWrite, FileStorePluginBase
 from ophyd.sim import new_uid
 from collections import deque
@@ -44,7 +44,7 @@ md = user_ns["RE"].md
 
 
 
-class FileStoreJPEG(FileStorePluginBase):
+class FileStoreTIFF(FileStorePluginBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filestore_spec = "BMM_USBCAM"  # spec name stored in resource doc
@@ -65,7 +65,7 @@ class FileStoreJPEG(FileStorePluginBase):
             ret = {key: {}}
         ret[key].update({
             "shape": [
-                #self.parent.cam.num_images.get(),
+                # self.parent.cam.num_images.get(),
                 self.array_size.depth.get(),  # should be width, need a PR in the relevant AD repo?
                 self.array_size.height.get(),
                 3,  # number of channels (RGB)
@@ -100,10 +100,11 @@ class FileStoreJPEG(FileStorePluginBase):
             # resource_path=full_file_name,
             # resource_kwargs={"resource_path": full_file_name},
             # For event-model>=1.21.0:
-            mimetype="image/jpeg",
+            mimetype="image/tiff",
             uri=uri,
             parameters={},
         )
+        print(self._stream_resource_document)
 
         self._asset_docs_cache.append(
             ("stream_resource", self._stream_resource_document)
@@ -134,7 +135,7 @@ class FileStoreJPEG(FileStorePluginBase):
 #     pass
 
 
-class JPEGPluginWithFileStore(JPEGPlugin_V33, FileStoreJPEG):
+class TIFFPluginWithFileStore(TIFFPlugin_V33, FileStoreTIFF):
     """Add this as a component to detectors that write JPEGs."""
     ...
 
@@ -156,19 +157,19 @@ class JPEGPluginWithFileStore(JPEGPlugin_V33, FileStoreJPEG):
 
 class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
     image = Cpt(ImagePlugin, 'image1:')
-    jpeg1 = Cpt(JPEGPluginWithFileStore,# 'JPEG1:')
-                suffix='JPEG1:',
+    tiff1 = Cpt(TIFFPluginWithFileStore,# 'TIFF1:')
+                suffix='TIFF1:',
                 write_path_template=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets/usbcam-1',
                 root=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets')
 
-    jpeg_filepath = Cpt(EpicsSignal, 'JPEG1:FilePath')
-    jpeg_filetemplate = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
-    jpeg_filename = Cpt(EpicsSignal, 'JPEG1:FileName')
-    jpeg_autoincrement = Cpt(EpicsSignal, 'JPEG1:AutoIncrement')
-    jpeg_fileformat = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
-    jpeg_writefile = Cpt(EpicsSignal, 'JPEG1:WriteFile')
-    jpeg_create_dir_depth = Cpt(EpicsSignal, 'JPEG1:CreateDirectory')
-    jpeg_autosave = Cpt(EpicsSignal, 'JPEG1:AutoSave')
+    tiff_filepath = Cpt(EpicsSignal, 'TIFF1:FilePath')
+    tiff_filetemplate = Cpt(EpicsSignal, 'TIFF1:FileTemplate')
+    tiff_filename = Cpt(EpicsSignal, 'TIFF1:FileName')
+    tiff_autoincrement = Cpt(EpicsSignal, 'TIFF1:AutoIncrement')
+    tiff_fileformat = Cpt(EpicsSignal, 'TIFF1:FileTemplate')
+    tiff_writefile = Cpt(EpicsSignal, 'TIFF1:WriteFile')
+    tiff_create_dir_depth = Cpt(EpicsSignal, 'TIFF1:CreateDirectory')
+    tiff_autosave = Cpt(EpicsSignal, 'TIFF1:AutoSave')
 
     def __init__(self, *args, root_dir=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -178,7 +179,7 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
             ]
         )
         self.kind = Kind.normal
-        self.jpeg1.kind = Kind.normal
+        self.tiff1.kind = Kind.normal
         if root_dir is None:
             msg = "The 'root_dir' kwarg cannot be None"
             raise RuntimeError(msg)
@@ -207,7 +208,7 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
 
     def stage(self):
         #self._update_paths()
-        self.jpeg1.auto_save.put(1)
+        self.tiff1.auto_save.put(1)
         super().stage()
 
     #     # Clear asset docs cache which may have some documents from the previous failed run.
@@ -254,11 +255,12 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
 
         ## turn off file saving and return the camera to continuous mode for viewing
         super().unstage()
-        self.jpeg1.auto_save.put(0)
+        self.tiff1.auto_save.put(0)
         self.cam.image_mode.put(2)
+        self.cam.acquire.put(1)
 
     def stop(self, success=False):
-        self.jpeg1.auto_save.put(0)
+        self.tiff1.auto_save.put(0)
         return super().stop(success=success)
 
         
