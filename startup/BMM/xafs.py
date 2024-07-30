@@ -944,7 +944,7 @@ def xafs(inifile=None, **kwargs):
                 elif 'glancing angle' in BMMuser.instrument.lower():
                     slotno = f', spinner {ga.current()}'
                     this_instrument = ga.dossier_entry();
-                    md['_snapshots']['ga_filename'] = ga.alignment_filename
+                    md['_snapshots']['ga_filename'] = os.path.basename(ga.alignment_filename)
                     md['_snapshots']['ga_yuid']     = ga.y_uid
                     md['_snapshots']['ga_pitchuid'] = ga.pitch_uid
                     md['_snapshots']['ga_fuid']     = ga.f_uid
@@ -1216,7 +1216,7 @@ def xanes(filename=None, step=2):
         filename = f'{el}-{ed}-testXANES'
     comment = 'quick-n-dirty XANES scan'
     yield from xafs(DEFAULT_INI, filename=filename, element=el, sample=comment, prep=comment, comment=comment,
-                    mode='both', edge=ed, experimenters=BMMuser.experimenters, snapshots=False, copy=False, **params)
+                    mode='both', edge=ed, experimenters=user_ns['BMMuser'].experimenters, snapshots=False, copy=False, **params)
     
 
 def howlong(inifile=None, interactive=True, **kwargs):

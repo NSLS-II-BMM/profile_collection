@@ -22,7 +22,7 @@ from scipy.ndimage import center_of_mass
 from PIL import Image
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import countdown, isfloat, present_options, now, PROMPT, PROMPTNC, animated_prompt
+from BMM.functions      import countdown, isfloat, present_options, now, PROMPT, PROMPTNC, animated_prompt, proposal_base
 from BMM.kafka          import kafka_message
 from BMM.logging        import report
 from BMM.linescans      import linescan
@@ -266,7 +266,9 @@ class GlancingAngle(Device):
         self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
+        yy = yy[2:]             # spurious first point in fluo scan due to Xspress3 issue 24 July 2024
         signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        signal = signal[2:]
         #if BMMuser.element in ('Cr', 'Zr'):
         centroid = yy[signal.idxmax()]
         #else:
@@ -329,7 +331,7 @@ class GlancingAngle(Device):
         report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=True)
             
         BMM_suspenders()
-        self.alignment_filename = os.path.join(BMMuser.folder, 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
+        self.alignment_filename = os.path.join(proposal_base(), 'snapshots', f'spinner{self.current()}-alignment-{now()}.png')
         kafka_message({'glancing_angle' : 'start',
                        'filename' : self.alignment_filename})
 
@@ -435,7 +437,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             self.tab = ' '*12
             #self.do_first_change = True
             self.content += self.check_edge()
-        
+        else:
+            self.content += self.check_edge() + '\n'
+            
 
         for m in self.measurements:
 
@@ -473,7 +477,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             #     self.content += text
             #     self.totaltime += time
                 
-            elif m['element'] != element or m['edge'] != edge: # focus...
+            if m['element'] != element or m['edge'] != edge: # focus...
                 element = m['element']
                 edge    = m['edge']
                 self.content += text
@@ -570,7 +574,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
                 self.content += self.tab +  'yield from ga.flatten()\n'
                 self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
-            #self.content += self.tab + 'close_plots()\n\n'
+            self.content += self.tab + 'close_plots()\n\n'
 
 
             ########################################

@@ -3,7 +3,7 @@ from urllib.parse import quote
 import numpy, pandas, openpyxl
 from scipy.io import savemat
 from bluesky import __version__ as bluesky_version
-
+import traceback
 
 import redis
 if not os.environ.get('AZURE_TESTING'):
@@ -337,7 +337,7 @@ class BMMDossier():
             log_entry(logger, f'wrote XAFS dossier: {htmlfilename}')
         except Exception as E:
             log_entry(logger, f'failed to write dossier file {htmlfilename}\n' + str(E))
-
+            traceback.print_exc()
 
         self.manifest_file = os.path.join(folder, 'dossier', 'MANIFEST')            
         manifest = open(self.manifest_file, 'a')

@@ -61,7 +61,7 @@ bicron.channels.chan26.name = 'APD'
 run_report('\t'+'electrometer and ion chambers')
 from BMM.electrometer import BMMQuadEM, BMMDualEM, dark_current, IntegratedIC
 
-ION_CHAMBERS = []
+ION_CHAMBERS = []               # list of ion chambers in use, will be populated below
 
 # configure signal chains for I0/It/Ir, configuration flags from BMM.user_ns.dwelltime
 from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2, with_iy
@@ -87,9 +87,12 @@ else:
 quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
 
 if with_iy is True:
-    ION_CHAMBERS.append(quadem1)
     quadem1.Iy.kind, quadem1.Iy.name = 'hinted', 'Iy'
 
+if with_iy is True or with_ic0 is False or with_ic1 is False or with_ic2 is False:
+    ION_CHAMBERS.append(quadem1)
+
+    
 ## need to do something like this:
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
 ## to get a sensible reporting precision from the Ix channels
@@ -143,7 +146,8 @@ try:                            # might not be in use
     toss = ic0.Ia.describe()
     set_precision(ic0.current2.mean_value, 3)
     toss = ic0.Ib.describe()
-    ION_CHAMBERS.append(ic0)
+    if with_ic0:
+        ION_CHAMBERS.append(ic0)
 except Exception as E:
     print(E)
     print(whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det'))
@@ -162,7 +166,8 @@ try:                            # might not be in use
     toss = ic1.Ia.describe()
     set_precision(ic1.current2.mean_value, 3)
     toss = ic1.Ib.describe()
-    ION_CHAMBERS.append(ic1)
+    if with_ic1:
+        ION_CHAMBERS.append(ic1)
 except:    
     print(whisper('\t\t\t'+'ic1 is not available, falling back to ophyd.sim.noisy_det'))
     ic1 = noisy_det
@@ -181,7 +186,8 @@ try:                            # might not be in use
     toss = ic2.Ia.describe()
     set_precision(ic2.current2.mean_value, 3)
     toss = ic2.Ib.describe()
-    ION_CHAMBERS.append(ic2)
+    if with_ic2:
+        ION_CHAMBERS.append(ic2)
 except:    
     print(whisper('\t\t\t'+'ic2 is not available, falling back to ophyd.sim.noisy_det'))
     ic2 = noisy_det
