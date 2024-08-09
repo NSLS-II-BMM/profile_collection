@@ -8,9 +8,10 @@ TAB = '\t\t\t'
 
 WITH_LAKESHORE = False
 WITH_LINKAM = True
-WITH_ENCLOSURE = False
+WITH_ENCLOSURE = True
 
 if WITH_ENCLOSURE is True:
+    from BMM.user_ns.motors import xafs_refy, xafs_refx
     run_report('\tAir Science enclosure')
     xafs_samx = xafs_refx
     xafs_samy = xafs_refy
@@ -376,6 +377,10 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'U' :     [0, 24, 'Y',  'Y2O3'],  # use Y K for U L3
                     #'U' :     [0, 24, 'U',  'UO3'],  # user supplied U standard
                     'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
+
+                    ## Hunter college reference wheel with Tc and U
+                    #'U':      [1,  3, 'U',  'UO3'],
+                    #'Tc':     [1,  7, 'Tc', 'TcO4'],
 }
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
 
@@ -395,9 +400,9 @@ def set_reference_wheel(position=None):
     '''
     if position is None:
         position = xafs_refx.position
-    xafs_ref.outer_position = outer_position
-    xafs_ref.inner_position = outer_position + 26.5
-    rkvs.set('BMM:ref:outer', outer_position)
+    xafs_ref.outer_position = position
+    xafs_ref.inner_position = position + 26.5
+    rkvs.set('BMM:ref:outer', position)
     
 def ref2redis():
     #for i in range(0, rkvs.llen('BMM:reference:list')):
