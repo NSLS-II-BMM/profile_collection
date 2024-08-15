@@ -3,7 +3,7 @@ from ophyd import SingleTrigger, AreaDetector, DetectorBase, Component as Cpt, D
 from ophyd import EpicsSignal, EpicsSignalRO, ImagePlugin, StatsPlugin, ROIPlugin
 from ophyd import DeviceStatus, Signal, Kind
 
-from ophyd.areadetector.plugins import ImagePlugin_V33, TIFFPlugin_V33
+from ophyd.areadetector.plugins import ImagePlugin_V33, JPEGPlugin_V33
 from ophyd.areadetector.filestore_mixins import resource_factory, FileStoreIterativeWrite, FileStorePluginBase
 from ophyd.sim import new_uid
 from collections import deque
@@ -44,7 +44,7 @@ md = user_ns["RE"].md
 
 
 
-class FileStoreTIFF(FileStorePluginBase):
+class FileStoreJPEG(FileStorePluginBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.filestore_spec = "BMM_USBCAM"  # spec name stored in resource doc
@@ -66,9 +66,9 @@ class FileStoreTIFF(FileStorePluginBase):
         ret[key].update({
             "shape": [
                 # self.parent.cam.num_images.get(),
+                3,  # number of channels (RGB)
                 self.array_size.depth.get(),  # should be width, need a PR in the relevant AD repo?
                 self.array_size.height.get(),
-                3,  # number of channels (RGB)
             ],
             "dtype": "array",
             "source": self.parent.name,
@@ -87,10 +87,7 @@ class FileStoreTIFF(FileStorePluginBase):
         # this over-rides the behavior is the base stage
         # self._fn = self._fp
 
-        full_file_name = self.full_file_name.get()  # TODO: .replace("_000.jpg", "_%3.3d.jpg")
-
-        hostname = "localhost"  # TODO: consider replacing with the IOC host.
-        uri = f"file://{hostname}/{str(full_file_name).strip('/')}"
+        full_file_name = self.full_file_name.get()  # TODO: .replace("_000.jpg", "_%d.jpg")
 
         self._stream_resource_document, self._stream_datum_factory = compose_stream_resource(
             data_key=self.name,
@@ -100,7 +97,7 @@ class FileStoreTIFF(FileStorePluginBase):
             # resource_path=full_file_name,
             # resource_kwargs={"resource_path": full_file_name},
             # For event-model>=1.21.0:
-            mimetype="image/tiff",
+            mimetype="image/jpeg",
             uri=uri,
             parameters={},
         )
@@ -131,13 +128,34 @@ class FileStoreTIFF(FileStorePluginBase):
         yield from items
 
 
-# class FileStoreJPEGIterativeWrite(FileStoreJPEG, FileStoreIterativeWrite):
-#     pass
+class FileStoreJPEG2:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._asset_docs_cache = []
+        self._counter = None
+        self._datum_factory = None
+
+    def stage(self):
+        self._asset_docs_cache.clear()
+        self._counter = itertools.count()
+        full_file_name = self.full_file_name.get().replace("_000.jpg", "_%3.3d.jpg")
+        print(f"{full_file_name = }")
+        resource, self._datum_factory = resource_factory(
+            "BMM_USBCAM",
+            "/",
+            full_file_name,
+            {},
+            "posix",
+        )
+        self._asset_docs_cache.append(("resource", resource))
+        return super().stage()
 
 
-class TIFFPluginWithFileStore(TIFFPlugin_V33, FileStoreTIFF):
+
+
+class JPEGPluginWithFileStore(FileStoreJPEG2, JPEGPlugin_V33):
     """Add this as a component to detectors that write JPEGs."""
-    ...
+    pass
 
 
 # class StandardCameraWithJPEG(AreaDetector):
@@ -157,19 +175,20 @@ class TIFFPluginWithFileStore(TIFFPlugin_V33, FileStoreTIFF):
 
 class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
     image = Cpt(ImagePlugin, 'image1:')
-    tiff1 = Cpt(TIFFPluginWithFileStore,# 'TIFF1:')
-                suffix='TIFF1:',
-                write_path_template=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets/usbcam-1',
-                root=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets')
+    jpeg1 = Cpt(JPEGPluginWithFileStore,# 'JPEG1:')
+                suffix='JPEG1:',
+                )
+                # write_path_template=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets/usbcam-1',
+                # root=f'/nsls2/data3/bmm/proposals/{md["cycle"]}/{md["data_session"]}/assets')
 
-    tiff_filepath = Cpt(EpicsSignal, 'TIFF1:FilePath')
-    tiff_filetemplate = Cpt(EpicsSignal, 'TIFF1:FileTemplate')
-    tiff_filename = Cpt(EpicsSignal, 'TIFF1:FileName')
-    tiff_autoincrement = Cpt(EpicsSignal, 'TIFF1:AutoIncrement')
-    tiff_fileformat = Cpt(EpicsSignal, 'TIFF1:FileTemplate')
-    tiff_writefile = Cpt(EpicsSignal, 'TIFF1:WriteFile')
-    tiff_create_dir_depth = Cpt(EpicsSignal, 'TIFF1:CreateDirectory')
-    tiff_autosave = Cpt(EpicsSignal, 'TIFF1:AutoSave')
+    jpeg_filepath = Cpt(EpicsSignal, 'JPEG1:FilePath')
+    jpeg_filetemplate = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
+    jpeg_filename = Cpt(EpicsSignal, 'JPEG1:FileName')
+    jpeg_autoincrement = Cpt(EpicsSignal, 'JPEG1:AutoIncrement')
+    jpeg_fileformat = Cpt(EpicsSignal, 'JPEG1:FileTemplate')
+    jpeg_writefile = Cpt(EpicsSignal, 'JPEG1:WriteFile')
+    jpeg_create_dir_depth = Cpt(EpicsSignal, 'JPEG1:CreateDirectory')
+    jpeg_autosave = Cpt(EpicsSignal, 'JPEG1:AutoSave')
 
     def __init__(self, *args, root_dir=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -179,7 +198,7 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
             ]
         )
         self.kind = Kind.normal
-        self.tiff1.kind = Kind.normal
+        self.jpeg1.kind = Kind.normal
         if root_dir is None:
             msg = "The 'root_dir' kwarg cannot be None"
             raise RuntimeError(msg)
@@ -199,16 +218,22 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
         return root_path
 
 
-    # def collect_asset_docs(self):
-    #     """The method to collect resource/datum documents."""
-    #     items = list(self._asset_docs_cache)
-    #     self._asset_docs_cache.clear()
-    #     yield from items
-        
+    def trigger(self):
+        i = next(self.jpeg1._counter)
+        if i > 0:
+            assert "Bruce said this could never happen. - Dan Allan, 2024"
+        datum = self.jpeg1._datum_factory({"index": i})
+        self.jpeg1._asset_docs_cache.append(("datum", datum))
+        self._datum_id = datum["datum_id"]
+        return super().trigger()
+
+    def collect_asset_docs(self):
+        yield from self.jpeg1._asset_docs_cache
+        self.jpeg1._asset_docs_cache.clear()
 
     def stage(self):
         #self._update_paths()
-        self.tiff1.auto_save.put(1)
+        self.jpeg1.auto_save.put(1)
         super().stage()
 
     #     # Clear asset docs cache which may have some documents from the previous failed run.
@@ -246,6 +271,19 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
         #     res[self.image.name].update(
         #         {"shape": (600, 800), "dtype_str": "<f4"}
         #     )
+        res["usbcam-1_jpeg1"] = {
+            "shape": (1080, 1920, 3),
+            "chunks": (1, 1080, 1920, 3,),
+            "dtype_str": "<f4",
+            "dtype": "array",
+            "source": "...",
+            "external": "FILESTORE:",
+        }
+        return res
+
+    def read(self):
+        res = super().read()
+        res["usbcam-1_jpeg1"] = {"value": self._datum_id, "timestamp": time.time()}
         return res
 
     def unstage(self):
@@ -255,12 +293,12 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
 
         ## turn off file saving and return the camera to continuous mode for viewing
         super().unstage()
-        self.tiff1.auto_save.put(0)
+        self.jpeg1.auto_save.put(0)
         self.cam.image_mode.put(2)
         self.cam.acquire.put(1)
 
     def stop(self, success=False):
-        self.tiff1.auto_save.put(0)
+        self.jpeg1.auto_save.put(0)
         return super().stop(success=success)
 
         
