@@ -138,7 +138,7 @@ class FileStoreJPEG2:
     def stage(self):
         self._asset_docs_cache.clear()
         self._counter = itertools.count()
-        full_file_name = self.full_file_name.get().replace("_000.jpg", "_%3.3d.jpg")
+        full_file_name = self.full_file_name.get()  #.replace("_000.jpg", "_%3.3d.jpg")
         print(f"{full_file_name = }")
         resource, self._datum_factory = resource_factory(
             "BMM_USBCAM",
@@ -225,41 +225,25 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
         datum = self.jpeg1._datum_factory({"index": i})
         self.jpeg1._asset_docs_cache.append(("datum", datum))
         self._datum_id = datum["datum_id"]
-        return super().trigger()
+        ret = super().trigger()
+        return ret
 
     def collect_asset_docs(self):
         yield from self.jpeg1._asset_docs_cache
         self.jpeg1._asset_docs_cache.clear()
 
     def stage(self):
-        #self._update_paths()
         self.jpeg1.auto_save.put(1)
+        assets_dir = self.name
+        data_file_no_ext = f"{self.name}_{new_uid()}"
+        data_file_with_ext = f"{data_file_no_ext}.jpeg"
+
+
+      # Update AD IOC parameters:
+        self.jpeg_filepath.put(str(Path(self._root_dir) / Path(assets_dir)))
+        self.jpeg_filename.put(data_file_with_ext)
         super().stage()
-
-    #     # Clear asset docs cache which may have some documents from the previous failed run.
-    #     self._asset_docs_cache.clear()
-
-    #     # date = datetime.datetime.now()
-    #     assets_dir = self.name
-    #     data_file_no_ext = f"{self.name}_{new_uid()}"
-    #     data_file_with_ext = f"{data_file_no_ext}.jpeg"
-
-    #     self._resource_document, self._datum_factory, _ = compose_resource(
-    #         start={"uid": "needed for compose_resource() but will be discarded"},
-    #         spec="BMM_JPEG_HANDLER",
-    #         root=self._root_dir,
-    #         resource_path=str(Path(assets_dir) / Path(data_file_with_ext)),
-    #         resource_kwargs={},
-    #     )
-
-    #     # now discard the start uid, a real one will be added later
-    #     self._resource_document.pop("run_start")
-    #     self._asset_docs_cache.append(("resource", self._resource_document))
-
-    #     # Update AD IOC parameters:
-    #     self.jpeg_filepath.put(str(Path(self._root_dir) / Path(assets_dir)))
-    #     self.jpeg_filename.put(data_file_with_ext)
-    #     #self.ioc_stage.put(1)
+        #self.ioc_stage.put(1)
 
     def describe(self):
         res = super().describe()
@@ -271,7 +255,7 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
         #     res[self.image.name].update(
         #         {"shape": (600, 800), "dtype_str": "<f4"}
         #     )
-        res["usbcam-1_jpeg1"] = {
+        res[f"{self.name}_jpeg1"] = {
             "shape": (1080, 1920, 3),
             "chunks": (1, 1080, 1920, 3,),
             "dtype_str": "<f4",
@@ -283,7 +267,7 @@ class CAMERA(SingleTrigger, AreaDetector): #SingleTrigger, Device, AreaDetector
 
     def read(self):
         res = super().read()
-        res["usbcam-1_jpeg1"] = {"value": self._datum_id, "timestamp": time.time()}
+        res[f"{self.name}_jpeg1"] = {"value": self._datum_id, "timestamp": time.time()}
         return res
 
     def unstage(self):

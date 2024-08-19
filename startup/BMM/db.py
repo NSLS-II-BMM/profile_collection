@@ -50,14 +50,19 @@ import matplotlib.pyplot as plt
 def show_snapshot(uid):
     '''Quickly plot a snapshot image from DataBroker given its UID.
     '''
-    this = user_ns['bmm_catalog'][uid].primary.read()
-    if 'usbcam1_image' in this:
-        key = 'usbcam1_image'
-    elif 'usbcam2_image' in this:
-        key = 'usbcam2_image'
-    elif 'xascam_image' in this:
-        key = 'xascam_image'
-    elif 'anacam_image' in this:
-        key = 'anacam_image'
-    plt.imshow(numpy.array(this[key])[0])
+    if 'usbcam-1_jpeg1' in user_ns['bmm_catalog'][uid]['primary']['data']:
+        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-1_jpeg1'][:])
+    elif 'usbcam-2_jpeg1' in user_ns['bmm_catalog'][uid]['primary']['data']:
+        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-2_jpeg1'][:])        
+    else:                       # pre-data-security
+        this = user_ns['bmm_catalog'][uid].primary.read()
+        if 'usbcam1_image' in this:
+            key = 'usbcam1_image'
+        elif 'usbcam2_image' in this:
+            key = 'usbcam2_image'
+        elif 'xascam_image' in this:
+            key = 'xascam_image'
+        elif 'anacam_image' in this:
+            key = 'anacam_image'
+        plt.imshow(numpy.array(this[key])[0])
     plt.grid(False)
