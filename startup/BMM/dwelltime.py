@@ -69,8 +69,8 @@ class LockedDwellTimes(PseudoPositioner):
         ic0_dwell_time = Cpt(IC0DwellTime, 'XF:06BM-BI{IC:0}EM180:', egu='seconds') # new I0 chamber
     if with_ic1 is True:
         ic1_dwell_time = Cpt(IC1DwellTime, 'XF:06BM-BI{IC:1}EM180:', egu='seconds') # new It chamber
-#    if with_ic2 is True:
-#        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:3}EM180:', egu='seconds') # new Ir chamber
+    if with_ic2 is True:
+        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:3}EM180:', egu='seconds') # new Ir chamber
     if with_xspress3 is True:
         xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
     
