@@ -228,11 +228,14 @@ anacam.x, anacam.y = 640, 480    # width, height
 
 
 run_report('\t\t'+'USB cameras')
-from BMM.usb_camera import CAMERA
-if with_cam1 is True:
-    usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usbcam-1',
-                  root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 
+
+from BMM.usb_camera import CAMERA, BMMUVCSingleTrigger
+if with_cam1 is True:
+    #usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usbcam-1',
+    #              root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
+
+    usb1 = BMMUVCSingleTrigger('XF:06BM-ES{UVC-Cam:1}', name="usbcam-1", read_attrs=["jpeg"])
     #usb1.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
     #usb1.jpeg_autosave.put(1)
     #usb1.jpeg_create_dir_depth.put(-3)
@@ -241,8 +244,11 @@ else:
     usb1, usbcam1 = None, None
 
 if with_cam2 is True:
-    usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usbcam-2',
-                  root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
+    #usb2 = CAMERA('XF:06BM-ES{UVC-Cam:2}', name='usbcam-2',
+    #              root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
+    
+    usb2 = BMMUVCSingleTrigger('XF:06BM-ES{UVC-Cam:2}', name="usbcam-2", read_attrs=["jpeg"])
+    
     #usb2.jpeg_filetemplate.put('%s%s_%3.3d.jpg')
     #usb2.jpeg_autosave.put(1)
     #usb2.jpeg_create_dir_depth.put(-3)
@@ -250,6 +256,17 @@ if with_cam2 is True:
     usbcam2.image.shape = (600, 800, 3)
 else:
     usb2, usbcam2 = None, None
+
+
+
+def display_last_image_usb_cam(catalog, camera=usb1):
+    from PIL import Image
+    print(catalog[-1]['primary']['data'][f'{camera.name}_image'])
+
+    Image.fromarray(
+        catalog[-1]['primary']['data'][f'{camera.name}_image'].read()[0]
+    ).show()
+
 
 ###############################################
 # ______ _____ _       ___ _____ _   _ _____  #
