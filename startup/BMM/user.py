@@ -1038,19 +1038,6 @@ class BMM_User(Borg):
         self.lims = True
 
 
-    def set_assets_folder(self, folder=None):
-        if folder is None:
-            folder = self.folder
-        assets = os.path.join(folder, 'assets')
-        if os.path.exists(assets) is False:
-            print(error_msg(f'Assets folder {assets} does not exist!'))
-            return
-        kafka_message({'mkdir': os.path.join(assets, 'xspress3')})
-        kafka_message({'mkdir': os.path.join(assets, 'webcam')})
-        kafka_message({'mkdir': os.path.join(assets, 'anacam')})
-        kafka_message({'mkdir': os.path.join(assets, 'usbcam1')})
-        kafka_message({'mkdir': os.path.join(assets, 'usbcam2')})
-        
     def fetch_proposal_from_saf(self, this=None, cycle=None):
         '''Use the PASS API at https://api.nsls2.bnl.gov to determine what
         proposal number an SAF is written against, returning the

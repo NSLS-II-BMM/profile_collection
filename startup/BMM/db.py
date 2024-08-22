@@ -1,4 +1,4 @@
-import os
+import os, re
 import numpy
 import matplotlib.pyplot as plt
 
@@ -40,7 +40,7 @@ def file_resource(record):
         for d in docs:
             if d[0] == 'resource':
                 this = os.path.join(d[1]['root'], d[1]['resource_path'])
-                if '_%d' in this:
+                if '_%d' in this or re.search('%\d\.\dd', this) is not None:
                     this = this % 0
                 return(this)
     else:
@@ -50,10 +50,10 @@ import matplotlib.pyplot as plt
 def show_snapshot(uid):
     '''Quickly plot a snapshot image from DataBroker given its UID.
     '''
-    if 'usbcam-1_jpeg1' in user_ns['bmm_catalog'][uid]['primary']['data']:
-        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-1_jpeg1'][:])
-    elif 'usbcam-2_jpeg1' in user_ns['bmm_catalog'][uid]['primary']['data']:
-        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-2_jpeg1'][:])        
+    if 'usbcam-1_image' in user_ns['bmm_catalog'][uid]['primary']['data']:
+        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-1_image'][0,:])
+    elif 'usbcam-2_image' in user_ns['bmm_catalog'][uid]['primary']['data']:
+        plt.imshow(user_ns['bmm_catalog'][uid]['primary']['data']['usbcam-2_image'][0,:])        
     else:                       # pre-data-security
         this = user_ns['bmm_catalog'][uid].primary.read()
         if 'usbcam1_image' in this:
