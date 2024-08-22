@@ -209,7 +209,7 @@ class DossierTools():
         metadata (UID, filename) for dossier creation
         '''
         ahora = now()
-        BMMuser, xascam, anacam, usbcam1, usbcam2 = user_ns['BMMuser'], user_ns['xascam'], user_ns['anacam'], user_ns['usbcam1'], user_ns['usbcam2']
+        BMMuser, xascam, anacam, usb1, usb2 = user_ns['BMMuser'], user_ns['xascam'], user_ns['anacam'], user_ns['usb1'], user_ns['usb2']
         image_ana, image_web, image_usb1, image_usb2 = '','','',''
         anauid, webuid, usb1uid, usb2uid = '','','',''
         anasnap, websnap, usb1snap, usb2snap = '','','',''
@@ -269,13 +269,10 @@ class DossierTools():
         usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
         image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
         md['_filename'] = image_usb1
-        usbcam1._annotation_string = stub
+        #usbcam1._annotation_string = stub
         print(bold_msg('USB camera #1 snapshot'))
-        usb1uid = yield from count([usbcam1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb1snap, self.usb1uid = usb1snap, usb1uid
-        #yield from sleep(0.5)
-        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb1uid].primary.read()['usbcam1_image'])[0])
-        # im.save(image_usb1, 'JPEG')
         kafka_message({'copy': True,
                        'file': file_resource(usb1uid),
                        'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
@@ -287,13 +284,10 @@ class DossierTools():
         usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
         image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
         md['_filename'] = image_usb2
-        usbcam2._annotation_string = stub
+        #usbcam2._annotation_string = stub
         print(bold_msg('USB camera #2 snapshot'))
-        usb2uid = yield from count([usbcam2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+        usb2uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb2snap, self.usb2uid = usb2snap, usb2uid
-        #yield from sleep(0.5)
-        # im = Image.fromarray(numpy.array(bmm_catalog[self.usb2uid].primary.read()['usbcam2_image'])[0])
-        # im.save(image_usb2, 'JPEG')
         kafka_message({'copy': True,
                        'file': file_resource(usb2uid),
                        'target': os.path.join(proposal_base(), 'snapshots', usb2snap), })

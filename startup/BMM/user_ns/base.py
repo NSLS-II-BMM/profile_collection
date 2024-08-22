@@ -87,3 +87,13 @@ db = Broker(bmm_catalog)
 from bluesky.callbacks.zmq import Publisher
 publisher = Publisher('localhost:5577')
 RE.subscribe(publisher)
+
+
+def print_docs_to_stdout(name, doc):
+    print("====================================")
+    print(f"{name = }")
+    print(f"{doc = }")
+    print("====================================")
+
+
+#RE.subscribe(print_docs_to_stdout)

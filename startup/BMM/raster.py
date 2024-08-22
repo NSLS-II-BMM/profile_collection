@@ -483,8 +483,6 @@ def raster(inifile=None, **kwargs):
 
 
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
-    xascam, anacam = user_ns['xascam'], user_ns['anacam']
-    usbcam1, usbcam2 = user_ns['usbcam1'], user_ns['usbcam2']
     RE.msg_hook = None
     dossier = DossierTools()
 

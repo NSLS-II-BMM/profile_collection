@@ -1,13 +1,17 @@
-import sys, os, re, shutil, socket, datetime, time
+import sys, os, re, shutil, socket, datetime, time, requests
 from distutils.dir_util import copy_tree
 import json, pprint, copy, textwrap
 from subprocess import run
 
-import start_experiment.start_experiment
+#try:
+#    from start_experiment.start_experiment import start_experiment, validate_proposal
+#except:
+from nslsii.sync_experiment import sync_experiment as start_experiment, validate_proposal
 
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
+md = user_ns["RE"].md
 
 import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS, LUSTRE_DATA_ROOT, proposal_base
@@ -793,27 +797,34 @@ class BMM_User(Borg):
             return()
         pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
         if pattern.fullmatch(date) is None:
-            print(error_msg(f'The start date {date} was not in the form YYYY-MM-DD'))
+            print(whisper(f'The start date {date} was not in the form YYYY-MM-DD'))
             #return()
-        if gup == 0:
-            print(error_msg('You did not supply the GUP number'))
-            return()
         if saf == 0:
             print(error_msg('You did not supply the SAF number'))
             return()
-
+        if gup == 0:
+            gup = self.fetch_proposal_from_saf(saf)
+            if gup == 0:
+                print(error_msg('Error retrieving data from PASS API'))
+                return()
+            if gup == -1:
+                print(error_msg('No proposal found corresponding to SAF'))
+                return()
+        
 
         ## NSLS-II start experiment infrastructure
-        start_experiment.start_experiment.start_experiment(gup, 'bmm', verbose=False)
+        start_experiment(gup, 'bmm', verbose=False)
+        # sync_experiment(gup, 'bmm', verbose=False)
         
         # from redis_json_dict import RedisJSONDict
         # import redis
         # redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
         # RedisJSONDict(redis_client=redis_client, prefix='')
-        self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in start_experiment.start_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
-        if self.gup == 301027:
+        if md['data_session'] == 'pass-301027':
             self.experimenters = 'Bruce Ravel'
-        
+        else:
+            self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in validate_proposal(f'pass-{gup}', 'bmm')['users'])))
+            # self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in sync_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
         
         # lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
         lustre_root = os.path.join(LUSTRE_DATA_ROOT, f'{self.cycle}', f'pass-{gup}')
@@ -1027,16 +1038,24 @@ class BMM_User(Borg):
         self.lims = True
 
 
-    def set_assets_folder(self, folder=None):
-        if folder is None:
-            folder = self.folder
-        assets = os.path.join(folder, 'assets')
-        if os.path.exists(assets) is False:
-            print(error_msg(f'Assets folder {assets} does not exist!'))
-            return
-        kafka_message({'mkdir': os.path.join(assets, 'xspress3')})
-        kafka_message({'mkdir': os.path.join(assets, 'webcam')})
-        kafka_message({'mkdir': os.path.join(assets, 'anacam')})
-        kafka_message({'mkdir': os.path.join(assets, 'usbcam1')})
-        kafka_message({'mkdir': os.path.join(assets, 'usbcam2')})
-        
+    def fetch_proposal_from_saf(self, this=None, cycle=None):
+        '''Use the PASS API at https://api.nsls2.bnl.gov to determine what
+        proposal number an SAF is written against, returning the
+        proposal number.  Works for GUP, BDT, PU-P, and PUP, by
+        default only for the current cycle.
+
+        '''
+        if cycle is None:
+            cycle = md["cycle"]
+        url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={cycle}'
+        #print(url)
+        r = requests.get(url)
+        if r.status_code != requests.codes.ok:
+            print(whisper(url))
+            return(0)           # problem contacting API
+        j = json.loads(r.text)
+        for prop in j['proposals']:
+            for saf in prop['safs']:
+                if str(this) == saf['saf_id']:
+                    return prop['proposal_id']
+        return(-1)              # didn't find it
