@@ -211,6 +211,8 @@ class DossierTools():
         ahora = now()
         BMMuser, xascam, anacam, usb1, usb2 = user_ns['BMMuser'], user_ns['xascam'], user_ns['anacam'], user_ns['usb1'], user_ns['usb2']
         image_ana, image_web, image_usb1, image_usb2 = '','','',''
+        anauid, webuid, usb1uid, usb2uid = '','','',''
+        anasnap, websnap, usb1snap, usb2snap = '','','',''
         
         ### --- XAS webcam ---------------------------------------------------------------
         annotation = stub
@@ -233,33 +235,34 @@ class DossierTools():
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
         thishost = socket.gethostname()
         if is_re_worker_active() is False and 'ws3' in thishost:
-            print(whisper('The error text below saying "Error opening file for output:"'))
-            print(whisper('happens every time and does not indicate a problem of any sort.'))
-            anasnap = "%s_analog_%s.jpg" % (stub, ahora)
-            image_ana = os.path.join(folder, 'snapshots', anasnap)
-            md['_filename'] = image_ana
-            anacam._annotation_string = stub
-            print(bold_msg('analog camera snapshot'))
-            anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            print(whisper('The error text above saying "Error opening file for output:"'))
-            print(whisper('happens every time and does not indicate a problem of any sort.\n'))
-            self.anasnap, self.anauid = anasnap, anauid
-            # try:
-            #     im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
-            #     im.save(image_ana, 'JPEG')
-            #     if BMMuser.post_anacam:
-            #         kafka_message({'echoslack': True,
-            #                        'img': image_ana})
-            # except:
-            #     print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-            #     anacam_uid = False
-            #     pass
-            kafka_message({'copy': True,
-                       'file': file_resource(anauid),
-                       'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
-            if BMMuser.post_anacam:
-                kafka_message({'echoslack': True,
-                               'img': os.path.join(proposal_base(), 'snapshots', anasnap)})
+            pass
+            # print(whisper('The error text below saying "Error opening file for output:"'))
+            # print(whisper('happens every time and does not indicate a problem of any sort.'))
+            # anasnap = "%s_analog_%s.jpg" % (stub, ahora)
+            # image_ana = os.path.join(folder, 'snapshots', anasnap)
+            # md['_filename'] = image_ana
+            # anacam._annotation_string = stub
+            # print(bold_msg('analog camera snapshot'))
+            # anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            # print(whisper('The error text above saying "Error opening file for output:"'))
+            # print(whisper('happens every time and does not indicate a problem of any sort.\n'))
+            # self.anasnap, self.anauid = anasnap, anauid
+            # # try:
+            # #     im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
+            # #     im.save(image_ana, 'JPEG')
+            # #     if BMMuser.post_anacam:
+            # #         kafka_message({'echoslack': True,
+            # #                        'img': image_ana})
+            # # except:
+            # #     print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
+            # #     anacam_uid = False
+            # #     pass
+            # kafka_message({'copy': True,
+            #            'file': file_resource(anauid),
+            #            'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
+            # if BMMuser.post_anacam:
+            #     kafka_message({'echoslack': True,
+            #                    'img': os.path.join(proposal_base(), 'snapshots', anasnap)})
 
             
         ### --- USB camera #1 --------------------------------------------------------------

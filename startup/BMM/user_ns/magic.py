@@ -68,6 +68,12 @@ def w(arg):
     except:
         print(f'{arg} is not a thing that can be probed for position')
 
+@register_line_magic
+def sam(arg):
+    print(f'xafs_samx = {xafs_refx.position}   xafs_samy = {xafs_refy.position}')
+    return
+
+        
 from BMM.kafka import kafka_message
 @register_line_magic
 def ca(arg):

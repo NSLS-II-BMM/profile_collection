@@ -63,8 +63,8 @@ class GlancingAngle():
         ax.set_xlabel(f'{motor} (mm)')
         ax.set_ylabel(f'{inverted}It/I0 and error function')
         ax.set_title(f'fit to {direction} scan, spinner {spinner}, center={center:.3f}')
-        fig.canvas.manager.show()
-        fig.canvas.flush_events() 
+        self.fig.canvas.manager.show()
+        self.fig.canvas.flush_events() 
 
     def plot_pitch(self, **kwargs):
         self.pitch_uid       = uid       = kwargs['uid']
@@ -145,5 +145,5 @@ class GlancingAngle():
         
         if matplotlib.get_backend().lower() == 'agg':
             self.fig.savefig(self.filename)
-            self.logger.info(f'saved spinner alignment figure {filename}')
+            self.logger.info(f'saved spinner alignment figure {self.filename}')
             img_to_slack(self.filename, title=f'Alignment of spinner {self.spinner}', measurement='xafs')

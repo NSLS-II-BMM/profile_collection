@@ -290,7 +290,8 @@ class WheelMacroBuilder(BMMMacroBuilder):
             self.tab = ' '*12
             #self.do_first_change = True
             self.content += self.check_edge()
-            
+        else:            
+            self.content += self.check_edge()
             
         for m in self.measurements:
 

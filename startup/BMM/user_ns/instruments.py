@@ -8,7 +8,17 @@ TAB = '\t\t\t'
 
 WITH_LAKESHORE = False
 WITH_LINKAM = True
+WITH_ENCLOSURE = True
 
+if WITH_ENCLOSURE is True:
+    from BMM.user_ns.motors import xafs_refy, xafs_refx
+    run_report('\tAir Science enclosure')
+    xafs_samx = xafs_refx
+    xafs_samy = xafs_refy
+    print(f'{TAB}defined xafs_samx/xafs_samy as xafs_refx/xafs_refy')
+    
+
+    
 ########################################################################
 # Note: the use of SynAxis in this file is so that every motor-related #
 # symbol gets set to `something' at startup.  This allows bsui to      #
@@ -303,10 +313,10 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -79.884
+    xafs_ref.outer_position = -60.487
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = -53.384 # xafs_ref.outer_position + ~26.5
+xafs_ref.inner_position = -33.987 # xafs_ref.outer_position + ~26.5
 
 #                    1     2     3     4     5     6     7     8     9     10    11    12
 #xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
@@ -367,6 +377,10 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'U' :     [0, 24, 'Y',  'Y2O3'],  # use Y K for U L3
                     #'U' :     [0, 24, 'U',  'UO3'],  # user supplied U standard
                     'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
+
+                    ## Hunter college reference wheel with Tc and U
+                    #'U':      [1,  3, 'U',  'UO3'],
+                    #'Tc':     [1,  7, 'Tc', 'TcO4'],
 }
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
 
@@ -376,27 +390,20 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
 #                    'Eu', 'Gd', None, None, None, None, None, None, None, 'Ba', None, None]
 #                    13    14    15    16    17    18    19    20    21    22    23    24
 
-        
-## reference foil wheel will be something like this:
-# xafs_wheel.content = ['Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As',
-#                       'Se', 'Br', 'Sr', 'Y',  'Nb', 'Mo', 'Hf', 'W',  'Re'  'Pt', 'Au', 'Pb']
-#
-# others: Zr, Rb, Ta, Hg, Ru, Bi, Cs, Ba, La, Ce to Lu (14)
-#
-# too low (H-Sc): 21
-# noble gases: 4
-# Rh to I: 9
-# radioactive (Tc, Po, At, Fr - U): 9 (Tc, U, and Th could be part of the experiment)
-#
-# available = 47, unavailable = 45
-#
-# then,
-#   try:
-#      sl = xafs_wheel.content.index[elem] + 1
-#      yield from reference_slot(sl)
-#   except:
-#      # don't move reference wheel
 
+def set_reference_wheel(position=None):
+    '''Run this after measuring the correct location of xafs_refx.  This
+    will set the inner and outer positions in bsui and push the outer
+    position to redis.  If no position is supplied, the current
+    position of xafs_refx will be used.
+
+    '''
+    if position is None:
+        position = xafs_refx.position
+    xafs_ref.outer_position = position
+    xafs_ref.inner_position = position + 26.5
+    rkvs.set('BMM:ref:outer', position)
+    
 def ref2redis():
     #for i in range(0, rkvs.llen('BMM:reference:list')):
     #    rkvs.rpop('BMM:reference:list')

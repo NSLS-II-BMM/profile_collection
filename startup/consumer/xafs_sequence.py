@@ -3,6 +3,7 @@ import os
 from matplotlib import get_backend
 
 from BMM.larch_interface import Pandrosus, Kekropidai, plt
+from larch.io import create_athena
 
 from slack import img_to_slack, post_to_slack
 from tools import experiment_folder
@@ -88,13 +89,27 @@ class XAFSSequence():
                         img_to_slack(tossfile, title=name, measurement='xafs')
                 
 
-    def merge(self):
+    def merge(self, prj=False, filename=None, seqnumber=None):
+        project = None
         if len(self.uidlist) == 0:
             return 0
         elif len(self.uidlist) == 1:
             toplot = self.panlist[0]
         else:
             toplot = self.kek.merge()
+            try:
+                if prj is True:
+                    ## build filename from name of associated png file
+                    filename = filename.replace('snapshots', 'prj')
+                    filename = filename.replace('.png', f'_{seqnumber:02d}.prj')
+                    location = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
+                    project = create_athena(location)
+                    for g in self.panlist:
+                        project.add_group(self.group)
+                    project.save()
+            except Exception as E:
+                print('filed to make project file')
+                print(E)
         toplot.facecolor = (0.95, 0.95, 0.95)
         name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
         if name == 'None': return 0
@@ -117,19 +132,23 @@ class XAFSSequence():
         if self.fig is not None:
             plt.close(self.fig.number)
         #plt.close('all')
-        ok = self.merge()
+
+        ## dossier should have already been written, thus the
+        ## sequence number (i.e. the number of times a
+        ## sequence of repetitions using the same file) should
+        ## already be known.  This will align the sequence
+        ## numbering of the live plot and triplot images with
+        ## the sequence numbering of the dossier itself
+        seqnumber = int(rkvs.get('BMM:dossier:seqnumber').decode('utf-8'))
+        ok = self.merge(prj=True, filename=filename, seqnumber=seqnumber)
         if ok == 1:
             if get_backend().lower() == 'agg':
-                ## dossier should have already been written, thus the
-                ## sequence number (i.e. the number of times a
-                ## sequence of repetitions using the same file) should
-                ## already be known.  This will align the sequence
-                ## numbering of the live plot and triplot images with
-                ## the sequence numbering of the dossier itself
-                sequnumber = rkvs.get('BMM:dossier:seqnumber').decode('utf-8')
                 if seqnumber is not None:
-                    filename = filename.replace('.png', f'-{seqnumber:02d}.png')
-                fname = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
+                    try:
+                        filename = filename.replace('.png', f'_{seqnumber:02d}.png')
+                    except:
+                        filename = filename.replace('.png', '_01.png')
+                    fname = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
                 self.fig.savefig(fname)
                 name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
                 self.logger.info(f'saved XAFS summary figure {fname}')
