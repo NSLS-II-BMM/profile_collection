@@ -28,18 +28,18 @@ from BMM.xspress3      import BMMXspress3DetectorBase, BMMXspress3Channel
 # also that a linescan or xafs scan must set total_points up front
 
 # JOSH: I wish someone had put that note in nslsii.detector.xspress3.py
-class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
-    '''Subclass of BMMXspress3DetectorBase specific to the 1-element interface.
+class BMMXspress3Detector_7Element_Base(BMMXspress3DetectorBase):
+    '''Subclass of BMMXspress3DetectorBase specific to the 7-element interface.
     '''
-    
+
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if read_attrs is None:
             read_attrs = ['hdf5']
-        super().__init__(prefix, configuration_attrs=configuration_attrs,
+        super().__init__(prefix, configuration_attrs=None,
                          read_attrs=read_attrs, **kwargs)
         self.hdf5.num_extra_dims.put(0)
-        
+
         ## May 22, 2024: this PV suppresses the EraseOnStart function
         ## of the Xspress3 IOC.  When on and used in the way BMM uses
         ## the IOC, this leads to trouble in the form of a "ghost
@@ -50,17 +50,18 @@ class BMMXspress3Detector_1Element_Base(BMMXspress3DetectorBase):
         erase_on_start = EpicsSignal('XF:06BM-ES{Xsp:1}:det1:EraseOnStart', name='erase_on_start')
         erase_on_start.put(0)
 
+
+
 if sys.version_info[1] == 9:
-    BMMXspress3Detector_1Element = build_detector_class(
-        channel_numbers=(8,),
+    BMMXspress3Detector_4Element = build_detector_class(
+        channel_numbers=(1, 2, 3, 4, 5, 6, 7),
         mcaroi_numbers=range(1, 17),
-        detector_parent_classes=(BMMXspress3Detector_1Element_Base, )
+        detector_parent_classes=(BMMXspress3Detector_7Element_Base, )
     )
 else:
-    BMMXspress3Detector_1Element = build_xspress3_class(
-        channel_numbers=(8,),
+    BMMXspress3Detector_4Element = build_xspress3_class(
+        channel_numbers=(1, 2, 3, 4, 5, 6, 7),
         mcaroi_numbers=range(1, 17),
         image_data_key="xrf",
-        xspress3_parent_classes=(BMMXspress3Detector_1Element_Base, )
+        xspress3_parent_classes=(BMMXspress3Detector_7Element_Base, ),
     )
-        

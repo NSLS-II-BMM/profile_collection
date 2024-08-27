@@ -1,4 +1,5 @@
 import numpy, h5py, json
+import xraylib, math
 import itertools, os, sys
 import time as ttime
 from collections import deque, OrderedDict
@@ -41,8 +42,8 @@ user_ns = vars(user_ns_module)
 md = user_ns["RE"].md
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-
-from BMM.periodictable import Z_number
+from BMM.kafka         import kafka_message
+from BMM.periodictable import Z_number, edge_number
 
 from BMM.user_ns.base import startup_dir
 
@@ -199,6 +200,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     )
 
     acquire_busy = Cpt(EpicsSignal, "AcquireBusy")
+    erase = Cpt(EpicsSignal, 'det1:ERASE')
+    Acquire = Cpt(EpicsSignal, 'det1:Acquire')
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -488,3 +491,124 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if doplot:
             self.plot(add=True, uid=uid)
         
+    def list_rois(self):
+        first_channel_number = self.channel_numbers[0]
+        first_channel = self.get_channel(channel_number=first_channel_number)
+        return list(((x.name, x.kind) for x in list(first_channel.iterate_mcarois())))
+
+
+            
+    def plot(self, uid=None, add=False, only=None): 
+        '''Make a plot appropriate for the N-element detector.
+
+        The default is to sum the four channels.
+        
+        Parameters
+        ----------
+        uid : str
+            DataBroker UID. If None, use the current values in the IOC
+        add : bool
+            If True, plot the sum of the four channels
+        only : int
+            plot only the signal from a specific channel -- (1) / (1-4) / (1-7)
+        
+        '''
+        if uid is not None:
+            kafka_message({'xrf': 'plot', 'uid': uid, 'add': add, 'only': only})
+        else:
+            dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
+            plt.clf()
+            plt.xlabel('Energy  (eV)')
+            plt.ylabel('counts')
+            plt.grid(which='major', axis='both')
+            plt.xlim(2500, round(dcm.energy.position, -2)+500)
+            plt.title(f'XRF Spectrum {BMMuser.element} {BMMuser.edge}')
+            s = list()
+            for channel in self.iterate_channels():
+                s.append(channel.mca.array_data.get())
+            e = numpy.arange(0, len(s[0])) * 10
+            plt.ion()
+            if only is not None and only in range(1, len(list(self.iterate_channels()))+1):
+                channel = self.get_channel(channel_number=only)
+                this = channel.mca.array_data
+                plt.plot(e, this.get(), label=f'channel {only}')
+            elif add is True:
+                plt.plot(e, sum(s), label=f'sum of {len(list(self.iterate_channels()))} channels')
+            else:
+                for i, sig in enumerate(s):
+                    plt.plot(e, sig, label=f'channel {i}')
+            z = Z_number(BMMuser.element)
+            if BMMuser.edge.lower() == 'k':
+                label = f'{BMMuser.element} Kα1'
+                ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                plt.axvline(x = ke/1.0016,  color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l3':
+                label = f'{BMMuser.element} Lα1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l2':
+                label = f'{BMMuser.element} Kβ1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l1':
+                label = f'{BMMuser.element} Kβ3'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            plt.legend()
+            #plt.show()
+    
+    def table(self):
+        '''Pretty print a table of values for each ROI and for all four channels.
+        '''
+        BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
+
+        edge = xraylib.EdgeEnergy(Z_number(BMMuser.element), int(edge_number(BMMuser.edge)))*1000
+
+        if dcm.energy.position > edge:
+            print(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}\n')
+        else:
+            print(warning_msg(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}  *** Below Edge! ***\n'))
+
+        print(' ROI     ', end='')
+        for i, channel in enumerate(self.iterate_channels()):
+            print(f' Chan{i}     ', end='')
+        print()
+        print('========', end='')
+        print('==========='*len(list(self.iterate_channels())))
+
+        first_channel_number = self.channel_numbers[0]
+        first_channel = self.get_channel(channel_number=first_channel_number)
+        for r in first_channel.mcaroi_numbers:
+            el = first_channel.get_mcaroi(mcaroi_number=r).name
+            if len(el) > 3:
+                continue
+            if el != 'OCR':
+                el = el[:-1]
+            if '_value' in el:
+                print(' None', end='')
+                for channel_number in self.channel_numbers:
+                    print(f"  {0:7}  ", end='')
+                print('')
+            elif el == BMMuser.element or el == 'OCR':
+                if dcm.energy.position > edge:
+                    print(go_msg(f' {el:3} '), end='')
+                else:
+                    print(warning_msg(f' {el:3} '), end='')                    
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=r)
+                    val = mcaroi.total_rbv.get()
+                    if math.isnan(val):
+                        val = 0
+                    if dcm.energy.position > edge:
+                        print(go_msg(f"  {int(val):7}  "), end='')
+                    else:
+                        print(warning_msg(f"  {int(val):7}  "), end='')
+                        
+                print('')
+            else:                
+                print(f' {el:3} ', end='')
+
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=r)
+                    val = mcaroi.total_rbv.get()
+                    if math.isnan(val):
+                        val = 0
+                    print(f"  {int(val):7}  ", end='')
+                print('')

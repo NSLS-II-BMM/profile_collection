@@ -23,7 +23,7 @@ from BMM.workspace         import rkvs
 from BMM.user_ns.base      import bmm_catalog
 from BMM.user_ns.bmm       import BMMuser
 from BMM.user_ns.dwelltime import _locked_dwell_time
-from BMM.user_ns.detectors import quadem1, xs, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, ION_CHAMBERS
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)

@@ -30,7 +30,7 @@ from BMM.suspenders    import BMM_suspenders, BMM_clear_to_start, BMM_clear_susp
 from BMM.xafs          import scan_metadata, file_exists
 
 from BMM.user_ns.base      import bmm_catalog
-from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, ic0, ic1, ic2, xs, xs1, xs4, xs7, ION_CHAMBERS
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -108,7 +108,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     elif detector == 'Xs1':
         yield from mv(xs1.cam.acquire_time, dwell)
         yield from mv(xs1.total_points, readings)
-
+    ## xs4 vs xs7
 
     line1 = '%s, N=%s, dwell=%.3f, delay=%.3f\n' % (detector, readings, dwell, delay)
     

@@ -34,7 +34,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base      import bmm_catalog, WORKSPACE
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
-from BMM.user_ns.detectors import quadem1, xs, xs1, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, ION_CHAMBERS
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -795,7 +795,8 @@ def xafs(inifile=None, **kwargs):
             yield from mv(xs1.cam.acquire_time, 0.5)
         elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
-
+        ## xs4 vs xs7
+            
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## copy INI file to proposal folder
@@ -823,6 +824,7 @@ def xafs(inifile=None, **kwargs):
                 yield from mv(xs.total_points, len(energy_grid))
             if plotting_mode(p['mode']) == 'xs1':
                 yield from mv(xs1.total_points, len(energy_grid))
+            ## xs4 vs xs7
 
                 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -864,16 +866,6 @@ def xafs(inifile=None, **kwargs):
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
-
-            # if 'xs1' in p['mode']:
-            #     yield from mv(xs1.erase.put, 1)
-            #     yield from mv(xs1.cam.acquire_time, time_grid[0])
-            #     yield from mv(xs1.Acquire, 1)
-            # elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
-            #     yield from mv(xs.erase, 1)
-            #     yield from mv(xs.cam.acquire_time, time_grid[0])
-            #     yield from mv(xs.Acquire, 1)
-
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## show the metadata to the user
@@ -1022,6 +1014,8 @@ def xafs(inifile=None, **kwargs):
                     md['_kind'] = '333'
                 if plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
+                elif plotting_mode(p['mode']) == 'xs7':
+                    md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4, BMMuser.xs5, BMMuser.xs6, BMMuser.xs7)
                 elif plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
@@ -1047,6 +1041,7 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
+                ## xs4 vs xs7
                 elif plotting_mode(p['mode']) == 'xs':
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
@@ -1070,7 +1065,7 @@ def xafs(inifile=None, **kwargs):
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
                 
-                if plotting_mode(p['mode']) in ('xs', 'xs1', 'fluo+yield'):
+                if plotting_mode(p['mode']) in ('xs', 'xs1', 'xs4', 'xs7', 'fluo+yield'):
                     hdf5_uid = xs.hdf5.file_name.value
                     
                 uidlist.append(uid)
@@ -1081,7 +1076,7 @@ def xafs(inifile=None, **kwargs):
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation + message to Slack
                 ## also sync data with Google Drive
-                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'xs1', 'yield')):
+                if any(md in p['mode'] for md in ('trans', 'fluo', 'flou', 'both', 'ref', 'xs', 'xs1', 'xs4', 'xs7', 'yield')):
                     try:
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"ML data evaluation model: {emoji}", level='bold', slack=True)

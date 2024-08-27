@@ -28,7 +28,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import xs, xs1, with_xspress3
+from BMM.user_ns.detectors   import xs, xs1, xs4, xs7, with_xspress3
 from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu, m3_xd, m3_xu, ks, m2_ydi, m2_ydo, m2_yu
 from BMM.user_ns.motors      import *
 
@@ -461,8 +461,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         #yield from rois.select_plan(el)   # DEPRECATED
         ## Xspress3
         if with_xspress3:
-            BMMuser.verify_roi(xs, el, edge)
+            BMMuser.verify_roi(xs4, el, edge)
             BMMuser.verify_roi(xs1, el, edge)
+            #BMMuser.verify_roi(xs7, el, edge)
         ## feedback
         show_edges()
 

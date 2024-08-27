@@ -24,6 +24,7 @@ with_struck   = False           # deprecated OG fluorescence read out
 with_xspress3 = True
 use_4element  = True
 use_1element  = True
+use_7element  = False
 
 ################################################################################
 

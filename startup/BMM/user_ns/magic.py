@@ -81,17 +81,37 @@ def ca(arg):
     kafka_message({'close': 'all'})
     return None
 
-from BMM.user_ns.detectors import xs
+from BMM.user_ns.detectors import xs4, xs1, xs7, xs
 @register_line_magic
-def xrf(arg):
-    xs.measure_xrf()
+def xrf4(arg):
+    xs4.measure_xrf()
     return None
 
-from BMM.user_ns.detectors import xs1
 @register_line_magic
 def xrf1(arg):
     xs1.measure_xrf()
     return None
+
+@register_line_magic
+def xrf7(arg):
+    xs7.measure_xrf()
+    return None
+
+@register_line_magic
+def xrf(arg):
+    if xs is xs4:
+        print('doing 4')
+        xs4.measure_xrf()
+        return None
+    elif xs is xs1:
+        print('doing 1')
+        xs1.measure_xrf()
+        return None
+    elif xs is xs7:
+        print('doing 7')
+        xs7.measure_xrf()
+        return None
+
 
 from BMM.demeter import run_athena, run_hephaestus
 @register_line_magic

@@ -68,7 +68,7 @@ class LineScan():
 
     numerator (str)
       the name of the detector being plotted, something like io, it,
-      ir, if, xs, xs1 ...
+      ir, if, xs, xs1, xs4, xs7 ...
 
     denominator (str or int)
       the name of the signal used to normalize the numerator
@@ -89,7 +89,7 @@ class LineScan():
     description (str)
       a generated string used in the figure title
 
-    xs1, xs2, xs3, xs4, xs8 (strs)
+    xs1, xs2, xs3, xs4, xs5, xs6, xs7, xs8 (strs)
       strings identifying the names of the fluorescence ROIs for the
       current state of the photon delivery system.  these will be
       fetched from redis.
@@ -566,6 +566,9 @@ class XAFSScan():
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
             else:
                 self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4])/kwargs['data']['I0'])
+            ## xs4 vs xs7
+            # else:
+            #     self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4]+kwargs['data'][self.xs5]+kwargs['data'][self.xs6]+kwargs['data'][self.xs7])/kwargs['data']['I0'])
             self.line_muf.set_data(self.energy, self.fluor)
         if self.mode in ('yield', 'eyield'):
             self.fluor.append( kwargs['data']['Iy'] / kwargs['data']['I0'] )

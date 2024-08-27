@@ -220,11 +220,17 @@ class BMM_User(Borg):
         self.xs2             = None
         self.xs3             = None
         self.xs4             = None
+        self.xs5             = None
+        self.xs6             = None
+        self.xs7             = None
         self.xs8             = None
         self.xschannel1      = None
         self.xschannel2      = None
         self.xschannel3      = None
         self.xschannel4      = None
+        self.xschannel5      = None
+        self.xschannel6      = None
+        self.xschannel7      = None
         self.xschannel8      = None
                 
         ## current plot attributes    #######################################################################
@@ -303,7 +309,7 @@ class BMM_User(Borg):
         self.bmm_strings  = ("DATA", "date", "host", "name", "instrument",
                              "readout_mode", "folder", "folder_link", "workspace", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
-                             "xs1", "xs2", "xs3", "xs4", "xs8", "pds_mode", "mode")
+                             "xs1", "xs2", "xs3", "xs4", "xs5", "xs6", "xs7", "xs8", "pds_mode", "mode")
         self.bmm_ints     = ("gup", "saf", "detector", "npoints", "bender_xas", "bender_xrd",
                              "bender_margin", "filter_state", "nscans", "start")
         self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
@@ -389,7 +395,7 @@ class BMM_User(Borg):
             self.edge    = edge
         for i in (1,2,3,4,8):
             setattr(self, f'xs{i}', f'{element}{i}')
-        for key in ('element', 'edge', 'xs1', 'xs2', 'xs3', 'xs4', 'xs8'):
+        for key in ('element', 'edge', 'xs1', 'xs2', 'xs3', 'xs4', 'xs5', 'xs6', 'xs7', 'xs8'):
             rkvs.set(f'BMM:user:{key}', getattr(self, key))
 
     def verify_roi(self, xs, el, edge, tab=''):
@@ -1041,8 +1047,8 @@ class BMM_User(Borg):
     def fetch_proposal_from_saf(self, this=None, cycle=None):
         '''Use the PASS API at https://api.nsls2.bnl.gov to determine what
         proposal number an SAF is written against, returning the
-        proposal number.  Works for GUP, BDT, PU-P, and PUP, by
-        default only for the current cycle.
+        proposal number.  Works for GUP, BDT, PU-P, and PUP.  Unless
+        cycle is specified, it works only for the current cycle.
 
         '''
         if cycle is None:

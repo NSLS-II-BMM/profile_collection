@@ -34,7 +34,7 @@ from BMM.workspace     import rkvs
 from BMM.user_ns.base        import WORKSPACE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, ION_CHAMBERS
+from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, xs4, xs7, ION_CHAMBERS
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
@@ -663,7 +663,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,
 ## for consistency with areascan().  This does a simple check to see if the old
 ## argument order is being used and swaps them if need be
 def ls_backwards_compatibility(detin, axin):
-    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'I0a', 'I0b', 'Ic0', 'Ic1', 'Xs', 'Xs1'):
+    if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'I0a', 'I0b', 'Ic0', 'Ic1', 'Xs', 'Xs1', 'Xs4', 'Xs7'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -759,9 +759,9 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         BMMuser.motor = thismotor
 
         # sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Ic1', 'Xs', 'Xs1'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Ic1', 'Xs', 'Xs1', 'Xs4', 'Xs7'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1, xs4, xs7')))
             yield from null()
             return
 
@@ -805,6 +805,8 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             detname = 'fluorescence'
             yield from mv(xs1.total_points, nsteps) # Xspress3 demands that this be set up front
 
+        ## xs4 vs xs7
+            
         elif detector == 'Ic0':
             pass
         elif detector == 'Ic1':
@@ -871,11 +873,6 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         yield from resting_state_plan()
 
 
-    #RE, BMMuser, rkvs = user_ns['RE'], user_ns['BMMuser'], user_ns['rkvs']
-    #try:
-    #    xs = user_ns['xs']
-    #except:
-    #    pass
     ######################################################################
     # this is a tool for verifying a macro.  this replaces an xafs scan  #
     # with a sleep, allowing the user to easily map out motor motions in #
