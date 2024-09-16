@@ -34,7 +34,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base      import bmm_catalog, WORKSPACE
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
-from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, pilatus, ION_CHAMBERS
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -569,7 +569,7 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if plotting_mode(p['mode']) in ('xs', 'fluo+yield') and use_4element is True:
+        if plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus') and use_4element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
@@ -754,6 +754,8 @@ def xafs(inifile=None, **kwargs):
             yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
         if plotting_mode(p['mode']) == 'fluo+yield' and BMMuser.lims is True:
             yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
+        if plotting_mode(p['mode']) == 'fluo+pilatus' and BMMuser.lims is True:
+            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -791,6 +793,8 @@ def xafs(inifile=None, **kwargs):
 
         if 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
+        if 'pilatus' in p['mode']:
+            pilatus.stats.kind = 'hinted'
         if 'xs1' in p['mode']:
             yield from mv(xs1.cam.acquire_time, 0.5)
         elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
@@ -820,7 +824,7 @@ def xafs(inifile=None, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## make sure XSpress3 IOC knows how many data points to measure
-            if plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
+            if plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus'):
                 yield from mv(xs.total_points, len(energy_grid))
             if plotting_mode(p['mode']) == 'xs1':
                 yield from mv(xs1.total_points, len(energy_grid))
@@ -998,6 +1002,11 @@ def xafs(inifile=None, **kwargs):
                     yield from mv(xs1.spectra_per_point, 1) 
                     yield from mv(xs1.total_points, len(energy_grid))
                     hdf5_uid = xs1.hdf5.file_name.value
+                if 'pilatus' in p['mode']:
+                    ## the next line does not work.  gets overridden by stage_sigs when staged :(
+                    #yield from mv(pilatus.hdf5.num_capture, len(energy_grid))
+                    ## this seems ugly and too far in the weeds, but it works
+                    pilatus.hdf5.stage_sigs['num_capture'] = len(energy_grid)
                 
                 rightnow = metadata_at_this_moment() # see metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
@@ -1016,7 +1025,7 @@ def xafs(inifile=None, **kwargs):
                     md['_dtc'] = (BMMuser.xs8,)
                 elif plotting_mode(p['mode']) == 'xs7':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4, BMMuser.xs5, BMMuser.xs6, BMMuser.xs7)
-                elif plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
+                elif plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus'):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
@@ -1054,6 +1063,10 @@ def xafs(inifile=None, **kwargs):
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs yield + fluorescence',
                                                  'BMM_kafka': { 'hint':  'xafs yield', **more_kafka }})
+                elif plotting_mode(p['mode']) == 'fluo+pilatus':
+                    uid = yield from scan_nd([*ION_CHAMBERS, xs, pilatus], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence + pilatus',
+                                                 'BMM_kafka': { 'hint':  'xafs fluo+pilatus', **more_kafka }})
                 elif plotting_mode(p['mode']) == 'yield':
                     uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',

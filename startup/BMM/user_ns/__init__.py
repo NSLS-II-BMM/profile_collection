@@ -48,7 +48,7 @@ from .utilities import *
 from .bmm_end import *
 
 if not is_re_worker_active():
-    print('\t\t', end='')
+    print('\t', end='')
     get_ipython().magic(u"%xmode Plain")
     from .prompt import *
     from .magic import *
@@ -59,6 +59,8 @@ if not is_re_worker_active():
 
 from BMM.user_ns.bmm import whoami
 if BMMuser.trigger is True:     # provide feedback if importing persistent user information 
+    if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
+        show_edges()
     print('')
     whoami()
     BMMuser.trigger = False

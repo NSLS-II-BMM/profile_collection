@@ -26,13 +26,20 @@ class IC1DwellTime(QuadEMDwellTime):
 
 class IC2DwellTime(QuadEMDwellTime):
     ...
-    
+
     
 class Xspress3DwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'det1:AcquireTime')
     readback = Cpt(EpicsSignalRO, 'det1:AcquireTime_RBV')
 
-from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3 #with_dualem,
+
+class PilatusDwellTime(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal,   'cam1:AcquireTime')
+    readback = Cpt(EpicsSignalRO, 'cam1:AcquireTime_RBV')
+
+    
+    
+from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3, with_pilatus #with_dualem,
 from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
 
 
@@ -60,20 +67,24 @@ class LockedDwellTimes(PseudoPositioner):
     '''
     dwell_time = Cpt(PseudoSingle, kind='hinted')
     if with_quadem is True:
-        quadem_dwell_time = Cpt(QuadEMDwellTime, 'XF:06BM-BI{EM:1}EM180:', egu='seconds') # main ion chambers
+        quadem_dwell_time   = Cpt(QuadEMDwellTime,   'XF:06BM-BI{EM:1}EM180:',    egu='seconds') # black-box quadem
     if with_struck is True:
-        struck_dwell_time = Cpt(StruckDwellTime, 'XF:06BM-ES:1{Sclr:1}.',  egu='seconds') # analog detector readout
-    #if with_dualem is True:
-    #    dualem_dwell_time = Cpt(DualEMDwellTime, 'XF:06BM-BI{EM:3}EM180:', egu='seconds') # new I0 chamber
+        struck_dwell_time   = Cpt(StruckDwellTime,   'XF:06BM-ES:1{Sclr:1}.',     egu='seconds') # analog detector readout, deprecated
     if with_ic0 is True:
-        ic0_dwell_time = Cpt(IC0DwellTime, 'XF:06BM-BI{IC:0}EM180:', egu='seconds') # new I0 chamber
+        ic0_dwell_time      = Cpt(IC0DwellTime,      'XF:06BM-BI{IC:0}EM180:',    egu='seconds') # stand-alone I0 chamber
     if with_ic1 is True:
-        ic1_dwell_time = Cpt(IC1DwellTime, 'XF:06BM-BI{IC:1}EM180:', egu='seconds') # new It chamber
+        ic1_dwell_time      = Cpt(IC1DwellTime,      'XF:06BM-BI{IC:1}EM180:',    egu='seconds') # stand-alone It chamber
     if with_ic2 is True:
-        ic2_dwell_time = Cpt(IC2DwellTime, 'XF:06BM-BI{IC:3}EM180:', egu='seconds') # new Ir chamber
+        ic2_dwell_time      = Cpt(IC2DwellTime,      'XF:06BM-BI{IC:3}EM180:',    egu='seconds') # stand-alone Ir chamber
     if with_xspress3 is True:
-        xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:', egu='seconds') # Xspress3
-    
+        xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:',        egu='seconds') # XSpress3X
+    if with_pilatus is True:
+        pilatus_dwell_time  = Cpt(PilatusDwellTime,  'XF:06BMB-ES{Det:PIL100k}:', egu='seconds') # pilatus100k
+
+    #if with_dualem is True:
+    #    dualem_dwell_time   = Cpt(DualEMDwellTime,   'XF:06BM-BI{EM:3}EM180:',    egu='seconds') # prototype ion chamber
+        
+        
     @property
     def settle_time(self):
         return self.quadem_dwell_time.settle_time
@@ -84,8 +95,6 @@ class LockedDwellTimes(PseudoPositioner):
             self.quadem_dwell_time.settle_time = val
         if hasattr(self, 'struck_dwell_time'):
             self.struck_dwell_time.settle_time = val
-        #if hasattr(self, 'dualem_dwell_time'):
-        #    self.dualem_dwell_time.settle_time = val
         if hasattr(self, 'ic0_dwell_time'):
             self.ic0_dwell_time.settle_time = val
         if hasattr(self, 'ic1_dwell_time'):
@@ -94,6 +103,10 @@ class LockedDwellTimes(PseudoPositioner):
             self.ic2_dwell_time.settle_time = val
         if hasattr(self, 'xspress3_dwell_time'):
             self.xspress3_dwell_time.settle_time = val
+        if hasattr(self, 'pilatus_dwell_time'):
+            self.pilatus_dwell_time.settle_time = val
+        #if hasattr(self, 'dualem_dwell_time'):
+        #    self.dualem_dwell_time.settle_time = val
 
     @pseudo_position_argument
     def forward(self, pseudo_pos):
@@ -109,8 +122,6 @@ class LockedDwellTimes(PseudoPositioner):
             signal_chains['quadem_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'struck_dwell_time'):
             signal_chains['struck_dwell_time'] = pseudo_pos.dwell_time
-        #if hasattr(self, 'dualem_dwell_time'):
-        #    signal_chains['dualem_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic0_dwell_time'):
             signal_chains['ic0_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'ic1_dwell_time'):
@@ -119,17 +130,13 @@ class LockedDwellTimes(PseudoPositioner):
             signal_chains['ic2_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'xspress3_dwell_time'):
             signal_chains['xspress3_dwell_time'] = pseudo_pos.dwell_time
+        if hasattr(self, 'pilatus_dwell_time'):
+            signal_chains['pilatus_dwell_time'] = pseudo_pos.dwell_time
+        #if hasattr(self, 'dualem_dwell_time'):
+        #    signal_chains['dualem_dwell_time'] = pseudo_pos.dwell_time
 
         return self.RealPosition(**signal_chains)
 
-        ## how I used to do this....
-        # if 'xspress3_dwell_time' in self.read_attrs and 'dualem_dwell_time' in self.read_attrs:
-        #     return self.RealPosition(
-        #         quadem_dwell_time=pseudo_pos.dwell_time,
-        #         #struck_dwell_time=pseudo_pos.dwell_time,
-        #         dualem_dwell_time=pseudo_pos.dwell_time,
-        #         xspress3_dwell_time=pseudo_pos.dwell_time,
-        #     )
             
     @real_position_argument
     def inverse(self, real_pos):

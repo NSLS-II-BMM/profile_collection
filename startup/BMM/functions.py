@@ -161,15 +161,15 @@ l2e = e2l
 
 ## see calibrate_pitch in BMM/mono_calibration.py
 def approximate_pitch(energy):
-    '''Updated 20 May 2024
+    '''Updated 12 September 2024
     '''
     if user_ns['dcm']._crystal == '111':
-        m = -5.0871e-06
-        b = 4.41381875
+        m = -4.6484e-06
+        b = 4.45537210
         return(m*energy + b)
     else:
-        m = -3.2775e-06
-        b = 2.38488057
+        m = -3.0517e-06
+        b = 2.38068447
         return(m*energy + b)
         
 
@@ -267,6 +267,8 @@ def plotting_mode(mode):
     mode = mode.lower()
     if mode == 'fluo+yield':
         return 'fluo+yield'
+    elif mode == 'fluo+pilatus':
+        return 'fluo+pilatus'
     elif user_ns['with_xspress3'] and mode == 'xs1':
         return 'xs1'
     elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):

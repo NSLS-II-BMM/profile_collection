@@ -20,8 +20,8 @@ from BMM.workspace  import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.dwelltime   import _locked_dwell_time, with_iy
-from BMM.user_ns.detectors   import quadem1, ION_CHAMBERS
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_iy, with_pilatus
+from BMM.user_ns.detectors   import quadem1, ION_CHAMBERS, pilatus
 from BMM.user_ns.instruments import xafs_wheel
 
 def resting_redis():
@@ -47,6 +47,10 @@ def resting_state():
         quadem1.Iy.kind = 'hinted'
     else:
         quadem1.Iy.kind = 'omitted'
+    if with_pilatus is True:
+        pilatus.stats.kind = 'hinted'
+    else:
+        pilatus.stats.kind = 'omitte'
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -83,6 +87,10 @@ def resting_state_plan():
         quadem1.Iy.kind = 'hinted'
     else:
         quadem1.Iy.kind = 'omitted'
+    if with_pilatus is True:
+        pilatus.stats.kind = 'hinted'
+    else:
+        pilatus.stats.kind = 'omitte'
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     for electrometer in ION_CHAMBERS:
@@ -118,6 +126,10 @@ def end_of_macro():
         quadem1.Iy.kind = 'hinted'
     else:
         quadem1.Iy.kind = 'omitted'
+    if with_pilatus is True:
+        pilatus.stats.kind = 'hinted'
+    else:
+        pilatus.stats.kind = 'omitte'
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False

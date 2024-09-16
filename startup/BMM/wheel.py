@@ -162,29 +162,8 @@ class WheelMotor(EndStationEpicsMotor):
         thistext +=  '	    </div>\n'
         return thistext
 
-        
 
 
-# def reference(target=None):
-#     xafs_ref = user_ns['xafs_ref']
-#     if target is None:
-#         print('Not moving reference wheel.')
-#         return(yield from null())
-#     if type(target) is int:
-#         if target < 1 or target > 24:
-#             print('An integer reference target must be between 1 and 24 (%d)' % target)
-#             return(yield from null())
-#         else:
-#             yield from xafs_ref.set_slot(target)
-#             return
-#     try:
-#         target = target.capitalize()
-#         slot = xafs_ref.content.index(target) + 1
-#         yield from xafs_ref.set_slot(slot)
-#     except:
-#         print('Element %s is not on the reference wheel.' % target)
-
-        
 def reference(target=None):
     xafs_ref  = user_ns['xafs_ref']
     xafs_refx = user_ns['xafs_refx']

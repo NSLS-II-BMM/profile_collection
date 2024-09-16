@@ -37,12 +37,14 @@ def file_resource(record):
             return(template)
     elif 'databroker.client.BlueskyRun' in str(type(record)):
         docs = record.documents()
+        found = []
         for d in docs:
             if d[0] == 'resource':
                 this = os.path.join(d[1]['root'], d[1]['resource_path'])
                 if '_%d' in this or re.search('%\d\.\dd', this) is not None:
                     this = this % 0
-                return(this)
+                found.append(this)
+        return(found)
     else:
         return(None)
 

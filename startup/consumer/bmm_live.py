@@ -400,7 +400,7 @@ class XAFSScan():
 
 
         ## 2x2 grid if fluorescence
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus'):
             self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
             self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
@@ -461,7 +461,7 @@ class XAFSScan():
             ax.set_facecolor((0.95, 0.95, 0.95))
         
         ## do all that for a fluorescence panel
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield', 'fluo+pilatus'):
             self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
@@ -491,7 +491,7 @@ class XAFSScan():
                 ax.legend(loc='best', shadow=True)
             else:
                 ax.legend.remove()
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
             if self.count < 16:
                 self.muf.legend(loc='best', shadow=True)
@@ -561,7 +561,7 @@ class XAFSScan():
         self.line_ref.set_data(self.energy, self.refer)
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield', 'fluo+pilatus'):
             if self.mode == 'xs1':
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
             else:

@@ -9,9 +9,9 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.bmm import BMMuser
 
 
-def run_athena():
-    os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
-    subprocess.Popen(["dathena"], stderr=subprocess.DEVNULL)
+# def run_athena():
+#     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 
+#     subprocess.Popen(["dathena"], stderr=subprocess.DEVNULL)
     
 def run_hephaestus():
     os.environ['DEMETER_FORCE_IFEFFIT'] = '1' 

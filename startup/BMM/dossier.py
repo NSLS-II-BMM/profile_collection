@@ -174,7 +174,7 @@ class DossierTools():
         md['_pccenergy'] = f'{dcm.energy.position:.2f}'
         md['_user'] = dict()
         md['_user']['startdate'] = BMMuser.date
-        if use_4element and plotting_mode(mode) in ('xs', 'fluo+yield'):
+        if use_4element and plotting_mode(mode) in ('xs', 'fluo+yield', 'fluo+pilatus'):
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
@@ -224,7 +224,7 @@ class DossierTools():
         webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.websnap, self.webuid = websnap, webuid
         kafka_message({'copy': True,
-                       'file': file_resource(webuid),
+                       'file': file_resource(webuid)[0],
                        'target': os.path.join(proposal_base(), 'snapshots', websnap), })
 
         if BMMuser.post_webcam:
@@ -258,7 +258,7 @@ class DossierTools():
             # #     anacam_uid = False
             # #     pass
             # kafka_message({'copy': True,
-            #            'file': file_resource(anauid),
+            #            'file': file_resource(anauid)[0],
             #            'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
             # if BMMuser.post_anacam:
             #     kafka_message({'echoslack': True,
@@ -274,7 +274,7 @@ class DossierTools():
         usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb1snap, self.usb1uid = usb1snap, usb1uid
         kafka_message({'copy': True,
-                       'file': file_resource(usb1uid),
+                       'file': file_resource(usb1uid)[0],
                        'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
         if BMMuser.post_usbcam1:
             kafka_message({'echoslack': True,
@@ -289,7 +289,7 @@ class DossierTools():
         usb2uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb2snap, self.usb2uid = usb2snap, usb2uid
         kafka_message({'copy': True,
-                       'file': file_resource(usb2uid),
+                       'file': file_resource(usb2uid)[0],
                        'target': os.path.join(proposal_base(), 'snapshots', usb2snap), })
         if BMMuser.post_usbcam2:
             kafka_message({'echoslack': True,

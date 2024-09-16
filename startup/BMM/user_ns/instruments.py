@@ -1,5 +1,5 @@
 import time, json
-from BMM.functions import run_report, examine_fmbo_motor_group
+from BMM.functions import run_report, examine_fmbo_motor_group, error_msg
 from BMM.workspace import rkvs
 
 run_report(__file__, text='instrument definitions')
@@ -8,7 +8,7 @@ TAB = '\t\t\t'
 
 WITH_LAKESHORE = False
 WITH_LINKAM = True
-WITH_ENCLOSURE = True
+WITH_ENCLOSURE = False
 
 if WITH_ENCLOSURE is True:
     from BMM.user_ns.motors import xafs_refy, xafs_refx
@@ -313,15 +313,11 @@ xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
 if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -60.487
+    xafs_ref.outer_position = -60.0
+    print(error_msg('\t\t\t\tReference wheel is not aligned!'))
 else:
     xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = -33.987 # xafs_ref.outer_position + ~26.5
-
-#                    1     2     3     4     5     6     7     8     9     10    11    12
-#xafs_ref.content = [None, 'Ti', 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge',
-#                    'As', 'Se', 'Br', 'Zr', 'Nb', 'Mo', 'Pt', 'Au', 'Pb', 'Bi', 'Ce', None]
-#                    13    14    15    16    17    18    19    20    21    22    23    24
+xafs_ref.inner_position = xafs_ref.outer_position + 26.5 # xafs_ref.outer_position + ~26.5
 
 #                          ring, slot, elem, material (ring: 0=outer, 1=inner)
 xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
@@ -385,10 +381,6 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
 
 
-#                    1     2     3     4     5     6     7     8     9     10    11    12
-#xafs_ref.content = [None, 'La', 'Ce', 'Pr', 'Nd', 'Sm', 'Tb', 'Ho', 'Er', 'Yb', 'Lu', 'Tm',
-#                    'Eu', 'Gd', None, None, None, None, None, None, None, 'Ba', None, None]
-#                    13    14    15    16    17    18    19    20    21    22    23    24
 
 
 def set_reference_wheel(position=None):
@@ -407,8 +399,6 @@ def set_reference_wheel(position=None):
 def ref2redis():
     #for i in range(0, rkvs.llen('BMM:reference:list')):
     #    rkvs.rpop('BMM:reference:list')
-    #for el in xafs_ref.content:
-    #    rkvs.rpush('BMM:reference:list', str(el))
     rkvs.set('BMM:reference:mapping', json.dumps(xafs_ref.mapping))
 
 ref2redis()
@@ -434,8 +424,8 @@ wmb.cleanup     = 'yield from xafs_wheel.reset()'
 # |___/ \____/  \_/ \____/ \____/ \_/  \___/\_| \_| \_|  |_/\___/ \___/\_| \_/ \_/   #
 ######################################################################################
                                                                                   
-run_report('\tdetector mount')
-from BMM.detector_mount import find_detector_position #, DetectorMount
+#run_report('\tdetector mount')
+#from BMM.detector_mount import find_detector_position #, DetectorMount
 #detx = DetectorMount()
 
 

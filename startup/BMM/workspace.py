@@ -118,7 +118,7 @@ def check_workstation_access():
         
 def check_lan():
     freakout = 0
-    for host in ('ioc2', 'disp1', 'xspress3'):
+    for host in ('ioc2', 'disp1'):
         response = os.system(f"ping -q -c 1 xf06bm-{host} > /dev/null")
         if response != 0:
             print(BMM.functions.error_msg(f'{TAB}*** Uh oh!  xf06bm-{host} is not responding to a ping!'))
@@ -160,9 +160,9 @@ def initialize_data_directories():
     Create any missing directories.
 
     '''
-    DATA=f'{os.environ["HOME"]}/Data'
+    DATA=f'{os.environ["HOME"]}/Workspace'
     check_directory(DATA, 'data')
-    for sub in ('bucket', 'Staff', 'Visitors'):
+    for sub in ('Staff', 'Visitors'):
         folder = f'{DATA}/{sub}'
         check_directory(folder, 'data')
 

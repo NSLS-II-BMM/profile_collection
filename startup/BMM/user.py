@@ -399,7 +399,7 @@ class BMM_User(Borg):
             rkvs.set(f'BMM:user:{key}', getattr(self, key))
 
     def verify_roi(self, xs, el, edge, tab=''):
-        print(bold_msg(f'{tab}Attempting to set ROIs on {xs.name} for {el} {edge} edge'))
+        print(bold_msg(f'{tab}Setting ROIs on {xs.name} for {el} {edge} edge'))
         try:
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):
@@ -416,15 +416,8 @@ class BMM_User(Borg):
                                            low =allrois[el.capitalize()][edge.lower()]['low'],
                                            high=allrois[el.capitalize()][edge.lower()]['high'])
                     xs.set_rois()
-                    # xs1.slots[14] = el
-                    # for channel in xs1.iterate_channels():
-                    #     xs1.set_roi_channel(channel, index=15, name=f'{el.capitalize()}',
-                    #                         low =allrois[el.capitalize()][edge.lower()]['low'],
-                    #                         high=allrois[el.capitalize()][edge.lower()]['high'])
-                    # xs1.set_rois()
 
                 xs.measure_roi()
-                #xs1.measure_roi()
             else:
                 report(f'{tab}No tabulated ROIs for the {el.capitalize()} {edge.capitalize()} edge.  Not setting ROIs for mesaurement.',
                        level='bold', slack=True)

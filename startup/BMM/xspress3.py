@@ -1,6 +1,6 @@
 import numpy, h5py, json
 import xraylib, math
-import itertools, os, sys
+import itertools, os, sys, re
 import time as ttime
 from collections import deque, OrderedDict
 from itertools import product
@@ -206,15 +206,29 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
         if configuration_attrs is None:
-            configuration_attrs = ['external_trig', 'total_points',
-                                   'spectra_per_point', 'cam',
-                                   'rewindable']
+            configuration_attrs = ['external_trig', 'total_points', 'spectra_per_point', 'cam', 'rewindable']
+
+        ## is this line needed?  I think the class builder takes care of this
         if read_attrs is None:
             read_attrs = ['channel01', 'channel02', 'channel03', 'channel04', 'hdf5'] #, 'channel8'
             #, 'channel5', 'channel6', 'channel7', 'channel8'
+
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
+        self.hdf5.num_extra_dims.put(0)
+
+        ## May 22, 2024: this PV suppresses the EraseOnStart function
+        ## of the Xspress3 IOC.  When on and used in the way BMM uses
+        ## the IOC, this leads to trouble in the form of a "ghost
+        ## frame" whenever the Xspress3 is counted.  This confuses a
+        ## simple count, and also adds considerable overhead to an
+        ## XAFS scan.  These two lines force that PV to off in a way
+        ## that is intentionally hidden.
+        erase_on_start = EpicsSignal('XF:06BM-ES{Xsp:1}:det1:EraseOnStart', name='erase_on_start')
+        erase_on_start.put(0)
+
+        
         self._asset_docs_cache = deque()
         self._datum_counter = None
         
@@ -309,19 +323,21 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             channel.mca_sum.array_data.put(numpy.zeros)
         self.erase.put(1)
 
-    def describe(self):
+    def describe(self):        
         res = super().describe()
-        try:
-            res['4-element SDD_channel01_xrf']['dtype_str'] = '<f8'
-            res['4-element SDD_channel02_xrf']['dtype_str'] = '<f8'
-            res['4-element SDD_channel03_xrf']['dtype_str'] = '<f8'
-            res['4-element SDD_channel04_xrf']['dtype_str'] = '<f8'
-        except:
-            pass
-        try:
-            res['1-element SDD_channel08_xrf']['dtype_str'] = '<f8'
-        except:
-            pass            
+        for channel in self.iterate_channels():
+            res[channel.name+'_xrf']['dtype_str'] = '<f8'
+        # try:
+        #     res['4-element SDD_channel01_xrf']['dtype_str'] = '<f8'
+        #     res['4-element SDD_channel02_xrf']['dtype_str'] = '<f8'
+        #     res['4-element SDD_channel03_xrf']['dtype_str'] = '<f8'
+        #     res['4-element SDD_channel04_xrf']['dtype_str'] = '<f8'
+        # except:
+        #     pass
+        # try:
+        #     res['1-element SDD_channel08_xrf']['dtype_str'] = '<f8'
+        # except:
+        #     pass            
         return res
 
     def set_rois(self):
@@ -418,27 +434,16 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             print(error_msg(f'{tab}Cannot reset rois, {el} is not in {self.name}.slots'))
 
     def roi_details(self):
-        BMMuser = user_ns['BMMuser']
-        print(' ROI  Elem   low   high')
-        print('==========================')
-        template = ' %3d  %-4s  %4d  %4d'
-        for i, el in enumerate(self.slots):
-            this = self.get_channel(channel_number=1).get_mcaroi(mcaroi_number=i+1)
-            if el is None:
-                print(template % (i+1, 'None', this.min_x.get(), this.min_x.get() + this.size_x.get()))
-            elif el == BMMuser.element:
-                print(
-                    go_msg(
-                        template % 
-                        (i+1, el.capitalize(), this.min_x.get(), this.min_x.get() + this.size_x.get())
-                    )
-                )
-            else:
-                print(
-                    template % 
-                    (i+1, el.capitalize(), this.min_x.get(), this.min_x.get() + this.size_x.get())
-                )
-                            
+        first_channel_number = self.channel_numbers[0]
+        first_channel = self.get_channel(channel_number=first_channel_number)
+
+        print('\n     El   hinting                low    high')
+        print('==============================================')
+        for i,x in enumerate(list(first_channel.iterate_mcarois())):
+            name = re.sub('\d', '', x.name)
+            print(f" {i+1:>2d}  {name:<3s}  {x.kind.name:<20s}  {10*x.min_x.get():>5d}  {10*(x.min_x.get()+x.size_x.get()):>5d}")
+    list_rois = roi_details
+                
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
@@ -482,6 +487,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
     
 
     def measure_xrf(self, exposure=1.0, doplot=True):
+        '''Measure, table, plot -- in a package suitable for an ipython magic.
+        '''
         uid = None
         self.total_points.put(1)
         self.cam.acquire_time.put(exposure)
@@ -491,13 +498,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if doplot:
             self.plot(add=True, uid=uid)
         
-    def list_rois(self):
-        first_channel_number = self.channel_numbers[0]
-        first_channel = self.get_channel(channel_number=first_channel_number)
-        return list(((x.name, x.kind) for x in list(first_channel.iterate_mcarois())))
-
-
-            
+        
     def plot(self, uid=None, add=False, only=None): 
         '''Make a plot appropriate for the N-element detector.
 
@@ -555,7 +556,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             #plt.show()
     
     def table(self):
-        '''Pretty print a table of values for each ROI and for all four channels.
+        '''Pretty print a table of values for each ROI and for all N channels.
         '''
         BMMuser, dcm = user_ns['BMMuser'], user_ns['dcm']
 

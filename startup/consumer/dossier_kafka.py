@@ -224,6 +224,23 @@ class BMMDossier():
                                                        xrffile       = quote('../XRF/'+XDI['_xrffile']),
                                                        xrfuid        = snapshots['xrf_uid'], )
 
+            # # left sidebar, entry for HDF5 containing the Pilatus image stack    
+            # if 'pilatus' in XDI['_user']['mode']:
+            #     docs = bmm_catalog[self.uidlist[0]].documents()
+            #     for d in docs:
+            #         if d[0] == 'resource':
+            #             this = os.path.join(d[1]['root'], d[1]['resource_path'])
+            #             if '_%d' in this or re.search('%\d\.\dd', this) is not None:
+            #                 this = this % 0
+            #             if 'pilatus100k' in this:
+            #                 pilatus_hdf5 = this
+            #                 break
+            #     with open(os.path.join(startup_dir, 'tmpl', 'dossier_pilatus.tmpl')) as f:
+            #         content = f.readlines()
+            #     thiscontent += ''.join(content).format(hdf5file = pilatus_hdf5,
+            #                                            basename = os.path.basename(pilatus_hdf5), )
+
+                
             # middle part of dossier
             instrument = XDI['_user']['instrument']
             if instrument is None or instrument == '':
@@ -324,6 +341,7 @@ class BMMDossier():
                                                    experimenters = XDI['Scan']['experimenters'],
                                                    gup           = XDI['Facility']['GUP'],
                                                    saf           = XDI['Facility']['SAF'],
+                                                   cycle         = XDI['Facility']['cycle'],
                                                    url           = XDI['_user']['url'],
                                                    doi           = XDI['_user']['doi'],
                                                    cif           = XDI['_user']['cif'],
@@ -422,11 +440,18 @@ class BMMDossier():
   <br>&nbsp;&nbsp;'''
         hdf5template = '''<a href="javascript:void(0)"
      onclick="toggle_visibility(\'{filename}.{ext:03d}.h5\');"
-     title="This is HDF5 file associated with {filename}.{ext:03d}, click to show/hide the HDF5 filename">
-         HDF5
+     title="This is the HDF5 file associated with {filename}.{ext:03d}, click to show/hide the HDF5 filename">
+         XSpress3 HDF5
   </a>
   <div id="{filename}.{ext:03d}.h5" style="display:none;"><small>{hdf5file}</small></div>
-</li>\n
+'''
+        pilatustemplate = '''<br>&nbsp;&nbsp;
+  <a href="javascript:void(0)"
+     onclick="toggle_visibility(\'{basename}\');"
+     title="This is the Pilatus HDF5 file containing the immage stack from {filename}.{ext:03d}, click to show/hide the HDF5 filename">
+         Pilatus HDF5
+  </a>
+  <div id="{basename}" style="display:none;"><small>{hdf5file}</small></div>
 '''
         
 #        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{printedname}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
@@ -437,6 +462,7 @@ class BMMDossier():
             ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
             printedname = filename
             hdf5file = self.hdf5_filename(bmm_catalog, u)
+            pilatusfile = self.pilatus_filename(bmm_catalog, u)
             if len(filename) > 11:
                 printedname = filename[0:6] + '&middot;&middot;&middot;' + filename[-5:]
             text += template.format(filename    = filename,
@@ -448,7 +474,13 @@ class BMMDossier():
                 text += hdf5template.format(filename    = filename,
                                             ext         = ext,
                                             hdf5file    = hdf5file,)
+            if pilatusfile is not None:
+                text += pilatustemplate.format(basename    = os.path.basename(pilatusfile),
+                                               filename    = filename,
+                                               ext         = ext,
+                                               hdf5file    = pilatusfile,)
             ext = ext + 1
+            text += '</li>\n'
         return text
 
     def mono_text(self, bmm_catalog):
@@ -520,9 +552,22 @@ class BMMDossier():
                 this = os.path.join(d[1]['root'], d[1]['resource_path'])
                 if '_%d' in this:
                     this = this % 0
-                return(this)
+                if 'xspress3' in this:
+                    return this 
         return None
-    
+
+    def pilatus_filename(self, bmm_catalog, uid):
+        '''Find the path/name of the asset file associated with UID
+        '''
+        for d in bmm_catalog[uid].documents():
+            if d[0] == 'resource':
+                this = os.path.join(d[1]['root'], d[1]['resource_path'])
+                if '_%d' in this:
+                    this = this % 0
+                if 'pilatus100k' in this:
+                    return this
+        return None
+
     
     def motor_sidebar(self, bmm_catalog):
         baseline = bmm_catalog[self.uidlist[0]].baseline.read()
@@ -900,6 +945,17 @@ class XASFile():
         elif 'test' in catalog[uid].metadata['start']['plan_name']:
             text = 'I0  --  $5'
         return text
+
+    def file_resource(self, catalog, uid):
+        docs = catalog[uid].documents()
+        found = []
+        for d in docs:
+            if d[0] == 'resource':
+                this = os.path.join(d[1]['root'], d[1]['resource_path'])
+                if '_%d' in this or re.search('%\d\.\dd', this) is not None:
+                    this = this % 0
+                found.append(this)
+        return found
     
     def to_xdi(self, catalog=None, uid=None, filename=None, logger=None, include_yield=False):
         '''Write an XDI-style file for an XAS scan.
@@ -925,6 +981,17 @@ class XASFile():
         handle.write(f'# Scan.end_time: {end}\n')
         handle.write(f'# Scan.uid: {uid}\n')
         handle.write(f'# Scan.transient_id: {catalog[uid].metadata["start"]["scan_id"]}\n')
+        
+        if any(x in catalog[uid].metadata['start']['detectors'] for x in ('1-element SDD', '4-element SDD', '7-element SDD')):
+            hdf5files = self.file_resource(catalog, uid)
+            for h in hdf5files:
+                relative = '/'.join(h.split('/')[-6:])
+                if 'xspress3' in relative:
+                    handle.write(f'# Scan.xspress3_hdf5_file: {relative}\n')
+                elif 'pilatus' in relative:
+                    handle.write(f'# Scan.piltus100k_hdf5_file: {relative}\n')
+        ## is this correct?  need to test....
+            
         handle.write(f'# Scan.plot_hint: {self.plot_hint(catalog=catalog, uid=uid)}\n')
         handle.write( '# Column.1: energy eV\n')
         handle.write( '# Column.2: requested_energy eV\n')

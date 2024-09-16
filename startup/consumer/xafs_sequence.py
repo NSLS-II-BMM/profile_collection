@@ -90,6 +90,8 @@ class XAFSSequence():
                 
 
     def merge(self, prj=False, filename=None, seqnumber=None):
+        if seqnumber is None:
+            seqnumber = int(rkvs.get('BMM:dossier:seqnumber').decode('utf-8'))
         project = None
         if len(self.uidlist) == 0:
             return 0
@@ -105,11 +107,12 @@ class XAFSSequence():
                     location = os.path.join(experiment_folder(self.catalog, self.uidlist[0]), filename)
                     project = create_athena(location)
                     for g in self.panlist:
-                        project.add_group(self.group)
+                        project.add_group(g.group)
                     project.save()
             except Exception as E:
-                print('filed to make project file')
+                print('xafs_sequence.merge: failed to make project file')
                 print(E)
+                #return 0
         toplot.facecolor = (0.95, 0.95, 0.95)
         name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
         if name == 'None': return 0

@@ -1,6 +1,7 @@
 from IPython.core.magic import register_line_magic  #, register_cell_magic, register_line_cell_magic)
 from BMM.functions import run_report
 from BMM.user_ns.bmm import BMMuser
+from os import getenv
 
 run_report(__file__, text='ipython magics for BMM ... general help: %h')
 
@@ -100,24 +101,25 @@ def xrf7(arg):
 @register_line_magic
 def xrf(arg):
     if xs is xs4:
-        print('doing 4')
         xs4.measure_xrf()
         return None
     elif xs is xs1:
-        print('doing 1')
         xs1.measure_xrf()
         return None
     elif xs is xs7:
-        print('doing 7')
         xs7.measure_xrf()
         return None
 
-
-from BMM.demeter import run_athena, run_hephaestus
 @register_line_magic
-def athena(arg):
-    run_athena()
+def condaenv(arg):
+    print(getenv('BS_ENV'))
     return None
+    
+from BMM.demeter import run_hephaestus
+# @register_line_magic
+# def athena(arg):
+#     run_athena()
+#     return None
 @register_line_magic
 def hephaestus(arg):
     run_hephaestus()

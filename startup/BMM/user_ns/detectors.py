@@ -10,7 +10,6 @@ from ophyd.sim import noisy_det
 
 run_report(__file__, text='detectors and cameras')
 
-with_pilatus = False
 with_cam1 = True
 with_cam2 = True
 
@@ -270,23 +269,26 @@ def display_last_image_usb_cam(catalog, camera=usb1):
 # | |    _| |_| |____| | | || | | |_| /\__/ / #
 # \_|    \___/\_____/\_| |_/\_/  \___/\____/  #
 ###############################################
-                                           
 
+pilatus = None
+#pilatus_tiff = None
+
+from BMM.user_ns.dwelltime import with_pilatus
 if with_pilatus is True:
-    run_report('\t'+'Pilatus') # & prosilica')
+    from BMM.pilatus import BMMPilatusSingleTrigger #,  BMMPilatusTIFFSingleTrigger
+    run_report('\t'+'Pilatus')
 
-    from BMM.pilatus_singletrigger import BMMPILSingleTrigger
-    pilatus = BMMPILSingleTrigger('XF:06BMB-ES{Det:PIL100k}:', name='pilatus100k-1', read_attrs=["tiff"])
+    ## make sure both file plugins are turned on
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:HDF1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:TIFF1:EnableCallbacks', name='').put(1)
+    
+    pilatus = BMMPilatusSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["hdf5"])
+    pilatus.stats.kind = "hinted"
+
+    #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
+    #pilatus_tiff.stats.kind = "hinted"
 
     
-    #from BMM.pilatus import MyDetector #, PilatusGrabber
-
-    ## prosilica3 = MyDetector('XF:06BM-BI{Scr:3}', name='Prosilica3')
-    ## p3         = ImageGrabber(prosilica3)
-    #pilatus = MyDetector('XF:06BMB-ES{Det:PIL100k}:', name='Pilatus')
-    #pil     = PilatusGrabber(pilatus)
-    #pilatus.autoincrement.put(1)
-
 
 
 #######################################################
@@ -303,16 +305,15 @@ from ophyd.log import config_ophyd_logging
 import logging
 #config_ophyd_logging(file="xspress3_ophyd_debug.log", level=logging.DEBUG)
 
-xs  = False
-xs4 = False
-xs1 = False
-xs7 = False
+xs  = None
+xs4 = None
+xs1 = None
+xs7 = None
 
 def _prep_xs(det):
-    # This is necessary for when the ioc restarts
-    # we have to trigger one image for the hdf5 plugin to work correctly
-    # else, we get file writing errors
-    # DEBUGGING: commented this out
+    # This is necessary when the ioc restarts.  We trigger one image
+    # for the hdf5 plugin to work correctly else, we get file writing
+    # errors
     if det.hdf5.run_time.get() == 0.0:
         det.hdf5.warmup()
     
@@ -366,21 +367,25 @@ def _prep_xs(det):
     
     
 from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element, use_7element
-if with_xspress3 is True and use_4element is True:
-    run_report('\t'+'4-element SDD with Xspress3')
-    from BMM.xspress3_4element import BMMXspress3Detector_4Element
-    xs4 = BMMXspress3Detector_4Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
-                                       name       = '4-element SDD',
-                                       read_attrs = ['hdf5']    )
-    _prep_xs(xs4)
+
+if with_xspress3 is True:
+    run_report('\t'+'Xspress3')
 
 if with_xspress3 is True and use_1element is True:
-    run_report('\t'+'1-element SDD with Xspress3')
+    run_report('\t\t'+'1-element SDD')
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
     xs1 = BMMXspress3Detector_1Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
                                        name       = '1-element SDD',
                                        read_attrs = ['hdf5']    )
     _prep_xs(xs1)
+
+if with_xspress3 is True and use_4element is True:
+    run_report('\t\t'+'4-element SDD')
+    from BMM.xspress3_4element import BMMXspress3Detector_4Element
+    xs4 = BMMXspress3Detector_4Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
+                                       name       = '4-element SDD',
+                                       read_attrs = ['hdf5']    )
+    _prep_xs(xs4)
 
 if with_xspress3 is True and use_7element is True:
     run_report('\t'+'7-element SDD with Xspress3')
@@ -392,140 +397,21 @@ if with_xspress3 is True and use_7element is True:
 
     
 def xspress3_set_detector(this=None):
-    global xs
     if this is None:
-        run_report('\t\t'+'"xs" is 4-element detector')  # change to 7
+        run_report('\t\t'+'"xs" is the 4-element detector')  # change to 7
         rkvs.set('BMM:xspress3', 4)
         return xs4
     if this == 4:
-        run_report('\t\t'+'"xs" is 4-element detector')
+        run_report('\t\t'+'"xs" is the 4-element detector')
         rkvs.set('BMM:xspress3', 4)
         return xs4
     elif this == 1:
-        run_report('\t\t'+'"xs" is 1-element detector')
+        run_report('\t\t'+'"xs" is the 1-element detector')
         rkvs.set('BMM:xspress3', 1)
         return xs1
     elif this == 7:
-        run_report('\t\t'+'"xs" is 7-element detector')
+        run_report('\t\t'+'"xs" is the 7-element detector')
         rkvs.set('BMM:xspress3', 7)
         return xs7
 
 xs=xspress3_set_detector(4)     # change to 7
-
-    
-    # # This is necessary for when the ioc restarts
-    # # we have to trigger one image for the hdf5 plugin to work correctly
-    # # else, we get file writing errors
-    # # DEBUGGING: commented this out
-    # if xs4.hdf5.run_time.get() == 0.0:
-    #     xs4.hdf5.warmup()
-
-    # # Hints:
-    # for channel in xs4.iterate_channels():
-    #     channel.kind = 'hinted'
-    #     #channel.mcarois.kind = 'hinted'
-    #     for mcaroi in channel.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'hinted'
-
-    # xs4.cam.configuration_attrs = ['acquire_period',
-    #                                'acquire_time',
-    #                                'image_mode',
-    #                                'manufacturer',
-    #                                'model',
-    #                                'num_exposures',
-    #                                'num_images',
-    #                                'temperature',
-    #                                'temperature_actual',
-    #                                'trigger_mode',
-    #                                'config_path',
-    #                                'config_save_path',
-    #                                'invert_f0',
-    #                                'invert_veto',
-    #                                'xsp_name',
-    #                                'num_channels',
-    #                                'num_frames_config',
-    #                                'run_flags',
-    #                                'trigger_signal']
-
-    # for channel in xs4.iterate_channels():
-    #     mcaroi_names = list(channel.iterate_mcaroi_attr_names())
-    #     #channel.mcarois.read_attrs = mcaroi_names
-    #     #channel.mcarois.configuration_attrs = mcaroi_names
-    #     for mcaroi in channel.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'omitted'
-
-    # xs4.set_rois()
-    # hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *BMMuser.date.split('-'))
-    # xs4.hdf5.read_path_template = hdf5folder
-    # xs4.hdf5.write_path_template = hdf5folder
-    # xs4.hdf5.file_path.put(hdf5folder)
-
-    # try:
-    #     xs4.channel01.xrf.dtype_str = "<f8"
-    #     xs4.channel02.xrf.dtype_str = "<f8"
-    #     xs4.channel03.xrf.dtype_str = "<f8"
-    #     xs4.channel04.xrf.dtype_str = "<f8"
-    #     xs4.channel01.get_external_file_ref().dtype_str = "<f8"
-    #     xs4.channel02.get_external_file_ref().dtype_str = "<f8"
-    #     xs4.channel03.get_external_file_ref().dtype_str = "<f8"
-    #     xs4.channel04.get_external_file_ref().dtype_str = "<f8"
-    # except:
-    #     pass
-        
-    ## this stage_sigs and trigger business was needed with the new (as of January 2023)
-    ## to maintain the correct triggering state for our mode of operation here at BMM
-    ## apparently to serve the needs of other BLs, the triggering mode would default
-    ## back to "Software" at the end of a scan.  This overrides that behavior.
-    #xs4.cam.stage_sigs[xs4.cam.trigger_mode] = "Internal"
-
-
-
-    
-    # # This is necessary for when the ioc restarts
-    # # we have to trigger one image for the hdf5 plugin to work correctly
-    # # else, we get file writing errors
-    # # DEBUGGING: commented this out
-    # #xs1.hdf5.warmup()
-
-    # # Hints:
-    # #xs1.channels.kind = 'hinted'
-    # for channel in xs1.iterate_channels():
-    #     channel.kind = 'hinted'
-    #     #channel.mcarois.kind = 'hinted'
-    #     for mcaroi in channel.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'hinted'
-
-    # xs1.cam.configuration_attrs = ['acquire_period',
-    #                                'acquire_time',
-    #                                'image_mode',
-    #                                'manufacturer',
-    #                                'model',
-    #                                'num_exposures',
-    #                                'num_images',
-    #                                'temperature',
-    #                                'temperature_actual',
-    #                                'trigger_mode',
-    #                                'config_path',
-    #                                'config_save_path',
-    #                                'invert_f0',
-    #                                'invert_veto',
-    #                                'xsp_name',
-    #                                'num_channels',
-    #                                'num_frames_config',
-    #                                'run_flags',
-    #                                'trigger_signal']
-
-    # for channel in xs1.iterate_channels():
-    #     mcaroi_names = list(channel.iterate_mcaroi_attr_names())
-    #     #channel.mcarois.read_attrs = mcaroi_names
-    #     #channel.mcarois.configuration_attrs = mcaroi_names
-    #     for mcaroi in channel.iterate_mcarois():
-    #         mcaroi.total_rbv.kind = 'omitted'
-
-    # xs1.set_rois()
-    # hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *BMMuser.date.split('-'))
-    # xs1.hdf5.read_path_template = hdf5folder
-    # xs1.hdf5.write_path_template = hdf5folder
-    # xs1.hdf5.file_path.put(hdf5folder)
-    # xs1.cam.stage_sigs[xs1.cam.trigger_mode] = "Internal"
-

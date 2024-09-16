@@ -78,7 +78,7 @@ gawheel.initialize = '''samx, samy, samp = xafs_x.position, xafs_y.position, xaf
 # \_|  |_/\_| |_/\____/\_| \_|\___/  \____/ \___/ \___/\_____/___/ \____/\_| \_|\____/  #
 #########################################################################################
 
-run_report('\tspreadsheet/instrument support functions')
+run_report('\t\tspreadsheet/instrument support functions')
 from BMM.functions import present_options, bold_msg
 from openpyxl import load_workbook
 
@@ -346,7 +346,7 @@ from BMM.larch_interface import Pandrosus, Kekropidai
 # bunch.add(seo)
 
 run_report('\t'+'Demeter')
-from BMM.demeter import run_athena, run_hephaestus
+from BMM.demeter import run_hephaestus
 
 run_report('\t'+'machine learning and data evaluation')
 from BMM.ml import BMMDataEvaluation
@@ -389,7 +389,7 @@ if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 i
         BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge, tab='\t\t\t')
     if xs7 is not False and use_7element:
         BMMuser.verify_roi(xs7, BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    show_edges()
+    #show_edges()
 
 run_report('\t'+'final setup: cameras')
 from BMM.user_ns.detectors import xascam, xrdcam, anacam
@@ -492,7 +492,7 @@ check_for_synaxis()
 examine_diagnostics()
 from BMM.workspace import check_instruments
 check_instruments(user_ns['linkam'], user_ns['lakeshore'], user_ns['xs'])
-run_report('\t\t'+'data folders and logging')
+##run_report('\t\t'+'data folders and logging')
 resting_state()
 
 try:
@@ -511,4 +511,4 @@ except:
 #debug_monitor_log.addHandler(logging.StreamHandler(stream=sys.stdout))
 
 from BMM.agent_plans import (agent_driven_nap, agent_move_and_measure, agent_move_motor, agent_change_edge,
-                            agent_measure_single_edge)
+                             agent_measure_single_edge)

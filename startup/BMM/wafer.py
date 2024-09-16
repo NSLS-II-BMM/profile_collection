@@ -1,16 +1,13 @@
 
-from bluesky.plan_stubs import sleep, mv, mvr, null
+from bluesky.plan_stubs import mv
 
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from lmfit.models import StepModel
-
-import numpy
+from numpy import array
 from sympy import geometry
 
-from BMM.kafka import kafka_message
-from BMM.linescans   import linescan
-from BMM.functions   import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.kafka         import kafka_message
+from BMM.linescans     import linescan
+from BMM.functions     import whisper
 from BMM.resting_state import resting_state_plan
 
 from BMM import user_ns as user_ns_module
@@ -18,10 +15,44 @@ user_ns = vars(user_ns_module)
 
 
 class Wafer():
-    points = []
-    center = []
+    '''Simple class for supporting measurements on round wafer samples.
+
+    With 
+
+       wafer = Wafer()
+
+    you can do the following.
+
+    Move to any point near the edge of the wafer, then do
+
+       RE(wafer.edge())
+
+    assuming the scan and its fit look OK, do
+
+       wafer.push()
+
+    Repeat this at two more spots on the edge of the wafer.  Spots
+    near the NE, NW, and SW edges of the wafer will give good results
+    with low uncertainty.
+
+    Once three spots have been found, do
+
+       wafer.find_center()
+
+    This uses sympy.geometry to find the center position and diameter
+    of the wafer.  Move to the wafer center with
+
+       RE(wafer.goto_center())
+
+    Clear the results to find the center anew
+
+       wafer.clear()
+
+    '''
+    points   = []
+    center   = []
     diameter = 0
-    out = None
+    out      = None
     
     def clear(self):
         self.points = []
@@ -33,8 +64,8 @@ class Wafer():
 
     def find_center(self):
         tri = geometry.Triangle(*self.points)
-        self.center = numpy.array(tri.circumcenter, dtype=float)
-        self.diameter= numpy.array(tri.circumradius, dtype=float)*2
+        self.center = array(tri.circumcenter, dtype=float)
+        self.diameter= array(tri.circumradius, dtype=float)*2
         print(f'The center is at {self.center}.   The diameter is {self.diameter}.')
 
     def goto_center(self):
@@ -63,8 +94,8 @@ class Wafer():
         else:
             ss     = signal - signal[2]
         mod    = StepModel(form='erf')
-        pars   = mod.guess(ss, x=numpy.array(yy))
-        self.out    = mod.fit(ss, pars, x=numpy.array(yy))
+        pars   = mod.guess(ss, x=array(yy))
+        self.out    = mod.fit(ss, pars, x=array(yy))
         print(whisper(self.out.fit_report(min_correl=0)))
         target = self.out.params['center'].value
         kafka_message({'wafer'     : 'edge',
@@ -76,7 +107,7 @@ class Wafer():
                        'amplitude' : self.out.params['amplitude'].value,
                        'uid'       : uid})
                        
-        #self.out.plot()
+        #self.out.plot()   # uncomment to plot directly rather than via BMM's kafka worker
         yield from mv(motor, target)
         yield from resting_state_plan()
         print(f'Edge found at X={user_ns["xafs_x"].position} and Y={user_ns["xafs_y"].position}')
