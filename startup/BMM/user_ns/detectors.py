@@ -278,12 +278,31 @@ if with_pilatus is True:
     from BMM.pilatus import BMMPilatusSingleTrigger #,  BMMPilatusTIFFSingleTrigger
     run_report('\t'+'Pilatus')
 
-    ## make sure both file plugins are turned on
+    ## make sure various plugins are turned on
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:image1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Pva1:EnableCallbacks', name='').put(1)
     EpicsSignal('XF:06BMB-ES{Det:PIL100k}:HDF1:EnableCallbacks', name='').put(1)
     EpicsSignal('XF:06BMB-ES{Det:PIL100k}:TIFF1:EnableCallbacks', name='').put(1)
+
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI4:EnableCallbacks', name='').put(1)
+    
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats2:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats3:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats4:EnableCallbacks', name='').put(1)
     
     pilatus = BMMPilatusSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["hdf5"])
-    pilatus.stats.kind = "hinted"
+    pilatus.stats.kind = "omitted"
+    pilatus.roi2.kind = "hinted"
+    pilatus.roi3.kind = "hinted"
+    pilatus.roi2.name = "yoneda"
+    pilatus.roi3.name = "specular"
+    #if pilatus.hdf5.run_time.get() == 0.0:
+    #    pilatus.hdf5.warmup()
+        
 
     #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
     #pilatus_tiff.stats.kind = "hinted"

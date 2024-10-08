@@ -652,7 +652,8 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
 ##                     linear stages        tilt stage           rotation stages
 motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,
                    'y'    : xafs_y,     'pitch': xafs_pitch, 'wh' : xafs_wheel,
-                   's'    : xafs_lins,  'p'    : xafs_pitch, 'rs' : xafs_rots,
+                   #'s'    : xafs_lins,
+                   'p'    : xafs_pitch, 'rs' : xafs_rots,
                    'xs'   : xafs_linxs, 'r'    : xafs_roll,
                }
 

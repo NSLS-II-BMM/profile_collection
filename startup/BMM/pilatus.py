@@ -1,6 +1,9 @@
     
 from pathlib import PurePath
 from itertools import count
+from collections import deque, OrderedDict
+import time as ttime
+from tqdm import tqdm
 
 from ophyd import Component as Cpt
 from ophyd import EpicsSignal, EpicsSignalRO, EpicsSignalWithRBV
@@ -17,6 +20,8 @@ md = user_ns["RE"].md
 from nslsii.ad33 import SingleTriggerV33
 from ophyd import Component as C
 
+
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
 
 ######################################################################################
@@ -67,7 +72,54 @@ class BMMFileStoreHDF5(FileStorePluginBase):
         self._generate_resource(resource_kwargs)
     
 class BMMHDF5Plugin(HDF5Plugin_V33, BMMFileStoreHDF5, FileStoreIterativeWrite):
-    pass
+    def warmup(self):
+        """
+        A convenience method for 'priming' the plugin.
+        The plugin has to 'see' one acquisition before it is ready to capture.
+        This sets the array size, etc.
+        NOTE : this comes from:
+            https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
+        We had to replace "cam" with "settings" here.
+
+        This has been slightly modified by Bruce to avoid a situation where the warmup
+        hangs.  Also to add some indication on screen for what is happening.
+        """
+        print(whisper("                        warming up the Pilatus hdf5 plugin..."), flush=True)
+        self.enable.set(1).wait()
+
+        # JOSH: proposed changes for new IOC
+        sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
+                            (self.parent.cam.image_mode, "Single"),
+                            (self.parent.cam.trigger_mode, 'Internal'),
+                            # just in case the acquisition time is set very long...
+                            (self.parent.cam.acquire_time, 0.2),
+                            (self.parent.cam.num_images, 1),
+                            #(self.parent.cam.acquire, 1)
+                        ]
+        )
+
+        original_vals = {sig: sig.get() for sig in sigs}
+
+        # Remove the hdf5.capture item here to avoid an error as it should reset back to 0 itself
+        # del original_vals[self.capture]
+
+        for sig, val in sigs.items():
+            sig.set(val).wait()
+            ttime.sleep(0.1)  # abundance of caution
+
+        self.parent.cam.acquire.set(1).wait()
+        
+        # JOSH: do we need more than 2 seconds here?
+        #       adding more time here helps!
+        for i in tqdm(range(4), colour='#7f8c8d'):
+            ttime.sleep(0.5)  # wait for acquisition
+
+        for sig, val in reversed(list(original_vals.items())):
+            ttime.sleep(0.1)
+            sig.set(val).wait()
+        print(whisper("                        done"))
+
+    
 
 
 
@@ -83,7 +135,10 @@ class BMMPilatus(AreaDetector):
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/pilatus100k-1/",
     )
     stats = C(EpicsSignalRO, "Stats1:Total_RBV")
+    roi2  = C(EpicsSignalRO, "Stats2:Total_RBV", name='yoneda')
+    roi3  = C(EpicsSignalRO, "Stats3:Total_RBV", name = 'specular')
 
+    
     cam_file_path      = C(EpicsSignalWithRBV, 'cam1:FilePath')
     cam_file_name      = C(EpicsSignalWithRBV, 'cam1:FileName')
     cam_file_number    = C(EpicsSignalWithRBV, 'cam1:FileNumber')
@@ -117,7 +172,6 @@ class BMMPilatus(AreaDetector):
 
 class BMMPilatusSingleTrigger(SingleTriggerV33, BMMPilatus):
     pass
-
 
 
 

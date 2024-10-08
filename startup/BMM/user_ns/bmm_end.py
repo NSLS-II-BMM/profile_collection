@@ -28,7 +28,7 @@ from BMM.fmbo import FMBO_status
 
 run_report('\t'+'Setting motor description strings')
 from BMM.desc_string import set_desc_strings
-set_desc_strings()
+#set_desc_strings()
 
 run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders

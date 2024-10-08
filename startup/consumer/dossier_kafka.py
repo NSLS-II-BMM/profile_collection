@@ -457,9 +457,9 @@ class BMMDossier():
 #        template = '<li><a href="../{filename}.{ext:03d}" title="Click to see the text of {filename}.{ext:03d}">{printedname}.{ext:03d}</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:void(0)" onclick="toggle_visibility(\'{filename}.{ext:03d}\');" title="This is the scan number for {filename}.{ext:03d}, click to show/hide its UID">#{scanid}</a><div id="{filename}.{ext:03d}" style="display:none;"><small>{uid}</small></div></li>\n'
 
         text = ''
-        for u in self.uidlist:
-            filename = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['filename']
-            ext = bmm_catalog[self.uidlist[0]].metadata['start']['XDI']['_user']['start']
+        for i,u in enumerate(self.uidlist):
+            filename = bmm_catalog[u].metadata['start']['XDI']['_user']['filename']
+            ext = bmm_catalog[u].metadata['start']['XDI']['_user']['start'] + i
             printedname = filename
             hdf5file = self.hdf5_filename(bmm_catalog, u)
             pilatusfile = self.pilatus_filename(bmm_catalog, u)
@@ -598,8 +598,8 @@ class BMMDossier():
         motors += f'              <div>xafs_wheel, {baseline["xafs_wheel"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_ref, {baseline["xafs_ref"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_refx, {baseline["xafs_refx"][0]:.3f}</div>\n'
-        motors += f'              <div>xafs_refy, {baseline["xafs_refy"][0]:.3f}</div>\n'
-        motors += f'              <div>xafs_det, {baseline["xafs_det"][0]:.3f}</div>\n'
+        #motors += f'              <div>xafs_refy, {baseline["xafs_refy"][0]:.3f}</div>\n'
+        #motors += f'              <div>xafs_det, {baseline["xafs_det"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_garot, {baseline["xafs_garot"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
 
@@ -998,8 +998,8 @@ class XASFile():
         handle.write( '# Column.3: measurement_time seconds\n')
         handle.write( '# Column.4: xmu\n')
         handle.write( '# Column.5: I0 nA\n')
-        handle.write( '# Column.6: It nA\n')
-        handle.write( '# Column.7: Ir nA\n')
+        handle.write( '# Column.6: Itrans nA\n')
+        handle.write( '# Column.7: Irefer nA\n')
 
         ## Column.N header lines
         column_list = ['dcm_energy', 'dcm_energy_setpoint', 'dwti_dwell_time', 'I0', 'It', 'Ir']
@@ -1021,6 +1021,10 @@ class XASFile():
             column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
             nchan = 4
+            if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
+                column_list.extend(['yoneda', 'specular'])
+                column_labels.extend(['yoneda', 'specular'])
+                
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
@@ -1032,6 +1036,9 @@ class XASFile():
             else:
                 for i in range(1, nchan+1):
                     handle.write(f'# Column.{i+7}: {el}{i}\n')
+        if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
+            handle.write(f'# Column.{8+nchan}: yoneda\n')
+            handle.write(f'# Column.{9+nchan}: specular\n')
 
                     
         ## prepare data table and insert xmu column

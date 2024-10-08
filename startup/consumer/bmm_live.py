@@ -432,10 +432,13 @@ class XAFSScan():
 
 
         ## start lines and set axis labels
-        #self.line_mut, = self.mut.plot([],[], label='$\mu_T(E)$')
-        self.mut.set_ylabel('$\mu(E)$ (transmission)')
-        if self.mode == 'icit':
-            self.mut.set_ylabel('$\mu(E)$ (transmission, integrated ion chamber for It)')
+
+        if self.mode == 'fluo+pilatus':
+            self.mut.set_ylabel('yoneda intensity')
+        else:
+            self.mut.set_ylabel('$\mu(E)$ (transmission)')
+            if self.mode == 'icit':
+                self.mut.set_ylabel('$\mu(E)$ (transmission, integrated ion chamber for It)')
         self.mut.set_xlabel('energy (eV)')
         self.mut.set_title(f'data: {self.sample}')
 
@@ -448,7 +451,12 @@ class XAFSScan():
             #self.line_ref, = self.ref.plot([],[], label='reference')
             self.ref.set_ylabel('electron yield $\mu(E)$')
             self.ref.set_xlabel('energy (eV)')
-            self.ref.set_title(f'electron yield')
+            self.ref.set_title('electron yield')
+        elif self.mode in ('fluo+pilatus'):
+            #self.line_ref, = self.ref.plot([],[], label='reference')
+            self.ref.set_ylabel('specular intensity')
+            self.ref.set_xlabel('energy (eV)')
+            self.ref.set_title('specular')
         else:
             #self.line_ref, = self.ref.plot([],[], label='reference')
             self.ref.set_ylabel('reference $\mu(E)$')
@@ -548,10 +556,14 @@ class XAFSScan():
         self.i0sig.append(kwargs['data']['I0']/kwargs['data']['dwti_dwell_time'])  # this should be the same number as cadashboard....
         if self.mode == 'icit':
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
+        elif self.mode == 'fluo+pilatus':
+            self.trans.append(kwargs['data']['yoneda']/kwargs['data']['I0'])
         else:                   # normal quadem transmission
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
         if self.mode in ('fluo+yield'):
             self.refer.append(kwargs['data']['Iy']/kwargs['data']['I0'])
+        elif self.mode == 'fluo+pilatus':
+            self.refer.append(kwargs['data']['specular']/kwargs['data']['I0'])
         else:
             self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
             

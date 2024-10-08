@@ -220,16 +220,17 @@ class DossierTools():
         image_web = os.path.join(folder, 'snapshots', websnap)
         md['_filename'] = image_web
         xascam._annotation_string = annotation
-        print(bold_msg('XAS webcam snapshot'))
-        webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        self.websnap, self.webuid = websnap, webuid
-        kafka_message({'copy': True,
-                       'file': file_resource(webuid)[0],
-                       'target': os.path.join(proposal_base(), 'snapshots', websnap), })
+        if False:
+            print(bold_msg('XAS webcam snapshot'))
+            webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            self.websnap, self.webuid = websnap, webuid
+            kafka_message({'copy': True,
+                           'file': file_resource(webuid)[0],
+                           'target': os.path.join(proposal_base(), 'snapshots', websnap), })
 
-        if BMMuser.post_webcam:
-            kafka_message({'echoslack': True,
-                           'img': os.path.join(proposal_base(), 'snapshots', websnap)})
+            if BMMuser.post_webcam:
+                kafka_message({'echoslack': True,
+                               'img': os.path.join(proposal_base(), 'snapshots', websnap)})
 
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1

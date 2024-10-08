@@ -1,5 +1,5 @@
 import nslsii
-import os, time
+import os, time, datetime
 
 from bluesky.plan_stubs import mv, mvr, sleep
 from databroker import Broker
@@ -56,7 +56,19 @@ def post_document(name, doc):
         time.sleep(2)
     else:
         # out of attempts
-        raise error
+        print('**************************************************')
+        print('One last try to connect to tiled.  Wating 2 minutes')
+        print(f'Begin sleeping for 2 minutes at {datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")}')
+        print('**************************************************')
+        time.sleep(120)
+        try:
+            tiled_writing_client.post_document(name, doc)
+        except Exception as exc:
+            print("Document saving failure:", repr(exc))
+            error = exc
+            raise error
+        else:
+            pass
 
     #print(f"post_document timing: {time.monotonic() - tz:.3}\n")
     

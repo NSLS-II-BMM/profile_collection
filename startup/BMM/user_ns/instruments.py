@@ -181,8 +181,8 @@ if xafs_table.connected is True:
     xafs_yu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YU}Mtr',  name='xafs_yu')
     xafs_ydo = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDO}Mtr', name='xafs_ydo')
     xafs_ydi = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_YDI}Mtr', name='xafs_ydi')
-    xafs_xu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
-    xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
+    #xafs_xu  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr',  name='xafs_xu')
+    #xafs_xd  = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_xd')
 else:
     xafs_yu     = SynAxis(name='xafs_yu')
     xafs_ydo    = SynAxis(name='xafs_ydo')
@@ -190,7 +190,7 @@ else:
     xafs_xu     = SynAxis(name='xafs_xu')
     xafs_xd     = SynAxis(name='xafs_xd')
     
-xafs_motors.extend([xafs_yu, xafs_ydo, xafs_ydi, xafs_xu, xafs_xd])
+xafs_motors.extend([xafs_yu, xafs_ydo, xafs_ydi]) #, xafs_xu, xafs_xd])
 
 from BMM.functions           import examine_xafs_motor_group
 print(f'{TAB}Examine XAFS motor groups')

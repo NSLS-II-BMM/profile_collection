@@ -7,7 +7,8 @@ from BMM.functions import boxedtext
 def motor_metadata(uid=None):
     biglist = (user_ns['xafs_linx'], user_ns['xafs_liny'], user_ns['xafs_pitch'], user_ns['xafs_roll'],
                user_ns['xafs_linxs'], user_ns['xafs_wheel'], user_ns['xafs_rots'], user_ns['xafs_ref'],
-               user_ns['xafs_lins'], user_ns['xafs_mtr8'], user_ns['xafs_refx'],
+               #user_ns['xafs_lins'],
+               user_ns['xafs_mtr8'], user_ns['xafs_refx'],
                
                user_ns['dm3_bct'], user_ns['dm3_foils'], user_ns['dm2_fs'],
                user_ns['slits3'].top, user_ns['slits3'].bottom, user_ns['slits3'].outboard, user_ns['slits3'].inboard,
@@ -25,7 +26,7 @@ def motor_metadata(uid=None):
                user_ns['m3'].yu, user_ns['m3'].ydo, user_ns['m3'].ydi, user_ns['m3'].xu, user_ns['m3'].xd,
                user_ns['m3'].vertical, user_ns['m3'].lateral, user_ns['m3'].pitch, user_ns['m3'].roll, user_ns['m3'].yaw,
                
-               user_ns['xafs_table'].yu, user_ns['xafs_table'].ydo, user_ns['xafs_table'].ydi, user_ns['xafs_xu'], user_ns['xafs_xd'],
+               user_ns['xafs_table'].yu, user_ns['xafs_table'].ydo, user_ns['xafs_table'].ydi, #user_ns['xafs_xu'], user_ns['xafs_xd'],
                user_ns['xafs_table'].vertical, user_ns['xafs_table'].pitch, user_ns['xafs_table'].roll, 
            )
     md = dict()
