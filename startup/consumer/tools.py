@@ -9,7 +9,7 @@ DATA_SECURITY = True
 def experiment_folder(catalog, uid):
 
     facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
-    if 'data_session' in catalog[uid].metadata['start']['data_session']:
+    if 'data_session' in catalog[uid].metadata['start']:
         proposal = catalog[uid].metadata['start']['data_session'][5:]
     else:
         proposal = facility_dict['data_session']

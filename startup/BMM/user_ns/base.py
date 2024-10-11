@@ -74,8 +74,9 @@ def post_document(name, doc):
     
 RE.subscribe(post_document)
 
+# this prefix needs to be the same (but with a dash) as the call to sync_experiment in user.py
 from redis_json_dict import RedisJSONDict 
-RE.md = RedisJSONDict(redis.Redis('info.bmm.nsls2.bnl.gov'), prefix='')
+RE.md = RedisJSONDict(redis.Redis('info.bmm.nsls2.bnl.gov'), prefix='xas-')
 
 
     

@@ -812,7 +812,8 @@ class BMM_User(Borg):
         
 
         ## NSLS-II start experiment infrastructure
-        start_experiment(gup, 'bmm', verbose=False)
+        ## this prefix needs to be the same (but without the dash) as the call to RedisJSONDict in user_ns/base.py
+        start_experiment(gup, 'bmm', verbose=False, prefix='xas')
         # sync_experiment(gup, 'bmm', verbose=False)
         
         # from redis_json_dict import RedisJSONDict
