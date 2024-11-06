@@ -141,4 +141,4 @@ class LockedDwellTimes(PseudoPositioner):
     @real_position_argument
     def inverse(self, real_pos):
         #real_pos = self.RealPosition(*real_pos)
-        return self.PseudoPosition(dwell_time=real_pos.quadem_dwell_time)
+        return self.PseudoPosition(dwell_time=real_pos.ic0_dwell_time)

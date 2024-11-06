@@ -10,13 +10,13 @@ def experiment_folder(catalog, uid):
 
     facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
     if 'data_session' in catalog[uid].metadata['start']:
-        proposal = catalog[uid].metadata['start']['data_session'][5:]
+        proposal = catalog[uid].metadata['start']['data_session'] #[5:]
     else:
-        proposal = facility_dict['data_session']
+        proposal = facility_dict['xas-data_session']
     if 'XDI' in catalog[uid].metadata['start'] and 'Facility' in catalog[uid].metadata['start']['XDI']:
         cycle = catalog[uid].metadata['start']['XDI']['Facility']['cycle']
     else:
-        cycle = facility_dict['cycle']
+        cycle = facility_dict['xas-cycle']
         
     if DATA_SECURITY:
         folder    = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', cycle, f'{proposal}')

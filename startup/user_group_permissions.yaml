@@ -11,15 +11,16 @@ user_groups:
       - "slit_height"
       - "mv"
       - "mvr"
+      - "move"
+      - "mover"
       - "count"
       - "areascan"
       - "timescan"
       - "reference"
       - "shb_open_plan"
       - "shb_close_plan"
-      - "mv"
-      - "mvr"  
       - ":^agent_"
+      - ":^CMS_"
     forbidden_plans:
       - ":^_"  # All plans with names starting with '_'
     allowed_devices:

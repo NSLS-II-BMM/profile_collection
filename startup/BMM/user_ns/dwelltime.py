@@ -13,21 +13,21 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 
 # Ion chambers
 with_quadem   = True            # available for Iy and other signals
+with_iy       = False           # electron yield
 with_ic0      = True            # new I0 chamber
 with_ic1      = True            # new It chamber
 with_ic2      = True            # new Ir chamber
 with_dualem   = False           # deprecated, prototype
-with_iy       = False           # electron yield
 
 # fluorescence detectors and readout systems
 with_struck   = False           # deprecated OG fluorescence read out
 with_xspress3 = True
-use_4element  = True
+use_4element  = False
 use_1element  = True
-use_7element  = False
+use_7element  = True
 
 # area detectors
-with_pilatus = True
+with_pilatus  = False
 
 def active_detectors_report():
     print(f'{with_quadem      = }')
@@ -39,6 +39,7 @@ def active_detectors_report():
     print(u"\u2523" + u"\u2501" + f'{ use_4element  = }')
     print(u"\u2517" + u"\u2501" + f'{ use_1element  = }')
     print(f'{with_pilatus     = }')
+    print(f'{with_iy          = }')
 
 
 ################################################################################

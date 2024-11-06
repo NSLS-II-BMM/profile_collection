@@ -190,7 +190,7 @@ class BMMMacroBuilder():
                 self.orientation = 'perpendicular' # only GA
             else:
                 self.orientation = 'parallel' # only GA                
-            self.retract         = self.ws['N3'].value      # only GA
+            self.retract         = abs(self.ws['N3'].value)      # only GA
         if self.nreps is None:
             self.nreps = 1
         else:

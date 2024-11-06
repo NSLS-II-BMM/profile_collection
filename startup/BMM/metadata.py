@@ -192,7 +192,12 @@ def bmm_metadata(measurement   = 'transmission',
     #     md['Mono']['scan_mode'] = 'fixed exit'
 
     if 'fluo' in measurement or 'flou' in measurement or 'both' in measurement or 'xs' in measurement:
-        md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
+        if user_ns['xs'].name == '7-element SDD':
+            md['Detector']['fluorescence'] = 'Hitachi Vortex ME7 (7-element silicon drift)'
+        elif user_ns['xs'].name == '4-element SDD':
+            md['Detector']['fluorescence'] = 'SII Vortex ME4 (4-element silicon drift)'
+        elif user_ns['xs'].name == '1-element SDD':
+            md['Detector']['fluorescence'] = 'SII Vortex ME1 (1-element silicon drift)'
         md['Detector']['deadtime_correction'] = 'Xspress3'
     #     md['Detector']['deadtime_correction'] = 'DOI: 10.1107/S0909049510009064'  # DEPRECATED
         
@@ -224,9 +229,11 @@ def metadata_at_this_moment():
         rightnow['Facility']['mode'] = 'top-off'
 
     rightnow['Sample'] = dict()
-    rightnow['Sample']['SDD_position'] = user_ns['xafs_det'].position
-    rightnow['Sample']['x'] = user_ns['xafs_x'].position
-    rightnow['Sample']['y'] = user_ns['xafs_y'].position
+    rightnow['Sample']['SDD_position'] = f"{user_ns['xafs_det'].position:.1f}"
+    rightnow['Sample']['x'] = f"{user_ns['xafs_x'].position:.3f}"
+    rightnow['Sample']['y'] = f"{user_ns['xafs_y'].position:.3f}"
+    if 'glancing' in BMMuser.instrument.lower():
+        rightnow['Sample']['pitch'] = f"{user_ns['xafs_pitch'].position:.3f}"
         
     #if BMMuser.extra_metadata is not None:
     #    rightnow['Sample'] = dict()

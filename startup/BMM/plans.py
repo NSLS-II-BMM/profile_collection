@@ -8,6 +8,20 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 
+# for use in queue server
+def move(motor, absolute_position):
+    '''
+    A thin wrapper around a single axis absolute move for use in queueserver
+    '''
+    yield from mv(motor, absolute_position)
+
+def mover(motor, relative_position):
+    '''
+    A thin wrapper around a single axis relative move for use in queueserver
+    '''
+    yield from mvr(motor, relative_position)
+
+
 TUNE_STEP = 0.004
 def tune_plan(step=0):
     '''

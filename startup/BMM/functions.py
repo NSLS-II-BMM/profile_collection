@@ -267,6 +267,8 @@ def plotting_mode(mode):
     mode = mode.lower()
     if mode == 'fluo+yield':
         return 'fluo+yield'
+    elif mode == 'yield':
+        return 'fluo+yield'
     elif mode == 'fluo+pilatus':
         return 'fluo+pilatus'
     elif user_ns['with_xspress3'] and mode == 'xs1':
@@ -277,8 +279,8 @@ def plotting_mode(mode):
         return 'fluo'
     elif mode == 'ref':
         return 'ref'
-    elif mode == 'yield':
-        return 'yield'
+    #elif mode == 'yield':
+    #    return 'yield'
     elif mode == 'test':
         return 'test'
     elif mode == 'icit':

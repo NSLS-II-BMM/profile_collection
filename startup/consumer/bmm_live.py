@@ -187,9 +187,9 @@ class LineScan():
         elif self.numerator in ('If', 'Xs', 'Fluorescence'):
             #self.line2, = self.axes.plot([],[], label='I0b')
             self.numerator = 'If'
-            self.description = 'fluorescence (4 channel)'
+            self.description = 'fluorescence (SDD)'
             self.denominator = 'I0'
-            self.axes.set_ylabel('fluorescence (4 channel)')
+            self.axes.set_ylabel('fluorescence (SDD)')
 
         ## fluorescence (1 channel): plot If/I0
         ##xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
@@ -361,12 +361,13 @@ class XAFSScan():
     trans       = []
     fluor       = []
     refer       = []
-    xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
+    xs1, xs2, xs3, xs4, xs5, xs6, xs7, xs8 = None, None, None, None, None, None, None, None
     mode        = None
     filename    = None
     repn        = 0
     reference_material = None
     sample      = None
+    fluo_detector = None
 
     fig, gs = None, None
     mut, line_mut = None, None
@@ -390,6 +391,7 @@ class XAFSScan():
         self.count       = 1
         self.reference_material = kwargs['reference_material']
         self.sample      = kwargs['sample']
+        self.fluo_detector = kwargs['fluo_detector']
         
         ## close the plot from the last sequence
         if self.fig is not None:
@@ -405,6 +407,9 @@ class XAFSScan():
             self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
             self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
+            self.xs5 = rkvs.get('BMM:user:xs5').decode('utf-8')
+            self.xs6 = rkvs.get('BMM:user:xs6').decode('utf-8')
+            self.xs7 = rkvs.get('BMM:user:xs7').decode('utf-8')
             self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
             if get_backend().lower() == 'agg':
                 self.fig.set_figheight(9.5)
@@ -447,7 +452,7 @@ class XAFSScan():
         self.i0.set_xlabel('energy (eV)')
         self.i0.set_title('I0')
 
-        if self.mode in ('fluo+yield'):
+        if self.mode in ('yield','fluo+yield'):
             #self.line_ref, = self.ref.plot([],[], label='reference')
             self.ref.set_ylabel('electron yield $\mu(E)$')
             self.ref.set_xlabel('energy (eV)')
@@ -469,11 +474,11 @@ class XAFSScan():
             ax.set_facecolor((0.95, 0.95, 0.95))
         
         ## do all that for a fluorescence panel
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield', 'fluo+pilatus'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'fluo+yield', 'fluo+pilatus'):
             self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
-        elif self.mode in ('yield', 'eyield'):
+        elif self.mode in ('eyield'):
             self.muf.set_ylabel('$\mu(E)$ (electron yield)')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
@@ -554,13 +559,15 @@ class XAFSScan():
         ## primary event document, append to data arrays
         self.energy.append(kwargs['data']['dcm_energy'])
         self.i0sig.append(kwargs['data']['I0']/kwargs['data']['dwti_dwell_time'])  # this should be the same number as cadashboard....
+
         if self.mode == 'icit':
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
         elif self.mode == 'fluo+pilatus':
             self.trans.append(kwargs['data']['yoneda']/kwargs['data']['I0'])
         else:                   # normal quadem transmission
             self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
-        if self.mode in ('fluo+yield'):
+
+        if self.mode in ('yield', 'fluo+yield'):
             self.refer.append(kwargs['data']['Iy']/kwargs['data']['I0'])
         elif self.mode == 'fluo+pilatus':
             self.refer.append(kwargs['data']['specular']/kwargs['data']['I0'])
@@ -573,18 +580,26 @@ class XAFSScan():
         self.line_ref.set_data(self.energy, self.refer)
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'fluo+yield', 'fluo+pilatus'):
-            if self.mode == 'xs1':
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'fluo+yield', 'fluo+pilatus'):
+            if self.fluo_detector == '1-element SDD':
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
+            elif self.fluo_detector == '4-element SDD':
+                self.fluor.append( (kwargs['data'][self.xs1] +
+                                    kwargs['data'][self.xs2] +
+                                    kwargs['data'][self.xs3] +
+                                    kwargs['data'][self.xs4]   ) / kwargs['data']['I0'])
             else:
-                self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4])/kwargs['data']['I0'])
-            ## xs4 vs xs7
-            # else:
-            #     self.fluor.append( (kwargs['data'][self.xs1]+kwargs['data'][self.xs2]+kwargs['data'][self.xs3]+kwargs['data'][self.xs4]+kwargs['data'][self.xs5]+kwargs['data'][self.xs6]+kwargs['data'][self.xs7])/kwargs['data']['I0'])
+                self.fluor.append( (kwargs['data'][self.xs1] +
+                                    kwargs['data'][self.xs2] +
+                                    kwargs['data'][self.xs3] +
+                                    kwargs['data'][self.xs4] +
+                                    kwargs['data'][self.xs5] +
+                                    kwargs['data'][self.xs6] +
+                                    kwargs['data'][self.xs7]   ) / kwargs['data']['I0'])
             self.line_muf.set_data(self.energy, self.fluor)
-        if self.mode in ('yield', 'eyield'):
-            self.fluor.append( kwargs['data']['Iy'] / kwargs['data']['I0'] )
-            self.line_muf.set_data(self.energy, self.fluor)
+        #if self.mode in ('eyield'):
+        #    self.fluor.append( kwargs['data']['Iy'] / kwargs['data']['I0'] )
+        #    self.line_muf.set_data(self.energy, self.fluor)
 
         ## rescale everything
         for ax in self.axis_list:
@@ -757,7 +772,7 @@ class XRF():
                 handle.write(f'# Facility.cycle: {xdi["Facility"]["cycle"]}\n')
                 handle.write(f'# Facility.GUP: {xdi["Facility"]["GUP"]}\n')
                 handle.write(f'# Facility.SAF: {xdi["Facility"]["SAF"]}\n')
-        handle.write('# Column.1: energy (eV)\n')
+        handle.write('# Column.1: energy eV\n')
 
         column_list = []
         if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
@@ -768,7 +783,7 @@ class XRF():
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             nchan = 7
         for c in range(1, nchan+1):
-            handle.write(f'# Column.{c+1}: MCA{c} (counts)\n')
+            handle.write(f'# Column.{c+1}: MCA{c} counts\n')
             if nchan > 1:
                 column_list.append(f'MCA{c}')
                 

@@ -10,8 +10,9 @@ from ophyd.sim import noisy_det
 
 run_report(__file__, text='detectors and cameras')
 
-with_cam1 = True
-with_cam2 = True
+with_cam1   = True
+with_cam2   = True
+with_webcam = False
 
 from ophyd.scaler import EpicsScaler
 
@@ -244,9 +245,6 @@ else:
 
 if with_cam2 is True:
     usb2 = BMMUVCSingleTrigger('XF:06BM-ES{UVC-Cam:2}', name="usbcam-2", read_attrs=["jpeg"])
-    #usb1 = CAMERA('XF:06BM-ES{UVC-Cam:1}', name='usbcam-1',
-    #              root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
-
 else:
     usb2 = None
 
@@ -329,12 +327,16 @@ xs4 = None
 xs1 = None
 xs7 = None
 
+warmed_up = False
+
 def _prep_xs(det):
     # This is necessary when the ioc restarts.  We trigger one image
     # for the hdf5 plugin to work correctly else, we get file writing
     # errors
-    if det.hdf5.run_time.get() == 0.0:
+    global warmed_up
+    if warmed_up is False and det.hdf5.run_time.get() == 0.0:
         det.hdf5.warmup()
+        warmed_up = True
     
     # Hints:
     for channel in det.iterate_channels():
@@ -390,6 +392,15 @@ from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element, use
 if with_xspress3 is True:
     run_report('\t'+'Xspress3')
 
+
+if with_xspress3 is True and use_7element is True:
+    run_report('\t'+'7-element SDD with Xspress3')
+    from BMM.xspress3_7element import BMMXspress3Detector_7Element
+    xs7 = BMMXspress3Detector_7Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
+                                       name       = '7-element SDD',
+                                       read_attrs = ['hdf5']    )
+    _prep_xs(xs7)
+
 if with_xspress3 is True and use_1element is True:
     run_report('\t\t'+'1-element SDD')
     from BMM.xspress3_1element import BMMXspress3Detector_1Element
@@ -405,14 +416,6 @@ if with_xspress3 is True and use_4element is True:
                                        name       = '4-element SDD',
                                        read_attrs = ['hdf5']    )
     _prep_xs(xs4)
-
-if with_xspress3 is True and use_7element is True:
-    run_report('\t'+'7-element SDD with Xspress3')
-    from BMM.xspress7_1element import BMMXspress3Detector_7Element
-    xs7 = BMMXspress3Detector_7Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
-                                       name       = '7-element SDD',
-                                       read_attrs = ['hdf5']    )
-    _prep_xs(xs7)
 
     
 def xspress3_set_detector(this=None):
@@ -433,4 +436,4 @@ def xspress3_set_detector(this=None):
         rkvs.set('BMM:xspress3', 7)
         return xs7
 
-xs=xspress3_set_detector(4)     # change to 7
+xs=xspress3_set_detector(7)

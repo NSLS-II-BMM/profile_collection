@@ -22,7 +22,8 @@ from BMM.modes             import get_mode, describe_mode
 from BMM.periodictable     import edge_energy, Z_number, element_name
 
 from BMM.user_ns.base      import bmm_catalog
-from BMM.user_ns.dwelltime import use_4element, use_1element
+from BMM.user_ns.detectors import with_cam1, with_cam2, with_webcam
+from BMM.user_ns.dwelltime import use_7element, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -156,7 +157,7 @@ class DossierTools():
     def __init__(self):
         self.scanlist      = ''
 
-    def capture_xrf(self, folder, stub, mode, md):
+    def capture_xrf(self, stub, mode, md):
         '''Capture an XRF spectrum and related metadata at the current energy
         '''
         
@@ -174,17 +175,18 @@ class DossierTools():
         md['_pccenergy'] = f'{dcm.energy.position:.2f}'
         md['_user'] = dict()
         md['_user']['startdate'] = BMMuser.date
-        if use_4element and plotting_mode(mode) in ('xs', 'fluo+yield', 'fluo+pilatus'):
-            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
-            yield from mv(xs.total_points, 1)
-            yield from mv(xs.cam.acquire_time, 1)
-            self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-            
+
+        print(stub, mode)
         if use_1element and plotting_mode(mode) == 'xs1':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+        elif plotting_mode(mode) in ('xs', 'fluo+yield', 'fluo+pilatus'):
+            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
+            yield from mv(xs.total_points, 1)
+            yield from mv(xs.cam.acquire_time, 1)
+            self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
 
         kafka_message({'xrf' : 'plot',
                        'uid' : self.xrfuid,
@@ -220,12 +222,12 @@ class DossierTools():
         image_web = os.path.join(folder, 'snapshots', websnap)
         md['_filename'] = image_web
         xascam._annotation_string = annotation
-        if False:
+        if with_webcam is True:
             print(bold_msg('XAS webcam snapshot'))
             webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             self.websnap, self.webuid = websnap, webuid
             kafka_message({'copy': True,
-                           'file': file_resource(webuid)[0],
+                           'uuid': webuid,
                            'target': os.path.join(proposal_base(), 'snapshots', websnap), })
 
             if BMMuser.post_webcam:
@@ -259,7 +261,7 @@ class DossierTools():
             # #     anacam_uid = False
             # #     pass
             # kafka_message({'copy': True,
-            #            'file': file_resource(anauid)[0],
+            #            'uuid': anauid,
             #            'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
             # if BMMuser.post_anacam:
             #     kafka_message({'echoslack': True,
@@ -275,26 +277,27 @@ class DossierTools():
         usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
         self.usb1snap, self.usb1uid = usb1snap, usb1uid
         kafka_message({'copy': True,
-                       'file': file_resource(usb1uid)[0],
+                       'uuid': usb1uid,
                        'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
         if BMMuser.post_usbcam1:
             kafka_message({'echoslack': True,
                            'img': os.path.join(proposal_base(), 'snapshots', usb1snap)})
 
         ### --- USB camera #2 --------------------------------------------------------------
-        usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
-        image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
-        md['_filename'] = image_usb2
-        #usbcam2._annotation_string = stub
-        print(bold_msg('USB camera #2 snapshot'))
-        usb2uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        self.usb2snap, self.usb2uid = usb2snap, usb2uid
-        kafka_message({'copy': True,
-                       'file': file_resource(usb2uid)[0],
-                       'target': os.path.join(proposal_base(), 'snapshots', usb2snap), })
-        if BMMuser.post_usbcam2:
-            kafka_message({'echoslack': True,
-                           'img': os.path.join(proposal_base(), 'snapshots', usb2snap)})
+        if with_cam2 is True:
+            usb2snap = "%s_usb2_%s.jpg" % (stub, ahora)
+            image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
+            md['_filename'] = image_usb2
+            #usbcam2._annotation_string = stub
+            print(bold_msg('USB camera #2 snapshot'))
+            usb2uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            self.usb2snap, self.usb2uid = usb2snap, usb2uid
+            kafka_message({'copy': True,
+                           'uuid': usb2uid,
+                           'target': os.path.join(proposal_base(), 'snapshots', usb2snap), })
+            if BMMuser.post_usbcam2:
+                kafka_message({'echoslack': True,
+                               'img': os.path.join(proposal_base(), 'snapshots', usb2snap)})
        
         ### --- capture metadata for dossier -----------------------------------------------
         self.cameras_md = {'webcam_file': websnap,  'webcam_uid': webuid,

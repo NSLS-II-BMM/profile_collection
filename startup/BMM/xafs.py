@@ -33,7 +33,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base      import bmm_catalog, WORKSPACE
-from BMM.user_ns.dwelltime import _locked_dwell_time, use_4element, use_1element
+from BMM.user_ns.dwelltime import _locked_dwell_time, use_7element, use_4element, use_1element
 from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, pilatus, ION_CHAMBERS
 
 try:
@@ -569,7 +569,16 @@ def xafs(inifile=None, **kwargs):
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## if in xs mode, make sure we are configured correctly
-        if plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus') and use_4element is True:
+        if plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus') and use_7element is True:
+            if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',  'xs5', 'xs6', 'xs7', 
+                                                          'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4',
+                                                          'xschannel5', 'xschannel6', 'xschannel7'))):
+                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
+                print(error_msg('Likely solution:'))
+                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
+                print(error_msg('then do:             xs.measure_roi()'))
+                return(yield from null())
+        if plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus') and use_4element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
                 print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
@@ -747,15 +756,17 @@ def xafs(inifile=None, **kwargs):
                           ththth        = p['ththth'],
         )
 
-        
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## measure XRF spectrum at Eave
         if 'xs' in plotting_mode(p['mode']) and BMMuser.lims is True:
-            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
+            print('capturing XRF for "xs" mode')
+            yield from dossier.capture_xrf(p['filename'], p['mode'], md)
+        if plotting_mode(p['mode']) == 'yield' and BMMuser.lims is True:
+            yield from dossier.capture_xrf(p['filename'], p['mode'], md)
         if plotting_mode(p['mode']) == 'fluo+yield' and BMMuser.lims is True:
-            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
+            yield from dossier.capture_xrf(p['filename'], p['mode'], md)
         if plotting_mode(p['mode']) == 'fluo+pilatus' and BMMuser.lims is True:
-            yield from dossier.capture_xrf(BMMuser.folder, p['filename'], p['mode'], md)
+            yield from dossier.capture_xrf(p['filename'], p['mode'], md)
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## snap photos
@@ -781,7 +792,8 @@ def xafs(inifile=None, **kwargs):
             initext = ''.join(f.readlines())
         user_metadata = {**p, **these_kwargs, 'initext': initext, 'clargs': clargs}
         md['_user'] = user_metadata
-
+        basename = md['_user']['filename']
+        rkvs.set('BMM:dossier:basename', basename)
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## set up a plotting subscription, anonymous functions for plotting various forms of XAFS
@@ -797,7 +809,7 @@ def xafs(inifile=None, **kwargs):
             pilatus.stats.kind = 'hinted'
         if 'xs1' in p['mode']:
             yield from mv(xs1.cam.acquire_time, 0.5)
-        elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode']:
+        elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode'] or 'yield' in p['mode']:
             yield from mv(xs.cam.acquire_time, 0.5)
         ## xs4 vs xs7
             
@@ -824,7 +836,7 @@ def xafs(inifile=None, **kwargs):
 
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## make sure XSpress3 IOC knows how many data points to measure
-            if plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus'):
+            if plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus'):
                 yield from mv(xs.total_points, len(energy_grid))
             if plotting_mode(p['mode']) == 'xs1':
                 yield from mv(xs1.total_points, len(energy_grid))
@@ -910,14 +922,20 @@ def xafs(inifile=None, **kwargs):
             sample = p['sample']
             if len(sample) > 50:
                 sample = sample[:45] + ' ...'
+
+            fluo_detector = None
+            if 'xs' in plotting_mode(p['mode']):
+                fluo_detector = xs.name
             kafka_message({'xafsscan': 'start',
                            'element': p["element"],
                            'edge': p["edge"],
-                           'mode': p['mode'],
+                           'mode': plotting_mode(p['mode']),
                            'filename': p["filename"],
                            'repetitions': p["nscans"],
                            'sample': sample,
-                           'reference_material': refmat, })
+                           'reference_material': refmat,
+                           'fluo_detector': fluo_detector})
+            
             for i in range(p['start'], p['start']+p['nscans'], 1):
                 cnt += 1
                 fname = "%s.%3.3d" % (p['filename'], i)
@@ -990,7 +1008,7 @@ def xafs(inifile=None, **kwargs):
                     print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
 
 
-                if plotting_mode(p['mode']) in ('xs', 'fluo+yield'):
+                if plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield'):
                     #yield from mv(xs.cam.acquire_time, time_grid[0])
                     #yield from mv(xs.Acquire, 1)
                     yield from mv(xs.spectra_per_point, 1) 
@@ -1025,7 +1043,7 @@ def xafs(inifile=None, **kwargs):
                     md['_dtc'] = (BMMuser.xs8,)
                 elif plotting_mode(p['mode']) == 'xs7':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4, BMMuser.xs5, BMMuser.xs6, BMMuser.xs7)
-                elif plotting_mode(p['mode']) in ('xs', 'fluo+yield', 'fluo+pilatus'):
+                elif plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus'):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
@@ -1068,7 +1086,7 @@ def xafs(inifile=None, **kwargs):
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence + pilatus',
                                                  'BMM_kafka': { 'hint':  'xafs fluo+pilatus', **more_kafka }})
                 elif plotting_mode(p['mode']) == 'yield':
-                    uid = yield from scan_nd([*ION_CHAMBERS], energy_trajectory + dwelltime_trajectory,
+                    uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : f'scan_nd xafs {p["mode"]}',
                                                  'BMM_kafka': { 'hint': f'xafs {p["mode"]}', **more_kafka }})
                 
@@ -1078,14 +1096,17 @@ def xafs(inifile=None, **kwargs):
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
                 
-                if plotting_mode(p['mode']) in ('xs', 'xs1', 'xs4', 'xs7', 'fluo+yield'):
+                if plotting_mode(p['mode']) in ('xs', 'xs1', 'xs4', 'xs7', 'fluo+yield', 'yield'):
                     hdf5_uid = xs.hdf5.file_name.value
                     
                 uidlist.append(uid)
                 kafka_message({'xasxdi': True, 'uid' : uid, 'filename': os.path.basename(datafile)})
                 print(bold_msg('wrote %s' % datafile))
-                BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')
-
+                if not is_re_worker_active():
+                    BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')
+                else:
+                    BMM_log_info(f'energy scan finished, uid = {uid}\ndata file written to {datafile}')
+                    
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
                 ## data evaluation + message to Slack
                 ## also sync data with Google Drive
@@ -1121,25 +1142,30 @@ def xafs(inifile=None, **kwargs):
         print('Finishing up after an XAFS scan sequence')
         BMM_clear_suspenders()
 
-        how = 'finished  :tada:'
-        try:
-            if 'primary' not in bmm_catalog[-1].metadata['stop']['num_events']:
+        if not is_re_worker_active():
+            how = 'finished  :tada:'
+            try:
+                if 'primary' not in bmm_catalog[-1].metadata['stop']['num_events']:
+                    how = '*stopped*  :warning:'
+                elif bmm_catalog[-1].metadata['stop']['num_events']['primary'] != bmm_catalog[-1].metadata['start']['num_points']:
+                    how = '*stopped*  :warning:'
+            except:
                 how = '*stopped*  :warning:'
-            elif bmm_catalog[-1].metadata['stop']['num_events']['primary'] != bmm_catalog[-1].metadata['start']['num_points']:
-                how = '*stopped*  :warning:'
-        except:
-            how = '*stopped*  :warning:'
+        else:
+            how = 'finished or stopped on QS'
         if BMMuser.final_log_entry is True:
             report(f'== XAFS scan sequence {how}', level='bold', slack=True)
-            BMM_log_info(f'most recent uid = {bmm_catalog[-1].metadata["start"]["uid"]}, scan_id = {bmm_catalog[-1].metadata["start"]["scan_id"]}')
-
+            if not is_re_worker_active():
+                BMM_log_info(f'most recent uid = {bmm_catalog[-1].metadata["start"]["uid"]}, scan_id = {bmm_catalog[-1].metadata["start"]["scan_id"]}')
+            else:
+                pass
 
             kafka_message({'dossier' : 'set', 'uidlist' : uidlist, })
             kafka_message({'dossier' : 'write', })
-            time.sleep(0.5)
+            time.sleep(3.0)
 
         if len(uidlist) > 0:
-            basename = bmm_catalog[uidlist[0]].metadata['start']['XDI']['_user']['filename']
+            basename = rkvs.get('BMM:dossier:basename').decode('utf-8')
             if basename is None:
                 kafka_message({'xafsscan': 'stop', 'filename': None})
             else:
@@ -1182,6 +1208,7 @@ def xafs(inifile=None, **kwargs):
     ######################################################################
     dossier = DossierTools()
     uidlist = []
+    basename = None
     BMMuser.final_log_entry = True
     RE.msg_hook = None
     if BMMuser.lims is False:

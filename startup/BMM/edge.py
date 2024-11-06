@@ -377,6 +377,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from mv(slits3.hsize, 2)
         elif mode in ('D', 'E', 'F'):
             yield from mv(slits3.hsize, 3)
+        elif mode in ('A', 'B', 'C'):
+            yield from mv(slits3.hsize, 0.4)
             
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
         yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist, no_ref=no_ref)
@@ -466,7 +468,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         #yield from rois.select_plan(el)   # DEPRECATED
         ## Xspress3
         if with_xspress3:
-            BMMuser.verify_roi(xs4, el, edge)
+            BMMuser.verify_roi(xs, el, edge)
             BMMuser.verify_roi(xs1, el, edge)
             #BMMuser.verify_roi(xs7, el, edge)
         ## feedback
@@ -476,8 +478,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from mv(slits3.hsize, 7)
             report('Finished configuring for XRD', level='bold', slack=True)
         else:
-            if mode in ('D', 'E', 'F'):
-                yield from mv(slits3.hsize, hsize)
+            #if mode in ('D', 'E', 'F'):
+            yield from mv(slits3.hsize, hsize)
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
         if slits is False:
             print('  * You may need to verify the slit position:  RE(slit_height())')

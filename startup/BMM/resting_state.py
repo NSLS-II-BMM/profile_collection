@@ -20,7 +20,7 @@ from BMM.workspace  import rkvs
 
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.dwelltime   import _locked_dwell_time, with_iy, with_pilatus
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_quadem, with_iy, with_pilatus
 from BMM.user_ns.detectors   import quadem1, ION_CHAMBERS, pilatus
 from BMM.user_ns.instruments import xafs_wheel
 
@@ -43,18 +43,22 @@ def resting_state():
     _ kafka sent resting state message
     '''
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument = True, False, ''
-    if with_iy is True:
-        quadem1.Iy.kind = 'hinted'
-    else:
-        quadem1.Iy.kind = 'omitted'
+    
+    if with_quadem is True:
+        if with_iy is True:
+            quadem1.Iy.kind = 'hinted'
+        else:
+            quadem1.Iy.kind = 'omitted'
     if with_pilatus is True:
         pilatus.stats.kind = 'hinted'
     else:
-        pilatus.stats.kind = 'omitted'
+        #pilatus.stats.kind = 'omitted'
+        pass
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
-    quadem1.on(quiet=True)
+    if with_quadem is True:
+        quadem1.on(quiet=True)
     _locked_dwell_time.move(0.5)
     for electrometer in ION_CHAMBERS:
         electrometer.acquire.put(1)
@@ -83,14 +87,16 @@ def resting_state_plan():
     #BMMuser.prompt = True
     #BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument , quadem1.Iy.kind = True, False, '', 'omitted'
     #yield from quadem1.on_plan()
-    if with_iy is True:
-        quadem1.Iy.kind = 'hinted'
-    else:
-        quadem1.Iy.kind = 'omitted'
+    if with_quadem is True:
+        if with_iy is True:
+            quadem1.Iy.kind = 'hinted'
+        else:
+            quadem1.Iy.kind = 'omitted'
     if with_pilatus is True:
         pilatus.stats.kind = 'hinted'
     else:
-        pilatus.stats.kind = 'omitted'
+        #pilatus.stats.kind = 'omitted'
+        pass
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     for electrometer in ION_CHAMBERS:
@@ -122,19 +128,22 @@ def end_of_macro():
     '''
     
     BMMuser.prompt, BMMuser.macro_dryrun, BMMuser.instrument = True, False, ''
-    if with_iy is True:
-        quadem1.Iy.kind = 'hinted'
-    else:
-        quadem1.Iy.kind = 'omitted'
+    if with_quadem is True:
+        if with_iy is True:
+            quadem1.Iy.kind = 'hinted'
+        else:
+            quadem1.Iy.kind = 'omitted'
     if with_pilatus is True:
         pilatus.stats.kind = 'hinted'
     else:
-        pilatus.stats.kind = 'omitted'
+        #pilatus.stats.kind = 'omitted'
+        pass
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
     BMMuser.running_macro, BMMuser.lims = False, True
-    yield from quadem1.on_plan()
+    if with_quadem is True:
+        yield from quadem1.on_plan()
     yield from mv(_locked_dwell_time, 0.5)
     #yield from mv(user_ns['dm3_bct'].kill_cmd, 1)
     yield from sleep(0.2)

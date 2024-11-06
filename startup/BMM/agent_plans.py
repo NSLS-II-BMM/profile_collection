@@ -169,3 +169,169 @@ def agent_move_motor(motor_x, Cu_x_position, *args, **kwargs):
 
 def agent_change_edge(element):
     yield from change_edge(element, focus=True)
+
+
+
+
+
+######################################################################
+## This section involves functionality for an experiment involving
+## CMS and Karen Chen-Wiegart's group.  Experiments driven by AI at
+## CMS will occassionally push a measurement to BMM's queueserver.
+## The following implements BMM's response for that experiment.
+######################################################################
+
+from bluesky.plan_stubs import sleep, mv, mvr, null
+from bluesky.preprocessors import finalize_wrapper
+
+import json, os, pprint
+from BMM.logging        import report
+from BMM.periodictable  import Z_number, element_symbol
+from BMM.resting_state  import resting_state_plan
+
+from BMM import user_ns as user_ns_module
+user_ns = vars(user_ns_module)
+
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
+
+
+
+def CMS_driven_measurement(composition=None, distance=None, time=None):
+    '''The purpose of this plan is to convert the experimental "coordinates" 
+    from CMS into physical coordinates on a set of samples at BMM.
+
+    parameters
+    ==========
+    composition (type)
+      meaning
+
+    distance (float)
+      distance from measured zero position on the selected sample
+
+    time (float)
+      The time that the corresponding sample at CMS has been subjected to heat.  
+      This value is used to select the appropriate sample from the list below.
+
+
+    configuration
+    =============
+
+    Detector distances for the edges and nominal
+    xafs_x/xafs_pitch/xafs_y positions of each sample are stored in a
+    JSON file called `cms.json` in the users Workspace folder.  Can
+    also configure whether mesages specific to this plan are echoed to
+    Slack.
+
+
+    notes
+    =====
+
+    From Cheng-Chu:
+
+      We will have 6 samples (top: 40 mm x 10 mm; bottom: 45 mm x 10 mm)
+      with different heating durations:
+
+      T1: 300 s
+      T2: 600 s
+      T3: 1200 s
+      T4: 1800 s
+      T5: 3600 s
+      T6: 5400 s
+
+    There are three edges to be measured at each position on each samples:
+    Sc, V, Mn
+
+    Once the 6 samples are mounted on the sample holder at BMM, each
+    will be aligned in the beam with xafs_x and xafs_pitch positions
+    for the aligned sample recorded.  Also recorded will the xafs_y
+    value of the zero position on each sample.
+
+    From that tuple of (xafs_x, xafs_pitch, xafs_y) positions, the
+    value of distance will be used to compute the measurement position.
+
+    So, the game plan is:
+    1. Rotate xafs_garot to the correct sample computed from time
+    2. Compute the xafs_y position from distance
+    3. Move to (xafs_x, xafs_pitch, xafs_y)
+    4. Measure XAS at (Sc, V, Mn) or (Mn, V, Sc) as appropriate
+
+    '''
+
+    def main_plan(composition, distance, time):
+        report(f"*CMS:* Received instructions: {composition = }, {distance = }, {time = }", slack=config['slack'])
+
+        ga.spin = False
+        durations = list((config['origins'][x]['duration'] for x in config['origins'].keys()))
+        this_time = min(durations, key=lambda x:abs(x-time))  # find sample duration closest to requested time
+        sample = None
+        for i,k in enumerate(config['origins'].keys()):
+            if this_time == config['origins'][k]['duration']:
+                sample = k
+                report(f'*CMS:* Rotating to sample {sample} at position {i+1}', slack=config['slack'])
+                yield from ga.to(i+1)
+
+        xpos  = config['origins'][sample]['xafs_x']
+        pitch = config['origins'][sample]['xafs_pitch']
+        roll  = config['origins'][sample]['xafs_roll']
+        ypos  = config['origins'][sample]['xafs_y'] - distance - 0.2
+        report(f'*CMS:* Moving to {distance = }  (X={xpos:.3f}, pitch={pitch:.3f}, roll={roll:.3f}, Y={ypos:.3f})', slack=config['slack'])
+        yield from mv(xafs_x, xpos, xafs_pitch, pitch, xafs_y, ypos, xafs_roll, roll)
+        yield from sleep(1)
+
+
+        ## put edges in ascending order by Z number
+        znums = list(Z_number(x) for x in  config['detector_distances'].keys())
+        elements = list(element_symbol(x) for x in sorted(znums))
+        ## if mono is currently at the highest energy edge, reverse the element list
+        if BMMuser.element == elements[-1]:
+            elements.reverse()
+
+
+        for i, el in enumerate(elements):
+            report(f'*CMS:* measuring {el} edge of sample {composition = }, {sample = }, {distance = }, {time = }', slack=config['slack'])
+            yield from mv(xafs_det, config['detector_distances'][el])
+            if i > 0:
+                if config['dryrun'] is False:
+                    yield from change_edge(el, focus=True)
+                else:
+                    print(f"change_edge('{el}', focus=True)")
+                    yield from sleep(3)
+
+            ## also need reference XANES measurement
+
+            filename = f"{el}_{composition}_{distance:.3f}_{time}"
+            comment = f"sample = {sample}, distance = {distance:.3f}, {time = }"
+            prep = f"MnVSc film deposited on glass, heated for {this_time} seconds"
+            kwargs = config['xas'] 
+            if config['dryrun'] is False:
+                yield from xafs(filename=filename, sample=composition, prep=prep, comment=comment, **kwargs)
+            else:
+                print(f"xafs('/nsls2/data3/bmm/legacy/{el}', {filename=}, sample={composition}, {prep =}, {comment=})")
+                yield from sleep(3)
+
+
+    def cleanup_plan():
+        report(f'== Finished a CMS driven measurement', level='bold', slack=config['slack'])
+        yield from resting_state_plan()
+        if not is_re_worker_active():
+            BMMuser.prompt = True
+        
+        
+    BMMuser = user_ns['BMMuser']
+    ga = user_ns['ga']
+    xafs_x, xafs_y, xafs_pitch, xafs_roll = user_ns['xafs_x'], user_ns['xafs_y'], user_ns['xafs_pitch'], user_ns['xafs_roll']
+    BMMuser.prompt = False
+    with open('/nsls2/data3/bmm/legacy/cms.json') as f:
+        config = json.load(f)
+    # pprint.pprint(config)
+    # print('\n')
+    
+    yield from finalize_wrapper(main_plan(composition, distance, time), cleanup_plan())
+
+    

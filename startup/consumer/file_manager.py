@@ -4,6 +4,7 @@ import pprint
 import uuid
 import sys
 import os
+import re
 import time
 import shutil
 sys.path.append('/home/xf06bm/.ipython/profile_collection/startup')
@@ -61,7 +62,7 @@ from file_logger import add_handler, clear_logger, establish_logger
 sh = logging.StreamHandler()
 add_handler(sh, logger)
 
-be_verbose = False
+be_verbose = True
 
 
 def pobj(text, style='monokai'):
@@ -76,6 +77,19 @@ def pobj(text, style='monokai'):
                     Terminal256Formatter(style=style)))
     
 
+def usb_filename(self, bmm_catalog, uid):
+    '''Find the path/name of the asset file associated with UID
+    '''
+    for d in bmm_catalog[uid].documents():
+        if d[0] == 'resource':
+            this = os.path.join(d[1]['root'], d[1]['resource_path'])
+            if '_%d' in this:
+                this = this % 0
+            if 'xspress3' in this:
+                return this 
+    return None
+
+    
     
 def manage_files_from_kafka_messages(beamline_acronym):
 
@@ -169,7 +183,20 @@ def manage_files_from_kafka_messages(beamline_acronym):
                     logger.info(f'made directory {message["mkdir"]}')
 
             elif 'copy' in message:
-                source = message['file']
+                if 'file' in message:
+                    source = message['file']
+                elif 'uuid' in message:
+                    record = bmm_catalog[message['uuid']]
+                    docs = record.documents()
+                    found = []
+                    for d in docs:
+                        if d[0] == 'resource':
+                            this = os.path.join(d[1]['root'], d[1]['resource_path'])
+                            if '_%d' in this or re.search('%\d\.\dd', this) is not None:
+                                this = this % 0
+                            found.append(this)
+                    source = found[0]
+                    uuid = True
                 target = message['target']
                 shutil.copy(source, target)
                 logger.info(f'copied {source} to {target}')

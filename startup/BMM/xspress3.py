@@ -254,7 +254,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         DeviceStatus
         """
 
-        return DeviceStatus(self, settle_time=0.075)
+        return DeviceStatus(self, settle_time=0.05)
 
     # JL: trying to use Xspress3Trigger.trigger
     #     which is almost identical to this
@@ -569,7 +569,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
         print(' ROI     ', end='')
         for i, channel in enumerate(self.iterate_channels()):
-            print(f' Chan{i}     ', end='')
+            print(f' Chan{i+1}     ', end='')
         print()
         print('========', end='')
         print('==========='*len(list(self.iterate_channels())))

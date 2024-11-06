@@ -343,7 +343,7 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Pb':     [0, 21, 'Pb', 'Pb foil'],
                     'Bi':     [0, 22, 'Bi', 'BiO2'],
                     'Sr':     [0, 23, 'Sr', 'SrTiO3'],
-                    'Y' :     [0, 24, 'Y',  'Y2O3'],
+                    'Y' :     [0, 24, 'Y',  'Y foil'],
                     'Cs':     [1,  1, 'Cs', 'CsNO3'],
                     'La':     [1,  2, 'La', 'La(OH)3'],
                     'Ce':     [1,  3, 'Ce', 'CeO2'],
@@ -370,7 +370,7 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     'Sc' :    [1, 23, 'Sc', 'Sc metal powder'],
                     'Ru':     [1, 24, 'Ru', 'RuO2'],
                     'Th':     [0, 22, 'Bi', 'BiO2'],  # use Bi L1 for Th L3
-                    'U' :     [0, 24, 'Y',  'Y2O3'],  # use Y K for U L3
+                    'U' :     [0, 24, 'Y',  'Y foil'],  # use Y K for U L3
                     #'U' :     [0, 24, 'U',  'UO3'],  # user supplied U standard
                     'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
 

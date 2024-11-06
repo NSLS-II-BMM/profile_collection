@@ -8,10 +8,17 @@ from subprocess import run
 #except:
 from nslsii.sync_experiment import sync_experiment as start_experiment, validate_proposal
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
-md = user_ns["RE"].md
+facility_dict = md = user_ns["RE"].md
 
 import BMM.functions
 from BMM.functions import BMM_STAFF, LUSTRE_XAS, LUSTRE_DATA_ROOT, proposal_base
@@ -25,10 +32,10 @@ from BMM.user_ns.base import startup_dir
 
 TEMPLATES_FOLDER = 'templates'
 
-import redis
-from redis_json_dict import RedisJSONDict
-redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
-facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+#import redis
+#from redis_json_dict import RedisJSONDict
+#redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+#facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
 
 
 
@@ -813,8 +820,9 @@ class BMM_User(Borg):
 
         ## NSLS-II start experiment infrastructure
         ## this prefix needs to be the same (but without the dash) as the call to RedisJSONDict in user_ns/base.py
-        start_experiment(gup, 'bmm', verbose=False, prefix='xas')
-        # sync_experiment(gup, 'bmm', verbose=False)
+        if not is_re_worker_active():  # want to not do this when starting QS environment
+            start_experiment(gup, 'bmm', verbose=False, prefix='xas')
+            # sync_experiment(gup, 'bmm', verbose=False, prefix='xas')
         
         # from redis_json_dict import RedisJSONDict
         # import redis
@@ -824,9 +832,7 @@ class BMM_User(Borg):
             self.experimenters = 'Bruce Ravel'
         else:
             self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in validate_proposal(f'pass-{gup}', 'bmm')['users'])))
-            # self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in sync_experiment.validate_proposal(f'pass-{gup}', 'bmm')['users'])))
-        
-        # lustre_root = os.path.join(LUSTRE_XAS, f'{self.cycle}', f'{saf}')
+         
         lustre_root = os.path.join(LUSTRE_DATA_ROOT, f'{self.cycle}', f'pass-{gup}')
         # if not os.path.isdir(lustre_root):
         #     os.makedirs(lustre_root)
@@ -1046,7 +1052,7 @@ class BMM_User(Borg):
 
         '''
         if cycle is None:
-            cycle = md["cycle"]
+            cycle = user_ns['RE'].md["cycle"]
         url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={cycle}'
         #print(url)
         r = requests.get(url)

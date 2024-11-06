@@ -8,7 +8,7 @@ import os
 import matplotlib.pyplot as plt
 from ophyd.sim import noisy_det
 
-from BMM.user_ns.dwelltime import use_1element, use_4element
+from BMM.user_ns.dwelltime import use_1element, use_4element, use_7element
 from BMM.resting_state     import resting_state_plan
 from BMM.suspenders        import BMM_clear_to_start
 from BMM.kafka             import kafka_message
@@ -91,6 +91,17 @@ def areascan(detector,
         if slow in motor_nicknames.keys():
             slow = motor_nicknames[slow]
 
+        current_slow = slow.position
+        if current_slow+startslow < slow.limits[0]:
+            print(error_msg(f'These scan parameters will take {slow.name} outside it\'s lower limit of {slow.limits[0]}'))
+            print(whisper(f'(starting position = {slow.position})'))
+            return(yield from null())
+        if current_slow+stopslow > slow.limits[1]:
+            print(error_msg(f'These scan parameters will take {slow.name} outside it\'s upper limit of {slow.limits[1]}'))
+            print(whisper(f'(starting position = {slow.position})'))
+            return(yield from null())
+
+
         ## sanity checks on fast axis
         if type(fast) is str: fast = fast.lower()
         if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
@@ -102,11 +113,24 @@ def areascan(detector,
         if fast in motor_nicknames.keys():
             fast = motor_nicknames[fast]
 
+        current_fast = fast.position
+        if current_fast+startfast < fast.limits[0]:
+            print(error_msg(f'These scan parameters will take {fast.name} outside it\'s lower limit of {fast.limits[0]}'))
+            print(whisper(f'(starting position = {fast.position})'))
+            return(yield from null())
+        if current_fast+stopfast > fast.limits[1]:
+            print(error_msg(f'These scan parameters will take {fast.name} outside it\'s upper limit of {fast.limits[1]}'))
+            print(whisper(f'(starting position = {fast.position})'))
+            return(yield from null())
+            
+
         detector = detector.capitalize()
         yield from mv(_locked_dwell_time, dwell)
         dets = ION_CHAMBERS.copy()
 
-        if use_4element and detector == 'If':
+        if use_7element and detector == 'If':
+            detector = 'Xs'
+        elif use_4element and detector == 'If':
             detector = 'Xs'
         elif use_1element and detector == 'If':
             detector = 'Xs1'

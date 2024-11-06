@@ -1,5 +1,3 @@
-from databroker import catalog
-from databroker.queries import TimeRange
 import numpy, json, os, time
 from tqdm import tqdm           # progress bar
 from pprint import pprint
@@ -12,7 +10,16 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base import startup_dir
 
-        
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
+
+from databroker import catalog
+from databroker.queries import TimeRange
 
 
 class BMMTelemetry():
@@ -28,7 +35,9 @@ class BMMTelemetry():
     def __init__(self):
         self.folder      = os.path.join(startup_dir, 'telemetry')
         self.json        = os.path.join(self.folder, 'telemetry.json')
-        self.bc          = catalog['bmm']
+        self.bc          = None
+        if not is_re_worker_active():
+            self.bc      = catalog['bmm']
         self._start_date = '2021-09-01'
         self.reliability = 10
         self.beamdump    = 3

@@ -245,7 +245,7 @@ def set_instrument(instrument=None):
                                                                                       
 
 run_report('\t'+'other plans')
-from BMM.plans import tu, td, mvbct, mvrbct, mvbender, mvrbender
+from BMM.plans import tu, td, mvbct, mvrbct, mvbender, mvrbender, move, mover
 from BMM.plans import recover_mirror2, recover_mirror3, recover_mirrors, recover_diagnostics, recover_slits2, recover_slits3
 
 run_report('\t'+'change_mode, change_xtals')
@@ -380,7 +380,7 @@ if BMMuser.element is None:
                                                                     
       
 run_report('\t'+'final setup: Xspress3')
-from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element, use_7element
+from BMM.user_ns.dwelltime import with_xspress3, use_7element, use_4element, use_1element
 from BMM.user_ns.detectors import xs4, xs1, xs7, xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
     if xs4 is not False and use_4element:
@@ -414,6 +414,10 @@ if gawheel is not None:
 if lmb  is not None: lmb.folder  = BMMuser.folder     # Linkam stage
 if lsmb is not None: lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
 if gmb  is not None: gmb.folder  = BMMuser.folder     # generic motor grid
+
+run_report('\t'+'CMS experiment')
+from BMM.agent_plans import CMS_driven_measurement
+
 
 from BMM.logging import BMM_msg_hook
 user_ns['RE'].msg_hook = BMM_msg_hook
@@ -492,8 +496,14 @@ check_for_synaxis()
 examine_diagnostics()
 from BMM.workspace import check_instruments
 check_instruments(user_ns['linkam'], user_ns['lakeshore'], user_ns['xs'])
-##run_report('\t\t'+'data folders and logging')
+run_report('\t\t'+'calling resting_state')
 resting_state()
+
+if not is_re_worker_active():
+    run_report('\t\t'+'establishing local logger')
+    from bluesky.log import config_bluesky_logging
+    config_bluesky_logging(file='/home/xf06bm/logs/bluesky.log', level='DEBUG')
+
 
 try:
     from bluesky_widgets.utils.streaming import stream_documents_into_runs

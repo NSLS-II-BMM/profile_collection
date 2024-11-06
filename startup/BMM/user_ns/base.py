@@ -26,6 +26,12 @@ import redis
 
 uns_dict = dict()
 
+class dummy_broker:
+    def insert(self, *args):
+        pass
+
+dummy = dummy_broker()
+
 if not is_re_worker_active():
     ip = get_ipython()
     nslsii.configure_base(ip.user_ns, 'bmm', configure_logging=True, publish_documents_with_kafka=use_kafka)
@@ -34,12 +40,13 @@ if not is_re_worker_active():
     sd  = ip.user_ns['sd']
     bec = ip.user_ns['bec']
 else:
-    nslsii.configure_base(uns_dict, 'bmm', configure_logging=True, publish_documents_with_kafka=use_kafka)
+    nslsii.configure_base(uns_dict, dummy, configure_logging=True, publish_documents_with_kafka=False)
     RE  = uns_dict['RE']
+    nslsii.configure_kafka_publisher(RE, "bmm")
     sd  = uns_dict['sd']
     bec = uns_dict['bec']
 RE.unsubscribe(0)  # remove databroker, which was subscribed first by configure_base
-tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/raw", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY"])
+tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/raw", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_BMM"])
 
 def post_document(name, doc):
     #tz = time.monotonic()
@@ -92,9 +99,12 @@ from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
 
-from tiled.client import from_profile
-bmm_catalog = from_profile('bmm')
-db = Broker(bmm_catalog)
+bmm_catalog = None
+
+if not is_re_worker_active():
+    from tiled.client import from_profile
+    bmm_catalog = from_profile('bmm')
+    db = Broker(bmm_catalog)
 
 
 from bluesky.callbacks.zmq import Publisher

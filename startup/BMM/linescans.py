@@ -35,7 +35,7 @@ from BMM.user_ns.base        import WORKSPACE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, xs4, xs7, pilatus, ION_CHAMBERS
-from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_4element, use_1element
+from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_7element, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *

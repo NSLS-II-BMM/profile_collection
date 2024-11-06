@@ -35,6 +35,7 @@ startup_dir = os.path.dirname(__file__)
 def log_entry(logger, message):
     #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
     #print(message)
+    post_to_slack(message)    
     echo_slack(text = message,
                icon = 'message',
                rid  = None )
@@ -303,7 +304,20 @@ class BMMDossier():
                     rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'8'][0]),]
                     ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['1-element SDD_channel08_xrf']).sum()),]
                 elif '7-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
-                    pass
+                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'5'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'6'][0]),
+                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'7'][0]) ]
+                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel01_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel02_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel03_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel04_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel05_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel06_xrf']).sum()),
+                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel07_xrf']).sum()) ]
 
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()

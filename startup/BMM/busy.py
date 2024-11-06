@@ -46,16 +46,16 @@ class BusyStatus(DeviceStatus):
                     )
                 time.sleep(tick)
                 current = time.monotonic()
-            w(
-                name=self.device.name,
-                current=delay,
-                initial=0,
-                target=delay,
-                unit="s",
-                fraction=0,
-                time_elapsed=current - start,
-                time_remaining=0,
-            )
+            # w(
+            #     name=self.device.name,
+            #     current=delay,
+            #     initial=0,
+            #     target=delay,
+            #     unit="s",
+            #     fraction=0,
+            #     time_elapsed=current - start,
+            #     time_remaining=0,
+            # )
             self.set_finished()
 
         threading.Thread(target=busy_status_loop).start()

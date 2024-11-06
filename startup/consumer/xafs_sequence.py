@@ -100,7 +100,7 @@ class XAFSSequence():
         else:
             toplot = self.kek.merge()
             try:
-                if prj is True:
+                if prj is True and get_backend().lower() == 'agg':
                     ## build filename from name of associated png file
                     filename = filename.replace('snapshots', 'prj')
                     filename = filename.replace('.png', f'_{seqnumber:02d}.prj')

@@ -79,7 +79,7 @@ def plot_from_kafka_messages(beamline_acronym):
         #     f"contents: {pprint.pformat(doc)}\n"
         # )
         name, message = doc
-
+        #print('========', name)
         # if be_verbose is True:
         #     print('\n\nVerbose mode is on:')
         #     pprint.pprint(message)
@@ -226,6 +226,7 @@ def plot_from_kafka_messages(beamline_acronym):
                 ##pprint.pprint(message)
                 ls.add(**message)
             elif doing == 'xafsscan':
+                #pprint.pprint(message)
                 xs.add(**message)
             elif doing == 'timescan':
                 #pprint.pprint(message)
