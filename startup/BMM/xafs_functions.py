@@ -211,7 +211,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
         timegrid = timegrid + list(tar)
         timegrid = list(numpy.round(timegrid, decimals=2))
 
-    if element in ('Kr', 'Hg', 'Pu', 'Th'):
+    if element in ('Kr', 'Hg', 'Pu', 'Th', 'Ru'):
         overhead, uncertainty = tele.average()
     elif element is not None:
         overhead, uncertainty, maxdpp, mindpp = tele.overhead_per_point(element) #, edge)
