@@ -63,7 +63,7 @@ class BMMFileStoreJPEG(FileStorePluginBase):
     def generate_datum(self, key, timestamp, datum_kwargs):
         i = next(self._point_counter)
         datum_kwargs = datum_kwargs or {}
-        datum_kwargs.update({"index": i})
+        datum_kwargs.update({"point_number": i})
         return super().generate_datum(key, timestamp, datum_kwargs)
 
     def stage(self):
@@ -133,7 +133,7 @@ class BMMUVC(AreaDetector):
             3,  # Always save in color
         )
         chunks = (
-            1, # Only save one image
+            1,  # Only save one image
             self.cam.array_size.array_size_y.get(),
             self.cam.array_size.array_size_x.get(),
             3,  # Always save in color   
