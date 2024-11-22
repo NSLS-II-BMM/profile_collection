@@ -51,7 +51,7 @@ from BMM.user_ns.base import startup_dir
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
 
-
+xs_app_dir = EpicsSignalRO('XF:06BM-CT{Xsp:1}::APP_DIR1', name='xs_app_dir')
 
 ################################################################################
 # Notes:

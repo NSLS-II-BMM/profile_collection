@@ -388,41 +388,58 @@ def _prep_xs(det):
     
     
 from BMM.user_ns.dwelltime import with_xspress3, use_4element, use_1element, use_7element
+xs4_ioc, xs7_ioc = False, False
 
 if with_xspress3 is True:
     run_report('\t'+'Xspress3')
+    from BMM.xspress3 import xs_app_dir
+
+    if 'xs3-4-1' in xs_app_dir.get():
+        run_report('\t\t'+'The running XSpress3 IOC is for the 4-element SDD')
+        xs4_ioc = True
+        use_4element, use_7element = True, False
+    elif 'xs3-7-1' in xs_app_dir.get():
+        run_report('\t\t'+'The running XSpress3 IOC is for the 7-element SDD')
+        xs7_ioc = True
+        use_4element, use_7element = False, True
 
 
-if with_xspress3 is True and use_7element is True:
-    run_report('\t'+'7-element SDD with Xspress3')
-    from BMM.xspress3_7element import BMMXspress3Detector_7Element
-    xs7 = BMMXspress3Detector_7Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
-                                       name       = '7-element SDD',
-                                       read_attrs = ['hdf5']    )
-    _prep_xs(xs7)
+    if use_7element is True:
+        run_report('\t'+'instantiate 7-element SDD')
+        from BMM.xspress3_7element import BMMXspress3Detector_7Element
+        xs7 = BMMXspress3Detector_7Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
+                                           name       = '7-element SDD',
+                                           read_attrs = ['hdf5']    )
+        _prep_xs(xs7)
 
-if with_xspress3 is True and use_1element is True:
-    run_report('\t\t'+'1-element SDD')
-    from BMM.xspress3_1element import BMMXspress3Detector_1Element
-    xs1 = BMMXspress3Detector_1Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
-                                       name       = '1-element SDD',
-                                       read_attrs = ['hdf5']    )
-    _prep_xs(xs1)
+    if use_1element is True:
+        run_report('\t\t'+'instantiate 1-element SDD')
+        from BMM.xspress3_1element import BMMXspress3Detector_1Element
+        xs1 = BMMXspress3Detector_1Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
+                                           name       = '1-element SDD',
+                                           read_attrs = ['hdf5']    )
+        _prep_xs(xs1)
 
-if with_xspress3 is True and use_4element is True:
-    run_report('\t\t'+'4-element SDD')
-    from BMM.xspress3_4element import BMMXspress3Detector_4Element
-    xs4 = BMMXspress3Detector_4Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
-                                       name       = '4-element SDD',
-                                       read_attrs = ['hdf5']    )
-    _prep_xs(xs4)
+    if use_4element is True:
+        run_report('\t\t'+'instantiate 4-element SDD')
+        from BMM.xspress3_4element import BMMXspress3Detector_4Element
+        xs4 = BMMXspress3Detector_4Element(prefix     = 'XF:06BM-ES{Xsp:1}:',
+                                           name       = '4-element SDD',
+                                           read_attrs = ['hdf5']    )
+        _prep_xs(xs4)
 
     
 def xspress3_set_detector(this=None):
     if this is None:
-        run_report('\t\t'+'"xs" is the 4-element detector')  # change to 7
-        rkvs.set('BMM:xspress3', 4)
-        return xs4
+        if use_7element is True:
+            this = 7
+        elif use_4element is True:
+            this = 4
+        elif use_1element is True:
+            this = 1
+        #run_report('\t\t'+'"xs" is the 4-element detector')  # change to 7
+        #rkvs.set('BMM:xspress3', 4)
+        #return xs4
     if this == 4:
         run_report('\t\t'+'"xs" is the 4-element detector')
         rkvs.set('BMM:xspress3', 4)
@@ -436,4 +453,10 @@ def xspress3_set_detector(this=None):
         rkvs.set('BMM:xspress3', 7)
         return xs7
 
-xs=xspress3_set_detector(7)
+if with_xspress3 is True:
+    if use_7element is True:
+        xs=xspress3_set_detector(7)
+    elif use_4element is True:
+        xs=xspress3_set_detector(4)
+    elif use_1element is True:
+        xs=xspress3_set_detector(1)

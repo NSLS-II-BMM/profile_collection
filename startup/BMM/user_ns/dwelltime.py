@@ -16,15 +16,15 @@ with_quadem   = True            # available for Iy and other signals
 with_iy       = False           # electron yield
 with_ic0      = True            # new I0 chamber
 with_ic1      = True            # new It chamber
-with_ic2      = False           # new Ir chamber
+with_ic2      = True            # new Ir chamber
 with_dualem   = False           # deprecated, prototype
 
 # fluorescence detectors and readout systems
 with_struck   = False           # deprecated OG fluorescence read out
 with_xspress3 = True
-use_4element  = False
+use_4element  = True
 use_1element  = True
-use_7element  = True
+use_7element  = False
 
 # area detectors
 with_pilatus  = False

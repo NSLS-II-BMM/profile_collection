@@ -248,8 +248,8 @@ run_report('\t'+'other plans')
 from BMM.plans import tu, td, mvbct, mvrbct, mvbender, mvrbender, move, mover
 from BMM.plans import recover_mirror2, recover_mirror3, recover_mirrors, recover_diagnostics, recover_slits2, recover_slits3
 
-run_report('\t'+'change_mode, change_xtals')
-from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, MODEDATA, change_xtals, pds_motors_ready
+run_report('\t'+'change_mode, change_xtals, PDS utilities')
+from BMM.modes import change_mode, describe_mode, get_mode, mode, read_mode_data, MODEDATA, change_xtals, pds_motors_ready, table_height
 
 if os.path.isfile(os.path.join(BMM_CONFIGURATION_LOCATION, 'Modes.json')):
      MODEDATA = read_mode_data()

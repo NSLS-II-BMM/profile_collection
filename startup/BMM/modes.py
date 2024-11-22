@@ -131,7 +131,44 @@ def pds_motors_ready():
 #            yield from null()
 #            return
      
-     
+
+def table_height(mode=None, by=None):
+     '''Move the XAS table to the correct height and inclination for the
+     specified mode.
+     '''
+     xafs_table = user_ns['xafs_table']
+     if by is not None:
+          yield from mvr(xafs_table.yu,  float(by),
+                        xafs_table.ydo,  float(by),
+                        xafs_table.ydi,  float(by))
+     elif mode in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
+          yield from mv(xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]))
+     else:
+          print('''
+usage:
+
+     absolute
+     ========
+     Move the table to the recorded table height for a photon delivery mode
+
+        table_height(mode=MODE)
+
+     where MODE is one of ('A', 'B', 'C', 'D', 'E', 'F', 'XRD')
+
+     relative
+     ========
+     Adjust the table height by an amount
+
+        table_height(by=AMOUNT)
+
+     where AMOUNT is a number (float or int)
+
+''')
+          yield from null()
+
+
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False, no_ref=False):
      '''Move the photon delivery system to a new mode. 
      A: focused at XAS end station, energy > 8000
