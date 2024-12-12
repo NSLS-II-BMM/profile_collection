@@ -257,7 +257,7 @@ if BMMuser.pds_mode is None:
      BMMuser.pds_mode = get_mode()
 
 run_report('\t'+'change_edge')
-from BMM.edge import show_edges, change_edge
+from BMM.edge import show_edges, change_edge, xrd_mode
 from BMM.functions import approximate_pitch
 
 run_report('\t'+'mono calibration')
@@ -383,11 +383,11 @@ run_report('\t'+'final setup: Xspress3')
 from BMM.user_ns.dwelltime import with_xspress3, use_7element, use_4element, use_1element
 from BMM.user_ns.detectors import xs4, xs1, xs7, xs
 if BMMuser.element is not None and with_xspress3 is True: # make sure Xspress3 is configured to measure from the correct ROI
-    if xs4 is not False and use_4element:
+    if xs4 is not None and use_4element:
         BMMuser.verify_roi(xs4,  BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    if xs1 is not False and use_1element:
+    if xs1 is not None and use_1element:
         BMMuser.verify_roi(xs1, BMMuser.element, BMMuser.edge, tab='\t\t\t')
-    if xs7 is not False and use_7element:
+    if xs7 is not None and use_7element:
         BMMuser.verify_roi(xs7, BMMuser.element, BMMuser.edge, tab='\t\t\t')
     #show_edges()
 
@@ -433,6 +433,37 @@ def measuring(element, edge=None):
     if use_1element:
         xs1.reset_rois()
     show_edges()
+
+
+def xrf_measurement(stub=None, timestamp=True, post=False, add=False):
+    '''Make a proper measurement of an XRF spectrum with the chosen xs
+    detector.  Unlike the %xrf magic, this is made through the run
+    engine and stored properly in the database.
+
+    An image will be displayed and saved in the proposal XRF folder,
+    as will and XDI-style ASCII data file.  The record will not,
+    however, have the full XDI dictionary in the start document.
+
+    '''
+    if timestamp is True:
+        xrffile = f'{stub}_{ahora}.xrf'
+        xrfsnap = f'{stub}_{ahora}.png'
+    else:
+        xrffile = f'{stub}.xrf'
+        xrfsnap = f'{stub}.png'
+        
+    yield from mv(xs.total_points, 1)
+    yield from mv(xs.cam.acquire_time, 1)
+    uid = yield from count([xs], 1, md = {'plan_name' : 'count xafs_metadata XRF'})
+
+    kafka_message({'xrf' : 'plot',
+                   'uid' : uid,
+                   'add' : add,
+                   'filename' : xrfsnap,
+                   'post' : post, })
+    kafka_message({'xrf' : 'write',
+                   'uid' : uid,
+                   'filename' : xrffile, })
 
 def examine_diagnostics():
     CHECK = '\u2714'

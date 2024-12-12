@@ -132,22 +132,9 @@ def pds_motors_ready():
 #            return
      
 
-def table_height(mode=None, by=None):
+def table_height(mode=None, by=None, pitch=None):
      '''Move the XAS table to the correct height and inclination for the
-     specified mode.
-     '''
-     xafs_table = user_ns['xafs_table']
-     if by is not None:
-          yield from mvr(xafs_table.yu,  float(by),
-                        xafs_table.ydo,  float(by),
-                        xafs_table.ydi,  float(by))
-     elif mode in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
-          yield from mv(xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
-                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
-                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]))
-     else:
-          print('''
-usage:
+     specified mode, or adjust the table height, or adjust the table pitch.
 
      absolute
      ========
@@ -165,8 +152,35 @@ usage:
 
      where AMOUNT is a number (float or int)
 
-''')
+     pitch
+     =====
+     Adjust the ends of the table by opposite amounts
+
+        table_height(pitch=ADJUSTMENT)
+
+     where ADJUSTMENT is a number (float or int)
+     The back of the table will be adjusted by that value, 
+     the front of the table by -1 times that value, thus
+     modifying the pitch of the table.  Note: this is units
+     of millimeters, not degrees.
+     '''
+     xafs_table = user_ns['xafs_table']
+     if by is not None:
+          yield from mvr(xafs_table.yu,  float(by),
+                         xafs_table.ydo, float(by),
+                         xafs_table.ydi, float(by))
+     elif pitch is not None:
+          yield from mvr(xafs_table.yu,  -1 * float(pitch),
+                         xafs_table.ydo, float(pitch),
+                         xafs_table.ydi, float(pitch))
+     elif mode in ('A', 'B', 'C', 'D', 'E', 'F', 'XRD'):
+          yield from mv(xafs_table.yu,   float(MODEDATA['xafs_yu'][mode]),
+                        xafs_table.ydo,  float(MODEDATA['xafs_ydo'][mode]),
+                        xafs_table.ydi,  float(MODEDATA['xafs_ydi'][mode]))
+     else:
+          print('Doing nothing.  Do table_height?? for explanation')
           yield from null()
+
 
 
 def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, insist=False, no_ref=False):

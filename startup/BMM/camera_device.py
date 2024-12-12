@@ -66,22 +66,22 @@ def xrd_webcam(filename=None, **kwargs):
 
 
 def analog_camera(filename    = None,
-           sample      = None,
-           folder      = os.environ['HOME'],
-           device      = '/dev/video2',
-           camera      = 0,
-           skip        = 30,
-           frames      = 5,
-           brightness  = 30,
-           x           = 320,
-           y           = 240,
-           linecolor   = 'white',
-           nocrosshair = True,
-           quiet       = False,
-           reset       = False,
-           usbid       = '534d:0021',
-           title       = 'NIST BMM (NSLS-II 06BM)',
-           timestamp   = '%Y-%m-%d %H:%M:%S'):
+                  sample      = None,
+                  folder      = os.environ['HOME'],
+                  device      = '/dev/video2',
+                  camera      = 0,
+                  skip        = 30,
+                  frames      = 5,
+                  brightness  = 30,
+                  x           = 320,
+                  y           = 240,
+                  linecolor   = 'white',
+                  nocrosshair = True,
+                  quiet       = False,
+                  reset       = False,
+                  usbid       = '534d:0021',
+                  title       = 'NIST BMM (NSLS-II 06BM)',
+                  timestamp   = '%Y-%m-%d %H:%M:%S'):
 
     """A function for interacting with fswebcam in a way that meets the
     needs of 06BM.

@@ -116,6 +116,7 @@ class LineScan():
     xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
     plots       = []
     initial     = 0
+    detector    = 7
     
     def start(self, **kwargs):
         #if self.figure is not None:
@@ -139,6 +140,10 @@ class LineScan():
         self.line, = self.axes.plot([],[])
         self.initial = 0
 
+        self.detector = rkvs.get('BMM:xspress3').decode('utf-8')
+        if self.detector == '1' and self.numerator in ('If', 'Xs', 'Fluorescence'):
+            self.numerator = 'Xs1'
+        
         self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
         self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
         self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
@@ -754,7 +759,7 @@ class XRF():
             if 'Beamline' in catalog[uid].metadata['start']['XDI']:
                 handle.write(f'# Beamline.focusing: {xdi["Beamline"]["focusing"]}\n')
                 handle.write(f'# Beamline.harmonic_rejection: {xdi["Beamline"]["harmonic_rejection"]}\n')
-        handle.write(f'# Beamline.energy: {xdi["_pccenergy"]}\n')
+                handle.write(f'# Beamline.energy: {xdi["_pccenergy"]}\n')
         handle.write(f'# Detector.fluorescence: SII Vortex ME4 (4-element silicon drift)\n')
         if xdi is not None:
             if 'Sample' in catalog[uid].metadata['start']['XDI']:

@@ -63,7 +63,8 @@ class BMMFileStoreJPEG(FileStorePluginBase):
     def generate_datum(self, key, timestamp, datum_kwargs):
         i = next(self._point_counter)
         datum_kwargs = datum_kwargs or {}
-        datum_kwargs.update({"point_number": i})
+        #datum_kwargs.update({"point_number": i})    #  see issue #26
+        datum_kwargs.update({"index": i})
         return super().generate_datum(key, timestamp, datum_kwargs)
 
     def stage(self):
@@ -102,7 +103,6 @@ class BMMJPEGPlugin(JPEGPlugin_V33, BMMFileStoreJPEG):
         root_path = f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/{self.parent.name}/"
         return root_path
 
-    
     def stage(self, *args, **kwargs):
         self._update_paths()
         super().stage(*args, **kwargs)

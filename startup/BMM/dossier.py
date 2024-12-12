@@ -1,4 +1,4 @@
-import os, re, socket
+import os, re
 from pygments import highlight
 from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
@@ -22,7 +22,7 @@ from BMM.modes             import get_mode, describe_mode
 from BMM.periodictable     import edge_energy, Z_number, element_name
 
 from BMM.user_ns.base      import bmm_catalog
-from BMM.user_ns.detectors import with_cam1, with_cam2, with_webcam
+from BMM.user_ns.detectors import with_cam1, with_cam2, with_webcam, with_anacam
 from BMM.user_ns.dwelltime import use_7element, use_4element, use_1element
 
 from BMM import user_ns as user_ns_module
@@ -236,52 +236,47 @@ class DossierTools():
 
         ### --- analog camera using redgo dongle ------------------------------------------
         ###     this can only be read by a client on xf06bm-ws3, so... not QS on srv1
-        thishost = socket.gethostname()
-        if is_re_worker_active() is False and 'ws3' in thishost:
+        # thishost = socket.gethostname()
+        # if is_re_worker_active() is False and 'ws3' in thishost:
+        if with_anacam and anacam is not None:
             pass
-            # print(whisper('The error text below saying "Error opening file for output:"'))
-            # print(whisper('happens every time and does not indicate a problem of any sort.'))
-            # anasnap = "%s_analog_%s.jpg" % (stub, ahora)
-            # image_ana = os.path.join(folder, 'snapshots', anasnap)
-            # md['_filename'] = image_ana
-            # anacam._annotation_string = stub
-            # print(bold_msg('analog camera snapshot'))
-            # anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-            # print(whisper('The error text above saying "Error opening file for output:"'))
-            # print(whisper('happens every time and does not indicate a problem of any sort.\n'))
-            # self.anasnap, self.anauid = anasnap, anauid
-            # # try:
-            # #     im = Image.fromarray(numpy.array(bmm_catalog[self.anauid].primary.read()['anacam_image'])[0])
-            # #     im.save(image_ana, 'JPEG')
-            # #     if BMMuser.post_anacam:
-            # #         kafka_message({'echoslack': True,
-            # #                        'img': image_ana})
-            # # except:
-            # #     print(error_msg('Could not copy analog snapshot, probably because it\'s capture failed.'))
-            # #     anacam_uid = False
-            # #     pass
-            # kafka_message({'copy': True,
-            #            'uuid': anauid,
-            #            'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
-            # if BMMuser.post_anacam:
-            #     kafka_message({'echoslack': True,
-            #                    'img': os.path.join(proposal_base(), 'snapshots', anasnap)})
+            print(whisper('The error text below saying "Error opening file for output:"'))
+            print(whisper('happens every time and does not indicate a problem of any sort.'))
+            anasnap = "%s_analog_%s.jpg" % (stub, ahora)
+            image_ana = os.path.join(folder, 'snapshots', anasnap)
+            md['_filename'] = image_ana
+            anacam._annotation_string = stub
+            print(bold_msg('analog camera snapshot'))
+            anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            localfile = os.path.join(anacam._root, anacam._rel_path_template % 0)
+            print(whisper('The error text above saying "Error opening file for output:"'))
+            print(whisper('happens every time and does not indicate a problem of any sort.\n'))
+            self.anasnap, self.anauid = anasnap, anauid
+            kafka_message({'copy': True,
+                           'file': localfile,
+                           'target': os.path.join(proposal_base(), 'snapshots', anasnap), })
+            if BMMuser.post_anacam:
+                kafka_message({'echoslack': True,
+                               'img': os.path.join(proposal_base(), 'snapshots', anasnap)})
 
             
         ### --- USB camera #1 --------------------------------------------------------------
-        usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
-        image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
-        md['_filename'] = image_usb1
-        #usbcam1._annotation_string = stub
-        print(bold_msg('USB camera #1 snapshot'))
-        usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
-        self.usb1snap, self.usb1uid = usb1snap, usb1uid
-        kafka_message({'copy': True,
-                       'uuid': usb1uid,
-                       'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
-        if BMMuser.post_usbcam1:
-            kafka_message({'echoslack': True,
-                           'img': os.path.join(proposal_base(), 'snapshots', usb1snap)})
+        if with_cam1 is True:
+            usb1snap = "%s_usb1_%s.jpg" % (stub, ahora)
+            image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
+            md['_filename'] = image_usb1
+            #usbcam1._annotation_string = stub
+            print(bold_msg('USB camera #1 snapshot'))
+            yield from count([usb1], 1, md={'throwaway': 1})  # this camera often captures incomplete images on the first stab
+                                                              # this is a throwaway image in hopes of capturing a good one
+            usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
+            self.usb1snap, self.usb1uid = usb1snap, usb1uid
+            kafka_message({'copy': True,
+                           'uuid': usb1uid,
+                           'target': os.path.join(proposal_base(), 'snapshots', usb1snap), })
+            if BMMuser.post_usbcam1:
+                kafka_message({'echoslack': True,
+                               'img': os.path.join(proposal_base(), 'snapshots', usb1snap)})
 
         ### --- USB camera #2 --------------------------------------------------------------
         if with_cam2 is True:

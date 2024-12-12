@@ -1,5 +1,5 @@
 
-import os, json
+import os, json, socket
 from BMM.functions import run_report, whisper
 from BMM.user_ns.base import RE
 from BMM.user_ns.bmm import BMMuser
@@ -8,8 +8,17 @@ from BMM.workspace import rkvs
 from ophyd import EpicsSignal
 from ophyd.sim import noisy_det
 
+try:
+    from bluesky_queueserver import is_re_worker_active
+except ImportError:
+    # TODO: delete this when 'bluesky_queueserver' is distributed as part of collection environment
+    def is_re_worker_active():
+        return False
+
+
 run_report(__file__, text='detectors and cameras')
 
+with_anacam = True
 with_cam1   = True
 with_cam2   = True
 with_webcam = False
@@ -227,11 +236,15 @@ xascam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:6}:", name="webcam-1",
                         root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
 xrdcam = AxisCaprotoCam("XF:06BM-ES{AxisCaproto:5}:", name="webcam-2",
                         root_dir=f"/nsls2/data3/bmm/proposals/{RE.md['cycle']}/{RE.md['data_session']}/assets")
-run_report('\t\t'+'initializing analog camera')
-anacam = BMMSnapshot(root=temp_root, which='analog', name='anacam')
-anacam.image.shape = (480, 640, 3)
-anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
-anacam.x, anacam.y = 640, 480    # width, height
+
+thishost = socket.gethostname()
+anacam = None
+if is_re_worker_active() is False and 'ws3' in thishost:
+    run_report('\t\t'+'initializing analog camera')
+    anacam = BMMSnapshot(root=temp_root, which='analog', name='anacam')
+    anacam.image.shape = (480, 640, 3)
+    anacam.device = '/dev/v4l/by-id/usb-MACROSIL_AV_TO_USB2.0-video-index0'
+    anacam.x, anacam.y = 640, 480    # width, height
 
 
 
@@ -454,9 +467,9 @@ def xspress3_set_detector(this=None):
         return xs7
 
 if with_xspress3 is True:
-    if use_7element is True:
-        xs=xspress3_set_detector(7)
-    elif use_4element is True:
+    if use_4element is True:
         xs=xspress3_set_detector(4)
+    elif use_7element is True:
+        xs=xspress3_set_detector(7)
     elif use_1element is True:
         xs=xspress3_set_detector(1)

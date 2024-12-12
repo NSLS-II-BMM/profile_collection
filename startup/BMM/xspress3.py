@@ -235,7 +235,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         self.slots = ['Ti', 'V',  'Cr', 'Mn',
                       'Fe', 'Co', 'Ni', 'Cu',
                       'Zn', 'Ge', 'As', 'Br',
-                      'Nb', 'Mo', None, 'OCR']
+                      'Nb', 'K', None, 'OCR']
         self.restart()
 
     def new_acquire_status(self):

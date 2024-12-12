@@ -295,7 +295,7 @@ class BMM_User(Borg):
         
         self.bender_xas    = 212225  #####################################################################
         self.bender_xrd    = 107240  # approximate values for M2 bender for focusing at XAS & XRD tables #
-        self.bender_margin = 30000   #####################################################################
+        self.bender_margin = 10000   #####################################################################
 
         self.filter_state  = 0
 
@@ -884,11 +884,11 @@ class BMM_User(Borg):
         self.folder_link = local_folder
 
         try:
-            xascam._root = os.path.join(self.folder, 'snapshots')
-            xrdcam._root = os.path.join(self.folder, 'snapshots')
+            #xascam._root = os.path.join(self.folder, 'snapshots')
+            #xrdcam._root = os.path.join(self.folder, 'snapshots')
             anacam._root = os.path.join(self.folder, 'snapshots')
-            usb1.tiff1.file_path.put(self.folder, 'snapshots')
-            usb2.tiff1.file_path.put(self.folder, 'snapshots')
+            #usb1.tiff1.file_path.put(self.folder, 'snapshots')
+            #usb2.tiff1.file_path.put(self.folder, 'snapshots')
         except:
             pass
 

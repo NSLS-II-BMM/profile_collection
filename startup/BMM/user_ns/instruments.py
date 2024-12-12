@@ -18,6 +18,16 @@ if WITH_ENCLOSURE is True:
     print(f'{TAB}defined xafs_samx/xafs_samy as xafs_refx/xafs_refy')
     
 
+WITH_SALTFURNACE = False
+if WITH_SALTFURNACE is True:
+    from BMM.user_ns.motors import xafs_refy, xafs_refx, xafs_det
+    run_report('\tMolten salt furnace')
+    xafs_detx = xafs_refx
+    xafs_dety = xafs_refy
+    xafs_detz = xafs_det
+    print(f'{TAB}defined xafs_detx/xafs_dety/xafs_detz as xafs_refx/xafs_refy/xafs_det')
+
+    
     
 ########################################################################
 # Note: the use of SynAxis in this file is so that every motor-related #

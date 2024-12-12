@@ -129,6 +129,10 @@ def m2_lateral_position(energy=None):
     return target
 
 
+def xrd_mode(energy=8600):
+     '''Thin wrapper around change_mode() to prepare for XRD measurements.
+     '''
+     yield from change_edge('Ni', xrd=True, energy=energy)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300.,
                 xrd=False, bender=True, insist=False, no_ref=False):
@@ -379,6 +383,11 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             yield from mv(slits3.hsize, 3)
         elif mode in ('A', 'B', 'C'):
             yield from mv(slits3.hsize, 0.4)
+
+        ## these two instruments involve hijacking the refx and refy motors for other purposes,
+        ## so the reference stages should NOT be moved
+        if WITH_ENCLOSURE is True or WITH_SALTFURNACE is True:
+            no_ref = True
             
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
         yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist, no_ref=no_ref)

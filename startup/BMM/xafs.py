@@ -627,13 +627,13 @@ def xafs(inifile=None, **kwargs):
         ## sometimes the kafka-redis-while loop in next_index() fails, give it another go
         nicount = 0
         while p['start'] is None:
-            report(f":bangbang: p['start']=next_index() returned None, retrying ({nicount})", slack=True)
+            #report(f":bangbang: p['start']=next_index() returned None, retrying ({nicount})", slack=True)
             time.sleep(0.5)
             p['start'] = next_index(stub=p['filename'])
             nicount += 1
             if nicount > 5:
                 p['start'] = 1
-                report(":bangbang: could not figure out starting index, setting to 1 :shrug:", slack=True)
+                report(":bangbang: could not figure out starting index after 5 tries, setting to 1 :shrug:", slack=True)
                 break
         ## probably not necessary....
         if p['nscans'] is None:
@@ -1039,14 +1039,15 @@ def xafs(inifile=None, **kwargs):
 
                 if p['ththth']:
                     md['_kind'] = '333'
-                if plotting_mode(p['mode']) == 'xs1':
+                which_detector = rkvs.get('BMM:xspress3').decode('utf-8')
+                if which_detector == '1':   # plotting_mode(p['mode']) == 'xs1':
                     md['_dtc'] = (BMMuser.xs8,)
-                elif plotting_mode(p['mode']) == 'xs7':
+                elif which_detector == '7':   # plotting_mode(p['mode']) == 'xs7':
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4, BMMuser.xs5, BMMuser.xs6, BMMuser.xs7)
-                elif plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus'):
+                elif which_detector == '4':   # plotting_mode(p['mode']) in ('xs', 'yield', 'fluo+yield', 'fluo+pilatus'):
                     md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
                 else:
-                    md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4)
+                    md['_dtc'] = (BMMuser.xs1, BMMuser.xs2, BMMuser.xs3, BMMuser.xs4, BMMuser.xs5, BMMuser.xs6, BMMuser.xs7)
 
                 
                 ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

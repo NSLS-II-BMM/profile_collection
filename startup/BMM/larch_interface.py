@@ -259,16 +259,17 @@ class Pandrosus():
         self.make_xmu(uid, mode=mode)
         self.make_ref(uid)
         self.prep()
-        if working_folder is None:
-            location = os.path.join(self.folder, 'prj', 'toss.prj')
-        else:
-            location = os.path.join(self.workspace, 'prj', 'toss.prj')
-        toss = create_athena(location)
-        toss.add_group(self.group)
-        toss.save()
-        os.remove(location)
-        toss = None
-        self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
+        # self.group.args = {}
+        # self.group.args['label'] = self.db[uid].metadata['start']['XDI']['_filename']
+        # if working_folder is None:
+        #     location = os.path.join(self.folder, 'prj', 'toss.prj')
+        # else:
+        #     location = os.path.join(self.workspace, 'prj', 'toss.prj')
+        # toss = create_athena(location)
+        # toss.add_group(self.group)
+        # toss.save()
+        # os.remove(location)
+        # toss = None
 
             
     def put(self, energy, mu, name):
