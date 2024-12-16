@@ -3,6 +3,8 @@ import os
 
 from BMM.functions import run_report
 from BMM.user_ns.bmm import BMMuser
+from BMM.user_ns.base import profile_configuration
+
 
 run_report(__file__, text='dwelltime + selecting detectors for use')
 
@@ -12,22 +14,22 @@ run_report(__file__, text='dwelltime + selecting detectors for use')
 # False to exclude a detector from consideration in bsui
 
 # Ion chambers
-with_quadem   = True            # available for Iy and other signals
-with_iy       = False           # electron yield
-with_ic0      = True            # new I0 chamber
-with_ic1      = True            # new It chamber
-with_ic2      = True            # new Ir chamber
-with_dualem   = False           # deprecated, prototype
+with_quadem    = profile_configuration.getboolean('electrometers', 'quadem') # True            # available for Iy and other signals
+with_iy        = profile_configuration.getboolean('electrometers', 'iy')     # False           # electron yield
+with_ic0       = profile_configuration.getboolean('electrometers', 'ic0')    # True            # new I0 chamber
+with_ic1       = profile_configuration.getboolean('electrometers', 'ic1')    # True            # new It chamber
+with_ic2       = profile_configuration.getboolean('electrometers', 'ic2')    # True            # new Ir chamber
+with_dualem    = profile_configuration.getboolean('electrometers', 'dualem') # False           # deprecated, prototype
 
 # fluorescence detectors and readout systems
-with_struck   = False           # deprecated OG fluorescence read out
-with_xspress3 = True
-use_4element  = True
-use_1element  = True
-use_7element  = False
+with_struck    = profile_configuration.getboolean('sdd', 'struck')   # False           # deprecated OG fluorescence read out
+with_xspress3  = profile_configuration.getboolean('sdd', 'xspress3') # True
+use_4element   = profile_configuration.getboolean('sdd', '4element') # True
+use_1element   = profile_configuration.getboolean('sdd', '1element') # True
+use_7element   = profile_configuration.getboolean('sdd', '7element') # False
 
 # area detectors
-with_pilatus  = False
+with_pilatus   = profile_configuration.getboolean('areadetectors', 'pilatus') # False
 
 def active_detectors_report():
     print(f'{with_quadem      = }')

@@ -1,14 +1,16 @@
-import time, json
+import time, json, os
 from BMM.functions import run_report, examine_fmbo_motor_group, error_msg
 from BMM.workspace import rkvs
+from BMM.user_ns.base import profile_configuration
 
 run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
-WITH_LAKESHORE = False
-WITH_LINKAM = True
-WITH_ENCLOSURE = False
+WITH_LAKESHORE   = profile_configuration.getboolean('experiments', 'lakeshore') # False
+WITH_LINKAM      = profile_configuration.getboolean('experiments', 'linkam') # True
+WITH_ENCLOSURE   = profile_configuration.getboolean('experiments', 'enclosure') # False
+WITH_SALTFURNACE = profile_configuration.getboolean('experiments', 'saltfurnace') # False
 
 if WITH_ENCLOSURE is True:
     from BMM.user_ns.motors import xafs_refy, xafs_refx
@@ -17,8 +19,6 @@ if WITH_ENCLOSURE is True:
     xafs_samy = xafs_refy
     print(f'{TAB}defined xafs_samx/xafs_samy as xafs_refx/xafs_refy')
     
-
-WITH_SALTFURNACE = False
 if WITH_SALTFURNACE is True:
     from BMM.user_ns.motors import xafs_refy, xafs_refx, xafs_det
     run_report('\tMolten salt furnace')

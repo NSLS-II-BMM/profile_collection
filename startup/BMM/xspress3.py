@@ -45,8 +45,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.kafka         import kafka_message
 from BMM.periodictable import Z_number, edge_number
 
-from BMM.user_ns.base import startup_dir
-
+from BMM.user_ns.base import startup_dir, profile_configuration
         
 from databroker.assets.handlers import HandlerBase, Xspress3HDF5Handler, XS3_XRF_DATA_KEY
 
@@ -380,6 +379,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
+        hint_potassium = profile_configuration.getboolean('sdd', 'hint_potassium') # False          # special consideration for molten salt experiments
         for channel in self.iterate_channels():
             for mcaroi in channel.iterate_mcarois():
                 if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:
@@ -387,7 +387,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                     mcaroi.total_rbv.kind = 'hinted'
                     setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
                     setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv)
-                elif self.slots[mcaroi.mcaroi_number-1] == 'K':
+                elif self.slots[mcaroi.mcaroi_number-1] == 'K' and hint_potassium is True:
                     mcaroi.kind = 'hinted'
                     mcaroi.total_rbv.kind = 'hinted'
                 # elif self.slots[mcaroi.mcaroi_number-1] == 'La':

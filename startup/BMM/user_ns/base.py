@@ -1,5 +1,5 @@
 import nslsii
-import os, time, datetime
+import os, time, datetime, configparser
 
 from bluesky.plan_stubs import mv, mvr, sleep
 from databroker import Broker
@@ -19,6 +19,10 @@ os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
 #startup_dir = os.path.split(os.path.split(os.path.split(__file__)[0])[0])[0]
 startup_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 WORKSPACE = '/home/xf06bm/Workspace'
+
+cfile = os.path.join(startup_dir, "BMM_configuration.ini")
+profile_configuration = configparser.ConfigParser(interpolation=None)
+profile_configuration.read_file(open(cfile))
 
 
 from redis_json_dict import RedisJSONDict

@@ -1,7 +1,7 @@
 
 import os, json, socket
 from BMM.functions import run_report, whisper
-from BMM.user_ns.base import RE
+from BMM.user_ns.base import RE, profile_configuration
 from BMM.user_ns.bmm import BMMuser
 from BMM.workspace import rkvs
 
@@ -18,10 +18,12 @@ except ImportError:
 
 run_report(__file__, text='detectors and cameras')
 
-with_anacam = True
-with_cam1   = True
-with_cam2   = True
-with_webcam = False
+
+with_anacam = profile_configuration.getboolean('cameras', 'anacam') # True
+with_cam1   = profile_configuration.getboolean('cameras', 'usb1') # True
+with_cam2   = profile_configuration.getboolean('cameras', 'usb2') # True
+with_webcam = profile_configuration.getboolean('cameras', 'webcam') # True
+
 
 from ophyd.scaler import EpicsScaler
 
@@ -466,10 +468,15 @@ def xspress3_set_detector(this=None):
         rkvs.set('BMM:xspress3', 7)
         return xs7
 
+primary = profile_configuration.getint('sdd', 'primary')  # primary SDD detector
 if with_xspress3 is True:
-    if use_4element is True:
+    if primary == 4:
         xs=xspress3_set_detector(4)
-    elif use_7element is True:
+    elif primary == 7:
         xs=xspress3_set_detector(7)
-    elif use_1element is True:
+    elif primary == 1:
         xs=xspress3_set_detector(1)
+    else:
+        xs=xspress3_set_detector(4)
+        
+        
