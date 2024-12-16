@@ -502,7 +502,7 @@ def examine_diagnostics():
     else:
         print(whisper(f'{TAB}DM3 BPM is not homed (which is ok, BR 5/5/23).'))
         #print(error_msg(f'{TAB}DM3 BPM is not homed.'))
-        
+
             
 def check_for_synaxis():
     '''A disconnected motor (due to IOC or controller not running) will be
@@ -511,17 +511,40 @@ def check_for_synaxis():
     things like motor_status() behave non-disastrously.
     '''
     BMMuser.syns = False
+    remove_slits2, remove_slits3 = False, False
     syns = []
     for m in mcs8_motors+xafs_motors:
         if 'SynAxis' in f'{m}':
             syns.append(m.name)
+            if m in user_ns['sd'].baseline:  # check is this is in the baseline, if so remove it
+                i = user_ns['sd'].baseline.index(m)
+                user_ns['sd'].baseline.pop(i)
+            if 'dm3_slits' in m.name:
+                remove_slits3 = True
+            if 'dm2_slits' in m.name:
+                remove_slits3 = True
+                
+    ## must handle slits specially due to inconsistent naming.  I blame Bruce!
+    if remove_slits2 is True:
+        sl2 = user_ns['slits3']
+        for x in (sl2.bottom, sl2.top, sl2.inboard, sl2.outboard, sl2.vsize, sl2.vcenter, sl2.hsize, sl2.hcenter):
+            i = user_ns['sd'].baseline.index(x)
+            user_ns['sd'].baseline.pop(i)
+    if remove_slits3 is True:
+        sl3 = user_ns['slits3']
+        for x in (sl3.bottom, sl3.top, sl3.inboard, sl3.outboard, sl3.vsize, sl3.vcenter, sl3.hsize, sl3.hcenter):
+            i = user_ns['sd'].baseline.index(x)
+            user_ns['sd'].baseline.pop(i)
+            
+        
     if len(syns) > 0:
         BMMuser.syns = True
         text = 'The following are disconnected & defined as simulated motors:\n\n'
         text += '\n'.join(disconnected_msg(x) for x in textwrap.wrap(', '.join(syns))) + '\n\n'
         text += 'This allows bsui to operate normally, but do not expect anything\n'
         text += 'involving those motors to work correctly.\n'
-        text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)')
+        text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)\n')
+        text += whisper('(Those motors have been removed from sd.baseline.)')
         boxedtext('Disconnected motors', text, 'red', width=74)
 check_for_synaxis()
 examine_diagnostics()

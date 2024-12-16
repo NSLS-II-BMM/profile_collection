@@ -229,6 +229,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                user_ns['ks'].cycle('m2')
                user_ns['ks'].cycle('m3')
                user_ns['ks'].cycle('dm3')
+               dm3_bct.clear_encoder_loss()
                yield from sleep(1)
           #raise ChangeModeException('One or more motors are showing amplifier faults. (in BMM/modes.py)')
           #return(yield from null())
@@ -369,6 +370,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
+                    user_ns['ks'].cycle('dm3')
+                    dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)
@@ -392,6 +395,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
+                    user_ns['ks'].cycle('dm3')
+                    dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)
@@ -431,6 +436,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     m2_bender.kill()
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
+                    user_ns['ks'].cycle('dm3')
+                    dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)

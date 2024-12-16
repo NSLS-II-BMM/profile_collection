@@ -375,3 +375,24 @@ def facility_md():
 def proposal_base():
     base = os.path.join('/nsls2', 'data3', 'bmm', 'proposals', user_ns['RE'].md['cycle'], user_ns['RE'].md['data_session'])
     return base
+
+def slurp(folder, fname):
+    'Slurp a text file into a string.'
+    with open(os.path.join(folder,fname), 'r') as myfile:
+        text=myfile.read()
+    return text
+
+def find_hdf5_files(folder=None):
+    '''Crude search through XDI files for UIDs then through Tiled for HDF5 resources
+    '''
+    for fl in sorted(os.listdir(folder)):
+        if re.search('\.\d+$', fl):
+            text   = slurp(folder, fl)
+            a      = re.search(r'uid: ([0-9a-f-]+)', text)
+            uid    = a.group(1)
+            hdf5file = file_resource(uid)
+            print(f'{fl:35} ---> {os.path.basename(hdf5file)}')
+
+# f = open(os.path.join(folder, 'mapping.txt'), "w")
+# f.write(f'{fl:35} ---> {os.path.basename(hdf5file)}\n')
+# f.close()

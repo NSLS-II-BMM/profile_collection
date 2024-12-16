@@ -16,7 +16,7 @@ from BMM.user_ns.dcm import *
 from BMM.user_ns.motors import *
 from BMM.user_ns.instruments import * #xafs_wheel, xafs_ref, slits2, slits3, m2, m3, xafs_table, m2_bender
 
-user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_wheel, xafs_det,
+user_ns['sd'].baseline = [xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_wheel, xafs_det,
                           xafs_ref, xafs_refx, xafs_refy, xafs_rots, xafs_garot,
                           dm3_bct, dm3_foils, dm2_fs,
                           dcm_x, dcm_pitch, dcm_roll, # dcm_bragg, dcm_para, dcm_pitch,
@@ -27,6 +27,6 @@ user_ns['sd'].baseline = (xafs_linx, xafs_liny, xafs_pitch, xafs_roll, xafs_whee
                           m3.yu, m3.ydo, m3.ydi, m3.xu, m3.xd, m3.vertical, m3.lateral, m3.pitch, m3.roll, m3.yaw,
                           xafs_table.yu, xafs_table.ydo, xafs_table.ydi, # xafs_xu , xafs_xd,
                           xafs_table.vertical, xafs_table.pitch, xafs_table.roll, 
-)
+]
 
 #sd.baseline = ()

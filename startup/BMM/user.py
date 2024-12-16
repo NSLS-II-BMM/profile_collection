@@ -88,9 +88,9 @@ class BMM_User(Borg):
     use_pilatus : bool
         True make a folder for Pilatus images
     echem : bool
-        True is doing electrochemistry with the BioLogic
+        deprecated
     echem_remote : str
-        mounted path to cifs share on ws3
+        deprecated
     instrument : str
         name of sample instrument, e.g. "sample wheel" or "glancing angle stage"
     syns : bool 
@@ -204,8 +204,8 @@ class BMM_User(Borg):
         self.user_is_defined = False
         self.motor_fault     = None
         self.detector        = 4
-        self.echem           = False
-        self.echem_remote    = None
+        self.echem           = False  # deprecated
+        self.echem_remote    = None   # deprecated
         self.use_slack       = True
         self.slack_channel   = None
         self.trigger         = False
@@ -321,17 +321,17 @@ class BMM_User(Borg):
                              "bender_margin", "filter_state", "nscans", "start")
         self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
                              "inttime", "tweak_xas_time") #, "edge_energy")
-        self.bmm_booleans = ("prompt", "final_log_entry", "use_pilatus", "staff", "echem",
+        self.bmm_booleans = ("prompt", "final_log_entry", "use_pilatus", "staff",
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
                              "doi", "cif", "syns", "enable_live_plots",
                              "post_webcam", "post_anacam", "post_usbcam1", "post_usbcam2", "post_xrf")
-        self.bmm_none     = ("echem_remote", "slack_channel", "extra_metadata")
+        self.bmm_none     = ("slack_channel", "extra_metadata")
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
         self.bmm_obsolete = ("read_rois", "e0", "gdrive", "do_gdrive",
-                             "rois", "roi_channel",
+                             "rois", "roi_channel", "echem", "echem_remote", 
                              'roi1', 'roi2', 'roi3', 'roi4',
                              'dtc1', 'dtc2', 'dtc3', 'dtc4',)
 
@@ -480,7 +480,7 @@ class BMM_User(Borg):
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 
                     'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
-                    'detector', 'use_pilatus', 'echem', 'echem_remote'):
+                    'detector', 'use_pilatus'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
@@ -544,7 +544,7 @@ class BMM_User(Borg):
             print(f'{i:2d}. {verb} {text:28}{pad}   {result:65}')
 
 
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False, echem=False):
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a data folder and it's subfolders, if needed, and set the DATA variable
@@ -565,8 +565,6 @@ class BMM_User(Borg):
             name of PI
         use_pilatus : bool
             true if this experiment uses the Pilatus
-        echem : bool
-            true if this experiment uses the BioLogic potentiostat
         '''
 
         step = 1
@@ -731,25 +729,6 @@ class BMM_User(Borg):
         #self.establish_folder(0, 'Xspress3 HDF5 folder', hdf5folder)
         #xs.hdf5.file_path.put(hdf5folder)
         
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## Pilatus folder
-        # if use_pilatus:
-        #     pilfolder = os.path.join(data_folder, 'raw', 'Pilatus')
-        #     self.establish_folder(0, 'Pilatus folder', pilfolder)
-
-        ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
-        ## echem folder
-        # if echem:
-        #     self.echem = True
-        #     ecfolder = os.path.join(data_folder, 'raw', 'electrochemistry')
-        #     self.establish_folder(0, 'electrochemistry folder', ecfolder)
-        #     #self.echem_remote = os.path.join('/mnt/nfs/ws3', name, self.date)
-        #     #if not os.path.isdir(self.echem_remote):
-        #     #    os.makedirs(self.echem_remote)
-        #     #    print('   Created remote echem folder:       %-75s' % (self.echem_remote))
-        #     #else:
-        #     #    print('   Found remote echem folder:         %-75s' % (self.echem_remote))
-            
         step += 1
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -765,7 +744,7 @@ class BMM_User(Borg):
     
         return None
 
-    def begin_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False, echem=False):
+    def begin_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
@@ -788,8 +767,6 @@ class BMM_User(Borg):
             SAF number
         use_pilatus : bool
             true if this experiment uses the Pilatus
-        echem : bool
-            true if this experiment uses the BioLogic potentiostat
         '''
         do_sync = False
         if self.user_is_defined:
@@ -864,7 +841,7 @@ class BMM_User(Borg):
         self.workspace = user_workspace
 
         
-        self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus, echem=echem)
+        self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus)
 
         # preserve BMMuser state to a json string #
         self.prev_fig = None
@@ -933,11 +910,6 @@ class BMM_User(Borg):
         #if user_ns['with_xspress3'] is False:
         #    print('ROIs   = %s' % ' '.join(map(str, user_ns['rois'].slots)))
 
-    def fetch_echem(self):
-        dest = os.path.join(self.folder, 'electrochemistry')
-        copy_tree(self.echem_remote, dest)
-        report('Copied electrochemistry data from: "%s" to "%s"' % (self.echem_remote, dest), 'bold')
-
     def end_experiment(self, force=False):
         '''
         Terminate and experiment.
@@ -945,30 +917,11 @@ class BMM_User(Borg):
         Unset the logger and the DATA variable at the end of an experiment.
         '''
 
-        self.echem = False
-        if self.echem and not os.path.ismount('/mnt/nfs/ws3'):
-            print(error_msg('''
-**************************************************************************
-   This is an electrochemistry experiment and /mnt/nfs/ws3 is not mounted
-   Electrochemistry data is not being backed up!
-**************************************************************************
-            '''))
-
         if not force:
             if not self.user_is_defined:
                 print(error_msg('There is not a current experiment!'))
                 return(None)
 
-            ######################################################################
-            #copy the electrochemistry data, if this was that sort of experiment #
-            ######################################################################
-            if self.echem and os.path.ismount('/mnt/nfs/ws3'):
-                try:
-                    self.fetch_echem()
-                except:
-                    print(error_msg('Unable to copy electrochemistry data from ws3'))
-                    if not os.path.ismount('/mnt/nfs/ws3'):
-                        print(error_msg('\t/mnt/nfs/ws3 seems not to be mounted...'))
             
         #####################################################################
         # remove the json serialization of the start_experiment() arguments #
@@ -995,8 +948,6 @@ class BMM_User(Borg):
         self.name = None
         self.staff = False
         self.user_is_defined = False
-        self.echem = False
-        self.echem_remote = None
         for thing in ('name', 'gup', 'saf', 'folder', 'folder_link', 'date'):
             rkvs.set(f'BMM:user:{thing}', '')
 

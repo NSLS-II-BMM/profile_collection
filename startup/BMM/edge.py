@@ -464,6 +464,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             print('Optimizing slits height...')
             if dm3_bct.amfe.get() or dm3_bct.amfae.get():
                 user_ns['ks'].cycle('dm3')
+                dm3_bct.clear_encoder_loss()
             yield from slit_height(move=True)
             kafka_message({'close': 'last'})
             ## redo rocking curve?
