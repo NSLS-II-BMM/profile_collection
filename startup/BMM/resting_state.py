@@ -18,6 +18,7 @@ from BMM.logging    import BMM_msg_hook
 from BMM.suspenders import BMM_suspenders, BMM_clear_suspenders
 from BMM.workspace  import rkvs
 
+from BMM.user_ns.base        import profile_configuration
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_quadem, with_iy, with_pilatus
@@ -71,9 +72,10 @@ def resting_state():
     if is_re_worker_active() is False:
         matplotlib.use('Qt5Agg')
     resting_redis()
-    xs1 = user_ns['xs1']
-    xs1.channel08.get_mcaroi(mcaroi_number=16).kind = 'hinted'
-    xs1.channel08.get_mcaroi(mcaroi_number=16).total_rbv.kind = 'hinted'
+    if profile_configuration.getboolean('sdd', 'xspress3') is True:
+        xs1 = user_ns['xs1']
+        xs1.channel08.get_mcaroi(mcaroi_number=16).kind = 'hinted'
+        xs1.channel08.get_mcaroi(mcaroi_number=16).total_rbv.kind = 'hinted'
     
 def resting_state_plan():
     '''
@@ -112,9 +114,10 @@ def resting_state_plan():
     if is_re_worker_active() is False:
         matplotlib.use('Qt5Agg')
     resting_redis()
-    xs1 = user_ns['xs1']
-    xs1.channel08.get_mcaroi(mcaroi_number=16).kind = 'hinted'
-    xs1.channel08.get_mcaroi(mcaroi_number=16).total_rbv.kind = 'hinted'
+    if profile_configuration.getboolean('sdd', 'xspress3') is True:
+        xs1 = user_ns['xs1']
+        xs1.channel08.get_mcaroi(mcaroi_number=16).kind = 'hinted'
+        xs1.channel08.get_mcaroi(mcaroi_number=16).total_rbv.kind = 'hinted'
     
 
 def end_of_macro():

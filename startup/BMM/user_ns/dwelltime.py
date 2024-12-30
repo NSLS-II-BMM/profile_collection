@@ -29,7 +29,10 @@ use_1element   = profile_configuration.getboolean('sdd', '1element') # True
 use_7element   = profile_configuration.getboolean('sdd', '7element') # False
 
 # area detectors
-with_pilatus   = profile_configuration.getboolean('areadetectors', 'pilatus') # False
+with_pilatus   = profile_configuration.getboolean('detectors', 'pilatus') # False
+
+# edxd through Dante
+with_dante     = profile_configuration.getboolean('detectors', 'dante') # False
 
 def active_detectors_report():
     print(f'{with_quadem      = }')

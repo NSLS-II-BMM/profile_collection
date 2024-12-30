@@ -320,7 +320,41 @@ if with_pilatus is True:
     #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
     #pilatus_tiff.stats.kind = "hinted"
 
+
+
+####################################
+# ______  ___   _   _ _____ _____  #
+# |  _  \/ _ \ | \ | |_   _|  ___| #
+# | | | / /_\ \|  \| | | | | |__   #
+# | | | |  _  || . ` | | | |  __|  #
+# | |/ /| | | || |\  | | | | |___  #
+# |___/ \_| |_/\_| \_/ \_/ \____/  #
+####################################
+
+
+dante = None
+from BMM.user_ns.dwelltime import with_dante
+
+if with_dante is True:
+    from BMM.pilatus import BMMPilatusSingleTrigger #,  BMMPilatusTIFFSingleTrigger
+    run_report('\t'+'Dante')
+
+    ## make sure various plugins are turned on
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Pva1:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}HDF1:EnableCallbacks',   name='').put(1)
+
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI1:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI2:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI3:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI4:EnableCallbacks',   name='').put(1)
+
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats2:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats3:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats4:EnableCallbacks', name='').put(1)
     
+    dante = BMMDanteSingleTrigger("XF:06BM-ES{Dante-Det:1}", name="dante-1", read_attrs=["hdf5"])
+    dante.stats.kind = "omitted"
 
 
 #######################################################
@@ -469,6 +503,14 @@ def xspress3_set_detector(this=None):
         return xs7
 
 primary = profile_configuration.getint('sdd', 'primary')  # primary SDD detector
+if primary == 4 and 'xs3-7-1' in xs_app_dir.get():
+    print(error_msg('\tYou have selected the 4-element detector as primary, but the 7-element IOC is running!'))
+    print(warning_msg('\tProceeding with the 7-element detector as primary.'))
+    primary = 7
+elif primary == 7 and 'xs3-4-1' in xs_app_dir.get():
+    print(error_msg('\tYou have selected the 7-element detector as primary, but the 4-element IOC is running!'))
+    print(warning_msg('\tProceeding with the 4-element detector as primary.'))
+    primary = 4
 if with_xspress3 is True:
     if primary == 4:
         xs=xspress3_set_detector(4)

@@ -50,5 +50,5 @@ Files
 
 #. ``rois.json``: ROI configuration for the Xspress3
 
-
+#. ``BMM_configuration.ini``: configure detectors, electrometers, cameras, experiments
 

@@ -550,11 +550,11 @@ check_for_synaxis()
 examine_diagnostics()
 from BMM.workspace import check_instruments
 check_instruments(user_ns['linkam'], user_ns['lakeshore'], user_ns['xs'])
-run_report('\t\t'+'calling resting_state')
+run_report('\t  '+'calling resting_state')
 resting_state()
 
 if not is_re_worker_active():
-    run_report('\t\t'+'establishing local logger')
+    run_report('\t  '+'establishing local logger')
     from bluesky.log import config_bluesky_logging
     config_bluesky_logging(file='/home/xf06bm/logs/bluesky.log', level='DEBUG')
 

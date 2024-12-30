@@ -95,9 +95,9 @@ if 'XAFSEpicsMotor' in str(type(dm3_fs)):
     dm3_fs.hvel_sp.put(0.05)
 
 if 'XAFSEpicsMotor' in str(type(dm3_bct)):
-    dm3_bct.velocity.put(0.4)
-    dm3_bct.acceleration.put(0.25)
-    dm3_bct.hvel_sp.put(0.05)
+    #dm3_bct.velocity.put(0.3)  # slowed down this motor to avoid rattling noise 17 December, 2024
+    #dm3_bct.acceleration.put(0.25)
+    #dm3_bct.hvel_sp.put(0.05)
     dm3_bct.llm.put(-60)
     dm3_bct.hlm.put(60)
 
@@ -180,7 +180,7 @@ def homed():
     normally_not_homed = ('dm1_filters1', 'dm1_filters2', 'dm2_fs',
                           'dm3_fs', 'dm3_foils', 'dm3_bpm', 'm1_yu',
                           'm1_ydo', 'm1_ydi', 'm1_xu', 'm1_xd',
-                          'm2_bender', 'dmc_y')
+                          'm2_bender', 'dcm_y')
     for m in mcs8_motors:
         if m.hocpl.get():
             print("%-12s : %s" % (m.name, m.hocpl.enum_strs[m.hocpl.get()]))
