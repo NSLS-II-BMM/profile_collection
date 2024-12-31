@@ -38,8 +38,8 @@ class PilatusDwellTime(PVPositionerPC):
     readback = Cpt(EpicsSignalRO, 'cam1:AcquireTime_RBV')
 
 class DanteDwellTime(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal,   'dante:PollTime')
-    readback = Cpt(EpicsSignalRO, 'dante:PollTime_RBV')
+    setpoint = Cpt(EpicsSignal,   'dante:PresetReal')
+    readback = Cpt(EpicsSignalRO, 'dante:PresetReal')
 
     
     

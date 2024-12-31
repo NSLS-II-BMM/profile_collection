@@ -23,7 +23,9 @@ from ophyd import Component as C
 
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
-
+import matplotlib.pyplot as plt
+import numpy, xraylib
+from BMM.periodictable import Z_number, edge_number
 
 ###########################################################################
 # ______  ___   _   _ _____ _____              ___   _____________ _____  #
@@ -132,7 +134,7 @@ from ophyd.areadetector.base import ad_group
 class DanteCamBase(ADBase):
     _default_configuration_attrs = ADBase._default_configuration_attrs + (
         "acquire_time",
-        "acquire_period",
+        #"acquire_period",
         "model",
         #"num_exposures",
         #"image_mode",
@@ -159,8 +161,10 @@ class DanteCamBase(ADBase):
 
     # Cam-specific
     acquire = ADCpt(SignalWithRBV, "Acquire")
-    acquire_period = ADCpt(SignalWithRBV, "PollTime")
-    acquire_time = ADCpt(SignalWithRBV, "PollTime")
+    #acquire_period = ADCpt(SignalWithRBV, "PollTime")
+    #acquire_time = ADCpt(SignalWithRBV, "PollTime")
+    #acquire_period = ADCpt(SignalWithRBV, "PollTime")
+    acquire_time = ADCpt(EpicsSignal, "PresetReal")
 
     array_callbacks = ADCpt(SignalWithRBV, "ArrayCallbacks")
     array_size = DDC(
@@ -237,9 +241,19 @@ class DanteCamBase(ADBase):
 class BMMDante(AreaDetector):
     image = Cpt(ImagePlugin, "image1:")
     cam = Cpt(DanteCamBase, "dante:")
-    acquire_period = ADCpt(SignalWithRBV, "PollTime")
-    acquire_time = ADCpt(SignalWithRBV, "PollTime")
+    #acquire_period = ADCpt(SignalWithRBV, "PollTime")
+    acquire_time = ADCpt(EpicsSignal, "dante:PresetReal")
+    acquire = ADCpt(EpicsSignal, "dante:EraseStart")
 
+    mca1 = ADCpt(EpicsSignal, "mca1")
+    mca2 = ADCpt(EpicsSignal, "mca2")
+    mca3 = ADCpt(EpicsSignal, "mca3")
+    mca4 = ADCpt(EpicsSignal, "mca4")
+    mca5 = ADCpt(EpicsSignal, "mca5")
+    mca6 = ADCpt(EpicsSignal, "mca6")
+    mca7 = ADCpt(EpicsSignal, "mca7")
+    mca8 = ADCpt(EpicsSignal, "mca8")
+    
     hdf5 = Cpt(
         BMMDanteHDF5Plugin,
         "HDF1:",
@@ -284,6 +298,81 @@ class BMMDante(AreaDetector):
     #     return data_key
 
 
+    def measure_xrf(self, exposure=1.0, doplot=True):
+        '''Measure, table, plot -- in a package suitable for an ipython magic.
+        '''
+        uid = None
+        #self.total_points.put(1)
+        self.acquire_time.put(exposure)
+        self.acquire.put(1)
+        ttime.sleep(exposure + 0.5)
+        #self.table()
+        if doplot:
+            self.plot(add=True, uid=uid)
+        
+        
+    def plot(self, uid=None, add=False, only=None): 
+        '''Make a plot appropriate for the N-element detector.
+
+        The default is to sum the four channels.
+        
+        Parameters
+        ----------
+        uid : str
+            DataBroker UID. If None, use the current values in the IOC
+        add : bool
+            If True, plot the sum of the four channels
+        only : int
+            plot only the signal from a specific channel -- (1) / (1-4) / (1-7)
+        
+        '''
+        if uid is not None:
+            kafka_message({'xrf': 'plot', 'uid': uid, 'add': add, 'only': only})
+        else:
+            dcm, BMMuser = user_ns['dcm'], user_ns['BMMuser']
+            plt.clf()
+            plt.xlabel('Energy  (eV)')
+            plt.ylabel('counts')
+            plt.grid(which='major', axis='both')
+            #plt.xlim(2500, round(dcm.energy.position, -2)+500)
+            plt.xlim(0, 20480)
+            plt.title(f'XRF Spectrum {BMMuser.element} {BMMuser.edge} (Dante)')
+            # s = list()
+            # for channel in self.iterate_channels():
+            #     s.append(channel.mca.array_data.get())
+            e = numpy.arange(0, len(self.mca1.get())) * 10
+            plt.ion()
+            plt.plot(e, self.mca1.get(), label=f'channel 1')
+                     
+            # if only is not None and only in range(1, len(list(self.iterate_channels()))+1):
+            #     channel = self.get_channel(channel_number=only)
+            #     this = channel.mca.array_data
+            #     plt.plot(e, this.get(), label=f'channel {only}')
+            # elif add is True:
+            #     plt.plot(e, sum(s), label=f'sum of {len(list(self.iterate_channels()))} channels')
+            # else:
+            #     for i, sig in enumerate(s):
+            #         plt.plot(e, sig, label=f'channel {i}')
+            z = Z_number(BMMuser.element)
+            if BMMuser.edge.lower() == 'k':
+                label = f'{BMMuser.element} Kα1'
+                ke = (2*xraylib.LineEnergy(z, xraylib.KL3_LINE) + xraylib.LineEnergy(z, xraylib.KL2_LINE))*1000/3
+                plt.axvline(x = ke/1.0016,  color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l3':
+                label = f'{BMMuser.element} Lα1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L3M5_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l2':
+                label = f'{BMMuser.element} Kβ1'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L2M4_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            elif BMMuser.edge.lower() == 'l1':
+                label = f'{BMMuser.element} Kβ3'
+                plt.axvline(x = xraylib.LineEnergy(z, xraylib.L1M3_LINE)*1000, color = 'brown', linewidth=1, label=label)
+            plt.legend()
+            #plt.show()
+
+
+
+    
 class BMMDanteSingleTrigger(SingleTriggerV33, BMMDante):
     pass
 

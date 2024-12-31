@@ -43,6 +43,7 @@ def active_detectors_report():
     print(u"\u2523" + u"\u2501" + f'{ use_7element  = }')
     print(u"\u2523" + u"\u2501" + f'{ use_4element  = }')
     print(u"\u2517" + u"\u2501" + f'{ use_1element  = }')
+    print(f'{with_dante       = }')
     print(f'{with_pilatus     = }')
     print(f'{with_iy          = }')
 
@@ -64,7 +65,7 @@ def active_detectors_report():
 # running under IPython. This disables the Xspress3 during testing.
 # This is a crude stopgap.
 if os.environ.get('AZURE_TESTING'):
-    with_xspress3, use_7element, use_4element, use_1element, with_pilatus = False, False, False, False, False
+    with_xspress3, use_7element, use_4element, use_1element, with_pilatus, with_dante = False, False, False, False, False, False
 
 if with_xspress3 is True:
     BMMuser.readout_mode = 'xspress3'
