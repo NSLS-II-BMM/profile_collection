@@ -1,13 +1,12 @@
     
 from pathlib import PurePath
-from itertools import count
 from collections import deque, OrderedDict
 import time as ttime
 from tqdm import tqdm
 
 from ophyd import Component as Cpt
 from ophyd import EpicsSignal, EpicsSignalRO, EpicsSignalWithRBV as SignalWithRBV
-from ophyd.areadetector import ADBase, AreaDetector, ImagePlugin
+from ophyd.areadetector import ADBase, AreaDetector, ImagePlugin, DetectorBase
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.areadetector.base import EpicsSignalWithRBV, ADComponent as ADCpt
 from ophyd.areadetector.filestore_mixins import resource_factory, FileStoreHDF5, FileStoreTIFF, FileStoreIterativeWrite, FileStorePluginBase
@@ -56,8 +55,8 @@ class BMMDanteFileStoreHDF5(FileStorePluginBase):
         # 'Single' file_write_mode means one image : one file.
         # It does NOT mean that 'num_images' is ignored.
 
-    #def get_frames_per_point(self):
-    #    return self.parent.cam.num_images.get()
+    def get_frames_per_point(self):
+       return self.parent.cam.num_images.get()
 
     def stage(self):
         super().stage()
@@ -75,53 +74,74 @@ class BMMDanteFileStoreHDF5(FileStorePluginBase):
         self._generate_resource(resource_kwargs)
     
 class BMMDanteHDF5Plugin(HDF5Plugin_V33, BMMDanteFileStoreHDF5, FileStoreIterativeWrite):
-    pass
-    # def warmup(self):
-    #     """
-    #     A convenience method for 'priming' the plugin.
-    #     The plugin has to 'see' one acquisition before it is ready to capture.
-    #     This sets the array size, etc.
-    #     NOTE : this comes from:
-    #         https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
-    #     We had to replace "cam" with "settings" here.
+    
 
-    #     This has been slightly modified by Bruce to avoid a situation where the warmup
-    #     hangs.  Also to add some indication on screen for what is happening.
-    #     """
-    #     print(whisper("                        warming up the Dante hdf5 plugin..."), flush=True)
-    #     self.enable.set(1).wait()
+    def _update_paths(self):
+        self.reg_root = self.root_path_str
+        self._write_path_template = self.root_path_str  + self.path_template_str
+        self._read_path_template = self.root_path_str + self.path_template_str
+    
+    @property
+    def root_path_str(self):
+        root_path = f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/dante-1/"
+        return root_path
 
-    #     # JOSH: proposed changes for new IOC
-    #     sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
-    #                         (self.parent.cam.image_mode, "Single"),
-    #                         (self.parent.cam.trigger_mode, 'Internal'),
-    #                         # just in case the acquisition time is set very long...
-    #                         (self.parent.cam.acquire_time, 0.2),
-    #                         (self.parent.cam.num_images, 1),
-    #                         #(self.parent.cam.acquire, 1)
-    #                     ]
-    #     )
+    @property
+    def path_template_str(self):
+        path_template = "%Y/%m/%d"
+        return path_template
 
-    #     original_vals = {sig: sig.get() for sig in sigs}
+    def stage(self, *args, **kwargs):
+        self._update_paths()
+        super().stage(*args, **kwargs)
 
-    #     # Remove the hdf5.capture item here to avoid an error as it should reset back to 0 itself
-    #     # del original_vals[self.capture]
 
-    #     for sig, val in sigs.items():
-    #         sig.set(val).wait()
-    #         ttime.sleep(0.1)  # abundance of caution
+    def warmup(self):
+        """
+        A convenience method for "priming" the plugin.
+        The plugin has to "see" one acquisition before it is ready to capture.
+        This sets the array size, etc.
+        NOTE : this comes from:
+            https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
+        We had to replace "cam" with "settings" here.
 
-    #     self.parent.cam.acquire.set(1).wait()
+        This has been slightly modified by Bruce to avoid a situation where the warmup
+        hangs.  Also to add some indication on screen for what is happening.
+        """
+        print(whisper("                        warming up the Dante hdf5 plugin..."), flush=True)
+        self.enable.set(1).wait()
+
+        # JOSH: proposed changes for new IOC
+        sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
+                            #(self.parent.cam.image_mode, "Single"),
+                            #(self.parent.cam.trigger_mode, 'Internal'),
+                            # just in case the acquisition time is set very long...
+                            (self.parent.cam.acquire_time, 0.2),
+                            (self.parent.cam.num_images, 1),
+                            #(self.parent.cam.acquire, 1)
+                        ]
+        )
+
+        original_vals = {sig: sig.get() for sig in sigs}
+
+        # Remove the hdf5.capture item here to avoid an error as it should reset back to 0 itself
+        # del original_vals[self.capture]
+
+        for sig, val in sigs.items():
+            sig.set(val).wait()
+            ttime.sleep(0.1)  # abundance of caution
+
+        self.parent.cam.acquire.set(1).wait()
         
-    #     # JOSH: do we need more than 2 seconds here?
-    #     #       adding more time here helps!
-    #     for i in tqdm(range(4), colour='#7f8c8d'):
-    #         ttime.sleep(0.5)  # wait for acquisition
+        # JOSH: do we need more than 2 seconds here?
+        #       adding more time here helps!
+        for i in tqdm(range(4), colour='#7f8c8d'):
+            ttime.sleep(0.5)  # wait for acquisition
 
-    #     for sig, val in reversed(list(original_vals.items())):
-    #         ttime.sleep(0.1)
-    #         sig.set(val).wait()
-    #     print(whisper("                        done"))
+        for sig, val in reversed(list(original_vals.items())):
+            ttime.sleep(0.1)
+            sig.set(val).wait()
+        print(whisper("                        done"))
 
 
 ## most recent problem: TimeoutError: XF:06BM-ES{Dante-Det:1}dante:NumExposures_RBV could not connect within 10.0-second timeout.
@@ -142,6 +162,7 @@ class DanteCamBase(ADBase):
         "manufacturer",
         #"trigger_mode",
     )
+    collect_mode = ADCpt(SignalWithRBV, "CollectMode")
 
     #ImageMode = enum(SINGLE=0, MULTIPLE=1, CONTINUOUS=2)
 
@@ -149,6 +170,8 @@ class DanteCamBase(ADBase):
     array_counter = ADCpt(SignalWithRBV, "ArrayCounter")
     array_rate = ADCpt(EpicsSignalRO, "ArrayRate_RBV")
     asyn_io = ADCpt(EpicsSignal, "AsynIO")
+
+    num_mca_channels = ADCpt(SignalWithRBV, "NumMCAChannels")
 
     nd_attributes_file = ADCpt(EpicsSignal, "NDAttributesFile", string=True)
     pool_alloc_buffers = ADCpt(EpicsSignalRO, "PoolAllocBuffers")
@@ -160,7 +183,7 @@ class DanteCamBase(ADBase):
     port_name = ADCpt(EpicsSignalRO, "PortName_RBV", string=True)
 
     # Cam-specific
-    acquire = ADCpt(SignalWithRBV, "Acquire")
+    acquire = ADCpt(EpicsSignal, "EraseStart")
     #acquire_period = ADCpt(SignalWithRBV, "PollTime")
     #acquire_time = ADCpt(SignalWithRBV, "PollTime")
     #acquire_period = ADCpt(SignalWithRBV, "PollTime")
@@ -201,11 +224,11 @@ class DanteCamBase(ADBase):
     min_x = ADCpt(SignalWithRBV, "MinX")
     min_y = ADCpt(SignalWithRBV, "MinY")
     model = ADCpt(EpicsSignalRO, "Model_RBV")
-
+    
 
     num_exposures = ADCpt(SignalWithRBV, "NumExposures")
     num_exposures_counter = ADCpt(EpicsSignalRO, "NumExposuresCounter_RBV")
-    num_images = ADCpt(SignalWithRBV, "ArrayCounter")   # , "NumImages")
+    num_images = ADCpt(SignalWithRBV, "MappingPoints")   # , "NumImages")
     #num_images_counter = ADCpt(EpicsSignalRO, "NumImagesCounter_RBV")
 
     read_status = ADCpt(EpicsSignal, "ReadStatus")
@@ -235,16 +258,34 @@ class DanteCamBase(ADBase):
     #trigger_mode = ADCpt(SignalWithRBV, "TriggerMode")
 
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
+
+class DanteChannel():
+    def __init__(self, prefix, channel, *args, **kwargs):
+        EpicsSignal(f'{prefix}ROIStat1:{channel}:Use', name='').put(1)
+        self.energy_start  = EpicsSignal(f'{prefix}ROIStat1:{channel}:MinX',  name=f'roi{channel}_minx')
+        self.energy_width  = EpicsSignal(f'{prefix}ROIStat1:{channel}:SizeX', name=f'roi{channel}_sizex')
+        self.channel_start = EpicsSignal(f'{prefix}ROIStat1:{channel}:MinY',  name=f'roi{channel}_miny')
+        self.channel_width = EpicsSignal(f'{prefix}ROIStat1:{channel}:SizeY', name=f'roi{channel}_sizey')
+        self.channel_start.put(channel-1)
+        self.channel_width.put(1)
+
+    def set_roi(self, start, width):
+        self.energy_start.put(start)
+        self.energy_width.put(width)
+        
     
-class BMMDante(AreaDetector):
-    image = Cpt(ImagePlugin, "image1:")
+class BMMDante(DetectorBase):
+    #image = Cpt(ImagePlugin, "image1:")
     cam = Cpt(DanteCamBase, "dante:")
     #acquire_period = ADCpt(SignalWithRBV, "PollTime")
     acquire_time = ADCpt(EpicsSignal, "dante:PresetReal")
     acquire = ADCpt(EpicsSignal, "dante:EraseStart")
 
+    
     mca1 = ADCpt(EpicsSignal, "mca1")
     mca2 = ADCpt(EpicsSignal, "mca2")
     mca3 = ADCpt(EpicsSignal, "mca3")
@@ -262,40 +303,35 @@ class BMMDante(AreaDetector):
         read_attrs=[],
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/dante-1/",
     )
-    stats = Cpt(EpicsSignalRO, "Stats1:Total_RBV")
-    roi2  = Cpt(EpicsSignalRO, "Stats2:Total_RBV")
-    roi3  = Cpt(EpicsSignalRO, "Stats3:Total_RBV")
-
-    
-    # cam_file_path      = Cpt(SignalWithRBV, 'cam1:FilePath')
-    # cam_file_name      = Cpt(SignalWithRBV, 'cam1:FileName')
-    # cam_file_number    = Cpt(SignalWithRBV, 'cam1:FileNumber')
-    # cam_auto_increment = Cpt(SignalWithRBV, 'cam1:AutoIncrement')
-    # cam_file_template  = Cpt(SignalWithRBV, 'cam1:FileTemplate')
-    # cam_full_file_name = Cpt(SignalRO,      'cam1:FullFileName_RBV')
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        #self.stage_sigs.update([(self.cam.trigger_mode, "Internal")])
-
-    # def make_data_key(self):
-    #     source = "PV:{}".format(self.prefix)
-    #     # This shape is expected to match arr.shape for the array.
-    #     shape = (
-    #         1,
-    #         self.cam.array_size.array_size_y.get(),
-    #         self.cam.array_size.array_size_x.get(),
-    #     )
+    roi1 = Cpt(EpicsSignalRO, "ROIStat1:1:Total_RBV")
+    roi2 = Cpt(EpicsSignalRO, "ROIStat1:2:Total_RBV")
+    roi3 = Cpt(EpicsSignalRO, "ROIStat1:3:Total_RBV")
+    roi4 = Cpt(EpicsSignalRO, "ROIStat1:4:Total_RBV")
+    roi5 = Cpt(EpicsSignalRO, "ROIStat1:5:Total_RBV")
+    roi6 = Cpt(EpicsSignalRO, "ROIStat1:6:Total_RBV")
+    roi7 = Cpt(EpicsSignalRO, "ROIStat1:7:Total_RBV")
+    roi8 = Cpt(EpicsSignalRO, "ROIStat1:8:Total_RBV")
         
-    #     data_key = dict(
-    #         shape=shape,
-    #         source=source,
-    #         dtype="array",
-    #         dtype_str="<f4",
-    #         external="FILESTORE:",
-    #     )
-    #     #print(data_key)
-    #     return data_key
+    nchannels = 8
+    
+    def make_data_key(self):
+        source = "PV:{}".format(self.prefix)
+        # This shape is expected to match arr.shape for the array.
+        shape = (
+            1, #self.cam.num_images,
+            8,
+            1024 * pow(2, self.cam.num_mca_channels.get()),
+        )
+        
+        data_key = dict(
+            shape=shape,
+            source=source,
+            dtype="array",
+            dtype_str="|u2",
+            external="FILESTORE:",
+        )
+        #print(data_key)
+        return data_key
 
 
     def measure_xrf(self, exposure=1.0, doplot=True):
@@ -370,10 +406,36 @@ class BMMDante(AreaDetector):
             plt.legend()
             #plt.show()
 
+        
+            
 
+import redis
+rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
     
 class BMMDanteSingleTrigger(SingleTriggerV33, BMMDante):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        del self.stage_sigs["cam.image_mode"]
+        del self.stage_sigs["cam.acquire"]
+        self.stage_sigs["cam.collect_mode"] = 1
 
+        self.channel1 = DanteChannel(self.prefix, 1)
+        self.channel2 = DanteChannel(self.prefix, 2)
+        self.channel3 = DanteChannel(self.prefix, 3)
+        self.channel4 = DanteChannel(self.prefix, 4)
+        self.channel5 = DanteChannel(self.prefix, 5)
+        self.channel6 = DanteChannel(self.prefix, 6)
+        self.channel7 = DanteChannel(self.prefix, 7)
+        self.channel8 = DanteChannel(self.prefix, 8)
 
+    def set_rois(self, start, size):
+        for i in range(1,9):
+            thischan = getattr(self, f'channel{i}')
+            thischan.set_roi(start, size)
+            thisroi = getattr(self, f'roi{i}')
+            name = user_ns['BMMuser'].element + str(i)
+            thisroi.name = name
+            #getattr(user_ns['BMMuser'], f'xs{i}') = name
+            rkvs.set(f'BMM:user:xs{i}', name)
+            EpicsSignal(f'{self.prefix}ROIStat1:{i}:Name',  name=f'').put(name)

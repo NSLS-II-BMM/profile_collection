@@ -271,6 +271,8 @@ def plotting_mode(mode):
         return 'fluo+yield'
     elif mode == 'fluo+pilatus':
         return 'fluo+pilatus'
+    elif mode == 'dante':
+        return 'dante'
     elif user_ns['with_xspress3'] and mode == 'xs1':
         return 'xs1'
     elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):

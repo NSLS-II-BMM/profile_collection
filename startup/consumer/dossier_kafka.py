@@ -27,7 +27,7 @@ from pygments.lexers import PythonLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 
 from BMM.periodictable import edge_energy, Z_number, element_symbol, element_name
-from tools import echo_slack, experiment_folder
+from tools import echo_slack, experiment_folder, file_resource
 from slack import img_to_slack, post_to_slack
 
 startup_dir = os.path.dirname(__file__)
@@ -960,16 +960,16 @@ class XASFile():
             text = 'I0  --  $5'
         return text
 
-    def file_resource(self, catalog, uid):
-        docs = catalog[uid].documents()
-        found = []
-        for d in docs:
-            if d[0] == 'resource':
-                this = os.path.join(d[1]['root'], d[1]['resource_path'])
-                if '_%d' in this or re.search('%\d\.\dd', this) is not None:
-                    this = this % 0
-                found.append(this)
-        return found
+    # def file_resource(self, catalog, uid):
+    #     docs = catalog[uid].documents()
+    #     found = []
+    #     for d in docs:
+    #         if d[0] == 'resource':
+    #             this = os.path.join(d[1]['root'], d[1]['resource_path'])
+    #             if '_%d' in this or re.search('%\d\.\dd', this) is not None:
+    #                 this = this % 0
+    #             found.append(this)
+    #     return found
     
     def to_xdi(self, catalog=None, uid=None, filename=None, logger=None, include_yield=False):
         '''Write an XDI-style file for an XAS scan.
@@ -997,7 +997,7 @@ class XASFile():
         handle.write(f'# Scan.transient_id: {catalog[uid].metadata["start"]["scan_id"]}\n')
         
         if any(x in catalog[uid].metadata['start']['detectors'] for x in ('1-element SDD', '4-element SDD', '7-element SDD')):
-            hdf5files = self.file_resource(catalog, uid)
+            hdf5files = file_resource(catalog, uid)
             for h in hdf5files:
                 relative = '/'.join(h.split('/')[-6:])
                 if 'xspress3' in relative:

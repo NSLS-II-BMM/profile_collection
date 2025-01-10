@@ -4,23 +4,38 @@ from bluesky.plans import count
 from numpy import array, sqrt, log, ceil, floor
 from lmfit.models import ExponentialModel
 
+from BMM.functions import boxedtext
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
 #from BMM.resting_state  import resting_state_plan
-from BMM.user_ns.motors import xafs_det, xafs_x
+from BMM.user_ns.motors import xafs_det, xafs_x, xafs_detx, xafs_dety, xafs_detz
 
 class DetectorMount():
     def __init__(self):
-        self.motor = xafs_det
-        self.low   = 10
-        self.high  = 205
-        self.sampley = xafs_x
-        self.margin = 15
+        self.low     = 150
+        self.high    = 205
+        self.samplex = xafs_x
+        self.margin  = 15
+        self.name    = 'Detector mount'
+        self.x       = xafs_detx
+        self.y       = xafs_dety
+        self.z       = xafs_detz
 
+
+    def where(self):
+        #print("%s:" % self.name.upper())
+        text =  f"      Detctor X   = {self.x.position:7.3f} mm\n"
+        text += f"      Detctor Y   = {self.y.position:7.3f} mm\n"
+        text += f"      Detctor Z   = {self.z.position:7.3f} mm"
+        return text
+    def wh(self):
+        boxedtext(self.name, self.where(), 'cyan')
 
     def far(self):
-        yield from mv(self.motor, self.high)
+        yield from mv(self.x, self.high)
 
     def near(self):
         yield from mv(self.motor, self.low)
@@ -35,7 +50,7 @@ class DetectorMount():
             return False
         
     def separation(self):
-        return(self.motor.position - self.sampley.position)
+        return(self.motor.position - self.samplex.position)
     
 
 

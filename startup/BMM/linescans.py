@@ -34,7 +34,7 @@ from BMM.workspace     import rkvs
 from BMM.user_ns.base        import WORKSPACE
 from BMM.user_ns.bmm         import BMMuser
 from BMM.user_ns.dcm         import *
-from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, xs4, xs7, pilatus, ION_CHAMBERS
+from BMM.user_ns.detectors   import quadem1, ic0, ic1, ic2, xs, xs1, xs4, xs7, pilatus, dante, ION_CHAMBERS
 from BMM.user_ns.dwelltime   import _locked_dwell_time, with_xspress3, with_quadem, with_struck, use_7element, use_4element, use_1element
 from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
@@ -230,7 +230,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
 
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
-                           'detector' : 'I0',})
+                           'detector' : 'I0',
+                           'fluo_detector': None,})
             uid = yield from rel_scan([*ION_CHAMBERS], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
             
@@ -356,7 +357,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             dets = ION_CHAMBERS.copy()
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
-                           'detector' : 'I0',})
+                           'detector' : 'I0',
+                           'fluo_detector': None,})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
 
@@ -499,10 +501,15 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
             if 'hint' not in md['BMM_kafka']:
                 md['BMM_kafka']['hint'] = hint
 
-                
+            fluo_detector = None
+            if 'xs' in plotting_mode(p['mode']):
+                fluo_detector = user_ns['xs'].name
+            elif detector == 'Dante':
+                fluo_detector = 'Dante'
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
-                           'detector' : detector.capitalize(),})
+                           'detector' : detector.capitalize(),
+                           'fluo_detector': fluo_detector,})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**md, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
             
@@ -590,9 +597,14 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
+            if 'xs' in plotting_mode(p['mode']):
+                fluo_detector = user_ns['xs'].name
+            elif detector == 'Dante':
+                fluo_detector = 'Dante'
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
-                           'detector' : detector. capitalize(),})
+                           'detector' : detector.capitalize(),
+                           'fluo_detector': fluo_detector,})
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka_message({'linescan': 'stop',})
 
@@ -666,7 +678,7 @@ motor_nicknames = {'x'    : xafs_x,     'roll' : xafs_roll,
 def ls_backwards_compatibility(detin, axin):
     if type(axin) is str and axin.capitalize() in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both',
                                                    'I0a', 'I0b', 'Ic0', 'Ic1',
-                                                   'Xs', 'Xs1', 'Xs4', 'Xs7', 'Pilatus'):
+                                                   'Xs', 'Xs1', 'Xs4', 'Xs7', 'Pilatus', 'Dante'):
         return(axin, detin)
     else:
         return(detin, axin)
@@ -676,7 +688,7 @@ def ls_backwards_compatibility(detin, axin):
 ####################################
 # generic linescan vs. It/If/Ir/I0 #
 ####################################
-def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, inttime=0.1, md={}): # integration time?
+def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, stack=True, inttime=0.1, md={}): # integration time?
     '''
     Generic linescan plan.  This is a RELATIVE scan, relative to the
     current position of the selected motor.
@@ -702,6 +714,8 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         flag for whether to offer to pluck & move motor
     force : bool, optional
         flag for forcing a scan even if not clear to start
+    stack : bool, optional
+        flag for forcing a fluorescence, yield, etc scan to plot without stacking with I0
     inttime : float, optional
         integration time in seconds (default: 0.1)
 
@@ -714,7 +728,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
     database and write it to a file.
     '''
 
-    def main_plan(detector, axis, start, stop, nsteps, dopluck, force, md):
+    def main_plan(detector, axis, start, stop, nsteps, dopluck, force, stack, md):
         if force is False:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
@@ -762,9 +776,9 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         BMMuser.motor = thismotor
 
         # sanity checks on detector
-        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Ic1', 'Xs', 'Xs1', 'Xs4', 'Xs7', 'Pilatus'):
+        if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Ic1', 'Xs', 'Xs1', 'Xs4', 'Xs7', 'Pilatus', 'Dante'):
             print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1, xs4, xs7, pilatus')))
+                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1, xs4, xs7, pilatus, dante')))
             yield from null()
             return
 
@@ -813,6 +827,11 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             detname = 'pilatus'
             pilatus.hdf5.stage_sigs['num_capture'] = nsteps  # pilatus demands that this be set up front
 
+        elif detector == 'Dante':
+            dets.append(dante)
+            detname = 'dante'
+            dante.hdf5.stage_sigs['num_capture'] = nsteps  # dante demands that this be set up front
+
             
         ## xs4 vs xs7
             
@@ -841,9 +860,17 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
             md['BMM_kafka'] = dict()
         if 'hint' not in md['BMM_kafka'] or thismotor.name not in md['BMM_kafka']['hint']:
             md['BMM_kafka']['hint'] = f'linescan {detector} {thismotor.name}'
+        fluo_detector = None
+        if detector in ('Xs', 'Xs1', 'Fluorescence', 'Fluo', 'Flourescence', 'Flou'):
+            fluo_detector = xs.name
+        elif detector == 'Dante':
+            fluo_detector = 'Dante'
+            
         kafka_message({'linescan': 'start',
                        'motor' : thismotor.name,
-                       'detector' : detector,})
+                       'detector' : detector,
+                       'fluo_detector': fluo_detector,
+                       'stack': stack})
             
         rkvs.set('BMM:scan:type',      'line')
         rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
@@ -893,7 +920,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, int
         return(yield from null())
     ######################################################################
     user_ns['RE'].msg_hook = None
-    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, dopluck, force, md), cleanup_plan())
+    yield from finalize_wrapper(main_plan(detector, axis, start, stop, nsteps, dopluck, force, stack, md), cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 

@@ -16,7 +16,7 @@ import redis
 rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
 
 from slack import img_to_slack
-from tools import experiment_folder, echo_slack
+from tools import experiment_folder, echo_slack, file_resource
 
 from BMM.periodictable import Z_number, edge_number
 
@@ -112,11 +112,16 @@ class LineScan():
     line        = None
     line2       = None
     line3       = None
+    linetr      = None
     description = None
-    xs1, xs2, xs3, xs4, xs8 = None, None, None, None, None
+    xs1, xs2, xs3, xs4, xs5, xs6, xs7, xs8 = None, None, None, None, None, None, None, None
     plots       = []
     initial     = 0
     detector    = 7
+
+    transmission_like = ('It', 'Transmission', 'Trans')
+    fluorescence_like = ('If', 'Xs', 'Xs1', 'Fluorescence', 'Flourescence', 'Fluo', 'Flou', 'Dante')
+    yield_like        = ('Iy', 'Yield')
     
     def start(self, **kwargs):
         #if self.figure is not None:
@@ -126,6 +131,7 @@ class LineScan():
         self.ydata = []
         self.y2data = []
         self.y3data = []
+        self.trdata = []
         if 'motor' in kwargs: self.motor = kwargs['motor']
         self.numerator = kwargs['detector'].capitalize()
         self.denominator = None
@@ -134,27 +140,33 @@ class LineScan():
             cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
             #cid = BMMuser.fig.canvas.mpl_disconnect(cid)
         
+        self.stack = kwargs['stack']
         self.plots.append(self.figure.number)
-        self.axes = self.figure.add_subplot(111)
-        self.axes.set_facecolor((0.95, 0.95, 0.95))
-        self.line, = self.axes.plot([],[])
+        if self.numerator not in self.fluorescence_like or self.stack is False:
+            self.axes = self.figure.add_subplot(111)
+            self.axes.set_facecolor((0.95, 0.95, 0.95))
+            self.line, = self.axes.plot([],[])
         self.initial = 0
+        self.fluo_detector = kwargs['fluo_detector']
 
         self.detector = rkvs.get('BMM:xspress3').decode('utf-8')
-        if self.detector == '1' and self.numerator in ('If', 'Xs', 'Fluorescence'):
+        if self.detector == '1' and self.numerator in self.fluorescence_like:
             self.numerator = 'Xs1'
         
         self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
         self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
         self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
         self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
+        self.xs5 = rkvs.get('BMM:user:xs5').decode('utf-8')
+        self.xs6 = rkvs.get('BMM:user:xs6').decode('utf-8')
+        self.xs7 = rkvs.get('BMM:user:xs7').decode('utf-8')
         self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
 
 
         ## todo:  bicron, new ion chambers, both
         
         ## transmission: plot It/I0
-        if self.numerator in ('It', 'Transmission'):
+        if self.numerator in self.transmission_like:
             self.numerator = 'It'
             self.description = 'transmission'
             self.denominator = 'I0'
@@ -185,33 +197,74 @@ class LineScan():
             self.description = 'split ion chamber (channel A)'
             self.denominator = 'I0'
             self.axes.set_ylabel(f'Ita/{self.denominator}')
+            self.axes.legend(loc='best', shadow=True)
+
+        elif self.stack is False and self.numerator in self.fluorescence_like:
+            self.description = 'fluorescence (SDD)'
+            self.denominator = 'I0'
+            self.axes.set_ylabel('fluorescence / I0')
             
 
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
-        elif self.numerator in ('If', 'Xs', 'Fluorescence'):
-            #self.line2, = self.axes.plot([],[], label='I0b')
-            self.numerator = 'If'
-            self.description = 'fluorescence (SDD)'
-            self.denominator = 'I0'
-            self.axes.set_ylabel('fluorescence (SDD)')
+        elif self.numerator in self.fluorescence_like:
+
+            if get_backend().lower() == 'agg':
+                self.figure.set_figheight(9.5)
+                self.figure.set_figwidth(5.5)
+            else:
+                self.figure.canvas.manager.window.setGeometry(2240, 1887, 600, 963)
+            self.gs = gridspec.GridSpec(2,1)
+            self.fl = self.figure.add_subplot(self.gs[0, 0])
+            self.fl.grid(which='major', axis='both')
+            self.fl.set_facecolor((0.95, 0.95, 0.95))
+            self.fl.set_ylabel('fluorescence (SDD)')
+            self.tr = self.figure.add_subplot(self.gs[1, 0])
+            self.tr.grid(which='major', axis='both')
+            self.tr.set_facecolor((0.95, 0.95, 0.95))
+            self.tr.set_ylabel('transmission')
+
+            if self.fluo_detector == '1-element SDD':
+                self.line, = self.fl.plot([],[])
+                self.line.set_label(rkvs.get('BMM:user:xs8').decode('utf-8'))
+                self.line2  = self.fl.plot([],[], label='K8')
+                self.line3  = self.fl.plot([],[], label='OCR')
+                self.linetr, = self.tr.plot([],[], label='trans')
+                self.numerator = 'If'
+                self.description = 'fluorescence (1 channel)'
+                self.denominator = 'I0'
+                self.fl.set_ylabel('fluorescence (1 channel)')
+                self.fl.legend(loc='best', shadow=True)
+            else:
+                self.line, = self.fl.plot([],[])
+                self.linetr, = self.tr.plot([],[], label='trans')
+                self.numerator = 'If'
+                self.description = 'fluorescence (SDD)'
+                self.denominator = 'I0'
+            if self.fluo_detector == 'Dante':
+                self.denominator = None
+                
 
         ## fluorescence (1 channel): plot If/I0
         ##xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
-        elif self.numerator == 'Xs1':
-            self.line2, = self.axes.plot([],[], label='K8')
-            self.line3, = self.axes.plot([],[], label='OCR')
-            self.description = 'fluorescence (1 channel)'
-            self.denominator = 'I0'
-            self.axes.set_ylabel('fluorescence (1 channel)')
+        #elif self.numerator == 'Xs1':
             
-        if 'motor' in kwargs:
-            self.axes.set_xlabel(self.motor)
-            self.axes.set_title(f'{self.description} vs. {self.motor}')
-        else:                   # this is a time scan
-            self.axes.set_xlabel('time (seconds)')
-            self.axes.set_title(f'{self.description} vs. time')
-
+        if self.numerator in self.fluorescence_like:
+            if 'motor' in kwargs:
+                self.fl.set_xlabel(self.motor)
+                self.tr.set_xlabel(self.motor)
+                self.figure.suptitle(f'{self.motor} alignment scan')
+            else:
+                self.fl.set_xlabel('time (seconds)')
+                self.tr.set_xlabel('time (seconds)')
+                self.figure.suptitle('time scan')
+        else:
+            if 'motor' in kwargs:
+                self.axes.set_xlabel(self.motor)
+                self.axes.set_title(f'{self.motor} alignment scan')
+            else:                   # this is a time scan
+                self.axes.set_xlabel('time (seconds)')
+                self.axes.set_title('time scan')
 
     def interpret_click(self, ev):
         '''Grab location of mouse click.  Identify motor by grabbing the
@@ -220,9 +273,10 @@ class LineScan():
         Stash those in Redis.
         '''
         x,y = ev.xdata, ev.ydata
-        print(x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
-        rkvs.set('BMM:mouse_event:value', x)
-        rkvs.set('BMM:mouse_event:motor', ev.canvas.figure.axes[0].get_xlabel())
+        print('plucked', x, ev.canvas.figure.axes[0].get_xlabel(), ev.canvas.figure.number)
+        if x is not None:
+            rkvs.set('BMM:mouse_event:value', x)
+            rkvs.set('BMM:mouse_event:motor', ev.canvas.figure.axes[0].get_xlabel())
         
 
         
@@ -251,6 +305,7 @@ class LineScan():
         self.xdata       = []
         self.ydata       = []
         self.y2data      = []
+        self.trdata      = []
         self.motor       = None
         self.numerator   = None
         self.denominator = 1
@@ -270,24 +325,49 @@ class LineScan():
             return              # this is a baseline event document, dcm_roll is almost never scanned
 
         
-        if self.numerator in ('If', 'Xs'):
-            if self.xs1 in kwargs['data']:  # this is a primary documemnt
-                signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
-                if numpy.isnan(signal):
-                    signal = 0
-                #signal2 = kwargs['data']['La1'] + kwargs['data']['La2'] + kwargs['data']['La3'] + kwargs['data']['La4']
-            else:                           # this is a baseline document
-                return
-        elif self.numerator == 'Ic0':
-            signal  = kwargs['data']['I0a']
-            signal2 = kwargs['data']['I0b']
-        elif self.numerator == 'Ic1':
-            signal  = kwargs['data']['Ita']
-            signal2 = kwargs['data']['Itb']
-        elif self.numerator == 'Xs1':
-            signal = kwargs['data'][self.xs8]
-            signal2 = kwargs['data']['K8']
-            signal3 = kwargs['data']['OCR']
+        if self.numerator in self.fluorescence_like:
+            if self.fluo_detector == '1-element SDD':
+                signal = kwargs['data'][self.xs8]
+            elif self.fluo_detector == '4-element SDD':
+                signal = (kwargs['data'][self.xs1] +
+                          kwargs['data'][self.xs2] +
+                          kwargs['data'][self.xs3] +
+                          kwargs['data'][self.xs4])
+            elif self.fluo_detector == 'Dante':
+                signal = (kwargs['data'][self.xs1] +
+                          kwargs['data'][self.xs2] +
+                          kwargs['data'][self.xs3] +
+                          kwargs['data'][self.xs4] + 
+                          kwargs['data'][self.xs5] +
+                          kwargs['data'][self.xs6] +
+                          kwargs['data'][self.xs7] +
+                          kwargs['data'][self.xs8])
+            else:
+                signal = (kwargs['data'][self.xs1] +
+                          kwargs['data'][self.xs2] +
+                          kwargs['data'][self.xs3] +
+                          kwargs['data'][self.xs4] + 
+                          kwargs['data'][self.xs5] +
+                          kwargs['data'][self.xs6] +
+                          kwargs['data'][self.xs7])
+            
+            # if self.xs1 in kwargs['data']:  # this is a primary documemnt
+            #     signal = kwargs['data'][self.xs1] + kwargs['data'][self.xs2] + kwargs['data'][self.xs3] + kwargs['data'][self.xs4]
+            #     if numpy.isnan(signal):
+            #         signal = 0
+            #     #signal2 = kwargs['data']['La1'] + kwargs['data']['La2'] + kwargs['data']['La3'] + kwargs['data']['La4']
+            # else:                           # this is a baseline document
+            #     return
+        # elif self.numerator == 'Ic0':
+        #     signal  = kwargs['data']['I0a']
+        #     signal2 = kwargs['data']['I0b']
+        # elif self.numerator == 'Ic1':
+        #     signal  = kwargs['data']['Ita']
+        #     signal2 = kwargs['data']['Itb']
+        # elif self.numerator == 'Xs1':
+        #     signal  = kwargs['data'][self.xs8]
+        #     signal2 = kwargs['data']['K8']
+        #     signal3 = kwargs['data']['OCR']
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
             signal = kwargs['data'][self.numerator]
         else:
@@ -300,28 +380,44 @@ class LineScan():
             self.xdata.append(kwargs['time'] - self.initial)
         else:
             self.xdata.append(kwargs['data'][self.motor])
+
         if self.denominator is None:
             self.ydata.append(signal)
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
-            if self.numerator in ('Ic0q', 'Ic1', 'Xs1', 'Xs', 'If'):
+            if self.fluo_detector is not None:
+                self.trdata.append(kwargs['data']['It'])
+            if self.fluo_detector == '1-element SDD':
                 self.y2data.append(signal2)
-            if self.numerator == 'Xs1':
                 self.y3data.append(signal3)
-                
+            # self.ydata.append(signal)
+            # #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
+            # if self.numerator in ('Xs1', 'Xs', 'If'):  # 'Ic0q', 'Ic1'
+            #     self.y2data.append(signal2)
+            # if self.numerator == 'Xs1':
+            #     self.y3data.append(signal3)
         else:
             self.ydata.append(signal/kwargs['data'][self.denominator])
             #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
-            if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
+            if self.fluo_detector is not None and self.stack is True:
+                self.trdata.append(kwargs['data']['It']/kwargs['data']['I0'])
+            if self.fluo_detector == '1-element SDD':
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
-            if self.numerator == 'Xs1':
                 self.y3data.append(signal3/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
-        if self.numerator in ('Ic0', 'Ic1', 'Xs1'): #, 'Xs', 'If'):
+        if self.fluo_detector == '1-element SDD':
             self.line2.set_data(self.xdata, self.y2data)
-        if self.numerator == 'Xs1':
             self.line3.set_data(self.xdata, self.y3data)
-        self.axes.relim()
-        self.axes.autoscale_view(True,True,True)
+        if self.fluo_detector is not None and self.stack is True:
+            self.linetr.set_data(self.xdata, self.trdata)
+            self.fl.relim()
+            self.fl.autoscale_view(True,True,True)
+            self.tr.relim()
+            self.tr.autoscale_view(True,True,True)
+        else:
+            self.axes.relim()
+            self.axes.autoscale_view(True,True,True)
+
+
         #self.figure.show()      # in case the user has closed the window
         self.figure.canvas.draw()
         self.figure.canvas.flush_events()
@@ -407,7 +503,7 @@ class XAFSScan():
 
 
         ## 2x2 grid if fluorescence
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus'):
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus', 'dante'):
             self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
             self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
@@ -593,6 +689,15 @@ class XAFSScan():
                                     kwargs['data'][self.xs2] +
                                     kwargs['data'][self.xs3] +
                                     kwargs['data'][self.xs4]   ) / kwargs['data']['I0'])
+            elif self.fluo_detector == 'dante':
+                self.fluor.append( (kwargs['data'][self.xs1] +
+                                    kwargs['data'][self.xs2] +
+                                    kwargs['data'][self.xs3] +
+                                    kwargs['data'][self.xs4] +
+                                    kwargs['data'][self.xs5] +
+                                    kwargs['data'][self.xs6] +
+                                    kwargs['data'][self.xs7] +
+                                    kwargs['data'][self.xs8]   ) / kwargs['data']['I0'])
             else:
                 self.fluor.append( (kwargs['data'][self.xs1] +
                                     kwargs['data'][self.xs2] +
@@ -680,7 +785,11 @@ class XRF():
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             nelem = 7
             channels = tuple(range(1, 8))
+        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
+            nelem = 8
+            channels = tuple(range(1, 9))
 
+            
         if nelem == 1:
             s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
             only = 1
@@ -770,6 +879,8 @@ class XRF():
         handle.write(f'# Scan.time: {start}\n')
         #handle.write(f'# Scan.stop: {end}\n')
         handle.write(f'# Scan.uid: {uid}\n')
+        hdf5files = file_resource(catalog, uid)
+        handle.write(f'# Scan.hdf5file: {hdf5files[0]}\n')
         handle.write(f'# Facility.name: NSLS-II\n')
         if xdi is not None:
             if 'Facility' in catalog[uid].metadata['start']['XDI']:
@@ -787,6 +898,8 @@ class XRF():
             nchan = 4
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             nchan = 7
+        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
+            nchan = 8
         for c in range(1, nchan+1):
             handle.write(f'# Column.{c+1}: MCA{c} counts\n')
             if nchan > 1:
@@ -805,6 +918,9 @@ class XRF():
         s = []
         if nchan == 1:
             s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
+            datatable = numpy.array([s,])
+        elif nchan == 8:        # this is dante
+            s.append(catalog[uid].primary.data['dante-1_image'][0][0])  #  note channel number!
             datatable = numpy.array([s,])
         else:
             for i in range(1, nchan+1):

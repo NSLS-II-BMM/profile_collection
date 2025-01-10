@@ -34,7 +34,7 @@ user_ns = vars(user_ns_module)
 
 from BMM.user_ns.base      import bmm_catalog, WORKSPACE
 from BMM.user_ns.dwelltime import _locked_dwell_time, use_7element, use_4element, use_1element
-from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, pilatus, ION_CHAMBERS
+from BMM.user_ns.detectors import quadem1, xs, xs1, xs4, xs7, ic0, ic1, ic2, pilatus, dante, ION_CHAMBERS
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -926,6 +926,8 @@ def xafs(inifile=None, **kwargs):
             fluo_detector = None
             if 'xs' in plotting_mode(p['mode']):
                 fluo_detector = xs.name
+            elif plotting_mode(p['mode']) == 'dante':
+                fluo_detector = 'dante'
             kafka_message({'xafsscan': 'start',
                            'element': p["element"],
                            'edge': p["edge"],
@@ -1025,6 +1027,8 @@ def xafs(inifile=None, **kwargs):
                     #yield from mv(pilatus.hdf5.num_capture, len(energy_grid))
                     ## this seems ugly and too far in the weeds, but it works
                     pilatus.hdf5.stage_sigs['num_capture'] = len(energy_grid)
+                if 'dante' in p['mode']:
+                    dante.hdf5.stage_sigs['num_capture'] = len(energy_grid)
                 
                 rightnow = metadata_at_this_moment() # see metadata.py
                 for family in rightnow.keys():       # transfer rightnow to md
@@ -1073,6 +1077,10 @@ def xafs(inifile=None, **kwargs):
                 elif plotting_mode(p['mode']) == 'xs':
                     uid = yield from scan_nd([*ION_CHAMBERS, xs], energy_trajectory + dwelltime_trajectory,
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence',
+                                                 'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
+                elif plotting_mode(p['mode']) == 'dante':
+                    uid = yield from scan_nd([*ION_CHAMBERS, dante], energy_trajectory + dwelltime_trajectory,
+                                             md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence dante',
                                                  'BMM_kafka': { 'hint':  'xafs xs', **more_kafka }})
                 elif plotting_mode(p['mode']) == 'xs1':
                     uid = yield from scan_nd([*ION_CHAMBERS, xs1], energy_trajectory + dwelltime_trajectory,

@@ -27,6 +27,22 @@ def experiment_folder(catalog, uid):
     #print(f'folder is {folder}')
     return folder
 
+def file_resource(catalog, uid):
+    '''Dig through the documents for this uid to find the resource
+    documents.  Make a list of fully resolved file paths pointed to in
+    the resource documents.
+
+    At BMM, these will point to files in the proposal assets folder.
+    '''
+    docs = catalog[uid].documents()
+    found = []
+    for d in docs:
+        if d[0] == 'resource':
+            this = os.path.join(d[1]['root'], d[1]['resource_path'])
+            if '_%d' in this or re.search('%\d\.\dd', this) is not None:
+                this = this % 0
+            found.append(this)
+    return found
 
 
 import redis

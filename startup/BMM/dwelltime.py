@@ -85,7 +85,7 @@ class LockedDwellTimes(PseudoPositioner):
     if with_pilatus is True:
         pilatus_dwell_time  = Cpt(PilatusDwellTime,  'XF:06BMB-ES{Det:PIL100k}:', egu='seconds') # pilatus100k
     if with_dante is True:
-        dante_dwell_time    = Cpt(DanteDwellTime,    'XF:06BMB-ES{Dante-Det:1}',  egu='seconds') # Dante
+        dante_dwell_time    = Cpt(DanteDwellTime,    'XF:06BM-ES{Dante-Det:1}',   egu='seconds') # Dante
 
     #if with_dualem is True:
     #    dualem_dwell_time   = Cpt(DualEMDwellTime,   'XF:06BM-BI{EM:3}EM180:',    egu='seconds') # prototype ion chamber

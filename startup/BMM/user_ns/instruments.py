@@ -433,10 +433,10 @@ wmb.cleanup     = 'yield from xafs_wheel.reset()'
 # | |/ /| |___  | | | |___| \__/\ | | \ \_/ / |\ \  | |  | \ \_/ / |_| | |\  | | |   #
 # |___/ \____/  \_/ \____/ \____/ \_/  \___/\_| \_| \_|  |_/\___/ \___/\_| \_/ \_/   #
 ######################################################################################
-                                                                                  
-#run_report('\tdetector mount')
-#from BMM.detector_mount import find_detector_position #, DetectorMount
-#detx = DetectorMount()
+
+run_report('\tdetector mount')
+from BMM.detector_mount import DetectorMount  #, find_detector_position
+det = DetectorMount()
 
 
 

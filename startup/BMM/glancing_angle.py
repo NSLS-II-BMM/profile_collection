@@ -262,12 +262,27 @@ class GlancingAngle(Device):
             motor = user_ns['xafs_liny']
         else:
             motor = user_ns['xafs_linx']
-        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, dopluck=False, force=force)
+        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, dopluck=False, force=force, stack=False)
         self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
         yy = yy[2:]             # spurious first point in fluo scan due to Xspress3 issue 24 July 2024
-        signal = (tf[BMMuser.xs1] + tf[BMMuser.xs2] + tf[BMMuser.xs3] + tf[BMMuser.xs4]) / tf['I0']
+        detector = rkvs.get('BMM:xspress3').decode('utf-8')
+        if detector == '1':
+            signal = tf[BMMuser.xs1] / tf['I0']
+        elif detector == '4':
+            signal = (tf[BMMuser.xs1] +
+                      tf[BMMuser.xs2] +
+                      tf[BMMuser.xs3] +
+                      tf[BMMuser.xs4]) / tf['I0']
+        elif detector == '7':
+            signal = (tf[BMMuser.xs1] +
+                      tf[BMMuser.xs2] +
+                      tf[BMMuser.xs3] +
+                      tf[BMMuser.xs4] +
+                      tf[BMMuser.xs5] +
+                      tf[BMMuser.xs6] +
+                      tf[BMMuser.xs7]) / tf['I0']
         signal = signal[2:]
         #if BMMuser.element in ('Cr', 'Zr'):
         centroid = yy[signal.idxmax()]

@@ -336,27 +336,31 @@ dante = None
 from BMM.user_ns.dwelltime import with_dante
 
 if with_dante is True:
-    from BMM.pilatus import BMMPilatusSingleTrigger #,  BMMPilatusTIFFSingleTrigger
+    from BMM.dante import BMMDanteSingleTrigger
     run_report('\t'+'Dante')
 
     ## make sure various plugins are turned on
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}Pva1:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}HDF1:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}Pva1:EnableCallbacks',     name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}HDF1:EnableCallbacks',     name='').put(1)
+    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROIStat1:EnableCallbacks', name='').put(1)
 
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI1:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI2:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI3:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI4:EnableCallbacks',   name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI1:EnableCallbacks',   name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI2:EnableCallbacks',   name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI3:EnableCallbacks',   name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}ROI4:EnableCallbacks',   name='').put(1)
 
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats2:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats3:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats4:EnableCallbacks', name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats1:EnableCallbacks', name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats2:EnableCallbacks', name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats3:EnableCallbacks', name='').put(1)
+    # EpicsSignal('XF:06BM-ES{Dante-Det:1}Stats4:EnableCallbacks', name='').put(1)
     
     dante = BMMDanteSingleTrigger("XF:06BM-ES{Dante-Det:1}", name="dante-1", read_attrs=["hdf5"])
-    dante.stats.kind = "omitted"
-
-
+    dante.cam.num_mca_channels.put(2)  # 4096 energy bins
+    dante.cam.collect_mode.put(1)      # MCA Mapping mode
+    dante.hdf5.warmup()                # make sure HDF5 knows array sizes
+    for i in range(1,9):
+        getattr(dante, f'roi{i}').kind = 'hinted'
+    
 #######################################################
 # __   __ _________________ _____ _____ _____  _____  #
 # \ \ / //  ___| ___ \ ___ \  ___/  ___/  ___||____ | #

@@ -26,9 +26,11 @@ from BMM.motor_status import motor_status, ms # , motor_metadata, xrd_motors, xr
 run_report('\t'+'FMBO motor tools')
 from BMM.fmbo import FMBO_status
 
-run_report('\t'+'Setting motor description strings')
-from BMM.desc_string import set_desc_strings
-#set_desc_strings()
+from BMM.user_ns.base import profile_configuration
+from BMM.desc_string  import set_desc_strings
+if profile_configuration.getboolean('miscellaneous', 'set_desc_strings'):
+    run_report('\t'+'setting motor description strings')
+    set_desc_strings()
 
 run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
@@ -428,8 +430,10 @@ def measuring(element, edge=None):
     if edge is not None:
         BMMuser.edge = edge
         rkvs.set('BMM:pds:edge', edge)
+    if use_7element:
+        xs7.reset_rois()
     if use_4element:
-        xs.reset_rois()
+        xs4.reset_rois()
     if use_1element:
         xs1.reset_rois()
     show_edges()

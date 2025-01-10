@@ -460,6 +460,12 @@ class EndStationEpicsMotor(EpicsMotor):
         if hasattr(self, 'default_hlm'):
             self.hlm.put(self.default_hlm)
     
+class EncodedEndStationEpicsMotor(EndStationEpicsMotor):
+    def homed(self):
+        'Return a string ("Homed"/"Not homed") indicating home status'
+        home_status = EpicsSignal(self.prefix.replace('Mtr','') + 'Sts:HomeCmplt-Sts', name='')
+        return home_status.get(as_string=True)
+    
 
 
             
