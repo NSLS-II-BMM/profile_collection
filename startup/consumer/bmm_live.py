@@ -139,8 +139,10 @@ class LineScan():
         if self.motor is not None:
             cid = self.figure.canvas.mpl_connect('button_press_event', self.interpret_click)
             #cid = BMMuser.fig.canvas.mpl_disconnect(cid)
-        
-        self.stack = kwargs['stack']
+        try:
+            self.stack = kwargs['stack']
+        except:
+            self.stack = False
         self.plots.append(self.figure.number)
         if self.numerator not in self.fluorescence_like or self.stack is False:
             self.axes = self.figure.add_subplot(111)
@@ -241,7 +243,7 @@ class LineScan():
                 self.numerator = 'If'
                 self.description = 'fluorescence (SDD)'
                 self.denominator = 'I0'
-            if self.fluo_detector == 'Dante':
+            if self.fluo_detector == 'Dante':  # delete me once testing is finished!
                 self.denominator = None
                 
 
@@ -340,8 +342,7 @@ class LineScan():
                           kwargs['data'][self.xs4] + 
                           kwargs['data'][self.xs5] +
                           kwargs['data'][self.xs6] +
-                          kwargs['data'][self.xs7] +
-                          kwargs['data'][self.xs8])
+                          kwargs['data'][self.xs7])
             else:
                 signal = (kwargs['data'][self.xs1] +
                           kwargs['data'][self.xs2] +
@@ -476,6 +477,11 @@ class XAFSScan():
     i0 , line_i0  = None, None
     ref, line_ref = None, None
     axis_list = []
+
+    transmission_like = ('It', 'Transmission', 'Trans')
+    fluorescence_like = ('Both', 'If', 'Xs', 'Xs1', 'Fluorescence', 'Flourescence', 'Fluo', 'Flou', 'Dante')
+    yield_like        = ('Iy', 'Yield')
+
     
     def start(self, **kwargs):
         '''Begin a sequence of XAFS live plots.
@@ -696,8 +702,7 @@ class XAFSScan():
                                     kwargs['data'][self.xs4] +
                                     kwargs['data'][self.xs5] +
                                     kwargs['data'][self.xs6] +
-                                    kwargs['data'][self.xs7] +
-                                    kwargs['data'][self.xs8]   ) / kwargs['data']['I0'])
+                                    kwargs['data'][self.xs7]   ) / kwargs['data']['I0'])
             else:
                 self.fluor.append( (kwargs['data'][self.xs1] +
                                     kwargs['data'][self.xs2] +
@@ -784,19 +789,22 @@ class XRF():
             only = 1
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             nelem = 7
-            channels = tuple(range(1, 8))
+            channels = tuple(range(0, 7))
         elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
-            nelem = 8
-            channels = tuple(range(1, 9))
+            nelem = 7
+            channels = tuple(range(1, 8))
 
             
         if nelem == 1:
             s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
             only = 1
             add = False
+        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
+            for i in channels:
+                s.append(catalog[uid].primary.data[f'dante-1_image'][0][0][i-1])
         else:
             for i in channels:
-                s.append(catalog[uid].primary.data[f'{nelem}-element SDD_channel0{i}_xrf'][0])
+                s.append(catalog[uid].primary.data[f'{nelem}-element SDD_channel0{i+1}_xrf'][0])
 
 
         e = numpy.arange(0, len(s[0])) * 10
@@ -899,7 +907,7 @@ class XRF():
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             nchan = 7
         elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
-            nchan = 8
+            nchan = 7
         for c in range(1, nchan+1):
             handle.write(f'# Column.{c+1}: MCA{c} counts\n')
             if nchan > 1:
@@ -919,7 +927,7 @@ class XRF():
         if nchan == 1:
             s.append(catalog[uid].primary.data['1-element SDD_channel08_xrf'][0])  #  note channel number!
             datatable = numpy.array([s,])
-        elif nchan == 8:        # this is dante
+        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
             s.append(catalog[uid].primary.data['dante-1_image'][0][0])  #  note channel number!
             datatable = numpy.array([s,])
         else:

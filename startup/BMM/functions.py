@@ -164,8 +164,8 @@ def approximate_pitch(energy):
     '''Updated 12 September 2024
     '''
     if user_ns['dcm']._crystal == '111':
-        m = -4.6484e-06
-        b = 4.45537210
+        m = -4.3490e-06
+        b = 4.47073688
         return(m*energy + b)
     else:
         m = -3.0517e-06
@@ -370,7 +370,7 @@ def clean_img():
 
 def facility_md():
     redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
-    the_dict = RedisJSONDict(redis_client=redis_client, prefix='')
+    the_dict = RedisJSONDict(redis_client=redis_client, prefix='xas-')
     return the_dict
 
 

@@ -144,9 +144,6 @@ class BMMDanteHDF5Plugin(HDF5Plugin_V33, BMMDanteFileStoreHDF5, FileStoreIterati
         print(whisper("                        done"))
 
 
-## most recent problem: TimeoutError: XF:06BM-ES{Dante-Det:1}dante:NumExposures_RBV could not connect within 10.0-second timeout.
-    
-
 from ophyd.utils import enum
 from ophyd.device import DynamicDeviceComponent as DDC
 from ophyd.areadetector.base import ad_group
@@ -293,7 +290,7 @@ class BMMDante(DetectorBase):
     mca5 = ADCpt(EpicsSignal, "mca5")
     mca6 = ADCpt(EpicsSignal, "mca6")
     mca7 = ADCpt(EpicsSignal, "mca7")
-    mca8 = ADCpt(EpicsSignal, "mca8")
+    #mca8 = ADCpt(EpicsSignal, "mca8")
     
     hdf5 = Cpt(
         BMMDanteHDF5Plugin,
@@ -310,7 +307,7 @@ class BMMDante(DetectorBase):
     roi5 = Cpt(EpicsSignalRO, "ROIStat1:5:Total_RBV")
     roi6 = Cpt(EpicsSignalRO, "ROIStat1:6:Total_RBV")
     roi7 = Cpt(EpicsSignalRO, "ROIStat1:7:Total_RBV")
-    roi8 = Cpt(EpicsSignalRO, "ROIStat1:8:Total_RBV")
+    #roi8 = Cpt(EpicsSignalRO, "ROIStat1:8:Total_RBV")
         
     nchannels = 8
     
@@ -427,10 +424,10 @@ class BMMDanteSingleTrigger(SingleTriggerV33, BMMDante):
         self.channel5 = DanteChannel(self.prefix, 5)
         self.channel6 = DanteChannel(self.prefix, 6)
         self.channel7 = DanteChannel(self.prefix, 7)
-        self.channel8 = DanteChannel(self.prefix, 8)
+        #self.channel8 = DanteChannel(self.prefix, 8)  # Abdul says it's a 7-element detector
 
     def set_rois(self, start, size):
-        for i in range(1,9):
+        for i in range(1,8):
             thischan = getattr(self, f'channel{i}')
             thischan.set_roi(start, size)
             thisroi = getattr(self, f'roi{i}')

@@ -267,6 +267,7 @@ class GlancingAngle(Device):
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
         yy = yy[2:]             # spurious first point in fluo scan due to Xspress3 issue 24 July 2024
+        rkvs = user_ns['rkvs']
         detector = rkvs.get('BMM:xspress3').decode('utf-8')
         if detector == '1':
             signal = tf[BMMuser.xs1] / tf['I0']
@@ -522,9 +523,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             # move to correct detector position #
             #####################################
             if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
-                self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
-            self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
+                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
+                self.content += self.tab + 'yield from mv(xafs_detx, %.2f)\n' % m['detectorx']
+            self.content += self.tab + f'yield from mvr(xafs_detx, {self.retract})\n'
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
             if self.orientation == "parallel":
@@ -559,7 +560,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             ############################################################
             # measure XAFS, then return to 0 pitch and close all plots #
             ############################################################
-            self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
+            self.content += self.tab + f'yield from mvr(xafs_detx, -{self.retract})\n'
             command = self.tab + 'yield from xafs(\'%s.ini\'' % self.basename
             for k in m.keys():
                 ## skip cells with macro-building parameters that are not INI parameters
@@ -586,9 +587,9 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             command += ', copy=False)\n'
             self.content += command
             if m['method'].lower() == 'automatic':
-                self.content += self.tab + f'yield from mvr(xafs_det, {self.retract})\n'
+                self.content += self.tab + f'yield from mvr(xafs_detx, {self.retract})\n'
                 self.content += self.tab +  'yield from ga.flatten()\n'
-                self.content += self.tab + f'yield from mvr(xafs_det, -{self.retract})\n'
+                self.content += self.tab + f'yield from mvr(xafs_detx, -{self.retract})\n'
             self.content += self.tab + 'close_plots()\n\n'
 
 

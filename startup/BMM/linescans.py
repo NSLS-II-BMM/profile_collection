@@ -502,7 +502,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
                 md['BMM_kafka']['hint'] = hint
 
             fluo_detector = None
-            if 'xs' in plotting_mode(p['mode']):
+            if detector.lower() == 'if':
                 fluo_detector = user_ns['xs'].name
             elif detector == 'Dante':
                 fluo_detector = 'Dante'

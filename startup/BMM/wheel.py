@@ -324,8 +324,8 @@ class WheelMacroBuilder(BMMMacroBuilder):
                 if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
                 self.content += self.tab + 'yield from mv(slits3.vsize, %.2f)\n' % m['slitheight']
             if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
-                self.content += self.tab + 'yield from mv(xafs_det, %.2f)\n' % m['detectorx']
+                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
+                self.content += self.tab + 'yield from mv(xafs_detx, %.2f)\n' % m['detectorx']
             # if m['optimize'] is not None:  # parse optimize xfstring, which is something like "max fluo(X)"
             #     do_max = 'max' if 'max'  in m['optimize'] else 'min'
             #     optdet = 'If'  if 'fluo' in m['optimize'] else 'It'

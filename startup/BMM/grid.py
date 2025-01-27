@@ -74,8 +74,8 @@ class GridMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################
             if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
-                self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
+                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
+                self.content += self.tab + f'yield from mv(xafs_detx, {m["detectorx"]:.2f})\n'
             if m['position1'] is not None and m['position2'] is not None:
                 if self.check_limit(m['motor1'], m['position1']) is False: return(False)
                 if self.check_limit(m['motor2'], m['position2']) is False: return(False)

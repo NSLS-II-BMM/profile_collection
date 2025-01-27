@@ -32,11 +32,6 @@ from BMM.user_ns.base import startup_dir
 
 TEMPLATES_FOLDER = 'templates'
 
-#import redis
-#from redis_json_dict import RedisJSONDict
-#redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
-#facility_dict = RedisJSONDict(redis_client=redis_client, prefix='')
-
 
 
 try:
@@ -801,10 +796,6 @@ class BMM_User(Borg):
             start_experiment(gup, 'bmm', verbose=False, prefix='xas')
             # sync_experiment(gup, 'bmm', verbose=False, prefix='xas')
         
-        # from redis_json_dict import RedisJSONDict
-        # import redis
-        # redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
-        # RedisJSONDict(redis_client=redis_client, prefix='')
         if md['data_session'] == 'pass-301027':
             self.experimenters = 'Bruce Ravel'
         else:

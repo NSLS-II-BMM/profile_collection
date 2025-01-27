@@ -537,7 +537,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 plt.plot(e, sum(s), label=f'sum of {len(list(self.iterate_channels()))} channels')
             else:
                 for i, sig in enumerate(s):
-                    plt.plot(e, sig, label=f'channel {i}')
+                    plt.plot(e, sig, label=f'channel {i+1}')
             z = Z_number(BMMuser.element)
             if BMMuser.edge.lower() == 'k':
                 label = f'{BMMuser.element} Kα1'

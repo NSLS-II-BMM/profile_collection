@@ -182,6 +182,11 @@ class DossierTools():
             yield from mv(xs1.total_points, 1)
             yield from mv(xs1.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+        elif mode == 'dante':
+            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (Dante)', 'bold')
+            yield from mv(xs.total_points, 1)
+            yield from mv(xs.cam.acquire_time, 1)
+            self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
         elif plotting_mode(mode) in ('xs', 'fluo+yield', 'fluo+pilatus'):
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
             yield from mv(xs.total_points, 1)

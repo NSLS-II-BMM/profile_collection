@@ -1092,7 +1092,6 @@ class XASFile():
         handle.close()
 
         log_entry(logger, f'wrote XAS data to {fname}')
-        #post_to_slack(f'wrote XAS data to {fname}')
 
 
 

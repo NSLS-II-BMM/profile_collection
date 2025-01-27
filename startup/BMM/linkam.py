@@ -241,8 +241,8 @@ class LinkamMacroBuilder(BMMMacroBuilder):
                 if self.check_limit(user_ns['xafs_y'], m['sampley']) is False: return(False)
                 self.content += self.tab + f'yield from mv(xafs_y, {m["sampley"]:.3f})\n'
             if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_det'], m['detectorx']) is False: return(False)
-                self.content += self.tab + f'yield from mv(xafs_det, {m["detectorx"]:.2f})\n'
+                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
+                self.content += self.tab + f'yield from mv(xafs_detx, {m["detectorx"]:.2f})\n'
 
             if m['slitwidth'] is not None:
                 if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)

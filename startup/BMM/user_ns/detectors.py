@@ -358,7 +358,7 @@ if with_dante is True:
     dante.cam.num_mca_channels.put(2)  # 4096 energy bins
     dante.cam.collect_mode.put(1)      # MCA Mapping mode
     dante.hdf5.warmup()                # make sure HDF5 knows array sizes
-    for i in range(1,9):
+    for i in range(1,8):               # detector is 7 element, even though Dante is 8 channel
         getattr(dante, f'roi{i}').kind = 'hinted'
     
 #######################################################

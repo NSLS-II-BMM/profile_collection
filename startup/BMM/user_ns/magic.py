@@ -63,6 +63,11 @@ from BMM.user_ns.dcm import dcm
 @register_line_magic
 def w(arg):
     '''show a motor position'''
+    words = {'detector': 'det',
+             'slits' : 'slits3',
+             }
+    if arg in words:
+        arg = words[arg]
     try:
         motor = eval(arg)
         return motor.wh()
