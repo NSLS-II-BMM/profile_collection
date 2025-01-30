@@ -389,8 +389,7 @@ class AxisCaprotoCam(Device):
         # Clear asset docs cache which may have some documents from the previous failed run.
         self._asset_docs_cache.clear()
 
-        # date = datetime.datetime.now()
-        assets_dir = self.name
+        assets_dir = self.name + datetime.datetime.now().strftime('/%Y/%m/%d')
         data_file_no_ext = f"{self.name}_{new_uid()}"
         data_file_with_ext = f"{data_file_no_ext}.jpeg"
 

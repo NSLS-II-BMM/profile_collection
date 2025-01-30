@@ -404,25 +404,28 @@ class BMMDossier():
     def plotting_mode(self, mode):
         '''Return a sane string to describe the plotting mode.'''
         mode = mode.lower()
-        if mode == 'xs1':
-            return 'xs1'
-        elif any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
-            return 'xs'
-        #elif any(x in mode for x in ('fluo', 'flou', 'both')):
-        #    return 'fluo'  # deprecated analog fluo detection
-        elif mode == 'ref':
-            return 'ref'
-        elif mode == 'yield':
+        if mode in ('fluo+yield', 'yield'):
             return 'yield'
+
+        elif mode in ('fluo+pilatus', 'pilatus'):
+            return 'pilatus'
+
+        elif mode == 'dante':
+            return 'dante'
+
+        elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+            return 'fluorescence'
+
+        elif 'ref' in mode:
+            return 'reference'
+
         elif mode == 'test':
             return 'test'
-        elif mode == 'icit':
-            return 'icit'
-        elif mode == 'ici0':
-            return 'ici0'
-        else:
-            return 'trans'
 
+        else:
+            return 'transmission'
+
+        
     def element_text(self, element='Po'):
         '''Return a string describing the element.  Returns Po if not
         specified or not specified correctly.'''

@@ -20,8 +20,8 @@ run_report(__file__, text='detectors and cameras')
 
 
 with_anacam = profile_configuration.getboolean('cameras', 'anacam') # True
-with_cam1   = profile_configuration.getboolean('cameras', 'usb1') # True
-with_cam2   = profile_configuration.getboolean('cameras', 'usb2') # True
+with_cam1   = profile_configuration.getboolean('cameras', 'usb1')   # True
+with_cam2   = profile_configuration.getboolean('cameras', 'usb2')   # True
 with_webcam = profile_configuration.getboolean('cameras', 'webcam') # True
 
 
@@ -309,10 +309,10 @@ if with_pilatus is True:
     
     pilatus = BMMPilatusSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["hdf5"])
     pilatus.stats.kind = "omitted"
-    pilatus.roi2.kind = "hinted"
-    pilatus.roi3.kind = "hinted"
-    pilatus.roi2.name = "yoneda"
-    pilatus.roi3.name = "specular"
+    pilatus.roi2.kind  = "hinted"
+    pilatus.roi3.kind  = "hinted"
+    pilatus.roi2.name  = "yoneda"
+    pilatus.roi3.name  = "specular"
     #if pilatus.hdf5.run_time.get() == 0.0:
     #    pilatus.hdf5.warmup()
         

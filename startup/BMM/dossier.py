@@ -15,7 +15,7 @@ from larch.io import create_athena
 from PIL import Image
 
 from BMM.db                import file_resource
-from BMM.functions         import error_msg, bold_msg, whisper, plotting_mode, now, proposal_base
+from BMM.functions         import error_msg, bold_msg, whisper, now, proposal_base
 from BMM.kafka             import kafka_message
 from BMM.logging           import report
 from BMM.modes             import get_mode, describe_mode
@@ -176,19 +176,14 @@ class DossierTools():
         md['_user'] = dict()
         md['_user']['startdate'] = BMMuser.date
 
-        print(stub, mode)
-        if use_1element and plotting_mode(mode) == 'xs1':
-            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (1-element detector)', 'bold')
-            yield from mv(xs1.total_points, 1)
-            yield from mv(xs1.cam.acquire_time, 1)
-            self.xrfuid = yield from count([xs1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-        elif mode == 'dante':
+        #print(stub, mode)
+        if mode == 'dante':
             report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (Dante)', 'bold')
-            yield from mv(xs.total_points, 1)
-            yield from mv(xs.cam.acquire_time, 1)
-            self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
-        elif plotting_mode(mode) in ('xs', 'fluo+yield', 'fluo+pilatus'):
-            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} (4-element detector)', 'bold')
+            yield from mv(dante.total_points, 1)
+            yield from mv(dante.cam.acquire_time, 1)
+            self.xrfuid = yield from count([dante], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})
+        elif mode in ('fluorescence', 'yield', 'pilatus'):
+            report(f'measuring an XRF spectrum at {dcm.energy.position:.1f} ({xs.name})', 'bold')
             yield from mv(xs.total_points, 1)
             yield from mv(xs.cam.acquire_time, 1)
             self.xrfuid = yield from count([xs], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata XRF'})

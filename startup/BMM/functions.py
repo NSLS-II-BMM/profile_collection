@@ -264,33 +264,55 @@ def present_options(suffix='xlsx'):
         return None
 
 def plotting_mode(mode):
+    '''Try to parse strings explaining the measurement mode.  Return one of:
+         transmission
+         fluorescence
+         yield
+         pilatus
+         dante
+         reference
+         test
+    
+    '''
     mode = mode.lower()
-    if mode == 'fluo+yield':
-        return 'fluo+yield'
-    elif mode == 'yield':
-        return 'fluo+yield'
-    elif mode == 'fluo+pilatus':
-        return 'fluo+pilatus'
+    if 'yield' in mode: # ('fluo+yield', 'yield', 'eyield'):
+        return 'yield'
+
+    elif mode == 'iy':
+        return 'yield'        
+
+    elif 'pil' in mode: # ('fluo+pilatus', 'pilatus'):
+        return 'pilatus'
+    
     elif mode == 'dante':
         return 'dante'
-    elif user_ns['with_xspress3'] and mode == 'xs1':
-        return 'xs1'
-    elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
-        return 'xs'
-    elif not user_ns['with_xspress3'] and any(x in mode for x in ('fluo', 'flou', 'both')):
-        return 'fluo'
-    elif mode == 'ref':
-        return 'ref'
-    #elif mode == 'yield':
-    #    return 'yield'
+
+    #elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+    elif any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+        return 'fluorescence'
+
+    elif 'ref' in mode:
+        return 'reference'
+
     elif mode == 'test':
         return 'test'
-    elif mode == 'icit':
-        return 'icit'
-    elif mode == 'ici0':
-        return 'ici0'
+
     else:
-        return 'trans'
+        return 'transmission'
+
+    # deprecated textual distinction between various SDDs
+    #elif user_ns['with_xspress3'] and mode == 'xs1':
+    #    return 'xs1'
+    
+    # deprecated analog readout system
+    #elif not user_ns['with_xspress3'] and any(x in mode for x in ('fluo', 'flou', 'both')):
+    #    return 'fluo'
+    
+    #deprecated ion chamber testing
+    #elif mode == 'icit':
+    #    return 'icit'
+    #elif mode == 'ici0':
+    #    return 'ici0'
 
 
 def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
@@ -398,3 +420,53 @@ def find_hdf5_files(folder=None):
 # f = open(os.path.join(folder, 'mapping.txt'), "w")
 # f.write(f'{fl:35} ---> {os.path.basename(hdf5file)}\n')
 # f.close()
+
+def bounds(base=0.5, coef=0.25, end='14k', edge=0.3):
+    '''Generate strings that can be used in an XAS automation spreadsheet
+    for k-weighted dwell times which are approximately continuous in
+    dwell time at the transition into the k-weighted region.
+
+    example
+    =======
+    > bounds(1/2,1/4)
+
+    bounds = -200   -30   -2    15.2    25    14k
+    steps  =     10    2     0.30  0.30   0.05k
+    times  =     0.50  0.50  0.50  0.25k  0.25k
+
+
+    arguments of the calculation
+    ============================
+    base (float) [0.5]
+      The base integration time in seconds, usually 0.5 or 1 second.  The
+      default is a half second -- that is, the dwell times leading up to the
+      k-weighted region will be a half second.
+
+    coef (float) [0.25]
+      The coefficient of k to use for the k-weighted dwell times.  The
+      default is a k coefficient of 1/4.
+
+
+    non-calculation arguments
+    =========================
+    end (string of int or float) ['14k']
+      The end value of the bounds list
+
+    edge (float) [0.3]
+      The step size through the end in eV.  The default is 0.3 eV.
+
+    '''
+    time = 1/coef
+    transition = KTOE*(time*base)**2
+    answer  = f'# base dwell time = {base:.2f} seconds, {coef:.2f}k weighting\n'
+    answer += f'# transition energy = {transition:.1f} eV above the edge\n\n'
+    if transition < 25:
+        answer += f'bounds = -200   -30   -2    {transition:.1f}    25    {end}\n'
+        answer += f'steps  =     10    2     {edge:.2f}  {edge:.2f}   0.05k\n'
+    else:
+        answer += f'bounds = -200   -30   -2    25    {transition:.1f}    {end}\n'
+        answer += f'steps  =     10    2     {edge:.2f}  0.05k  0.05k\n'
+
+    answer += f'times  =     {base:.2f}  {base:.2f}  {base:.2f}  {1/time:.2f}k  {1/time:.2f}k'
+
+    print(answer)

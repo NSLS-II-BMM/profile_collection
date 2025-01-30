@@ -539,7 +539,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             fname = self.make_filename(m)
             self.content += self.tab + 'if ref is True:\n'
             self.content += self.tab + self.tab + f'yield from mvr({motor}, -{self.retract})\n'
-            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}_ref_{fname}", nscans=1, sample="{m["element"]} referance", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5", copy=False)\n'
+            self.content += self.tab + self.tab + f'yield from xafs("{self.basename}.ini", mode="reference", filename="{m["element"]}_ref_{fname}", nscans=1, sample="{m["element"]} reference", element="{m["element"]}", edge="{m["edge"]}", bounds="-30 -10 40 70", steps="2 0.5 2", times="0.5 0.5 0.5", copy=False)\n'
             self.content += self.tab + self.tab + f'yield from mvr({motor}, {self.retract})\n'
 
             ####################################

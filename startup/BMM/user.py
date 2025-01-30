@@ -395,7 +395,7 @@ class BMM_User(Borg):
         else:
             self.element = element
             self.edge    = edge
-        for i in (1,2,3,4,8):
+        for i in range(1,9):
             setattr(self, f'xs{i}', f'{element}{i}')
         for key in ('element', 'edge', 'xs1', 'xs2', 'xs3', 'xs4', 'xs5', 'xs6', 'xs7', 'xs8'):
             rkvs.set(f'BMM:user:{key}', getattr(self, key))
@@ -412,9 +412,9 @@ class BMM_User(Borg):
                     with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:
                         js = fl.read()
                     allrois = json.loads(js)
-                    xs.slots[14] = el
+                    xs.slots[-2] = el
                     for channel in xs.iterate_channels():
-                        xs.set_roi_channel(channel, index=15, name=f'{el.capitalize()}',
+                        xs.set_roi_channel(channel, index=19, name=f'{el.capitalize()}',
                                            low =allrois[el.capitalize()][edge.lower()]['low'],
                                            high=allrois[el.capitalize()][edge.lower()]['high'])
                     xs.set_rois()

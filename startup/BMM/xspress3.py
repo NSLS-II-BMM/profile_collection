@@ -234,7 +234,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         self.slots = ['Ti', 'V',  'Cr', 'Mn',
                       'Fe', 'Co', 'Ni', 'Cu',
                       'Zn', 'Ge', 'As', 'Br',
-                      'Nb', 'K', None, 'OCR']
+                      'Pt', 'Au', 'Pb', 'Nb',
+                      'Mo', 'K', None, 'OCR']
         self.restart()
 
     def new_acquire_status(self):
@@ -358,6 +359,14 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 
                 continue
             elif el is None:
+                for channel in self.iterate_channels():
+                    mcaroi = channel.get_mcaroi(mcaroi_number=i+1)
+                    self.set_roi(
+                        mcaroi,
+                        name='none',
+                        min_x=0,
+                        size_x=0
+                    )
                 continue
             edge = 'k'
             if Z_number(el) > 45:
@@ -441,24 +450,24 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         print('==============================================')
         for i,x in enumerate(list(first_channel.iterate_mcarois())):
             name = re.sub('\d', '', x.name)
-            print(f" {i+1:>2d}  {name:<3s}  {x.kind.name:<20s}  {10*x.min_x.get():>5d}  {10*(x.min_x.get()+x.size_x.get()):>5d}")
+            print(f" {i+1:>2d}  {name:<4s}  {x.kind.name:<20s}  {10*x.min_x.get():>5d}  {10*(x.min_x.get()+x.size_x.get()):>5d}")
     list_rois = roi_details
                 
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
         text = list_msg('Xspress3 ROIs:\n')
-        text += bold_msg('    1      2      3      4      5      6      7      8\n')
+        text += bold_msg('    1      2      3      4      5      6      7      8      9     10\n')
         text += ' '
-        for i in range(8):
+        for i in range(10):
             if self.slots[i] == BMMuser.element:
                 text += go_msg('%4.4s' % self.slots[i]) + '   '
             else:
                 text += '%4.4s' % self.slots[i] + '   '
         text += '\n\n'
-        text += bold_msg('    9     10     11     12     13     14     15     16\n')
+        text += bold_msg('   11     12     13     14     15     16     17     18     19     20\n')
         text += ' '
-        for i in range(8, 16):
+        for i in range(10, 20):
             if self.slots[i] == BMMuser.element:
                 text += go_msg('%4.4s' % self.slots[i]) + '   '
             else:

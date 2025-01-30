@@ -6,7 +6,7 @@ except ImportError:
         return False
 
 import os, textwrap
-from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg, proposal_base
+from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg, proposal_base, bounds
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module

@@ -597,7 +597,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
             line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
                     (motor.name, sgnl, start, stop, nsteps, motor.user_readback.get())
 
-            if 'xs' in plotting_mode(p['mode']):
+            if plotting_mode(p['mode']) == 'fluorescence':
                 fluo_detector = user_ns['xs'].name
             elif detector == 'Dante':
                 fluo_detector = 'Dante'

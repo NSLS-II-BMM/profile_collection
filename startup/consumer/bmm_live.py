@@ -435,7 +435,7 @@ class XAFSScan():
     Care is taken to maintain references to the matplotlib objects in
     each grid panel of the plot.
 
-    In the event of an ion-chamber-only scan, show a 1x3 grid:
+    In the event of an ion-chamber-only scan (transmission, reference, test) show a 3x1 grid:
 
     +----------+----------+----------+
     |          |          |          |
@@ -455,11 +455,36 @@ class XAFSScan():
     |          |          |
     +----------+----------+
 
+    In the event of a scan with electron yield and fluorescence, show a 3x2 grid:
+
+    +----------+----------+----------+
+    |          |          |          |
+    | trans(E) | fluo(E)  |   I0     |
+    |          |          |          |
+    +----------+----------+----------+
+    |          |          |          |
+    |  ref(e)  | yield(E) |          |
+    |          |          |          |
+    +----------+----------+----------+
+
+    In the event of a reflectivity scan with Pilatus and fluorescence, show a 3x2 grid:
+
+    +----------+----------+----------+
+    |          |          |          |
+    | trans(E) |  Yoneda  |   I0     |
+    |          |          |          |
+    +----------+----------+----------+
+    |          |          |          |
+    |  ref(e)  | specular |          |
+    |          |          |          |
+    +----------+----------+----------+
+
     '''
 
     ongoing     = False
     energy      = []
     i0sig       = []
+    iysig       = []
     trans       = []
     fluor       = []
     refer       = []
@@ -476,6 +501,7 @@ class XAFSScan():
     muf, line_muf = None, None
     i0 , line_i0  = None, None
     ref, line_ref = None, None
+    iy , line_iy  = None, None
     axis_list = []
 
     transmission_like = ('It', 'Transmission', 'Trans')
@@ -492,13 +518,14 @@ class XAFSScan():
         self.trans       = []
         self.fluor       = []
         self.refer       = []
+        self.iysig       = []
         self.mode        = kwargs['mode']
         self.filename    = kwargs['filename']
         self.repetitions = kwargs['repetitions']
         self.count       = 1
-        self.reference_material = kwargs['reference_material']
         self.sample      = kwargs['sample']
         self.fluo_detector = kwargs['fluo_detector']
+        self.reference_material = kwargs['reference_material']
         
         ## close the plot from the last sequence
         if self.fig is not None:
@@ -507,9 +534,16 @@ class XAFSScan():
         self.fig = plt.figure(num='XAFS live view', tight_layout=True)
         plt.rcParams["figure.raise_window"] = False
 
-
+        ## a nod at backwards compatibility, regularize mode, as of Jan 30 2025 mode should be regularized
+        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'xs4', 'xs7'):
+            self.mode = 'fluorescence'
+        if self.mode in ('yield', 'eyield', 'fluo+yield'):
+            self.mode = 'yield'
+        if self.mode in ('fluo+pilatus',):
+            self.mode = 'pilatus'
+        
         ## 2x2 grid if fluorescence
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus', 'dante'):
+        if self.mode in ('fluorescence', 'dante'):
             self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
             self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
             self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
@@ -528,8 +562,37 @@ class XAFSScan():
             self.muf = self.fig.add_subplot(self.gs[0, 1])
             self.i0  = self.fig.add_subplot(self.gs[1, 0])
             self.ref = self.fig.add_subplot(self.gs[1, 1])
-            self.axis_list   = [self.mut,  self.muf,  self.i0,  self.ref]
-        ## 1x3 grid if no fluorescence (transmission, reference, test)
+            self.axis_list   = [self.mut, self.muf, self.i0, self.ref]
+
+        ## 3x2 grid for yield and pilatus
+        elif self.mode in ('yield'):
+            if get_backend().lower() == 'agg':
+                self.fig.set_figheight(9.5)
+                self.fig.set_figwidth(6.5)
+            else:
+                self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
+            self.gs = gridspec.GridSpec(2,3)
+            self.mut = self.fig.add_subplot(self.gs[0, 0])
+            self.muf = self.fig.add_subplot(self.gs[0, 1])
+            self.i0  = self.fig.add_subplot(self.gs[0, 2])
+            self.ref = self.fig.add_subplot(self.gs[1, 0])
+            self.iy  = self.fig.add_subplot(self.gs[1, 1])
+            self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
+        elif self.mode in ('pilatus'):
+            if get_backend().lower() == 'agg':
+                self.fig.set_figheight(9.5)
+                self.fig.set_figwidth(6.5)
+            else:
+                self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
+            self.gs = gridspec.GridSpec(2,3)
+            self.mut = self.fig.add_subplot(self.gs[0, 0])
+            self.ref = self.fig.add_subplot(self.gs[0, 1])
+            self.i0  = self.fig.add_subplot(self.gs[0, 2])
+            self.muf = self.fig.add_subplot(self.gs[1, 0])
+            self.iy  = self.fig.add_subplot(self.gs[1, 1])
+            self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
+
+        ## 3x1 grid if no fluorescence (transmission, reference, test)
         else:
             if get_backend().lower() == 'agg':
                 self.fig.set_figwidth(16.5)
@@ -539,56 +602,52 @@ class XAFSScan():
             self.mut = self.fig.add_subplot(self.gs[0, 0])
             self.i0  = self.fig.add_subplot(self.gs[0, 1])
             self.ref = self.fig.add_subplot(self.gs[0, 2])
-            self.axis_list   = [self.mut,  self.i0,  self.ref]
+            self.axis_list   = [self.mut, self.i0, self.ref]
         self.fig.suptitle(f'{self.filename}: scan {self.count} of {self.repetitions}')
 
 
         ## start lines and set axis labels
 
-        if self.mode == 'fluo+pilatus':
-            self.mut.set_ylabel('yoneda intensity')
-        else:
-            self.mut.set_ylabel('$\mu(E)$ (transmission)')
-            if self.mode == 'icit':
-                self.mut.set_ylabel('$\mu(E)$ (transmission, integrated ion chamber for It)')
+        ## every plot type uses mu_t and i0
+        self.mut.set_ylabel('transmission $\mu(E)$')
         self.mut.set_xlabel('energy (eV)')
         self.mut.set_title(f'data: {self.sample}')
 
-        #self.line_i0, = self.i0.plot([],[], label='I0')
         self.i0.set_ylabel('I0 (nanoamps)')
         self.i0.set_xlabel('energy (eV)')
         self.i0.set_title('I0')
 
-        if self.mode in ('yield','fluo+yield'):
-            #self.line_ref, = self.ref.plot([],[], label='reference')
-            self.ref.set_ylabel('electron yield $\mu(E)$')
-            self.ref.set_xlabel('energy (eV)')
-            self.ref.set_title('electron yield')
-        elif self.mode in ('fluo+pilatus'):
-            #self.line_ref, = self.ref.plot([],[], label='reference')
-            self.ref.set_ylabel('specular intensity')
-            self.ref.set_xlabel('energy (eV)')
-            self.ref.set_title('specular')
-        else:
-            #self.line_ref, = self.ref.plot([],[], label='reference')
+        ## all plot types except transmission and reference need mu_f
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
+            self.muf.set_ylabel(f'fluorescence $\mu(E)$  ({self.fluo_detector})')
+            self.muf.set_xlabel('energy (eV)')
+            self.muf.set_title(f'data: {self.sample}')
+
+        ## all plot types except pilatus need reference
+        if self.mode in ('transmission', 'fluorescence', 'yield', 'dante', 'reference'):
             self.ref.set_ylabel('reference $\mu(E)$')
             self.ref.set_xlabel('energy (eV)')
             self.ref.set_title(f'reference: {self.reference_material}')
+        elif self.mode == 'pilatus':  # pilatus plot re-purposes ref for Yoneda
+            self.ref.set_ylabel('yoneda intensity')
+            self.ref.set_xlabel('energy (eV)')
+            self.ref.set_title('Yoneda')
+            
+
+        ## yield needs the iy signal
+        if self.mode == 'yield':
+            self.iy.set_ylabel('electron yield $\mu(E)$')
+            self.iy.set_xlabel('energy (eV)')
+            self.iy.set_title('electron yield')
+        elif self.mode == 'pilatus':  # pilatus plot re-purposes iy for specular
+            self.iy.set_ylabel('specular intensity')
+            self.iy.set_xlabel('energy (eV)')
+            self.iy.set_title('specular')
             
         ## common appearance
         for ax in self.axis_list:
             ax.grid(which='major', axis='both')
             ax.set_facecolor((0.95, 0.95, 0.95))
-        
-        ## do all that for a fluorescence panel
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flour', 'xs', 'xs1', 'yield', 'fluo+yield', 'fluo+pilatus'):
-            self.muf.set_ylabel('$\mu(E)$ (fluorescence)')
-            self.muf.set_xlabel('energy (eV)')
-            self.muf.set_title(f'data: {self.sample}')
-        elif self.mode in ('eyield'):
-            self.muf.set_ylabel('$\mu(E)$ (electron yield)')
-            self.muf.set_xlabel('energy (eV)')
-            self.muf.set_title(f'data: {self.sample}')
 
         
 
@@ -603,26 +662,24 @@ class XAFSScan():
         self.trans       = []
         self.fluor       = []
         self.refer       = []
+        self.iysig       = []
         self.line_mut,   = self.mut.plot([],[], label=f'scan {self.count}')
         self.line_i0,    = self.i0.plot([],[],  label=f'scan {self.count}')
         self.line_ref,   = self.ref.plot([],[], label=f'scan {self.count}')
-        for ax in (self.mut, self.i0, self.ref):
+        for ax in self.axis_list:
             if self.count < 16:
                 ax.legend(loc='best', shadow=True)
             else:
                 ax.legend.remove()
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'eyield', 'fluo+yield', 'fluo+pilatus'):
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
-            if self.count < 16:
-                self.muf.legend(loc='best', shadow=True)
-            else:
-                self.muf.legend.remove()
+        if self.mode in ('yield', 'pilatus'):
+            self.line_iy, = self.iy.plot([],[], label=f'scan {self.count}')
             
     def stop(self, catalog, **kwargs):
         '''Done with a sequence of XAFS live plots.
         '''
         filename = kwargs['filename']
-        uid = kwargs['uid']
         #self.figure.show(block=False)
         self.ongoing     = False
         # self.xdata       = []
@@ -638,6 +695,7 @@ class XAFSScan():
         # self.initial     = 0
         if get_backend().lower() == 'agg':
             if filename is not None:
+                uid = kwargs['uid']
                 ## dossier should have already been written, thus the
                 ## sequence number (i.e. the number of times a
                 ## sequence of repetitions using the same file) should
@@ -666,28 +724,29 @@ class XAFSScan():
         ## primary event document, append to data arrays
         self.energy.append(kwargs['data']['dcm_energy'])
         self.i0sig.append(kwargs['data']['I0']/kwargs['data']['dwti_dwell_time'])  # this should be the same number as cadashboard....
-
-        if self.mode == 'icit':
-            self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['I0a'])))
-        elif self.mode == 'fluo+pilatus':
-            self.trans.append(kwargs['data']['yoneda']/kwargs['data']['I0'])
-        else:                   # normal quadem transmission
-            self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
-
-        if self.mode in ('yield', 'fluo+yield'):
-            self.refer.append(kwargs['data']['Iy']/kwargs['data']['I0'])
-        elif self.mode == 'fluo+pilatus':
-            self.refer.append(kwargs['data']['specular']/kwargs['data']['I0'])
-        else:
-            self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
-            
+        self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
         ## push the updated data arrays to the various lines
         self.line_mut.set_data(self.energy, self.trans)
         self.line_i0.set_data(self.energy, self.i0sig)
-        self.line_ref.set_data(self.energy, self.refer)
+
+
+        if self.mode in ('transmission', 'fluorescence', 'yield', 'pilatus'):
+            self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
+            
+        if self.mode == 'pilatus':  # re-purpose refer and iysig
+            self.refer.append(kwargs['data']['yoneda']/kwargs['data']['I0'])
+            self.iysig.append(kwargs['data']['specular']/kwargs['data']['I0'])
+            self.line_iy.set_data(self.energy, self.iysig)
+
+        if self.mode == 'yield':
+            self.iysig.append(kwargs['data']['Iy']/kwargs['data']['I0'])
+
+        
+        self.line_ref.set_data(self.energy, self.iysig)
+            
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
-        if self.mode in ('both', 'fluorescence', 'fluo', 'flourescence', 'flou', 'xs', 'xs1', 'yield', 'fluo+yield', 'fluo+pilatus'):
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
             if self.fluo_detector == '1-element SDD':
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
             elif self.fluo_detector == '4-element SDD':
