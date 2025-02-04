@@ -190,9 +190,11 @@ class Pandrosus():
 
         elif any(md in mode for md in ('fluo', 'flou', 'both')):
             columns = start['XDI']['_dtc']
-            self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
             self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
+            self.group.signal = numpy.zeros(len(self.group.i0))
+            for col in columns:
+                self.group.signal += numpy.array(table[col])
+            self.group.mu = self.group.signal / self.group.i0
 
         elif mode in ('icit', 'ici0'):
             if mode == 'icit':
@@ -436,6 +438,7 @@ class Pandrosus():
 
         Setting deriv to True forces all other arguments to false.
         '''
+        fig = None
         if self.reuse is True:
             plt.cla()
         else:
@@ -487,7 +490,8 @@ class Pandrosus():
         plt.legend(loc='best', shadow=True)
         if self.reuse is False:
             plt.close()
-        return fig
+        if fig is not None:
+            return fig
 
     def plot_signals(self):
         '''Make a plot of mu(E) for a single data set with I0 and the signal

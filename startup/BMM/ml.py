@@ -290,45 +290,41 @@ class BMMDataEvaluation:
             when not None, used to specify fluorescence or transmission (for a data set that has both)
 
         '''
-        if mode == 'xs':
-            this = user_ns['db'].v2[uid]
+        this = user_ns['db'].v2[uid]
+        if mode is None:
+            mode = this.metadata['start']['XDI']['_mode'][0]
+        element = this.metadata['start']['XDI']['Element']['symbol']
+        t = this.primary.read()
+        i0 = t['I0']
+        en = t['dcm_energy']
+        if mode in ('fluorescence', 'dante', 'pilatus'):
             channels = this.metadata['start']['XDI']['_dtc']
-            el = BMMuser.element
-            t = this.primary.read()
-            i0 = t['I0']
-            en = t['dcm_energy']
-            dtc1 = numpy.array(t[channels[0]])
-            dtc2 = numpy.array(t[channels[1]])
-            dtc3 = numpy.array(t[channels[2]])
-            dtc4 = numpy.array(t[channels[3]])
-            signal = dtc1+dtc2+dtc3+dtc4
+            signal = numpy.zeros(len(en))
+            for ch in channels:
+                signal += numpy.array(t[ch])
             mu = signal/i0
-        else:
-            this = user_ns['db'].v2[uid]
-            if mode is None:
-                mode = this.metadata['start']['XDI']['_mode'][0]
-            element = this.metadata['start']['XDI']['Element']['symbol']
-            i0 = this.primary.read()['I0']
-            en = this.primary.read()['dcm_energy']
-            if 'trans' in mode:
-                it = this.primary.read()['It']
-                mu = numpy.log(abs(i0/it))
-            elif 'ref' in mode:
-                it = this.primary.read()['It']
-                ir = this.primary.read()['Ir']
-                mu = numpy.log(abs(it/ir))
-            else:               # fluorescence and NOT Xspress3
-                if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
-                    signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']
-                elif element in str(this.primary.read()['vor:vor_names_name15'][0].values):
-                    signal = this.primary.read()['DTC2_1'] + this.primary.read()['DTC2_2'] + this.primary.read()['DTC2_3'] + this.primary.read()['DTC2_4']
-                elif element in str(this.primary.read()['vor:vor_names_name19'][0].values):
-                    signal = this.primary.read()['DTC3_1'] + this.primary.read()['DTC3_2'] + this.primary.read()['DTC3_3'] + this.primary.read()['DTC3_4']
-                else:
-                    print('cannot figure out fluorescence signal')
-                    #print(f'vor:vor_names_name3 {}')
-                    return()
-                mu = signal/i0
+        elif mode == 'transmission':
+            it = this.primary.read()['It']
+            mu = numpy.log(abs(i0/it))
+        elif mode == 'reference':
+            it = this.primary.read()['It']
+            ir = this.primary.read()['Ir']
+            mu = numpy.log(abs(it/ir))
+        elif mode == 'yield':
+            iy = this.primary.read()['Iy']
+            mu = iy/i0
+        else:                   #  this is old skool analog fluorescence data.  Try to evaluate...
+            if element in str(this.primary.read()['vor:vor_names_name3'][0].values):
+                signal = this.primary.read()['DTC1'] + this.primary.read()['DTC2'] + this.primary.read()['DTC3'] + this.primary.read()['DTC4']
+            elif element in str(this.primary.read()['vor:vor_names_name15'][0].values):
+                signal = this.primary.read()['DTC2_1'] + this.primary.read()['DTC2_2'] + this.primary.read()['DTC2_3'] + this.primary.read()['DTC2_4']
+            elif element in str(this.primary.read()['vor:vor_names_name19'][0].values):
+                signal = this.primary.read()['DTC3_1'] + this.primary.read()['DTC3_2'] + this.primary.read()['DTC3_3'] + this.primary.read()['DTC3_4']
+            else:
+                print('cannot figure out fluorescence signal')
+                #print(f'vor:vor_names_name3 {}')
+                return()
+            mu = signal/i0
         e,m = self.rationalize_mu(en, mu)
         if len(e) > self.GRIDSIZE:
             e, m = e[:-1], m[:-1]
