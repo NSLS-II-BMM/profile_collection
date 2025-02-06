@@ -209,7 +209,7 @@ class LineScan():
 
         ## fluorescence (4 channel): plot sum(If)/I0
         ##xs1, xs2, xs3, xs4 = rkvs.get('BMM:user:xs1'), rkvs.get('BMM:user:xs2'), rkvs.get('BMM:user:xs3'), rkvs.get('BMM:user:xs4')
-        elif self.numerator in self.fluorescence_like:
+        elif self.stack is True and self.numerator in self.fluorescence_like:
 
             if get_backend().lower() == 'agg':
                 self.figure.set_figheight(9.5)
@@ -253,12 +253,18 @@ class LineScan():
             
         if self.numerator in self.fluorescence_like:
             if 'motor' in kwargs:
-                self.fl.set_xlabel(self.motor)
-                self.tr.set_xlabel(self.motor)
+                if self.stack is True:
+                    self.fl.set_xlabel(self.motor)
+                    self.tr.set_xlabel(self.motor)
+                else:
+                    self.axes.set_xlabel(self.motor)
                 self.figure.suptitle(f'{self.motor} alignment scan')
             else:
-                self.fl.set_xlabel('time (seconds)')
-                self.tr.set_xlabel('time (seconds)')
+                if self.stack is True:
+                    self.fl.set_xlabel('time (seconds)')
+                    self.tr.set_xlabel('time (seconds)')
+                else:
+                    self.axes.set_xlabel(self.motor)
                 self.figure.suptitle('time scan')
         else:
             if 'motor' in kwargs:
@@ -730,7 +736,7 @@ class XAFSScan():
         self.line_i0.set_data(self.energy, self.i0sig)
 
 
-        if self.mode in ('transmission', 'fluorescence', 'yield', 'pilatus'):
+        if self.mode in ('transmission', 'fluorescence', 'yield', 'dante', 'reference'):
             self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
             
         if self.mode == 'pilatus':  # re-purpose refer and iysig
@@ -742,8 +748,8 @@ class XAFSScan():
             self.iysig.append(kwargs['data']['Iy']/kwargs['data']['I0'])
 
         
-        self.line_ref.set_data(self.energy, self.iysig)
-            
+        self.line_ref.set_data(self.energy, self.refer)
+        
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
         if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):

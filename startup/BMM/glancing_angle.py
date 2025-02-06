@@ -262,7 +262,7 @@ class GlancingAngle(Device):
             motor = user_ns['xafs_liny']
         else:
             motor = user_ns['xafs_linx']
-        uid = yield from linescan(motor, 'xs', -2.3, 2.3, 51, dopluck=False, force=force, stack=False)
+        uid = yield from linescan(motor, 'xs', -1.8, 1.8, 51, dopluck=False, force=force, stack=False)
         self.f_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
         tf = user_ns['db'][-1].table()
         yy = tf[motor.name]
