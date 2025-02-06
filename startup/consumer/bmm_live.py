@@ -672,15 +672,15 @@ class XAFSScan():
         self.line_mut,   = self.mut.plot([],[], label=f'scan {self.count}')
         self.line_i0,    = self.i0.plot([],[],  label=f'scan {self.count}')
         self.line_ref,   = self.ref.plot([],[], label=f'scan {self.count}')
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
+            self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
+        if self.mode in ('yield', 'pilatus'):
+            self.line_iy, = self.iy.plot([],[], label=f'scan {self.count}')
         for ax in self.axis_list:
             if self.count < 16:
                 ax.legend(loc='best', shadow=True)
             else:
                 ax.legend.remove()
-        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
-            self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
-        if self.mode in ('yield', 'pilatus'):
-            self.line_iy, = self.iy.plot([],[], label=f'scan {self.count}')
             
     def stop(self, catalog, **kwargs):
         '''Done with a sequence of XAFS live plots.
