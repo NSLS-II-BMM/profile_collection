@@ -376,7 +376,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         ################################################
         # if not calibrating and mode != current_mode:
         #     print('Moving to photon delivery mode %s...' % mode)
-        hsize = slits3.hsize.get().readback
+        hsize_save = slits3.hsize.position
         if mode == 'XRD':
             yield from mv(slits3.hsize, 2)
         elif mode in ('D', 'E', 'F'):
@@ -489,7 +489,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             report('Finished configuring for XRD', level='bold', slack=True)
         else:
             #if mode in ('D', 'E', 'F'):
-            yield from mv(slits3.hsize, hsize)
+            yield from mv(slits3.hsize, hsize_save)
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
         if slits is False:
             print('  * You may need to verify the slit position:  RE(slit_height())')

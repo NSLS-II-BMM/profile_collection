@@ -305,7 +305,7 @@ class BMM_User(Borg):
 
         self.mouse_click    = None
         
-        self.tweak_xas_time = 24.0  # this is a fudge factor to get XAS time approximation to work, see xafs_functions.py l.221
+        self.tweak_xas_time = 18.0  # this is a fudge factor to get XAS time approximation to work, see xafs_functions.py l.221
         self.enable_live_plots = False
         
         self.bmm_strings  = ("DATA", "date", "host", "name", "instrument",

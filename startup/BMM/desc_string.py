@@ -68,9 +68,9 @@ def set_desc_strings():
     ## motors on MC09 + two axes on MC07/MC08 that have fried amplifiers
     
     toss = EpicsSignal('XF:06BMA-BI{XAFS-Ax:LinS}Mtr.DESC', name='toss')
-    toss.put('out of service')  # was xafs_det
+    toss.put('   (not in use)')  # was xafs_det
     toss = EpicsSignal('XF:06BMA-BI{XAFS-Ax:Tbl_XU}Mtr.DESC', name='toss')
-    toss.put('out of service')  # was xafs_tbl_xu
+    toss.put('   (not in use)')  # was xafs_tbl_xu
     toss = EpicsSignal('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr.DESC', name='toss')
     toss.put('xafs_detx')       # was xafs_tbl_xd
     toss = EpicsSignal('XF:06BM-ES{MC:09-Ax:1}Mtr.DESC', name='toss')

@@ -15,7 +15,7 @@ os.environ['PAGER'] = 'most'
 
 
 ## some global parameters
-BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Vesna Stanic')
+BMM_STAFF  = ('Bruce Ravel', 'Jean Jordan-Sweet', 'Joe Woicik', 'Joseph Woicik', 'Vesna Stanic')
 HBARC      = 1973.27053324
 LUSTRE_XAS = os.path.join('/nsls2', 'data3', 'bmm', 'XAS')
 
@@ -168,8 +168,8 @@ def approximate_pitch(energy):
         b = 4.47073688
         return(m*energy + b)
     else:
-        m = -3.0517e-06
-        b = 2.38068447
+        m = -2.9206e-06
+        b = 2.37355640
         return(m*energy + b)
         
 
@@ -461,10 +461,10 @@ def bounds(base=0.5, coef=0.25, end='14k', edge=0.3):
     answer  = f'# base dwell time = {base:.2f} seconds, {coef:.2f}k weighting\n'
     answer += f'# transition energy = {transition:.1f} eV above the edge\n\n'
     if transition < 25:
-        answer += f'bounds = -200   -30   -2    {transition:.1f}    25    {end}\n'
+        answer += f'bounds = -200   -30   -6    {transition:.1f}    25    {end}\n'
         answer += f'steps  =     10    2     {edge:.2f}  {edge:.2f}   0.05k\n'
     else:
-        answer += f'bounds = -200   -30   -2    25    {transition:.1f}    {end}\n'
+        answer += f'bounds = -200   -30   -6    25    {transition:.1f}    {end}\n'
         answer += f'steps  =     10    2     {edge:.2f}  0.05k  0.05k\n'
 
     answer += f'times  =     {base:.2f}  {base:.2f}  {base:.2f}  {1/time:.2f}k  {1/time:.2f}k'

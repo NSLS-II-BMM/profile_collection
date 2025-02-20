@@ -94,7 +94,7 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
 
 
 def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, number=True, verbose=False):
-    '''Determine if a file of the specified filename exists in specified
+    '''Determine if a file of the specified filename exists in a specified
     folder in the proposals directory.
 
     This sends a message over kafka asking the file manager worker to
@@ -1151,8 +1151,8 @@ def xafs(inifile=None, **kwargs):
                 pass
 
             kafka_message({'dossier' : 'set', 'uidlist' : uidlist, })
-            kafka_message({'dossier' : 'write', })
             time.sleep(3.0)
+        kafka_message({'dossier' : 'write', })
 
         if len(uidlist) > 0:
             basename = rkvs.get('BMM:dossier:basename').decode('utf-8')
@@ -1241,7 +1241,7 @@ def xanes(filename=None, step=2):
         filename = f'{el}-{ed}-testXANES'
     comment = 'quick-n-dirty XANES scan'
     yield from xafs(DEFAULT_INI, filename=filename, element=el, sample=comment, prep=comment, comment=comment,
-                    mode='both', edge=ed, experimenters=user_ns['BMMuser'].experimenters, snapshots=False, copy=False, **params)
+                    mode='fluorescence', edge=ed, experimenters=user_ns['BMMuser'].experimenters, snapshots=False, copy=False, **params)
     
 
 def howlong(inifile=None, interactive=True, **kwargs):
@@ -1290,12 +1290,12 @@ def howlong(inifile=None, interactive=True, **kwargs):
         print(error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing))
         return(orig, -1)
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
-    if delta == 0:
-        text = f'One scan of {len(energy_grid)} points will take about {approx_time:.1f} minutes\n'
-        text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours'
-    else:
-        text = f'One scan of {len(energy_grid)} points will take {approx_time:.1f} minutes +/- {delta:.1f} minutes \n'
-        text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours +/- {delta*numpy.sqrt(int(p["nscans"])):.1f} minutes'
+    #if delta == 0:
+    text = f'One scan of {len(energy_grid)} points will take about {approx_time:.1f} minutes\n'
+    text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours'
+    #else:
+    #    text = f'One scan of {len(energy_grid)} points will take {approx_time:.1f} minutes +/- {delta:.1f} minutes \n'
+    #    text +=f'The sequence of {inflect("scan", p["nscans"])} will take about {approx_time * int(p["nscans"])/60:.1f} hours +/- {delta*numpy.sqrt(int(p["nscans"])):.1f} minutes'
 
 
     if interactive:

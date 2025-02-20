@@ -396,6 +396,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                     mcaroi.total_rbv.kind = 'hinted'
                     setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
                     setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv)
+                    #EpicsSignal(mcaroi.total_rbv.pvname + ".PREC", name='').put(1)
                 elif self.slots[mcaroi.mcaroi_number-1] == 'K' and hint_potassium is True:
                     mcaroi.kind = 'hinted'
                     mcaroi.total_rbv.kind = 'hinted'
@@ -405,7 +406,17 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 else:
                     mcaroi.kind = 'omitted'
                     mcaroi.total_rbv.kind = 'omitted'
-        
+
+    def livetable_precision(self, val=1):
+        '''Set sensible LiveTable precision for the ROI readback values.
+        '''
+        for i, channel in enumerate(self.iterate_channels()):
+            print(f'Channel {i+1}: ', end='', flush=True)
+            for j, mcaroi in enumerate(channel.iterate_mcarois()):
+                print(f' {j+1}', end='', flush=True)
+                EpicsSignal(mcaroi.total_rbv.pvname + ".PREC", name='').put(1)
+            print('', flush=True)
+        print(whisper('\nYou should restart bsui to have this take effect.'))
             
     def set_roi(self, mcaroi, name='OCR', min_x=1, size_x=4095):
         """

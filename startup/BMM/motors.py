@@ -449,6 +449,8 @@ class EndStationEpicsMotor(EpicsMotor):
     hlm = Cpt(EpicsSignal, '.HLM', kind='config')
     llm = Cpt(EpicsSignal, '.LLM', kind='config')
     kill_cmd = Cpt(EpicsSignal, ':KILL', kind='config')
+    spmg = Cpt(EpicsSignal, '.SPMG', kind='normal')
+    setpoint = Cpt(EpicsSignal, '.VAL', kind='normal')
 
     def wh(self):
         return(round(self.user_readback.get(), 3))
@@ -459,6 +461,21 @@ class EndStationEpicsMotor(EpicsMotor):
             self.llm.put(self.default_llm)
         if hasattr(self, 'default_hlm'):
             self.hlm.put(self.default_hlm)
+
+    def ready(self):
+        '''Sometimes a motor gets into a paused state, usually by user
+        interaction.  Simply unpausing might not be the right call.
+        If the set point is different from the current position, the
+        motor will begin moving as soon as it is re-enabled.
+
+        This method forces the set point to the current position, then
+        sets the SPMG filed for the motor to 3 (the "go" value from
+        Stop/Pause/Move/Go).
+
+        '''
+        if abs(self.setpoint.get() - self.position) > 0.01:
+            self.setpoint.put(self.position)
+        self.spmg.put(3)
     
 class EncodedEndStationEpicsMotor(EndStationEpicsMotor):
     def homed(self):

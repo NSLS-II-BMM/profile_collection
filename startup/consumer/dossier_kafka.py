@@ -413,7 +413,7 @@ class BMMDossier():
         elif mode == 'dante':
             return 'dante'
 
-        elif user_ns['with_xspress3'] and any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
+        elif any(x in mode for x in ('xs', 'fluo', 'flou', 'both')):
             return 'fluorescence'
 
         elif 'ref' in mode:
@@ -585,10 +585,53 @@ class BMMDossier():
                     return this
         return None
 
-    
-    def motor_sidebar(self, bmm_catalog):
-        baseline = bmm_catalog[self.uidlist[0]].baseline.read()
+    def motor_entry(self, baseline, motor):
+        '''Return a string for a single entry in the motor position sidebar.
 
+        arguments
+        =========
+        baseline
+          baseline stream of the current record
+
+        motor (str)
+          name of the current motor as a string
+        '''
+        if motor == 'slot':     # deal specially with major instruments
+            motor_name = motor
+            position = self.wheel_slot(float(baseline["xafs_wheel"][0]))
+            text = f'              <div>{motor}, {position}</div>\n'
+        elif motor == 'spinner':
+            motor_name = motor
+            position = self.spinner(float(baseline["xafs_garot"][0]))
+            text = f'              <div>{motor}, {position}</div>\n'
+        else:                   # 'xafs_table' is a long string, special case
+            motor_name = motor.replace('xt', 'xafs_table')
+            label = motor
+            if any(motor.startswith(x) for x in ('slits2', 'slits3', 'xt', 'm2', 'm3')):
+                label = motor.replace('_', '.')
+            if motor_name in baseline:  # deal elegantly if a motor is not listed in the baseline
+                position = baseline[motor_name][0]
+                text = f'              <div>{label}, {position:.3f}</div>\n'
+            else:
+                text = ''
+        return text
+
+    def motor_paragrph(self, baseline, title, motorlist):
+        '''Format a labeled group of motors for the motor position sidebar.
+        '''
+        content = ''
+        tmpl = '''
+            <span class="motorheading">{title}:</span>
+            <div id="motorgrid">
+{content}            </div>
+'''
+        for m in motorlist:
+            content += self. motor_entry(baseline, m)
+        text = tmpl.format(title = title,
+                           content = content)
+        return text
+    
+    def motor_sidebar_new(self, bmm_catalog):
         '''Generate a list of motor positions for the sidebar of the static
         html page for a scan sequence.  Return value is a long string
         with html tags and entities embedded in the string.
@@ -604,6 +647,63 @@ class BMMDossier():
         >>> text = dossier.motor_sidebar(bmm_catalog)
 
         '''
+        baseline = bmm_catalog[self.uidlist[0]].baseline.read()
+
+        motors = ''
+        
+        motorlist = ('xafs_x', 'xafs_y', 'xafs_pitch', 'xafs_roll', 'xafs_wheel', 'xafs_garot',
+                     'xafs_ref', 'xafs_refx', 'xafs_refy',
+                     'xafs_detx', 'xafs_dety', 'xafs_detz')
+        motors += self.motor_paragrph(baseline, 'XAFS stages', motorlist)
+        
+        motorlist = ('slot', 'spinner', 'dm3_bct')
+        motors += self.motor_paragrph(baseline, 'Instruments', motorlist)
+
+        motorlist = ('slits3_vsize', 'slits3_vcenter', 'slits3_hsize', 'slits3_hcenter', 'slits3_top', 'slits3_bottom', 'slits3_inboard', 'slits3_outboard')
+        motors += self.motor_paragrph(baseline, 'Slits3', motorlist)
+
+        motorlist = ('m2_vertical', 'm2_lateral', 'm2_pitch', 'm2_roll', 'm2_yaw', 'm2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd', 'm2_bender')
+        motors += self.motor_paragrph(baseline, 'M2', motorlist)
+        
+        stripe = '(Rh/Pt stripe)'
+        if baseline['m3_xu'][0] < 0:
+            stripe = '(Si stripe)'
+        motorlist = ('m3_vertical', 'm3_lateral', 'm3_pitch', 'm3_roll', 'm3_yaw', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd')
+        motors += self.motor_paragrph(baseline, f'M3 {stripe}', motorlist)
+
+        motorlist = ('xt_vertical', 'xt_pitch', 'xt_roll', 'xt_yu', 'xt_ydo', 'xt_ydi')
+        motors += self.motor_paragrph(baseline, 'XAFS table', motorlist)
+
+        motorlist = ('slits2_vsize', 'slits2_vcenter', 'slits2_hsize', 'slits2_hcenter', 'slits2_top', 'slits2_bottom', 'slits2_inboard', 'slits2_outboard')
+        motors += self.motor_paragrph(baseline, 'Slits2', motorlist)
+
+        motorlist = ('dcm_x', 'dcm_pitch', 'dcm_roll')
+        motors += self.motor_paragrph(baseline, 'Monochromator', motorlist)
+
+        motorlist = ('dm3_foils', 'dm2_fs')
+        motors += self.motor_paragrph(baseline, 'Diagnostics', motorlist)
+
+        return motors
+
+
+    def motor_sidebar_orig(self, bmm_catalog):
+        '''Generate a list of motor positions for the sidebar of the static
+        html page for a scan sequence.  Return value is a long string
+        with html tags and entities embedded in the string.
+
+        All motor positions are taken from the first entry in the
+        record's baseline stream.
+
+        Parameters
+        ----------
+        bmm_catalog : Tiled catalog
+            catalog in which to find the record for a UID string
+
+        >>> text = dossier.motor_sidebar(bmm_catalog)
+
+        '''
+        baseline = bmm_catalog[self.uidlist[0]].baseline.read()
+
         motors = ''
 
         motors +=  '<span class="motorheading">XAFS stages:</span>\n'
@@ -613,11 +713,13 @@ class BMMDossier():
         motors += f'              <div>xafs_pitch, {baseline["xafs_pitch"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_roll, {baseline["xafs_roll"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_wheel, {baseline["xafs_wheel"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_garot, {baseline["xafs_garot"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_ref, {baseline["xafs_ref"][0]:.3f}</div>\n'
         motors += f'              <div>xafs_refx, {baseline["xafs_refx"][0]:.3f}</div>\n'
-        #motors += f'              <div>xafs_refy, {baseline["xafs_refy"][0]:.3f}</div>\n'
-        #motors += f'              <div>xafs_det, {baseline["xafs_det"][0]:.3f}</div>\n'
-        motors += f'              <div>xafs_garot, {baseline["xafs_garot"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_refy, {baseline["xafs_refy"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_detx, {baseline["xafs_detx"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_dety, {baseline["xafs_detx"][0]:.3f}</div>\n'
+        motors += f'              <div>xafs_detz, {baseline["xafs_detx"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
 
         motors +=  '            <span class="motorheading">Instruments:</span>\n'
@@ -694,12 +796,25 @@ class BMMDossier():
         motors += f'              <div>slits2_outboard, {baseline["slits2_outboard"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
 
+        motors +=  '            <span class="motorheading">Monochromator:</span>\n'
+        motors +=  '            <div id="motorgrid">\n'
+        motors += f'              <div>dcm_x, {baseline["dcm_x"][0]:.3f}</div>\n'
+        motors += f'              <div>dcm_pitch, {baseline["dcm_pitch"][0]:.3f}</div>\n'
+        motors += f'              <div>dcm_roll, {baseline["dcm_roll"][0]:.3f}</div>\n'
+        motors +=  '            </div>\n'
+        
         motors +=  '            <span class="motorheading">Diagnostics:</span>\n'
         motors +=  '            <div id="motorgrid">\n'
         motors += f'              <div>dm3_foils, {baseline["dm3_foils"][0]:.3f}</div>\n'
         motors += f'              <div>dm2_fs, {baseline["dm2_fs"][0]:.3f}</div>\n'
         motors +=  '            </div>\n'
         
+        return motors
+
+
+
+    def motor_sidebar(self, bmm_catalog):
+        motors = self.motor_sidebar_new(bmm_catalog)
         return motors
     
     def instrument_default(self):

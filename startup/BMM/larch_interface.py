@@ -124,7 +124,7 @@ class Pandrosus():
         self.group   = None
         self.title   = ''
         ## Larch parameters
-        self.pre     = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':None, 'nvict':0,}
+        self.pre     = {'e0':None, 'pre1':None, 'pre2':None, 'norm1':None, 'norm2':None, 'nnorm':3, 'nvict':0,}
         self.bkg     = {'rbkg':1, 'e0':None, 'kmin':0, 'kmax':None, 'kweight':2,}
         self.fft     = {'window':'Hanning', 'kmin':3, 'kmax':12, 'dk':2,}
         self.bft     = {'window':'Hanning', 'rmin':1, 'rmax':3, 'dr':0.1,}
@@ -140,6 +140,8 @@ class Pandrosus():
         self.reuse   = True
 
         self.facecolor = (1.0, 1.0, 1.0)
+
+        self.verbose = False
         
         ## flow control parameters
         
@@ -173,7 +175,7 @@ class Pandrosus():
             
         self.group.energy = numpy.array(table['dcm_energy'])
         self.group.i0 = numpy.array(table['I0'])
-        if mode == 'flourescence': mode = 'fluorescence'
+        #if mode in ('flourescence', 'xs', 'xs1', 'fluo', 'flou', 'both'): mode = 'fluorescence'
         if mode == 'reference':
             self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))
             self.group.i0 = numpy.array(table['It'])
@@ -188,8 +190,10 @@ class Pandrosus():
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.array(table['Iy'])
 
-        elif any(md in mode for md in ('fluo', 'flou', 'both')):
+        elif mode in ('fluorescence', 'flourescence', 'fluo', 'flou', 'xs', 'xs1', 'xs4', 'xs7', 'both'):
             columns = start['XDI']['_dtc']
+            if self.verbose:
+                print(columns)
             self.group.i0 = numpy.array(table['I0'])
             self.group.signal = numpy.zeros(len(self.group.i0))
             for col in columns:
@@ -206,17 +210,17 @@ class Pandrosus():
                 self.group.i0 = numpy.array(table['I0a'])
                 self.group.signal = numpy.array(table['It'])
 
-        elif mode == 'xs1':
-            columns = start['XDI']['_dtc']
-            self.group.mu = numpy.array(table[columns[0]]/table['I0'])
-            self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table[columns[0]])
+        # elif mode == 'xs1':
+        #     columns = start['XDI']['_dtc']
+        #     self.group.mu = numpy.array(table[columns[0]]/table['I0'])
+        #     self.group.i0 = numpy.array(table['I0'])
+        #     self.group.signal = numpy.array(table[columns[0]])
 
-        elif mode == 'xs':
-            columns = start['XDI']['_dtc']
-            self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
-            self.group.i0 = numpy.array(table['I0'])
-            self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
+        # elif mode == 'xs':
+        #     columns = start['XDI']['_dtc']
+        #     self.group.mu = numpy.array((table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])/table['I0'])
+        #     self.group.i0 = numpy.array(table['I0'])
+        #     self.group.signal = numpy.array(table[columns[0]]+table[columns[1]]+table[columns[2]]+table[columns[3]])
 
         elif mode == 'ref':
             self.group.mu = numpy.array(numpy.log(table['It']/table['Ir']))

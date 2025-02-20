@@ -38,7 +38,7 @@ class BMMTelemetry():
         self.bc          = None
         if not is_re_worker_active():
             self.bc      = catalog['bmm']
-        self._start_date = '2021-09-01'
+        self._start_date = '2023-09-01'
         self.reliability = 10
         self.beamdump    = 3
         ###                         k-edges               l-edges
@@ -200,7 +200,9 @@ class BMMTelemetry():
         for el in alltele.keys():
             if 'dpp' in alltele[el]:
                 a.append(alltele[el]['dpp'][0])
-        return(numpy.array(a).mean(), numpy.array(a).std())
+
+        result = numpy.array(a).mean()
+        return [result, numpy.array(a).std(), result, result]
 
     # def interpolate(self, energy):
     #     a = json.load(open(self.json))

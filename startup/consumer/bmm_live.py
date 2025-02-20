@@ -571,7 +571,7 @@ class XAFSScan():
             self.axis_list   = [self.mut, self.muf, self.i0, self.ref]
 
         ## 3x2 grid for yield and pilatus
-        elif self.mode in ('yield'):
+        elif self.mode in ('yield', 'pilatus'):
             if get_backend().lower() == 'agg':
                 self.fig.set_figheight(9.5)
                 self.fig.set_figwidth(6.5)
@@ -584,19 +584,19 @@ class XAFSScan():
             self.ref = self.fig.add_subplot(self.gs[1, 0])
             self.iy  = self.fig.add_subplot(self.gs[1, 1])
             self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
-        elif self.mode in ('pilatus'):
-            if get_backend().lower() == 'agg':
-                self.fig.set_figheight(9.5)
-                self.fig.set_figwidth(6.5)
-            else:
-                self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
-            self.gs = gridspec.GridSpec(2,3)
-            self.mut = self.fig.add_subplot(self.gs[0, 0])
-            self.ref = self.fig.add_subplot(self.gs[0, 1])
-            self.i0  = self.fig.add_subplot(self.gs[0, 2])
-            self.muf = self.fig.add_subplot(self.gs[1, 0])
-            self.iy  = self.fig.add_subplot(self.gs[1, 1])
-            self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
+        # elif self.mode in ('pilatus'):
+        #     if get_backend().lower() == 'agg':
+        #         self.fig.set_figheight(9.5)
+        #         self.fig.set_figwidth(6.5)
+        #     else:
+        #         self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
+        #     self.gs = gridspec.GridSpec(2,3)
+        #     self.mut = self.fig.add_subplot(self.gs[0, 0])
+        #     self.ref = self.fig.add_subplot(self.gs[0, 1])
+        #     self.i0  = self.fig.add_subplot(self.gs[0, 2])
+        #     self.muf = self.fig.add_subplot(self.gs[1, 0])
+        #     self.iy  = self.fig.add_subplot(self.gs[1, 1])
+        #     self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
 
         ## 3x1 grid if no fluorescence (transmission, reference, test)
         else:
@@ -675,9 +675,9 @@ class XAFSScan():
         if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
         if self.mode in ('yield', 'pilatus'):
-            self.line_iy, = self.iy.plot([],[], label=f'scan {self.count}')
+            self.line_iy,  = self.iy.plot([],[], label=f'scan {self.count}')
         for ax in self.axis_list:
-            if self.count < 16:
+            if self.count < 10:
                 ax.legend(loc='best', shadow=True)
             else:
                 ax.legend.remove()
@@ -768,7 +768,7 @@ class XAFSScan():
                                     kwargs['data'][self.xs5] +
                                     kwargs['data'][self.xs6] +
                                     kwargs['data'][self.xs7]   ) / kwargs['data']['I0'])
-            else:
+            else:               # 7-element SDD
                 self.fluor.append( (kwargs['data'][self.xs1] +
                                     kwargs['data'][self.xs2] +
                                     kwargs['data'][self.xs3] +

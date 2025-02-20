@@ -154,7 +154,7 @@ xafs_rots  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RotS}Mtr',  name='
 #xafs_det   = xafs_lins  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinS}Mtr',  name='xafs_det')
 xafs_detx  = xafs_det   = EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Tbl_XD}Mtr',  name='xafs_detx')
 xafs_linxs = xafs_refy  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinXS}Mtr', name='xafs_refy')
-xafs_refx  = define_EpicsMotor('XF:06BMA-BI{XAFS-Ax:RefX}Mtr', name='xafs_refx')
+xafs_refx  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:RefX}Mtr', name='xafs_refx')
 xafs_x     = xafs_linx  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinX}Mtr',  name='xafs_x')
 xafs_y     = xafs_liny  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:LinY}Mtr',  name='xafs_y')
 xafs_roll  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Pitch}Mtr', name='xafs_roll') # note: the way this stage gets mounted, the

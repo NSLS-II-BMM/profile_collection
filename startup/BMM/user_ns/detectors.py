@@ -110,6 +110,12 @@ if with_iy is True or with_ic0 is False or with_ic1 is False or with_ic2 is Fals
 ##    caput XF:06BM-BI{EM:1}EM180:Current3:MeanValue_RBV.PREC 7
 ## to get a sensible reporting precision from the Ix channels
 def set_precision(pv, val):
+    '''Set the precision reported in a BEC LiveTable to a sensible value.
+
+    Note that this will likely take effect only when bsui is stopped
+    and restarted.
+
+    '''
     EpicsSignal(pv.pvname + ".PREC", name='').put(val)
 
 set_precision(quadem1.current1.mean_value, 3)

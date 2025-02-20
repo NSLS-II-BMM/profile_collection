@@ -1,5 +1,5 @@
 
-import os
+import os, gzip
 from matplotlib import get_backend
 
 from BMM.larch_interface import Pandrosus, Kekropidai, plt
@@ -109,6 +109,7 @@ class XAFSSequence():
                     for g in self.panlist:
                         project.add_group(g.group)
                     project.save()
+                    self.fix_project(filename)
             except Exception as E:
                 print('xafs_sequence.merge: failed to make project file')
                 print(E)
@@ -128,6 +129,34 @@ class XAFSSequence():
             self.fig.canvas.manager.window.setGeometry(2040, 865, 640, 552)
         return 1
 
+    def fix_project(filename=None):
+        '''A stop-gap measure to deal with the bkg_nvict parameter which Larch
+        writes to the athena project file, but which Athena does not
+        (at this time) recognize.
+
+        Slurp in the entire text of the project file.  Remove the b-string 
+            'bkg_nvict','0',
+        and replace it with an empty b-string.  Replace the string (if found)
+            'bkg_nnorm','1',
+        with
+            'bkg_nnorm','3',
+        Then overwrite the project file.
+
+        '''
+        if filename is None:
+            return
+        # slurp up the as-written project file
+        with gzip.open(filename) as f:
+            file_content = f.read()
+        # remove the 'bkg_nvict' parameter
+        exp = 
+        replaced = file_content.replace(b"'bkg_nvict','0',", b'', -1).replace(b"'bkg_nnorm','1',", b"'bkg_nnorm','3',", -1)
+        # overwrite the project file
+        with gzip.open(filename, 'wb') as f:
+            f.write(replaced)
+
+        
+    
     def stop(self, filename):
         self.ongoing = False
         if 'test' in self.mode:
@@ -156,5 +185,4 @@ class XAFSSequence():
                 name = self.catalog[self.uidlist[0]].metadata['start']['XDI']['Sample']['name']
                 self.logger.info(f'saved XAFS summary figure {fname}')
                 img_to_slack(fname, title=name, measurement='xafs')
-        
 

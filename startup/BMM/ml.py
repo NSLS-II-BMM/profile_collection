@@ -21,7 +21,7 @@ user_ns = vars(user_ns_module)
 from BMM.functions       import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.larch_interface import Pandrosus
 #from BMM.functions import plotting_mode
-from BMM.user_ns.base import WORKSPACE
+from BMM.user_ns.base import WORKSPACE, bmm_catalog
 from BMM.user_ns.bmm  import BMMuser
 
 # when pickle changes version number, this error message will happen twice:
@@ -66,12 +66,15 @@ class BMMDataEvaluation:
                 self.scaler = load(self.matrix)
         except Exception as E:  # regenerate joblib files if python or pickle version has changed
             print(str(E))
-            self.tab = '\t'*4
-            print(self.tab+"regenerating joblib files")
-            self.import_training_set()
-            self.train()
-            self.clf = load(self.model)
-            self.scaler = load(self.matrix)
+            self.retrain()
+            
+    def retrain(self):
+        self.tab = '\t'*4
+        print(self.tab+"regenerating joblib files")
+        self.import_training_set()
+        self.train()
+        self.clf = load(self.model)
+        self.scaler = load(self.matrix)
                 
 
     def extract_mu(self, clog=None, uid=None, mode='transmission', fig=None, ax=None, show_plot=True):
@@ -235,6 +238,8 @@ class BMMDataEvaluation:
                 for uid in f.keys():
                     try:
                         score = int(f[uid].attrs['score'])
+                        if score >1:
+                            score == 0
                     except:
                         continue
                     mu = list(f[uid]['mu'])
@@ -337,7 +342,7 @@ class BMMDataEvaluation:
         else:
             return(result, self.bad_emoji)
     
-    def test_failure(self):
+    def test_failure(self, filename=None):
         '''Examine and process data that failed the current iteration of the data evaluator. 
         '''
 
@@ -347,7 +352,7 @@ class BMMDataEvaluation:
         fig.canvas.flush_events()
 
         
-        h5file = os.path.join(self.folder, f'supplemental_training_set.hdf5')
+        h5file = os.path.join(self.folder, f'{filename}_training_set.hdf5')
         try:
             os.remove(h5file)
         except:
@@ -355,38 +360,38 @@ class BMMDataEvaluation:
         h5 = h5py.File(h5file, 'w')
 
         count = 0
-        faillist = os.path.join(WORKSPACE, 'logs', 'failed_data_evaluation.txt')
+        faillist = os.path.join(self.folder, filename)
         with open(faillist, 'r') as fl:
-            allstr = fl.read()
-        a = allstr.replace('\t', '')
-        b = a[:-1]
-        l = b.split('\n')
-        fails = {}
-        for n in range(0, len(l), 4):
-            k = l[n+2]
-            v = l[n+1]
-            fails[k] = v
+            allstr = fl.readlines()
 
-        
-        #uids = (x[1:] for x in allstr.split('\n') if '\t' in x)
-        for uid in fails.keys():
-            #mode = user_ns['db'].v2[uid].metadata['start']['plan_name'].split()[2]
-            if 'xs' in fails[uid]:
-                mode = 'xs'
-            elif 'reference' in fails[uid]:
+        p = Pandrosus()
+        p.folder, p.db = user_ns['BMMuser'].workspace, user_ns['db']
+
+        for u in allstr:
+            uid = u.strip()
+            print(f'-->{uid}<--', end='')
+            thisdata = bmm_catalog[uid]
+            print('    ', thisdata)
+            plan_name = thisdata.metadata['start']['plan_name']
+            if 'xafs' not in plan_name:
+                continue
+            if 'fluorescence' in plan_name:
+                mode = 'fluorescence'
+            elif 'xs' in plan_name:
+                mode = 'fluorescence'
+            elif 'xs1' in plan_name:
+                mode = 'fluorescence'
+            elif 'transmission' in plan_name:
+                mode = 'transmission'
+            elif 'reference' in plan_name:
                 mode = 'reference'
-            elif 'transmission' in fails[uid]:
-                mode = 'transmission'
-            else:
-                mode = 'transmission'
                 
-            result, emoji = self.evaluate(uid, mode)
-            print(result, emoji)
-            p = Pandrosus()
-            p.folder, p.db = user_ns['BMMuser'].folder, user_ns['db']
+            #result, emoji = self.evaluate(uid, mode)
+            #print(result, emoji)
             try:
                 p.fetch(uid, mode=mode)
-            except:
+            except Exception as E:
+                print(E)
                 pass
             plt.cla()
             ax.plot(p.group.energy, p.group.mu)
@@ -394,9 +399,10 @@ class BMMDataEvaluation:
             fig.canvas.flush_events()
 
             count += 1
-            action = input('\n' + bold_msg('1= good  2=bad  3=skip  q=quit > '))
+            action = input('\n' + bold_msg('1= good  0=bad  3=skip  q=quit > '))
             if action.lower() == 'q':
                 plt.close(fig)
+                print()
                 h5.close()
                 return()
             elif action == '3':
@@ -413,6 +419,10 @@ class BMMDataEvaluation:
                 grp = h5.create_group(uid)
                 grp.create_dataset("energy", data=ee)
                 grp.create_dataset("mu", data=mm)
-                grp.attrs['score'] = action
+                if int(action) == 1: 
+                    grp.attrs['score'] = 1
+                else:
+                    grp.attrs['score'] = 0
                 print(go_msg(f'added #{count}'))
+            print()
         h5.close()

@@ -406,6 +406,7 @@ def set_reference_wheel(position=None):
     xafs_ref.outer_position = position
     xafs_ref.inner_position = position + 26.5
     rkvs.set('BMM:ref:outer', position)
+    xafs_ref.hlm.put(xafs_ref.inner_position + 6.5)
     
 def ref2redis():
     #for i in range(0, rkvs.llen('BMM:reference:list')):

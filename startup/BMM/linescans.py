@@ -8,7 +8,7 @@ except ImportError:
 import bluesky
 
 from bluesky.plans import rel_scan
-from bluesky.plan_stubs import sleep, mv, null
+from bluesky.plan_stubs import sleep, mv, null, mvr
 from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
 from lmfit.models import SkewedGaussianModel, RectangleModel
@@ -224,9 +224,23 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from mv(_locked_dwell_time, 0.1)
             yield from mv(motor.velocity, 0.4)
             yield from mv(motor.kill_cmd, 1)
-            if motor.amfe.get() or motor.amfae.get():
-                user_ns['ks'].cycle('dm3')
-            
+
+            ## wiggle the dm3_bct motor to see if it prompts an amplifier fault
+            ## if it does, cycle the dm3 killswitch
+            attempt = 1
+            while attempt < 4:
+                yield from mvr(motor, 0.01)
+                if motor.amfe.get() or motor.amfae.get():
+                    print(warning_msg(f'Amplifier fault on dm3_bct.  Attempt {attempt} to clear fault.'))
+                    user_ns['ks'].cycle('dm3')
+                    attempt += 1
+                else:
+                    break
+            else:
+                if motor.amfe.get() or motor.amfae.get():
+                    print(error_msg('Unable to start slit height scan.  Amplifier fault on dm3_bct.'))
+                    return(yield from null())
+                
 
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,
