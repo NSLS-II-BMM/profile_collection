@@ -336,34 +336,40 @@ def xrfat(**kwargs):
     add     = kwargs['add']
     only    = kwargs['only']
     xmax    = kwargs['xmax']
+
+
+    datatable = catalog[uid].primary['data']
     
     record  = catalog[uid]
-    xafs    = record.primary.read()
-    docs    = record.documents()
-    for d in docs:
-        if d[0] == 'resource':
-            hfile = os.path.join(d[1]['root'], d[1]['resource_path'])
-            #if '_%d' in this: hfile = this % 0  #  deal with image files
-            break
+    # xafs    = record.primary.read()
+    # docs    = record.documents()
+    # for d in docs:
+    #     if d[0] == 'resource':
+    #         hfile = os.path.join(d[1]['root'], d[1]['resource_path'])
+    #         #if '_%d' in this: hfile = this % 0  #  deal with image files
+    #         break
     
-    #hfile = file_resource(uid)
-    f  = h5py.File(hfile,'r')
+    # #hfile = file_resource(uid)
+    # f  = h5py.File(hfile,'r')
     el = record.metadata["start"]["XDI"]["Element"]["symbol"]
     ed = record.metadata["start"]["XDI"]["Element"]["edge"]
     
 
-    is_4elem, is_1elem = False, False
+    is_7_elem, is_4elem, is_1elem = False, False, False
     if '4-element SDD' in record.metadata["start"]['detectors']:
         is_4elem = True
         ncol = 4
     elif '1-element SDD' in record.metadata["start"]['detectors']:
         is_1elem = True
         ncol = 1
+    elif '7-element SDD' in record.metadata["start"]['detectors']:
+        is_7elem = True
+        ncol = 7
     else:
         print('The specified scan was not a fluorescence XAFS scan.')
         return()
         
-    dcm = numpy.array(xafs['dcm_energy'])
+    dcm = numpy.array(datatable['dcm_energy'])
     fig = plt.figure()
     ax = fig.gca()
     # thisname = record.metadata["start"]["XDI"]["Sample"]["name"]
@@ -388,14 +394,22 @@ def xrfat(**kwargs):
             en = float(dcm[position])
 
         if is_4elem is True:
-            s1 = f['entry']['data']['data'][position][0]
-            s2 = f['entry']['data']['data'][position][1]
-            s3 = f['entry']['data']['data'][position][2]
-            s4 = f['entry']['data']['data'][position][3]
+            s1 = datatable['4-element SDD_channel01_xrf'][position]
+            s2 = datatable['4-element SDD_channel02_xrf'][position]
+            s3 = datatable['4-element SDD_channel03_xrf'][position]
+            s4 = datatable['4-element SDD_channel04_xrf'][position]
+        elif is_7elem is True:
+            s1 = datatable['7-element SDD_channel01_xrf'][position]
+            s2 = datatable['7-element SDD_channel02_xrf'][position]
+            s3 = datatable['7-element SDD_channel03_xrf'][position]
+            s4 = datatable['7-element SDD_channel04_xrf'][position]
+            s5 = datatable['7-element SDD_channel05_xrf'][position]
+            s6 = datatable['7-element SDD_channel06_xrf'][position]
+            s7 = datatable['7-element SDD_channel07_xrf'][position]
         else:
-            s1 = f['entry']['data']['data'][position][7]
+            s1 = datatable['1-element SDD_channel08_xrf'][position]
             add, only = False, 8
-        ee = numpy.array(range(len(f['entry']['data']['data'][position][0])))*10
+        ee = numpy.array(range(len(datatable['7-element SDD_channel07_xrf'][0])))*10
 
         title += f'{en:.1f}, '
 
@@ -405,24 +419,39 @@ def xrfat(**kwargs):
             ax.grid(which='major', axis='both')
             ax.set_facecolor((0.95, 0.95, 0.95))
             ax.set_xlim(2500, en+xmax)
-        if only is not None and only in (1, 2, 3, 4, 8):
+        if only is not None and only in (1, 2, 3, 4, 5, 6, 7, 8):
             if only == 1:
                 ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
             elif only == 8:         #  1 element SDD
-                ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
+                ax.plot(ee, s1, label=f'channel8, {en:.1f} eV')
             elif only == 2:
                 ax.plot(ee, s2, label=f'channel2, {en:.1f} eV')
             elif only == 3:
                 ax.plot(ee, s3, label=f'channel3, {en:.1f} eV')
             elif only == 4:
                 ax.plot(ee, s4, label=f'channel4, {en:.1f} eV')
+            elif only == 5:
+                ax.plot(ee, s5, label=f'channel5, {en:.1f} eV')
+            elif only == 6:
+                ax.plot(ee, s6, label=f'channel6, {en:.1f} eV')
+            elif only == 7:
+                ax.plot(ee, s7, label=f'channel7, {en:.1f} eV')
         elif add is True:
             ax.plot(ee, s1+s2+s3+s4, label=f'sum, {en:.1f} eV')
         else:
-            ax.plot(ee, s1, label=f'channel1, {en:.1f} eV')
-            ax.plot(ee, s2, label=f'channel2, {en:.1f} eV')
-            ax.plot(ee, s3, label=f'channel3, {en:.1f} eV')
-            ax.plot(ee, s4, label=f'channel4, {en:.1f} eV')
+            if is_4elem is True:
+                ax.plot(ee, s1, label='channel1')
+                ax.plot(ee, s2, label='channel2')
+                ax.plot(ee, s3, label='channel3')
+                ax.plot(ee, s4, label='channel4')
+            elif is_7elem is True:
+                ax.plot(ee, s1, label='channel1')
+                ax.plot(ee, s2, label='channel2')
+                ax.plot(ee, s3, label='channel3')
+                ax.plot(ee, s4, label='channel4')
+                ax.plot(ee, s5, label='channel5')
+                ax.plot(ee, s6, label='channel6')
+                ax.plot(ee, s7, label='channel7')
 
         if i == 0:
             z = element(el).atomic_number
@@ -469,6 +498,9 @@ def xrfat(**kwargs):
         if is_4elem:
             a = numpy.vstack((s1, s2, s3, s4))
             column_list = ['MCA1','MCA2','MCA3','MCA4']
+        elif is_7elem:
+            a = numpy.vstack((s1, s2, s3, s4))
+            column_list = ['MCA1','MCA2','MCA3','MCA4','MCA5','MCA7','MCA8']
         elif is_1elem:
             a = s1
             column_list = ['MCA1',]

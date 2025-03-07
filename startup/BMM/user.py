@@ -406,7 +406,7 @@ class BMM_User(Borg):
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):
                 forceit = False
-                if el.capitalize() in ('Pb', 'Pt') and edge.capitalize() in ('L2', 'L1'):
+                if el.capitalize() in ('Pb', 'Au', 'Pt') and edge.capitalize() in ('L2', 'L1'):
                     forceit = True # Pb and Pt L3 edges are "standard" ROIs
                 if el not in xs.slots or forceit:
                     with open(os.path.join(startup_dir, 'rois.json'), 'r') as fl:

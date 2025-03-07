@@ -397,7 +397,8 @@ run_report('\t'+'final setup: cameras')
 from BMM.user_ns.detectors import xascam, xrdcam, anacam
 xascam._root = os.path.join(BMMuser.folder, 'snapshots')
 xrdcam._root = os.path.join(BMMuser.folder, 'snapshots')
-anacam._root = os.path.join(BMMuser.folder, 'snapshots')
+if not is_re_worker_active():
+    anacam._root = os.path.join(BMMuser.folder, 'snapshots')
 
      
 run_report('\t'+'checking motor connections')

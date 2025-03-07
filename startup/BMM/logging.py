@@ -111,6 +111,7 @@ def BMM_log_info(message):
 ##   https://api.slack.com/messaging/webhooks#create_a_webhook
 ## in the future, this could be an ini with per-user channel URLs...
 slack_secret = os.path.join(startup_dir, 'BMM', 'slack_secret')
+bmmbot_secret = '/nsls2/data3/bmm/XAS/secrets/bmmbot_secret'
 try:
     with open(slack_secret, "r") as f:
         default_slack_channel = f.read().replace('\n','')
@@ -173,7 +174,7 @@ def post_to_slack(text):
 
 
         
-def report(text, level=None, slack=False, rid=None):
+def report(text, level=None, slack=False, rid=None, bmmbot=False):
     '''Print a string to:
       * the log file
       * the screen
@@ -227,7 +228,11 @@ def report(text, level=None, slack=False, rid=None):
                        'icon': 'message',
                        'rid': rid})
         #echo_slack(text=text, img=None, icon='message', rid=rid)
-
+    if bmmbot is True:
+        client = WebClient(token=bmmbot_secret)
+        non_chat_channel = 'C08FQ892UET'
+        client.pos
+        pass
 
         
 

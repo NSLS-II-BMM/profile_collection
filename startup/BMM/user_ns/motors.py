@@ -164,7 +164,7 @@ xafs_garot = xafs_mtr8  = define_EndStationEpicsMotor('XF:06BMA-BI{XAFS-Ax:Mtr8}
 
 #xafs_linxs.hlm.put(30)
 #xafs_linxs.llm.put(10)
-xafs_linx.kill_cmd.kind = 'config'
+#xafs_linx.kill_cmd.kind = 'config'
 
 # RE(scan(dets, m3.pitch, -4, -3, num=10))
 

@@ -149,7 +149,6 @@ class XAFSSequence():
         with gzip.open(filename) as f:
             file_content = f.read()
         # remove the 'bkg_nvict' parameter
-        exp = 
         replaced = file_content.replace(b"'bkg_nvict','0',", b'', -1).replace(b"'bkg_nnorm','1',", b"'bkg_nnorm','3',", -1)
         # overwrite the project file
         with gzip.open(filename, 'wb') as f:

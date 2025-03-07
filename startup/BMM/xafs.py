@@ -533,7 +533,7 @@ def xafs(inifile=None, **kwargs):
                 print(bold_msg('Not clear to start scan sequence....\n'))
                 yield from null()
                 return
-        _locked_dwell_time.quadem_dwell_time.settle_time = 0
+        #_locked_dwell_time.quadem_dwell_time.settle_time = 0
 
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

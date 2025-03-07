@@ -93,7 +93,7 @@ class LakeShore(PVPositioner):
 
     # a sort of temperature deadband, don't even try to change
     # temperature if already within this amount.
-    deadband = 5.0
+    deadband = 3.0
     
     
     # Utility signals/PVs

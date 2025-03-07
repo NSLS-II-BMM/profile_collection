@@ -94,8 +94,10 @@ else:
 
 if with_ic2 is False:
     quadem1.Ir.kind, quadem1.Ir.name = 'hinted', 'Ir'
+    rkvs.set('BMM:Ir', 'quadem')  # help cadashboard keep track of which signal chain is used for Ir
 else:
     quadem1.Ir.kind, quadem1.Ir.name = 'omitted', 'Irq'
+    rkvs.set('BMM:Ir', 'ic2')
 
 quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
 

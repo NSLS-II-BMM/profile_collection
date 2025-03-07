@@ -7,11 +7,11 @@ run_report(__file__, text='instrument definitions')
 
 TAB = '\t\t\t'
 
-WITH_LAKESHORE   = profile_configuration.getboolean('experiments', 'lakeshore') # False
-WITH_LINKAM      = profile_configuration.getboolean('experiments', 'linkam') # True
-WITH_ENCLOSURE   = profile_configuration.getboolean('experiments', 'enclosure') # False
-WITH_SALTFURNACE = profile_configuration.getboolean('experiments', 'saltfurnace') # False
-
+WITH_LAKESHORE    = profile_configuration.getboolean('experiments', 'lakeshore') # False
+WITH_LINKAM       = profile_configuration.getboolean('experiments', 'linkam') # True
+WITH_ENCLOSURE    = profile_configuration.getboolean('experiments', 'enclosure') # False
+WITH_SALTFURNACE  = profile_configuration.getboolean('experiments', 'saltfurnace') # False
+WITH_RADIOLOGICAL = profile_configuration.getboolean('experiments', 'radiological') # False
 if WITH_ENCLOSURE is True:
     from BMM.user_ns.motors import xafs_refy, xafs_refx
     run_report('\tAir Science enclosure')
@@ -385,11 +385,31 @@ xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
                     #'U' :     [0, 24, 'U',  'UO3'],  # user supplied U standard
                     'Pu':     [0, 16, 'Zr', 'Zr foil'],  # use Zr K for Pu L3
 
-                    ## Hunter college reference wheel with Tc and U
+                    ## Hunter college reference wheel with Tc and U -- deprecated, see BMM_configuration.ini
                     #'U':      [1,  3, 'U',  'UO3'],
-                    #'Tc':     [1,  7, 'Tc', 'TcO4'],
+                    #'Tc':     [1,  9, 'Tc', 'TcO4'],
 }
 ## missing: Tl, Hg, Ca, Sc, Th, U, Pu
+
+if WITH_RADIOLOGICAL:
+    try:
+        uranium = profile_configuration.get('experiments', 'u_ref').split()
+        uranium[0] = int(uranium[0])
+        uranium[1] = int(uranium[1])
+        xafs_ref.mapping['U'] = uranium
+    except Exception as E:
+        print(E)
+        print('Unable to read U reference configuration from INI file')
+        pass
+    try:
+        technicium = profile_configuration.get('experiments', 'tc_ref').split()
+        technicium[0] = int(technicium[0])
+        technicium[1] = int(technicium[1])
+        xafs_ref.mapping['Tc'] = technicium
+    except Exception as E:
+        print(E)
+        print('Unable to read Tc reference configuration from INI file')
+        pass
 
 
 
@@ -592,6 +612,7 @@ if WITH_LAKESHORE:
     ## 1 second updates on scan and ctrl
     lakeshore.temp_scan_rate.put(6)
     lakeshore.ctrl_scan_rate.put(6)
+    lakeshore.ramp_rate.put(0.5)
 
     lsmb = LakeShoreMacroBuilder()
     lsmb.description = 'the LakeShore 331 temperature controller'

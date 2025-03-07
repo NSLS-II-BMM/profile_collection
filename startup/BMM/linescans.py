@@ -179,6 +179,31 @@ def peak(signal):
     center of rocking curve and slit height scans.'''
     return pandas.Series.idxmax(signal)
 
+
+def wiggle_bct(tries=3):
+    '''Wiggle the dm3_bct motor to see if it prompts an amplifier fault.
+    If it does, cycle the dm3 killswitch.  Give up after a few tries.
+
+    '''
+    attempt = 1
+    while attempt <= tries:
+        try:
+            yield from mvr(dm3_bct, 0.01)
+        except:
+            pass
+        if dm3_bct.amfe.get() or dm3_bct.amfae.get():
+            print(warning_msg(f'Amplifier fault on dm3_bct.  Attempt {attempt} to clear fault.'))
+            user_ns['ks'].cycle('dm3')
+            attempt += 1
+        else:
+            return True
+    else:
+        if dm3_bct.amfe.get() or dm3_bct.amfae.get():
+            print(error_msg('Unable to start slit height scan.  Amplifier fault on dm3_bct.'))
+            yield from null()
+            return False
+
+
 def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak'):
     '''Perform a relative scan of the DM3 BCT motor around the current
     position to find the optimal position for slits3. Optionally, the
@@ -225,22 +250,10 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
             yield from mv(motor.velocity, 0.4)
             yield from mv(motor.kill_cmd, 1)
 
-            ## wiggle the dm3_bct motor to see if it prompts an amplifier fault
-            ## if it does, cycle the dm3 killswitch
-            attempt = 1
-            while attempt < 4:
-                yield from mvr(motor, 0.01)
-                if motor.amfe.get() or motor.amfae.get():
-                    print(warning_msg(f'Amplifier fault on dm3_bct.  Attempt {attempt} to clear fault.'))
-                    user_ns['ks'].cycle('dm3')
-                    attempt += 1
-                else:
-                    break
-            else:
-                if motor.amfe.get() or motor.amfae.get():
-                    print(error_msg('Unable to start slit height scan.  Amplifier fault on dm3_bct.'))
-                    return(yield from null())
-                
+
+            ok = yield from wiggle_bct()
+            if ok is False:
+                return(yield from null())
 
             kafka_message({'linescan': 'start',
                            'motor' : motor.name,

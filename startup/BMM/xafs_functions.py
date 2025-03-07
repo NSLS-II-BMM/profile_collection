@@ -219,6 +219,7 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
         overhead, uncertainty = tele.average()
 
     #approximate_time = (sum(timegrid) + float(len(timegrid))*overhead + user_ns['BMMuser'].tweak_xas_time) / 60.0
+    overhead = overhead * 1.15 # sigh.....
     approximate_time = (sum(timegrid) * (1+overhead)) / 60
     delta = float(len(timegrid))*uncertainty / 60.0
     return (grid, timegrid, approximate_time, delta)

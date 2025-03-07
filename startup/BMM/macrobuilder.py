@@ -443,7 +443,7 @@ class BMMMacroBuilder():
             el = self.measurements[-1]['element'] or self.measurements[0]['element']
             ed = self.measurements[-1]['edge']    or self.measurements[0]['edge']
             e0 = edge_energy(el, ed)
-            (grid, inttime, time, delta) = conventional_grid(bounds=float_or_string(b), steps=float_or_string(s), times=float_or_string(t), e0=e0)
+            (grid, inttime, time, delta) = conventional_grid(bounds=float_or_string(b), steps=float_or_string(s), times=float_or_string(t), element=el, edge=ed) #, e0=e0)
             if any(it > 20 for it in inttime):
                 isok = False
                 text = error_msg('\tYour scan asks for an integration time greater than 20 seconds, which the ion chamber electrometer cannot accommodate.')
@@ -507,7 +507,7 @@ class BMMMacroBuilder():
         ed = self.measurements[0]['edge']
         t = ''
         if 'temperature' in self.measurements[0]:
-            t  = str(int(self.measurements[0]['temperature']))
+            t  = f'{int(self.measurements[0]["temperature"])::03d}'
         if 'element' in m:
             el = m['element']
         if 'edge' in m:
@@ -590,7 +590,6 @@ class BMMMacroBuilder():
         s = [float(x) if isfloat(x) else x for x in s]
         t = [float(x) if isfloat(x) else x for x in t]
 
-        #print(el, ed, edge_energy(el, ed), b, s, t)
         (e, t, at, delta) = conventional_grid(bounds=b, steps=s, times=t, e0=edge_energy(el, ed), element=el, edge=ed, ththth=False)
 
         if type(m['nscans']) is int:
