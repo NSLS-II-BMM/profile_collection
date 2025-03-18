@@ -323,12 +323,7 @@ xafs_wheel.inner_position   = xafs_wheel.outer_position + 26.0
 xafs_ref = WheelMotor('XF:06BMA-BI{XAFS-Ax:Ref}Mtr',  name='xafs_ref')
 xafs_ref.slotone = 0        # the angular position of slot #1
 xafs_ref.x_motor = xafs_refx
-if rkvs.get('BMM:ref:outer') is None:
-    xafs_ref.outer_position = -60.0
-    print(error_msg('\t\t\t\tReference wheel is not aligned!'))
-else:
-    xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
-xafs_ref.inner_position = xafs_ref.outer_position + 26.5 # xafs_ref.outer_position + ~26.5
+
 
 #                          ring, slot, elem, material (ring: 0=outer, 1=inner)
 xafs_ref.mapping = {'empty0': [0,  1, 'empty0', 'empty'],
@@ -416,9 +411,10 @@ if WITH_RADIOLOGICAL:
 
 def set_reference_wheel(position=None):
     '''Run this after measuring the correct location of xafs_refx.  This
-    will set the inner and outer positions in bsui and push the outer
-    position to redis.  If no position is supplied, the current
-    position of xafs_refx will be used.
+    will set the inner and outer positions in bsui, push the outer
+    position to redis, and set sensible limits on xafs_refx.  If no
+    position is supplied, the current position of xafs_refx will be
+    used.
 
     '''
     if position is None:
@@ -426,7 +422,17 @@ def set_reference_wheel(position=None):
     xafs_ref.outer_position = position
     xafs_ref.inner_position = position + 26.5
     rkvs.set('BMM:ref:outer', position)
+    xafs_ref.llm.put(xafs_ref.outer_position - 6.5)
     xafs_ref.hlm.put(xafs_ref.inner_position + 6.5)
+
+if rkvs.get('BMM:ref:outer') is None:
+    xafs_ref.outer_position = 0.0
+    print(error_msg('\t\t\t\tReference wheel is not aligned!'))
+else:
+    set_reference_wheel(float(rkvs.get('BMM:ref:outer')))
+#    xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))
+#xafs_ref.inner_position = xafs_ref.outer_position + 26.5 # xafs_ref.outer_position + ~26.5
+
     
 def ref2redis():
     #for i in range(0, rkvs.llen('BMM:reference:list')):
