@@ -337,7 +337,10 @@ class BMMDossier():
             # end of dossier
             with open(os.path.join(startup_dir, 'tmpl', 'dossier_bottom.tmpl')) as f:
                 content = f.readlines()
-            this_ref = all_references[XDI['Element']['symbol']][3]
+            if XDI['Element']['symbol'] in all_references:
+                this_ref = all_references[XDI['Element']['symbol']][3]
+            else:
+                this_ref = 'none'
 
             thiscontent += ''.join(content).format(e0            = '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']),
                                                    edge          = XDI['Element']['edge'],
