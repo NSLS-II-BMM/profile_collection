@@ -181,8 +181,7 @@ class BMMTelemetry():
     def value(self, el, thing='dpp'):
         if thing not in ('dpp', 'visual', 'xrf', 'ratio', 'difference'):
             return 0
-        with open(self.json, 'r') as td:
-            tdata = td.read()
+       
         alltele = json.loads(tdata)
         return alltele[el.capitalize()][thing][0]
         
@@ -202,6 +201,8 @@ class BMMTelemetry():
                 a.append(alltele[el]['dpp'][0])
 
         result = numpy.array(a).mean()
+        if str(result) == 'nan':
+            result = 0.0
         return [result, numpy.array(a).std(), result, result]
 
     # def interpolate(self, energy):

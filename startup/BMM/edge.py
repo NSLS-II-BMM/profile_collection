@@ -128,6 +128,11 @@ def m2_lateral_position(energy=None):
     target = energy * slope + intercept
     return target
 
+def xafs_table_ok():
+    bad_position = 150
+    if xafs_yu.position > bad_position or xafs_ydi.position > bad_position or xafs_ydo.position > bad_position:
+        return False
+    return True
 
 def xrd_mode(energy=8600):
      '''Thin wrapper around change_mode() to prepare for XRD measurements.
@@ -246,7 +251,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 yield from null()
                 return
 
+        if xafs_table_ok is False:
+            print(error_msg('XAFS table positions looks strange.  Check user_offset values for xafs_yu, xafs_ydi, and xafs_ydo.'))
+            print(bold_msg('Quitting change_edge() macro....\n'))
+            yield from null()
+            return
 
+            
         (ok, text) = BMM_clear_to_start()
         if ok is False:
             print(error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n'))

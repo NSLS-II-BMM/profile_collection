@@ -82,16 +82,20 @@ from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2, with_iy
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.enable_electrometer()
 print(whisper('\t\t\t'+'instantiated quadem1'))
+
+## using quadem for I0 detector?
 if with_ic0 is False:
     quadem1.I0.kind, quadem1.I0.name = 'hinted', 'I0'
 else:
     quadem1.I0.kind, quadem1.I0.name = 'omitted', 'I0q'
 
+## using quadem for transmission detector?
 if with_ic1 is False:
     quadem1.It.kind, quadem1.It.name = 'hinted', 'It'
 else:
     quadem1.It.kind, quadem1.It.name = 'omitted', 'Itq'
 
+## using quadem for reference detector?
 if with_ic2 is False:
     quadem1.Ir.kind, quadem1.Ir.name = 'hinted', 'Ir'
     rkvs.set('BMM:Ir', 'quadem')  # help cadashboard keep track of which signal chain is used for Ir
@@ -99,11 +103,15 @@ else:
     quadem1.Ir.kind, quadem1.Ir.name = 'omitted', 'Irq'
     rkvs.set('BMM:Ir', 'ic2')
 
-quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
-
+## Electron yield detector: active/inactive
 if with_iy is True:
     quadem1.Iy.kind, quadem1.Iy.name = 'hinted', 'Iy'
+    rkvs.set('BMM:Iy', 1)
+else:
+    quadem1.Iy.kind, quadem1.Iy.name = 'omitted', 'Iy'
+    rkvs.set('BMM:Iy', 0)
 
+    
 if with_iy is True or with_ic0 is False or with_ic1 is False or with_ic2 is False:
     ION_CHAMBERS.append(quadem1)
 
@@ -292,11 +300,11 @@ def display_last_image_usb_cam(catalog, camera=usb1):
 ###############################################
 
 pilatus = None
-#pilatus_tiff = None
+pilatus_tiff = None
 
 from BMM.user_ns.dwelltime import with_pilatus
 if with_pilatus is True:
-    from BMM.pilatus import BMMPilatusSingleTrigger #,  BMMPilatusTIFFSingleTrigger
+    from BMM.pilatus import BMMPilatusSingleTrigger,  BMMPilatusTIFFSingleTrigger
     run_report('\t'+'Pilatus')
 
     ## make sure various plugins are turned on
@@ -325,8 +333,8 @@ if with_pilatus is True:
     #    pilatus.hdf5.warmup()
         
 
-    #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
-    #pilatus_tiff.stats.kind = "hinted"
+    pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
+    pilatus_tiff.stats.kind = "hinted"
 
 
 

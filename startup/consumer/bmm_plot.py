@@ -499,7 +499,7 @@ def xrfat(**kwargs):
             a = numpy.vstack((s1, s2, s3, s4))
             column_list = ['MCA1','MCA2','MCA3','MCA4']
         elif is_7elem:
-            a = numpy.vstack((s1, s2, s3, s4))
+            a = numpy.vstack((s1, s2, s3, s4, s5, s6, s7))
             column_list = ['MCA1','MCA2','MCA3','MCA4','MCA5','MCA7','MCA8']
         elif is_1elem:
             a = s1

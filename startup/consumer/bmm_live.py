@@ -547,17 +547,19 @@ class XAFSScan():
             self.mode = 'yield'
         if self.mode in ('fluo+pilatus',):
             self.mode = 'pilatus'
-        
+
+        self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
+        self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
+        self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
+        self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
+        self.xs5 = rkvs.get('BMM:user:xs5').decode('utf-8')
+        self.xs6 = rkvs.get('BMM:user:xs6').decode('utf-8')
+        self.xs7 = rkvs.get('BMM:user:xs7').decode('utf-8')
+        self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
+
+            
         ## 2x2 grid if fluorescence
         if self.mode in ('fluorescence', 'dante'):
-            self.xs1 = rkvs.get('BMM:user:xs1').decode('utf-8')
-            self.xs2 = rkvs.get('BMM:user:xs2').decode('utf-8')
-            self.xs3 = rkvs.get('BMM:user:xs3').decode('utf-8')
-            self.xs4 = rkvs.get('BMM:user:xs4').decode('utf-8')
-            self.xs5 = rkvs.get('BMM:user:xs5').decode('utf-8')
-            self.xs6 = rkvs.get('BMM:user:xs6').decode('utf-8')
-            self.xs7 = rkvs.get('BMM:user:xs7').decode('utf-8')
-            self.xs8 = rkvs.get('BMM:user:xs8').decode('utf-8')
             if get_backend().lower() == 'agg':
                 self.fig.set_figheight(9.5)
                 self.fig.set_figwidth(11)
@@ -746,6 +748,7 @@ class XAFSScan():
 
         if self.mode == 'yield':
             self.iysig.append(kwargs['data']['Iy']/kwargs['data']['I0'])
+            self.line_iy.set_data(self.energy, self.iysig)
 
         
         self.line_ref.set_data(self.energy, self.refer)
