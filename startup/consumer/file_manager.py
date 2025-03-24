@@ -36,6 +36,7 @@ except:
 from tools import echo_slack, next_index, file_exists
 from slack import img_to_slack, post_to_slack
 
+
 # legible screen output
 from pygments import highlight
 from pygments.lexers import PythonLexer, HtmlLexer
@@ -107,10 +108,8 @@ def manage_files_from_kafka_messages(beamline_acronym):
             print('\n')
 
         if name == 'bmm':
-            if any(x in message for x in ('dossier', 'mkdir', 'copy', 'touch', 'echoslack',
-                                          'xasxdi', 'seadxdi', 'lsxdi', 'raster', 'next_index')) :
-                if be_verbose is True:
-                    print(f'\n{pprint.pformat(message, compact=True)}')
+            # if any(x in message for x in ('dossier', 'mkdir', 'copy', 'touch', 'echoslack',
+                #                           'xasxdi', 'seadxdi', 'lsxdi', 'raster', 'next_index')) :
                 # if be_verbose is True:
                 #     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
                 # else:
@@ -165,14 +164,14 @@ def manage_files_from_kafka_messages(beamline_acronym):
 
                     
             elif 'echoslack' in message:
-                if 'img' not in message or  message['img'] is None:
+                if 'img' not in message or message['img'] is None:
                     print(f'sending message "{message["text"]}" to slack')
                     post_to_slack(message['text'])
-                    if 'icon' not in message: message['icon'] = 'message'
-                    if 'rid'  not in message: message['rid']  = None
-                    echo_slack(text = message['text'],
-                               icon = message['icon'],
-                               rid  = message['rid'] )
+                    if 'icon'   not in message: message['icon'] = 'message'
+                    if 'rid'    not in message: message['rid']  = None
+                    echo_slack(text   = message['text'],
+                               icon   = message['icon'],
+                               rid    = message['rid'] )
 
                 elif 'img' in message and os.path.exists(message['img']):
                     img_to_slack(message['img'])

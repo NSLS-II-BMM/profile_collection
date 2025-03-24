@@ -1220,6 +1220,57 @@ def xafs(inifile=None, **kwargs):
     RE.msg_hook = BMM_msg_hook
 
 
+def remake_dossier(stub=None, uidlist=None, folder=None):
+    '''Regenerate a dossier given a list of UIDs for the xafs scan
+    repetitions in the measurement.
+
+    arguments
+    =========
+    stub: (str)
+      The filename stub of the group of files.  If not provided, it
+      will be gleaned from the first record in uidlist
+
+    uidlist: (list of strings)
+      A list of UID strings for the database records of the xafs scans
+      to be captured in the dossier page.  All UIDs will be checked to
+      verify that they are for xafs scans
+
+    folder: (str)
+      The fully resolved path to the proposal folder to which the dossier 
+      file should be written.  If not provided, the current value of 
+      BMMuser.folder will be used.
+
+
+    A good command line trick for getting the UIDs:
+
+       grep uid myfile.00[1-7] | cut -d ' ' -f 3
+
+    This snarfs the UIDs from the headers of a group of xafs XDI
+    files.
+
+    '''
+    if folder is None:          # use current proposal folder if None
+        folder = proposal_base()
+    if os.path.exists(folder) is False:
+        print(f'The folder provided does not exist or is inaccessible: {folder}.')
+        return        
+    if uidlist is None:         # require a list of UID strings
+        print('No uidlist provided.')
+        return
+    if all('xafs' in bmm_catalog[x].metadata['start']['plan_name'] for x in uidlist) is False:  # all UIDs must point to an xafs record
+        print('The uidlist contains records that are not xafs scans.')
+        return
+    if stub is None:            # snarf stub from first UID if not provided
+        first = bmm_catalog[uidlist[0]].metadata['start']['XDI']['_filename']
+        stub = os.path.splitext(first)[0]
+        
+    kafka_message({'dossier': 'start', 'stub': stub})
+    kafka_message({'dossier': 'set', 'folder': folder, 'rid': str(uuid.uuid4())[:8]})
+    kafka_message({'dossier': 'set', 'uidlist': uidlist})
+    kafka_message({'dossier': 'write'})
+
+
+    
 def xanes(filename=None, step=2):
     '''Measure one repetition of a quick-n-dirty XANES scan from -30 to
     +40 using the element and edge currently reported by redis.

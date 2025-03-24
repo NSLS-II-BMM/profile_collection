@@ -35,7 +35,7 @@ startup_dir = os.path.dirname(__file__)
 def log_entry(logger, message):
     #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
     #print(message)
-    post_to_slack(message)    
+    post_to_slack(message)
     echo_slack(text = message,
                icon = 'message',
                rid  = None )

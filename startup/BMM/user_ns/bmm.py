@@ -22,8 +22,9 @@ from BMM.functions           import now, colored, run_report, boxedtext, elapsed
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 run_report(__file__, text='functions and other basics')
 run_report('\t'+'logging')
-from BMM.logging             import report, BMM_log_info, BMM_msg_hook
+from BMM.logging             import report, BMM_log_info, BMM_msg_hook#, BMMbot
 
+from BMM_common.bmmbot       import BMMbot
 
 from bluesky.preprocessors   import finalize_wrapper
 
@@ -39,9 +40,10 @@ from BMM.user import BMM_User
 run_report('\t'+'recovering user configuration')
 BMMuser = BMM_User()
 BMMuser.start_experiment_from_serialization()
+BMMuser.bmmbot = BMMbot()
 
 if BMMuser.pds_mode is None:
-    try:                        # do the right then when "%run -i"-ed
+    try:                        # do the right thing when "%run -i"-ed
         BMMuser.pds_mode = get_mode()
     except:                     # else wait until later to set this correctly, get_mode()
         pass

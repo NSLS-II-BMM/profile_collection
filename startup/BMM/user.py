@@ -80,8 +80,6 @@ class BMM_User(Borg):
         normally None, set to a string when motors are found in a fault state
     detector : int
         4=4-element detector, 1=1-element detector
-    use_pilatus : bool
-        True make a folder for Pilatus images
     echem : bool
         deprecated
     echem_remote : str
@@ -191,7 +189,6 @@ class BMM_User(Borg):
         cnum = (0,1,1,1,1,2,2,2,2,3,3,3,3)[int(datetime.datetime.now().strftime("%m"))]
         self.cycle           = f'{datetime.datetime.now().strftime("%Y")}-{cnum}'
         self.host            = socket.gethostname()
-        self.use_pilatus     = False
         self.name            = None
         self.staff           = False
         #self.read_foils      = None
@@ -316,7 +313,7 @@ class BMM_User(Borg):
                              "bender_margin", "filter_state", "nscans", "start")
         self.bmm_floats   = ("macro_sleep", "dwell", "delay", "acc_fast", "acc_slow",
                              "inttime", "tweak_xas_time") #, "edge_energy")
-        self.bmm_booleans = ("prompt", "final_log_entry", "use_pilatus", "staff",
+        self.bmm_booleans = ("prompt", "final_log_entry", "staff",
                              "use_slack", "trigger", "running_macro", "suspenders_engaged",
                              "macro_dryrun", "snapshots", "usbstick", "rockingcurve",
                              "htmlpage", "bothways", "channelcut", "ththth", "lims", "url",
@@ -326,7 +323,7 @@ class BMM_User(Borg):
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
         self.bmm_obsolete = ("read_rois", "e0", "gdrive", "do_gdrive",
-                             "rois", "roi_channel", "echem", "echem_remote", 
+                             "rois", "roi_channel", "echem", "echem_remote", 'use_pilatus',
                              'roi1', 'roi2', 'roi3', 'roi4',
                              'dtc1', 'dtc2', 'dtc3', 'dtc4',)
 
@@ -475,7 +472,7 @@ class BMM_User(Borg):
         print('Experiment attributes:')
         for att in ('DATA', 'prompt', 'final_log_entry', 'date', 'gup', 'saf', 'name', 'staff', 
                     'user_is_defined', 'pds_mode', 'macro_dryrun', 'macro_sleep', 'motor_fault',
-                    'detector', 'use_pilatus'):
+                    'detector'):
             print('\t%-15s = %s' % (att, str(getattr(self, att))))
 
         print('\nROI control attributes:')
@@ -539,7 +536,7 @@ class BMM_User(Borg):
             print(f'{i:2d}. {verb} {text:28}{pad}   {result:65}')
 
 
-    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper', use_pilatus=False):
+    def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
         Do the work of prepping for a new experiment.  This will:
           * Create a data folder and it's subfolders, if needed, and set the DATA variable
@@ -558,8 +555,6 @@ class BMM_User(Borg):
             SAF number
         name : str
             name of PI
-        use_pilatus : bool
-            true if this experiment uses the Pilatus
         '''
 
         step = 1
@@ -739,7 +734,7 @@ class BMM_User(Borg):
     
         return None
 
-    def begin_experiment(self, name=None, date=None, gup=0, saf=0, use_pilatus=False):
+    def begin_experiment(self, name=None, date=None, gup=0, saf=0, startup=False):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
@@ -760,8 +755,6 @@ class BMM_User(Borg):
             GUP number
         saf : str
             SAF number
-        use_pilatus : bool
-            true if this experiment uses the Pilatus
         '''
         do_sync = False
         if self.user_is_defined:
@@ -796,11 +789,13 @@ class BMM_User(Borg):
             start_experiment(gup, 'bmm', verbose=False, prefix='xas')
             # sync_experiment(gup, 'bmm', verbose=False, prefix='xas')
         
-        if md['data_session'] == 'pass-301027':
+        if md['data_session'] in ('pass-301027', 'pass-317886'):  # PU proposal numbers of history
             self.experimenters = 'Bruce Ravel'
         else:
             self.experimenters = ", ".join(list((f"{x['first_name']} {x['last_name']}" for x in validate_proposal(f'pass-{gup}', 'bmm')['users'])))
-         
+        
+
+            
         lustre_root = os.path.join(LUSTRE_DATA_ROOT, f'{self.cycle}', f'pass-{gup}')
         # if not os.path.isdir(lustre_root):
         #     os.makedirs(lustre_root)
@@ -832,7 +827,9 @@ class BMM_User(Borg):
         self.workspace = user_workspace
 
         
-        self.new_experiment(lustre_root, saf=saf, gup=gup, name=name, use_pilatus=use_pilatus)
+        self.new_experiment(lustre_root, saf=saf, gup=gup, name=name)
+        if startup is False:
+            self.bmmbot.refresh()   # direct Slack messages to new proposal channel
 
         # preserve BMMuser state to a json string #
         self.prev_fig = None
@@ -885,7 +882,7 @@ class BMM_User(Borg):
         self.suspenders_engaged = False
         self.trigger = True
         if self.name is not None:
-            self.begin_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf)
+            self.begin_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf, startup=True)
 
     def show_experiment(self):
         '''Show serialized configuration parameters'''

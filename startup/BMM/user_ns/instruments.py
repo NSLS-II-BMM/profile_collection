@@ -422,8 +422,8 @@ def set_reference_wheel(position=None):
     xafs_ref.outer_position = position
     xafs_ref.inner_position = position + 26.5
     rkvs.set('BMM:ref:outer', position)
-    xafs_ref.llm.put(xafs_ref.outer_position - 6.5)
-    xafs_ref.hlm.put(xafs_ref.inner_position + 6.5)
+    xafs_refx.llm.put(xafs_ref.outer_position - 6.5)
+    xafs_refx.hlm.put(xafs_ref.inner_position + 6.5)
 
 if rkvs.get('BMM:ref:outer') is None:
     xafs_ref.outer_position = 0.0

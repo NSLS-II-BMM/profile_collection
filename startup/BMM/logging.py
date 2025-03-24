@@ -1,7 +1,7 @@
 import logging, datetime, emojis
 import os
 from urllib import request, parse
-import json
+import json, requests
 from os import chmod
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -13,7 +13,7 @@ from BMM.kafka import kafka_message
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
-from BMM.user_ns.base import startup_dir
+from BMM.user_ns.base import startup_dir, profile_configuration
 
 
 #run_report(__file__, text='BMM-specific logging')
@@ -109,90 +109,64 @@ def BMM_log_info(message):
 
 ## small effort to obfuscate the web hook URL, which is secret-ish.  See:
 ##   https://api.slack.com/messaging/webhooks#create_a_webhook
-## in the future, this could be an ini with per-user channel URLs...
-slack_secret = os.path.join(startup_dir, 'BMM', 'slack_secret')
-bmmbot_secret = '/nsls2/data3/bmm/XAS/secrets/bmmbot_secret'
+use_bmm_slack = profile_configuration.getboolean('slack', 'use_bmm')
+slack_secret = profile_configuration.get('slack', 'slack_secret')
 try:
     with open(slack_secret, "r") as f:
         default_slack_channel = f.read().replace('\n','')
 except:
     print(error_msg('\t\t\tslack_secret file not found!'))
 
-def post_to_slack(text):
-    try:
-        channel = BMMuser.slack_channel
-    except:
-        channel = default_slack_channel
-    if channel is None:
-        channel = default_slack_channel
-    post = {"text": "{0}".format(text)}
-    try:
-        json_data = json.dumps(post)
-        req = request.Request(channel,
-                              data=json_data.encode('ascii'),
-                              headers={'Content-Type': 'application/json'}) 
-        resp = request.urlopen(req)
-    except Exception as em:
-        print("EXCEPTION: " + str(em))
-        print(f'slack_secret = {slack_secret}')
 
-
-## DEPRECATED, now in kafka consumer
+use_bmm_slack = profile_configuration.getboolean('slack', 'use_bmm')
+use_nsls2_slack = profile_configuration.getboolean('slack', 'use_nsls2')
+bmmbot_secret = profile_configuration.get('slack', 'bmmbot_secret') # '/nsls2/data3/bmm/XAS/secrets/bmmbot_secret'
         
-## Simple but useful guide to configuring a slack app:        
-## https://hamzaafridi.com/2019/11/03/sending-a-file-to-a-slack-channel-using-api/
-# def img_to_slack(imagefile):
-#     ''' DEPRECATED
+
     
-#     images should be posted via the kafka filemanager  April 2024
-#     '''
-#     token_file = os.path.join(startup_dir, 'BMM', 'image_uploader_token')
-#     try:
-#         with open(token_file, "r") as f:
-#             token = f.read().replace('\n','')
-#     except:
-#         post_to_slack(f'failed to post image (token failure): {imagefile}')
-#         return()
-#     client = WebClient(token=token)
-#     #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
-#     try:
-#         response = client.files_upload(channels='#beamtime', file=imagefile)
-#         # #beamtime channel ID: C016GHBFHTM
-#         assert response["file"]  # the uploaded file
-#         icon = 'plot'
-#         if imagefile.endswith('.jpg'): icon = 'camera'
-#         echo_slack(text=os.path.basename(imagefile), img=os.path.basename(imagefile), icon=icon)
-#     except SlackApiError as e:
-#         post_to_slack(f'failed to post image (SlackApiError): {imagefile}')
-#         # You will get a SlackApiError if "ok" is False
-#         assert e.response["ok"] is False
-#         assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-#         print(f"Got an error: {e.response['error']}")
-#     except Exception as em:
-#         print("EXCEPTION: " + str(em))
-#         report(f'failed to post image (other exception): {imagefile}', level='bold', slack=True)
-
-
+def post_to_slack(text):
+    BMMuser = user_ns['BMMuser']
+    if use_bmm_slack:
+        try:
+            channel = BMMuser.slack_channel
+        except:
+            channel = default_slack_channel
+        if channel is None or channel == '':
+            channel = default_slack_channel
+        post = {"text": "{0}".format(text)}
+        try:
+            json_data = json.dumps(post)
+            req = request.Request(channel,
+                                  data=json_data.encode('ascii'),
+                                  headers={'Content-Type': 'application/json'}) 
+            resp = request.urlopen(req)
+        except Exception as em:
+            print("EXCEPTION: " + str(em))
+            print(f'slack_secret = {slack_secret}')
+    if use_nsls2_slack:
+        BMMuser.bmmbot.post(text)
+        
         
 def report(text, level=None, slack=False, rid=None, bmmbot=False):
     '''Print a string to:
       * the log file
       * the screen
       * the BMM beamtime slack channel
+      * the NSLS2 slack channel
 
-    Report level decorations  on screen:
+    Report level decorations on screen:
 
       * 'error' (red)
       * 'warning' (yellow)
       * 'info' (brown)
-      * 'url' (undecorated)
+      * 'url' (un-decorated)
       * 'bold' (bright white)
       * 'verbosebold' (bright cyan)
       * 'list' (cyan)
       * 'disconnected' (purple)
       * 'whisper' (gray)
 
-    not matching a report level will be undecorated
+    not matching a report level will be un-decorated
     '''
     BMMuser = user_ns['BMMuser']
     BMM_log_info(text)
@@ -220,19 +194,14 @@ def report(text, level=None, slack=False, rid=None, bmmbot=False):
             print(screen)
     else:
         print(screen)
-    if BMMuser.use_slack and slack:
-        #post_to_slack(text)
+    if use_bmm_slack and slack:
         kafka_message({'echoslack': True,
                        'text': text,
                        'img': None,
                        'icon': 'message',
                        'rid': rid})
-        #echo_slack(text=text, img=None, icon='message', rid=rid)
-    if bmmbot is True:
-        client = WebClient(token=bmmbot_secret)
-        non_chat_channel = 'C08FQ892UET'
-        client.pos
-        pass
+    if use_nsls2_slack and bmmbot:
+        BMMuser.bmmbot.post(text)
 
         
 
