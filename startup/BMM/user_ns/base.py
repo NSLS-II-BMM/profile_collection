@@ -12,17 +12,21 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-use_kafka = True
-os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = 'kafka1.nsls2.bnl.gov:9092'
-
 ## the intent here is to return $HOME/.profile_collection/startup
 #startup_dir = os.path.split(os.path.split(os.path.split(__file__)[0])[0])[0]
 startup_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-WORKSPACE = '/home/xf06bm/Workspace'
 
+    
 cfile = os.path.join(startup_dir, "BMM_configuration.ini")
 profile_configuration = configparser.ConfigParser(interpolation=None)
 profile_configuration.read_file(open(cfile))
+
+    
+use_kafka = True
+os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = profile_configuration.get('services', 'kafka')
+
+WORKSPACE = profile_configuration.get('services', 'workspace')
+
 
 
 from redis_json_dict import RedisJSONDict
@@ -50,7 +54,8 @@ else:
     sd  = uns_dict['sd']
     bec = uns_dict['bec']
 RE.unsubscribe(0)  # remove databroker, which was subscribed first by configure_base
-tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/raw", api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_BMM"])
+tiled_writing_client = from_uri(profile_configuration.get('services', 'tiled'),
+                                api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_BMM"])
 
 def post_document(name, doc):
     #tz = time.monotonic()
@@ -86,8 +91,9 @@ def post_document(name, doc):
 RE.subscribe(post_document)
 
 # this prefix needs to be the same (but with a dash) as the call to sync_experiment in user.py
-from redis_json_dict import RedisJSONDict 
-RE.md = RedisJSONDict(redis.Redis('info.bmm.nsls2.bnl.gov'), prefix='xas-')
+from redis_json_dict import RedisJSONDict
+nsls2_redis = profile_configuration.get('services', 'nsls2_redis')
+RE.md = RedisJSONDict(redis.Redis(nsls2_redis), prefix='xas-')
 
 
     

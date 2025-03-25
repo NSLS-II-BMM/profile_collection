@@ -15,7 +15,7 @@ import json, time, os
 import matplotlib as mpl
 mpl.rcParams['figure.raise_window'] = False
 
-DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
+#DATA = os.path.join(os.getenv('HOME'), 'Data', 'bucket') + '/'
 BMM_CONFIGURATION_LOCATION = os.path.join(startup_dir, 'lookup_table')
 
 from BMM.functions           import now, colored, run_report, boxedtext, elapsed_time

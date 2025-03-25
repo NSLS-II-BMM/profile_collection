@@ -2,11 +2,11 @@ from ophyd import EpicsSignalRO
 import os, subprocess, shutil, socket
 import redis
 import BMM.functions  #from BMM.functions import verbosebold_msg, error_msg
-from BMM.user_ns.base import startup_dir
+from BMM.user_ns.base import startup_dir, profile_configuration
 
 
 if not os.environ.get('AZURE_TESTING'):
-    redis_host = 'xf06bm-ioc2'
+    redis_host = profile_configuration.get('services', 'bmm_redis')
 else:
     redis_host = '127.0.0.1'
 
@@ -155,15 +155,15 @@ def check_directory(dir, desc):
 
     
 def initialize_data_directories():
-    '''Verify that a Data directory is available under the home of the
+    '''Verify that a workspace directory is available under the home of the
     user running bsui.  Then verify that several subdirectories exist.
     Create any missing directories.
 
     '''
-    DATA=f'{os.environ["HOME"]}/Workspace'
-    check_directory(DATA, 'data')
+    workspace = profile_configuration.get('services', 'workspace')
+    check_directory(workspace, 'workspace')
     for sub in ('Staff', 'Visitors'):
-        folder = f'{DATA}/{sub}'
+        folder = f'{workspace}/{sub}'
         check_directory(folder, 'data')
 
 

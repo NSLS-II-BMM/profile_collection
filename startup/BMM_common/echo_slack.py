@@ -1,8 +1,9 @@
 
-import os, datetime, emojis
+import os, datetime, emojis, configparser
 
+bmm_redis = profile_configuration.get('services', 'bmm_redis')
 import redis
-rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
+rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
 
 startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 

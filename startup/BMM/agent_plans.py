@@ -4,11 +4,13 @@ import bluesky.preprocessors as bpp
 import redis
 from bluesky import plan_stubs as bps
 from BMM.edge import change_edge
+from BMM.user_ns.base import profile_configuration
 from BMM.user_ns.instruments import slits3
 from BMM.user_ns.motors import xafs_det
 
 __all__ = ["agent_driven_nap", "agent_move_and_measure"]
 
+bmm_redis = profile_configuration.get('services', 'bmm_redis')
 
 @bpp.run_decorator()
 def agent_driven_nap(delay: float, *, delay_kwarg: float = 0, md=None):
@@ -52,7 +54,7 @@ def agent_measure_single_edge(motor_x, x_position, motor_y, y_position, *, md=No
             >>> 'steps': '10 2 0.3 0.05k',
             >>> 'times': '0.5 0.5 0.5 0.5'}
     """
-    rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
+    rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
     element = rkvs.get("BMM:pds:element").decode("utf-8")
     edge = rkvs.get("BMM:pds:edge").decode("utf-8")
     yield from bps.mv(motor_x, x_position)
@@ -151,7 +153,7 @@ def agent_move_and_measure(
             yield from change_edge(elements[1], focus=True) #, slits=False)  # slits=False uses special knowledge 12/12/23
         yield from xafs(element=elements[1], edge=edges[1], comment=str(_md), **kwargs)
 
-    rkvs = redis.Redis(host="xf06bm-ioc2", port=6379, db=0)
+    rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
     element = rkvs.get("BMM:pds:element").decode("utf-8")
     # edge = rkvs.get('BMM:pds:edge').decode('utf-8')
     if element == elements[1]:
@@ -379,8 +381,8 @@ def populate_overnight_CMS_driven_experiments():
     with open('/nsls2/data3/bmm/legacy/overnight.txt', 'r') as f:
         instructions = f.readlines()
 
-    beamline_tla  = "bmm"
-    qs = REManagerAPI(http_server_uri=f"https://qserver.nsls2.bnl.gov/{beamline_tla}")
+    #beamline_tla  = "bmm"
+    qs = REManagerAPI(http_server_uri=profile_configuration.get('services', 'qs'))
     qs.set_authorization_key(api_key="dbb8b2a3060cc02cfjg9029ncls2983sx7jd7CMSBeamtime20250303")
     for inst in instructions:
         dt, composition, position, time = inst.split()

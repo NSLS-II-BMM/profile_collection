@@ -9,9 +9,12 @@ from mendeleev import element
 
 from larch_interface import Pandrosus, Kekropidai
 from slack import img_to_slack, post_to_slack
+from tools import profile_configuration
+
 
 import redis
-rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
+bmm_redis = profile_configuration.get('services', 'bmm_redis')
+rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
 
 from BMM_common.xdi import xdi_xrf_header
 

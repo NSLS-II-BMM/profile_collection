@@ -1,14 +1,9 @@
 
 import os, datetime, configparser
-from tools import echo_slack
+from tools import echo_slack, profile_configuration
 
 
 #-------- fetch Slack configuration --------------------------------
-startup_dir = os.path.dirname(os.path.dirname(__file__))
-cfile = os.path.join(startup_dir, "BMM_configuration.ini")
-profile_configuration = configparser.ConfigParser(interpolation=None)
-profile_configuration.read_file(open(cfile))
-
 use_nsls2_slack = profile_configuration.getboolean('slack', 'use_nsls2')
 use_bmm_slack = profile_configuration.getboolean('slack', 'use_bmm')
 
@@ -60,7 +55,7 @@ def post_to_slack(text):
 def img_to_slack(imagefile, title='', measurement='xafs'):
     ## BMM's own Slack channel, soon to be deprecated
     if use_bmm_slack:
-        token_file = os.path.join(startup_dir, 'BMM', 'image_uploader_token')
+        token_file = os.path.join(profile_configuration.get('slack', 'image_uploader'))
         try:
             with open(token_file, "r") as f:
                 token = f.read().replace('\n','')
@@ -70,7 +65,7 @@ def img_to_slack(imagefile, title='', measurement='xafs'):
         client = WebClient(token=token)
         #client = WebClient(token=os.environ['SLACK_API_TOKEN'])
         try:
-            response = client.files_upload_v2(channels='C016GHBFHTM',
+            response = client.files_upload_v2(channel='C016GHBFHTM',
                                               file=imagefile,
                                               title=title)
             # #beamtime channel ID: C016GHBFHTM

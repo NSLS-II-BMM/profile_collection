@@ -13,13 +13,17 @@ from bluesky_kafka.consume import BasicConsumer
 import nslsii
 import nslsii.kafka_utils
 
+from tools import echo_slack, next_index, file_exists, profile_configuration
+from slack import img_to_slack, post_to_slack
+
+
 from tiled.client import from_profile
 bmm_catalog = from_profile('bmm')
 
 
 import redis
 if not os.environ.get('AZURE_TESTING'):
-    redis_host = 'xf06bm-ioc2'
+    redis_host = profile_configuration.get('services', 'bmm_redis')
 else:
     redis_host = '127.0.0.1'
 class NoRedis():
@@ -33,8 +37,6 @@ except:
     rkvs = NoRedis()
 
 
-from tools import echo_slack, next_index, file_exists
-from slack import img_to_slack, post_to_slack
 
 
 # legible screen output

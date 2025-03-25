@@ -8,17 +8,19 @@ import xraylib
 import datetime
 from bluesky import __version__ as bluesky_version
 
+from slack import img_to_slack
+from tools import experiment_folder, echo_slack, file_resource, profile_configuration
+
+from BMM.periodictable import Z_number, edge_number
+
 #from nslsii.kafka_utils import _read_bluesky_kafka_config_file
 #from bluesky_kafka.produce import BasicProducer
 import pprint
 
 import redis
-rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
+bmm_redis = profile_configuration.get('services', 'bmm_redis')
+rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
 
-from slack import img_to_slack
-from tools import experiment_folder, echo_slack, file_resource
-
-from BMM.periodictable import Z_number, edge_number
 
 
 class LineScan():

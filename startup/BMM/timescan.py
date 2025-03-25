@@ -55,7 +55,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     delay : float
         pause in seconds between measurements
     outfile :  str
-        data file name (relative to DATA), False to not write
+        data file name (relative to proposal folder), False to not write
     force : bool
         flag for forcing a scan even if not clear to start
 

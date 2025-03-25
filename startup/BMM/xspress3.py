@@ -388,7 +388,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         '''Hint the ROI currently in use for XAS
         '''
         BMMuser = user_ns['BMMuser']
-        hint_potassium = profile_configuration.getboolean('sdd', 'hint_potassium') # False          # special consideration for molten salt experiments
+        hint_potassium = profile_configuration.getboolean('experiments', 'hint_potassium')  # special consideration for molten salt experiments
         for channel in self.iterate_channels():
             for mcaroi in channel.iterate_mcarois():
                 if self.slots[mcaroi.mcaroi_number-1] == BMMuser.element:

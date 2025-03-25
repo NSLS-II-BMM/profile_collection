@@ -1314,7 +1314,7 @@ def howlong(inifile=None, interactive=True, **kwargs):
 
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
-    ## try inifile as given then DATA + inifile
+    ## try inifile as given then workspace + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     if is_re_worker_active():
         inifile = '/nsls2/data3/bmm/shared/config/xafs/scan.ini'
@@ -1385,7 +1385,7 @@ def xafs_grid(inifile=None, **kwargs):
 
     ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
     ## user input, find and parse the INI file
-    ## try inifile as given then DATA + inifile
+    ## try inifile as given then workspace + inifile
     ## this allows something like RE(xafs('myscan.ini')) -- short 'n' sweet
     BMMuser = user_ns['BMMuser']
     if inifile is None:

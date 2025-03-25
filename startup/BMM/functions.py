@@ -5,6 +5,8 @@ from numpy import pi, sin, cos, arcsin, sqrt
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.base import profile_configuration
+
 import redis
 from redis_json_dict import RedisJSONDict
 
@@ -391,7 +393,8 @@ def clean_img():
 
 
 def facility_md():
-    redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+    nsls2_redis = profile_configuration.get('services', 'nsls2_redis')
+    redis_client = redis.Redis(host=nsls2_redis)
     the_dict = RedisJSONDict(redis_client=redis_client, prefix='xas-')
     return the_dict
 

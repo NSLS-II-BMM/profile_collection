@@ -5,9 +5,18 @@ from scipy.io import savemat
 from bluesky import __version__ as bluesky_version
 import traceback
 
+from pygments import highlight
+from pygments.lexers import PythonLexer, IniLexer
+from pygments.formatters import HtmlFormatter
+
+from BMM.periodictable import edge_energy, Z_number, element_symbol, element_name
+from tools import echo_slack, experiment_folder, file_resource, profile_configuration
+from slack import img_to_slack, post_to_slack
+
+
 import redis
 if not os.environ.get('AZURE_TESTING'):
-    redis_host = 'xf06bm-ioc2'
+    redis_host = profile_configuration.get('services', 'bmm_redis')
 else:
     redis_host = '127.0.0.1'
 class NoRedis():
@@ -22,13 +31,6 @@ except:
 all_references = ast.literal_eval(rkvs.get('BMM:reference:mapping').decode('UTF8'))
 
     
-from pygments import highlight
-from pygments.lexers import PythonLexer, IniLexer
-from pygments.formatters import HtmlFormatter
-
-from BMM.periodictable import edge_energy, Z_number, element_symbol, element_name
-from tools import echo_slack, experiment_folder, file_resource
-from slack import img_to_slack, post_to_slack
 
 startup_dir = os.path.dirname(__file__)
 

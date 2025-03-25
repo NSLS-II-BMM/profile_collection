@@ -28,7 +28,7 @@ from BMM.logging   import BMM_user_log, BMM_unset_user_log, report
 from BMM.periodictable import edge_energy
 from BMM.workspace import rkvs
 
-from BMM.user_ns.base import startup_dir
+from BMM.user_ns.base import startup_dir, profile_configuration
 
 TEMPLATES_FOLDER = 'templates'
 
@@ -248,8 +248,8 @@ class BMM_User(Borg):
         self.bounds        = [-200, -30, 15.3, '14k']  ## scan grid parameters
         self.steps         = [10, 0.5, '0.05k']
         self.times         = [0.5, 0.5, '0.25k']
-        self.folder        = os.path.join(os.getenv('HOME'), 'Data', 'bucket')
-        self.folder_link   = None
+        self.folder        = os.path.join(os.getenv('HOME'), 'Data', 'bucket')  # DEPRECATED
+        self.folder_link   = None  # DEPRECATED
         self.filename      = 'data.dat'
         self.experimenters = ''
         self.element       = None
@@ -306,7 +306,7 @@ class BMM_User(Borg):
         self.enable_live_plots = False
         
         self.bmm_strings  = ("DATA", "date", "host", "name", "instrument",
-                             "readout_mode", "folder", "folder_link", "workspace", "filename",
+                             "readout_mode", "workspace", "filename",
                              "experimenters", "element", "edge", "sample", "prep", "comment",
                              "xs1", "xs2", "xs3", "xs4", "xs5", "xs6", "xs7", "xs8", "pds_mode", "mode")
         self.bmm_ints     = ("gup", "saf", "detector", "npoints", "bender_xas", "bender_xrd",
@@ -323,7 +323,7 @@ class BMM_User(Borg):
         self.bmm_ignore   = ("motor_fault", "bounds", "steps", "times", "motor", "motor2",
                              "fig", "ax", "x", "y", "prev_fig", "prev_ax", 'display_img')
         self.bmm_obsolete = ("read_rois", "e0", "gdrive", "do_gdrive",
-                             "rois", "roi_channel", "echem", "echem_remote", 'use_pilatus',
+                             "rois", "roi_channel", "echem", "echem_remote", 'use_pilatus', "folder", "folder_link",
                              'roi1', 'roi2', 'roi3', 'roi4',
                              'dtc1', 'dtc2', 'dtc3', 'dtc4',)
 
@@ -539,7 +539,7 @@ class BMM_User(Borg):
     def new_experiment(self, folder, gup=0, saf=0, name='Betty Cooper'):
         '''
         Do the work of prepping for a new experiment.  This will:
-          * Create a data folder and it's subfolders, if needed, and set the DATA variable
+          * Create a data folder and it's subfolders
           * Set up the experimental log, creating an experiment.log file, if needed
           * Write templates for scan.ini and macro.py + xlsx templates, if needed
           * Make folders for XRF, HDF5, Pilatus, and electrochemistry
@@ -561,7 +561,7 @@ class BMM_User(Borg):
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## Main folders, point BMMuser and wmb objects at data folder
         data_folder = os.path.join(folder, self.date)
-        user_ns['DATA'] = self.folder = data_folder + '/'
+        #user_ns['DATA'] = data_folder + '/'
         try:
             hdf5folder = os.path.join('/nsls2', 'data', 'bmm', 'assets', 'xspress3', *self.date.split('-'))
             user_ns['xs'].hdf5.read_path_template = hdf5folder
@@ -738,7 +738,7 @@ class BMM_User(Borg):
         '''
         Get ready for a new experiment.  Run this first thing when a user
         sits down to start their beamtime.  This will:
-          * Create a folder, if needed, and set the DATA variable
+          * Create a folder, if needed
           * Set up the experimental log, creating an experiment.log file, if needed
           * Write templates for scan.ini and macro.py, if needed
           * Copy some other useful files
@@ -814,12 +814,12 @@ class BMM_User(Borg):
 
         if name in BMM_STAFF:
             user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Staff', name)
-            user_workspace = os.path.join(os.getenv('HOME'), 'Workspace', 'Staff', name, date)
+            user_workspace = os.path.join(profile_configuration.get('services', 'workspace'), 'Staff', name, date)
         else:
             user_folder = os.path.join(os.getenv('HOME'), 'Data', 'Visitors', name)
-            user_workspace = os.path.join(os.getenv('HOME'), 'Workspace', 'Visitors', name, date)
-        if not os.path.isdir(user_folder):
-            os.makedirs(user_folder)
+            user_workspace = os.path.join(profile_configuration.get('services', 'workspace'), 'Visitors', name, date)
+        #if not os.path.isdir(user_folder):
+        #    os.makedirs(user_folder)
         if not os.path.isdir(user_workspace):
             os.makedirs(user_workspace)
         if not os.path.isdir(os.path.join(user_workspace, 'templates')):
@@ -829,7 +829,7 @@ class BMM_User(Borg):
         
         self.new_experiment(lustre_root, saf=saf, gup=gup, name=name)
         if startup is False:
-            self.bmmbot.refresh()   # direct Slack messages to new proposal channel
+            self.bmmbot.refresh_channel()   # direct Slack messages to new proposal channel
 
         # preserve BMMuser state to a json string #
         self.prev_fig = None
@@ -842,11 +842,6 @@ class BMM_User(Borg):
         with open(jsonfile, 'w') as outfile:
             json.dump({'name': name, 'date': date, 'gup' : gup, 'saf' : saf}, outfile)
         os.chmod(jsonfile, 0o444)
-
-        if not os.path.islink(local_folder):
-            os.symlink(self.DATA, local_folder, target_is_directory=True)
-        print(f'    Made symbolic link to data folder at {local_folder}')
-        self.folder_link = local_folder
 
         try:
             #xascam._root = os.path.join(self.folder, 'snapshots')
@@ -875,7 +870,6 @@ class BMM_User(Borg):
             return()
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.BMMuser')
-        #jsonfile = os.path.join(self.DATA, '.BMMuser')
         self.state_from_redis()
         #if os.path.isfile(jsonfile):
         #    self.state_from_redis(jsonfile)
@@ -902,7 +896,7 @@ class BMM_User(Borg):
         '''
         Terminate and experiment.
 
-        Unset the logger and the DATA variable at the end of an experiment.
+        Unset the logger at the end of an experiment.
         '''
 
         if not force:
@@ -924,10 +918,9 @@ class BMM_User(Borg):
 
             
         ###############################################################
-        # unset self attributes, DATA, and experiment specific logger #
+        # unset self attributes and experiment specific logger #
         ###############################################################
         BMM_unset_user_log()
-        DATA = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         self.folder = os.path.join(os.environ['HOME'], 'Data', 'bucket') + '/'
         user_ns["wmb"].folder = self.folder
         self.date = ''
@@ -984,10 +977,10 @@ class BMM_User(Borg):
 
 
     def fetch_proposal_from_saf(self, this=None, cycle=None):
-        '''Use the PASS API at https://api.nsls2.bnl.gov to determine what
-        proposal number an SAF is written against, returning the
-        proposal number.  Works for GUP, BDT, PU-P, and PUP.  Unless
-        cycle is specified, it works only for the current cycle.
+        '''Use the PASS API to determine what proposal number an SAF is
+        written against, returning the proposal number.  Works for
+        GUP, BDT, PU-P, and PUP.  Unless cycle is specified, it works
+        only for the current cycle.
 
         '''
         if cycle is None:

@@ -1,8 +1,22 @@
-import os, datetime, emojis, re
+import os, datetime, emojis, re, configparser
+
+
+startup_dir = os.path.dirname(os.path.dirname(__file__))
+cfile = os.path.join(startup_dir, "BMM_configuration.ini")
+profile_configuration = configparser.ConfigParser(interpolation=None)
+profile_configuration.read_file(open(cfile))
+
 
 import redis
 from redis_json_dict import RedisJSONDict
-redis_client = redis.Redis(host="info.bmm.nsls2.bnl.gov")
+nsls2_redis = profile_configuration.get('services', 'nsls2_redis')
+redis_client = redis.Redis(host=nsls2_redis)
+
+bmm_redis = profile_configuration.get('services', 'bmm_redis')
+rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
+
+startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
+
 
 DATA_SECURITY = True
 
@@ -45,10 +59,6 @@ def file_resource(catalog, uid):
     return found
 
 
-import redis
-rkvs = redis.Redis(host='xf06bm-ioc2', port=6379, db=0)
-
-startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 
 def echo_slack(text='', img=None, icon='message', rid=None, measurement='xafs'):
     facility_dict = RedisJSONDict(redis_client=redis_client, prefix='xas-')
