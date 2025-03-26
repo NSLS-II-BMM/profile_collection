@@ -26,7 +26,7 @@ Beamline configuration
 ======================
 
 The file `BMM_configuration.ini <BMM_configuration.ini>`__ contains
-configuration parameters for the beamnline, including
+configuration parameters for the beamline, including
 
 + flags controlling to specific detectors, instruments, optical
   cameras, and experiment types

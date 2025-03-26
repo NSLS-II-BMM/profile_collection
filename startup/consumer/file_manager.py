@@ -14,7 +14,7 @@ import nslsii
 import nslsii.kafka_utils
 
 from tools import echo_slack, next_index, file_exists, profile_configuration
-from slack import img_to_slack, post_to_slack
+from slack import img_to_slack, post_to_slack, refresh_slack, describe_slack
 
 
 from tiled.client import from_profile
@@ -178,6 +178,12 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 elif 'img' in message and os.path.exists(message['img']):
                     img_to_slack(message['img'])
 
+            elif 'refresh_slack' in message:
+                refresh_slack()
+                    
+            elif 'describe_slack' in message:
+                describe_slack()
+                    
             elif 'mkdir' in message:
                 if os.path.exists(message['mkdir']) is False:
                     os.makedirs(message['mkdir'])

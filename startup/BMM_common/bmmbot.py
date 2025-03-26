@@ -7,16 +7,15 @@ from slack_sdk.errors import SlackApiError
 startup_dir = os.path.dirname(os.path.dirname(__file__))
 profile_configuration = configparser.ConfigParser(interpolation=None)
 profile_configuration.read_file(open(os.path.join(startup_dir, "BMM_configuration.ini")))
+
 bmmbot_secret = profile_configuration.get('slack', 'bmmbot_secret')
-
 redis_client = redis.Redis(host=profile_configuration.get('services', 'nsls2_redis'))
-
 pass_api = profile_configuration.get('services', 'pass_api') + "/{pass_id}/slack-channels"
 
 
 class BMMbot():
     '''Simple class to manage conversations via the facility-provided
-    Slack BMM Bot.
+    Slack proposal channel.
 
     usage
     =====
@@ -29,7 +28,7 @@ class BMMbot():
       bmmbot.post('This is a text message')
 
     post an image file:
-      bmmbot.image('/path/to/image/file')
+      bmmbot.image('/path/to/local/image/file')
 
     after changing users by running NSLS2's sync_experiment():
       bmmbot.refresh_channel()

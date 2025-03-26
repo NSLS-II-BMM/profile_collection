@@ -25,6 +25,11 @@ except:
     print(error_msg('\t\t\tslack_secret file not found!'))
 #-------------------------------------------------------------------
 
+def refresh_slack():
+    bmmbot.refresh_channel()
+
+def describe_slack():
+    bmmbot.describe()
 
     
 def post_to_slack(text):

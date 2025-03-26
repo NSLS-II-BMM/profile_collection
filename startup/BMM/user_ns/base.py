@@ -19,14 +19,16 @@ startup_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     
 cfile = os.path.join(startup_dir, "BMM_configuration.ini")
 profile_configuration = configparser.ConfigParser(interpolation=None)
-profile_configuration.read_file(open(cfile))
-
+def reload_profile_configuration():
+    profile_configuration.read_file(open(cfile))
+reload_profile_configuration()
     
 use_kafka = True
 os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'] = profile_configuration.get('services', 'kafka')
 
 WORKSPACE = profile_configuration.get('services', 'workspace')
 
+    
 
 
 from redis_json_dict import RedisJSONDict

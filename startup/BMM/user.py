@@ -830,7 +830,9 @@ class BMM_User(Borg):
         self.new_experiment(lustre_root, saf=saf, gup=gup, name=name)
         if startup is False:
             self.bmmbot.refresh_channel()   # direct Slack messages to new proposal channel
-
+            kafka_message({'refresh_slack': True})  # do the same in the Kafka workers
+            
+            
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
@@ -986,7 +988,6 @@ class BMM_User(Borg):
         if cycle is None:
             cycle = user_ns['RE'].md["cycle"]
         url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={cycle}'
-        #print(url)
         r = requests.get(url)
         if r.status_code != requests.codes.ok:
             print(whisper(url))

@@ -68,6 +68,7 @@ asc.logger = logger
 plt.ion()
 plt.rcParams["figure.raise_window"] = False
 
+from slack import refresh_slack, describe_slack
 
 def plot_from_kafka_messages(beamline_acronym):
 
@@ -87,7 +88,7 @@ def plot_from_kafka_messages(beamline_acronym):
 
         if name == 'bmm':
             if any(x in message for x in ('xafs_sequence', 'glancing_angle', 'align_wheel', 'wafer', 'mono_calibration',
-                                          'xrfat', 'linescan', 'xafsscan', 'timescan', 'xrf', 'areascan', 'close', 'logger')) :
+                                          'xrfat', 'linescan', 'xafsscan', 'timescan', 'xrf', 'areascan', 'close', 'logger', 'refresh_slack')) :
                 if be_verbose is True:
                     print(f'\n[{datetime.datetime.now().isoformat(timespec="seconds")}]\n{pprint.pformat(message, compact=True)}')
                 else:
@@ -204,6 +205,12 @@ def plot_from_kafka_messages(beamline_acronym):
                 #elif message['logger'] == 'entry':
                 #    logger.info(message['text'])
 
+            elif 'refresh_slack' in message:
+                refresh_slack()
+                    
+            elif 'describe_slack' in message:
+                describe_slack()
+                    
 
                     
             # elif 'resting_state' in message:
