@@ -37,7 +37,7 @@ from BMM.user import BMM_User
 # rois = ROI()
 
 
-run_report('\t'+'recovering user configuration')
+run_report('\t'+'recovering user configuration and setting bmmbot')
 BMMuser = BMM_User()
 BMMuser.start_experiment_from_serialization()
 BMMuser.bmmbot = BMMbot()

@@ -8,10 +8,6 @@ startup_dir = os.path.dirname(os.path.dirname(__file__))
 profile_configuration = configparser.ConfigParser(interpolation=None)
 profile_configuration.read_file(open(os.path.join(startup_dir, "BMM_configuration.ini")))
 
-bmmbot_secret = profile_configuration.get('slack', 'bmmbot_secret')
-redis_client = redis.Redis(host=profile_configuration.get('services', 'nsls2_redis'))
-pass_api = profile_configuration.get('services', 'pass_api') + "/{pass_id}/slack-channels"
-
 
 class BMMbot():
     '''Simple class to manage conversations via the facility-provided
@@ -41,9 +37,15 @@ class BMMbot():
                 text=myfile.read()
             return text
         self._post_allowed = True
+        self._bmmbot_secret = profile_configuration.get('slack', 'bmmbot_secret')
+        self._redis_client = redis.Redis(host=profile_configuration.get('services', 'nsls2_redis'))
+        self._pass_api = profile_configuration.get('services', 'pass_api') + "/{pass_id}/slack-channels"
+
         self.refresh_channel()
-        self._auth = slurp(bmmbot_secret)
+        self._auth = slurp(self._bmmbot_secret)
         self.client = WebClient(token=self._auth)
+
+        self.last_message = None
         
     def post(self, text):
         '''Post a text message to the proposal-tla channel.
@@ -58,7 +60,8 @@ class BMMbot():
             print('Cannot post message. No proposal Slack channel exists.')
             return
         try:
-            self.client.chat_postMessage(text=text.replace(':flag:', self.random_flag()), channel=self.non_chat_channel)
+            response = self.client.chat_postMessage(text=text.replace(':flag:', self.random_flag()), channel=self.non_chat_channel)
+            self.last_message = response
         except SlackApiError as e:
             print('Slack message post failed for reason: ' + e.response["error"])
 
@@ -78,10 +81,10 @@ class BMMbot():
         print('Channel data from NSLS-II API:')
         pprint.pprint(self.channel_data)
         print()
-        print(f'_post_allowed = {self._post_allowed}')
-        print(f'pass_id = {self.pass_id}')
-        print(f'api_url = {self.api_url}')
-        print(f'non_chat_channel = {self.non_chat_channel}')
+        print(f'_post_allowed     = {self._post_allowed}')
+        print(f'pass_id           = {self.pass_id}')
+        print(f'api_url           = {self.api_url}')
+        print(f'non_chat_channel  = {self.non_chat_channel}')
         print(f'random flag emoji = {self.random_flag()}')
         
     def refresh_channel(self):
@@ -91,20 +94,31 @@ class BMMbot():
         for this proposal.
 
         '''
-        facility_dict = RedisJSONDict(redis_client=redis_client, prefix='xas-')
-        data_session = facility_dict['data_session']
-        self.pass_id = data_session.replace('pass-','')
-        self.api_url = pass_api.format(pass_id=self.pass_id)  # see line 14
-        response=requests.get(self.api_url)
-        self.channel_data = json.loads(response.text)
-        self.non_chat_channel = '---'
+        facility_dict         = RedisJSONDict(redis_client=self._redis_client, prefix='xas-')
+        data_session          = facility_dict['data_session']
+        self.pass_id          = data_session.replace('pass-','')
+        self.api_url          = self._pass_api.format(pass_id=self.pass_id)  # see line 14
+        response              = requests.get(self.api_url)
+        self.channel_data     = json.loads(response.text)
+        self.non_chat_channel = None
         for c in self.channel_data:
             if c['channel_name'] == data_session + '-bmm':
                 self.non_chat_channel = c['channel_id']
-                self._post_allowed = True
-        if self.non_chat_channel == '---':
+                self._post_allowed    = True
+        if self.non_chat_channel is None:
             self._post_allowed = False
-        
+
+    def post_and_pin(self, text):
+        '''Post a text message to the current proposal channel and pin that
+        message to the channel.
+
+        '''
+        self.post(text)
+        if self.last_message is not None:
+            timestamp = self.last_message.data['ts']
+            channel = self.last_message.data['channel']
+            self.client.pins_add(channel=channel, timestamp=timestamp)
+            
     def random_flag(self):
         '''Return a random flag emoji, which is sometimes useful for debugging.'''
         countries = ('ad', 'ae', 'af', 'ag', 'ai', 'al', 'am', 'ao', 'aq', 'ar', 'as', 'at', 'au', 'aw',

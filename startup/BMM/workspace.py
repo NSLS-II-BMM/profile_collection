@@ -27,7 +27,7 @@ except:
 LUSTRE_ROOT = '/nsls2/data3'
 LUSTRE_ROOT_BMM = '/nsls2/data3/bmm'
 SECRETS = os.path.join(LUSTRE_ROOT_BMM, 'XAS', 'secrets')
-SECRET_FILES = ('slack_secret', 'image_uploader_token')
+SECRET_FILES = ('slack_secret', 'image_uploader_token', 'bmmbot_secret')
 REDISVAR="BMM:scan:type"
 ###################################################################
 
@@ -136,7 +136,8 @@ def check_lan():
         
 def check_profile_branch():
     here = os.getcwd()
-    os.chdir(os.path.dirname(startup_dir))
+    #os.chdir(os.path.dirname(startup_dir))
+    os.chdir(profile_configuration.get('services', 'startup'))
     try:
         branch = subprocess.check_output(['git', 'branch', '--show-current']).decode("utf-8")[:-1]
     except subprocess.CalledProcessError:

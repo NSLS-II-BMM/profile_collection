@@ -8,7 +8,7 @@ from BMM.exceptions    import ChangeModeException
 from BMM.functions     import approximate_pitch, countdown, PROMPT, PROMPTNC, animated_prompt
 from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka         import kafka_message
-from BMM.linescans     import rocking_curve, slit_height
+from BMM.linescans     import rocking_curve, slit_height, mirror_pitch, wiggle_bct
 from BMM.logging       import BMM_log_info, BMM_msg_hook, report
 from BMM.motor_status  import motor_status
 from BMM.resting_state import resting_state_plan
@@ -365,13 +365,15 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     if count > 5:
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
+                         return
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
                     user_ns['ks'].cycle('dm3')
-                    dm3_bct.clear_encoder_loss()
+                    wiggle_bct()
+                    #dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)
@@ -390,13 +392,15 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     if count > 5:
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
+                         return
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
                     user_ns['ks'].cycle('dm3')
-                    dm3_bct.clear_encoder_loss()
+                    wiggle_bct()
+                    #dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)
@@ -430,6 +434,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     if count > 5:
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
+                         return
                     report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
@@ -437,7 +442,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     user_ns['ks'].cycle('m2')
                     user_ns['ks'].cycle('m3')
                     user_ns['ks'].cycle('dm3')
-                    dm3_bct.clear_encoder_loss()
+                    wiggle_bct()
+                    #dm3_bct.clear_encoder_loss()
                     yield from sleep(1)
                     try:
                          yield from mv(*base)
@@ -626,7 +632,8 @@ def change_xtals(xtal=None):
      yield from sleep(1.0)
      yield from mv(dcm_pitch.kill_cmd, 1)
      kafka_message({'close': 'line'})
-     yield from slit_height(move=True)
+     #yield from slit_height(move=True)
+     yield from mirror_pitch(move=True)
      RE.msg_hook = BMM_msg_hook
      BMM_log_info(motor_status())
      kafka_message({'close': 'line'})

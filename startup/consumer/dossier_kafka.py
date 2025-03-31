@@ -30,9 +30,8 @@ except:
     rkvs = NoRedis()
 all_references = ast.literal_eval(rkvs.get('BMM:reference:mapping').decode('UTF8'))
 
-    
 
-startup_dir = os.path.dirname(__file__)
+startup_dir = profile_configuration.get('services'. 'startup')
 
 def log_entry(logger, message):
     #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':

@@ -147,7 +147,7 @@ def post_to_slack(text):
         BMMuser.bmmbot.post(text)
         
         
-def report(text, level=None, slack=False, rid=None, bmmbot=False):
+def report(text, level=None, slack=False, rid=None):
     '''Print a string to:
       * the log file
       * the screen
@@ -194,14 +194,12 @@ def report(text, level=None, slack=False, rid=None, bmmbot=False):
             print(screen)
     else:
         print(screen)
-    if use_bmm_slack and slack:
+    if slack:
         kafka_message({'echoslack': True,
                        'text': text,
                        'img': None,
                        'icon': 'message',
                        'rid': rid})
-    if use_nsls2_slack and bmmbot:
-        BMMuser.bmmbot.post(text)
 
         
 

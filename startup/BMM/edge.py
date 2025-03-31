@@ -19,7 +19,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.kafka         import kafka_message
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
-from BMM.linescans     import rocking_curve, slit_height, wiggle_bct
+from BMM.linescans     import rocking_curve, slit_height, mirror_pitch, wiggle_bct
 from BMM.resting_state import resting_state_plan
 from BMM.workspace     import rkvs
 
@@ -139,7 +139,7 @@ def xrd_mode(energy=8600):
      '''
      yield from change_edge('Ni', xrd=True, energy=energy)
     
-def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, target=300.,
+def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True, tune=True, target=300.,
                 xrd=False, bender=True, insist=False, no_ref=False):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
@@ -160,7 +160,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     tune : bool, optional
         perform rocking_curve() scan [True]
     slits : bool, optional
-        perform slit_height() scan [True]
+        perform slit_height() scan [False]
+    mirror : bool, optional
+        perform mirror_pitch() scan [True]
     target : float, optional
         energy where rocking curve is measured [300]
     xrd : boolean, optional
@@ -196,7 +198,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
 
     '''
 
-    def main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist, no_ref):
+    def main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref):
         el = el.capitalize()
         ######################################################################
         # this is a tool for verifying a macro.  this replaces an xafsmod scan  #
@@ -327,6 +329,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
         print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
         print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
         print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
+        print('   %s: %s'    % (list_msg('optimizing mirror pitch'), str(mirror)))
 
         ## prepare for the possibility of dcm_para stalling while moving to new energy
         if energy+target > dcm.energy.position:
@@ -478,8 +481,20 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
                 return(yield from null())
             yield from slit_height(move=True)
             kafka_message({'close': 'last'})
-            ## redo rocking curve?
 
+        ###########################
+        # run a mirror pitch scan #
+        ###########################
+        if mirror:
+            if mode == 'A':
+                mirror = 'm2'
+            else:
+                mirror = 'm3'
+            print('Optimizing {mirror} pitch...')
+            yield from mirror_pitch(mirror=mirror, move=True)
+            kafka_message({'close': 'last'})
+
+            
         ##################################
         # set reference and roi channels #
         ##################################
@@ -502,8 +517,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
             #if mode in ('D', 'E', 'F'):
             yield from mv(slits3.hsize, hsize_save)
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
-        if slits is False:
-            print('  * You may need to verify the slit position:  RE(slit_height())')
+        # if slits is False:
+        #     print('  * You may need to verify the slit position:  RE(slit_height())')
 
     def cleanup_plan():
         BMM_clear_suspenders()
@@ -521,6 +536,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=True, tune=True, t
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
     dm3_bct, slits3 = user_ns['dm3_bct'], user_ns['slits3']
-    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, tune, target, xrd, bender, insist, no_ref),
+    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

@@ -881,7 +881,7 @@ class BMM_User(Borg):
             self.begin_experiment(name=self.name, date=self.date, gup=self.gup, saf=self.saf, startup=True)
 
     def show_experiment(self):
-        '''Show serialized configuration parameters'''
+        '''Show basic experiment configuration'''
         experimenters = textwrap.wrap(self.experimenters, subsequent_indent='                ')
         print('PI            = %s' % self.name)
         print('Experimenters = %s' % '\n'.join(experimenters))

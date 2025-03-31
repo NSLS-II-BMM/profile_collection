@@ -15,7 +15,7 @@ redis_client = redis.Redis(host=nsls2_redis)
 bmm_redis = profile_configuration.get('services', 'bmm_redis')
 rkvs = redis.Redis(host=bmm_redis, port=6379, db=0)
 
-startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
+#startup_dir = '/nsls2/data/bmm/shared/config/bluesky/profile_collection/startup/'
 
 
 DATA_SECURITY = True

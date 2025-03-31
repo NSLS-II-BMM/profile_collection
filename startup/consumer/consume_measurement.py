@@ -14,10 +14,6 @@ import bmm_plot
 
 import matplotlib               # trust environment to set backend correctly
 
-#from plotWindow import plotWindow
-#import xafs_visualization
-#xafsviz_window=None
-
 # capture Ctrl-c to exit kafka polling loop semi-gracefully
 def handler(signal, frame):
     print('Exiting Kafka consumer')
@@ -73,7 +69,6 @@ from slack import refresh_slack, describe_slack
 def plot_from_kafka_messages(beamline_acronym):
 
     def examine_message(consumer, doctype, doc):
-        #global xafsviz_window
         global doing, be_verbose
         # print(
         #     f"\n[{datetime.datetime.now().isoformat(timespec='seconds')}] document topic: {doctype}\n"

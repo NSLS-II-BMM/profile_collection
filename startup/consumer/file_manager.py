@@ -169,11 +169,11 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 if 'img' not in message or message['img'] is None:
                     print(f'sending message "{message["text"]}" to slack')
                     post_to_slack(message['text'])
-                    if 'icon'   not in message: message['icon'] = 'message'
-                    if 'rid'    not in message: message['rid']  = None
-                    echo_slack(text   = message['text'],
-                               icon   = message['icon'],
-                               rid    = message['rid'] )
+                    # if 'icon'   not in message: message['icon'] = 'message'
+                    # if 'rid'    not in message: message['rid']  = None
+                    # echo_slack(text   = message['text'],
+                    #            icon   = message['icon'],
+                    #            rid    = message['rid'] )
 
                 elif 'img' in message and os.path.exists(message['img']):
                     img_to_slack(message['img'])
