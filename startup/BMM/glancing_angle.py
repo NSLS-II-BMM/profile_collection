@@ -197,7 +197,23 @@ class GlancingAngle(Device):
         xafs_pitch = user_ns['xafs_pitch']
         uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, dopluck=False, force=force)
         kafka_message({'close': 'last'})
-        table  = user_ns['db'][-1].table()
+
+        # Remove this when Tiled adds support for retries.
+        ATTEMPTS = 20
+        error = None
+        for attempt in range(ATTEMPTS):
+            try:
+                table  = user_ns['db'][-1].table()
+            except Exception as exc:
+                print(f'retry attempt {attempt} failed')
+                error = exc
+            else:
+                break
+            import time; time.sleep(2)
+        else:
+            # out of attempts
+            raise error
+
         pitch  = table['xafs_pitch']
         signal = table['It']/table['I0']
         target = signal.idxmax()
