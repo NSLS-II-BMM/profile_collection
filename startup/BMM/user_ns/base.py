@@ -61,7 +61,7 @@ tiled_writing_client = from_uri(profile_configuration.get('services', 'tiled'),
 
 def post_document(name, doc):
     #tz = time.monotonic()
-    ATTEMPTS = 20
+    ATTEMPTS = 30
     error = None
     for attempt in range(ATTEMPTS):
         try:

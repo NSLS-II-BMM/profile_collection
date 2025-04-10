@@ -102,6 +102,7 @@ class BMMMacroBuilder():
                                  'slot', 'ring',  # ex situ sample wheel
                                  'temperature', 'settle', 'power',  # Linkam, Lakeshore
                                  'spin', 'angle',  # glancing angle stage
+                                 'spinner', 'roi2', 'roi3', # resonent reflectivity
                                  'motor1', 'position1', 'motor2', 'position2', 'motor3', 'position3',  # grid automation
                                  'method', 'optimize'  # ???
         )

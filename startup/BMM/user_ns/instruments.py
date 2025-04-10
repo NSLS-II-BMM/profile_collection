@@ -238,8 +238,8 @@ if slits3.connected is True:
     dm3_slits_i.hvel_sp.put(0.2)
     dm3_slits_t.hvel_sp.put(0.2)
     dm3_slits_b.hvel_sp.put(0.2)
-    dm3_slits_i.user_offset.put(-6.0211)
-    dm3_slits_o.user_offset.put(7.9844)
+    #dm3_slits_i.user_offset.put(-6.0211)
+    #dm3_slits_o.user_offset.put(7.9844)
     #dm3_slits_t.user_offset.put(-2.676)
     #dm3_slits_b.user_offset.put(-2.9737)
 else:
@@ -644,6 +644,26 @@ gmb = GridMacroBuilder()
 gmb.description = 'a motor grid'
 gmb.instrument = 'grid'
 gmb.folder = BMMuser.workspace
+
+
+###################################################################################################################################
+# ______ _____ _____  _____ _   _   ___   _   _ _____  ______ ___________ _      _____ _____ _____ _____ _   _ _____ _______   __ #
+# | ___ \  ___/  ___||  _  | \ | | / _ \ | \ | |_   _| | ___ \  ___|  ___| |    |  ___/  __ \_   _|_   _| | | |_   _|_   _\ \ / / #
+# | |_/ / |__ \ `--. | | | |  \| |/ /_\ \|  \| | | |   | |_/ / |__ | |_  | |    | |__ | /  \/ | |   | | | | | | | |   | |  \ V /  #
+# |    /|  __| `--. \| | | | . ` ||  _  || . ` | | |   |    /|  __||  _| | |    |  __|| |     | |   | | | | | | | |   | |   \ /   #
+# | |\ \| |___/\__/ /\ \_/ / |\  || | | || |\  | | |   | |\ \| |___| |   | |____| |___| \__/\ | |  _| |_\ \_/ /_| |_  | |   | |   #
+# \_| \_\____/\____/  \___/\_| \_/\_| |_/\_| \_/ \_/   \_| \_\____/\_|   \_____/\____/ \____/ \_/  \___/ \___/ \___/  \_/   \_/   #
+###################################################################################################################################
+                                                                                                                               
+
+run_report('\tresonant reflectivity automation')
+from BMM.reflectivity import ResonantReflectivityMacroBuilder
+refl = ResonantReflectivityMacroBuilder()
+refl.description = 'a resonant reflectivity experiment'
+refl.instrument = 'resonant reflectivity'
+refl.folder = BMMuser.workspace
+
+
 
 
 ####################################################################################

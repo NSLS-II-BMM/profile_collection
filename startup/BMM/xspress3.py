@@ -407,6 +407,30 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                     mcaroi.kind = 'omitted'
                     mcaroi.total_rbv.kind = 'omitted'
 
+    def measure_multiple_rois(self, roilist=()):
+        '''Hint multiple ROIs for XAS use
+        '''
+        BMMuser = user_ns['BMMuser']
+        hint_potassium = profile_configuration.getboolean('experiments', 'hint_potassium')  # special consideration for molten salt experiments
+        for channel in self.iterate_channels():
+            for mcaroi in channel.iterate_mcarois():
+                if self.slots[mcaroi.mcaroi_number-1] in roilist:
+                    mcaroi.kind = 'hinted'
+                    mcaroi.total_rbv.kind = 'hinted'
+                    setattr(BMMuser, f'xs{channel.channel_number}', mcaroi.total_rbv.name) 
+                    setattr(BMMuser, f'xschannel{channel.channel_number}', mcaroi.total_rbv)
+                    #EpicsSignal(mcaroi.total_rbv.pvname + ".PREC", name='').put(1)
+                elif self.slots[mcaroi.mcaroi_number-1] == 'K' and hint_potassium is True:
+                    mcaroi.kind = 'hinted'
+                    mcaroi.total_rbv.kind = 'hinted'
+                # elif self.slots[mcaroi.mcaroi_number-1] == 'La':
+                #     mcaroi.kind = 'hinted'
+                #     mcaroi.total_rbv.kind = 'hinted'
+                else:
+                    mcaroi.kind = 'omitted'
+                    mcaroi.total_rbv.kind = 'omitted'
+
+                    
     def livetable_precision(self, val=1):
         '''Set sensible LiveTable precision for the ROI readback values.
         '''

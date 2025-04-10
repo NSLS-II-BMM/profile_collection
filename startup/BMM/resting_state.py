@@ -50,11 +50,11 @@ def resting_state():
             quadem1.Iy.kind = 'hinted'
         else:
             quadem1.Iy.kind = 'omitted'
-    if with_pilatus is True:
-        pilatus.stats.kind = 'hinted'
-    else:
-        #pilatus.stats.kind = 'omitted'
-        pass
+    # if with_pilatus is True:
+    #     pilatus.stats.kind = 'hinted'
+    # else:
+    #     #pilatus.stats.kind = 'omitted'
+    #     pass
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False
@@ -94,11 +94,11 @@ def resting_state_plan():
             quadem1.Iy.kind = 'hinted'
         else:
             quadem1.Iy.kind = 'omitted'
-    if with_pilatus is True:
-        pilatus.stats.kind = 'hinted'
-    else:
-        #pilatus.stats.kind = 'omitted'
-        pass
+    # if with_pilatus is True:
+    #     pilatus.stats.kind = 'hinted'
+    # else:
+    #     #pilatus.stats.kind = 'omitted'
+    #     pass
     #BMMuser.instrument = ''
     yield from mv(_locked_dwell_time, 0.5)
     for electrometer in ION_CHAMBERS:
@@ -136,11 +136,11 @@ def end_of_macro():
             quadem1.Iy.kind = 'hinted'
         else:
             quadem1.Iy.kind = 'omitted'
-    if with_pilatus is True:
-        pilatus.stats.kind = 'hinted'
-    else:
-        #pilatus.stats.kind = 'omitted'
-        pass
+    # if with_pilatus is True:
+    #     pilatus.stats.kind = 'hinted'
+    # else:
+    #     #pilatus.stats.kind = 'omitted'
+    #     pass
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:
         BMMuser.prompt = False

@@ -11,6 +11,7 @@ pid/
 .~lock*
 
 # secrets that should not be commited to an on-line repo
+bmmbot_secret
 slack_secret
 image_uploader_token
 

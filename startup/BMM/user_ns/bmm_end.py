@@ -36,7 +36,7 @@ run_report('\t'+'suspenders')
 from BMM.suspenders import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 
 run_report('\t'+'linescan, rocking curve, slit_height, mirror_pitch, find_slot, pluck')
-from BMM.linescans import linescan, pluck, rocking_curve, slit_height, mirror_pitch, ls2dat, find_slot, rectangle_scan
+from BMM.linescans import linescan, pluck, rocking_curve, slit_height, mirror_pitch, ls2dat, find_slot, rectangle_scan, hcenter
 
 run_report('\t'+'kafka')
 from BMM.kafka import close_line_plots, close_plots, kafka_message, preserve
@@ -172,6 +172,10 @@ the templates folder of your data directory.
         print(bold_msg('This is a motor grid spreadsheet'))
         gmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'motor grid'
+    elif instrument.lower() == 'resonant reflectivity':
+        print(bold_msg('This is a resonant reflectivity spreadsheet'))
+        refl.spreadsheet(spreadsheet, sheet)
+        BMMuser.instrument = 'resonant reflectivity'
     elif instrument.lower() == 'sample wheel':
         print(bold_msg('This is a single wheel spreadsheet'))
         print(error_msg('Single wheel spreadsheets have been retired.'))
@@ -201,6 +205,7 @@ def set_instrument(instrument=None):
   3: Linkam stage
   4: Displex and LakeShore
   5: Motor grid
+  6: Resonant reflectivity
 
   r: return
 ''')
@@ -229,6 +234,9 @@ def set_instrument(instrument=None):
     elif instrument.lower() == 'grid':
         print(bold_msg('Setting instrument as sample grid'))
         BMMuser.instrument = 'motor grid'
+    elif instrument.lower() == 'resonant reflectivity':
+        print(bold_msg('Setting instrument as resonant reflectivity'))
+        BMMuser.instrument = 'resonant reflectivity'
     else:
         print(bold_msg('Default instrument choice: sample wheel'))
         BMMuser.instrument = 'double wheel'
@@ -259,7 +267,7 @@ if BMMuser.pds_mode is None:
      BMMuser.pds_mode = get_mode()
 
 run_report('\t'+'change_edge')
-from BMM.edge import show_edges, change_edge, xrd_mode
+from BMM.edge import show_edges, change_edge, quick_change, xrd_mode
 from BMM.functions import approximate_pitch
 
 run_report('\t'+'mono calibration')
@@ -409,7 +417,7 @@ if all_connected(True) is False:
 
 run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
-from BMM.user_ns.instruments import wmb, lmb, gmb, lsmb
+from BMM.user_ns.instruments import wmb, lmb, gmb, lsmb, refl
 if wmb  is not None: wmb.folder  = BMMuser.folder     # single or double wheel
 if gawheel is not None:
     gawheel.folder = BMMuser.folder  # glancing angle stage

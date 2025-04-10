@@ -1,5 +1,5 @@
 
-import os, json, socket
+import os, json, socket, uuid
 from BMM.functions import run_report, whisper
 from BMM.user_ns.base import RE, profile_configuration
 from BMM.user_ns.bmm import BMMuser
@@ -302,6 +302,20 @@ def display_last_image_usb_cam(catalog, camera=usb1):
 pilatus = None
 pilatus_tiff = None
 
+
+def prep_pilatus(pilatus):
+    pilatus.cam_file_path.put('/disk2')
+    pilatus.cam_file_number.put(1)
+    pilatus.cam_auto_increment.put(1)
+    tiff_filename = f"{RE.md['data_session']}_{RE.md['cycle']}"
+    pilatus.cam_file_name.put(tiff_filename)
+    pilatus.cam_file_format.put(0)
+    pilatus.cam_file_template.put('%s%s_%3.3d.tiff')
+
+    #tiff_filename = f"{RE.md['data_session']}_{RE.md['cycle']}"
+    #EpicsSignal('XF:06BMB-ES{Det:PIL100k}:TIFF1:FileName', name='').put(tiff_filename)
+    
+
 from BMM.user_ns.dwelltime import with_pilatus
 if with_pilatus is True:
     from BMM.pilatus import BMMPilatusSingleTrigger,  BMMPilatusTIFFSingleTrigger
@@ -332,10 +346,32 @@ if with_pilatus is True:
     #if pilatus.hdf5.run_time.get() == 0.0:
     #    pilatus.hdf5.warmup()
         
+    ## starting ROI values
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinX',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeX', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinY',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeY', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinX',  name='').put(150)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeX', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinY',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeY', name='').put(50)
 
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeX', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinY',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeY', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinX',  name='').put(150)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeX', name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinY',  name='').put(50)
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeY', name='').put(50)
+
+    
+
+    
     pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
     pilatus_tiff.stats.kind = "hinted"
 
+    prep_pilatus(pilatus)
 
 
 ####################################

@@ -21,7 +21,7 @@ from nslsii.ad33 import SingleTriggerV33
 from ophyd import Component as C
 
 
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 
 
 ######################################################################################
@@ -49,8 +49,7 @@ class BMMFileStoreHDF5(FileStorePluginBase):
                 #("num_capture", 3)
 
             ]
-        )
-        # 'Single' file_write_mode means one image : one file.
+        )        # 'Single' file_write_mode means one image : one file.
         # It does NOT mean that 'num_images' is ignored.
 
     def get_frames_per_point(self):
@@ -135,8 +134,8 @@ class BMMPilatus(AreaDetector):
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/pilatus100k-1/",
     )
     stats = C(EpicsSignalRO, "Stats1:Total_RBV")
-    roi2  = C(EpicsSignalRO, "Stats2:Total_RBV", name='yoneda')
-    roi3  = C(EpicsSignalRO, "Stats3:Total_RBV", name = 'specular')
+    roi2  = C(EpicsSignalRO, "ROIStat1:2:Total_RBV", name = 'yoneda')
+    roi3  = C(EpicsSignalRO, "ROIStat1:3:Total_RBV", name = 'specular')
 
     
     cam_file_path      = C(EpicsSignalWithRBV, 'cam1:FilePath')
@@ -145,7 +144,9 @@ class BMMPilatus(AreaDetector):
     cam_auto_increment = C(EpicsSignalWithRBV, 'cam1:AutoIncrement')
     cam_file_template  = C(EpicsSignalWithRBV, 'cam1:FileTemplate')
     cam_full_file_name = C(EpicsSignalRO,      'cam1:FullFileName_RBV')
+    cam_file_format    = C(EpicsSignalWithRBV, 'cam1:FileFormat')
 
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         #self.stage_sigs.update([(self.cam.trigger_mode, "Internal")])
@@ -250,6 +251,8 @@ class BMMPilatusTIFF(AreaDetector):
     cam_auto_increment = C(EpicsSignalWithRBV, 'cam1:AutoIncrement')
     cam_file_template  = C(EpicsSignalWithRBV, 'cam1:FileTemplate')
     cam_full_file_name = C(EpicsSignalRO,      'cam1:FullFileName_RBV')
+    cam_file_format    = C(EpicsSignalWithRBV, 'cam1:FileFormat')
+    cam_file_template  = C(EpicsSignalWithRBV, 'cam1:FileTemplate')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -223,7 +223,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                     report('\nFailed to correct the problem. Giving up.)', level='error', slack=True)
                     yield from null()
                     return
-               report('\nMirror amplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
+               report('\nAmplifier fault? Attempting to correct the problem. (Try #{count})', level='error', slack=True)
                yield from sleep(1)
                m2_bender.kill()
                user_ns['ks'].cycle('m2')
@@ -366,7 +366,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
                          return
-                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                    report(f'\nAmplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
@@ -393,7 +393,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
                          return
-                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                    report(f'\nAmplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
                     user_ns['ks'].cycle('m2')
@@ -435,7 +435,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                          report('\nTried five times to correct the amplifier fault.  Giving up now.',
                                 level='error', slack=True)
                          return
-                    report(f'\nMirror amplifier fault? Attempting to correct the problem. (Attempt {count})',
+                    report(f'\nAmplifier fault? Attempting to correct the problem. (Attempt {count})',
                            level='error', slack=True)
                     yield from sleep(1)
                     m2_bender.kill()
@@ -605,7 +605,7 @@ def change_xtals(xtal=None):
      yield from sleep(1.0) 
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.3,
-                        dcm_roll, -4.5608,  # new value May 4, 2023
+                        dcm_roll, -8.05644,  # new value April 10, 2025
                         dcm_x,     0.5    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset

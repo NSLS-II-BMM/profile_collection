@@ -106,6 +106,8 @@ def pluck(suggested_motor=None):
     yield from sleep(0.25)
     position    = float(rkvs.get('BMM:mouse_event:value').decode('utf-8'))
     motor_name  = rkvs.get('BMM:mouse_event:motor').decode('utf-8')
+    if motor_name == 'xafs_yu':
+        motor_name = 'xafs_table_yu'
     position2   = ''
     motor_name2 = ''
     if rkvs.get('BMM:mouse_event:value2').decode('utf-8') != '':
@@ -557,6 +559,103 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     user_ns['RE'].msg_hook = BMM_msg_hook
 
 
+
+
+def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak'):
+    '''Perform a relative scan of slits3.hcenter to optimize the signal on
+    I0.
+
+    Optionally, the motor will moved to the peak at the end of the
+    scan.
+
+    Parameters
+    ----------
+    start : float
+        starting position relative to current [-3.0]
+    end : float 
+        ending position relative to current [3.0]
+    nsteps : int
+        number of steps [61]
+    move : bool
+        True=move to position of max signal, False=pluck and move [False]
+    force : bool
+        True=run scan even if not clear to start, False=respect clear-to-start [False]
+    choice : str 
+        'peak' or 'com' (center of mass) ['peak']  (com not currently implemented)
+
+    '''
+
+    def main_plan(start, stop, nsteps, move, force):
+        (ok, text) = BMM_clear_to_start()
+        if force is False and ok is False:
+            print(error_msg(text))
+            yield from null()
+            return
+
+        user_ns['RE'].msg_hook = None
+        line1 = '%s, %s, %.3f, %.3f, %d -- starting at %.3f\n' % \
+                (motor.name, 'i0', start, stop, nsteps, motor.position)
+        rkvs.set('BMM:scan:type',      'line')
+        rkvs.set('BMM:scan:starttime', str(datetime.datetime.timestamp(datetime.datetime.now())))
+        rkvs.set('BMM:scan:estimated', 0)
+
+        def scan_hcenter():
+            yield from mv(_locked_dwell_time, 0.1)
+
+            kafka_message({'linescan': 'start',
+                           'motor' : motor.name,
+                           'detector' : 'I0',
+                           'fluo_detector': None,})
+            uid = yield from rel_scan([*ION_CHAMBERS], motor, start, stop, nsteps, md={'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            kafka_message({'linescan': 'stop',})
+            
+            user_ns['RE'].msg_hook = BMM_msg_hook
+            BMM_log_info('slit height scan: %s\tuid = %s, scan_id = %d' %                         (line1, uid, user_ns['db'][-1].start['scan_id']))
+            if move:
+                t  = user_ns['db'][-1].table()
+                signal = t['I0']
+                #if get_mode() in ('A', 'B', 'C'):
+                #    position = com(signal)
+                #else:
+                position = peak(signal)
+                top = t[motor.name][position]
+                yield from mv(motor, top)
+
+            else:
+                #action = input('\n' + bold_msg('Pluck motor position from the plot? ' + PROMPT))
+                print()
+                action = animated_prompt('Pluck slits3.hcenter position from the plot? ' + PROMPTNC)
+                if action != '':
+                    if action[0].lower() == 'n' or action[0].lower() == 'q':
+                        return(yield from null())
+                yield from pluck(suggested_motor=motor)
+            yield from mv(_locked_dwell_time, 0.5)
+        yield from scan_hcenter()
+
+    def cleanup_plan():
+        yield from mv(_locked_dwell_time, 0.5)
+        yield from resting_state_plan()
+
+    #######################################################################
+    # this is a tool for verifying a macro.  this replaces this slit      #
+    # height scan with a sleep, allowing the user to easily map out motor #
+    # motions in a macro                                                  #
+    if BMMuser.macro_dryrun:
+        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an hcenter scan.\n' %
+                       BMMuser.macro_sleep))
+        countdown(BMMuser.macro_sleep)
+        return(yield from null())
+    #######################################################################
+    motor = slits3.hcenter
+    user_ns['RE'].msg_hook = None
+    yield from finalize_wrapper(main_plan(start, stop, nsteps, move, force), cleanup_plan())
+    user_ns['RE'].msg_hook = BMM_msg_hook
+
+
+
+
+
+    
 def find_slot(shape='slot'):
     ## NEVER prompt when using queue server
     if is_re_worker_active() is True:

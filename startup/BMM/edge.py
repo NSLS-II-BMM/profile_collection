@@ -19,7 +19,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM.kafka         import kafka_message
 from BMM.wheel         import show_reference_wheel
 from BMM.modes         import change_mode, get_mode, pds_motors_ready, MODEDATA
-from BMM.linescans     import rocking_curve, slit_height, mirror_pitch, wiggle_bct
+from BMM.linescans     import rocking_curve, slit_height, mirror_pitch, wiggle_bct, hcenter
 from BMM.resting_state import resting_state_plan
 from BMM.workspace     import rkvs
 
@@ -138,14 +138,29 @@ def xrd_mode(energy=8600):
      '''Thin wrapper around change_mode() to prepare for XRD measurements.
      '''
      yield from change_edge('Ni', xrd=True, energy=energy)
+
+
+def quick_change(el, focus=False, edge='K', target=300., reference=False):
+    '''Streamlines edge change.  Just move the mono and set ROIs, but skip
+    the reference foil, tuning the second crystal, and mirror pitch
+    (or slit height) scan.
+
+    This is NOT recommended for large monochromator motions, but is
+    probably OK for adjacent elements.
+
+    '''
+    yield from change_edge(el, focus=focus, edge=edge, slits=False,  mirror=False, tune=False, target=target, xrd=False,
+                           bender=True, insist=False, no_ref=not reference, no_hslits=True)
     
 def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True, tune=True, target=300.,
-                xrd=False, bender=True, insist=False, no_ref=False):
+                xrd=False, bender=True, insist=False, no_ref=False, no_hslits=False):
     '''Change edge energy by:
     1. Moving the DCM above the edge energy
     2. Moving the photon delivery system to the correct mode
     3. Running a rocking curve scan
-    4. Running a slits_height scan
+    4. Running a mirror_pitch scan
+    5. Setting the reference material
+    5. Hinting ROIs for the new element & edge
 
     Parameters
     ----------
@@ -169,6 +184,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         force photon delivery system to XRD [False]
     insist : boolean
         override the check for whether to move M2, when True always move M2 [False]
+    no_ref : boolean, optional
+        when True, skip the movement of the reference wheel [False]
+        (this is useful when the reference stages have been used for something else)
+    no_hslits : boolean, optional
+        when True, skip the adjustment of horizontal slit size [False]
+        (this was implemented for the quick_change() function)
+
 
     Examples
     --------
@@ -198,7 +220,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
 
     '''
 
-    def main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref):
+    def main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref, no_hslits):
         el = el.capitalize()
         ######################################################################
         # this is a tool for verifying a macro.  this replaces an xafsmod scan  #
@@ -391,7 +413,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         # if not calibrating and mode != current_mode:
         #     print('Moving to photon delivery mode %s...' % mode)
         hsize_save = slits3.hsize.position
-        if mode == 'XRD':
+        if no_hslits is True:
+            pass
+        elif mode == 'XRD':
             yield from mv(slits3.hsize, 2)
         elif mode in ('D', 'E', 'F'):
             yield from mv(slits3.hsize, 3)
@@ -486,7 +510,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         # run a mirror pitch scan #
         ###########################
         if mirror:
-            if mode == 'A':
+            if mode in ('A', 'XRD'):
                 mirror = 'm2'
             else:
                 mirror = 'm3'
@@ -494,6 +518,10 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             yield from mirror_pitch(mirror=mirror, move=True)
             kafka_message({'close': 'last'})
 
+
+        if mode in ('A', 'B', 'C'):
+            yield from hcenter(move=True)
+            kafka_message({'close': 'last'})
             
         ##################################
         # set reference and roi channels #
@@ -515,7 +543,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             report('Finished configuring for XRD', level='bold', slack=True)
         else:
             #if mode in ('D', 'E', 'F'):
-            yield from mv(slits3.hsize, hsize_save)
+            if not no_hslits:
+                yield from mv(slits3.hsize, hsize_save)
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
         # if slits is False:
         #     print('  * You may need to verify the slit position:  RE(slit_height())')
@@ -536,6 +565,6 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
     dcm_pitch, dcm_perp = user_ns["dcm_pitch"], user_ns["dcm_perp"]
     dcm_roll, dcm_bragg = user_ns["dcm_roll"], user_ns["dcm_bragg"]
     dm3_bct, slits3 = user_ns['dm3_bct'], user_ns['slits3']
-    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref),
+    yield from finalize_wrapper(main_plan(el, focus, edge, energy, slits, mirror, tune, target, xrd, bender, insist, no_ref, no_hslits),
                                 cleanup_plan())
     user_ns['RE'].msg_hook = BMM_msg_hook

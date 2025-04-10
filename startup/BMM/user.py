@@ -831,8 +831,18 @@ class BMM_User(Borg):
         if startup is False:
             self.bmmbot.refresh_channel()   # direct Slack messages to new proposal channel
             kafka_message({'refresh_slack': True})  # do the same in the Kafka workers
-            
-            
+            from BMM.xafs import file_exists
+            if file_exists(proposal_base(), '.introduction_made', number=False) is False:
+                text = f'''Welcome to the Slack channel for your beamtime at BMM!
+ 
+:speech_balloon: Use this channel for chat .
+:atom_symbol: Beamline messages will be posted on #pass-{gup}-bmm.
+
+BMM data access: https://nsls-ii-bmm.github.io/BeamlineManual/data.html
+Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{gup}`'''
+                self.bmmbot.chat_and_pin(text)
+                kafka_message({'touch': os.path.join(proposal_base(), '.introduction_made')})
+
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None

@@ -197,7 +197,22 @@ class GlancingAngle(Device):
         xafs_pitch = user_ns['xafs_pitch']
         uid = yield from linescan(xafs_pitch, 'it', -2.5, 2.5, 51, dopluck=False, force=force)
         kafka_message({'close': 'last'})
-        table  = user_ns['db'][-1].table()
+
+        ATTEMPTS = 4
+        error = None
+        for attempt in range(ATTEMPTS):
+            try:
+                table  = user_ns['db'][-1].table()
+            except Exception as exc:
+                print(f"glancing angle alignment: Failure {attempt} reading back pitch scan data:", repr(exc))
+                error = exc
+            else:
+                break
+            time.sleep(2)
+        else:
+            # out of attemtps
+            raise error
+            
         pitch  = table['xafs_pitch']
         signal = table['It']/table['I0']
         target = signal.idxmax()
@@ -353,15 +368,19 @@ class GlancingAngle(Device):
 
         ## first pass in transmission
         yield from self.align_linear(drop=drop)
+        yield from sleep(1)
         yield from self.align_pitch()
+        yield from sleep(1)
 
         ## for realsies X or Y in transmission
         yield from self.align_linear(drop=drop)
         self.y_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        yield from sleep(1)
 
         ## for realsies Y in pitch
         yield from self.align_pitch()
         self.pitch_uid = user_ns['db'].v2[-1].metadata['start']['uid'] 
+        yield from sleep(1)
 
         ## record the flat position
         if self.orientation == 'parallel':

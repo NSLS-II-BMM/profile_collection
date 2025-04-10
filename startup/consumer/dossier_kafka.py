@@ -31,7 +31,7 @@ except:
 all_references = ast.literal_eval(rkvs.get('BMM:reference:mapping').decode('UTF8'))
 
 
-startup_dir = profile_configuration.get('services'. 'startup')
+startup_dir = profile_configuration.get('services', 'startup')
 
 def log_entry(logger, message):
     #if logger.name == 'BMM file manager logger' or logger.name == 'bluesky_kafka':
@@ -219,7 +219,7 @@ class BMMDossier():
 
             # left sidebar, entry for XRF file in the case of fluorescence data
             thismode = self.plotting_mode(XDI['_user']['mode'])
-            if thismode == 'xs' or thismode == 'xs1':
+            if thismode == 'xs' or thismode == 'xs1' or thismode == 'fluorescence':
                 with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
@@ -1125,7 +1125,7 @@ class XASFile():
                 if 'xspress3' in relative:
                     handle.write(f'# Scan.xspress3_hdf5_file: {relative}\n')
                 elif 'pilatus' in relative:
-                    handle.write(f'# Scan.piltus100k_hdf5_file: {relative}\n')
+                    handle.write(f'# Scan.pilatus100k_hdf5_file: {relative}\n')
         ## is this correct?  need to test....
             
         handle.write(f'# Scan.plot_hint: {self.plot_hint(catalog=catalog, uid=uid)}\n')
@@ -1165,6 +1165,10 @@ class XASFile():
             column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             nchan = 7
+            if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
+                column_list.extend(['yoneda', 'specular'])
+                column_labels.extend(['yoneda', 'specular'])
+                
         if nchan > 0:
             if 'yield' in catalog[uid].metadata['start']['plan_name'] or include_yield is True:
                 for i in range(1, nchan+1):

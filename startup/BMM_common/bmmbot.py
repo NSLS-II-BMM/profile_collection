@@ -65,6 +65,24 @@ class BMMbot():
         except SlackApiError as e:
             print('Slack message post failed for reason: ' + e.response["error"])
 
+    def chat(self, text):
+        '''Post a text message to the proposal discussion channel.
+
+        To generate a slightly randomized message (perhaps for
+        debugging purposes), put ":flag:" in the text.  That string
+        will be replaced by a random country flag emoji,
+        e.g. ":flag-tv:".
+
+        '''
+        if self._post_allowed is False:
+            print('Cannot post message. No proposal Slack channel exists.')
+            return
+        try:
+            response = self.client.chat_postMessage(text=text.replace(':flag:', self.random_flag()), channel=self.chat_channel)
+            self.last_message = response
+        except SlackApiError as e:
+            print('Slack chat failed for reason: ' + e.response["error"])
+
     def image(self, fname, title=None):
         '''Post an image (or other file) to the proposal-tla channel'''
         if self._post_allowed is False:
@@ -85,6 +103,7 @@ class BMMbot():
         print(f'pass_id           = {self.pass_id}')
         print(f'api_url           = {self.api_url}')
         print(f'non_chat_channel  = {self.non_chat_channel}')
+        print(f'chat_channel      = {self.non_chat_channel}')
         print(f'random flag emoji = {self.random_flag()}')
         
     def refresh_channel(self):
@@ -101,19 +120,22 @@ class BMMbot():
         response              = requests.get(self.api_url)
         self.channel_data     = json.loads(response.text)
         self.non_chat_channel = None
+        self.chat_channel     = None
         for c in self.channel_data:
             if c['channel_name'] == data_session + '-bmm':
                 self.non_chat_channel = c['channel_id']
                 self._post_allowed    = True
+            if c['channel_name'] == data_session:
+                self.chat_channel = c['channel_id']
         if self.non_chat_channel is None:
             self._post_allowed = False
 
-    def post_and_pin(self, text):
+    def chat_and_pin(self, text):
         '''Post a text message to the current proposal channel and pin that
         message to the channel.
 
         '''
-        self.post(text)
+        self.chat(text)
         if self.last_message is not None:
             timestamp = self.last_message.data['ts']
             channel = self.last_message.data['channel']

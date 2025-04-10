@@ -54,6 +54,8 @@ class XAFSSequence():
         self.folder = folder
         self.workspace = workspace
         self.repetitions = repetitions
+        if mode == 'pilatus':
+            mode = 'fluorescence'
         self.mode = mode
         self.tossfile = os.path.join(folder, 'snapshots', 'toss.png')
         #if self.fig is not None:
