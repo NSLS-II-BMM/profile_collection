@@ -341,7 +341,7 @@ if with_pilatus is True:
     pilatus.stats.kind = "omitted"
     pilatus.roi2.kind  = "hinted"
     pilatus.roi3.kind  = "hinted"
-    pilatus.roi2.name  = "yoneda"
+    pilatus.roi2.name  = "diffuse"
     pilatus.roi3.name  = "specular"
     #if pilatus.hdf5.run_time.get() == 0.0:
     #    pilatus.hdf5.warmup()

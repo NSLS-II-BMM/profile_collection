@@ -134,7 +134,7 @@ class BMMPilatus(AreaDetector):
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/pilatus100k-1/",
     )
     stats = C(EpicsSignalRO, "Stats1:Total_RBV")
-    roi2  = C(EpicsSignalRO, "ROIStat1:2:Total_RBV", name = 'yoneda')
+    roi2  = C(EpicsSignalRO, "ROIStat1:2:Total_RBV", name = 'diffuse')
     roi3  = C(EpicsSignalRO, "ROIStat1:3:Total_RBV", name = 'specular')
 
     

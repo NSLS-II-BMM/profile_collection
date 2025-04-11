@@ -65,3 +65,9 @@ def preserve(fname, target=None):
                        'target': target})
     else:
         print(warning_msg(f"There is not a file called {fname} in {user_ns['BMMuser'].workspace}."))
+
+
+def regenerate_file(uid):
+    '''Regenerate an XDI file for an XAS measurement given a UID.'''
+    fname = bmm_catalog[uid].metadata['start']['XDI']['_filename']
+    kafka_message({'xasxdi': True, 'uid': uid, 'filename': fname})

@@ -1162,16 +1162,16 @@ class XASFile():
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4'])
             nchan = 4
             if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
-                column_list.extend(['yoneda', 'specular'])
-                column_labels.extend(['yoneda', 'specular'])
+                column_list.extend(['diffuse', 'specular'])
+                column_labels.extend(['diffuse', 'specular'])
                 
         elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
             column_list.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             column_labels.extend([f'{el}1', f'{el}2', f'{el}3', f'{el}4', f'{el}5', f'{el}6', f'{el}7'])
             nchan = 7
             if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
-                column_list.extend(['yoneda', 'specular'])
-                column_labels.extend(['yoneda', 'specular'])
+                column_list.extend(['diffuse', 'specular'])
+                column_labels.extend(['diffuse', 'specular'])
                 
         if nchan > 0:
             if 'yield' in catalog[uid].metadata['start']['plan_name'] or include_yield is True:
@@ -1181,7 +1181,7 @@ class XASFile():
                 for i in range(1, nchan+1):
                     handle.write(f'# Column.{i+7}: {el}{i}\n')
         if 'pilatus100k-1' in catalog[uid].metadata['start']['detectors']:
-            handle.write(f'# Column.{8+nchan}: yoneda\n')
+            handle.write(f'# Column.{8+nchan}: diffuse\n')
             handle.write(f'# Column.{9+nchan}: specular\n')
 
                     

@@ -483,7 +483,7 @@ class XAFSScan():
     |          |          |          |
     +----------+----------+----------+
     |          |          |          |
-    |  Yoneda  | specular |          |
+    | diffuse  | specular |          |
     |          |          |          |
     +----------+----------+----------+
 
@@ -638,10 +638,10 @@ class XAFSScan():
             self.ref.set_ylabel('reference $\mu(E)$')
             self.ref.set_xlabel('energy (eV)')
             self.ref.set_title(f'reference: {self.reference_material}')
-        elif self.mode == 'pilatus':  # pilatus plot re-purposes ref for Yoneda
-            self.ref.set_ylabel('yoneda intensity')
+        elif self.mode == 'pilatus':  # pilatus plot re-purposes ref for diffuse
+            self.ref.set_ylabel('diffuse intensity')
             self.ref.set_xlabel('energy (eV)')
-            self.ref.set_title('Yoneda')
+            self.ref.set_title('diffuse scattering')
             
 
         ## yield needs the iy signal
@@ -652,7 +652,7 @@ class XAFSScan():
         elif self.mode == 'pilatus':  # pilatus plot re-purposes iy for specular
             self.iy.set_ylabel('specular intensity')
             self.iy.set_xlabel('energy (eV)')
-            self.iy.set_title('specular')
+            self.iy.set_title('specular scattering')
             
         ## common appearance
         for ax in self.axis_list:
@@ -744,7 +744,7 @@ class XAFSScan():
             self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
             
         if self.mode == 'pilatus':  # re-purpose refer and iysig
-            self.refer.append(kwargs['data']['yoneda']/kwargs['data']['I0'])
+            self.refer.append(kwargs['data']['diffuse']/kwargs['data']['I0'])
             self.iysig.append(kwargs['data']['specular']/kwargs['data']['I0'])
             self.line_iy.set_data(self.energy, self.iysig)
 
