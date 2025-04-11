@@ -130,7 +130,7 @@ def manage_files_from_kafka_messages(beamline_acronym):
                     #     logger.info('set 1 parameter')
 
                 elif message['dossier'] == 'show':
-                    logger.info(pprint.pformat(dossier.__dict__))
+                    #logger.info(pprint.pformat(dossier.__dict__))
                     pobj(dossier)
                     
                 elif message['dossier'] == 'motors':

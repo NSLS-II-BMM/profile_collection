@@ -136,6 +136,7 @@ class BMMDossier():
     instrument = None
     rid = None
     uidlist = []
+    force_seqnumber = None
 
     def set_parameters(self, **kwargs):
         '''Set dossier parameters from strings in the Kafka message.
@@ -195,13 +196,16 @@ class BMMDossier():
         ## determine names of output dossier files
         basename     = XDI['_user']['filename']
         htmlfilename = os.path.join(folder, 'dossier/', XDI['_user']['filename']+'-01.html')
-        seqnumber = 1
-        if os.path.isfile(htmlfilename):
-            seqnumber = 2
-            while os.path.isfile(os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))):
-                seqnumber += 1
-            basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
-            htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
+        if self.force_seqnumber is not None:
+            seqnumber = self.force_seqnumber
+        else:
+            seqnumber = 1
+            if os.path.isfile(htmlfilename):
+                seqnumber = 2
+                while os.path.isfile(os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))):
+                    seqnumber += 1
+        basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
+        htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
         rkvs.set('BMM:dossier:seqnumber', seqnumber)
             
         ## sanity check the "report ID" (used to link to correct position in messagelog.html
@@ -209,7 +213,7 @@ class BMMDossier():
 
         try:
             # dossier header
-            with open(os.path.join(startup_dir, 'tmpl', 'dossier_top.tmpl')) as f:
+            with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_top.tmpl')) as f:
                 content = f.readlines()
             thiscontent = ''.join(content).format(measurement   = 'XAFS',
                                                   filename      = XDI['_user']['filename'],
@@ -219,8 +223,8 @@ class BMMDossier():
 
             # left sidebar, entry for XRF file in the case of fluorescence data
             thismode = self.plotting_mode(XDI['_user']['mode'])
-            if thismode == 'xs' or thismode == 'xs1' or thismode == 'fluorescence':
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_file.tmpl')) as f:
+            if thismode in ('xs', 'xs1', 'fluorescence'):
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
                                                        xrffile       = quote('../XRF/'+XDI['_xrffile']),
@@ -237,7 +241,7 @@ class BMMDossier():
             #             if 'pilatus100k' in this:
             #                 pilatus_hdf5 = this
             #                 break
-            #     with open(os.path.join(startup_dir, 'tmpl', 'dossier_pilatus.tmpl')) as f:
+            #     with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_pilatus.tmpl')) as f:
             #         content = f.readlines()
             #     thiscontent += ''.join(content).format(hdf5file = pilatus_hdf5,
             #                                            basename = os.path.basename(pilatus_hdf5), )
@@ -247,7 +251,7 @@ class BMMDossier():
             instrument = XDI['_user']['instrument']
             if instrument is None or instrument == '':
                 instrument = self.instrument_default()
-            with open(os.path.join(startup_dir, 'tmpl', 'dossier_middle.tmpl')) as f:
+            with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_middle.tmpl')) as f:
                 content = f.readlines()
             thiscontent += ''.join(content).format(basename      = XDI['_user']['filename'], # awkward, wants un-numbered basename
                                                    scanlist      = self.generate_scanlist(bmm_catalog),  # uses self.uidlist
@@ -261,28 +265,28 @@ class BMMDossier():
 
             # middle part, cameras, one at a time and only if actually snapped
             if 'webcam_uid' in snapshots and snapshots['webcam_uid'] != '':
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['webcam_file']),
                                                        uid         = snapshots['webcam_uid'],
                                                        camera      = 'webcam',
                                                        description = 'XAS web camera', )
             if 'anacam_uid' in snapshots and snapshots['anacam_uid'] != '':
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['analog_file']),
                                                        uid         = snapshots['anacam_uid'],
                                                        camera      = 'anacam',
                                                        description = 'analog pinhole camera', )
             if 'usbcam1_uid' in snapshots and snapshots['usbcam1_uid'] != '':
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['usb1_file']),
                                                        uid         = snapshots['usbcam1_uid'],
                                                        camera      = 'usbcam1',
                                                        description = 'USB camera #1', )
             if 'usbcam2_uid' in snapshots and snapshots['usbcam2_uid'] != '':
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_img.tmpl')) as f:
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_img.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(snap        = quote('../snapshots/'+snapshots['usb2_file']),
                                                        uid         = snapshots['usbcam2_uid'],
@@ -290,7 +294,7 @@ class BMMDossier():
                                                        description = 'USB camera #2', )
             
             # middle part, XRF and glancing angle alignment images
-            if thismode == 'xs' or thismode == 'xs1':
+            if thismode in ('xs', 'xs1', 'fluorescence'):
                 el = XDI['Element']['symbol']
                 if '4-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
                     rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
@@ -320,7 +324,7 @@ class BMMDossier():
                             int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel06_xrf']).sum()),
                             int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel07_xrf']).sum()) ]
 
-                with open(os.path.join(startup_dir, 'tmpl', 'dossier_xrf_image.tmpl')) as f:
+                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_xrf_image.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+snapshots['xrf_image']),
                                                        pccenergy = '%.1f' % XDI['_user']['pccenergy'],
@@ -328,7 +332,7 @@ class BMMDossier():
                                                        rois      = ', '.join(map(str,rois)),
                                                        symbol    = XDI['Element']['symbol'],)
                 if 'ga_filename' in snapshots:
-                    with open(os.path.join(startup_dir, 'tmpl', 'dossier_ga.tmpl')) as f:
+                    with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_ga.tmpl')) as f:
                         content = f.readlines()
                     thiscontent += ''.join(content).format(ga_align = quote('../snapshots/'+ snapshots['ga_filename']),
                                                            ga_yuid  = snapshots['ga_yuid'],
@@ -336,7 +340,7 @@ class BMMDossier():
                                                            ga_fuid  = snapshots['ga_fuid'], )
 
             # end of dossier
-            with open(os.path.join(startup_dir, 'tmpl', 'dossier_bottom.tmpl')) as f:
+            with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_bottom.tmpl')) as f:
                 content = f.readlines()
             if XDI['Element']['symbol'] in all_references:
                 this_ref = all_references[XDI['Element']['symbol']][3]
@@ -367,7 +371,7 @@ class BMMDossier():
                                                    clargs        = highlight(XDI['_user']['clargs'],  PythonLexer(), HtmlFormatter()),
                                                    filename      = XDI['_user']['filename'],)
 
-            with open(htmlfilename, 'a') as o:
+            with open(htmlfilename, 'w') as o:
                 o.write(thiscontent)
 
             log_entry(logger, f'wrote XAFS dossier: {htmlfilename}')
@@ -395,7 +399,7 @@ class BMMDossier():
             this = os.path.basename(fname)
             experimentlist += f'<li>{scantype}: <a href="./{this}">{this}</a></li>\n'
 
-        with open(os.path.join(startup_dir, 'tmpl', 'manifest.tmpl')) as f:
+        with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'manifest.tmpl')) as f:
             content = f.readlines()
         indexfile = os.path.join(self.folder, 'dossier', '00INDEX.html')
         o = open(indexfile, 'w')
@@ -892,7 +896,7 @@ class BMMDossier():
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
 
 
-        with open(os.path.join(startup_dir, 'tmpl', 'sead_dossier.tmpl')) as f:
+        with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'sead_dossier.tmpl')) as f:
                 content = f.readlines()
         thiscontent = ''.join(content).format(measurement   = 'SEAD',
                                               filename      = XDI['_user']['filename'],
@@ -1003,7 +1007,7 @@ class BMMDossier():
             basename     = "%s-%2.2d" % (XDI['_user']['filename'],seqnumber)
             htmlfilename = os.path.join(folder, 'dossier', "%s-%2.2d.html" % (XDI['_user']['filename'],seqnumber))
 
-        with open(os.path.join(startup_dir, 'tmpl', 'raster_dossier.tmpl')) as f:
+        with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'raster_dossier.tmpl')) as f:
                 content = f.readlines()
         thiscontent = ''.join(content).format(measurement   = 'RASTER',
                                               filename      = XDI['_user']['filename'],
