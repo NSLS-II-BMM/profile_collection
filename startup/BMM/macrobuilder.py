@@ -114,6 +114,7 @@ class BMMMacroBuilder():
         self.optimize         = None
         self.orientation      = 'parallel'
         self.retract          = 10
+        self.edge_change      = 'Quick'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.
@@ -192,7 +193,10 @@ class BMMMacroBuilder():
             else:
                 self.orientation = 'parallel' # only GA                
             if self.ws['N3'].value is not None:
-                self.retract         = abs(self.ws['N3'].value)      # only GA
+                if 'Retraction'  in str(self.ws['M3'].value):
+                    self.retract = abs(self.ws['N3'].value)      # only GA
+                if 'Edge change' in str(self.ws['M3'].value):
+                    self.edgechange = str(self.ws['N3'].value)      # only GA
         if self.nreps is None:
             self.nreps = 1
         else:
@@ -539,7 +543,10 @@ class BMMMacroBuilder():
         return fname
 
     def do_change_edge(self, el, ed, focus, tab):
-        text = f"{tab}yield from change_edge('{el}', edge='{ed}', focus={focus})\n"
+        if self.edgechange == 'Quick':
+            text = f"{tab}yield from quick_change('{el}', edge='{ed}', focus={focus})\n"
+        else:
+            text = f"{tab}yield from change_edge('{el}', edge='{ed}', focus={focus})\n"
         time = 5.0
         inrange = True
         ee = edge_energy(el, ed)
@@ -567,7 +574,10 @@ class BMMMacroBuilder():
 
         text  = self.tab + "## change edge before starting, if needed...\n"
         text += self.tab + f"if not_at_edge('{first_element}', '{first_edge}'):\n"
-        text += self.tab + f"    yield from change_edge('{first_element}', edge='{first_edge}', focus={first_focus})\n\n"
+        if self.edgechange == 'Quick':
+            text += self.tab + f"    yield from quick_change('{first_element}', edge='{first_edge}', focus={first_focus})\n\n"
+        else:
+            text += self.tab + f"    yield from change_edge('{first_element}', edge='{first_edge}', focus={first_focus})\n\n"
 
         return text
 
@@ -621,7 +631,7 @@ class BMMMacroBuilder():
         for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method',
                   'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx',
                   'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2',
-                  'optimize'):
+                  'optimize', 'roi2', 'roi3', 'spinner'):
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'
