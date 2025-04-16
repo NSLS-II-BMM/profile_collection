@@ -154,36 +154,36 @@ the templates folder of your data directory.
 
     if instrument.lower() == 'glancing angle':
         print(bold_msg('This is a glancing angle spreadsheet'))
-        gawheel.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'glancing angle stage'
+        gawheel.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'double wheel':
         print(bold_msg('This is a double sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet, sheet, double=True)
         BMMuser.instrument = 'double wheel'
+        wmb.spreadsheet(spreadsheet, sheet, double=True)
     elif instrument.lower() == 'linkam':
         print(bold_msg('This is a Linkam spreadsheet'))
-        lmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'Linkam stage'
+        lmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'lakeshore':
         print(bold_msg('This is a LakeShore spreadsheet'))
-        lsmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'LakeShore 331'
+        lsmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'grid':
         print(bold_msg('This is a motor grid spreadsheet'))
-        gmb.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'motor grid'
+        gmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'resonant reflectivity':
         print(bold_msg('This is a resonant reflectivity spreadsheet'))
-        refl.spreadsheet(spreadsheet, sheet)
         BMMuser.instrument = 'resonant reflectivity'
+        refl.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'sample wheel':
         print(bold_msg('This is a single wheel spreadsheet'))
         print(error_msg('Single wheel spreadsheets have been retired.'))
         print(error_msg('Use a double wheel spreadsheet, instead.'))
     else:
         print(bold_msg('This is a double sample wheel spreadsheet'))
-        wmb.spreadsheet(spreadsheet, sheet, double=True)
         BMMuser.instrument = 'double wheel'
+        wmb.spreadsheet(spreadsheet, sheet, double=True)
 
     rkvs.set('BMM:automation:type', instrument)
     kafka_message({'copy': True,

@@ -82,38 +82,32 @@ class Linkam(PVPositioner):
     def off_plan(self):
         return(yield from mv(self.startheat, 0))
 
-    def arr2word(self, lst):
-        word = ''
-        for l in lst[:-1]:
-            word += chr(l)
-        return word
-
     def temperature(self):
         return self.readback.get()
     
     @property
     def serial(self):
-        return self.arr2word(self.serial_array.get())
+        return self.serial_array.get(as_string=True)
 
     @property
     def model(self):
-        return self.arr2word(self.model_array.get())
+        return self.model_array.get(as_string=True)
     
     @property
     def stage_model(self):
-        return self.arr2word(self.stage_model_array.get())
+        return self.stage_model_array.get(as_string=True)
     
     @property
     def stage_serial(self):
-        return self.arr2word(self.stage_serial_array.get())
+        return self.stage_serial_array.get(as_string=True)
 
     @property
     def firmware_version(self):
-        return self.arr2word(self.firm_ver.get())
+        return self.firm_ver.get(as_string=True)
 
     @property
     def hardware_version(self):
-        return self.arr2word(self.hard_ver.get())
+        return self.hard_ver.get(as_string=True)
 
     def status(self):
         text = f'\nCurrent temperature = {self.readback.get():.1f}, setpoint = {self.setpoint.get():.1f}\n\n'

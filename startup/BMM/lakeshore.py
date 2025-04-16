@@ -189,7 +189,10 @@ class LakeShore(PVPositioner):
         else:
             yield from mv(self.setpoint, target)
             yield from mv(self.power, self.level(heater))
-            deltat = int(1.3 * (abs(self.setpoint.get() - self.readback.get()) / self.ramp_rate.get())) * 60
+            rate = self.ramp_rate.get()
+            if rate == 0:
+                rate = 1
+            deltat = int(1.3 * (abs(self.setpoint.get() - self.readback.get()) / rate)) * 60
             #yield from mv(self, target)
             print(f'Waiting {deltat/60.0:.1f} minutes to arrive at temperature.')
             yield from mv(user_ns['busy'], deltat)
@@ -308,7 +311,10 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
                 self.content += self.tab + f'yield from mv(busy, {m["settle"]:.1f})\n'
                 temperature = m['temperature']
                 settle_time += m["settle"]
-                ramp_time += (temperature - previous) / user_ns['lakeshore'].ramp_rate.get()
+                rate = user_ns['lakeshore'].ramp_rate.get()
+                if rate == 0:
+                    rate = 1
+                ramp_time += (temperature - previous) / rate
                 previous = temperature
 
             ############################

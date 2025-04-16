@@ -101,10 +101,10 @@ class BMMMacroBuilder():
                                  'focus', 'measure',
                                  'slot', 'ring',  # ex situ sample wheel
                                  'temperature', 'settle', 'power',  # Linkam, Lakeshore
-                                 'spin', 'angle',  # glancing angle stage
-                                 'spinner', 'roi2', 'roi3', # resonent reflectivity
+                                 'spin', 'angle', 'method',  # glancing angle stage
+                                 'spinner', 'roi2', 'roi3', 'flat', 'relativep', # resonent reflectivity
                                  'motor1', 'position1', 'motor2', 'position2', 'motor3', 'position3',  # grid automation
-                                 'method', 'optimize'  # ???
+                                 'optimize'  # grid, but not in use
         )
         self.flags            = ('snapshots', 'htmlpage', 'usbstick', 'bothways', 'channelcut', 'ththth')
         self.motors           = ('samplex', 'sampley', 'samplep', 'slitwidth', 'slitheight', 'detectorx')
@@ -114,7 +114,7 @@ class BMMMacroBuilder():
         self.optimize         = None
         self.orientation      = 'parallel'
         self.retract          = 10
-        self.edge_change      = 'Quick'
+        self.edgechange       = 'Quick'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.
@@ -512,7 +512,7 @@ class BMMMacroBuilder():
         ed = self.measurements[0]['edge']
         t = ''
         if 'temperature' in self.measurements[0]:
-            t  = f'{int(self.measurements[0]["temperature"])::03d}'
+            t  = f'{int(self.measurements[0]["temperature"]):03d}'
         if 'element' in m:
             el = m['element']
         if 'edge' in m:
@@ -539,6 +539,9 @@ class BMMMacroBuilder():
             fname = el + self.joiner + ed + self.joiner + t + self.joiner + fname
         elif self.append_element.lower() == 'temperature+element+edge at end':
             fname = fname + self.joiner + el + self.joiner + ed + self.joiner + t
+
+        if 'relativep' in m:
+            fname = fname + self.joiner + str(m['relativep']) + 'deg'
             
         return fname
 
@@ -628,10 +631,11 @@ class BMMMacroBuilder():
         config = configparser.ConfigParser()
         default = self.measurements[0].copy()
         #          things in the spreadsheet but not in the INI file
-        for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method',
-                  'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx',
-                  'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2',
-                  'optimize', 'roi2', 'roi3', 'spinner'):
+        # for k in ('default', 'slot', 'measure', 'spin', 'focus', 'method',
+        #           'samplep', 'samplex', 'sampley', 'slitwidth', 'slitheight', 'detectorx',
+        #           'settle', 'power', 'temperature', 'motor1', 'position1', 'motor2', 'position2', 'motor3', 'position3',
+        #           'optimize', 'roi2', 'roi3', 'spinner', 'flat', 'relativep'):
+        for k in self.experiment + self.motors + self.flags + self.science_metadata:
             default.pop(k, None)
         default['url'] = '...'
         default['doi'] = '...'
@@ -644,7 +648,8 @@ class BMMMacroBuilder():
         if default is None:
             print(error_msg(f'Could not interpret {self.source} as a wheel macro.'))
             return
-        # print(default)
+        #import pprint
+        #pprint.pprint(default)
         config.read_dict({'scan': default})
 
         ## write ini file and macro script to workspace
