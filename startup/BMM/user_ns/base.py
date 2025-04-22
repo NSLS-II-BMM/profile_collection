@@ -61,7 +61,7 @@ tiled_writing_client = from_uri(profile_configuration.get('services', 'tiled'),
 
 def post_document(name, doc):
     #tz = time.monotonic()
-    ATTEMPTS = 30
+    ATTEMPTS = 6
     error = None
     for attempt in range(ATTEMPTS):
         try:
@@ -71,18 +71,20 @@ def post_document(name, doc):
             error = exc
         else:
             break
-        time.sleep(2)
+        print(f'sleeping {2**attempt} seconds before trying again...')
+        time.sleep(2**attempt)
     else:
         # out of attempts
-        print('**************************************************')
+        print('***************************************************')
         print('One last try to connect to tiled.  Wating 2 minutes')
         print(f'Begin sleeping for 2 minutes at {datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")}')
-        print('**************************************************')
+        print('***************************************************')
         time.sleep(120)
         try:
             tiled_writing_client.post_document(name, doc)
         except Exception as exc:
             print("Document saving failure:", repr(exc))
+            print("Likeliest cause is a network failure or a Tiled service failure.  Contact beamline staff.")
             error = exc
             raise error
         else:

@@ -336,6 +336,9 @@ if with_pilatus is True:
     EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats2:EnableCallbacks', name='').put(1)
     EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats3:EnableCallbacks', name='').put(1)
     EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats4:EnableCallbacks', name='').put(1)
+
+    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:EnableCallbacks_RBV', name='').put(1)
+
     
     pilatus = BMMPilatusSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["hdf5"])
     pilatus.stats.kind = "omitted"

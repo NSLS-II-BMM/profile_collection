@@ -17,6 +17,8 @@ from BMM.suspenders    import BMM_clear_to_start
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.base   import profile_configuration
+
 
 MODEDATA = None
 def read_mode_data():
@@ -605,13 +607,13 @@ def change_xtals(xtal=None):
      yield from sleep(1.0) 
      if xtal == 'Si(111)':
           yield from mv(dcm_pitch, 4.3,
-                        dcm_roll, -8.05644,  # new value April 10, 2025
+                        dcm_roll,  profile_configuration.getfloat('dcm', 'roll_111'),
                         dcm_x,     0.5    )
           #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset
      elif xtal == 'Si(311)':
           yield from mv(dcm_pitch, 2.28,
-                        dcm_roll, -23.86,
+                        dcm_roll,  profile_configuration.getfloat('dcm', 'roll_111'),
                         dcm_x,     65.3    )
           #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset

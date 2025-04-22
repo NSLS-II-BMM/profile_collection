@@ -543,7 +543,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             report('Finished configuring for XRD', level='bold', slack=True)
         else:
             #if mode in ('D', 'E', 'F'):
-            if not no_hslits:
+            if no_hslits is False:
                 yield from mv(slits3.hsize, hsize_save)
             report(f'Finished configuring for {el.capitalize()} {edge.capitalize()} edge, now in photon delivery mode {get_mode()}', level='bold', slack=True)
         # if slits is False:

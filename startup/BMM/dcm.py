@@ -15,6 +15,7 @@ BMM_dcm = dcm_parameters()
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from BMM.user_ns.base   import profile_configuration
 from BMM.user_ns.bmm    import BMMuser
 from BMM.user_ns.dcm    import *
 
@@ -129,7 +130,7 @@ class DCM(PseudoPositioner):
         ## move pitch and roll to the Si(111) positions
         this_energy = self.energy.readback.get()
         yield from self.kill_plan()
-        yield from mv(user_ns['dcm_pitch'], approximate_pitch(this_energy), user_ns['dcm_roll'], -4.56078)
+        yield from mv(user_ns['dcm_pitch'], approximate_pitch(this_energy), user_ns['dcm_roll'], profile_configuration.getfloat('dcm', 'roll_111')) # -8.05644)
         yield from mv(self.energy, this_energy)
         print('DCM is at %.1f eV.  There should be signal in I0.' % self.energy.readback.get())
         yield from sleep(2.0)
