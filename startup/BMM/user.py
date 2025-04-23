@@ -702,12 +702,13 @@ class BMM_User(Borg):
                        'file': macropy,
                        'target': os.path.join(base, "templates")})
 
-        #self.find_or_copy_file(0, 'wheel macro spreadsheet',    'wheel.xlsx')
-        self.find_or_copy_file(0, 'glancing angle spreadsheet', 'glancing_angle.xlsx')
-        self.find_or_copy_file(0, 'double wheel spreadsheet',   'wheel.xlsx')
-        self.find_or_copy_file(0, 'Linkam stage spreadsheet',   'linkam.xlsx')
-        self.find_or_copy_file(0, 'Lakeshore spreadsheet',      'lakeshore.xlsx')
-        self.find_or_copy_file(0, 'motor grid spreadsheet',     'grid.xlsx')
+        #self.find_or_copy_file(0, 'wheel macro spreadsheet',           'wheel.xlsx')
+        self.find_or_copy_file(0, 'glancing angle spreadsheet',        'glancing_angle.xlsx')
+        self.find_or_copy_file(0, 'double wheel spreadsheet',          'wheel.xlsx')
+        self.find_or_copy_file(0, 'Linkam stage spreadsheet',          'linkam.xlsx')
+        self.find_or_copy_file(0, 'Lakeshore spreadsheet',             'lakeshore.xlsx')
+        self.find_or_copy_file(0, 'motor grid spreadsheet',            'grid.xlsx')
+        self.find_or_copy_file(0, 'resonant reflectivity spreadsheet', 'reflectivity.xlsx')
         step += 1            
         
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--

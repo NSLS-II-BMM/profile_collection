@@ -194,7 +194,7 @@ def determine_reference():
     xafs_ref  = user_ns['xafs_ref']
     xafs_refx = user_ns['xafs_refx']
     slot  = round((-15+xafs_ref.position) / (-15)) % 24
-    if xafs_refx.position < 0:
+    if abs(xafs_refx.position - xafs_ref.outer_position) < abs(xafs_refx.position - xafs_ref.inner_position):  # if closer to outer ring...
         ring = 0
     else:
         ring = 1
