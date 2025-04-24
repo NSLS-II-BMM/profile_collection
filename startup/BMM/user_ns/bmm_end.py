@@ -502,7 +502,7 @@ def examine_diagnostics():
             whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.')
         else:
             whisper(f'{TAB}{things[k][0]} is not homed (which is ok, BR 5/5/23).')
-            #print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
+            #error_msg(f'{TAB}{things[k][0]} is not homed.')
 
         
     if 'SynAxis' in f'{user_ns["dm3_bpm"]}':
@@ -514,7 +514,7 @@ def examine_diagnostics():
             print(f'{TAB}DM3 BPM {CHECK}')
     else:
         whisper(f'{TAB}DM3 BPM is not homed (which is ok, BR 5/5/23).')
-        #print(error_msg(f'{TAB}DM3 BPM is not homed.'))
+        #error_msg(f'{TAB}DM3 BPM is not homed.')
 
             
 def check_for_synaxis():

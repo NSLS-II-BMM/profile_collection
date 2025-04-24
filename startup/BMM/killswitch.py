@@ -83,10 +83,10 @@ class KillSwitch(Device):
            'dcm', 'slits2', 'm2', 'm3', 'dm3'
         '''
         if mc is None:
-            print(error_msg("Specify a device: ks.kill(device), device is dcm/slits2/m2/m3/dm3"))
+            error_msg("Specify a device: ks.kill(device), device is dcm/slits2/m2/m3/dm3")
             return False
         if mc.lower() not in ('dcm', 'slits2', 'm2', 'm3', 'dm3'):
-            print(error_msg("Specify a device: ks.kill(device), device is dcm/slits2/m2/m3/dm3"))
+            error_msg("Specify a device: ks.kill(device), device is dcm/slits2/m2/m3/dm3")
             return False
         return True
         
@@ -123,13 +123,13 @@ class KillSwitch(Device):
         '''
         if self.check(mc) is False:
             return
-        print(bold_msg(f'Cycling amplifiers on {mc} motor controller'))
-        print(whisper('killing amplifiers'))
+        bold_msg(f'Cycling amplifiers on {mc} motor controller')
+        whisper('killing amplifiers')
         self.kill(mc)
         countdown(5)
-        print(whisper('reactivating amplifiers'))
+        whisper('reactivating amplifiers')
         self.enable(mc)
-        print(whisper('enabling motors'))
+        whisper('enabling motors')
         if mc == 'm2':
             m2.ena()
         elif mc == 'm3':

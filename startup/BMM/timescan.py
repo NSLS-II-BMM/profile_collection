@@ -77,8 +77,8 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a time scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a time scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
@@ -86,7 +86,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     if force is False:
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -95,7 +95,7 @@ def timescan(detector, readings, dwell, delay, outfile=None, force=False, md={})
     ## sanitize and sanity checks on detector
     detector = detector.capitalize()
     if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Ic1', 'Test', 'Transmission', 'Fluorescence', 'Flourescence'):
-        print(error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, ic1, transmission, fluorescence)\n'))
+        error_msg(f'\n*** {detector} is not a timescan measurement (it, if, i0, iy, ir, ic1, transmission, fluorescence)\n')
         yield from null()
         return None
 
@@ -173,7 +173,7 @@ def ts2dat(datafile, key):
     >>> ts2dat('/path/to/myfile.dat', '42447313-46a5-42ef-bf8a-46fedc2c2bd1')
     '''
     kafka_message({'seadxdi': True, 'uid': key, 'filename': datafile})
-    print(bold_msg('wrote timescan to %s' % datafile))
+    bold_msg('wrote timescan to %s' % datafile)
 
 
 ###############################################################################
@@ -197,7 +197,7 @@ def sead(inifile=None, force=False, **kwargs):
         # if force is False:
         #     (ok, ctstext) = BMM_clear_to_start()
         #     if ok is False:
-        #         print(error_msg(ctstext))
+        #         error_msg(ctstext)
         #         yield from null()
         #         return
 
@@ -208,14 +208,14 @@ def sead(inifile=None, force=False, **kwargs):
             inifile = os.path.join(BMMuser.workspace, inifile)
             if not os.path.isfile(inifile):
                 print(inifile)
-                print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
+                warning_msg('\n%s does not exist!  Bailing out....\n' % orig)
                 return(orig, -1)
-        print(bold_msg('reading ini file: %s' % inifile))
+        bold_msg('reading ini file: %s' % inifile)
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if not any(p):          # scan_metadata returned having printed an error message
             return(yield from null())
         #if not os.path.isdir(p['folder']):
-        #    print(error_msg('\n%s is not a folder\n' % p['folder']))
+        #    error_msg('\n%s is not a folder\n' % p['folder'])
         #    return(yield from null())
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
@@ -237,7 +237,7 @@ def sead(inifile=None, force=False, **kwargs):
         ## verify output file name won't be overwritten
         outfile = f"{p['filename']}.{int(p['start']):03d}"
         if file_exists(filename=outfile, number=False):
-            print(error_msg('%s already exists!  Bailing out....' % outfile))
+            error_msg('%s already exists!  Bailing out....' % outfile)
             return(yield from null())
 
         kafka_message({'dossier': 'start', 'stub': p['filename']})
@@ -272,7 +272,7 @@ def sead(inifile=None, force=False, **kwargs):
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         # organize metadata for injection into database and XDI output
-        print(bold_msg('gathering metadata'))
+        bold_msg('gathering metadata')
         md = bmm_metadata(measurement   = p['mode'],
                           experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
@@ -340,7 +340,7 @@ def sead(inifile=None, force=False, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## move to the energy specified in the INI file
-        print(bold_msg('Moving to measurement energy: %.1f eV' % p['energy']))
+        bold_msg('Moving to measurement energy: %.1f eV' % p['energy'])
         dcm.mode = 'fixed'
         yield from mv(dcm.energy, p['energy'])
 
@@ -386,7 +386,7 @@ def sead(inifile=None, force=False, **kwargs):
         if how != 'stopped':
             report(f'== SEAD scan {how}', level='bold', slack=True)
         else:
-            print(whisper('Quitting SEAD scan.'))
+            whisper('Quitting SEAD scan.')
 
         yield from resting_state_plan()
 

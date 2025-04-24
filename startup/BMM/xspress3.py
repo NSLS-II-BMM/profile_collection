@@ -100,7 +100,7 @@ class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
         This has been slightly modified by Bruce to avoid a situation where the warmup
         hangs.  Also to add some indication on screen for what is happening.
         """
-        print(whisper("                        warming up the hdf5 plugin..."), flush=True)
+        whisper("                        warming up the hdf5 plugin...")
         self.enable.set(1).wait()
 
         # JOSH: proposed changes for new IOC
@@ -133,7 +133,7 @@ class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
             sig.set(val).wait()
-        print(whisper("                        done"))
+        whisper("                        done")
 
     def unstage(self):
         """A custom unstage method is needed to avoid these messages:

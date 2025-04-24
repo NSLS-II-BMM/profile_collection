@@ -79,28 +79,15 @@ except ImportError:
 
 def colored(text, tint='white', attrs=[], end=None):
     '''
-    A simple wrapper around rich
+    A simple wrapper around rich.print
     '''
     if not is_re_worker_active():
-        #from IPython.utils.coloransi import TermColors as color
         tint = tint.lower()
         this = f'[{tint}]{text}[/{tint}]'
-        #print(this)
         if end is not None:
             cprint(f'[{tint}]{text}[/{tint}]', end=end)
         else:
             cprint(f'[{tint}]{text}[/{tint}]')
-        # if 'dark' in tint:
-        #     tint = 'Dark' + tint[4:].capitalize()
-        # elif 'light' in tint:
-        #     tint = 'Light' + tint[5:].capitalize()
-        # elif 'blink' in tint:
-        #     tint = 'Blink' + tint[5:].capitalize()
-        # elif 'no' in tint:
-        #     tint = 'Normal'
-        # else:
-        #     tint = tint.capitalize()
-        # return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
     else:
         print(text)
         
@@ -130,10 +117,10 @@ def go_msg(text, end=None):
     colored(text, 'green', end=end)
 def url_msg(text, end=None):
     '''Undecorated text, intended for URL decoration...'''
-    colored(text, 'normal', end=end)
+    colored(text, 'underline', end=end)
 def bold_msg(text, end=None):
     '''Bright white text'''
-    colored(text, 'white', end=end)
+    colored(text, 'yellow2', end=end)
 def verbosebold_msg(text, end=None):
     '''Bright cyan text'''
     colored(text, 'cyan', end=end)
@@ -142,10 +129,10 @@ def list_msg(text, end=None):
     colored(text, 'bold cyan', end=end)
 def disconnected_msg(text, end=None):
     '''Purple text'''
-    colored(text, 'purple', end=end)
+    colored(text, 'magenta3', end=end)
 def info_msg(text, end=None):
     '''Brown text'''
-    colored(text, 'brown', end=end)
+    colored(text, 'light_goldenrod2', end=end)
 def cold_msg(text, end=None):
     '''Light blue text'''
     colored(text, 'blue', end=end)
@@ -261,7 +248,7 @@ def elapsed_time(start, slack=None):
 def present_options(suffix='xlsx'):
     options = [x for x in os.listdir(user_ns['BMMuser'].workspace) if x.endswith(suffix)]
     options = sorted(options)
-    print(bold_msg(f'Looking in {user_ns["BMMuser"].workspace}\n'))
+    bold_msg(f'Looking in {user_ns["BMMuser"].workspace}\n')
     
     print(f'Select your {suffix} file:\n')
     for i,x in enumerate(options):

@@ -427,7 +427,7 @@ def set_reference_wheel(position=None):
 
 if rkvs.get('BMM:ref:outer') is None:
     xafs_ref.outer_position = 0.0
-    print(error_msg('\t\t\t\tReference wheel is not aligned!'))
+    error_msg('\t\t\t\tReference wheel is not aligned!')
 else:
     set_reference_wheel(float(rkvs.get('BMM:ref:outer')))
 #    xafs_ref.outer_position   = float(rkvs.get('BMM:ref:outer'))

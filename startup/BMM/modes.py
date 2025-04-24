@@ -87,7 +87,7 @@ def pds_motors_ready():
     count = 0
     for m in mcs8_motors:
         if m.amfe.get() or m.amfae.get():
-            print(error_msg("%-12s : %s / %s" % (m.name, m.amfe.enum_strs[m.amfe.get()], m.amfae.enum_strs[m.amfae.get()])))
+            error_msg("%-12s : %s / %s" % (m.name, m.amfe.enum_strs[m.amfe.get()], m.amfae.enum_strs[m.amfae.get()]))
             count += 1
         else:
             pass
@@ -217,7 +217,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
 
      if pds_motors_ready() is False:
           report('\nOne or more motors are showing amplifier faults.\nCycle the correct kill switch, then try again.', level='error', slack=True)
-          print(error_msg('One or more motors are showing amplifier faults. (in BMM/modes.py)'))
+          error_msg('One or more motors are showing amplifier faults. (in BMM/modes.py)')
           count = 0
           while pds_motors_ready() is False:
                count += 1
@@ -241,8 +241,8 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      # with a sleep, allowing the user to easily map out motor motions in #
      # a macro                                                            #
      if BMMuser.macro_dryrun:
-          print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to mode %s.\n' %
-                         (BMMuser.macro_sleep, mode)))
+          info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to mode %s.\n' %
+                   (BMMuser.macro_sleep, mode))
           countdown(BMMuser.macro_sleep)
           return(yield from null())
      ######################################################################
@@ -360,7 +360,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                report('M2 remaining collimated', slack=True)
                yield from mv(*base)
           except Exception as E:
-               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
+               verbosebold_msg(f"\nThis is the problem:\n\t{E}\n")
                count = 0
                while motors_in_position(mode) is False:
                     count += 1
@@ -387,7 +387,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                report('M2 remaining focused', slack=True)
                yield from mv(*base)
           except Exception as E:
-               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
+               verbosebold_msg(f"\nThis is the problem:\n\t{E}\n")
                count = 0
                while motors_in_position(mode) is False:
                     count += 1
@@ -429,7 +429,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
                report('Changing M2 setup', slack=True)
                yield from mv(*base)
           except Exception as E:
-               print(verbosebold_msg(f"\nThis is the problem:\n\t{E}\n"))
+               verbosebold_msg(f"\nThis is the problem:\n\t{E}\n")
                count = 0
                while motors_in_position(mode) is False:
                     count += 1
@@ -548,7 +548,7 @@ def change_xtals(xtal=None):
 
      (ok, text) = BMM_clear_to_start()
      if ok == 0:
-          print(error_msg(text))
+          error_msg(text)
           yield from null()
           return
 
@@ -565,7 +565,7 @@ def change_xtals(xtal=None):
           return(yield from null())
 
      if pds_motors_ready() is False:
-          print(error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.'))
+          error_msg('\nOne or more motors are showing amplifier faults.\nToggle the correct kill switch, then re-enable the faulted motor.')
           return(yield from null())
 
      
@@ -574,8 +574,8 @@ def change_xtals(xtal=None):
      # with a sleep, allowing the user to easily map out motor motions in #
      # a macro                                                            #
      if BMMuser.macro_dryrun:
-          print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s crystal.\n' %
-                         (BMMuser.macro_sleep, xtal)))
+          info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s crystal.\n' %
+                   (BMMuser.macro_sleep, xtal))
           countdown(BMMuser.macro_sleep)
           return(yield from null())
      ######################################################################

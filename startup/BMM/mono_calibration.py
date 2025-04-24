@@ -36,7 +36,7 @@ def calibrate_low_end(mono='111', focus=False):
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
+        error_msg('\n'+text) + bold_msg('Quitting macro....\n')
         return(yield from null())
     
     BMM_log_info('Beginning low end calibration macro')
@@ -108,7 +108,7 @@ def calibrate_high_end(mono='111', focus=False):
     BMMuser, shb, dcm_pitch = user_ns['BMMuser'], user_ns['shb'], user_ns['dcm_pitch']
     (ok, text) = BMM_clear_to_start()
     if ok is False:
-        print(error_msg('\n'+text) + bold_msg('Quitting macro....\n'))
+        error_msg('\n'+text) + bold_msg('Quitting macro....\n')
         return(yield from null())
     
     BMM_log_info('Beginning high end calibration macro')
@@ -176,7 +176,7 @@ def calibrate(focus=False):
     def cleanup_plan():
         yield from resting_state_plan()
     if type(focus) is not bool:
-        print(error_msg('The argument for calibrate is a boolean -- True means to use focused beam, False is default.'))
+        error_msg('The argument for calibrate is a boolean -- True means to use focused beam, False is default.')
         return()
     yield from finalize_wrapper(main_plan(), cleanup_plan())    
 
@@ -207,7 +207,7 @@ def calibrate_pitch(mono='111'):
     mod    = lmfit.models.LinearModel()
     pars   = mod.guess(tt, x=ee)
     out    = mod.fit(tt, pars, x=ee)
-    print(whisper(out.fit_report(min_correl=0)))
+    whisper(out.fit_report(min_correl=0))
     out.plot()
 
     

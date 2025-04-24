@@ -50,12 +50,12 @@ def rsync_to_gdrive():
 def synch_gdrive_folder(prefix=''):
     return
     # if user_ns['BMMuser'].do_gdrive is False:
-    #     print(warning_msg('Not syncing to Google Drive'))
+    #     warning_msg('Not syncing to Google Drive')
     #     return
     # user_gdrive_folder = os.path.join(gdrive_folder, 'Data', user_ns['BMMuser'].name, user_ns['BMMuser'].date)
     # location = determine_bin_location()
     # if location is None:
-    #     print(error_msg('Unable to synch Google drive: could not determine drive program location.'))
+    #     error_msg('Unable to synch Google drive: could not determine drive program location.')
     # else:
     #     print(f'{prefix}syncing {user_gdrive_folder} to Google drive')
     #     here = os.getcwd()

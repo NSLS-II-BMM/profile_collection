@@ -406,7 +406,7 @@ class BMMDataEvaluation:
                 h5.close()
                 return()
             elif action == '3':
-                print(warning_msg(f'skipping #{count}'))
+                warning_msg(f'skipping #{count}')
                 continue
             else:
                 ee, mm = self.rationalize_mu(p.group.energy, p.group.mu)
@@ -423,6 +423,6 @@ class BMMDataEvaluation:
                     grp.attrs['score'] = 1
                 else:
                     grp.attrs['score'] = 0
-                print(go_msg(f'added #{count}'))
+                go_msg(f'added #{count}')
             print()
         h5.close()

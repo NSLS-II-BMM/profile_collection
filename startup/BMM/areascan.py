@@ -73,7 +73,7 @@ def areascan(detector,
         else:
             (ok, text) = BMM_clear_to_start()
             if force is False and ok is False:
-                print(error_msg(text))
+                error_msg(text)
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
@@ -83,8 +83,8 @@ def areascan(detector,
         ## sanity checks on slow axis
         if type(slow) is str: slow = slow.lower()
         if slow not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(slow)) and 'PseudoSingle' not in str(type(slow)):
-            print(error_msg('\n*** %s is not an areascan motor (%s)\n' %
-                            (slow, str.join(', ', motor_nicknames.keys()))))
+            error_msg('\n*** %s is not an areascan motor (%s)\n' %
+                      (slow, str.join(', ', motor_nicknames.keys())))
             BMMuser.final_log_entry = False
             yield from null()
             return
@@ -93,20 +93,20 @@ def areascan(detector,
 
         current_slow = slow.position
         if current_slow+startslow < slow.limits[0]:
-            print(error_msg(f'These scan parameters will take {slow.name} outside it\'s lower limit of {slow.limits[0]}'))
-            print(whisper(f'(starting position = {slow.position})'))
+            error_msg(f'These scan parameters will take {slow.name} outside it\'s lower limit of {slow.limits[0]}')
+            whisper(f'(starting position = {slow.position})')
             return(yield from null())
         if current_slow+stopslow > slow.limits[1]:
-            print(error_msg(f'These scan parameters will take {slow.name} outside it\'s upper limit of {slow.limits[1]}'))
-            print(whisper(f'(starting position = {slow.position})'))
+            error_msg(f'These scan parameters will take {slow.name} outside it\'s upper limit of {slow.limits[1]}')
+            whisper(f'(starting position = {slow.position})')
             return(yield from null())
 
 
         ## sanity checks on fast axis
         if type(fast) is str: fast = fast.lower()
         if fast not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(fast)) and 'PseudoSingle' not in str(type(fast)):
-            print(error_msg('\n*** %s is not an areascan motor (%s)\n' %
-                            (fast, str.join(', ', motor_nicknames.keys()))))
+            error_msg('\n*** %s is not an areascan motor (%s)\n' %
+                      (fast, str.join(', ', motor_nicknames.keys())))
             BMMuser.final_log_entry = False
             yield from null()
             return
@@ -115,12 +115,12 @@ def areascan(detector,
 
         current_fast = fast.position
         if current_fast+startfast < fast.limits[0]:
-            print(error_msg(f'These scan parameters will take {fast.name} outside it\'s lower limit of {fast.limits[0]}'))
-            print(whisper(f'(starting position = {fast.position})'))
+            error_msg(f'These scan parameters will take {fast.name} outside it\'s lower limit of {fast.limits[0]}')
+            whisper(f'(starting position = {fast.position})')
             return(yield from null())
         if current_fast+stopfast > fast.limits[1]:
-            print(error_msg(f'These scan parameters will take {fast.name} outside it\'s upper limit of {fast.limits[1]}'))
-            print(whisper(f'(starting position = {fast.position})'))
+            error_msg(f'These scan parameters will take {fast.name} outside it\'s upper limit of {fast.limits[1]}')
+            whisper(f'(starting position = {fast.position})')
             return(yield from null())
             
 
@@ -234,7 +234,7 @@ def areascan(detector,
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an area scan.\n' %
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an area scan.\n' 
                        BMMuser.macro_sleep))
         countdown(BMMuser.macro_sleep)
         return(yield from null())
@@ -295,4 +295,4 @@ def as2dat(datafile, key):
     The arguments are a data file name and the database key.
     '''
     pass
-    #print(bold_msg('wrote areascan to %s' % datafile))
+    #bold_msg('wrote areascan to %s' % datafile)

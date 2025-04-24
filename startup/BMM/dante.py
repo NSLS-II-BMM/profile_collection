@@ -108,7 +108,7 @@ class BMMDanteHDF5Plugin(HDF5Plugin_V33, BMMDanteFileStoreHDF5, FileStoreIterati
         This has been slightly modified by Bruce to avoid a situation where the warmup
         hangs.  Also to add some indication on screen for what is happening.
         """
-        print(whisper("                        warming up the Dante hdf5 plugin..."), flush=True)
+        whisper("                        warming up the Dante hdf5 plugin..."), flush=True
         self.enable.set(1).wait()
 
         # JOSH: proposed changes for new IOC
@@ -141,7 +141,7 @@ class BMMDanteHDF5Plugin(HDF5Plugin_V33, BMMDanteFileStoreHDF5, FileStoreIterati
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
             sig.set(val).wait()
-        print(whisper("                        done"))
+        whisper("                        done")
 
 
 from ophyd.utils import enum

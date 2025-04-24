@@ -59,7 +59,7 @@ try:
                                               post_plan=beamup_message)
         all_BMM_suspenders.append(suspender_ring_current)
 except Exception as e:
-    print(error_msg(f'failed to create ring current suspender: {e}'))
+    error_msg(f'failed to create ring current suspender: {e}')
     pass
 
 ## ----------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ try:
     suspender_bmps = SuspendBoolLow(bmps.state, sleep=60)
     all_BMM_suspenders.append(suspender_bmps)
 except Exception as e:
-    print(error_msg(f'failed to create bpms suspender: {e}'))
+    error_msg(f'failed to create bpms suspender: {e}')
     pass
 
     
@@ -78,7 +78,7 @@ try:
     suspender_sha = SuspendBoolLow(idps.state, sleep=60)
     all_BMM_suspenders.append(suspender_sha)
 except Exception as e:
-    print(error_msg(f'failed to create sha suspender: {e}'))
+    error_msg(f'failed to create sha suspender: {e}')
     pass
 
 ## ----------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ try:
                                     #post_plan=tell_slack_shb_opened,)
     all_BMM_suspenders.append(suspender_shb)
 except Exception as e:
-    print(error_msg(f'failed to create shb suspender: {e}'))
+    error_msg(f'failed to create shb suspender: {e}')
     pass
 
     

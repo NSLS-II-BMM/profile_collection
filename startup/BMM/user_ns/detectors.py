@@ -179,7 +179,7 @@ try:                            # might not be in use
         ION_CHAMBERS.append(ic0)
 except Exception as E:
     print(E)
-    print(whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det'))
+    whisper('\t\t\t'+'ic0 is not available, falling back to ophyd.sim.noisy_det')
     ic0 = noisy_det
 
 try:                            # might not be in use
@@ -198,7 +198,7 @@ try:                            # might not be in use
     if with_ic1:
         ION_CHAMBERS.append(ic1)
 except:    
-    print(whisper('\t\t\t'+'ic1 is not available, falling back to ophyd.sim.noisy_det'))
+    whisper('\t\t\t'+'ic1 is not available, falling back to ophyd.sim.noisy_det')
     ic1 = noisy_det
 
 
@@ -218,7 +218,7 @@ try:                            # might not be in use
     if with_ic2:
         ION_CHAMBERS.append(ic2)
 except:    
-    print(whisper('\t\t\t'+'ic2 is not available, falling back to ophyd.sim.noisy_det'))
+    whisper('\t\t\t'+'ic2 is not available, falling back to ophyd.sim.noisy_det')
     ic2 = noisy_det
 
 
@@ -563,12 +563,12 @@ def xspress3_set_detector(this=None):
 
 primary = profile_configuration.getint('sdd', 'primary')  # primary SDD detector
 if primary == 4 and 'xs3-7-1' in xs_app_dir.get():
-    print(error_msg('\tYou have selected the 4-element detector as primary, but the 7-element IOC is running!'))
-    print(warning_msg('\tProceeding with the 7-element detector as primary.'))
+    error_msg('\tYou have selected the 4-element detector as primary, but the 7-element IOC is running!')
+    warning_msg('\tProceeding with the 7-element detector as primary.')
     primary = 7
 elif primary == 7 and 'xs3-4-1' in xs_app_dir.get():
-    print(error_msg('\tYou have selected the 7-element detector as primary, but the 4-element IOC is running!'))
-    print(warning_msg('\tProceeding with the 4-element detector as primary.'))
+    error_msg('\tYou have selected the 7-element detector as primary, but the 4-element IOC is running!')
+    warning_msg('\tProceeding with the 4-element detector as primary.')
     primary = 4
 if with_xspress3 is True:
     if primary == 4:

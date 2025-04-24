@@ -275,14 +275,14 @@ def raster(inifile=None, **kwargs):
             BMMuser.prompt = False
             kwargs['force'] = True
 
-        if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
+        if verbose: verbosebold_msg('checking clear to start (unless force=True)')
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text, force) = (True, '', True)
         else:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
-                print(error_msg('\n'+text))
-                print(bold_msg('Quitting scan sequence....\n'))
+                error_msg('\n'+text)
+                bold_msg('Quitting scan sequence....\n')
                 yield from null()
                 return
         
@@ -291,10 +291,10 @@ def raster(inifile=None, **kwargs):
 
 
         if inifile is None:
-            print(error_msg('\nNo inifile specified\n'))
+            error_msg('\nNo inifile specified\n')
             return(yield from null())
         if not os.path.isfile(inifile):
-            print(error_msg('\ninifile does not exist\n'))
+            error_msg('\ninifile does not exist\n')
             return(yield from null())
 
         close_plots()
@@ -365,7 +365,7 @@ def raster(inifile=None, **kwargs):
         #BMM_log_info(motor_status())
 
         ## organize metadata for injection into database and XDI output
-        print(bold_msg('gathering metadata'))
+        bold_msg('gathering metadata')
         md = bmm_metadata(measurement   = p['mode'],
                           experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
@@ -466,14 +466,14 @@ def raster(inifile=None, **kwargs):
             try:
                 htmlout = dossier.raster_dossier()
             except Exception as E:
-                print(error_msg('Failed to write dossier.  Here is the exception message:'))
+                error_msg('Failed to write dossier.  Here is the exception message:')
                 print(E)
                 htmlout, prjout, pngout = None, None, None
             if htmlout is not None:
                 htmlout = dossier.raster_dossier()
                 report('wrote dossier %s' % htmlout, 'bold')
         except:
-            print(whisper('Quitting raster scan. Not returning to start position or writing dossier.'))
+            whisper('Quitting raster scan. Not returning to start position or writing dossier.')
         yield from resting_state_plan()
 
 

@@ -68,11 +68,11 @@ def predict_detector_position(datatable=None, target=20500):
         pars   = mod.guess(signal, x=dt[:,0])
         out    = mod.fit(signal, pars, x=dt[:,0])
         #out.plot()
-        #print(whisper(out.fit_report(min_correl=0)))
+        #whisper(out.fit_report(min_correl=0))
         amp = out.params['amplitude']
         tau = out.params['decay']
         prediction.append(ceil(tau * log(amp/target)))
-    #print(go_msg(f'predictions are {prediction}'))
+    #go_msg(f'predictions are {prediction}')
     return prediction
 
 def find_detector_position(start=205, inttime=0.1, verbose=True):
@@ -118,7 +118,7 @@ def find_detector_position(start=205, inttime=0.1, verbose=True):
             
         if xafs_det.position + step < xafs_det.llm.get():
             description = 'closest possible'
-            print(whisper(f'the next step would go below the xafs_det soft limit ({xafs_det.llm.get()})'))
+            whisper(f'the next step would go below the xafs_det soft limit ({xafs_det.llm.get()})')
             break
         yield from mvr(xafs_det, step)
 
@@ -145,7 +145,7 @@ def find_detector_position(start=205, inttime=0.1, verbose=True):
         #xs.table()
         #xs.plot(add=True)
         xs.measure_xrf(doplot=False)
-        print(whisper('make a plot with: xs.plot()'))
+        whisper('make a plot with: xs.plot()')
 
         
     yield from mv(dwell_time, 0.5)

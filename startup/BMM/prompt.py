@@ -7,6 +7,7 @@ from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg,
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
+from rich import print as cprint
 
 from IPython.terminal.prompts import Prompts, Token
 class BMMPrompt(Prompts):
@@ -83,31 +84,32 @@ def BMM_help():
     '''
     BMMuser = user_ns['BMMuser']
     print('')
-    print(bold_msg('Open the shutter:\t\t')+'shb.open()')
-    print(bold_msg('Close the shutter:\t\t')+'shb.close()')
+    cprint('[honeydew2]Open the shutter:[/honeydew2]\t\t[white]shb.open()[/white]')
+    cprint('[honeydew2]Close the shutter:[/honeydew2]\t\t[white]shb.close()[/white]')
     print('')
-    print(bold_msg('Change energy:\t\t\t')+'RE(mv(dcm.energy, <energy>))')
-    print(bold_msg('Move a motor, absolute:\t\t')+'RE(mv(<motor>, <position>))')
-    print(bold_msg('Move a motor, relative:\t\t')+'RE(mvr(<motor>, <delta>))')
-    print(bold_msg('Where is a motor?\t\t')+'%w <motor>')
+    cprint('[honeydew2]Change edge:[/honeydew2]\t\t\t[white]RE(change_edge("Xx"))[/white]')
+    cprint('[honeydew2]Change energy:[/honeydew2]\t\t\t[white]RE(mv(dcm.energy, <energy>))[/white]')
+    cprint('[honeydew2]Move a motor, absolute:[/honeydew2]\t\t[white]RE(mv(<motor>, <position>))[/white]')
+    cprint('[honeydew2]Move a motor, relative:[/honeydew2]\t\t[white]RE(mvr(<motor>, <delta>))[/white]')
+    cprint('[honeydew2]Where is a motor?\t\t[white]%w <motor>[/white]')
     print('')
-    print(bold_msg('Where is the DCM?\t\t')+'%w dcm')
-    print(bold_msg('Where is M2?\t\t\t')+'%w m2')
-    print(bold_msg('Where is M3?\t\t\t')+'%w m3')
-    print(bold_msg('Where are the slits?\t\t')+'%w slits3')
-    print(bold_msg('Where is the XAFS table?\t')+'%w xafs_table')
+    cprint('[honeydew2]Where is the DCM?\t\t[white]%w dcm[/white]')
+    cprint('[honeydew2]Where is M2?\t\t\t[white]%w m2[/white]')
+    cprint('[honeydew2]Where is M3?\t\t\t[white]%w m3[/white]')
+    cprint('[honeydew2]Where are the slits?\t\t[white]%w slits3[/white]')
+    cprint('[honeydew2]Where is the XAFS table?\t[white]%w xafs_table[/white]')
     print('')
-    print(bold_msg('Summarize all motor positions:\t')+'%m')
-    print(bold_msg('Summarize utilities:\t\t')+'%ut')
+    cprint('[honeydew2]Summarize all motor positions:[/honeydew2]\t[white]%m[/white]')
+    cprint('[honeydew2]Summarize utilities:[/honeydew2]\t\t[white]%ut[/white]')
     print('')
-    print(bold_msg('How long will a scan seq. be?\t')+'howlong(\'scan.ini\')')
-    print(bold_msg('Run a scan sequence:\t\t')+'RE(xafs(\'scan.ini\'))')
-    print(bold_msg('Scan a motor, plot a detector:\t')+'RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))')
-    print(bold_msg('Scan 2 motors, plot a detector:\t')+'RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))')
+    cprint('[honeydew2]How long will a scan seq. be?\t[white]howlong(\'scan.ini\')[/white]')
+    cprint('[honeydew2]Run a scan sequence:[/honeydew2]\t\t[white]RE(xafs(\'scan.ini\'))[/white]')
+    cprint('[honeydew2]Scan a motor, plot a detector:[/honeydew2]\t[white]RE(linescan(<det>, <motor>, <start>, <stop>, <nsteps>))[/white]')
+    cprint('[honeydew2]Scan 2 motors, plot a detector:[/honeydew2]\t[white]RE(areascan(<det>, <slow motor>, <start>, <stop>, <nsteps>, <fast motor>, <start>, <stop>, <nsteps>))[/white]')
+    cprint('')
+    cprint('[honeydew2]hephaestus:[/honeydew2]\t\t\t[white]%hephaestus[/white]')
     print('')
-    print(bold_msg('athena / hephaestus:\t\t') + '%athena / %hephaestus')
-    print('')
-    print(bold_msg('All the details: ') + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/index.html'))
+    cprint('[honeydew2]All the details:[/honeydew2] [underline]https://nsls2.github.io/bmm-beamline-manual/[/underline]')
     return None
 
 def BMM_keys():
@@ -115,16 +117,16 @@ def BMM_keys():
     Print a concise summary of command line hotkeys.
     '''
     print('')
-    print(bold_msg('Abort scan:\t\t')+error_msg('Ctrl-c twice!'))
-    print(bold_msg('Search backwards:\t')+'Ctrl-r')
-    print(bold_msg('Quit search:\t\t')+'Ctrl-g')
-    print(bold_msg('Beginning of line:\t')+'Ctrl-a')
-    print(bold_msg('End of line:\t\t')+'Ctrl-e')
-    print(bold_msg('Delete character\t')+'Ctrl-d')
-    print(bold_msg('Cut text to eol\t\t')+'Ctrl-k')
-    print(bold_msg('Cut text to bol\t\t')+'Ctrl-u')
-    print(bold_msg('Paste text\t\t')+'Ctrl-y')
-    print(bold_msg('Clear screen\t\t')+'Ctrl-l')
+    cprint('[honeydew2]Abort scan:[/honeydew2]\t\t[red on white]Ctrl-c twice![/red on white]')
+    cprint('[honeydew2]Search backwards:[/honeydew2]\tCtrl-r')
+    cprint('[honeydew2]Quit search:[/honeydew2]\t\tCtrl-g')
+    cprint('[honeydew2]Beginning of line:[/honeydew2]\tCtrl-a')
+    cprint('[honeydew2]End of line:[/honeydew2]\t\tCtrl-e')
+    cprint('[honeydew2]Delete character:[/honeydew2]\tCtrl-d')
+    cprint('[honeydew2]Cut text to eol:[/honeydew2]\tCtrl-k')
+    cprint('[honeydew2]Cut text to bol:[/honeydew2]\tCtrl-u')
+    cprint('[honeydew2]Paste text:[/honeydew2]\t\tCtrl-y')
+    cprint('[honeydew2]Clear screen:[/honeydew2]\t\tCtrl-l')
     print('')
-    print(bold_msg('More details: ') + url_msg('https://jakevdp.github.io/PythonDataScienceHandbook/01.02-shell-keyboard-shortcuts.html'))
+    cprint('[honeydew2]More details:[/honeydew2] [underline]https://jakevdp.github.io/PythonDataScienceHandbook/01.02-shell-keyboard-shortcuts.html[/underline]')
     return None

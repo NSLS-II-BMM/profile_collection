@@ -78,10 +78,10 @@ class WheelMotor(EndStationEpicsMotor):
     def angle_from_current(self, n):
         '''Return the angle from the current position to the target'''
         if type(n) is not int:
-            print(error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n)))
+            error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n))
             return(0)
         if n<1 or n>24:
-            print(error_msg('Slots are numbered from 1 to 24'))
+            error_msg('Slots are numbered from 1 to 24')
             return(0)
 
         current = self.current_slot()
@@ -96,10 +96,10 @@ class WheelMotor(EndStationEpicsMotor):
     def set_slot(self, n):
         '''Move to a numbered slot on a sample wheel.'''
         if type(n) is not int:
-            print(error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n)))
+            error_msg('Slots numbers must be integers between 1 and 24 (argument was %s)' % type(n))
             return(yield from null())
         if n<1 or n>24:
-            print(error_msg('Slots are numbered from 1 to 24'))
+            error_msg('Slots are numbered from 1 to 24')
             return(yield from null())
         angle = self.angle_from_current(n)
         yield from mvr(self, angle)
@@ -125,7 +125,7 @@ class WheelMotor(EndStationEpicsMotor):
         here = self.user_readback.get()
         center = round(here / 15) * 15
         yield from mv(self, center)
-        print(whisper('recentered %s to %.1f' % (self.name, center)))
+        whisper('recentered %s to %.1f' % (self.name, center))
 
     def in_place(self):
         #user_ns['wmb'].outer_position = user_ns['xafs_x'].position
@@ -186,7 +186,7 @@ def reference(target=None):
         #xafs_refx.user_setpoint.set(xafs_ref.outer_position)
         yield from mv(xafs_refx, xafs_ref.outer_position)
     yield from xafs_ref.set_slot(slot)
-    #print(whisper('Pausing for 15 seconds to make sure xafs_refx is done moving.'))
+    #whisper('Pausing for 15 seconds to make sure xafs_refx is done moving.')
     #yield from mv(user_ns['busy'], 15)
 
 

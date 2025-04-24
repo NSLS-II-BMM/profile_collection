@@ -31,10 +31,10 @@ fe_slits_vcenter     = EpicsSignalRO('FE:C06B-OP{Slt:12-Ax:Y}center', name='fe_s
 def check_for_connection(m):
     if m.connected:
         return(True)
-    print(disconnected_msg(f'{m.name} is not connected'))
+    disconnected_msg(f'{m.name} is not connected')
     for walk in m.walk_signals(include_lazy=False):
         if walk.item.connected is False:
-            print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
+            disconnected_msg(f'      {walk.item.name} is a disconnected PV')
     return(False)
 
 def define_XAFSEpicsMotor(prefix, name='unnamed'):
@@ -212,7 +212,7 @@ def ampen():
             
 
 def amfe():
-    print(bold_msg("%-12s : %s / %s" % ('motor', 'AMFE', 'AMFAE')))
+    bold_msg("%-12s : %s / %s" % ('motor', 'AMFE', 'AMFAE'))
     for m in mcs8_motors:
         if m.amfe.get():
             fe  = warning_msg(m.amfe.enum_strs[m.amfe.get()])

@@ -124,8 +124,8 @@ def pluck(suggested_motor=None):
 
     
     if suggested_motor is not None and suggested_motor.name != motor_name:
-        print(warning_msg(f'You seem to have clicked on the wrong plot.'))
-        print(warning_msg(f'You just scanned {suggested_motor.name} but clicked on a window showing {motor.name}.'))
+        warning_msg(f'You seem to have clicked on the wrong plot.')
+        warning_msg(f'You just scanned {suggested_motor.name} but clicked on a window showing {motor.name}.')
         unset_mouse_click()
         return(yield from null())
         
@@ -140,7 +140,7 @@ def pluck(suggested_motor=None):
                 break
 
     if motor == None:
-        print(warning_msg(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....'))
+        warning_msg(f'{motor_name} does not seem to be the name of an actual motor ...  hmmm....')
         unset_mouse_click()
         return(yield from null())
     ## if x-axis motor is ok, presume that y-axis will also be sensible
@@ -165,7 +165,7 @@ def pluck(suggested_motor=None):
         yield from mv(motor, position, motor2, position2)
     user_ns['BMMuser'].mouse_click = position
     unset_mouse_click()
-    print(whisper('\nRE(pluck()) to grab a different point from the plot.\n'))
+    whisper('\nRE(pluck()) to grab a different point from the plot.\n')
     
 
         
@@ -194,14 +194,14 @@ def wiggle_bct(tries=3):
         except:
             pass
         if dm3_bct.amfe.get() or dm3_bct.amfae.get():
-            print(warning_msg(f'Amplifier fault on dm3_bct.  Attempt {attempt} to clear fault.'))
+            warning_msg(f'Amplifier fault on dm3_bct.  Attempt {attempt} to clear fault.')
             user_ns['ks'].cycle('dm3')
             attempt += 1
         else:
             return True
     else:
         if dm3_bct.amfe.get() or dm3_bct.amfae.get():
-            print(error_msg('Unable to start slit height scan.  Amplifier fault on dm3_bct.'))
+            error_msg('Unable to start slit height scan.  Amplifier fault on dm3_bct.')
             yield from null()
             return False
 
@@ -231,7 +231,7 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     def main_plan(start, stop, nsteps, move, slp, force):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -312,8 +312,8 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
     # height scan with a sleep, allowing the user to easily map out motor #
     # motions in a macro                                                  #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     #######################################################################
@@ -354,7 +354,7 @@ def mirror_pitch(start=None, stop=None, nsteps=41, mirror='m3', move=False, forc
     def main_plan(start, stop, nsteps, move, force):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -413,8 +413,8 @@ def mirror_pitch(start=None, stop=None, nsteps=41, mirror='m3', move=False, forc
     # height scan with a sleep, allowing the user to easily map out motor #
     # motions in a macro                                                  #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a slit height scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     #######################################################################
@@ -461,7 +461,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     def main_plan(start, stop, nsteps, detector, height):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -509,7 +509,7 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
                 mod      = SkewedGaussianModel()
                 pars     = mod.guess(signal, x=pitch)
                 out      = mod.fit(signal, pars, x=pitch)
-                print(whisper(out.fit_report(min_correl=0)))
+                whisper(out.fit_report(min_correl=0))
                 out.plot()
                 top      = out.params['center'].value
             else:
@@ -543,8 +543,8 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
     # curve scan with a sleep, allowing the user to easily map out motor #
     # motions in a macro                                                 #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a rocking curve scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a rocking curve scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
@@ -588,7 +588,7 @@ def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak')
     def main_plan(start, stop, nsteps, move, force):
         (ok, text) = BMM_clear_to_start()
         if force is False and ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -641,8 +641,8 @@ def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak')
     # height scan with a sleep, allowing the user to easily map out motor #
     # motions in a macro                                                  #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an hcenter scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an hcenter scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     #######################################################################
@@ -679,14 +679,14 @@ def find_slot(shape='slot'):
     user_ns['xafs_wheel'].in_place()
     kafka_message({'close': 'all'})
     kafka_message({'align_wheel' : 'stop'})
-    print(bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})'))
+    bold_msg(f'Found slot at (X,Y) = ({xafs_x.position}, {xafs_y.position})')
 
 def find_reference():
     yield from rectangle_scan(motor=xafs_refy, start=-4,   stop=4,   nsteps=31, detector='Ir')
                               #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refy notnegated'}})
     yield from rectangle_scan(motor=xafs_refx, start=-10,  stop=10,  nsteps=31, detector='Ir')
                               #md={'BMM_kafka': {'hint': f'rectanglescan Ir xafs_refx notnegated'}})
-    print(bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})'))
+    bold_msg(f'Found reference slot at (X,Y) = ({xafs_refx.position}, {xafs_refy.position})')
 
     
 def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
@@ -696,7 +696,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
         if force is False:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
-                print(error_msg(text))
+                error_msg(text)
                 yield from null()
                 return
 
@@ -762,7 +762,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
             mod      = RectangleModel(form='erf')
             pars     = mod.guess(signal, x=pos)
             out      = mod.fit(signal, pars, x=pos)
-            print(whisper(out.fit_report(min_correl=0)))
+            whisper(out.fit_report(min_correl=0))
             if chore == 'find_slot':
                 kafka_message({'close': 'last'})
                 kafka_message({'align_wheel' : 'find_slot',
@@ -777,7 +777,7 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
 
             if move is True:
                 yield from mv(motor, out.params['midpoint'].value)
-            print(bold_msg(f'Found center at {motor.name} = {motor.position}'))
+            bold_msg(f'Found center at {motor.name} = {motor.position}')
             for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
                 rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
 
@@ -798,7 +798,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
     def main_plan(motor, start, stop, nsteps, detector, find, how, filename):
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(error_msg(text))
+            error_msg(text)
             yield from null()
             return
 
@@ -863,7 +863,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
                 mod      = SkewedGaussianModel()
                 pars     = mod.guess(signal, x=pitch)
                 out      = mod.fit(signal, pars, x=pitch)
-                print(whisper(out.fit_report(min_correl=0)))
+                whisper(out.fit_report(min_correl=0))
                 out.plot()
                 top      = out.params['center'].value
             else:
@@ -879,7 +879,7 @@ def peak_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It', find='ma
             matplotlib.use(thisagg) # return to screen display
             
             yield from mv(motor, top)
-            print(bold_msg(f'Found peak at {motor.name} = {motor.position}'))
+            bold_msg(f'Found peak at {motor.name} = {motor.position}')
             for k in ('center1', 'center2', 'sigma1', 'sigma2', 'amplitude', 'midpoint'):
                 rkvs.set(f'BMM:lmfit:{k}', out.params[k].value)
 
@@ -966,7 +966,7 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, sta
         if force is False:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
-                print(error_msg(text))
+                error_msg(text)
                 yield from null()
                 return
 
@@ -983,8 +983,8 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, sta
         ## sanity checks on axis
         if axis not in motor_nicknames.keys() and 'EpicsMotor' not in str(type(axis)) \
            and 'PseudoSingle' not in str(type(axis)) and 'WheelMotor' not in str(type(axis)):
-            print(error_msg('\n*** %s is not a linescan motor (%s)\n' %
-                          (axis, str.join(', ', motor_nicknames.keys()))))
+            error_msg('\n*** %s is not a linescan motor (%s)\n' %
+                      (axis, str.join(', ', motor_nicknames.keys())))
             yield from null()
             return
 
@@ -999,20 +999,20 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, sta
 
         current = thismotor.position
         if current+start < thismotor.limits[0]:
-            print(error_msg(f'These scan parameters will take {thismotor.name} outside it\'s lower limit of {thismotor.limits[0]}'))
-            print(whisper(f'(starting position = {thismotor.position})'))
+            error_msg(f'These scan parameters will take {thismotor.name} outside it\'s lower limit of {thismotor.limits[0]}')
+            whisper(f'(starting position = {thismotor.position})')
             return(yield from null())
         if current+stop > thismotor.limits[1]:
-            print(error_msg(f'These scan parameters will take {thismotor.name} outside it\'s upper limit of {thismotor.limits[1]}'))
-            print(whisper(f'(starting position = {thismotor.position})'))
+            error_msg(f'These scan parameters will take {thismotor.name} outside it\'s upper limit of {thismotor.limits[1]}')
+            whisper(f'(starting position = {thismotor.position})')
             return(yield from null())
 
         BMMuser.motor = thismotor
 
         # sanity checks on detector
         if detector not in ('It', 'If', 'I0', 'Iy', 'Ir', 'Both', 'Bicron', 'Ic0', 'Ic1', 'Xs', 'Xs1', 'Xs4', 'Xs7', 'Pilatus', 'Dante'):
-            print(error_msg('\n*** %s is not a linescan measurement (%s)\n' %
-                            (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1, xs4, xs7, pilatus, dante')))
+            error_msg('\n*** %s is not a linescan measurement (%s)\n' %
+                      (detector, 'it, if, i0, iy, ir, both, bicron, Ic0, Ic1, xs, xs1, xs4, xs7, pilatus, dante'))
             yield from null()
             return
 
@@ -1148,8 +1148,8 @@ def linescan(detector, axis, start, stop, nsteps, dopluck=True, force=False, sta
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
-        print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a line scan.\n' %
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running a line scan.\n' %
+                 BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
@@ -1174,4 +1174,4 @@ def ls2dat(datafile, key):
     '''
     #BMMuser, db = user_ns['BMMuser'], user_ns['db']
     kafka_message({'lsxdi': True, 'uid': key, 'filename': datafile})
-    print(bold_msg('wrote linescan to %s' % datafile))
+    bold_msg('wrote linescan to %s' % datafile)

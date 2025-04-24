@@ -73,7 +73,7 @@ class Wafer():
         yield from (mv(xafs_x, self.center[0], xafs_y, self.center[1]))
 
     def plot(self):
-        #print(whisper(self.out.fit_report(min_correl=0)))
+        #whisper(self.out.fit_report(min_correl=0))
         self.out.plot()
         
         
@@ -96,7 +96,7 @@ class Wafer():
         mod    = StepModel(form='erf')
         pars   = mod.guess(ss, x=array(yy))
         self.out    = mod.fit(ss, pars, x=array(yy))
-        print(whisper(self.out.fit_report(min_correl=0)))
+        whisper(self.out.fit_report(min_correl=0))
         target = self.out.params['center'].value
         kafka_message({'wafer'     : 'edge',
                        'motor'     : motor.name,

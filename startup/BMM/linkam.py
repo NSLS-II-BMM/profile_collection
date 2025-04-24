@@ -309,9 +309,9 @@ class LinkamMacroBuilder(BMMMacroBuilder):
             ########################################
             self.estimate_time(m, element, edge)
 
-        print(whisper(f'XAS time:      about {self.totaltime/60:.1f} hours'))
-        print(whisper(f'ramp time:     about {ramp_time:.1f} minutes'))
-        print(whisper(f'settling time: about {settle_time/60:.1f} minutes'))
+        whisper(f'XAS time:      about {self.totaltime/60:.1f} hours')
+        whisper(f'ramp time:     about {ramp_time:.1f} minutes')
+        whisper(f'settling time: about {settle_time/60:.1f} minutes')
         self.totaltime = self.totaltime + (settle_time / 60) + ramp_time
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'

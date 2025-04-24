@@ -64,7 +64,7 @@ def preserve(fname, target=None):
                        'file': fullname,
                        'target': target})
     else:
-        print(warning_msg(f"There is not a file called {fname} in {user_ns['BMMuser'].workspace}."))
+        warning_msg(f"There is not a file called {fname} in {user_ns['BMMuser'].workspace}.")
 
 
 def regenerate_file(uid):

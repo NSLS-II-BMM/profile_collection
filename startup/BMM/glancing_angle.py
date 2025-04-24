@@ -139,10 +139,10 @@ class GlancingAngle(Device):
     def on(self, number):
         '''Turn on the specified spinner'''
         if self.spin is False:
-            print(warning_msg('The spinners are currently disabled.  do "ga.spin = True" to re-enable.'))
+            warning_msg('The spinners are currently disabled.  do "ga.spin = True" to re-enable.')
             return
         if not self.valid(number):
-            print(error_msg('The fans are numbered from 1 to 8'))
+            error_msg('The fans are numbered from 1 to 8')
             return
         this = getattr(self, f'spinner{number}')
         this.put(1)
@@ -152,7 +152,7 @@ class GlancingAngle(Device):
             self.alloff()
             return
         if not self.valid(number):
-            print(error_msg('The fans are numbered from 1 to 8'))
+            error_msg('The fans are numbered from 1 to 8')
             return
         this = getattr(self, f'spinner{number}')
         this.put(0)
@@ -174,7 +174,7 @@ class GlancingAngle(Device):
         '''Rotate to the specified spinner. Turn off all other spinners.  Turn
         on the specified spinner.'''
         if not self.valid(number):
-            print(error_msg('The fans are numbered from 1 to 8'))
+            error_msg('The fans are numbered from 1 to 8')
             yield from null()
             return
         yield from self.alloff_plan()
@@ -253,7 +253,7 @@ class GlancingAngle(Device):
         mod    = StepModel(form='erf')
         pars   = mod.guess(ss, x=numpy.array(yy))
         out    = mod.fit(ss, pars, x=numpy.array(yy))
-        print(whisper(out.fit_report(min_correl=0)))
+        whisper(out.fit_report(min_correl=0))
         target = out.params['center'].value
         yield from mv(motor, target)
         kafka_message({'glancing_angle' : 'linear',
@@ -354,8 +354,8 @@ class GlancingAngle(Device):
         BMMuser = user_ns['BMMuser']
         if BMMuser.macro_dryrun:
             report(f'Auto-aligning glancing angle stage, spinner {self.current()}', level='bold', slack=False)
-            print(info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
-                           (BMMuser.macro_sleep, self.current())))
+            info_msg(f'\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at spinner %d.\n' %
+                           (BMMuser.macro_sleep, self.current()))
             countdown(BMMuser.macro_sleep)
             return(yield from null())
 

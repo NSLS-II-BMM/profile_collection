@@ -182,8 +182,8 @@ class LakeShore(PVPositioner):
 
         '''
         if abs(self.readback.get() - target) < self.deadband:
-            print(warning_msg(f'Requested temperature target is within the temperature deadband, {self.deadband}K'))
-            print(warning_msg('Not attempting to change temperature.'))
+            warning_msg(f'Requested temperature target is within the temperature deadband, {self.deadband}K')
+            warning_msg('Not attempting to change temperature.')
             yield from mv(user_ns['busy'], 10)
         else:
             yield from mv(self.setpoint, target)
@@ -204,7 +204,7 @@ class LakeShore(PVPositioner):
         if unit.lower()[0] == 'k':
             self.units_sel.put('K')
             return
-        print(warning_msg('LakeShore 331 units not changed.  Valid units are Kelvin and Celsius (as strings)."'))
+        warning_msg('LakeShore 331 units not changed.  Valid units are Kelvin and Celsius (as strings)."')
 
 
     def status(self):
@@ -399,9 +399,9 @@ class LakeShoreMacroBuilder(BMMMacroBuilder):
             self.estimate_time(m, element, edge)
             
 
-        print(whisper(f'XAS time:      about {self.totaltime/60:.1f} hours'))
-        print(whisper(f'ramp time:     about {ramp_time:.1f} minutes (this estimate is probably unreliable)'))
-        print(whisper(f'settling time: about {settle_time/60:.1f} minutes'))
+        whisper(f'XAS time:      about {self.totaltime/60:.1f} hours')
+        whisper(f'ramp time:     about {ramp_time:.1f} minutes (this estimate is probably unreliable)')
+        whisper(f'settling time: about {settle_time/60:.1f} minutes')
         self.totaltime = self.totaltime + (settle_time / 60) + ramp_time
         if self.close_shutters:
             self.content += self.tab + 'if not dryrun:\n'

@@ -223,7 +223,7 @@ class DossierTools():
         md['_filename'] = image_web
         xascam._annotation_string = annotation
         if with_webcam is True:
-            print(bold_msg('XAS webcam snapshot'))
+            bold_msg('XAS webcam snapshot')
             webuid = yield from count([xascam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             self.websnap, self.webuid = websnap, webuid
             kafka_message({'copy': True,
@@ -240,17 +240,17 @@ class DossierTools():
         # if is_re_worker_active() is False and 'ws3' in thishost:
         if with_anacam and anacam is not None:
             pass
-            print(whisper('The error text below saying "Error opening file for output:"'))
-            print(whisper('happens every time and does not indicate a problem of any sort.'))
+            whisper('The error text below saying "Error opening file for output:"')
+            whisper('happens every time and does not indicate a problem of any sort.')
             anasnap = "%s_analog_%s.jpg" % (stub, ahora)
             image_ana = os.path.join(folder, 'snapshots', anasnap)
             md['_filename'] = image_ana
             anacam._annotation_string = stub
-            print(bold_msg('analog camera snapshot'))
+            bold_msg('analog camera snapshot')
             anauid = yield from count([anacam], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             localfile = os.path.join(anacam._root, anacam._rel_path_template % 0)
-            print(whisper('The error text above saying "Error opening file for output:"'))
-            print(whisper('happens every time and does not indicate a problem of any sort.\n'))
+            whisper('The error text above saying "Error opening file for output:"')
+            whisper('happens every time and does not indicate a problem of any sort.\n')
             self.anasnap, self.anauid = anasnap, anauid
             kafka_message({'copy': True,
                            'file': localfile,
@@ -266,7 +266,7 @@ class DossierTools():
             image_usb1 = os.path.join(folder, 'snapshots', usb1snap)
             md['_filename'] = image_usb1
             #usbcam1._annotation_string = stub
-            print(bold_msg('USB camera #1 snapshot'))
+            bold_msg('USB camera #1 snapshot')
             yield from count([usb1], 1, md={'throwaway': 1})  # this camera often captures incomplete images on the first stab
                                                               # this is a throwaway image in hopes of capturing a good one
             usb1uid = yield from count([usb1], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
@@ -284,7 +284,7 @@ class DossierTools():
             image_usb2 = os.path.join(folder, 'snapshots', usb2snap)
             md['_filename'] = image_usb2
             #usbcam2._annotation_string = stub
-            print(bold_msg('USB camera #2 snapshot'))
+            bold_msg('USB camera #2 snapshot')
             usb2uid = yield from count([usb2], 1, md = {'XDI':md, 'plan_name' : 'count xafs_metadata snapshot'})
             self.usb2snap, self.usb2uid = usb2snap, usb2uid
             kafka_message({'copy': True,

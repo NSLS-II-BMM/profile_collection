@@ -212,9 +212,9 @@ class FMBOEpicsMotor(EpicsMotor):
                     elif 'slits3' in self.name or 'dm3' in self.name:
                         which = 'dm3'
 
-                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')')
                     print('Then try your last command again.  If this error repeats, call for help.')
-                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
+                    whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n')
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '
@@ -312,9 +312,9 @@ class FMBOThinEpicsMotor(EpicsMotor):
                     elif 'slits3' in self.name or 'dm3' in self.name:
                         which = 'dm3'
 
-                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')')
                     print('Then try your last command again.  If this error repeats, call for help.')
-                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
+                    whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n')
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '
@@ -388,9 +388,9 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
                     elif 'slits3' in self.name or 'dm3' in self.name:
                         which = 'dm3'
 
-                    print(error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')'))
+                    error_msg('\n\n' + f'try doing:  ks.cycle(\'{which}\')')
                     print('Then try your last command again.  If this error repeats, call for help.')
-                    print(whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n'))
+                    whisper('The possible arguments for ks.cycle() are m3, m2, dcm, slits2, and dm3\n')
                     success = False
                 else:
                     self.log.warning('Motor %s raised an alarm during motion '

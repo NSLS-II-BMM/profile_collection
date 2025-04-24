@@ -48,11 +48,11 @@ def all_connected(with_m2=False):
     ok = True
     for m in motors:
         if m.connected is False:
-            print(disconnected_msg(f'{m.name} is not connected'))
+            disconnected_msg(f'{m.name} is not connected')
             for walk in m.walk_signals(include_lazy=False):
                 if walk.item.connected is False:
-                    print(disconnected_msg(f'      {walk.item.name} is a disconnected PV'))
-            print(whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})'))
+                    disconnected_msg(f'      {walk.item.name} is a disconnected PV')
+            whisper(f'try: {m.name} = {m.__class__}("{m.prefix}", name={m.name})')
             ok = False
     return ok
 
@@ -225,7 +225,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         # with a sleep, allowing the user to easily map out motor motions in #
         # a macro                                                            #
         if BMMuser.macro_dryrun:
-            print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' %
+            info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' 
                            (BMMuser.macro_sleep, el)))
             countdown(BMMuser.macro_sleep)
             yield from null()
@@ -237,7 +237,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         
         ready_count = 0
         while pds_motors_ready() is False:
-            print(whisper('Pausing 5 seconds before trying kill switches.'))
+            whisper('Pausing 5 seconds before trying kill switches.')
             yield from mv(user_ns['busy'], 5)
             ready_count += 1
             report('\nOne or more motors are showing amplifier faults. Attempting to correct the problem.', level='error', slack=True)
@@ -274,15 +274,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
                 return
 
         if xafs_table_ok is False:
-            print(error_msg('XAFS table positions looks strange.  Check user_offset values for xafs_yu, xafs_ydi, and xafs_ydo.'))
-            print(bold_msg('Quitting change_edge() macro....\n'))
+            error_msg('XAFS table positions looks strange.  Check user_offset values for xafs_yu, xafs_ydi, and xafs_ydo.')
+            bold_msg('Quitting change_edge() macro....\n')
             yield from null()
             return
 
             
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            print(error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n'))
+            error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n')
             yield from null()
             return
 
@@ -290,7 +290,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             energy = edge_energy(el,edge)
 
         if energy is None:
-            print(error_msg('\nEither %s or %s is not a valid symbol\n' % (el, edge)))
+            error_msg('\nEither %s or %s is not a valid symbol\n' % (el, edge))
             yield from null()
             return
         if energy > 23500:
@@ -298,13 +298,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             energy = edge_energy(el,'L3')
 
         if energy < 4000:
-            print(warning_msg('The %s edge energy is below 4950 eV' % el))
-            print(warning_msg('You have to change energy by hand.'))
+            warning_msg('The %s edge energy is below 4950 eV' % el)
+            warning_msg('You have to change energy by hand.')
             yield from null()
             return
 
         if energy > 23500:
-            print(warning_msg('The %s edge energy is outside the range of this beamline!' % el))
+            warning_msg('The %s edge energy is outside the range of this beamline!' % el)
             yield from null()
             return
 
@@ -331,7 +331,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         if insist is True:
             with_m2 = True
         if all_connected(with_m2) is False:
-            print(warning_msg('Ophyd connection failure' % el))
+            warning_msg('Ophyd connection failure' % el)
             yield from null()
             return
 
@@ -342,7 +342,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         ################################
         # confirm configuration change #
         ################################
-        print(bold_msg('\nEnergy change:'))
+        bold_msg('\nEnergy change:')
         print('   %s: %s %s' % (list_msg('edge'),                    el.capitalize(), edge.capitalize()))
         print('   %s: %.1f'  % (list_msg('edge energy'),             energy))
         print('   %s: %.1f'  % (list_msg('target energy'),           energy+target))
@@ -368,18 +368,18 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
                 if action[0].lower() == 'n' or action[0].lower() == 'q':
                     return(yield from null())
             if mode == 'C' and energy < 6000:
-                print(warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.'))
-                print(warning_msg("You will not get optimal harmonic rejection."))
-                print(whisper("This message is informational, not indicative of a problem with your experiment."))
+                warning_msg('\nMoving to mode C for focused beam and an edge energy below 6 keV.')
+                warning_msg("You will not get optimal harmonic rejection.")
+                whisper("This message is informational, not indicative of a problem with your experiment.")
                 #action = input("You will not get optimal harmonic rejection.  Continue anyway? " + PROMPT)
                 #if action != '':
                 #    if action[0].lower() == 'n' or action[0].lower() == 'q':
                 #        return(yield from null())
         else:
             if el == rkvs.get('BMM:user:element').decode('utf-8') and edge == rkvs.get('BMM:user:edge').decode('utf-8'):
-                print(warning_msg(f'You are already at the {el} {edge} edge.'))
+                warning_msg(f'You are already at the {el} {edge} edge.')
                 if insist is True:
-                    print(warning_msg('But changing edge anyway.'))                
+                    warning_msg('But changing edge anyway.')
                 else:
                     yield from null()
                     return
@@ -440,7 +440,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             faulted_axes = False
             for m in dcm_axes:
                 if m.amfe.get() or m.amfae.get():
-                    #print(error_msg("%-12s : %s / %s" % (m.name, m.amfe.enum_strs[m.amfe.get()], m.amfae.enum_strs[m.amfae.get()])))
+                    #error_msg("%-12s : %s / %s" % (m.name, m.amfe.enum_strs[m.amfe.get()], m.amfae.enum_strs[m.amfae.get()]))
                     faulted_axes = True
             if faulted_axes is True:
                 user_ns['ks'].cycle('dcm')

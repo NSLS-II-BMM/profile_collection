@@ -1001,7 +1001,7 @@ Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{g
         url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={cycle}'
         r = requests.get(url)
         if r.status_code != requests.codes.ok:
-            print(whisper(url))
+            whisper(url)
             return(0)           # problem contacting API
         j = json.loads(r.text)
         for prop in j['proposals']:

@@ -57,7 +57,7 @@ class WDYWTD():
         choice = choice.upper()
         print('\n')
         def bailout():
-            print(whisper('doing nothing'))
+            whisper('doing nothing')
             yield from null()
         thing = 'do_nothing'
         if choice in actions:
@@ -66,25 +66,25 @@ class WDYWTD():
 
 
     def do_nothing(self):
-        print(whisper('doing nothing'))
+        whisper('doing nothing')
         yield from null()
             
     def do_XAFS(self):
-        print(go_msg('You would like to do an XAFS scan...\n'))
+        go_msg('You would like to do an XAFS scan...\n')
         howlong()
         yield from null()
         ##yield from xafs()
             
     def do_ChangeEdge(self):
-        print(go_msg('You would like to change to a different edge...\n'))
+        go_msg('You would like to change to a different edge...\n')
 
         el = input(" What element? ")
         el = el.capitalize()
         if el == '':
-            print(whisper('doing nothing'))
+            whisper('doing nothing')
             return(yield from null())
         if el not in ELEMENTS:
-            print(error_msg(f'{el} is not an element'))
+            error_msg(f'{el} is not an element')
             return(yield from null())
 
         if Z_number(el) < 46:
@@ -104,12 +104,12 @@ class WDYWTD():
         else:
             focus = False
 
-        print(disconnected_msg(f'yield from change_edge("{el}", focus={focus}, edge="{ed}")'))
+        disconnected_msg(f'yield from change_edge("{el}", focus={focus}, edge="{ed}")')
         yield from null()
         ##yield from change_edge(el, focus=focus, edge=ed)
             
     def do_Spreadsheet(self):
-        print(go_msg('You would like to import a spreadsheet...\n'))
+        go_msg('You would like to import a spreadsheet...\n')
         ## prompt for type of spreadsheet: wheel or glancing angle
         ret = user_ns['wmb'].spreadsheet()
         yield from null()
@@ -129,36 +129,36 @@ class WDYWTD():
         #     yield from null()
             
     def do_RunMacro(self):
-        print(go_msg('You would like to run a measurement macro...\n'))
+        go_msg('You would like to run a measurement macro...\n')
         macro = present_options('py')
         if macro is None:
             return
         ipython = get_ipython()
         fullpath = os.path.join(user_ns['BMMuser'].folder, macro)
         ipython.magic(f'run -i \'{fullpath}\'')
-        print(disconnected_msg(f'yield from {macro[:-3]}()'))
+        disconnected_msg(f'yield from {macro[:-3]}()')
         yield from null()
             
     def do_AlignSlot(self):
-        print(go_msg('You would like to align a wheel slot...\n'))
+        go_msg('You would like to align a wheel slot...\n')
         yield from find_slot()
             
     def do_AlignGA(self):
-        print(go_msg('You would like to align the glancing angle stage...\n'))
+        go_msg('You would like to align the glancing angle stage...\n')
         yield from user_ns['ga'].auto_align()
             
     def do_RockingCurve(self):
-        print(go_msg('You would like to measure a rocking curve scan...\n'))
-        print(disconnected_msg('yield from rocking_curve()'))
+        go_msg('You would like to measure a rocking curve scan...\n')
+        disconnected_msg('yield from rocking_curve()')
         yield from null()
             
     def do_SlitHeight(self):
-        print(go_msg('You would like to set the slit height...\n'))
-        print(disconnected_msg('yield from slit_height()'))
+        go_msg('You would like to set the slit height...\n')
+        disconnected_msg('yield from slit_height()')
         yield from null()
             
     def do_AdjustSlits(self):
-        print(go_msg('You would like to adjust the size of the hutch slits...\n'))
+        go_msg('You would like to adjust the size of the hutch slits...\n')
         which = input(" Horizontal or vertical? [H/v] ")
         which = which.lower()
         if which.startswith('h') or which == '':
@@ -174,35 +174,35 @@ class WDYWTD():
         try:
             size = float(size)
         except:
-            print(error_msg(f'\n "{size}" cannot be interpreted as a number'))
+            error_msg(f'\n "{size}" cannot be interpreted as a number')
             yield from null()
             return
         if is_horiz:
-            #print(disconnected_msg(f'yield from mv(slits3.hsize, {size})'))
+            #disconnected_msg(f'yield from mv(slits3.hsize, {size})')
             #yield from null()
             yield from mv(user_ns['slits3'].hsize, size)
         else:
-            #print(disconnected_msg(f'yield from mv(slits3.vsize, {size})'))
+            #disconnected_msg(f'yield from mv(slits3.vsize, {size})')
             #yield from null()
             yield from mv(user_ns['slits3'].vsize, size)
             
     def do_XRFSpectrum(self):
-        print(go_msg('You would like to see an XRF spectrum...\n'))
+        go_msg('You would like to see an XRF spectrum...\n')
         user_ns['xs'].measure_xrf()
         yield from null()
             
     def do_ChangeXtals(self):
         if user_ns['dcm']._crystal == '111':
-            print(go_msg('You would like to change from the ') + whisper('Si(111)') + go_msg(' to the ') + bold_msg('Si(311)') + go_msg(' crystals...\n'))
-            print(disconnected_msg('yield from change_xtals("311")'))
+            go_msg('You would like to change from the ') + whisper('Si(111)') + go_msg(' to the ') + bold_msg('Si(311)') + go_msg(' crystals...\n')
+            disconnected_msg('yield from change_xtals("311")')
         else:
-            print(go_msg('You would like to change from the ') + whisper('Si(311)') + go_msg(' to the ') + bold_msg('Si(111)') + go_msg(' crystals...\n'))
-            print(disconnected_msg('yield from change_xtals("111")'))
+            go_msg('You would like to change from the ') + whisper('Si(311)') + go_msg(' to the ') + bold_msg('Si(111)') + go_msg(' crystals...\n')
+            disconnected_msg('yield from change_xtals("111")')
         yield from null()
 
     def do_SetupXRD(self):
-        print(go_msg('You would like to set up for XRD...\n'))
-        print(disconnected_msg('yield from change_edge("Ni", xrd=True, energy=8600)'))
+        go_msg('You would like to set up for XRD...\n')
+        disconnected_msg('yield from change_edge("Ni", xrd=True, energy=8600)')
         #yield from change_edge("Ni", xrd=True, energy=8600)
         yield from null()
 

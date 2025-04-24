@@ -94,15 +94,15 @@ class EPS_Shutter(Device):
         if self.state.get() == self.closeval:
             state = 'closed'
             if self.name == 'FS1':
-                return('retracted')
+                return 'retracted'
             if self.name == 'LN2':
-                return(state)
-            return error_msg(state)
+                return state
+            return f'[red]{state}[/red]'
         state = 'open'
         if self.name == 'FS1':
-            return(error_msg('in place'))
+            return '[red]in place[/red]'
         if self.name == 'LN2':
-            return(cold_msg(state))
+            return f'[pale_turquoise1]{state}[/pale_turquoise1]'
         return(state + '  ')
 
     

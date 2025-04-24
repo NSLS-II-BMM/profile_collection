@@ -138,7 +138,7 @@ class BMMMacroBuilder():
         if spreadsheet is None:
             spreadsheet = present_options('xlsx')
         if spreadsheet is None:
-            print(error_msg('No spreadsheet specified!'))
+            error_msg('No spreadsheet specified!')
             return None
         if spreadsheet[-5:] != '.xlsx':
             spreadsheet = spreadsheet+'.xlsx'
@@ -274,13 +274,13 @@ class BMMMacroBuilder():
             if motor in user_ns:
                 motor = user_ns[motor]
             else:
-                print(error_msg(f'"{motor}" is not a valid motor name.'))
+                error_msg(f'"{motor}" is not a valid motor name.')
                 return(False)
         if value > motor.limits[1]:
-            print(error_msg(f"A requested {motor.name} position ({value}) is greater than the high limit ({motor.limits[1]})"))
+            error_msg(f"A requested {motor.name} position ({value}) is greater than the high limit ({motor.limits[1]})")
             return(False)
         if value < motor.limits[0]:
-            print(error_msg(f"A requested {motor.name} position ({value}) is less than the low limit ({motor.limits[0]})"))
+            error_msg(f"A requested {motor.name} position ({value}) is less than the low limit ({motor.limits[0]})")
             return(False)
         return(True)
 
@@ -292,10 +292,10 @@ class BMMMacroBuilder():
         if 'lakeshore' in stage.name.lower():
             name, units = 'Displex', 'K'
         if value > stage.limits[1]:
-            print(error_msg(f"A requested {name} temperature ({value}{units}) is greater than the high limit ({stage.limits[1]}{units})"))
+            error_msg(f"A requested {name} temperature ({value}{units}) is greater than the high limit ({stage.limits[1]}{units})")
             return(False)
         if value < stage.limits[0]:
-            print(error_msg(f"A requested {name} temperature ({value}{units}) is less than the low limit ({stage.limits[0]}{units})"))
+            error_msg(f"A requested {name} temperature ({value}{units}) is less than the low limit ({stage.limits[0]}{units})")
             return(False)
         return(True)
 
@@ -386,7 +386,7 @@ class BMMMacroBuilder():
         #     default['e0'] = edge_energy(default['element'], default['edge'])
 
         if unrecoverable:
-            print(error_msg(message))
+            error_msg(message)
             default = None
         return default
 
@@ -554,7 +554,7 @@ class BMMMacroBuilder():
         inrange = True
         ee = edge_energy(el, ed)
         if ee > 23500 or ee < 3500:
-            print(error_msg(f'\nThe {el} {ed} energy {ee:.1f} is outside the available range at BMM.'))
+            error_msg(f'\nThe {el} {ed} energy {ee:.1f} is outside the available range at BMM.')
             print('You probably have the edge set incorrectly in your spreadsheet.\n')
             inrange = False
         return(text, time, inrange)
@@ -646,7 +646,7 @@ class BMMMacroBuilder():
         #     default['experimenters'] = self.ws['E1'].value  # top line of xlsx file
         default = self.ini_sanity(default)
         if default is None:
-            print(error_msg(f'Could not interpret {self.source} as a wheel macro.'))
+            error_msg(f'Could not interpret {self.source} as a wheel macro.')
             return
         #import pprint
         #pprint.pprint(default)
@@ -657,7 +657,7 @@ class BMMMacroBuilder():
         ## see xlsx() in user_ns/bmm_end.py
         with open(self.ini, 'w') as configfile:
             config.write(configfile)
-        print(whisper('Wrote default INI file: %s' % self.ini))
+        whisper('Wrote default INI file: %s' % self.ini)
 
         #########################################################
         # write the full macro to a file and %run -i that file  #
@@ -678,7 +678,7 @@ class BMMMacroBuilder():
         from IPython import get_ipython
         ipython = get_ipython()
         ipython.magic('run -i \'%s\'' % self.macro)
-        print(whisper('Wrote and read macro file: %s' % self.macro))
+        whisper('Wrote and read macro file: %s' % self.macro)
 
     def finish_macro(self):
         #######################################

@@ -5,7 +5,6 @@ import json, requests
 from os import chmod
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from IPython.utils.coloransi import TermColors as color
 
 from BMM.functions           import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.kafka import kafka_message
@@ -115,7 +114,7 @@ try:
     with open(slack_secret, "r") as f:
         default_slack_channel = f.read().replace('\n','')
 except:
-    print(error_msg('\t\t\tslack_secret file not found!'))
+    error_msg('\t\t\tslack_secret file not found!')
 
 
 use_bmm_slack = profile_configuration.getboolean('slack', 'use_bmm')
@@ -171,25 +170,25 @@ def report(text, level=None, slack=False, rid=None):
     BMMuser = user_ns['BMMuser']
     BMM_log_info(text)
     screen = emojis.encode(text)
-    if color:                   # test that color is sensible...
+    if level is not None: # test that level is sensible...
         if level == 'error':
-            print(error_msg(screen))
+            error_msg(screen)
         elif level == 'warning':
-            print(warning_msg(screen))
+            warning_msg(screen)
         elif level == 'info':
-            print(info_msg(screen))
+            info_msg(screen)
         elif level == 'url':
-            print(url_msg(screen))
+            url_msg(screen)
         elif level == 'bold':
-            print(bold_msg(screen))
+            bold_msg(screen)
         elif level == 'verbosebold':
-            print(verbosebold_msg(screen))
+            verbosebold_msg(screen)
         elif level == 'disconnected':
-            print(disconnected_msg(screen))
+            disconnected_msg(screen)
         elif level == 'list':
-            print(list_msg(screen))
+            list_msg(screen)
         elif level == 'whisper':
-            print(whisper(screen))
+            whisper(screen)
         else:
             print(screen)
     else:
