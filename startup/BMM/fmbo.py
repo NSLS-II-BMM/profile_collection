@@ -43,5 +43,5 @@ def FMBO_status(motor):
                 if signal.get() != status_list[a]:
                     string = warning_msg(f'{string: <19}')
             text += f'   {desc.get():26}  {string: <19}  {bold_msg(signal.get())}   {whisper(suffix)}{padding}\n'
-        boxedtext(f'{motor.name} status signals', text, 'brown')
+        boxedtext(text, title=f'{motor.name} status signals', color='yellow')
 

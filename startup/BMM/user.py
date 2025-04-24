@@ -398,7 +398,7 @@ class BMM_User(Borg):
             rkvs.set(f'BMM:user:{key}', getattr(self, key))
 
     def verify_roi(self, xs, el, edge, tab=''):
-        print(bold_msg(f'{tab}Setting ROIs on {xs.name} for {el} {edge} edge'))
+        bold_msg(f'{tab}Setting ROIs on {xs.name} for {el} {edge} edge')
         try:
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):
@@ -422,7 +422,7 @@ class BMM_User(Borg):
                        level='bold', slack=True)
             xs.reset_rois(tab=tab, quiet=True)
         except Exception as E:
-            print(error_msg(E))
+            error_msg(E)
 
             
     def state_from_redis(self):
@@ -759,28 +759,28 @@ class BMM_User(Borg):
         '''
         do_sync = False
         if self.user_is_defined:
-            print(error_msg('An experiment is already started.'))
+            error_msg('An experiment is already started.')
             return()
         if name is None:
-            print(error_msg('You did not supply the user\'s name'))
+            error_msg('You did not supply the user\'s name')
             return()
         if date is None:
-            print(error_msg('You did not supply the start date'))
+            error_msg('You did not supply the start date')
             return()
         pattern=re.compile('\d{4}\-\d{2}\-\d{2}')
         if pattern.fullmatch(date) is None:
-            print(whisper(f'The start date {date} was not in the form YYYY-MM-DD'))
+            whisper(f'The start date {date} was not in the form YYYY-MM-DD')
             #return()
         if saf == 0:
-            print(error_msg('You did not supply the SAF number'))
+            error_msg('You did not supply the SAF number')
             return()
         if gup == 0:
             gup = self.fetch_proposal_from_saf(saf)
             if gup == 0:
-                print(error_msg('Error retrieving data from PASS API'))
+                error_msg('Error retrieving data from PASS API')
                 return()
             if gup == -1:
-                print(error_msg('No proposal found corresponding to SAF'))
+                error_msg('No proposal found corresponding to SAF')
                 return()
         
 
@@ -914,7 +914,7 @@ Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{g
 
         if not force:
             if not self.user_is_defined:
-                print(error_msg('There is not a current experiment!'))
+                error_msg('There is not a current experiment!')
                 return(None)
 
             

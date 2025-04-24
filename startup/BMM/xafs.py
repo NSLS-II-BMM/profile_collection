@@ -75,7 +75,7 @@ def next_index(folder=None, stub=None, maxtries=15, verbose=False):
     if folder is None:
         folder = proposal_base()
     if stub is None:
-        print(error_msg('No stub supplied to next_index'))
+        error_msg('No stub supplied to next_index')
         return(None)
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:next_index', 'None')
@@ -129,7 +129,7 @@ def file_exists(folder=None, filename=None, start=1, stop=2, maxtries=15, number
     if folder is None:
         folder = proposal_base()
     if filename is None:
-        print(error_msg('No filename supplied to file_exists'))
+        error_msg('No filename supplied to file_exists')
         return(None)
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:file_exists', 'None')
@@ -238,10 +238,10 @@ def scan_metadata(inifile=None, **kwargs):
     parameters = dict()
 
     if inifile is None:
-        print(error_msg('\nNo inifile specified\n'))
+        error_msg('\nNo inifile specified\n')
         return {}, {}
     if not os.path.isfile(inifile):
-        print(error_msg('\ninifile does not exist\n'))
+        error_msg('\ninifile does not exist\n')
         return {}, {}
 
     config = configparser.ConfigParser(interpolation=None)
@@ -313,7 +313,7 @@ def scan_metadata(inifile=None, **kwargs):
         else:
             parameters['start'] = int(parameters['start'])
     except ValueError:
-        print(error_msg('\nstart value must be a positive integer or "next"'))
+        error_msg('\nstart value must be a positive integer or "next"')
         parameters['start'] = -1
         found['start'] = False
 
@@ -360,24 +360,24 @@ def scan_metadata(inifile=None, **kwargs):
         parameters['snapshots'] = False
             
     if dcm._crystal != '111' and parameters['ththth']:
-        print(error_msg('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n'))
+        error_msg('\nYou must be using the Si(111) crystal to make a Si(333) measurement\n')
         return {}, {}
 
     if not found['e0'] and found['element'] and found['edge']:
         parameters['e0'] = edge_energy(parameters['element'], parameters['edge'])
         if parameters['e0'] is None:
-            print(error_msg('\nCannot figure out edge energy from element = %s and edge = %s\n' % (parameters['element'], parameters['edge'])))
+            error_msg('\nCannot figure out edge energy from element = %s and edge = %s\n' % (parameters['element'], parameters['edge']))
             return {}, {}
         else:
             found['e0'] = True
             #print('\nUsing tabulated value of %.1f for the %s %s edge\n' % (parameters['e0'], parameters['element'], parameters['edge']))
         if parameters['e0'] > 23500:
-            print(error_msg('\nThe %s %s edge is at %.1f, which is ABOVE the measurement range for BMM\n' %
-                            (parameters['element'], parameters['edge'], parameters['e0'])))
+            error_msg('\nThe %s %s edge is at %.1f, which is ABOVE the measurement range for BMM\n' %
+                      (parameters['element'], parameters['edge'], parameters['e0']))
             return {}, {}
         if parameters['e0'] < 4000:
-            print(error_msg('\nThe %s %s edge is at %.1f, which is BELOW the measurement range for BMM\n' %
-                            (parameters['element'], parameters['edge'], parameters['e0'])))
+            error_msg('\nThe %s %s edge is at %.1f, which is BELOW the measurement range for BMM\n' %
+                      (parameters['element'], parameters['edge'], parameters['e0']))
             return {}, {}
 
             
@@ -424,7 +424,7 @@ def attain_energy_position(value):
     count = 0
     while abs(dcm.energy.position - value) > 0.1 :
         if count > 4:
-            print(error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.'))
+            error_msg('Unresolved encoder loss on Bragg axis.  Stopping XAFS scan.')
             BMMuser.final_log_entry = False
             yield from null()
             return False
@@ -489,7 +489,7 @@ def xas2xdi(datafile, key):
 
     '''
     kafka_message({'xasxdi': True, 'uid' : key, 'filename': datafile})
-    print(bold_msg('wrote %s' % dfile))
+    bold_msg('wrote %s' % dfile)
 
 
 
@@ -505,7 +505,7 @@ def xafs(inifile=None, **kwargs):
         ## verify mono position and configuration are consistent
         isok, msg = mono_sanity()
         if isok is False:
-            print(error_msg(msg))
+            error_msg(msg)
             yield from null()
             return
         
@@ -522,15 +522,15 @@ def xafs(inifile=None, **kwargs):
             kwargs['force'] = True
 
         ## verify that it is OK to start the scan
-        if verbose: print(verbosebold_msg('checking clear to start (unless force=True)')) 
+        if verbose: verbosebold_msg('checking clear to start (unless force=True)')
         if 'force' in kwargs and kwargs['force'] is True:
             (ok, text) = (True, '')
         else:
             (ok, text) = BMM_clear_to_start()
             if ok is False:
                 BMMuser.final_log_entry = False
-                print(error_msg('\n'+text))
-                print(bold_msg('Not clear to start scan sequence....\n'))
+                error_msg('\n'+text)
+                bold_msg('Not clear to start scan sequence....\n')
                 yield from null()
                 return
         #_locked_dwell_time.quadem_dwell_time.settle_time = 0
@@ -550,7 +550,7 @@ def xafs(inifile=None, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user input, find and parse the INI file
-        if verbose: print(verbosebold_msg('time estimate')) 
+        if verbose: verbosebold_msg('time estimate')
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         if estimate == -1:
             BMMuser.final_log_entry = False
@@ -573,25 +573,25 @@ def xafs(inifile=None, **kwargs):
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',  'xs5', 'xs6', 'xs7', 
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4',
                                                           'xschannel5', 'xschannel6', 'xschannel7'))):
-                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
-                print(error_msg('Likely solution:'))
-                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
-                print(error_msg('then do:             xs.measure_roi()'))
+                error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector')
+                error_msg('Likely solution:')
+                error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)')
+                error_msg('then do:             xs.measure_roi()')
                 return(yield from null())
         if plotting_mode(p['mode']) == 'fluorescence' and use_4element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs1', 'xs2', 'xs3', 'xs4',
                                                           'xschannel1', 'xschannel2', 'xschannel3', 'xschannel4'))):
-                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector'))
-                print(error_msg('Likely solution:'))
-                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
-                print(error_msg('then do:             xs.measure_roi()'))
+                error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 4-element detector')
+                error_msg('Likely solution:')
+                error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)')
+                error_msg('then do:             xs.measure_roi()')
                 return(yield from null())
         if plotting_mode(p['mode']) == 'fluorescence' and use_1element is True:
             if (any(getattr(BMMuser, x) is None for x in ('element', 'xs8', 'xschannel8'))):
-                print(error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 1-element detector'))
-                print(error_msg('Likely solution:'))
-                print(error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)'))
-                print(error_msg('then do:             xs.measure_roi()'))
+                error_msg('BMMuser is not configured to measure correctly with the Xspress3 and the 1-element detector')
+                error_msg('Likely solution:')
+                error_msg('Set element symbol:  BMMuser.element = Fe  # (or whatever...)')
+                error_msg('then do:             xs.measure_roi()')
                 return(yield from null())
 
         sub_dict = {'*' : '_STAR_',
@@ -610,16 +610,16 @@ def xafs(inifile=None, **kwargs):
             new_filename = re.sub(r'[*:?"<>|/\\]', vfatify, p['filename'])
             if new_filename != p['filename']: 
                 report('\nChanging filename from "%s" to %s"' % (p['filename'], new_filename), 'error')
-                print(error_msg('\nThese characters cannot be in file names copied onto most memory sticks:'))
-                print(error_msg('\n\t* : ? % " < > | / \\'))
-                print(error_msg('\nSee ')+url_msg('https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words'))
+                error_msg('\nThese characters cannot be in file names copied onto most memory sticks:')
+                error_msg('\n\t* : ? % " < > | / \\')
+                error_msg('\nSee ')+url_msg('https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words')
                 p['filename'] = new_filename
 
             ## 255 character limit for filenames on VFAT
             # if len(p['filename']) > 250:
             #     BMMuser.final_log_entry = False
-            #     print(error_msg('\nYour filename is too long,'))
-            #     print(error_msg('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,'))
+            #     error_msg('\nYour filename is too long,')
+            #     error_msg('\nFilenames longer than 255 characters cannot be copied onto most memory sticks,')
             #     yield from null()
             #     return
 
@@ -663,16 +663,14 @@ def xafs(inifile=None, **kwargs):
             
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## user verification (disabled by BMMuser.prompt)
-        if verbose: print(verbosebold_msg('computing pseudo-channelcut energy'))
+        if verbose: verbosebold_msg('computing pseudo-channelcut energy')
         eave = channelcut_energy(p['e0'], p['bounds'], p['ththth'])
-        length = 0
         if BMMuser.prompt:
             BMMuser.instrument = ''  # we are NOT using a spreadsheet, so unset instrument
             text = '\n'
             for k in ('bounds', 'bounds_given', 'steps', 'times'):
                 addition = '      %-13s : %-50s\n' % (k,p[k])
                 text = text + addition.rstrip() + '\n'
-                if len(addition) > length: length = len(addition)
             for (k,v) in p.items():
                 if k in ('bounds', 'bounds_given', 'steps', 'times'):
                     continue
@@ -680,14 +678,10 @@ def xafs(inifile=None, **kwargs):
                     continue
                 addition = '      %-13s : %-50s\n' % (k,v)
                 text = text + addition.rstrip() + '\n'
-                if len(addition) > length: length = len(addition)
-                if length < 75: length = 75
             for k in ('post_webcam', 'post_anacam', 'post_usbcam1', 'post_usbcam2', 'post_xrf'):
                 addition = '      %-13s : %-50s\n' % (k,getattr(user_ns['BMMuser'], k))
                 text = text + addition.rstrip() + '\n'
-                if len(addition) > length: length = len(addition)
-                if length < 75: length = 75
-            boxedtext('How does this look?', text, 'green', width=length+4) # see 05-functions
+            boxedtext(text, title='How does this look?', color='green')
 
             outfile = os.path.join(p['folder'], "%s.%3.3d" % (p['filename'], p['start']))
             print('\nFirst data file to be written to "%s"' % outfile)
@@ -735,7 +729,7 @@ def xafs(inifile=None, **kwargs):
 
         ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
         ## organize metadata for injection into database and XDI output
-        print(bold_msg('gathering metadata'))
+        bold_msg('gathering metadata')
         md = bmm_metadata(measurement   = p['mode'],
                           experimenters = BMMuser.experimenters,
                           edge          = p['edge'],
@@ -824,7 +818,7 @@ def xafs(inifile=None, **kwargs):
         def scan_sequence(clargs): #, noreturn=False):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## compute energy and dwell grids
-            print(bold_msg('computing energy and dwell time grids'))
+            bold_msg('computing energy and dwell time grids')
             (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
 
 
@@ -838,39 +832,39 @@ def xafs(inifile=None, **kwargs):
             ## --*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--*--
             ## sanity checks
             if energy_grid is None or time_grid is None or approx_time is None:
-                print(error_msg('Cannot interpret scan grid parameters!  Bailing out....'))
+                error_msg('Cannot interpret scan grid parameters!  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             BMMuser.element = rkvs.get('BMM:user:element').decode('utf-8')
             BMMuser.edge    = rkvs.get('BMM:user:edge').decode('utf-8')
             if p['element'] != BMMuser.element or p['edge'] != BMMuser.edge:
-                print(error_msg(f'The photon delivery system is not configured for the {p["element"]} {p["edge"]} edge.  You need to run the "change_edge()" command.  Bailing out....'))
+                error_msg(f'The photon delivery system is not configured for the {p["element"]} {p["edge"]} edge.  You need to run the "change_edge()" command.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if any(t > 20 for t in time_grid):
-                print(error_msg('Your scan asks for an integration time greater than 20 seconds, which the ion chamber electrometer cannot accommodate.  Bailing out....'))
+                error_msg('Your scan asks for an integration time greater than 20 seconds, which the ion chamber electrometer cannot accommodate.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if any(y > 23500 for y in energy_grid):
-                print(error_msg('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....'))
+                error_msg('Your scan goes above 23500 eV, the maximum energy available at BMM.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y > 21200 for y in energy_grid):
-                print(error_msg('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....'))
+                error_msg('Your scan goes above 21200 eV, the maximum energy value on the Si(111) mono.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '111' and any(y < 2900 for y in energy_grid): # IS THIS CORRECT???
-                print(error_msg('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....'))
+                error_msg('Your scan goes below 2900 eV, the minimum energy value on the Si(111) mono.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
             if dcm._crystal == '311' and any(y < 5500 for y in energy_grid):
-                print(error_msg('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....'))
+                error_msg('Your scan goes below 5500 eV, the minimum energy value on the Si(311) mono.  Bailing out....')
                 BMMuser.final_log_entry = False
                 yield from null()
                 return
@@ -994,12 +988,12 @@ def xafs(inifile=None, **kwargs):
                     ## if not measuring in both direction, lower acceleration of the mono
                     ## for the rewind, explicitly rewind, then reset for measurement
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
-                    print(whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get())))
+                    whisper('  Rewinding DCM to %.1f eV with acceleration time = %.2f sec' % (energy_grid[0]-5, dcm_bragg.acceleration.get()))
                     yield from attain_energy_position(energy_grid[0]-5)
                     #dcm_bragg.clear_encoder_loss()
                     #yield from mv(dcm.energy, energy_grid[0]-5)
                     yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
-                    print(whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get()))
+                    whisper('  Resetting DCM acceleration time to %.2f sec' % dcm_bragg.acceleration.get())
 
 
                 if plotting_mode(p['mode']) in ('fluorescence', 'yield', 'pilatus'):
@@ -1081,7 +1075,7 @@ def xafs(inifile=None, **kwargs):
                                              md={**xdi, **supplied_metadata, 'plan_name' : 'scan_nd xafs fluorescence + pilatus',
                                                  'BMM_kafka': { 'hint':  'xafs fluo+pilatus', **more_kafka }})
                 else:
-                    print(error_msg('No valid plotting mode provided!'))
+                    error_msg('No valid plotting mode provided!')
 
                 kafka_message({'xafs_sequence'      :'add',
                                'uid'                : uid})
@@ -1091,7 +1085,7 @@ def xafs(inifile=None, **kwargs):
                     
                 uidlist.append(uid)
                 kafka_message({'xasxdi': True, 'uid' : uid, 'filename': os.path.basename(datafile)})
-                print(bold_msg('wrote %s' % datafile))
+                bold_msg('wrote %s' % datafile)
                 if not is_re_worker_active():
                     BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')
                 else:
@@ -1188,11 +1182,11 @@ def xafs(inifile=None, **kwargs):
         inifile, estimate = howlong(inifile, interactive=False, **kwargs)
         (p, f) = scan_metadata(inifile=inifile, **kwargs)
         if 'filename' in p:
-            print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at sample "%s".\n' %
-                           (BMMuser.macro_sleep, p['filename'])))
+            info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds at sample "%s".\n' %
+                     (BMMuser.macro_sleep, p['filename']))
         else:
-            print(info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds.\nAlso there seems to be a problem with "%s".\n' %
-                           (BMMuser.macro_sleep, inifile)))
+            info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds.\nAlso there seems to be a problem with "%s".\n' %
+                     (BMMuser.macro_sleep, inifile))
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################
@@ -1329,16 +1323,16 @@ def howlong(inifile=None, interactive=True, **kwargs):
     if not os.path.isfile(inifile):
         inifile = os.path.join(BMMuser.workspace, inifile)
         if not os.path.isfile(inifile):
-            print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
+            warning_msg('\n%s does not exist!  Bailing out....\n' % orig)
             return(orig, -1)
-    print(bold_msg('reading ini file: %s' % inifile))
+    bold_msg('reading ini file: %s' % inifile)
     (p, f) = scan_metadata(inifile=inifile, **kwargs)
     if not p:
-        print(error_msg('%s could not be read as an XAFS control file\n' % inifile))
+        error_msg('%s could not be read as an XAFS control file\n' % inifile)
         return(orig, -1)
     (ok, missing) = ini_sanity(f)
     if not ok:
-        print(error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing))
+        error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing)
         return(orig, -1)
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     #if delta == 0:
@@ -1350,12 +1344,10 @@ def howlong(inifile=None, interactive=True, **kwargs):
 
 
     if interactive:
-        length = 0
         bt = '\n'
         for k in ('bounds', 'bounds_given', 'steps', 'times'):
             addition = '      %-13s : %-50s\n' % (k,p[k])
             bt = bt + addition.rstrip() + '\n'
-            if len(addition) > length: length = len(addition)
         for (k,v) in p.items():
             if k in ('bounds', 'bounds_given', 'steps', 'times'):
                 continue
@@ -1363,15 +1355,11 @@ def howlong(inifile=None, interactive=True, **kwargs):
                 continue
             addition = '      %-13s : %-50s\n' % (k,v)
             bt = bt + addition.rstrip() + '\n'
-            if len(addition) > length: length = len(addition)
-            if length < 75: length = 75
         for k in ('post_webcam', 'post_anacam', 'post_usbcam1', 'post_usbcam2', 'post_xrf'):
             addition = '      %-13s : %-50s\n' % (k,getattr(user_ns['BMMuser'], k))
             bt = bt + addition.rstrip() + '\n'
-            if len(addition) > length: length = len(addition)
-            if length < 75: length = 75
             
-        boxedtext('Control file contents', bt, 'cyan', width=length+4) # see 05-functions
+        boxedtext(bt, title='Control file contents', color='cyan')
         print(text)
     else:
         return(inifile, text)
@@ -1398,16 +1386,16 @@ def xafs_grid(inifile=None, **kwargs):
     if not os.path.isfile(inifile):
         inifile = os.path.join(BMMuser.workspace, inifile)
         if not os.path.isfile(inifile):
-            print(warning_msg('\n%s does not exist!  Bailing out....\n' % orig))
+            warning_msg('\n%s does not exist!  Bailing out....\n' % orig)
             return(orig, -1)
-    print(bold_msg('reading ini file: %s' % inifile))
+    bold_msg('reading ini file: %s' % inifile)
     (p, f) = scan_metadata(inifile=inifile, **kwargs)
     if not p:
-        print(error_msg('%s could not be read as an XAFS control file\n' % inifile))
+        error_msg('%s could not be read as an XAFS control file\n' % inifile)
         return(orig, -1)
     (ok, missing) = ini_sanity(f)
     if not ok:
-        print(error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing))
+        error_msg('\nThe following keywords are missing from your INI file: '), '%s\n' % str.join(', ', missing)
         return(orig, -1)
     (energy_grid, time_grid, approx_time, delta) = conventional_grid(p['bounds'], p['steps'], p['times'], e0=p['e0'], element=p['element'], edge=p['edge'], ththth=p['ththth'])
     print(f'{p["element"]} {p["edge"]}')

@@ -20,17 +20,17 @@ class Slits(PseudoPositioner):
 
     def where(self):
         #print("%s:" % self.name.upper())
-        text = "      vertical   size   = %7.3f mm            Top      = %7.3f mm\n" % \
+        text = "      [white]vertical   size   = %7.3f mm            Top      = %7.3f mm\n" % \
                (self.vsize.readback.get(),   self.top.user_readback.get())
         text += "      vertical   center = %7.3f mm            Bottom   = %7.3f mm\n" % \
                 (self.vcenter.readback.get(), self.bottom.user_readback.get())
         text += "      horizontal size   = %7.3f mm            Outboard = %7.3f mm\n" % \
                 (self.hsize.readback.get(),   self.outboard.user_readback.get())
-        text += "      horizontal center = %7.3f mm            Inboard  = %7.3f mm" % \
+        text += "      horizontal center = %7.3f mm            Inboard  = %7.3f mm[/white]" % \
                 (self.hcenter.readback.get(), self.inboard.user_readback.get())
         return text
     def wh(self):
-        boxedtext(self.name, self.where(), 'cyan')
+        boxedtext(self.where(), title=self.name, color='cyan')
 
     def enable(self):
         self.top.enable()
@@ -92,7 +92,7 @@ class GonioSlits(PseudoPositioner):
                 (self.hcenter.readback.get(), self.inboard.user_readback.get())
         return text
     def wh(self):
-        boxedtext(self.name, self.where(), 'cyan')
+        boxedtext(self.where(), title=self.name, color='cyan')
 
     # The pseudo positioner axes:
     vsize   = Cpt(PseudoSingle, limits=(-15, 20))

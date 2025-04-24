@@ -5,13 +5,11 @@ from ophyd.pseudopos import (pseudo_position_argument,
                              real_position_argument)
 
 from bluesky.plan_stubs import sleep, mv, null, abs_set
-from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper, PROMPT
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions import boxedtext, PROMPT
 from BMM.logging   import BMM_log_info
 
-
 import time
-
-from BMM.functions import boxedtext
 
 status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'LOOPM' : 1, 'TIACT' : 0, 'INTMO' : 1, 'DWPRO' : 0,
@@ -227,25 +225,18 @@ class FMBOEpicsMotor(EpicsMotor):
     
     
     def status(self):
-        text = '\n  %s is %s\n\n' % (self.name, self.prefix)
+        text = '\n  [white]%s is %s[/white]\n\n' % (self.name, self.prefix)
         for signal in status_list.keys():
             sig = signal.lower()
             try:
                 suffix = getattr(self, sig).pvname.replace(self.prefix, '')
                 string = getattr(self, sig).enum_strs[getattr(self, sig).get()]
-                if signal != 'asscs':
-                    if getattr(self, sig).get() != status_list[signal]:
-                        string = verbosebold_msg('%-19s' % string)
-                #text += '  %-26s : %-19s  %s   %s \n' % (getattr(self, sig+'_desc').get(),
-                #                                         string,
-                #                                         bold_msg(getattr(self, sig).get()),
-                #                                         whisper(suffix))
                 text += '  %-19s  %s   %s \n' % (string,
-                                                 bold_msg(getattr(self, sig).get()),
-                                                 whisper(suffix))
+                                                 '[white]' + str(getattr(self, sig).get()) + '[/white]',
+                                                 '[bold black]' + suffix + '[/bold black]')
             except:
                 pass
-        boxedtext('%s status signals' % self.name, text, 'green')
+        boxedtext(text, title=f'{self.name} status signals', color='green')
 
     def home(self, force=False):
         if force is False:
@@ -547,11 +538,11 @@ class Mirrors(PseudoPositioner):
             else:
                 stripe = '(Si stripe)'
         #text += "%s: %s" % (self.name.upper(), stripe))
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
+        text  = "      [white]vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
         text += "      lateral  = %7.3f mm            YDO = %7.3f\n" % (self.lateral.readback.get(),  self.ydo.user_readback.get())
         text += "      pitch    = %7.3f mrad          YDI = %7.3f\n" % (self.pitch.readback.get(),    self.ydi.user_readback.get())
         text += "      roll     = %7.3f mrad          XU  = %7.3f\n" % (self.roll.readback.get(),     self.xu.user_readback.get())
-        text += "      yaw      = %7.3f mrad          XD  = %7.3f"   % (self.yaw.readback.get(),      self.xd.user_readback.get())
+        text += "      yaw      = %7.3f mrad          XD  = %7.3f[/white]"   % (self.yaw.readback.get(),      self.xd.user_readback.get())
         #if self.name.lower() == 'm2':
         #    text += '\n      bender   = %9.1f steps' % m2_bender.user_readback.get()
         return text
@@ -566,7 +557,7 @@ class Mirrors(PseudoPositioner):
                 stripe = ' (Rh/Pt stripe)'
             else:
                 stripe = ' (Si stripe)'
-        boxedtext(self.name + stripe, self.where(), 'cyan')
+        boxedtext(self.where(), title=f'{self.name} {stripe}', color='green')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(-8, 8))
@@ -614,12 +605,12 @@ class XAFSTable(PseudoPositioner):
 
     def where(self):
         #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
+        text  = "      [white]vertical = %7.3f mm            YU  = %7.3f\n" % (self.vertical.readback.get(), self.yu.user_readback.get())
         text += "      pitch    = %7.3f mrad          YDO = %7.3f\n" % (self.pitch.readback.get(),    self.ydo.user_readback.get())
-        text += "      roll     = %7.3f mrad          YDI = %7.3f"   % (self.roll.readback.get(),     self.ydi.user_readback.get())
+        text += "      roll     = %7.3f mrad          YDI = %7.3f[/white]"   % (self.roll.readback.get(),     self.ydi.user_readback.get())
         return text
     def wh(self):
-        boxedtext('XAFS table', self.where(), 'cyan')
+        boxedtext(self.where(), title='XAFS Table', color='green')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(5, 145))
@@ -660,12 +651,12 @@ class GonioTable(PseudoPositioner):
 
     def where(self):
         #text += "%s:" % self.name.upper())
-        text  = "      vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.get(), self.yuo.user_readback.get())
+        text  = "      [white]vertical = %7.3f mm            YUO = %7.3f\n" % (self.vertical.readback.get(), self.yuo.user_readback.get())
         text += "      pitch    = %7.3f mrad          YUI = %7.3f\n" % (self.pitch.readback.get(),    self.yui.user_readback.get())
-        text += "      roll     = %7.3f mrad          YD  = %7.3f"   % (self.roll.readback.get(),     self.yd.user_readback.get())
+        text += "      roll     = %7.3f mrad          YD  = %7.3f[/white]"   % (self.roll.readback.get(),     self.yd.user_readback.get())
         return text
     def wh(self):
-        boxedtext('goniometer table', self.where(), 'cyan')
+        boxedtext(text, title='Goniometer Table', color='green')
 
     # The pseudo positioner axes:
     vertical = Cpt(PseudoSingle, limits=(291, 412))

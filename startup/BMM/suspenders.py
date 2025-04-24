@@ -20,9 +20,12 @@ all_BMM_suspenders = list()
 suspender_I0 = SuspendFloor(quadem1.I0, 0.1, resume_thresh=1, sleep=5)
 #all_BMM_suspenders.append(suspender_I0)
 
-## ----------------------------------------------------------------------------------
-## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
-beam_dump_screen_message = warning_msg('''
+
+def beamdown_message():
+
+    ## ----------------------------------------------------------------------------------
+    ## suspend upon beam dump, resume 30 seconds after hitting 90% of fill target
+    warning_msg('''
 *************************************************************
 
   The beam has dumped. :(
@@ -31,15 +34,15 @@ beam_dump_screen_message = warning_msg('''
   noticed the loss of beam and have paused your scan.
 
   Your scan will resume soon after the beam returns.
-''') + whisper('''
+''')
+    whisper('''
       You may also terminate your scan by hitting 
       C-c twice then entering RE.stop()
-''') + warning_msg('''                                  
+''')
+    warning_msg('''                                  
 *************************************************************
 ''')
-
-def beamdown_message():
-    print(beam_dump_screen_message)
+    #print(beam_dump_screen_message)
     kafka_message({'echoslack': True, 'text': ':skull_and_crossbones: Beam has dumped! :skull_and_crossbones:'})
     #post_to_slack(':skull_and_crossbones: Beam has dumped! :skull_and_crossbones:')
     yield from null()

@@ -28,22 +28,22 @@ def ocd(text, signal, negate=False):
     if 'ShutterTuple' in str(type(signal.get())):
         get = signal.get()[0]
         open_state = 'open         '
-        closed_state = error_msg('closed       ')
+        closed_state = '[bold red]closed[/bold red]       '
     else:
         get = signal.get()
         open_state = 'enabled      '
-        closed_state = error_msg('disabled      ')
+        closed_state = '[bold red]disabled[/bold red]      '
     if negate:
         get = -get+1
     try:
         if signal.connected is False:
-            outtext += disconnected_msg('disconnected ')
+            outtext += '[bold magenta]disconnected[\bold magenta] '
         elif get == 1:
             outtext += open_state
         else:
             outtext += closed_state
     except:
-        outtext += whisper('unavailable   ')
+        outtext += '[bold black]unavailable[/bold black]   '
     return outtext
 
     
@@ -88,7 +88,7 @@ def show_vacuum():
     text += '%-20s  %s\n' % (flight_path.name, flight_path._pressure())
     for i in range(1,7):
         text += 'Front end section %d   %s\n' % (i, fev._pressure(i))
-    boxedtext('BMM vacuum', text, 'brown', width=55)
+    boxedtext(text, title=f"BMM vacuum", color='yellow')
 
 ############################
 # state of gate valves     #
@@ -128,8 +128,8 @@ tcs = [Thermocouple('XF:06BM-EPS-OP{Mir:1}T:1',              name = 'Mirror 1, i
        Thermocouple('XF:06BM-EPS-OP{Mir:1}T:2',              name = 'Mirror 1, disaster mask'),
        Thermocouple('XF:06BM-EPS-OP{Mir:1}T:3',              name = 'Mirror 1, outboard fin'),
        Thermocouple('XF:06BMA-OP{FS:1}T:1',                  name = 'First fluorescent screen'),
-       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1}T',         name = '111 first crystal'),
-       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2}T',         name = '311 first crystal'),
+       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1}T',         name = 'Si111 first crystal'),
+       Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2}T',         name = 'Si311 first crystal'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:1-Ax:R}T',    name = 'Compton shield'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:R}T',    name = 'Second crystal roll'),
        Thermocouple('XF:06BMA-OP{Mono:DCM-Crys:2-Ax:P}T',    name = 'Second crystal pitch'),
@@ -193,25 +193,25 @@ pcw_return_temperature = EpicsSignalRO('XF:06BMA-PU{PCW}T:Return-I', name='PCW r
 foe_leak_detector = EpicsSignalRO('XF:06BMA-UT{LD:1}Alrm-Sts', name='FOE water leak detector')
 
 def show_water():
-    text  = '  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '\n\n'
+    text  = '  [white]' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '[white]\n\n'
     text += '  Sensor                            Value\n'
     text += ' ==============================================\n'
     for pv in (bmm_di.dm1_flow, bmm_di.dcm_flow,
                bmm_di.supply_pressure, bmm_di.supply_temperature, bmm_di.return_pressure, bmm_di.return_temperature, 
                pbs_di_a, pbs_di_b, pcw_return_temperature, pcw_supply_temperature):
         if pv.alarm_status.value:
-            text += error_msg('  %-28s     %.1f %s\n' % (pv.name, float(pv.get()), pv.describe()[pv.name]['units']))
+            text += '  [bold red]%-28s     %.1f %s[/bold red]\n' % (pv.name, float(pv.get()), pv.describe()[pv.name]['units'])
         else:
             text += '  %-28s     %.1f %s\n' % (pv.name, float(pv.get()), pv.describe()[pv.name]['units'])
     if foe_leak_detector.get() > 0:
         text += '  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.get()].replace('  ', ' '))
     else:
-        text += error_msg('  %-28s     %s\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.get()].replace('  ', ' ')))
+        text += '  [bold red]%-28s     %s[/bold red]\n' % (foe_leak_detector.name, foe_leak_detector.enum_strs[foe_leak_detector.get()].replace('  ', ' '))
     return text[:-1]
 
 
 def sw():
-    boxedtext('BMM water', show_water(), 'lightblue', width=55)
+    boxedtext(show_water(), title=f"BMM water", color='yellow')
         
 
     
@@ -221,7 +221,7 @@ def sw():
 
 import datetime
 def show_utilities():
-    text = '  ' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '\n\n'
+    text = '  [green]' + datetime.datetime.now().strftime('%A %d %B, %Y %I:%M %p') + '[/green]\n\n'
     text += show_shutters() + '\n\n'
     ltcs = len(tcs)
     lvac = len(vac)
@@ -235,20 +235,20 @@ def show_utilities():
         if i < lvac and i < lgv:
             units = 'μA'
             if float(vac[i].current.get()) > 5e-4: units = 'mA'
-            text += '  %-28s     %s C        %-5s   %s        %-20s  %s    %s %s\n' % \
+            text += '  [white]%-28s[/white]     %s C        [white]%-5s[/white]   %s        [white]%-20s[/white]  %s    %s %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), vac[i].name, vac[i]._pressure(), vac[i]._current(), units)
 
         elif i == lvac:         # flight path ... TCG class
-            text += '  %-28s     %s C        %-5s   %s        %-20s  %s\n' % \
+            text += '  [white]%-28s[/white]     %s C        [white]%-5s[/white]   %s        [white]%-20s[/white]  %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state(), flight_path.name, flight_path._pressure())
 
         elif i < lgv:
-            text += '  %-28s     %s C        %-5s   %s\n' % \
+            text += '  [white]%-28s[/white]     %s C        [white]%-5s[/white]   %s\n' % \
                     (tcs[i].name, tcs[i]._state(info=info), gv[i].name, gv[i]._state())
 
         else:
-            text += '  %-28s     %s C\n' % (tcs[i].name, tcs[i]._state(info=info))
+            text += '  [white]%-28s[/white]     %s C\n' % (tcs[i].name, tcs[i]._state(info=info))
     return text[:-1]
 
 def su():
-    boxedtext('BMM utilities', show_utilities(), 'brown', width=120)
+    boxedtext(show_utilities(), title=f"BMM utilities", color='yellow')

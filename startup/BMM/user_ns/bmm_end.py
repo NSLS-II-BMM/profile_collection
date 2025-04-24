@@ -6,7 +6,7 @@ except ImportError:
         return False
 
 import os, textwrap
-from BMM.functions import run_report, disconnected_msg, error_msg, whisper, boxedtext, verbosebold_msg, proposal_base, bounds
+from BMM.functions import boxedtext, run_report, disconnected_msg, error_msg, whisper, verbosebold_msg, proposal_base, bounds
 from BMM.workspace import rkvs
 
 from BMM import user_ns as user_ns_module
@@ -107,7 +107,7 @@ def xlsx():
     '''
     spreadsheet = present_options('xlsx')
     if spreadsheet is None:
-        print(error_msg('No spreadsheet specified!'))
+        error_msg('No spreadsheet specified!')
         return None
 
     wb = load_workbook(os.path.join(BMMuser.workspace, spreadsheet), read_only=True, data_only=True)
@@ -120,7 +120,7 @@ def xlsx():
 Recreate {spreadsheet} using an example from
 the templates folder of your data directory.
 '''
-        boxedtext(f'{spreadsheet} cannot be imported', text, 'red', width=77)
+        boxedtext(text, title=f'{spreadsheet} cannot be imported', color='red')
         return
 
     #ws = wb.active
@@ -153,35 +153,35 @@ the templates folder of your data directory.
     instrument = str(wb[sheet]['B1'].value).lower()
 
     if instrument.lower() == 'glancing angle':
-        print(bold_msg('This is a glancing angle spreadsheet'))
+        bold_msg('This is a glancing angle spreadsheet')
         BMMuser.instrument = 'glancing angle stage'
         gawheel.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'double wheel':
-        print(bold_msg('This is a double sample wheel spreadsheet'))
+        bold_msg('This is a double sample wheel spreadsheet')
         BMMuser.instrument = 'double wheel'
         wmb.spreadsheet(spreadsheet, sheet, double=True)
     elif instrument.lower() == 'linkam':
-        print(bold_msg('This is a Linkam spreadsheet'))
+        bold_msg('This is a Linkam spreadsheet')
         BMMuser.instrument = 'Linkam stage'
         lmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'lakeshore':
-        print(bold_msg('This is a LakeShore spreadsheet'))
+        bold_msg('This is a LakeShore spreadsheet')
         BMMuser.instrument = 'LakeShore 331'
         lsmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'grid':
-        print(bold_msg('This is a motor grid spreadsheet'))
+        bold_msg('This is a motor grid spreadsheet')
         BMMuser.instrument = 'motor grid'
         gmb.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'resonant reflectivity':
-        print(bold_msg('This is a resonant reflectivity spreadsheet'))
+        bold_msg('This is a resonant reflectivity spreadsheet')
         BMMuser.instrument = 'resonant reflectivity'
         refl.spreadsheet(spreadsheet, sheet)
     elif instrument.lower() == 'sample wheel':
-        print(bold_msg('This is a single wheel spreadsheet'))
-        print(error_msg('Single wheel spreadsheets have been retired.'))
-        print(error_msg('Use a double wheel spreadsheet, instead.'))
+        bold_msg('This is a single wheel spreadsheet')
+        error_msg('Single wheel spreadsheets have been retired.')
+        error_msg('Use a double wheel spreadsheet, instead.')
     else:
-        print(bold_msg('This is a double sample wheel spreadsheet'))
+        bold_msg('This is a double sample wheel spreadsheet')
         BMMuser.instrument = 'double wheel'
         wmb.spreadsheet(spreadsheet, sheet, double=True)
 
@@ -220,25 +220,25 @@ def set_instrument(instrument=None):
             instrument = 'double wheel'
 
     if instrument.lower() == 'glancing angle':
-        print(bold_msg('Setting instrument as glancing angle stage'))
+        bold_msg('Setting instrument as glancing angle stage')
         BMMuser.instrument = 'glancing angle stage'
     elif instrument.lower() == 'sample wheel':
-        print(bold_msg('Setting instrument as double sample wheel'))
+        bold_msg('Setting instrument as double sample wheel')
         BMMuser.instrument = 'double wheel'
     elif instrument.lower() == 'linkam':
-        print(bold_msg('Setting instrument as Linkam stage'))
+        bold_msg('Setting instrument as Linkam stage')
         BMMuser.instrument = 'Linkam stage'
     elif instrument.lower() == 'lakeshore':
-        print(bold_msg('Setting instrument as LakeShore 331'))
+        bold_msg('Setting instrument as LakeShore 331')
         BMMuser.instrument = 'LakeShore'
     elif instrument.lower() == 'grid':
-        print(bold_msg('Setting instrument as sample grid'))
+        bold_msg('Setting instrument as sample grid')
         BMMuser.instrument = 'motor grid'
     elif instrument.lower() == 'resonant reflectivity':
-        print(bold_msg('Setting instrument as resonant reflectivity'))
+        bold_msg('Setting instrument as resonant reflectivity')
         BMMuser.instrument = 'resonant reflectivity'
     else:
-        print(bold_msg('Default instrument choice: sample wheel'))
+        bold_msg('Default instrument choice: sample wheel')
         BMMuser.instrument = 'double wheel'
     rkvs.set('BMM:automation:type', BMMuser.instrument)
     
@@ -412,8 +412,8 @@ if not is_re_worker_active():
 run_report('\t'+'checking motor connections')
 from BMM.edge import all_connected
 if all_connected(True) is False:
-     print(error_msg('Ophyd connection failure (testing main PDS motors)'))
-     print(error_msg('You likely have to restart bsui.'))
+     error_msg('Ophyd connection failure (testing main PDS motors)')
+     error_msg('You likely have to restart bsui.')
 
 run_report('\t'+'data folders and logging')
 from BMM.user_ns.base import startup_dir
@@ -482,7 +482,7 @@ def examine_diagnostics():
     CHECK = '\u2714'
     TAB = '\t\t\t'
 
-    print(verbosebold_msg(f'\t\tverifying positions of diagnostics ...'))
+    verbosebold_msg(f'\t\tverifying positions of diagnostics ...')
     things = {'dm1_filters1' : ['DM1 filter ladder #1',   55],
               'dm1_filters2' : ['DM1 filter ladder #2',   55],
               'dm2_fs'       : ['DM2 fluorescent screen', 62],
@@ -492,28 +492,28 @@ def examine_diagnostics():
 
     for k in things.keys():
         if 'SynAxis' in f'{user_ns[k]}':
-            print(disconnected_msg(f'{TAB}{things[k][0]} is not connected.'))
+            disconnected_msg(f'{TAB}{things[k][0]} is not connected.')
         elif user_ns[k].hocpl.get() == 1:
             if user_ns[k].position < things[k][1]-2: ## out of beam is 67
-                print(error_msg(f'{TAB}{things[k][0]} is not out of the beam.'))
+                error_msg(f'{TAB}{things[k][0]} is not out of the beam.')
             else:
                 print(f'{TAB}{things[k][0]} {CHECK}')
         elif 'filter' in k:
-            print(whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.'))
+            whisper(f'{TAB}{things[k][0]} is not homed, but that\'s expected.')
         else:
-            print(whisper(f'{TAB}{things[k][0]} is not homed (which is ok, BR 5/5/23).'))
+            whisper(f'{TAB}{things[k][0]} is not homed (which is ok, BR 5/5/23).')
             #print(error_msg(f'{TAB}{things[k][0]} is not homed.'))
 
         
     if 'SynAxis' in f'{user_ns["dm3_bpm"]}':
-        print(disconnected_msg(f'{TAB}DM3 BPM is not connected.'))
+        disconnected_msg(f'{TAB}DM3 BPM is not connected.')
     elif user_ns['dm3_foils'].hocpl.get() == 1:
         if abs(user_ns['dm3_bpm'].position - 5.51) > 2: ## out of beam is 5.5112
-            print(error_msg(f'{TAB}DM3 BPM is not out of the beam.'))
+            error_msg(f'{TAB}DM3 BPM is not out of the beam.')
         else:
             print(f'{TAB}DM3 BPM {CHECK}')
     else:
-        print(whisper(f'{TAB}DM3 BPM is not homed (which is ok, BR 5/5/23).'))
+        whisper(f'{TAB}DM3 BPM is not homed (which is ok, BR 5/5/23).')
         #print(error_msg(f'{TAB}DM3 BPM is not homed.'))
 
             
@@ -553,12 +553,13 @@ def check_for_synaxis():
     if len(syns) > 0:
         BMMuser.syns = True
         text = 'The following are disconnected & defined as simulated motors:\n\n'
-        text += '\n'.join(disconnected_msg(x) for x in textwrap.wrap(', '.join(syns))) + '\n\n'
+        text += '\n'.join(x for x in textwrap.wrap(', '.join(syns))) + '\n\n'
         text += 'This allows bsui to operate normally, but do not expect anything\n'
         text += 'involving those motors to work correctly.\n'
-        text += whisper('(This likely means that an IOC or a motor controller (or both) are off.)\n')
-        text += whisper('(Those motors have been removed from sd.baseline.)')
-        boxedtext('Disconnected motors', text, 'red', width=74)
+        text += '[bold black](This likely means that an IOC or a motor controller (or both) are off.)[/bold black]\n'
+        text += '[bold black](Those motors have been removed from sd.baseline.)[/bold black]'
+        boxedtext(text, title=f'{spreadsheet} cannot be imported', color='red')
+
 check_for_synaxis()
 examine_diagnostics()
 from BMM.workspace import check_instruments

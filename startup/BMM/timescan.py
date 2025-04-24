@@ -255,7 +255,7 @@ def sead(inifile=None, force=False, **kwargs):
         if is_re_worker_active() is True:
             BMMuser.prompt = False
         if BMMuser.prompt:
-            boxedtext('How does this look?', text + '\n      %-13s : %-50s\n' % ('output file',outfile), 'green', width=len(p['folder'])+25)
+            boxedtext(text + '\n      %-13s : %-50s\n' % ('output file',outfile), title='How does this look?', color='green')
             #action = input("\nBegin time scan? " + PROMPT)
             print()
             action = animated_prompt('Begin time scan? ' + PROMPTNC)

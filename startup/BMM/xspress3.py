@@ -41,7 +41,7 @@ from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 md = user_ns["RE"].md
 
-from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions     import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper, boxedtext
 from BMM.kafka         import kafka_message
 from BMM.periodictable import Z_number, edge_number
 
@@ -440,7 +440,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 print(f' {j+1}', end='', flush=True)
                 EpicsSignal(mcaroi.total_rbv.pvname + ".PREC", name='').put(1)
             print('', flush=True)
-        print(whisper('\nYou should restart bsui to have this take effect.'))
+        whisper('\nYou should restart bsui to have this take effect.')
             
     def set_roi(self, mcaroi, name='OCR', min_x=1, size_x=4095):
         """
@@ -470,12 +470,12 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
             el = BMMuser.element
         if el in self.slots:
             if quiet is False:
-                print(whisper(f'{tab}Resetting rois with {el} as the active ROI'))
+                whisper(f'{tab}Resetting rois with {el} as the active ROI')
             BMMuser.element = el
             self.set_rois()
             self.measure_roi()
         else:
-            print(error_msg(f'{tab}Cannot reset rois, {el} is not in {self.name}.slots'))
+            error_msg(f'{tab}Cannot reset rois, {el} is not in {self.name}.slots')
 
     def roi_details(self):
         first_channel_number = self.channel_numbers[0]
@@ -491,24 +491,27 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
     def show_rois(self):
         BMMuser = user_ns['BMMuser']
-        text = list_msg('Xspress3 ROIs:\n')
-        text += bold_msg('    1      2      3      4      5      6      7      8      9     10\n')
+        text  = '[bold green]    1      2      3      4      5      6      7      8      9     10[/bold green]\n'
         text += ' '
         for i in range(10):
             if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
+                text += '[bold blue]%4.4s' % self.slots[i]
+                text += '[/bold blue]   '
             else:
-                text += '%4.4s' % self.slots[i] + '   '
+                text += '%4.4s' % self.slots[i]
+                text += '   '
         text += '\n\n'
-        text += bold_msg('   11     12     13     14     15     16     17     18     19     20\n')
+        text += '[bold green]   11     12     13     14     15     16     17     18     19     20[/bold green]\n'
         text += ' '
         for i in range(10, 20):
             if self.slots[i] == BMMuser.element:
-                text += go_msg('%4.4s' % self.slots[i]) + '   '
+                text += '[bold blue]%4.4s' % self.slots[i]
+                text += '[/bold blue]   '
             else:
-                text += '%4.4s' % self.slots[i] + '   '
-        text += '\n'
-        return(text)
+                text += '%4.4s' % self.slots[i]
+                text += '   '
+        #text += '\n'
+        boxedtext(text, title="Xspress3 ROIs", color='yellow')
 
 
     def check_element(self, element, edge):
@@ -609,7 +612,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         if dcm.energy.position > edge:
             print(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}\n')
         else:
-            print(warning_msg(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}  *** Below Edge! ***\n'))
+            warning_msg(f'{BMMuser.element} {BMMuser.edge} -- current energy: {round(dcm.energy.position, 1)}  *** Below Edge! ***\n')
 
         print(' ROI     ', end='')
         for i, channel in enumerate(self.iterate_channels()):
@@ -633,18 +636,18 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
                 print('')
             elif el == BMMuser.element or el == 'OCR':
                 if dcm.energy.position > edge:
-                    print(go_msg(f' {el:3} '), end='')
+                    go_msg(f' {el:3} ', end='')
                 else:
-                    print(warning_msg(f' {el:3} '), end='')                    
+                    warning_msg(f' {el:3} ', end='') 
                 for channel in self.iterate_channels():
                     mcaroi = channel.get_mcaroi(mcaroi_number=r)
                     val = mcaroi.total_rbv.get()
                     if math.isnan(val):
                         val = 0
                     if dcm.energy.position > edge:
-                        print(go_msg(f"  {int(val):7}  "), end='')
+                        go_msg(f"  {int(val):7}  ", end='')
                     else:
-                        print(warning_msg(f"  {int(val):7}  "), end='')
+                        warning_msg(f"  {int(val):7}  ", end='')
                         
                 print('')
             else:                

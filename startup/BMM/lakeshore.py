@@ -5,8 +5,7 @@ from ophyd.signal import DerivedSignal
 from ophyd.areadetector.base import EpicsSignalWithRBV
 from ophyd.sim import FakeEpicsSignal
 
-from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import boxedtext
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper, boxedtext
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -221,7 +220,7 @@ class LakeShore(PVPositioner):
         text += f'Resting at setpoint: {yesno}\n\n'
         text += f'(scan rate = {self.temp_scan_rate.describe()["LakeShore 331_temp_scan_rate"]["enum_strs"][self.temp_scan_rate.get()]})\n'
         
-        boxedtext('LakeShore 331', text, 'cyan', width = 45)
+        boxedtext(text, title='Lakeshore 331', color='green')
 
 
     def dossier_entry(self):

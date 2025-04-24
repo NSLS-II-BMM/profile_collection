@@ -2,6 +2,9 @@ import os, time, datetime, psutil, glob
 import inflection, textwrap, ansiwrap, termcolor
 from numpy import pi, sin, cos, arcsin, sqrt
 
+from rich import print as cprint
+from rich.panel import Panel
+
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
 
@@ -74,26 +77,32 @@ except ImportError:
     def is_re_worker_active():
         return False
 
-def colored(text, tint='white', attrs=[]):
+def colored(text, tint='white', attrs=[], end=None):
     '''
-    A simple wrapper around IPython's interface to TermColors
+    A simple wrapper around rich
     '''
     if not is_re_worker_active():
-        from IPython.utils.coloransi import TermColors as color
+        #from IPython.utils.coloransi import TermColors as color
         tint = tint.lower()
-        if 'dark' in tint:
-            tint = 'Dark' + tint[4:].capitalize()
-        elif 'light' in tint:
-            tint = 'Light' + tint[5:].capitalize()
-        elif 'blink' in tint:
-            tint = 'Blink' + tint[5:].capitalize()
-        elif 'no' in tint:
-            tint = 'Normal'
+        this = f'[{tint}]{text}[/{tint}]'
+        #print(this)
+        if end is not None:
+            cprint(f'[{tint}]{text}[/{tint}]', end=end)
         else:
-            tint = tint.capitalize()
-        return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
+            cprint(f'[{tint}]{text}[/{tint}]')
+        # if 'dark' in tint:
+        #     tint = 'Dark' + tint[4:].capitalize()
+        # elif 'light' in tint:
+        #     tint = 'Light' + tint[5:].capitalize()
+        # elif 'blink' in tint:
+        #     tint = 'Blink' + tint[5:].capitalize()
+        # elif 'no' in tint:
+        #     tint = 'Normal'
+        # else:
+        #     tint = tint.capitalize()
+        # return '{0}{1}{2}'.format(getattr(color, tint), text, color.Normal)
     else:
-        return(text)
+        print(text)
         
 def run_report(thisfile, text=None):
     '''
@@ -107,42 +116,42 @@ def run_report(thisfile, text=None):
     importing = 'Importing'
     if thisfile[0] == '\t':
         importing = '\t'
-    print(colored(f'{importing} {prepend}{thisfile.split("/")[-1]} {add}', 'lightcyan'), flush=True)
+    colored(f'{importing} {prepend}{thisfile.split("/")[-1]} {add}', 'cyan')
 
 
-def error_msg(text):
+def error_msg(text, end=None):
     '''Red text'''
-    return colored(text, 'lightred')
-def warning_msg(text):
+    colored(text, 'red on white', end=end)
+def warning_msg(text, end=None):
     '''Yellow text'''
-    return colored(text, 'yellow')
-def go_msg(text):
+    colored(text, 'yellow', end=end)
+def go_msg(text, end=None):
     '''Green text'''
-    return colored(text, 'lightgreen')
-def url_msg(text):
+    colored(text, 'green', end=end)
+def url_msg(text, end=None):
     '''Undecorated text, intended for URL decoration...'''
-    return colored(text, 'normal')
-def bold_msg(text):
+    colored(text, 'normal', end=end)
+def bold_msg(text, end=None):
     '''Bright white text'''
-    return colored(text, 'white')
-def verbosebold_msg(text):
+    colored(text, 'white', end=end)
+def verbosebold_msg(text, end=None):
     '''Bright cyan text'''
-    return colored(text, 'lightcyan')
-def list_msg(text):
+    colored(text, 'cyan', end=end)
+def list_msg(text, end=None):
     '''Cyan text'''
-    return colored(text, 'cyan')
-def disconnected_msg(text):
+    colored(text, 'bold cyan', end=end)
+def disconnected_msg(text, end=None):
     '''Purple text'''
-    return colored(text, 'lightpurple')
-def info_msg(text):
+    colored(text, 'purple', end=end)
+def info_msg(text, end=None):
     '''Brown text'''
-    return colored(text, 'brown')
-def cold_msg(text):
+    colored(text, 'brown', end=end)
+def cold_msg(text, end=None):
     '''Light blue text'''
-    return colored(text, 'lightblue')
-def whisper(text):
+    colored(text, 'blue', end=end)
+def whisper(text, end=None):
     '''Light gray text'''
-    return colored(text, 'darkgray')
+    colored(text, 'bold black', end=end)
 
 ##BMM_logfile = '/home/bravel/BMM_master.log'
 
@@ -191,28 +200,31 @@ def inflect(word, number):
     else:
         return('%d %s' % (number, inflection.pluralize(word)))
 
-def boxedtext(title, text, tint, width=75):
-    '''
-    Put text in a lovely unicode block element box.  The top
-    of the box will contain a title.  The box elements will
-    be colored.
-    '''
-    remainder = width - 2 - len(title)
-    ul        = u'\u2554' # u'\u250C'
-    ur        = u'\u2557' # u'\u2510'
-    ll        = u'\u255A' # u'\u2514'
-    lr        = u'\u255D' # u'\u2518'
-    bar       = u'\u2550' # u'\u2500'
-    strut     = u'\u2551' # u'\u2502'
-    template  = '%-' + str(width) + 's'
+# def boxedtext(title, text, tint, width=75):
+#     '''
+#     Put text in a lovely unicode block element box.  The top
+#     of the box will contain a title.  The box elements will
+#     be colored.
+#     '''
+#     remainder = width - 2 - len(title)
+#     ul        = u'\u2554' # u'\u250C'
+#     ur        = u'\u2557' # u'\u2510'
+#     ll        = u'\u255A' # u'\u2514'
+#     lr        = u'\u255D' # u'\u2518'
+#     bar       = u'\u2550' # u'\u2500'
+#     strut     = u'\u2551' # u'\u2502'
+#     template  = '%-' + str(width) + 's'
 
-    print('')
-    print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
-    for line in text.split('\n'):
-        lne = line.rstrip()
-        add = ' '*(width-ansiwrap.ansilen(lne))
-        print(' '.join([colored(strut, tint), lne, add, colored(strut, tint)]))
-    print(colored(''.join([ll, bar*(width+3), lr]), tint))
+#     print('')
+#     print(colored(''.join([ul, bar*3, ' ', title, ' ', bar*remainder, ur]), tint))
+#     for line in text.split('\n'):
+#         lne = line.rstrip()
+#         add = ' '*(width-ansiwrap.ansilen(lne))
+#         print(' '.join([colored(strut, tint), lne, add, colored(strut, tint)]))
+#     print(colored(''.join([ll, bar*(width+3), lr]), tint))
+
+def boxedtext(text, title='', color='green'):
+    cprint(Panel(text, title=title, title_align='left', highlight=True, expand=False, border_style=color))
 
 
 def clear_dashboard():
@@ -321,21 +333,21 @@ def examine_fmbo_motor_group(motor_group, TAB='\t\t\t\t'):
     CHECK = '\u2714'
     for m in motor_group:
         if 'SynAxis' in f'{m}':
-            print(disconnected_msg(f'{TAB}{m.name} is not connected.'))
+            disconnected_msg(f'{TAB}{m.name} is not connected.')
         elif m.name in ('dcm_y', 'm2_bender'):
-            print(whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}'))
+            whisper(f'{TAB}{m.name} is normally run unhomed {CHECK}')
         elif m.hocpl.get() == 1:
             print(f'{TAB}{m.name} {CHECK}')
         elif any(x in m.name for x in ('filter', 'fs', 'bpm', 'foils')):
-            print(whisper(f'{TAB}{m.name} is not homed, but that\'s probably OK.'))
+            whisper(f'{TAB}{m.name} is not homed, but that\'s probably OK.')
         else:
-            print(error_msg(f'{TAB}{m.name} is not homed.'))
+            error_msg(f'{TAB}{m.name} is not homed.')
 
 def examine_xafs_motor_group(motor_group, TAB='\t\t\t\t'):
     CHECK = '\u2714'
     for m in motor_group:
         if 'SynAxis' in f'{m}':
-            print(disconnected_msg(f'{TAB}{m.name} is not connected.'))
+            disconnected_msg(f'{TAB}{m.name} is not connected.')
         else:
             print(f'{TAB}{m.name} {CHECK}')
 
@@ -384,7 +396,7 @@ def clean_img():
         try:
             os.remove(f)
         except:
-            print(whisper(f'unable to delete {f} while cleaning up /tmp'))
+            whisper(f'unable to delete {f} while cleaning up /tmp')
     try:
         if BMMuser.display_img is not None:
             BMMuser.display_img.close()

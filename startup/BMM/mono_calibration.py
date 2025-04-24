@@ -265,7 +265,7 @@ def calibrate_mono(mono='111'):
 
     
     fit = lmfit.minimize(match, params, args=(th,), kws={'data': e})
-    boxedtext('fit results', lmfit.fit_report(fit), 'green')
+    boxedtext(lmfit.fit_report(fit), title='fit results', color='green')
 
     d_spacing = fit.params.get('d').value
     derr =  fit.params.get('d').stderr
@@ -281,14 +281,14 @@ def calibrate_mono(mono='111'):
         found.append(val)
         text = text + "    %-2s  %9.3f  %9.3f  %9.3f\n" % (el.capitalize(), ee[i], found[i], found[i]-ee[i])
         i = i+1
-    boxedtext('comparison with tabulated values', text, 'lightgray')
+    boxedtext(text, title='comparison with tabulated values', color='green')
     text = ' self.dspacing_%s = %.7f\n' % (dcm._crystal, d_spacing)
     if dcm._crystal == '111':
         text += ' self.offset_111 = %.7f' % (BMM_dcm.offset_111 + offset)
-        boxedtext('new values for BMM/dcm_parameters.py', text, 'lightgray')
+        boxedtext(text, title='new values for BMM/dcm_parameters.py', color='green')
     else:
         text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 + offset)
-        boxedtext('new values for BMM/dcm_parameters.py', text, 'lightgray')
+        boxedtext(text, title='new values for BMM/dcm_parameters.py', color='dark black')
 
     ## plot with the kafka consumer
     kafka_message({'mono_calibration' : True,

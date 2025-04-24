@@ -10,57 +10,57 @@ class Vacuum(Device):
         #print(self.pressure.get())
         #print(type(self.pressure.get()))
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if self.pressure.get() == 'OFF':
-            return(disconnected_msg(-1.1E-15))
+            return('[magenta]-1.1E-15[/magenta]')
 
         if type(self.pressure.get()) is str and self.pressure.get() == 'LO<E-11':
-            return whisper('1.00e-11')
+            return('[bold black]1.00e-11[/bold black]')
         if float(self.pressure.get()) > 1e-6:
-            return error_msg(self.pressure.get())
+            return('[bold red]' + str(self.pressure.get()) + '[/bold red]')
         if float(self.pressure.get()) > 1e-8:
-            return warning_msg(self.pressure.get())
-        return(self.pressure.get())
+            return('[bold yellow]' + str(self.pressure.get())  + '[/bold yellow]')
+        return(f'[white]{self.pressure.get()}[/white]')
 
     def _current(self):
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         curr = float(self.current.get())
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
-            return(error_msg(out))
+            return(f'[bold red]{out}[/bold red]')
         if curr > 5e-4:
             out = '%.1f' % (1e3*curr)
-            return(warning_msg(out))
+            return(f'[bold yellow]{out}[/bold yellow]')
         out = '%.1f' % (1e6*curr)
-        return(out)
+        return(f'[white]{out}[/white]')
 
 class TCG(Device):
     pressure = Cpt(EpicsSignalRO, '-TCG:1}P:Raw-I')
 
     def _pressure(self):
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if self.pressure.get() == 'OFF':
-            return(disconnected_msg(-1.1e-15))
+            return('[magenta]-1.1e-15[/magenta]')
         if float(self.pressure.get()) > 1e-1:
-            return warning_msg(self.pressure.get())
+            return(f'[bold yellow]{self.pressure.get()}[/bold yellow]')
         if float(self.pressure.get()) > 6e-3:
-            return error_msg(self.pressure.get())
-        return(self.pressure.get())
+            return(f'[bold red]{self.pressure.get()}[/bold red]')
+        return(f'[white]{self.pressure.get()}[/white]')
 
 class Rack(Device):
     temperature = Cpt(EpicsSignalRO, 'T-I')
     def _state(self, info=False):
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if self.temperature.get() == 'OFF':
-            return(disconnected_msg('OFF'))
+            return('[magenta]OFF[/magenta]')
         if float(self.temperature.get()) > 26:
-            return warning_msg(self.temperature.get())
+            return(f'[bold yellow]{self.temperature.get()}[/bold yellow]')
         if float(self.temperature.get()) > 30:
-            return error_msg(self.temperature.get())
-        return(self.temperature.get())
+            return(f'[bold red]{self.temperature.get()}[/bold red]')
+        return(f'[white]{self.temperature.get()}[/white]')
     
     
 ## front end vacuum readings FE:C06B-VA{CCG:#}P-1 and FE:C06B-VA{IP:#}P-1
@@ -83,7 +83,7 @@ class FEVac(Device):
                
     def _pressure(self, num=None):
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if num is None:
             num = 1
         if num < 1:
@@ -94,17 +94,17 @@ class FEVac(Device):
         #print(self.pressure.get())
         #print(type(self.pressure.get()))
         if sgnl.get() == 'OFF':
-            return(disconnected_msg(-1.1E-15))
+            return('[magenta]-1.1e-15[/magenta]')
 
         if float(sgnl.get()) > 1e-6:
-            return error_msg(self.pressure.get())
+            return(f'[bold red]{self.pressure.get()}[/bold red]')
         if float(sgnl.get()) > 1e-8:
-            return warning_msg(self.pressure.get())
-        return(sgnl.get())
+            return(f'[bold yellow]{self.pressure.get()}[/bold yellow]')
+        return(f'[white]{sgnl.get()}[/white]')
 
     def _current(self, num=None):
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if num is None:
             num = 1
         if num < 1:
@@ -115,12 +115,12 @@ class FEVac(Device):
         curr = float(sgnl.get())
         if curr > 2e-3:
             out = '%.1f' % (1e3*curr)
-            return(error_msg(out))
+            return(f'[bold red]{out}[/bold red]')
         if curr > 5e-4:
             out = '%.1f' % (1e3*curr)
-            return(warning_msg(out))
+            return(f'[bold yellow]{out}[/bold yellow]')
         out = '%.1f' % (1e6*curr)
-        return(out)
+        return(f'[white]{out}[/white]')
 
 
 
@@ -150,7 +150,7 @@ class GateValve(Device):
         #if self.connected is False:
         #    return disconnected_msg('?????')
         if self.state.get() == 0:
-            return error_msg('closed')
+            return('[bold red]closed[/bold red]')
         return('open  ')
 
 
@@ -162,14 +162,14 @@ class Thermocouple(Device):
     def _state(self, info=False):
         t = "%.1f" % self.temperature.get()
         if self.connected is False:
-            return(disconnected_msg('?????'))
+            return('[magenta]?????[/magenta]')
         if self.temperature.get() > self.alarm.get():
-            return(error_msg(t))
+            return(f'[bold red]{t}[/bold red]')
         if self.temperature.get() > self.warning.get():
-            return(warning_msg(t))
+            return(f'[bold yellow]{t}[/bold yellow]')
         if info is True and self.temperature.get() > (0.5 * self.warning.get()):
-            return(info_msg(t))
-        return(t)
+            return(f'[yellow]{t}[/yellow]')
+        return(f'[white]{t}[/white]')
 
 class OneWireTC(Device):
     temperature = Cpt(EpicsSignal, '-I')
@@ -179,12 +179,12 @@ class OneWireTC(Device):
     def _state(self, info=False):
         t = "%.1f" % self.temperature.get()
         if self.temperature.get() > self.alarm.get():
-            return(error_msg(t))
+            return(f'[bold red]{t}[/bold red]')
         if self.temperature.get() > self.warning.get():
-            return(warning_msg(t))
+            return(f'[bold yellow]{t}[/bold yellow]')
         if info is True and self.temperature.get() > (0.5 * self.warning.get()):
-            return(info_msg(t))
-        return(t)
+            return(f'[yellow]{t}[/yellow]')
+        return(f'[white]{t}[/white]')
 
 
 class BMM_DIWater(Device):

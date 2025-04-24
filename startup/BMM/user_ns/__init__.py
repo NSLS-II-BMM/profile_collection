@@ -49,7 +49,7 @@ from .bmm_end import *
 
 if not is_re_worker_active():
     print('\t', end='')
-    get_ipython().magic(u"%xmode Plain")
+    get_ipython().run_line_magic("xmode", "Plain")
     from .prompt import *
     from .magic import *
     #import warnings

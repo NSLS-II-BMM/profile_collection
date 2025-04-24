@@ -81,7 +81,7 @@ from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2, with_iy
         
 quadem1 = BMMQuadEM('XF:06BM-BI{EM:1}EM180:', name='quadem1')
 quadem1.enable_electrometer()
-print(whisper('\t\t\t'+'instantiated quadem1'))
+whisper('\t\t\t'+'instantiated quadem1')
 
 ## using quadem for I0 detector?
 if with_ic0 is False:
@@ -164,7 +164,7 @@ toss = quadem1.Iy.describe()
 try:                            # might not be in use
     ic0 = IntegratedIC('XF:06BM-BI{IC:0}EM180:', name='Ic0')
     ic0.enable_electrometer()
-    print(whisper('\t\t\t'+'instantiated ic0'))
+    whisper('\t\t\t'+'instantiated ic0')
     if with_ic0 is False:
         ic0.Ia.kind, ic0.Ia.name = 'omitted', 'I0a'
     else:
@@ -185,7 +185,7 @@ except Exception as E:
 try:                            # might not be in use
     ic1 = IntegratedIC('XF:06BM-BI{IC:1}EM180:', name='Ic1')
     ic1.enable_electrometer()
-    print(whisper('\t\t\t'+'instantiated ic1'))
+    whisper('\t\t\t'+'instantiated ic1')
     if with_ic1 is False:
         ic1.Ia.kind, ic1.Ia.name = 'omitted', 'Ita'
     else:
@@ -205,7 +205,7 @@ except:
 try:                            # might not be in use
     ic2 = IntegratedIC('XF:06BM-BI{IC:3}EM180:', name='Ic2')
     ic2.enable_electrometer()
-    print(whisper('\t\t\t'+'instantiated ic2'))
+    whisper('\t\t\t'+'instantiated ic2')
     if with_ic2 is False:
         ic2.Ia.kind, ic2.Ia.name = 'omitted', 'Ira'
     else:

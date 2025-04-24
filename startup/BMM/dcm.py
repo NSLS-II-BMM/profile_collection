@@ -7,7 +7,7 @@ from bluesky.plan_stubs import sleep, mv, mvr, null
 from numpy import pi, sin, cos, arcsin
 
 from BMM.motors         import FMBOEpicsMotor, VacuumEpicsMotor, DeadbandEpicsMotor
-from BMM.functions      import HBARC, boxedtext, approximate_pitch
+from BMM.functions      import HBARC, approximate_pitch, boxedtext
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.dcm_parameters import dcm_parameters
 BMM_dcm = dcm_parameters()
@@ -70,9 +70,9 @@ class DCM(PseudoPositioner):
         #text += "                             %s = %7.4f   %s = %8.4f" %\
         #    ('2nd Xtal pitch', self.pitch.user_readback.get(),
         #     '2nd Xtal roll',  self.roll.user_readback.get())
-        return text
+        return '[white]' + text + '[/white]'
     def wh(self):
-        boxedtext('DCM', self.where(), 'cyan', width=74)
+        boxedtext(self.where(), title='DCM', color='yellow')
 
     def restore(self):
         self.mode = 'fixed'

@@ -3,8 +3,8 @@ from bluesky.plan_stubs import null, sleep, mv, mvr
 from ophyd import Component as Cpt, EpicsSignal, EpicsSignalRO, Signal, Device, PVPositioner
 from ophyd.signal import DerivedSignal
 
-from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import boxedtext
+from BMM.functions import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
+from BMM.functions import boxedtext
 
 from BMM import user_ns as user_ns_module
 user_ns = vars(user_ns_module)
@@ -113,27 +113,28 @@ class Linkam(PVPositioner):
         text = f'\nCurrent temperature = {self.readback.get():.1f}, setpoint = {self.setpoint.get():.1f}\n\n'
         code = int(self.status_code.get())
         if code & 1:
-            text += error_msg('Error        : yes') + '\n'
+            text += '[bold red]Error        : yes[/bold red]\n'
         else:
             text += 'Error        : no\n'
         if code & 2:
-            text += go_msg('At setpoint  : yes') + '\n'
+            text += '[bold green]At setpoint  : yes[/bold green]\n'
         else:
             text += 'At setpoint  : no\n'
         if code & 4:
-            text += go_msg('Heater       : on') + '\n'
+            text += '[bold green]Heater       : on[/bold green]\n'
         else:
             text += 'Heater       : off\n'
         if code & 8:
-            text += go_msg('Pump         : on') + '\n'
+            text += '[bold green]Pump         : on[/bold green]\n'
         else:
             text += 'Pump         : off\n'
         if code & 16:
-            text += go_msg('Pump Auto    : yes') + '\n'
+            text += '[bold green]Pump Auto    : yes[/bold green]\n'
         else:
             text += 'Pump Auto    : no\n'
             
-        boxedtext(f'Linkam {self.model}, stage {self.stage_model}', text, 'brown', width = 48)
+        boxedtext(text, title=f'Linkam {self.model}, stage {self.stage_model}', color='yellow')
+
 
     def dossier_entry(self):
         thistext  =  '	    <div>\n'

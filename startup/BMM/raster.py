@@ -308,16 +308,13 @@ def raster(inifile=None, **kwargs):
         fast  = user_ns[p['fast_motor']]
         slow  = user_ns[p['slow_motor']]
 
-        length = 0
         if BMMuser.prompt:
             text  = '\n'
             addition = f'fast motor: {fast.name} from {p["fast_start"]} to {p["fast_stop"]} in {p["fast_steps"]} steps (current position={fast.position:7.3f})'
             text = text + addition.rstrip() + '\n'
-            if len(addition) > length: length = len(addition)
             
             addition = f'slow motor: {slow.name} from {p["slow_start"]} to {p["slow_stop"]} in {p["slow_steps"]} steps (current position={slow.position:7.3f})'
             text = text + addition.rstrip() + '\n\n'
-            if len(addition) > length: length = len(addition)
             for k in sorted(p.keys()):
                 if 'slow' in k or 'fast' in k:
                     continue
@@ -325,8 +322,7 @@ def raster(inifile=None, **kwargs):
                     continue
                 addition = f'{k:13} : {p[k]}'
                 text = text + addition.rstrip() + '\n'
-                if len(addition) > length: length = len(addition)
-            boxedtext('How does this look?', text, 'green', width=length+4)
+            boxedtext(text, title='How does this look?', color='green')
 
             pngout  = f"{p['filename']}.png"
             basename = p['filename']

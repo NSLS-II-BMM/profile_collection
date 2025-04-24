@@ -48,7 +48,6 @@ def motor_metadata(uid=None):
 def motor_status():
     md = motor_metadata()
 
-    line = ' ' + '=' * 78 + '\n'
     text = '\n Energy = %.1f eV   reflection = Si(%s)   mode = %s\n' % (user_ns['dcm'].energy.readback.get(), user_ns['dcm']._crystal, user_ns['dcm'].mode)
     text += '      Bragg = %8.5f   2nd Xtal Perp  = %7.4f   Para = %8.4f\n' % \
             (user_ns['dcm'].bragg.user_readback.get(), user_ns['dcm'].perp.user_readback.get(), user_ns['dcm'].para.user_readback.get())
@@ -106,15 +105,14 @@ def motor_status():
              md[user_ns['xafs_ref'].name]
             )
 
-    return text
-    # return line + text + line
+    return '[white]' + text + '[/white]'
 
 def ms():
     if user_ns['BMMuser'].syns is True:
         print('Some motors are disconnected and represented as a SynAxis.')
         print('Do check_for_synaxis() for more information.')
-        return
-    boxedtext('BMM motor status', motor_status(), 'cyan', width=84)
+        return 
+    boxedtext(motor_status(), title='BMM motor status', color='green')
 
 
 
@@ -131,4 +129,4 @@ def xrd_motors():
     return text
 
 def xrdm():
-    boxedtext('XRD motor status', xrd_motors(), 'cyan', width=60)
+    boxedtext(xrd_motors(), title='XRD motor status', color='green')

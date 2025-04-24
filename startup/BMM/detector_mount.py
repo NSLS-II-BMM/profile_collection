@@ -32,7 +32,7 @@ class DetectorMount():
         text += f"      Detctor Z   = {self.z.position:7.3f} mm"
         return text
     def wh(self):
-        boxedtext(self.name, self.where(), 'cyan')
+        boxedtext(self.where(), title=self.name, color='cyan')
 
     def far(self):
         yield from mv(self.x, self.high)

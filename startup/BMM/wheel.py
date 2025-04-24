@@ -8,7 +8,7 @@ import numpy
 from bluesky.plan_stubs import null, sleep, mv, mvr
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
-from BMM.functions      import isfloat, present_options
+from BMM.functions      import boxedtext, isfloat, present_options
 from BMM.macrobuilder   import BMMMacroBuilder
 from BMM.motors         import EndStationEpicsMotor
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
@@ -209,34 +209,33 @@ def show_reference_wheel():
 
     def write_text(current_ref, k):
         if k in ('Th', 'U', 'Pu'):              # skip elements which use other elements
-            return ''
+            return('')
         elif k == current_ref:                  # green: current position of reference wheel
-            return go_msg('%4.4s' % k) + '   '
+            return('[bold blue]%4.4s[/bold blue]   ' % k)
         elif xafs_ref.mapping[k][3] == 'None':  # gray: defined position, missing reference
-            return whisper('%4.4s' % k) + '   '
+            return('[bold black]%4.4s[/bold black]   ' % k)
         else:
             here = k
             if 'empty' in k:
                 here = 'None'
-            return '%4.4s' % here + '   '
+            return('%4.4s' % here + '   ')
     
     this  = determine_reference()
     text = ''
     for i, which in enumerate(['outer', 'inner']):
-        text += list_msg(f'Reference wheel, {which} ring') + '\n'
-        text += bold_msg('    1      2      3      4      5      6      7      8      9     10     11     12\n ')
+        text = '[bold green]    1      2      3      4      5      6      7      8      9     10     11     12[/bold green]\n '
         for k in xafs_ref.mapping.keys():
             if xafs_ref.mapping[k][0] == i and xafs_ref.mapping[k][1] < 13:
                 text += write_text(this,k)
-        text += '\n\n'
-        text += bold_msg('   13     14     15     16     17     18     19     20     21     22     23     24\n ')
+        text += '\n'
+        text += '[bold green]   13     14     15     16     17     18     19     20     21     22     23     24\n[/bold green] '
         for k in xafs_ref.mapping.keys():
             if xafs_ref.mapping[k][0] == i and xafs_ref.mapping[k][1] > 12:
                 text += write_text(this,k)
         if i == 0:
-            text += '\n\n'
-    text += '\n'
-    return(text)
+            print()
+
+        boxedtext(text, title=f"Reference wheel, {which} ring", color='yellow')
 
 class WheelMacroBuilder(BMMMacroBuilder):
     '''A class for parsing specially constructed spreadsheets and

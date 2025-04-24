@@ -84,13 +84,13 @@ def initialize_workspace():
       * availability and configuration of detectors.
 
     '''
-    print(BMM.functions.verbosebold_msg('''
+    BMM.functions.verbosebold_msg('''
 
 ================================================================
 bsui profile for NIST's Beamline for Materials Measurement (6BM)
 ================================================================
 
-Verifying workspace on this computer ...'''))
+Verifying workspace on this computer ...''')
     check_workstation_access()
     check_lan()
     check_profile_branch()
@@ -106,7 +106,7 @@ Verifying workspace on this computer ...'''))
     
 def check_workstation_access():
     if wa.get() == 0:
-        print(BMM.functions.error_msg(f'{TAB}*** Uh oh!  The beamline is not enabled for write access to PVs!'))
+        BMM.functions.error_msg(f'{TAB}*** Uh oh!  The beamline is not enabled for write access to PVs!')
         print(f'{TAB}    A beamline staff person needs to do:')
         print(f'{TAB}       caput XF:06BM-CT{{}}Prmt:RemoteExp-Sel 1')
         print(f'{TAB}    then restart bsui')
@@ -121,7 +121,7 @@ def check_lan():
     for host in ('ioc2', 'disp1'):
         response = os.system(f"ping -q -c 1 xf06bm-{host} > /dev/null")
         if response != 0:
-            print(BMM.functions.error_msg(f'{TAB}*** Uh oh!  xf06bm-{host} is not responding to a ping!'))
+            BMM.functions.error_msg(f'{TAB}*** Uh oh!  xf06bm-{host} is not responding to a ping!')
             freakout = 1;
 
     if freakout == 1:
@@ -176,7 +176,7 @@ def initialize_lustre():
     if os.path.ismount(LUSTRE_ROOT_BMM):
         print(f'{TAB}Found Lustre mount point: {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}*** Uh oh! Lustre is not mounted!'))
+        BMM.functions.error_msg(f'{TAB}*** Uh oh! Lustre is not mounted!')
         print(f'{TAB}    Consult the DSSI support team for help.')
         print(f'{TAB}    (Now issuing a command that will fail and return to the command line.)')
         ## the next line is intended to trigger an immediate error and return to the IPython command line
@@ -199,7 +199,7 @@ def initialize_secrets():
                 print(f'{TAB}Copied {fname} file')
             except Exception as e:
                 print(e)
-                print(BMM.functions.error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!'))
+                BMM.functions.error_msg(f'{TAB}Failed to copy {os.path.join(SECRETS, fname)}!')
 
                 
 def initialize_redis():
@@ -210,7 +210,7 @@ def initialize_redis():
     if rkvs.get(REDISVAR) is not None:
         print(f'{TAB}Found Redis server: {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}*** Uh oh! Did not find redis server'))
+        BMM.functions.error_msg(f'{TAB}*** Uh oh! Did not find redis server')
         print(f'{TAB}    A beamline staff person needs to log onto xf06bm-ioc2:')
         print(f'{TAB}       dzdo systemctl start redis')
         print(f'{TAB}    then restart bsui')
@@ -257,7 +257,7 @@ def initialize_ssh():
     if s.returncode == 0:
         print(f'{TAB}Key exists for xf06bm@xf06bm-ws3: {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1'))
+        BMM.functions.error_msg(f'{TAB}Key does not exist for xf06bm@xf06bm-ws1')
 
 
 def ping(host):
@@ -274,7 +274,7 @@ def check_linkam(linkam):
         if linkam.model == 'T96-S':
             print(f'{TAB}Linkam stage is available {CHECK}')
         else:
-            print(BMM.functions.error_msg(f'{TAB}Linkam stage is powered dawn or out of communication with IOC2'))
+            BMM.functions.error_msg(f'{TAB}Linkam stage is powered dawn or out of communication with IOC2')
     else:
         print(f'{TAB}Linkam stage is available {CHECK}')
     return
@@ -285,12 +285,12 @@ def check_lakeshore(lakeshore):
         was = lakeshore.units_sel.get()
         lakeshore.units_sel.put(0)
         if lakeshore.sample_a.get() == 0.0:
-            print(BMM.functions.error_msg(f'{TAB}LakeShore 331 is powered dawn or out of communication with IOC2'))
+            BMM.functions.error_msg(f'{TAB}LakeShore 331 is powered dawn or out of communication with IOC2')
         else:
             print(f'{TAB}LakeShore 331 is available {CHECK}')
         lakeshore.units_sel.put(was)
     else:
-        print(BMM.functions.whisper(f'{TAB}LakeShore 331 is unavailable'))
+        BMM.functions.whisper(f'{TAB}LakeShore 331 is unavailable')
     return
     
 def check_biologic():
@@ -298,7 +298,7 @@ def check_biologic():
     if ret is True:
         print(f'{TAB}BioLogic potentiostat is available {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}BioLogic is not responding to pings (powered down or not on the network)'))
+        BMM.functions.error_msg(f'{TAB}BioLogic is not responding to pings (powered down or not on the network)')
     return
     
 def check_electrometers():
@@ -316,16 +316,16 @@ def check_electrometers():
             if ret is True:
                 print(f'{TAB}{hosts[h][0]} is available {CHECK}')
             else:
-                print(BMM.functions.error_msg(f'{TAB}{hosts[h][0]} is not available'))
+                BMM.functions.error_msg(f'{TAB}{hosts[h][0]} is not available')
     return
     
 def check_xspress3(xs):
     ret = ping('xf06bm-xspress3')
     if ret is False:
-        print(BMM.functions.error_msg(f'{TAB}Xspress3 is not responding to pings'))
+        BMM.functions.error_msg(f'{TAB}Xspress3 is not responding to pings')
         return
     if xs.connected is False:
-        print(BMM.functions.error_msg(f'{TAB}Xspress3 IOC is unavailable'))
+        BMM.functions.error_msg(f'{TAB}Xspress3 IOC is unavailable')
         return
     print(f'{TAB}XSpress3 server and its IOC are available {CHECK}')
     return
@@ -338,7 +338,7 @@ def check_diode():
     if ok is True:
         print(f'{TAB}DIODE (sample spinners, XRD filters) is available {CHECK}')
     else:
-        print(BMM.functions.error_msg(f'{TAB}DIODE (sample spinners, XRD filters) is not available'))
+        BMM.functions.error_msg(f'{TAB}DIODE (sample spinners, XRD filters) is not available')
         
     
 def check_instruments(linkam, lakeshore, xs):
@@ -374,7 +374,7 @@ def check_instruments(linkam, lakeshore, xs):
        check that the local and remote buses report being up
 
     '''
-    print(BMM.functions.verbosebold_msg(f'\t\tverifying availability of instruments ...'))
+    BMM.functions.verbosebold_msg(f'\t\tverifying availability of instruments ...')
     check_linkam(linkam)
     check_lakeshore(lakeshore)
     check_biologic()
