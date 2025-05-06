@@ -377,6 +377,71 @@ if with_pilatus is True:
     prep_pilatus(pilatus)
 
 
+
+
+####################################
+#  _____ _____ _____  ___________  #
+# |  ___|_   _|  __ \|  ___| ___ \ #
+# | |__   | | | |  \/| |__ | |_/ / #
+# |  __|  | | | | __ |  __||    /  #
+# | |___ _| |_| |_\ \| |___| |\ \  #
+# \____/ \___/ \____/\____/\_| \_| #
+####################################
+
+
+    
+from BMM.user_ns.dwelltime import with_eiger
+if with_eiger is True:
+    from BMM.eiger import BMMEigerSingleTrigger
+    run_report('\t'+'Eiger')
+
+    ## make sure various plugins are turned on
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}image1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Pva1:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}HDF1:EnableCallbacks',   name='').put(1)
+
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI1:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:EnableCallbacks',   name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI4:EnableCallbacks',   name='').put(1)
+
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats1:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats2:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats3:EnableCallbacks', name='').put(1)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats4:EnableCallbacks', name='').put(1)
+
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:EnableCallbacks_RBV', name='').put(1)
+
+    eiger = BMMEigerSingleTrigger("XF:06BM-ES{Det-Eiger:1}", name="eiger1m-1", read_attrs=["hdf5"])
+    eiger.stats.kind = "omitted"
+    eiger.roi2.kind  = "hinted"
+    eiger.roi3.kind  = "hinted"
+    eiger.roi2.name  = "diffuse"
+    eiger.roi3.name  = "specular"
+    #if eiger.hdf5.run_time.get() == 0.0:
+    #    eiger.hdf5.warmup()
+
+    ## starting ROI values
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinX',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:SizeX', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinY',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:SizeY', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:MinX',  name='').put(150)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:SizeX', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:MinY',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:SizeY', name='').put(50)
+
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinX',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:SizeX', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinY',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:SizeY', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:MinX',  name='').put(150)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:SizeX', name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:MinY',  name='').put(50)
+    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:SizeY', name='').put(50)
+    
+
+    
 ####################################
 # ______  ___   _   _ _____ _____  #
 # |  _  \/ _ \ | \ | |_   _|  ___| #

@@ -39,10 +39,13 @@ def check_for_connection(m):
 
 def define_XAFSEpicsMotor(prefix, name='unnamed'):
     '''Deal gracefully with a motor whose IOC is not running or whose
-    controller is turned off.  See discussion at the top of
-    BMM/user_ns/instruments.py
+    controller is turned off.  An unconnected motor will be
+    instantiated as a SynAxis.  This allows bsui to start, which can
+    be handy when doing development or troubleshooting activities.
+
     '''
     this = XAFSEpicsMotor(prefix, name=name)
+    time.sleep(0.2)
     count = 0
     while this.connected is False:  #  try for no more than 3 seconds
         count += 1

@@ -16,7 +16,8 @@
 ##                           Ovid, Metamorphosis
 ##                           Book II:531-565
 
-import numpy, os
+import numpy, os, sys
+
 from larch import (Group, Parameter, isParameter, param_value, isNamedClass, Interpreter) 
 from larch.xafs import (find_e0, pre_edge, autobk, xftf, xftr)
 from larch.io import create_athena

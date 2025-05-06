@@ -234,8 +234,8 @@ def areascan(detector,
     # with a sleep, allowing the user to easily map out motor motions in #
     # a macro                                                            #
     if BMMuser.macro_dryrun:
-        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an area scan.\n' 
-                       BMMuser.macro_sleep))
+        info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than running an area scan.\n' %
+                       BMMuser.macro_sleep)
         countdown(BMMuser.macro_sleep)
         return(yield from null())
     ######################################################################

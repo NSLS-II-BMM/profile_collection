@@ -83,7 +83,7 @@ class BMMHDF5Plugin(HDF5Plugin_V33, BMMFileStoreHDF5, FileStoreIterativeWrite):
         This has been slightly modified by Bruce to avoid a situation where the warmup
         hangs.  Also to add some indication on screen for what is happening.
         """
-        whisper("                        warming up the Pilatus hdf5 plugin..."), flush=True
+        whisper("                        warming up the Pilatus hdf5 plugin...")
         self.enable.set(1).wait()
 
         # JOSH: proposed changes for new IOC

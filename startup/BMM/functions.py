@@ -108,7 +108,7 @@ def run_report(thisfile, text=None):
 
 def error_msg(text, end=None):
     '''Red text'''
-    colored(text, 'red on white', end=end)
+    colored(text, 'red1', end=end)
 def warning_msg(text, end=None):
     '''Yellow text'''
     colored(text, 'yellow', end=end)
@@ -116,16 +116,16 @@ def go_msg(text, end=None):
     '''Green text'''
     colored(text, 'green', end=end)
 def url_msg(text, end=None):
-    '''Undecorated text, intended for URL decoration...'''
+    '''Underlined text, intended for URL decoration...'''
     colored(text, 'underline', end=end)
 def bold_msg(text, end=None):
-    '''Bright white text'''
+    '''Bright yellow text'''
     colored(text, 'yellow2', end=end)
 def verbosebold_msg(text, end=None):
     '''Bright cyan text'''
     colored(text, 'cyan', end=end)
 def list_msg(text, end=None):
-    '''Cyan text'''
+    '''Dark cyan text'''
     colored(text, 'bold cyan', end=end)
 def disconnected_msg(text, end=None):
     '''Purple text'''

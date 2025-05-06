@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/xf06bm/.local/lib/python3.11/site-packages/')
+
 from BMM.user_ns import *
 
 

@@ -495,8 +495,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         text += ' '
         for i in range(10):
             if self.slots[i] == BMMuser.element:
-                text += '[bold blue]%4.4s' % self.slots[i]
-                text += '[/bold blue]   '
+                text += '[yellow1]%4.4s' % self.slots[i]
+                text += '[/yellow1]   '
             else:
                 text += '%4.4s' % self.slots[i]
                 text += '   '
@@ -505,8 +505,8 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         text += ' '
         for i in range(10, 20):
             if self.slots[i] == BMMuser.element:
-                text += '[bold blue]%4.4s' % self.slots[i]
-                text += '[/bold blue]   '
+                text += '[yellow1]%4.4s' % self.slots[i]
+                text += '[/yellow1]   '
             else:
                 text += '%4.4s' % self.slots[i]
                 text += '   '

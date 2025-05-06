@@ -239,7 +239,7 @@ def initialize_beamline_configuration():
         subprocess.run(['git', 'pull']) 
     else:
         os.chdir(GIT)
-        subprocess.run(['git', 'clone', '-q', 'git@github.com:bruceravel/bmm-profile-collection.git']) 
+        subprocess.run(['git', 'clone', '-q', 'https://github.com/NSLS-II-BMM/BMM-beamline-configuration']) 
     os.chdir(here)
 
 

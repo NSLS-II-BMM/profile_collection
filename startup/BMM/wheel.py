@@ -211,7 +211,7 @@ def show_reference_wheel():
         if k in ('Th', 'U', 'Pu'):              # skip elements which use other elements
             return('')
         elif k == current_ref:                  # green: current position of reference wheel
-            return('[bold blue]%4.4s[/bold blue]   ' % k)
+            return('[yellow1]%4.4s[/yellow1]   ' % k)
         elif xafs_ref.mapping[k][3] == 'None':  # gray: defined position, missing reference
             return('[bold black]%4.4s[/bold black]   ' % k)
         else:

@@ -225,8 +225,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         # with a sleep, allowing the user to easily map out motor motions in #
         # a macro                                                            #
         if BMMuser.macro_dryrun:
-            info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' 
-                           (BMMuser.macro_sleep, el)))
+            info_msg('\nBMMuser.macro_dryrun is True.  Sleeping for %.1f seconds rather than changing to the %s edge.\n' %
+                           (BMMuser.macro_sleep, el))
             countdown(BMMuser.macro_sleep)
             yield from null()
             return

@@ -398,7 +398,7 @@ class BMM_User(Borg):
             rkvs.set(f'BMM:user:{key}', getattr(self, key))
 
     def verify_roi(self, xs, el, edge, tab=''):
-        bold_msg(f'{tab}Setting ROIs on {xs.name} for {el} {edge} edge')
+        print(f'{tab}Setting ROIs on {xs.name} for {el} {edge} edge')
         try:
             ## if el is not one of the "standard" 12 ROI sets, insert it into xs.slots[12]/index 13
             if xs.check_element(el, edge):

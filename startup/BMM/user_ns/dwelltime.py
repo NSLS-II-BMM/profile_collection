@@ -30,6 +30,7 @@ use_7element   = profile_configuration.getboolean('sdd', '7element') # False
 
 # area detectors
 with_pilatus   = profile_configuration.getboolean('detectors', 'pilatus') # False
+with_eiger     = profile_configuration.getboolean('detectors', 'eiger')   # False
 
 # edxd through Dante
 with_dante     = profile_configuration.getboolean('detectors', 'dante') # False

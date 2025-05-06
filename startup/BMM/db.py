@@ -45,6 +45,17 @@ def file_resource(record):
                     this = this % 0
                 found.append(this)
         return(found)
+    elif 'bluesky_tiled_plugins.bluesky_run.BlueskyRun' in str(type(record)):
+        docs = record.documents()
+        found = []
+        for d in docs:
+            if d[0] == 'resource':
+                rp = d[1]['resource_path']
+                if '_%d' in rp or re.search('%\d\.\dd', rp) is not None:
+                    this = rp % 0
+                found.append(rp)
+        return(found)
+        
     else:
         return(None)
 
