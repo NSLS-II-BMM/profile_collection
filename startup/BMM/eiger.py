@@ -38,8 +38,8 @@ class BMMEiger(AreaDetector):
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/eiger1m-1/",
     )
     stats = C(EpicsSignalRO, "Stats1:Total_RBV")
-    #roi2  = C(EpicsSignalRO, "ROIStat1:2:Total_RBV", name = 'diffuse')
-    #roi3  = C(EpicsSignalRO, "ROIStat1:3:Total_RBV", name = 'specular')
+    roi2  = C(EpicsSignalRO, "ROIStat1:2:Total_RBV", name = 'diffuse')
+    roi3  = C(EpicsSignalRO, "ROIStat1:3:Total_RBV", name = 'specular')
 
     
     cam_file_path      = C(EpicsSignalWithRBV, 'cam1:FilePath')

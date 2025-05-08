@@ -321,26 +321,18 @@ if with_pilatus is True:
     from BMM.pilatus import BMMPilatusSingleTrigger,  BMMPilatusTIFFSingleTrigger
     run_report('\t'+'Pilatus')
 
+    pvbase = "XF:06BMB-ES{Det:PIL100k}:"
+
+    
     ## make sure various plugins are turned on
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:image1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Pva1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:HDF1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:TIFF1:EnableCallbacks', name='').put(1)
-
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI4:EnableCallbacks', name='').put(1)
-    
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats2:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats3:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:Stats4:EnableCallbacks', name='').put(1)
-
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:EnableCallbacks_RBV', name='').put(1)
+    for x in ('image1', 'Pva1', 'HDF1', 'ROI1', 'ROI2', 'ROI3', 'ROI4', 'Stats1' , 'Stats2' , 'Stats3' , 'Stats4', 'ROIStat1', 'TIFF1'):
+        EpicsSignal(f'{pvbase}{x}:EnableCallbacks', name='').put(1)
+        # turn on all useful common plugins
+        #    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:image1:EnableCallbacks', name='').put(1)
+        # and so on...
 
     
-    pilatus = BMMPilatusSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["hdf5"])
+    pilatus = BMMPilatusSingleTrigger(pvbase, name="pilatus100k-1", read_attrs=["hdf5"])
     pilatus.stats.kind = "omitted"
     pilatus.roi2.kind  = "hinted"
     pilatus.roi3.kind  = "hinted"
@@ -350,27 +342,16 @@ if with_pilatus is True:
     #    pilatus.hdf5.warmup()
         
     ## starting ROI values
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinX',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeX', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinY',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeY', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinX',  name='').put(150)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeX', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinY',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeY', name='').put(50)
-
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeX', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinY',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeY', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinX',  name='').put(150)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeX', name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinY',  name='').put(50)
-    EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeY', name='').put(50)
-
-    
-
-    
+    roivalues = {'ROI2:MinX': 50,  'ROI2:SizeX': 50, 'ROI2:MinY': 50, 'ROI2:SizeY': 50,
+                 'ROI3:MinX': 150, 'ROI3:SizeX': 50, 'ROI3:MinY': 50, 'ROI3:SizeY': 50, }
+    for k,v in roivalues.items():
+        EpicsSignal(f'{pvbase}{k}',  name='').put(v)
+        EpicsSignal(f'{pvbase}{k.replace("ROI", "ROIStat1:")}',  name='').put(v)
+        # this does 
+        #   EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinX',  name='').put(50)
+        #   EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='').put(50)
+        # and so on...
+        
     pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
     pilatus_tiff.stats.kind = "hinted"
 
@@ -395,24 +376,15 @@ if with_eiger is True:
     from BMM.eiger import BMMEigerSingleTrigger
     run_report('\t'+'Eiger')
 
+    pvbase = "XF:06BM-ES{Det-Eiger:1}"
     ## make sure various plugins are turned on
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}image1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Pva1:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}HDF1:EnableCallbacks',   name='').put(1)
+    for x in ('image1', 'Pva1', 'HDF1', 'ROI1', 'ROI2', 'ROI3', 'ROI4', 'Stats1' , 'Stats2' , 'Stats3' , 'Stats4', 'ROIStat1'):
+        EpicsSignal(f'{pvbase}{x}:EnableCallbacks', name='').put(1)
+        # turn on all useful common plugins
+        #    EpicsSignal('XF:06BM-ES{Det-Eiger:1}image1:EnableCallbacks', name='').put(1)
+        # and so on...
 
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI1:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:EnableCallbacks',   name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI4:EnableCallbacks',   name='').put(1)
-
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats1:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats2:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats3:EnableCallbacks', name='').put(1)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}Stats4:EnableCallbacks', name='').put(1)
-
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:EnableCallbacks_RBV', name='').put(1)
-
-    eiger = BMMEigerSingleTrigger("XF:06BM-ES{Det-Eiger:1}", name="eiger1m-1", read_attrs=["hdf5"])
+    eiger = BMMEigerSingleTrigger(pvbase, name="eiger1m-1", read_attrs=["hdf5"])
     eiger.stats.kind = "omitted"
     eiger.roi2.kind  = "hinted"
     eiger.roi3.kind  = "hinted"
@@ -422,24 +394,15 @@ if with_eiger is True:
     #    eiger.hdf5.warmup()
 
     ## starting ROI values
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinX',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:SizeX', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinY',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:SizeY', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:MinX',  name='').put(150)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:SizeX', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:MinY',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI3:SizeY', name='').put(50)
-
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinX',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:SizeX', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinY',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:SizeY', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:MinX',  name='').put(150)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:SizeX', name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:MinY',  name='').put(50)
-    EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:3:SizeY', name='').put(50)
-    
+    roivalues = {'ROI2:MinX': 51,  'ROI2:SizeX': 51, 'ROI2:MinY': 51, 'ROI2:SizeY': 51,
+                 'ROI3:MinX': 151, 'ROI3:SizeX': 51, 'ROI3:MinY': 51, 'ROI3:SizeY': 51, }
+    for k,v in roivalues.items():
+        EpicsSignal(f'{pvbase}{k}',  name='').put(v)
+        EpicsSignal(f'{pvbase}{k.replace("ROI", "ROIStat1:")}',  name='').put(v)
+        # this does 
+        #   EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinX',  name='').put(50)
+        #   EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinX',  name='').put(50)
+        # and so on...
 
     
 ####################################
