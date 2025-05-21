@@ -14,9 +14,7 @@ import redis
 from redis_json_dict import RedisJSONDict
 
 
-## trying "most".  It's a pager, like less, but has helpful hints in
-## the bottom gutter.  Let's see how it goes....
-os.environ['PAGER'] = 'most'
+os.environ['PAGER'] = 'less -Ps"type Q to quit: "'    # new ipython (or maybe latest less) obviates need for "most"
 
 
 ## some global parameters

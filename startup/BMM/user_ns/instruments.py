@@ -662,6 +662,8 @@ refl = ResonantReflectivityMacroBuilder()
 refl.description = 'a resonant reflectivity experiment'
 refl.instrument = 'resonant reflectivity'
 refl.folder = BMMuser.workspace
+refl.use_roi2.put(1)
+refl.use_roi3.put(1)
 
 
 

@@ -317,6 +317,7 @@ def prep_pilatus(pilatus):
     
 
 from BMM.user_ns.dwelltime import with_pilatus
+from BMM.user_ns.dcm import dcm
 if with_pilatus is True:
     from BMM.pilatus import BMMPilatusSingleTrigger,  BMMPilatusTIFFSingleTrigger
     run_report('\t'+'Pilatus')
@@ -334,13 +335,16 @@ if with_pilatus is True:
     
     pilatus = BMMPilatusSingleTrigger(pvbase, name="pilatus100k-1", read_attrs=["hdf5"])
     pilatus.stats.kind = "omitted"
+    pilatus.stats.name = "total"
     pilatus.roi2.kind  = "hinted"
     pilatus.roi3.kind  = "hinted"
     pilatus.roi2.name  = "diffuse"
     pilatus.roi3.name  = "specular"
     #if pilatus.hdf5.run_time.get() == 0.0:
-    #    pilatus.hdf5.warmup()
-        
+    pilatus.hdf5.warmup()
+    pilatus.gain.put(0)         # 7-30KeV/Fast/LowG
+    pilatus.photon_energy.put(dcm.energy.readback.get())
+    
     ## starting ROI values
     roivalues = {'ROI2:MinX': 50,  'ROI2:SizeX': 50, 'ROI2:MinY': 50, 'ROI2:SizeY': 50,
                  'ROI3:MinX': 150, 'ROI3:SizeX': 50, 'ROI3:MinY': 50, 'ROI3:SizeY': 50, }
@@ -352,8 +356,8 @@ if with_pilatus is True:
         #   EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='').put(50)
         # and so on...
         
-    pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
-    pilatus_tiff.stats.kind = "hinted"
+    #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
+    #pilatus_tiff.stats.kind = "hinted"
 
     prep_pilatus(pilatus)
 
@@ -394,8 +398,8 @@ if with_eiger is True:
     #    eiger.hdf5.warmup()
 
     ## starting ROI values
-    roivalues = {'ROI2:MinX': 51,  'ROI2:SizeX': 51, 'ROI2:MinY': 51, 'ROI2:SizeY': 51,
-                 'ROI3:MinX': 151, 'ROI3:SizeX': 51, 'ROI3:MinY': 51, 'ROI3:SizeY': 51, }
+    roivalues = {'ROI2:MinX': 501,  'ROI2:SizeX': 501, 'ROI2:MinY': 501, 'ROI2:SizeY': 501,
+                 'ROI3:MinX': 1501, 'ROI3:SizeX': 501, 'ROI3:MinY': 501, 'ROI3:SizeY': 501, }
     for k,v in roivalues.items():
         EpicsSignal(f'{pvbase}{k}',  name='').put(v)
         EpicsSignal(f'{pvbase}{k.replace("ROI", "ROIStat1:")}',  name='').put(v)
@@ -564,7 +568,6 @@ if with_xspress3 is True:
                                            read_attrs = ['hdf5']    )
         _prep_xs(xs4)
 
-    
 def xspress3_set_detector(this=None):
     if this is None:
         if use_7element is True:
@@ -608,4 +611,5 @@ if with_xspress3 is True:
     else:
         xs=xspress3_set_detector(4)
         
+#xs.get_external_file_ref().kind = "normal"
         

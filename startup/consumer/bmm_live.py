@@ -475,17 +475,17 @@ class XAFSScan():
     |          |          |          |
     +----------+----------+----------+
 
-    In the event of a reflectivity scan with Pilatus and fluorescence, show a 3x2 grid:
+    In the event of a reflectivity scan with Pilatus and fluorescence, show a 2x2 grid:
 
-    +----------+----------+----------+
-    |          |          |          |
-    | trans(E) |  fluo(E) |   I0     |
-    |          |          |          |
-    +----------+----------+----------+
-    |          |          |          |
-    | diffuse  | specular |          |
-    |          |          |          |
-    +----------+----------+----------+
+    +----------+----------+
+    |          |          |
+    | fluo(E)  |   I0     |
+    |          |          |
+    +----------+----------+
+    |          |          |
+    | diffuse  | specular |
+    |          |          |
+    +----------+----------+
 
     '''
 
@@ -574,11 +574,11 @@ class XAFSScan():
             self.ref = self.fig.add_subplot(self.gs[1, 1])
             self.axis_list   = [self.mut, self.muf, self.i0, self.ref]
 
-        ## 3x2 grid for yield and pilatus
-        elif self.mode in ('yield', 'pilatus'):
+        ## 3x2 grid for yield
+        elif self.mode == 'yield':
             if get_backend().lower() == 'agg':
                 self.fig.set_figheight(9.5)
-                self.fig.set_figwidth(6.5)
+                self.fig.set_figwidth(15)
             else:
                 self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
             self.gs = gridspec.GridSpec(2,3)
@@ -588,19 +588,20 @@ class XAFSScan():
             self.ref = self.fig.add_subplot(self.gs[1, 0])
             self.iy  = self.fig.add_subplot(self.gs[1, 1])
             self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
-        # elif self.mode in ('pilatus'):
-        #     if get_backend().lower() == 'agg':
-        #         self.fig.set_figheight(9.5)
-        #         self.fig.set_figwidth(6.5)
-        #     else:
-        #         self.fig.canvas.manager.window.setGeometry(1800, 1726, 1600, 1093)
-        #     self.gs = gridspec.GridSpec(2,3)
-        #     self.mut = self.fig.add_subplot(self.gs[0, 0])
-        #     self.ref = self.fig.add_subplot(self.gs[0, 1])
-        #     self.i0  = self.fig.add_subplot(self.gs[0, 2])
-        #     self.muf = self.fig.add_subplot(self.gs[1, 0])
-        #     self.iy  = self.fig.add_subplot(self.gs[1, 1])
-        #     self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
+            
+        ## 2x2 grid if pilatus
+        elif self.mode in ('pilatus'):
+            if get_backend().lower() == 'agg':
+                self.fig.set_figheight(9.5)
+                self.fig.set_figwidth(6.5)
+            else:
+                self.fig.canvas.manager.window.setGeometry(2240, 1757, 1200, 1093)
+            self.gs = gridspec.GridSpec(2,2)
+            self.muf = self.fig.add_subplot(self.gs[0, 0])
+            self.i0  = self.fig.add_subplot(self.gs[0, 1])
+            self.ref = self.fig.add_subplot(self.gs[1, 0])
+            self.iy  = self.fig.add_subplot(self.gs[1, 1])
+            self.axis_list   = [self.muf, self.i0, self.ref, self.iy]
 
         ## 3x1 grid if no fluorescence (transmission, reference, test)
         else:
@@ -619,9 +620,10 @@ class XAFSScan():
         ## start lines and set axis labels
 
         ## every plot type uses mu_t and i0
-        self.mut.set_ylabel('transmission $\mu(E)$')
-        self.mut.set_xlabel('energy (eV)')
-        self.mut.set_title(f'data: {self.sample}')
+        if self.mode != 'pilatus':
+            self.mut.set_ylabel('transmission $\mu(E)$')
+            self.mut.set_xlabel('energy (eV)')
+            self.mut.set_title(f'data: {self.sample}')
 
         self.i0.set_ylabel('I0 (nanoamps)')
         self.i0.set_xlabel('energy (eV)')
@@ -673,7 +675,8 @@ class XAFSScan():
         self.fluor       = []
         self.refer       = []
         self.iysig       = []
-        self.line_mut,   = self.mut.plot([],[], label=f'scan {self.count}')
+        if self.mode != 'pilatus':
+            self.line_mut,   = self.mut.plot([],[], label=f'scan {self.count}')
         self.line_i0,    = self.i0.plot([],[],  label=f'scan {self.count}')
         self.line_ref,   = self.ref.plot([],[], label=f'scan {self.count}')
         if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
@@ -736,8 +739,9 @@ class XAFSScan():
         self.i0sig.append(kwargs['data']['I0']/kwargs['data']['dwti_dwell_time'])  # this should be the same number as cadashboard....
         self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
         ## push the updated data arrays to the various lines
-        self.line_mut.set_data(self.energy, self.trans)
         self.line_i0.set_data(self.energy, self.i0sig)
+        if self.mode != 'pilatus':
+            self.line_mut.set_data(self.energy, self.trans)
 
 
         if self.mode in ('transmission', 'fluorescence', 'yield', 'dante', 'reference'):

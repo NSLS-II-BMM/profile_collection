@@ -32,7 +32,7 @@ class BMMEiger(AreaDetector):
     hdf5 = C(
         BMMHDF5Plugin,
         "HDF1:",
-        write_path_template=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/eiger1m-1-1/%Y/%m/%d/",
+        write_path_template=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/eiger1m-1/%Y/%m/%d/",
         read_path_template=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/eiger1m-1//%Y/%m/%d/",
         read_attrs=[],
         root=f"/nsls2/data3/bmm/proposals/{md['cycle']}/{md['data_session']}/assets/eiger1m-1/",
@@ -50,10 +50,13 @@ class BMMEiger(AreaDetector):
     cam_full_file_name = C(EpicsSignalRO,      'cam1:FullFileName_RBV')
     cam_file_format    = C(EpicsSignalWithRBV, 'cam1:FileFormat')
 
+    threshold_energy   = C(EpicsSignalWithRBV, 'cam1:ThresholdEnergy')
+    photon_energy      = C(EpicsSignalWithRBV, 'cam1:PhotonEnergy')
+
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.stage_sigs.update([(self.cam.trigger_mode, "Internal")])
+        #self.stage_sigs.update([(self.cam.trigger_mode, "Internal Server")])
 
     def make_data_key(self):
         source = "PV:{}".format(self.prefix)

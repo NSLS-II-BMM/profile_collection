@@ -32,7 +32,7 @@ def describe_slack():
     bmmbot.describe()
 
     
-def post_to_slack(text):
+def post_to_slack(text, rid=None):
     ## BMM's own Slack channel, soon to be deprecated
     if use_bmm_slack is True:
         channel = default_slack_channel
@@ -52,7 +52,7 @@ def post_to_slack(text):
         bmmbot.post(text)
         
     ## record Slack timeline
-    echo_slack(text=text, img=None, icon='message', rid=None)
+    echo_slack(text=text, img=None, icon='message', rid=rid)
 
 
 ## Simple but useful guide to configuring a slack app:        

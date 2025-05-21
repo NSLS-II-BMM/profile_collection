@@ -74,11 +74,11 @@ class GridMacroBuilder(BMMMacroBuilder):
             # sample and slit movement #
             ############################
             if m['detectorx'] is not None:
-                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
+                if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return False
                 self.content += self.tab + f'yield from mv(xafs_detx, {m["detectorx"]:.2f})\n'
             if m['position1'] is not None and m['position2'] is not None:
-                if self.check_limit(m['motor1'], m['position1']) is False: return(False)
-                if self.check_limit(m['motor2'], m['position2']) is False: return(False)
+                if self.check_limit(m['motor1'], m['position1']) is False: return False
+                if self.check_limit(m['motor2'], m['position2']) is False: return False
                 self.content += self.tab + f'gmb.motor1, gmb.motor2, gmb.position1, gmb.position2 = {m["motor1"]}, {m["motor2"]}, {m["position1"]}, {m["position2"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f}, {m["motor2"]}, {m["position2"]:.3f})\n'
                 self.motor1    = m["motor1"]
@@ -87,30 +87,30 @@ class GridMacroBuilder(BMMMacroBuilder):
                 self.position2 = m["position2"]
             else:
                 if m['position1'] is not None:
-                    if self.check_limit(m['motor1'], m['position1']) is False: return(False)
+                    if self.check_limit(m['motor1'], m['position1']) is False: return False
                     self.motor1    = m["motor1"]
                     self.position1 = m["position1"]
                     self.content += self.tab + f'gmb.motor1, gmb.position1 = {m["motor1"]}, {m["position1"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor1"]}, {m["position1"]:.3f})\n'
                 if m['position2'] is not None:
-                    if self.check_limit(m['motor2'], m['position2']) is False: return(False)
+                    if self.check_limit(m['motor2'], m['position2']) is False: return False
                     self.motor2    = m["motor2"]
                     self.position2 = m["position2"]
                     self.content += self.tab + f'gmb.motor2, gmb.position2 = {m["motor2"]}, {m["position2"]}\n'
                     self.content += self.tab + f'yield from mv({m["motor2"]}, {m["position2"]:.3f})\n'
 
             if type(m['position3']) is not int and m['position3'] is not None:
-                if self.check_limit(m['motor3'], m['position3']) is False: return(False)
+                if self.check_limit(m['motor3'], m['position3']) is False: return False
                 self.content += self.tab + f'gmb.motor3, gmb.position3 = {m["motor3"]}, {m["position3"]}\n'
                 self.content += self.tab + f'yield from mv({m["motor3"]}, {m["position3"]:.3f})\n'
                 self.motor3    = m["motor3"]
                 self.position3 = m["position3"]
 
             if m['slitwidth'] is not None:
-                if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return(False)
+                if self.check_limit(user_ns['slits3'].hsize, m['slitwidth']) is False: return False
                 self.content += self.tab + 'yield from mv(slits3.hsize, %.2f)\n' % m['slitwidth']
             if m['slitheight'] is not None:
-                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return(False)
+                if self.check_limit(user_ns['slits3'].vsize, m['slitheight']) is False: return False
                 self.content += self.tab + 'yield from mv(slits3.vsize, %.2f)\n' % m['slitheight']
                 
 
@@ -122,7 +122,7 @@ class GridMacroBuilder(BMMMacroBuilder):
             if m['focus'] == 'focused':
                 focus = True
             text, time, inrange = self.do_change_edge(m['element'], m['edge'], focus, self.tab)
-            if inrange is False: return(False)
+            if inrange is False: return False
                             
             # if self.do_first_change is True:
             #     self.do_first_change = False

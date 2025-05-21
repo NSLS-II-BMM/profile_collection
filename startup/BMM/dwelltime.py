@@ -37,13 +37,18 @@ class PilatusDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'cam1:AcquireTime')
     readback = Cpt(EpicsSignalRO, 'cam1:AcquireTime_RBV')
 
+class EigerDwellTime(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal,   'cam1:AcquireTime')
+    readback = Cpt(EpicsSignalRO, 'cam1:AcquireTime_RBV')
+
 class DanteDwellTime(PVPositionerPC):
     setpoint = Cpt(EpicsSignal,   'dante:PresetReal')
     readback = Cpt(EpicsSignalRO, 'dante:PresetReal')
 
     
     
-from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3, with_pilatus, with_dante #with_dualem,
+from BMM.user_ns.dwelltime import with_quadem, with_struck, with_xspress3, with_dante
+from BMM.user_ns.dwelltime import with_pilatus, with_eiger #with_dualem,
 from BMM.user_ns.dwelltime import with_ic0, with_ic1, with_ic2
 
 
@@ -84,6 +89,8 @@ class LockedDwellTimes(PseudoPositioner):
         xspress3_dwell_time = Cpt(Xspress3DwellTime, 'XF:06BM-ES{Xsp:1}:',        egu='seconds') # XSpress3X
     if with_pilatus is True:
         pilatus_dwell_time  = Cpt(PilatusDwellTime,  'XF:06BMB-ES{Det:PIL100k}:', egu='seconds') # pilatus100k
+    if with_eiger is True:
+        eiger_dwell_time    = Cpt(PilatusDwellTime,  'XF:06BM-ES{Det-Eiger:1}',   egu='seconds') # pilatus100k
     if with_dante is True:
         dante_dwell_time    = Cpt(DanteDwellTime,    'XF:06BM-ES{Dante-Det:1}',   egu='seconds') # Dante
 
@@ -111,6 +118,8 @@ class LockedDwellTimes(PseudoPositioner):
             self.xspress3_dwell_time.settle_time = val
         if hasattr(self, 'pilatus_dwell_time'):
             self.pilatus_dwell_time.settle_time = val
+        if hasattr(self, 'eiger_dwell_time'):
+            self.eiger_dwell_time.settle_time = val
         if hasattr(self, 'dante_dwell_time'):
             self.dante_dwell_time.settle_time = val
         #if hasattr(self, 'dualem_dwell_time'):
@@ -140,6 +149,8 @@ class LockedDwellTimes(PseudoPositioner):
             signal_chains['xspress3_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'pilatus_dwell_time'):
             signal_chains['pilatus_dwell_time'] = pseudo_pos.dwell_time
+        if hasattr(self, 'eiger_dwell_time'):
+            signal_chains['eiger_dwell_time'] = pseudo_pos.dwell_time
         if hasattr(self, 'dante_dwell_time'):
             signal_chains['dante_dwell_time'] = pseudo_pos.dwell_time
         #if hasattr(self, 'dualem_dwell_time'):

@@ -3,7 +3,7 @@ import os, time, datetime, configparser
 
 from bluesky.plan_stubs import mv, mvr, sleep
 from databroker import Broker
-from tiled.client import from_uri
+from tiled.client import from_uri, show_logs
 
 try:
     from bluesky_queueserver import is_re_worker_active

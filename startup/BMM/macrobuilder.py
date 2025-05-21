@@ -1,7 +1,7 @@
 
 import os, re, numpy, configparser
 from openpyxl import load_workbook
-
+from rich import print as cprint
 
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.functions      import isfloat, present_options
@@ -266,6 +266,15 @@ class BMMMacroBuilder():
             return True
         return False
 
+    def check_spinner(value):
+        if type(value)is not int:
+            error_msg(f"Spinner number must be an integer between 1 and 8. You said {value}")
+            return False
+        if value <1 or value > 8:
+            error_msg(f"Spinner number must be an integer between 1 and 8. You said {value}")
+            return False
+        return True 
+    
     def check_limit(self, motor, value):
         '''Perform a sanity check on a requested motor position.
         Return False if there is a problem.
@@ -275,14 +284,14 @@ class BMMMacroBuilder():
                 motor = user_ns[motor]
             else:
                 error_msg(f'"{motor}" is not a valid motor name.')
-                return(False)
+                return False
         if value > motor.limits[1]:
             error_msg(f"A requested {motor.name} position ({value}) is greater than the high limit ({motor.limits[1]})")
-            return(False)
+            return False
         if value < motor.limits[0]:
             error_msg(f"A requested {motor.name} position ({value}) is less than the low limit ({motor.limits[0]})")
-            return(False)
-        return(True)
+            return False
+        return True 
 
     def check_temp(self, stage, value):
         '''Perform a sanity check on a requested heating/cooling stage temperature.
@@ -293,11 +302,11 @@ class BMMMacroBuilder():
             name, units = 'Displex', 'K'
         if value > stage.limits[1]:
             error_msg(f"A requested {name} temperature ({value}{units}) is greater than the high limit ({stage.limits[1]}{units})")
-            return(False)
+            return False
         if value < stage.limits[0]:
             error_msg(f"A requested {name} temperature ({value}{units}) is less than the low limit ({stage.limits[0]}{units})")
-            return(False)
-        return(True)
+            return False
+        return True
 
     
         
@@ -677,21 +686,21 @@ class BMMMacroBuilder():
         ## I think this will never be called by queueserver
         from IPython import get_ipython
         ipython = get_ipython()
-        ipython.magic('run -i \'%s\'' % self.macro)
+        ipython.run_line_magic('run',  f' -i \'{self.macro}\'')
         whisper('Wrote and read macro file: %s' % self.macro)
 
     def finish_macro(self):
         #######################################
         # explain to the user what to do next #
         #######################################
-        print(f'\nYour new {BMMuser.instrument} plan is called: ' + bold_msg('%s_macro' % self.basename))
-        print('\nVerify:  ' + bold_msg('%s_macro??' % self.basename))
+        cprint(f'\nYour new {BMMuser.instrument} plan is called:  [yellow2]{self.basename}_macro[/yellow2]')
+        cprint(f'\nVerify:  [yellow2]{self.basename}_macro??[/yellow2]')
         if 'glancing angle' in self.instrument:
-            print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
-            print('Add ref: '   + bold_msg('RE(%s_macro(ref=True))' % self.basename))
+            cprint(f'Run:     [yellow2]RE({self.basename}_macro())[/yellow2]')
+            cprint(f'Add ref: [yellow2]RE({self.basename}_macro(ref=True))[/yellow2]')
         else:
-            print('Run:     '   + bold_msg('RE(%s_macro())' % self.basename))
-            #print('Dryrun:  '   + bold_msg('RE(%s_macro(dryrun=True))' % self.basename))
+            cprint(f'Run:     [yellow2]RE({self.basename}_macro())[/yellow2]')
+            #cprint('Dryrun:  [yellow2]RE({self.basename}_macro(dryrun=True)[/yellow2]')
 
         alltime = self.totaltime + self.metadatatime/60
         hours = int(alltime/60)

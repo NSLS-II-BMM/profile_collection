@@ -793,8 +793,6 @@ def xafs(inifile=None, **kwargs):
 
         if 'yield' in p['mode']:
             quadem1.Iy.kind = 'hinted'
-        if 'pilatus' in p['mode']:
-            pilatus.stats.kind = 'hinted'
         if 'xs1' in p['mode']:
             yield from mv(xs1.cam.acquire_time, 0.5)
         elif 'fluo' in p['mode'] or 'flou' in p['mode'] or 'xs' in p['mode'] or 'yield' in p['mode']:
@@ -910,7 +908,7 @@ def xafs(inifile=None, **kwargs):
                 sample = sample[:45] + ' ...'
 
             fluo_detector = None
-            if plotting_mode(p['mode']) == 'fluorescence':
+            if plotting_mode(p['mode']) in ('fluorescence', 'pilatus'):
                 fluo_detector = xs.name
             elif plotting_mode(p['mode']) == 'dante':
                 fluo_detector = 'dante'
@@ -961,7 +959,10 @@ def xafs(inifile=None, **kwargs):
                 elif 'grid' in BMMuser.instrument.lower():
                     slotno = f', motor grid {gmb.motor1.name}, {gmb.motor2.name} = {gmb.position1:.1f}, {gmb.position2:.1f}'
                     this_instrument = gmb.dossier_entry();
-
+                elif 'reflectivity' in BMMuser.instrument.lower():
+                    this_iqnstrument = refl.dossier_entry();
+                    
+                    
                     
                 report(f'starting repetition {cnt} of {p["nscans"]} -- {fname} -- {len(energy_grid)} energy points{slotno}{ring}', level='bold', slack=True)
                 md['_filename'] = fname
@@ -1099,7 +1100,7 @@ def xafs(inifile=None, **kwargs):
                         score, emoji = user_ns['clf'].evaluate(uid, mode=plotting_mode(p['mode']))
                         report(f"ML data evaluation model: {emoji}", level='bold', slack=True)
                         if score == 0:
-                            report(f'An {emoji} may not mean that there is anything wrong with your data. See https://tinyurl.com/yrnrhshj', level='whisper', slack=True)
+                            report(f'An {emoji} may not mean that there is anything wrong with your data. See https://tinyurl.com/2xp2bhbx', level='whisper', slack=True)
                             with open(os.path.join(WORKSPACE, 'logs', 'failed_data_evaluation.txt'), 'a') as f:
                                 f.write(f'{now()}\n\tmode = {p["mode"]}/{plotting_mode(p["mode"])}\n\t{uid}\n\n')
                     except:
@@ -1167,6 +1168,7 @@ def xafs(inifile=None, **kwargs):
     RE, BMMuser, dcm, dwell_time = user_ns['RE'], user_ns['BMMuser'], user_ns['dcm'], user_ns['dwell_time']
     dcm_bragg, dcm_pitch, dcm_roll, dcm_x = user_ns['dcm_bragg'], user_ns['dcm_pitch'], user_ns['dcm_roll'], user_ns['dcm_x']
     xafs_wheel, ga, linkam, gmb, lakeshore = user_ns['xafs_wheel'], user_ns['ga'], user_ns['linkam'], user_ns['gmb'], user_ns['lakeshore']
+    refl = user_ns['refl']
     rkvs = user_ns['rkvs']
 
     try:

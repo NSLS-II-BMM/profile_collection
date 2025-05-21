@@ -288,7 +288,7 @@ def calibrate_mono(mono='111'):
         boxedtext(text, title='new values for BMM/dcm_parameters.py', color='green')
     else:
         text += ' self.offset_311 = %.7f' % (BMM_dcm.offset_311 + offset)
-        boxedtext(text, title='new values for BMM/dcm_parameters.py', color='dark black')
+        boxedtext(text, title='new values for BMM/dcm_parameters.py', color='green')
 
     ## plot with the kafka consumer
     kafka_message({'mono_calibration' : True,

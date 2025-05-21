@@ -6,6 +6,7 @@ except ImportError:
         return False
 
 import time, json, os
+from rich import print as cprint
 
 from bluesky.plan_stubs import null, sleep, mv, mvr
 from bluesky.preprocessors import finalize_wrapper
@@ -282,7 +283,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             
         (ok, text) = BMM_clear_to_start()
         if ok is False:
-            error_msg('\n'+text) + bold_msg('Quitting change_edge() macro....\n')
+            cprint(f'\n[red1]{text}[/red1]\n[yellow2]Quitting change_edge() plan....[/yellow2]\n')
             yield from null()
             return
 
@@ -343,13 +344,13 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         # confirm configuration change #
         ################################
         bold_msg('\nEnergy change:')
-        print('   %s: %s %s' % (list_msg('edge'),                    el.capitalize(), edge.capitalize()))
-        print('   %s: %.1f'  % (list_msg('edge energy'),             energy))
-        print('   %s: %.1f'  % (list_msg('target energy'),           energy+target))
-        print('   %s: %s'    % (list_msg('focus'),                   str(focus)))
-        print('   %s: %s'    % (list_msg('photon delivery mode'),    mode))
-        print('   %s: %s'    % (list_msg('optimizing slits height'), str(slits)))
-        print('   %s: %s'    % (list_msg('optimizing mirror pitch'), str(mirror)))
+        cprint(f'   [spring_green4]edge[/spring_green4]: [white]{el.capitalize()} {edge.capitalize()}[/white]')
+        cprint(f'   [spring_green4]edge_energy[/spring_green4]: [white]{energy:.1f}[/white]')
+        cprint(f'   [spring_green4]target energy[/spring_green4]: [white]{energy+target:.1f}[/white]')
+        cprint(f'   [spring_green4]focus[/spring_green4]: [white]{str(focus)}[/white]')
+        cprint(f'   [spring_green4]photon delivery mode[/spring_green4]: [white]{mode}[/white]')
+        cprint(f'   [spring_green4]optimizing slits height[/spring_green4]: [white]{str(slits)}[/white]')
+        cprint(f'   [spring_green4]optimizing mirror pitch[/spring_green4]: [white]{str(mirror)}[/white]\n')
 
         ## prepare for the possibility of dcm_para stalling while moving to new energy
         if energy+target > dcm.energy.position:
@@ -398,9 +399,9 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
 
         start = time.time()
         if mode == 'XRD':
-            report(f'Configuring beamline for XRD at {energy} eV', level='bold', slack=True)
+            report(f'\nConfiguring beamline for XRD at {energy} eV', level='bold', slack=True)
         else:
-            report(f'Configuring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True, rid=True)
+            report(f'\nConfiguring beamline for {el.capitalize()} {edge.capitalize()} edge', level='bold', slack=True, rid=True)
         yield from dcm.kill_plan()
 
         ################################################
@@ -512,14 +513,15 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
                 mirror = 'm2'
             else:
                 mirror = 'm3'
-            print('Optimizing {mirror} pitch...')
+            print(f'Optimizing {mirror} pitch...')
             yield from mirror_pitch(mirror=mirror, move=True)
             kafka_message({'close': 'last'})
 
 
         if mode in ('A', 'B', 'C'):
-            yield from hcenter(move=True)
-            kafka_message({'close': 'last'})
+            if no_hslits is False:
+                yield from hcenter(move=True)
+                kafka_message({'close': 'last'})
             
         ##################################
         # set reference and roi channels #

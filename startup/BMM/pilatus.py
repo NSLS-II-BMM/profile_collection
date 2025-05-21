@@ -87,9 +87,13 @@ class BMMHDF5Plugin(HDF5Plugin_V33, BMMFileStoreHDF5, FileStoreIterativeWrite):
         self.enable.set(1).wait()
 
         # JOSH: proposed changes for new IOC
+
+        tm = 'Internal'         # trigger mode for Pilatus
+        if 'eiger' in self.parent.name:
+            tm = 'Internal Series'
         sigs = OrderedDict([(self.parent.cam.array_callbacks, 1),
                             (self.parent.cam.image_mode, "Single"),
-                            (self.parent.cam.trigger_mode, 'Internal'),
+                            (self.parent.cam.trigger_mode, tm),
                             # just in case the acquisition time is set very long...
                             (self.parent.cam.acquire_time, 0.2),
                             (self.parent.cam.num_images, 1),
@@ -146,6 +150,9 @@ class BMMPilatus(AreaDetector):
     cam_full_file_name = C(EpicsSignalRO,      'cam1:FullFileName_RBV')
     cam_file_format    = C(EpicsSignalWithRBV, 'cam1:FileFormat')
 
+    threshold_energy   = C(EpicsSignalWithRBV, 'cam1:ThresholdEnergy')
+    photon_energy      = C(EpicsSignalWithRBV, 'cam1:Energy')
+    gain               = C(EpicsSignalWithRBV, 'cam1:GainMenu')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -426,8 +426,8 @@ if lmb  is not None: lmb.folder  = BMMuser.folder     # Linkam stage
 if lsmb is not None: lsmb.folder = BMMuser.folder     # LakeShore 331 temperature controller
 if gmb  is not None: gmb.folder  = BMMuser.folder     # generic motor grid
 
-run_report('\t'+'CMS experiment')
-from BMM.agent_plans import CMS_driven_measurement
+#run_report('\t'+'CMS experiment')
+#from BMM.agent_plans import CMS_driven_measurement
 
 
 from BMM.logging import BMM_msg_hook
@@ -558,7 +558,7 @@ def check_for_synaxis():
         text += 'involving those motors to work correctly.\n'
         text += '[bold black](This likely means that an IOC or a motor controller (or both) are off.)[/bold black]\n'
         text += '[bold black](Those motors have been removed from sd.baseline.)[/bold black]'
-        boxedtext(text, title=f'{spreadsheet} cannot be imported', color='red')
+        boxedtext(text, title=text, color='red')
 
 check_for_synaxis()
 examine_diagnostics()

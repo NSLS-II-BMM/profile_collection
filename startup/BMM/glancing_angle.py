@@ -545,6 +545,7 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
                 if self.check_limit(user_ns['xafs_detx'], m['detectorx']) is False: return(False)
                 self.content += self.tab + 'yield from mv(xafs_detx, %.2f)\n' % m['detectorx']
             self.content += self.tab + f'yield from mvr(xafs_detx, {self.retract})\n'
+            if self.check_spinner(m['slot']) is False: return False
             self.content += self.tab + f'yield from ga.to({m["slot"]})\n'
 
             if self.orientation == "parallel":
