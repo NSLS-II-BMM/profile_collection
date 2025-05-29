@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+	cat <<EOF 
+
+Grant channel access permit for a beamline."
+
+   pv_access <username>
+
+You will be prompted for password and two-factor authentication.
+
+EOF
+	exit 1
+fi
+
+
+HN=`hostname | cut -d '-' -f 1 | tr '[:lower:]' '[:upper:]'`
+PV=${HN:0:2}:${HN:2}-CT{}Prmt:RemoteExp-Sel
+
+#echo "caput $PV 1" $1
+su -c "caput $PV 1" $1
