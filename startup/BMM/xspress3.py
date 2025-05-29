@@ -94,7 +94,7 @@ class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
         The plugin has to 'see' one acquisition before it is ready to capture.
         This sets the array size, etc.
         NOTE : this comes from:
-            https://github.com/NSLS-II/ophyd/blob/master/ophyd/areadetector/plugins.py
+            https://github.com/NSLS-II/ophyd/blob/main/ophyd/areadetector/plugins.py
         We had to replace "cam" with "settings" here.
 
         This has been slightly modified by Bruce to avoid a situation where the warmup
