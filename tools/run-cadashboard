@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd ~/git/BMM-beamline-configuration/tools
+eval "$(conda shell.bash hook)"
+conda activate 2023-1.0-py310-tiled
+./cadashboard $1
