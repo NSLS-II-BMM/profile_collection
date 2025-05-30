@@ -21,38 +21,75 @@ status_list = {'MTACT' : 1, 'MLIM'  : 0, 'PLIM'  : 0, 'AMPEN' : 0,
                'WFOER' : 0, 'INPOS' : 1, 'ENC_LSS' : 0}
 
 
+# for DeadbandEpicsMotor and DeadbandEpicsMotor see
+# https://github.com/xraygui/nbs-bl/blob/master/nbs_bl/devices/motors.py#L123
+# Thanks to Jamie Titus
 
-# see https://github.com/NSLS-II-SST/sst_base/blob/master/sst_base/motors.py
 class DeadbandMixin(Device, PositionerBase):
     """
     Should be the leftmost class in the inheritance list so that it grabs move first!
+
     Must be combined with either EpicsMotor or PVPositioner, or some other class
     that has a done_value attribute
+
     An EpicsMotor subclass that has an absolute tolerance for moves.
     If the readback is within tolerance of the setpoint, the MoveStatus
     is marked as finished, even if the motor is still settling.
+
     This prevents motors with long, but irrelevant, settling times from
     adding overhead to scans.
     """
-    tolerance = Cpt(Signal, value=-1, kind='config')
+
+    tolerance = Cpt(Signal, value=-1, kind="config")
+    move_latch = Cpt(Signal, value=0, kind="omitted")
+
+    def __init__(self, *args, tolerance=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if tolerance is not None:
+            self.tolerance.put(tolerance)
+
+    def _done_moving(self, success=True, timestamp=None, value=None, **kwargs):
+        """Call when motion has completed.  Runs ``SUB_DONE`` subscription."""
+        if self.move_latch.get():
+            #print(f"{timestamp} {datetime.today().time().isoformat()} [{self.name}]: marked done")
+            if success:
+                self._run_subs(sub_type=self.SUB_DONE, timestamp=timestamp, value=value)
+
+            self._run_subs(
+                sub_type=self._SUB_REQ_DONE, success=success, timestamp=timestamp
+            )
+            self._reset_sub(self._SUB_REQ_DONE)
+            self.move_latch.put(0)
 
     def move(self, position, wait=True, **kwargs):
         tolerance = self.tolerance.get()
+
         if tolerance < 0:
+            self.move_latch.put(1)
             return super().move(position, wait=wait, **kwargs)
         else:
             status = super().move(position, wait=False, **kwargs)
             setpoint = position
             done_value = getattr(self, "done_value", 1)
+
             def check_deadband(value, timestamp, **kwargs):
-                if abs(value - setpoint) < tolerance:                    
-                    self._move_changed(timestamp=timestamp, value=done_value)
+                if abs(value - setpoint) < tolerance:
+                    #print(f"{timestamp} {datetime.today().time().isoformat()} [{self.name}]: {value} within {tolerance} of {setpoint}")
+                    self._done_moving(
+                        timestamp=timestamp, success=True, value=done_value
+                    )
+                else:
+                    pass
+                    # print(f"{timestamp}: {self.name}, {value} not within {tolerance} of {setpoint}")
 
             def clear_deadband(*args, **kwargs):
+                # print(f"{timestamp}: Ran deadband clear for {self.name}")
                 self.clear_sub(check_deadband, event_type=self.SUB_READBACK)
 
-            self.subscribe(check_deadband, event_type=self.SUB_READBACK, run=False)
             self.subscribe(clear_deadband, event_type=self._SUB_REQ_DONE, run=False)
+            self.move_latch.put(1)
+            self.subscribe(check_deadband, event_type=self.SUB_READBACK, run=True)
+
             try:
                 if wait:
                     status_wait(status)
@@ -68,11 +105,17 @@ class DeadbandEpicsMotor(DeadbandMixin, EpicsMotor):
     An EpicsMotor subclass that has an absolute tolerance for moves.
     If the readback is within tolerance of the setpoint, the MoveStatus
     is marked as finished, even if the motor is still settling.
+
     This prevents motors with long, but irrelevant, settling times from
     adding overhead to scans.
+
     This class is designed to be subclassed.
     """
+
     pass
+
+
+
 
 class EpicsMotorWithDial(EpicsMotor):
     dial = Cpt(EpicsSignal, '.DVAL', kind='config')
@@ -410,6 +453,10 @@ class XAFSEpicsMotor(FMBOEpicsMotor):
     
     #def wh(self):
     #    return(round(self.user_readback.get(), 3))
+
+
+class BMMDeadBandMotor(DeadbandEpicsMotor, XAFSEpicsMotor):
+    pass
 
     
 class VacuumEpicsMotor(FMBOEpicsMotor):

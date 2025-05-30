@@ -63,6 +63,7 @@ xs_app_dir = EpicsSignalRO('XF:06BM-CT{Xsp:1}::APP_DIR1', name='xs_app_dir')
 # also that a linescan or xafs scan must set total_points up front
 
 #class Xspress3FileStoreFlyable(Xspress3FileStore):
+
 class BMMXspress3HDF5Plugin(Xspress3HDF5Plugin):
 
     def __init__(self, *args, **kwargs):
@@ -325,6 +326,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
 
     def describe(self):        
         res = super().describe()
+        # res[self.xrf.name]["shape"] = (8, 4096)
         for channel in self.iterate_channels():
             res[channel.name+'_xrf']['dtype_str'] = '<f8'
         # try:
