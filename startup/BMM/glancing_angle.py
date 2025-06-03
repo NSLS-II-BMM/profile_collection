@@ -27,6 +27,7 @@ from BMM.kafka          import kafka_message
 from BMM.logging        import report
 from BMM.linescans      import linescan
 from BMM.macrobuilder   import BMMMacroBuilder
+from BMM.modes          import get_mode
 from BMM.periodictable  import PERIODIC_TABLE, edge_energy
 from BMM.suspenders     import BMM_suspenders, BMM_clear_to_start, BMM_clear_suspenders
 from BMM.xafs_functions import conventional_grid
@@ -567,6 +568,10 @@ class GlancingAngleMacroBuilder(BMMMacroBuilder):
             ####################################
             if m['method'].lower() == 'automatic':
                 user_ns['ga'].automatic = True
+                if get_mode() == 'A':
+                    self.content += self.tab + 'yield from mirror_pitch(mirror="m2", move=True)\n'
+                else:
+                    self.content += self.tab + 'yield from mirror_pitch(mirror="m3", move=True)\n'
                 self.content += self.tab + f'yield from ga.auto_align(pitch={m["angle"]})\n'
             else:
                 if m['sampley'] is not None:

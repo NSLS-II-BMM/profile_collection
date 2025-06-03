@@ -223,7 +223,7 @@ class BMMDossier():
 
             # left sidebar, entry for XRF file in the case of fluorescence data
             thismode = self.plotting_mode(XDI['_user']['mode'])
-            if thismode in ('xs', 'xs1', 'fluorescence'):
+            if thismode in ('xs', 'xs1', 'fluorescence') and '_xrffile' in XDI:
                 with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_xrf_file.tmpl')) as f:
                     content = f.readlines()
                 thiscontent += ''.join(content).format(basename      = basename,
@@ -296,41 +296,42 @@ class BMMDossier():
             # middle part, XRF and glancing angle alignment images
             if thismode in ('xs', 'xs1', 'fluorescence'):
                 el = XDI['Element']['symbol']
-                if '4-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
-                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0])]
-                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel01_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel02_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel03_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel04_xrf']).sum()) ]
-                elif '1-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
-                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'8'][0]),]
-                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['1-element SDD_channel08_xrf']).sum()),]
-                elif '7-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
-                    rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'5'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'6'][0]),
-                            int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'7'][0]) ]
-                    ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel01_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel02_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel03_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel04_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel05_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel06_xrf']).sum()),
-                            int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel07_xrf']).sum()) ]
+                if 'xrf_uid' in XDI['_snapshots']:
+                    if '4-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                        rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0])]
+                        ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel01_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel02_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel03_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['4-element SDD_channel04_xrf']).sum()) ]
+                    elif '1-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                        rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'8'][0]),]
+                        ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['1-element SDD_channel08_xrf']).sum()),]
+                    elif '7-element SDD' in bmm_catalog[self.uidlist[0]].metadata['start']['detectors']:
+                        rois = [int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'1'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'2'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'3'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'4'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'5'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'6'][0]),
+                                int(bmm_catalog[snapshots['xrf_uid']].primary.data[el+'7'][0]) ]
+                        ocrs = [int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel01_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel02_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel03_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel04_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel05_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel06_xrf']).sum()),
+                                int(numpy.array(bmm_catalog[snapshots['xrf_uid']].primary.data['7-element SDD_channel07_xrf']).sum()) ]
 
-                with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_xrf_image.tmpl')) as f:
-                    content = f.readlines()
-                thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+snapshots['xrf_image']),
-                                                       pccenergy = '%.1f' % XDI['_user']['pccenergy'],
-                                                       ocrs      = ', '.join(map(str,ocrs)),
-                                                       rois      = ', '.join(map(str,rois)),
-                                                       symbol    = XDI['Element']['symbol'],)
+                    with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_xrf_image.tmpl')) as f:
+                        content = f.readlines()
+                    thiscontent += ''.join(content).format(xrfsnap   = quote('../XRF/'+snapshots['xrf_image']),
+                                                           pccenergy = '%.1f' % XDI['_user']['pccenergy'],
+                                                           ocrs      = ', '.join(map(str,ocrs)),
+                                                           rois      = ', '.join(map(str,rois)),
+                                                           symbol    = XDI['Element']['symbol'],)
                 if 'ga_filename' in snapshots:
                     with open(os.path.join(startup_dir, 'consumer', 'tmpl', 'dossier_ga.tmpl')) as f:
                         content = f.readlines()
