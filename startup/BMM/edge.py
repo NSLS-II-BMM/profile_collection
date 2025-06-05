@@ -469,7 +469,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             print('\n')
             report(f'\nSome motors are reporting amplifier faults: {BMMuser.motor_fault}', level='error', slack=True)
             print('Clear the faults and try running the same change_edge() command again.')
-            print('Troubleshooting: ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
+            print('Troubleshooting: ' + url_msg('https://nsls2.github.io/bmm-beamline-manual/trouble.html#amplifier-fault'))
             BMMuser.motor_fault = None
             raise ArrivedInModeException(f'Failed to arrive in mode {mode} due to amplifier faults. (in BMM/edge.py)')
             #yield from null()
