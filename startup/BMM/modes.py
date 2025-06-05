@@ -198,7 +198,7 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      BMMuser, RE, dcm, dm3_bct, slits3 = user_ns['BMMuser'], user_ns['RE'], user_ns['dcm'], user_ns['dm3_bct'], user_ns['slits3']
      xafs_table, m3, m2, m2_bender = user_ns['xafs_table'], user_ns['m3'], user_ns['m2'], user_ns['m2_bender']
      m2_xu, m2_xd = user_ns['m2_xu'], user_ns['m2_xd']
-     dcm_bragg, xafs_ref, xafs_refx = user_ns['dcm_bragg'], user_ns['xafs_ref'], user_ns['xafs_refx']
+     dcm_bragg, dcm_roll, xafs_ref, xafs_refx = user_ns['dcm_bragg'], user_ns['dcm_roll'], user_ns['xafs_ref'], user_ns['xafs_refx']
      if mode is None:
           print('No mode specified')
           return(yield from null())
@@ -347,7 +347,14 @@ def change_mode(mode=None, prompt=True, edge=None, reference=None, bender=True, 
      #print(mode, current_mode, insist)
 
      report(f'Moving from mode {current_mode} to mode {mode}', slack=True)
-     
+
+     if mode == 'XRD':
+          print('For XRD mode, move to old (pre 4/2025) position for dcm_roll.')
+          yield from mv(dcm_roll, -4.5608)
+     else:
+          print('For all XAS modes, move to new (post 4/2025) position for dcm_roll.')
+          yield from mv(dcm_roll, -6.05644)
+          
      if mode in ('D', 'E', 'F') and user_ns['slits3'].vsize.position < 0.4:
           print('Slit height appears to be set for focused beam.  Opening slits.')
           yield from mv(user_ns['slits3'].vsize, 1.0)

@@ -847,6 +847,7 @@ Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{g
         # preserve BMMuser state to a json string #
         self.prev_fig = None
         self.prev_ax  = None
+        self.fix()
         self.state_to_redis(filename=os.path.join(self.workspace, '.BMMuser'), prefix=' >> ')
 
         jsonfile = os.path.join(os.environ['HOME'], 'Data', '.user.json')

@@ -1,9 +1,13 @@
 import nslsii
 import os, time, datetime, configparser
+from collections import deque
 
+from event_model import pack_datum_page
 from bluesky.plan_stubs import mv, mvr, sleep
 from databroker import Broker
 from tiled.client import from_uri, show_logs
+
+from rich import print as cprint
 
 try:
     from bluesky_queueserver import is_re_worker_active
@@ -59,10 +63,26 @@ RE.unsubscribe(0)  # remove databroker, which was subscribed first by configure_
 tiled_writing_client = from_uri(profile_configuration.get('services', 'tiled'),
                                 api_key=os.environ["TILED_BLUESKY_WRITING_API_KEY_BMM"])
 
+datum_docs_cache = deque()
+def create_datum_page_cb(name, doc):
+    if name == "datum":
+        datum_docs_cache.append(doc)
+        return
+
+    if len(datum_docs_cache) > 0:
+        datum_page = pack_datum_page(*datum_docs_cache)
+        datum_docs_cache.clear()
+        post_document("datum_page", datum_page)
+
+    post_document(name, doc)
+
+
 def post_document(name, doc):
     #tz = time.monotonic()
+
     ATTEMPTS = 6
     error = None
+    #cprint(f'[orange1]{name}[/orange1]')
     for attempt in range(ATTEMPTS):
         try:
             tiled_writing_client.post_document(name, doc)
@@ -92,7 +112,8 @@ def post_document(name, doc):
 
     #print(f"post_document timing: {time.monotonic() - tz:.3}\n")
     
-RE.subscribe(post_document)
+# RE.subscribe(post_document)
+RE.subscribe(create_datum_page_cb)
 
 # this prefix needs to be the same (but with a dash) as the call to sync_experiment in user.py
 from redis_json_dict import RedisJSONDict

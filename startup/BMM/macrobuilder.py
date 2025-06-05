@@ -266,7 +266,7 @@ class BMMMacroBuilder():
             return True
         return False
 
-    def check_spinner(value):
+    def check_spinner(self, value):
         if type(value)is not int:
             error_msg(f"Spinner number must be an integer between 1 and 8. You said {value}")
             return False
