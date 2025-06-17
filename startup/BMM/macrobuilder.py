@@ -114,7 +114,7 @@ class BMMMacroBuilder():
         self.optimize         = None
         self.orientation      = 'parallel'
         self.retract          = 10
-        self.edgechange       = 'Quick'
+        self.edgechange       = 'Normal' # 'Quick'
         
     def spreadsheet(self, spreadsheet=None, sheet=None, double=False):
         '''Convert an experiment description spreadsheet to a BlueSky plan.

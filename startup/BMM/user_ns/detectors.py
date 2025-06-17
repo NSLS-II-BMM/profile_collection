@@ -355,6 +355,8 @@ if with_pilatus is True:
         #   EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinX',  name='').put(50)
         #   EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='').put(50)
         # and so on...
+    EpicsSignal(f'{pvbase}ROIStat1:2:Use', name='').put(1)
+    EpicsSignal(f'{pvbase}ROIStat1:3:Use', name='').put(1)
         
     #pilatus_tiff = BMMPilatusTIFFSingleTrigger("XF:06BMB-ES{Det:PIL100k}:", name="pilatus100k-1", read_attrs=["tiff"])
     #pilatus_tiff.stats.kind = "hinted"
@@ -374,6 +376,7 @@ if with_pilatus is True:
 ####################################
 
 
+eiger = None
     
 from BMM.user_ns.dwelltime import with_eiger
 if with_eiger is True:
@@ -382,20 +385,21 @@ if with_eiger is True:
 
     pvbase = "XF:06BM-ES{Det-Eiger:1}"
     ## make sure various plugins are turned on
-    for x in ('image1', 'Pva1', 'HDF1', 'ROI1', 'ROI2', 'ROI3', 'ROI4', 'Stats1' , 'Stats2' , 'Stats3' , 'Stats4', 'ROIStat1'):
+    for x in ('image1', 'Pva1', 'HDF1', 'ROI1', 'ROI2', 'ROI3', 'ROI4', 'Stats1' , 'Stats2' , 'Stats3' , 'Stats4', 'ROIStat1',):
         EpicsSignal(f'{pvbase}{x}:EnableCallbacks', name='').put(1)
         # turn on all useful common plugins
         #    EpicsSignal('XF:06BM-ES{Det-Eiger:1}image1:EnableCallbacks', name='').put(1)
         # and so on...
 
+        
     eiger = BMMEigerSingleTrigger(pvbase, name="eiger1m-1", read_attrs=["hdf5"])
     eiger.stats.kind = "omitted"
     eiger.roi2.kind  = "hinted"
     eiger.roi3.kind  = "hinted"
     eiger.roi2.name  = "diffuse"
     eiger.roi3.name  = "specular"
-    #if eiger.hdf5.run_time.get() == 0.0:
-    #    eiger.hdf5.warmup()
+    if eiger.hdf5.run_time.get() < 0.1:
+        eiger.hdf5.warmup()
 
     ## starting ROI values
     roivalues = {'ROI2:MinX': 501,  'ROI2:SizeX': 501, 'ROI2:MinY': 501, 'ROI2:SizeY': 501,
@@ -407,6 +411,10 @@ if with_eiger is True:
         #   EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROI2:MinX',  name='').put(50)
         #   EpicsSignal('XF:06BM-ES{Det-Eiger:1}ROIStat1:2:MinX',  name='').put(50)
         # and so on...
+    #EpicsSignal(f'{pvbase}ROIStat1:2:Use', name='').put(1)
+    #EpicsSignal(f'{pvbase}ROIStat1:3:Use', name='').put(1)
+
+    eiger.hdf5.stage_sigs['num_capture'] = 1
 
     
 ####################################

@@ -425,7 +425,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
         ## so the reference stages should NOT be moved
         if WITH_ENCLOSURE is True or WITH_SALTFURNACE is True:
             no_ref = True
-            
+
+        yield from wiggle_bct()
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_slow)
         yield from change_mode(mode=mode, prompt=False, edge=energy+target, reference=el, bender=bender, insist=insist, no_ref=no_ref)
         yield from mv(dcm_bragg.acceleration, BMMuser.acc_fast)
@@ -469,7 +470,8 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
             print('\n')
             report(f'\nSome motors are reporting amplifier faults: {BMMuser.motor_fault}', level='error', slack=True)
             print('Clear the faults and try running the same change_edge() command again.')
-            print('Troubleshooting: ' + url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault'))
+            print('Troubleshooting: ', end='')
+            url_msg('https://nsls-ii-bmm.github.io/BeamlineManual/trouble.html#amplifier-fault')
             BMMuser.motor_fault = None
             raise ArrivedInModeException(f'Failed to arrive in mode {mode} due to amplifier faults. (in BMM/edge.py)')
             #yield from null()

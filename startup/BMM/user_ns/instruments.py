@@ -654,16 +654,23 @@ gmb.folder = BMMuser.workspace
 # | |\ \| |___/\__/ /\ \_/ / |\  || | | || |\  | | |   | |\ \| |___| |   | |____| |___| \__/\ | |  _| |_\ \_/ /_| |_  | |   | |   #
 # \_| \_\____/\____/  \___/\_| \_/\_| |_/\_| \_/ \_/   \_| \_\____/\_|   \_____/\____/ \____/ \_/  \___/ \___/ \___/  \_/   \_/   #
 ###################################################################################################################################
-                                                                                                                               
 
-run_report('\tresonant reflectivity automation')
-from BMM.reflectivity import ResonantReflectivityMacroBuilder
-refl = ResonantReflectivityMacroBuilder()
-refl.description = 'a resonant reflectivity experiment'
-refl.instrument = 'resonant reflectivity'
-refl.folder = BMMuser.workspace
-refl.use_roi2.put(1)
-refl.use_roi3.put(1)
+refldet = None
+if profile_configuration.getboolean('detectors', 'pilatus') is True:
+    refldet = 'pilatus'
+if profile_configuration.getboolean('detectors', 'eiger') is True:
+    refldet = 'eiger'
+
+refl = None
+if refldet is not None:
+    run_report('\tresonant reflectivity automation')
+    from BMM.reflectivity import ResonantReflectivityMacroBuilder
+    refl = ResonantReflectivityMacroBuilder(detector=refldet)
+    refl.description = 'a resonant reflectivity experiment'
+    refl.instrument = 'resonant reflectivity'
+    refl.folder = BMMuser.workspace
+    refl.use_roi2.put(1)
+    refl.use_roi3.put(1)
 
 
 

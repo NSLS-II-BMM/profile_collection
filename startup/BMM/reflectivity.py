@@ -19,27 +19,36 @@ class ResonantReflectivityMacroBuilder(BMMMacroBuilder):
     macro_type = 'Resonant reflectivity'
 
 
-    roi2_minx  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinX',  name='')
-    roi2_sizex = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeX', name='')
-    roi2_miny  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:MinY',  name='')
-    roi2_sizey = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI2:SizeY', name='')
-    roi3_minx  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinX',  name='')
-    roi3_sizex = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeX', name='')
-    roi3_miny  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:MinY',  name='')
-    roi3_sizey = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROI3:SizeY', name='')
+    def __init__(self, *args, detector='pilatus', **kwargs):
+        super().__init__(*args, **kwargs)
 
-    roistat2_minx  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinX',  name='')
-    roistat2_sizex = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeX', name='')
-    roistat2_miny  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:MinY',  name='')
-    roistat2_sizey = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:SizeY', name='')
-    roistat3_minx  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinX',  name='')
-    roistat3_sizex = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeX', name='')
-    roistat3_miny  = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:MinY',  name='')
-    roistat3_sizey = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:SizeY', name='')
+        self.detector = detector
+        if detector == 'pilatus':
+            pvbase = 'XF:06BMB-ES{Det:PIL100k}:'
+        elif detector == 'eiger':
+            pvbase = "XF:06BM-ES{Det-Eiger:1}"
+            
+        self.roi2_minx  = EpicsSignal(f'{pvbase}ROI2:MinX',  name='')
+        self.roi2_sizex = EpicsSignal(f'{pvbase}ROI2:SizeX', name='')
+        self.roi2_miny  = EpicsSignal(f'{pvbase}ROI2:MinY',  name='')
+        self.roi2_sizey = EpicsSignal(f'{pvbase}ROI2:SizeY', name='')
+        self.roi3_minx  = EpicsSignal(f'{pvbase}ROI3:MinX',  name='')
+        self.roi3_sizex = EpicsSignal(f'{pvbase}ROI3:SizeX', name='')
+        self.roi3_miny  = EpicsSignal(f'{pvbase}ROI3:MinY',  name='')
+        self.roi3_sizey = EpicsSignal(f'{pvbase}ROI3:SizeY', name='')
+
+        self.roistat2_minx  = EpicsSignal(f'{pvbase}ROIStat1:2:MinX',  name='')
+        self.roistat2_sizex = EpicsSignal(f'{pvbase}ROIStat1:2:SizeX', name='')
+        self.roistat2_miny  = EpicsSignal(f'{pvbase}ROIStat1:2:MinY',  name='')
+        self.roistat2_sizey = EpicsSignal(f'{pvbase}ROIStat1:2:SizeY', name='')
+        self.roistat3_minx  = EpicsSignal(f'{pvbase}ROIStat1:3:MinX',  name='')
+        self.roistat3_sizex = EpicsSignal(f'{pvbase}ROIStat1:3:SizeX', name='')
+        self.roistat3_miny  = EpicsSignal(f'{pvbase}ROIStat1:3:MinY',  name='')
+        self.roistat3_sizey = EpicsSignal(f'{pvbase}ROIStat1:3:SizeY', name='')
 
 
-    use_roi2 = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:2:Use', name='use_roi2')
-    use_roi3 = EpicsSignal('XF:06BMB-ES{Det:PIL100k}:ROIStat1:3:Use', name='use_roi3')
+        self.use_roi2 = EpicsSignal(f'{pvbase}ROIStat1:2:Use', name='use_roi2')
+        self.use_roi3 = EpicsSignal(f'{pvbase}ROIStat1:3:Use', name='use_roi3')
     
     def screen_rois(self):
         self.roistat2_minx.put(self.roi2_minx.get())
@@ -92,6 +101,7 @@ class ResonantReflectivityMacroBuilder(BMMMacroBuilder):
         thistext  =  '	    <div>\n'
         thistext +=  '	      <h3>Instrument: Resonant reflectivity</h3>\n'
         thistext +=  '	      <ul>\n'
+        thistext += f'               <li><b>Detector:</b> {self.detector.capitalize()}</li>\n'
         thistext += f'               <li><b>Pitch:</b> {xafs_pitch.position:.3f}</li>\n'
         thistext += f'               <li><b>Flat:</b> {user_ns["rkvs"].get("bmm:reflectivity:flat").decode("utf-8")}'
         thistext += f'               <li><b>Relative pitch:</b> {user_ns["rkvs"].get("bmm:reflectivity:relativep").decode("utf-8")}'

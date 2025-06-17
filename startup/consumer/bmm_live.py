@@ -194,6 +194,14 @@ class LineScan():
             self.denominator = 'I0'
             self.axes.set_ylabel(f'{self.numerator}/{self.denominator}')
 
+        elif self.numerator == 'Eiger':
+            self.line.set_label('specular (ROI3)')
+            self.line2, = self.axes.plot([],[], label='diffuse (ROI2)')
+            self.description = 'specular (ROI3)'
+            self.denominator = None
+            self.axes.set_ylabel(self.numerator)
+            self.axes.legend(loc='best', shadow=True)
+            
         ## split ion chamber
         elif self.numerator == 'Ic1':
             self.line.set_label('Ita')
@@ -367,16 +375,20 @@ class LineScan():
             #     #signal2 = kwargs['data']['La1'] + kwargs['data']['La2'] + kwargs['data']['La3'] + kwargs['data']['La4']
             # else:                           # this is a baseline document
             #     return
-        # elif self.numerator == 'Ic0':
-        #     signal  = kwargs['data']['I0a']
-        #     signal2 = kwargs['data']['I0b']
-        # elif self.numerator == 'Ic1':
-        #     signal  = kwargs['data']['Ita']
-        #     signal2 = kwargs['data']['Itb']
-        # elif self.numerator == 'Xs1':
-        #     signal  = kwargs['data'][self.xs8]
-        #     signal2 = kwargs['data']['K8']
-        #     signal3 = kwargs['data']['OCR']
+            # elif self.numerator == 'Ic0':
+            #     signal  = kwargs['data']['I0a']
+            #     signal2 = kwargs['data']['I0b']
+            # elif self.numerator == 'Ic1':
+            #     signal  = kwargs['data']['Ita']
+            #     signal2 = kwargs['data']['Itb']
+            # elif self.numerator == 'Xs1':
+            #     signal  = kwargs['data'][self.xs8]
+            #     signal2 = kwargs['data']['K8']
+            #     signal3 = kwargs['data']['OCR']
+        elif self.numerator == 'Eiger':
+            signal  = kwargs['data']['specular']
+            signal2 = kwargs['data']['diffuse']
+    
         elif self.numerator in kwargs['data']:  # numerator will not be in baseline document
             signal = kwargs['data'][self.numerator]
         else:
@@ -398,6 +410,9 @@ class LineScan():
             if self.fluo_detector == '1-element SDD':
                 self.y2data.append(signal2)
                 self.y3data.append(signal3)
+            if self.numerator == 'Eiger':
+                self.y2data.append(signal2)
+                
             # self.ydata.append(signal)
             # #if self.numerator == 'Ic0' or self.numerator == 'Xs1':
             # if self.numerator in ('Xs1', 'Xs', 'If'):  # 'Ic0q', 'Ic1'
@@ -413,6 +428,8 @@ class LineScan():
                 self.y2data.append(signal2/kwargs['data'][self.denominator])
                 self.y3data.append(signal3/kwargs['data'][self.denominator])
         self.line.set_data(self.xdata, self.ydata)
+        if self.numerator == 'Eiger':
+            self.line2.set_data(self.xdata, self.y2data)
         if self.fluo_detector == '1-element SDD':
             self.line2.set_data(self.xdata, self.y2data)
             self.line3.set_data(self.xdata, self.y3data)
@@ -475,7 +492,7 @@ class XAFSScan():
     |          |          |          |
     +----------+----------+----------+
 
-    In the event of a reflectivity scan with Pilatus and fluorescence, show a 2x2 grid:
+    In the event of a reflectivity scan with Pilatus/Eiger and fluorescence, show a 2x2 grid:
 
     +----------+----------+
     |          |          |
@@ -589,8 +606,8 @@ class XAFSScan():
             self.iy  = self.fig.add_subplot(self.gs[1, 1])
             self.axis_list   = [self.mut, self.muf, self.i0, self.ref, self.iy]
             
-        ## 2x2 grid if pilatus
-        elif self.mode in ('pilatus'):
+        ## 2x2 grid if pilatus or eiger
+        elif self.mode in ('pilatus', 'eiger'):
             if get_backend().lower() == 'agg':
                 self.fig.set_figheight(9.5)
                 self.fig.set_figwidth(6.5)
@@ -620,7 +637,7 @@ class XAFSScan():
         ## start lines and set axis labels
 
         ## every plot type uses mu_t and i0
-        if self.mode != 'pilatus':
+        if self.mode not in ('pilatus', 'eiger'):
             self.mut.set_ylabel('transmission $\mu(E)$')
             self.mut.set_xlabel('energy (eV)')
             self.mut.set_title(f'data: {self.sample}')
@@ -630,17 +647,17 @@ class XAFSScan():
         self.i0.set_title('I0')
 
         ## all plot types except transmission and reference need mu_f
-        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'eiger', 'dante'):
             self.muf.set_ylabel(f'fluorescence $\mu(E)$  ({self.fluo_detector})')
             self.muf.set_xlabel('energy (eV)')
             self.muf.set_title(f'data: {self.sample}')
 
-        ## all plot types except pilatus need reference
+        ## all plot types except pilatus/eiger need reference
         if self.mode in ('transmission', 'fluorescence', 'yield', 'dante', 'reference'):
             self.ref.set_ylabel('reference $\mu(E)$')
             self.ref.set_xlabel('energy (eV)')
             self.ref.set_title(f'reference: {self.reference_material}')
-        elif self.mode == 'pilatus':  # pilatus plot re-purposes ref for diffuse
+        elif self.mode in ('pilatus', 'eiger'):  # pilatus/eiger plot re-purposes ref for diffuse
             self.ref.set_ylabel('diffuse intensity')
             self.ref.set_xlabel('energy (eV)')
             self.ref.set_title('diffuse scattering')
@@ -651,7 +668,7 @@ class XAFSScan():
             self.iy.set_ylabel('electron yield $\mu(E)$')
             self.iy.set_xlabel('energy (eV)')
             self.iy.set_title('electron yield')
-        elif self.mode == 'pilatus':  # pilatus plot re-purposes iy for specular
+        elif self.mode in ('pilatus', 'eiger'):  # pilatus plot re-purposes iy for specular
             self.iy.set_ylabel('specular intensity')
             self.iy.set_xlabel('energy (eV)')
             self.iy.set_title('specular scattering')
@@ -675,13 +692,13 @@ class XAFSScan():
         self.fluor       = []
         self.refer       = []
         self.iysig       = []
-        if self.mode != 'pilatus':
+        if self.mode not in ('pilatus', 'eiger'):
             self.line_mut,   = self.mut.plot([],[], label=f'scan {self.count}')
         self.line_i0,    = self.i0.plot([],[],  label=f'scan {self.count}')
         self.line_ref,   = self.ref.plot([],[], label=f'scan {self.count}')
         if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
             self.line_muf, = self.muf.plot([],[], label=f'scan {self.count}')
-        if self.mode in ('yield', 'pilatus'):
+        if self.mode in ('yield', 'pilatus', 'eiger'):
             self.line_iy,  = self.iy.plot([],[], label=f'scan {self.count}')
         for ax in self.axis_list:
             if self.count < 10:
@@ -740,14 +757,14 @@ class XAFSScan():
         self.trans.append(numpy.log(abs(kwargs['data']['I0']/kwargs['data']['It'])))
         ## push the updated data arrays to the various lines
         self.line_i0.set_data(self.energy, self.i0sig)
-        if self.mode != 'pilatus':
+        if self.mode not in ('pilatus', 'eiger'):
             self.line_mut.set_data(self.energy, self.trans)
 
 
         if self.mode in ('transmission', 'fluorescence', 'yield', 'dante', 'reference'):
             self.refer.append(numpy.log(abs(kwargs['data']['It']/kwargs['data']['Ir'])))
             
-        if self.mode == 'pilatus':  # re-purpose refer and iysig
+        if self.mode in ('pilatus', 'eiger'):  # re-purpose refer and iysig
             self.refer.append(kwargs['data']['diffuse']/kwargs['data']['I0'])
             self.iysig.append(kwargs['data']['specular']/kwargs['data']['I0'])
             self.line_iy.set_data(self.energy, self.iysig)
@@ -761,7 +778,7 @@ class XAFSScan():
         
 
         ## and do all that for the fluorescence spectrum if it is being plotted.
-        if self.mode in ('fluorescence', 'yield', 'pilatus', 'dante'):
+        if self.mode in ('fluorescence', 'yield', 'pilatus', 'eiger', 'dante'):
             if self.fluo_detector == '1-element SDD':
                 self.fluor.append( kwargs['data'][self.xs8] / kwargs['data']['I0'] )
             elif self.fluo_detector == '4-element SDD':

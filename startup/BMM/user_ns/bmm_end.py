@@ -555,10 +555,10 @@ def check_for_synaxis():
         text = 'The following are disconnected & defined as simulated motors:\n\n'
         text += '\n'.join(x for x in textwrap.wrap(', '.join(syns))) + '\n\n'
         text += 'This allows bsui to operate normally, but do not expect anything\n'
-        text += 'involving those motors to work correctly.\n'
-        text += '[bold black](This likely means that an IOC or a motor controller (or both) are off.)[/bold black]\n'
+        text += 'involving those motors to work correctly.\n\n'
+        text += '[bold black]This likely means that an IOC or a motor controller (or both) are off.[/bold black]\n'
         text += '[bold black](Those motors have been removed from sd.baseline.)[/bold black]'
-        boxedtext(text, title=text, color='red')
+        boxedtext(text, title='Disconnected motors', color='red')
 
 check_for_synaxis()
 examine_diagnostics()

@@ -1,6 +1,8 @@
 from bluesky.plan_stubs import sleep, mv, mvr
 import time
 
+from rich import print as cprint
+
 from BMM.functions      import error_msg, warning_msg, go_msg, url_msg, bold_msg, verbosebold_msg, list_msg, disconnected_msg, info_msg, whisper
 from BMM.modes import MODEDATA
 
@@ -93,8 +95,8 @@ def recover_slits2():
         hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
         strings = ['dm2_slits_i', 'dm2_slits_o', 'dm2_slits_t', 'dm2_slits_b']
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from mv(slits2.vsize, 1.1, slits2.hsize, 18)
@@ -115,8 +117,8 @@ def recover_slits3():
         hvalues = (inb.hocpl.get(), outb.hocpl.get(), top.hocpl.get(), bot.hocpl.get())
         strings = ['dm3_slits_i', 'dm3_slits_o', 'dm3_slits_t', 'dm3_slits_b']
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from mv(slits3.vsize,   1, slits3.hsize,   5)
@@ -141,8 +143,8 @@ def recover_diagnostics():
         hvalues = (dm2_fs.hocpl.get(), dm3_fs.hocpl.get(), dm3_bct.hocpl.get(), dm3_bpm.hocpl.get(), dm3_foils.hocpl.get())
         strings = ['dm2_fs', 'dm3_fs', 'dm3_bct', 'dm3_bpm', 'dm3_foils']
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     #yield from mv(dm3_bct.kill_cmd, 1)
@@ -163,8 +165,8 @@ def recover_mirror2():
         hvalues = (m2_yu.hocpl.get(), m2_ydo.hocpl.get(), m2_ydi.hocpl.get(), m2_xu.hocpl.get(), m2_xd.hocpl.get())
         strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd',]
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from mv(m2_yu,  MODEDATA['m2_yu']['E'],
@@ -184,8 +186,8 @@ def recover_mirror3():
         hvalues = (m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
         strings = ['m3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from mv(m3_yu,  MODEDATA['m3_yu']['E'],
@@ -211,8 +213,8 @@ def recover_mirrors():
                    m3_yu.hocpl.get(), m3_ydo.hocpl.get(), m3_ydi.hocpl.get(), m3_xu.hocpl.get(), m3_xd.hocpl.get())
         strings = ['m2_yu', 'm2_ydo', 'm2_ydi', 'm2_xu', 'm2_xd', 'm3_yu', 'm3_ydo', 'm3_ydi', 'm3_xu', 'm3_xd',]
         for i,v in enumerate(hvalues):
-            strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-        print('  '.join(strings), end='\r')
+            strings[i] = f'[green]{strings[i]}[/green]' if hvalues[i] == 1 else f'[red1]{strings[i]}[/red1]'
+        cprint('  '.join(strings), end='\r')
         yield from sleep(1.0)
     print('\n')
     yield from mv(m2_yu,  MODEDATA['m2_yu']['E'],

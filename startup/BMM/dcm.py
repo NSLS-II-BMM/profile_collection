@@ -5,6 +5,7 @@ from ophyd.pseudopos import (pseudo_position_argument,
 from bluesky.plan_stubs import sleep, mv, mvr, null
 
 from numpy import pi, sin, cos, arcsin
+from rich import print as cprint
 
 from BMM.motors         import FMBOEpicsMotor, VacuumEpicsMotor, DeadbandEpicsMotor, BMMDeadBandMotor
 from BMM.functions      import HBARC, approximate_pitch, boxedtext
@@ -119,8 +120,8 @@ class DCM(PseudoPositioner):
                        user_ns['dcm_perp'].hocpl.get(), user_ns['dcm_x'].hocpl.get())
             strings = ['Bragg', 'pitch', 'roll', 'para', 'perp', 'x']
             for i,v in enumerate(hvalues):
-                strings[i] = go_msg(strings[i]) if hvalues[i] == 1 else error_msg(strings[i])
-            print('  '.join(strings), end='\r')
+                strings[i] = f'[white]{strings[i]}[/white]' if hvalues[i] == 1 else f'[green]{strings[i]}[/green]'
+            cprint('  '.join(strings), end='\r')
             yield from sleep(1.0)
                 
 

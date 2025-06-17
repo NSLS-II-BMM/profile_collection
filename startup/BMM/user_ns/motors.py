@@ -131,6 +131,24 @@ def define_EndStationEpicsMotor(prefix, name='unnamed'):
         this = SynAxis(name=name)
     return(this)
 
+def define_EncodedEndStationEpicsMotor(prefix, name='unnamed'):
+    '''Deal gracefully with a motor whose IOC is not running or whose
+    controller is turned off.  See discussion at the top of
+    BMM/user_ns/instruments.py
+    '''
+    try:
+        this = EncodedEndStationEpicsMotor(prefix, name=name)
+        count = 0
+        while this.connected is False:  #  try for no more than 3 seconds
+            count += 1
+            time.sleep(0.5)
+            if count > 6:
+                break
+        if this.connected is False:
+            this = SynAxis(name=name)
+        return this
+    except:
+        return SynAxis(name=name)
 
 def define_EpicsMotor(prefix, name='unnamed'):
     '''Deal gracefully with a motor whose IOC is not running or whose
@@ -176,15 +194,18 @@ xafs_x.default_hlm = 126
 xafs_y.default_llm = 10
 xafs_y.default_hlm = 200
 
-xafs_motors = [xafs_rots, xafs_det, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_roll, xafs_pitch, xafs_garot]
 
 ## MC09 stages -- stages with encoders and limit/home indicators
 print(f'{TAB}XAFS stages motor group, encoded')
-xafs_dety  = EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:1}Mtr',  name='xafs_dety')
-xafs_detz  = EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:2}Mtr',  name='xafs_detz')
-xafs_spare = EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:3}Mtr',  name='xafs_spare')
+xafs_dety  = define_EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:1}Mtr',  name='xafs_dety')
+xafs_detz  = define_EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:2}Mtr',  name='xafs_detz')
+xafs_spare = define_EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:3}Mtr',  name='xafs_spare')
+xafs_bsy   = define_EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:4}Mtr',  name='xafs_bsy')
+xafs_bsx   = define_EncodedEndStationEpicsMotor('XF:06BM-ES{MC:09-Ax:5}Mtr',  name='xafs_bsx')
 
-homeable_xafs_motors = [xafs_dety, xafs_detz, xafs_spare]
+xafs_motors = [xafs_rots, xafs_refy, xafs_refx, xafs_x, xafs_y, xafs_rots,
+               xafs_roll, xafs_pitch, xafs_garot, xafs_detx]
+homeable_xafs_motors = [xafs_dety, xafs_detz, xafs_spare, xafs_bsy, xafs_bsx]
 
 xafs_motors.extend(homeable_xafs_motors)
 
@@ -217,6 +238,8 @@ def ampen():
 def amfe():
     bold_msg("%-12s : %s / %s" % ('motor', 'AMFE', 'AMFAE'))
     for m in mcs8_motors:
+        if 'm1' in m.name:
+            continue
         if m.amfe.get():
             fe  = warning_msg(m.amfe.enum_strs[m.amfe.get()])
         else:

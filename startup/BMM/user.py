@@ -775,7 +775,7 @@ class BMM_User(Borg):
             error_msg('You did not supply the SAF number')
             return()
         if gup == 0:
-            gup = self.fetch_proposal_from_saf(saf)
+            (gup, cyc) = self.fetch_proposal_from_saf(saf)
             if gup == 0:
                 error_msg('Error retrieving data from PASS API')
                 return()
@@ -989,24 +989,52 @@ Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{g
         self.ththth = False
         self.lims = True
 
+    def cycles(self):
+        all_cycles = []
+        end = datetime.datetime.now().year + 1
+        for y in range(2014, 2028):
+            for c in range(1,4):
+                all_cycles.append(f'{y}-{c}')
+        return all_cycles
 
     def fetch_proposal_from_saf(self, this=None, cycle=None):
         '''Use the PASS API to determine what proposal number an SAF is
         written against, returning the proposal number.  Works for
-        GUP, BDT, PU-P, and PUP.  Unless cycle is specified, it works
-        only for the current cycle.
+        GUP, BDT, PU-P, and PUP.
+
+        If cycle is None, search in the current cycle for the SAF.
+
+        If cycle is specified, if must be a "year-cycle" string like
+        '2022-1'
+
+        If cycle is 'all', then all years since the start of NSLS-II
+        will be searched
+        
+
+        If found, a tuple of GUP number and cycle string is returned.
+
+        If the API server cannot be contacted, the returned GUP number
+        is 0 and the cycle string is empty.
+
+        If the SAF number cannot be found, the returned GUP number is
+        -1 and the cycle string is empty.
 
         '''
+        cycle_list = [cycle,]
         if cycle is None:
-            cycle = user_ns['RE'].md["cycle"]
-        url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={cycle}'
-        r = requests.get(url)
-        if r.status_code != requests.codes.ok:
-            whisper(url)
-            return(0)           # problem contacting API
-        j = json.loads(r.text)
-        for prop in j['proposals']:
-            for saf in prop['safs']:
-                if str(this) == saf['saf_id']:
-                    return prop['proposal_id']
-        return(-1)              # didn't find it
+            cycle_list = [user_ns['RE'].md["cycle"],]
+        elif type(cycle) is str and cycle.lower() == 'all':
+            cycle_list = self.cycles()
+
+        for c in cycle_list:
+            url = f'https://api.nsls2.bnl.gov/v1/proposals/?beamline=BMM&facility=nsls2&page_size=100&cycle={c}'
+            r = requests.get(url)
+            if r.status_code != requests.codes.ok:
+                whisper(url)
+                return(0, '')           # problem contacting API
+            j = json.loads(r.text)
+            for prop in j['proposals']:
+                for saf in prop['safs']:
+                    if str(this) == saf['saf_id']:
+                        return(prop['proposal_id'], c)
+            return(-1, '')              # didn't find it
