@@ -98,7 +98,7 @@ def sanitize_step_scan_parameters(bounds, steps, times):
 
     
             
-    reference = 'https://nsls-ii-bmm.github.io/BeamlineManual/xafs.html#scan-regions\n'
+    reference = 'https://nsls2.github.io/bmm-beamline-manual/xafs.html#scan-regions\n'
 
     return problem, text, reference
     
@@ -222,26 +222,6 @@ def conventional_grid(bounds=CS_BOUNDS, steps=CS_STEPS, times=CS_TIMES, e0=7112,
     approximate_time = (sum(timegrid) + (len(timegrid)*overhead)) / 60
     delta = float(len(timegrid))*uncertainty / 60.0
     return (grid, timegrid, approximate_time, delta)
-
-## -----------------------
-##  energy step scan plan concept
-##  1. collect metadata from an INI file
-##  2. compute scan grid
-##  3. move to center of angular range
-##  4. drop into pseudo channel cut mode
-##  5. set OneCount and Single modes on the detectors
-##  6. begin scan repititions, for each one
-##     a. scan:
-##          i. make metadata dict, set md argument in call to scan plan
-##         ii. move
-##        iii. set acquisition time for this point
-##         iv. trigger
-##          v. collect
-##     b. grab dataframe from Mongo
-##        http://nsls-ii.github.io/bluesky/tutorial.html#aside-access-saved-data
-##     c. write XDI file
-##  8. return to fixed exit mode
-##  9. return detectors to AutoCount and Continuous modes
 
 
 def xrfat(uid, energy=-1, xrffile=None, add=True, only=None, xmax=1500):

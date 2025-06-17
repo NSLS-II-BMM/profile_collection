@@ -839,7 +839,7 @@ class BMM_User(Borg):
 :speech_balloon: Use this channel for chat .
 :atom_symbol: Beamline messages will be posted on #pass-{gup}-bmm.
 
-BMM data access: https://nsls-ii-bmm.github.io/BeamlineManual/data.html
+BMM data access: https://nsls2.github.io/bmm-beamline-manual/data.html
 Your data folder: `/nsls2/data/bmm/proposals/{user_ns["RE"].md["cycle"]}/pass-{gup}`'''
                 self.bmmbot.chat_and_pin(text)
                 kafka_message({'touch': os.path.join(proposal_base(), '.introduction_made')})
