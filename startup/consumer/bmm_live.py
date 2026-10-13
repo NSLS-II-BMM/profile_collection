@@ -1011,16 +1011,33 @@ class XRF():
         if 'post'     in kwargs: post     = kwargs['post']
         if 'show_roi' in kwargs: show_roi = kwargs['show_roi']
 
+        start, count = None, 0
+        while start is None:
+            try:
+                start = catalog[uid].metadata['start']
+            except:
+                pass
+            if start is not None:
+                break
+            count += 1
+            if count > 6:
+                return
+            this_pause = 0.1 * 2**count
+            print(f"getting record for XRF plot {count = }, {this_pause = }", flush=True)
+            time.sleep(this_pause)
+
+
+        
         self.title = ''
         self.figure = plt.figure()
         self.axes = self.figure.add_subplot(111)
         self.axes.set_facecolor((0.95, 0.95, 0.95))
         self.axes.set_xlabel('Energy (eV)')
         title = 'counts'
-        if 'XDI' in catalog[uid].metadata['start']:
-            if 'Sample' in catalog[uid].metadata['start']['XDI'] and 'name' in catalog[uid].metadata['start']['XDI']['Sample']:
-                title = catalog[uid].metadata['start']['XDI']['Sample']['name']
-        this_energy = catalog[uid].metadata['start']['XDI']['_pccenergy']
+        if 'XDI' in start:
+            if 'Sample' in start['XDI'] and 'name' in start['XDI']['Sample']:
+                title = start['XDI']['Sample']['name']
+        this_energy = start['XDI']['_pccenergy']
         self.title = f"{title}, incident energy={this_energy}"
         self.axes.set_title(self.title)
         self.axes.grid(which='major', axis='both')
@@ -1028,17 +1045,17 @@ class XRF():
         s = []
         nelem = 4
         channels = tuple(range(0, 4))
-        if '1-element SDD' in catalog[uid].metadata['start']['detectors']:
+        if '1-element SDD' in start['detectors']:
             nelem = 1
             channels = (1, )
             only = 1
-        elif '4-element SDD' in catalog[uid].metadata['start']['detectors']:
+        elif '4-element SDD' in start['detectors']:
             nelem = 4
             channels = tuple(range(0, 4))
-        elif '7-element SDD' in catalog[uid].metadata['start']['detectors']:
+        elif '7-element SDD' in start['detectors']:
             nelem = 7
             channels = tuple(range(0, 7))
-        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
+        elif 'dante-1' in start['detectors']:
             nelem = 7
             channels = tuple(range(1, 8))
 
@@ -1059,7 +1076,7 @@ class XRF():
             s.append(catalog[uid].primary['1-element SDD_channel08_xrf'].read()[0])  #  note channel number!
             only = 1
             add = False
-        elif 'dante-1' in catalog[uid].metadata['start']['detectors']:
+        elif 'dante-1' in start['detectors']:
             for i in channels:
                 s.append(catalog[uid].primary[f'dante-1_image'].read()[0])  # this is not correct
         else:                   # this is inefficient
@@ -1082,11 +1099,11 @@ class XRF():
             for i in channels:
                 plt.plot(e, s[i], label=f'channel {i+1}')
 
-        if 'XDI' in catalog[uid].metadata['start']:
-            if 'Element' in catalog[uid].metadata['start']['XDI']:
-                if 'symbol' in catalog[uid].metadata['start']['XDI']['Element'] and 'edge' in catalog[uid].metadata['start']['XDI']['Element']:
-                    el = catalog[uid].metadata['start']['XDI']['Element']['symbol']
-                    ed = catalog[uid].metadata['start']['XDI']['Element']['edge']
+        if 'XDI' in start:
+            if 'Element' in start['XDI']:
+                if 'symbol' in start['XDI']['Element'] and 'edge' in start['XDI']['Element']:
+                    el = start['XDI']['Element']['symbol']
+                    ed = start['XDI']['Element']['edge']
                     z = Z_number(el)
                     if ed.lower() == 'k':
                         label = f'{el} Kα ROI'
@@ -1112,7 +1129,7 @@ class XRF():
                         ymin, ymax = axis.get_ylim()
                         axis.add_patch(Rectangle((lower,ymin), upper-lower, ymax-ymin, facecolor=roicolor))
 
-                upperlimit = float(catalog[uid].metadata['start']['XDI']["_pccenergy"]) + 500
+                upperlimit = float(start['XDI']["_pccenergy"]) + 500
                 self.axes.set_xlim(2500, upperlimit)
         else:
             self.axes.set_xlim(2500, 20000)
@@ -1800,11 +1817,12 @@ def mythen_plot(roi=1, xmin=1, xmax=1280):
     '''
     Quick-n-dirty plot of Mythen MCA spectrum with one of the ROIs overlayed.
     '''
-    plt.clf()
-    plt.xlabel('bin')
-    plt.ylabel('counts')
-    plt.grid(which='major', axis='both')
-    plt.title(f'Mythen Spectrum, ROI #{roi}')
+    fig = plt.figure()
+    axes = fig.add_subplot(111)
+    axes.set_xlabel('bin')
+    axes.set_ylabel('counts')
+    axes.set_grid(which='major', axis='both')
+    axes.set_title(f'Mythen Spectrum, ROI #{roi}')
 
     sig = mythen_arraydata.get()
     b = numpy.arange(0, len(sig))
@@ -1812,11 +1830,10 @@ def mythen_plot(roi=1, xmin=1, xmax=1280):
     plt.plot(b, sig, label='Mythen')
 
     roicolor = '#aaaa7f77'
-    axis = plt.gca()
-    axis.set_xlim(xmin, xmax)
-    axis.set_facecolor((0.95, 0.95, 0.95))
-    ymin, ymax = axis.get_ylim()
-    axis.add_patch(Rectangle((mythen_lower[roi-1].get(),0), mythen_size[roi-1].get(), ymax, facecolor=roicolor))
+    axes.set_xlim(xmin, xmax)
+    axes.set_facecolor((0.95, 0.95, 0.95))
+    ymin, ymax = axes.get_ylim()
+    axes.add_patch(Rectangle((mythen_lower[roi-1].get(),0), mythen_size[roi-1].get(), ymax, facecolor=roicolor))
 
 
 def xrr_plot(catalog, uidlist):

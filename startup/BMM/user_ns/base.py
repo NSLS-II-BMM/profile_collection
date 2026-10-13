@@ -194,6 +194,7 @@ from bluesky.utils import ts_msg_hook
 RE.msg_hook = ts_msg_hook
 
 bmm_catalog = None
+bmm_mongo   = None
 
 print()
 if not is_re_worker_active():
@@ -203,6 +204,8 @@ if not is_re_worker_active():
     bmm_catalog = from_uri('https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/migration')
     bmm_catalog.context.http_client.headers['tiled-qos'] = 'acquisition'
     db = Broker(bmm_catalog)
+
+    bmm_mongo = from_uri('https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/raw')
 
 
 cprint('[cyan]Subscribing to Publisher[/cyan]')

@@ -180,7 +180,22 @@ class BMMDossier():
 
         ## gather information for the dossier from the start document
         ## of the first scan in the sequence
-        XDI = bmm_catalog[self.uidlist[0]].start['XDI']
+        XDI, count = None, 0
+        while XDI is None:
+            try:
+                XDI = bmm_catalog[self.uidlist[0]].start['XDI']
+            except:
+                pass
+            if XDI is not None:
+                break
+            count  += 1
+            if count >= 7:
+                return
+            this_pause = 0.1 * 2**count
+            print(f"retrying start doc read in write_dossier {count = }, {this_pause = }", flush=True)
+            time.sleep(this_pause)
+        
+        # XDI = bmm_catalog[self.uidlist[0]].start['XDI']
         if '_snapshots' in XDI:
             snapshots = XDI['_snapshots']
         else:
@@ -373,6 +388,11 @@ class BMMDossier():
             else:
                 this_ref = 'none'
 
+            try:
+                # it could happen that the last record has not yet made it into Tiled. if so, just use the current time
+                seqend = datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[-1]].stop['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+            except:
+                seqend = datetime.datetime.now()
             thiscontent += ''.join(content).format(e0            = '%.1f' % edge_energy(XDI['Element']['symbol'], XDI['Element']['edge']),
                                                    edge          = XDI['Element']['edge'],
                                                    element       = self.element_text(XDI['Element']['symbol']),
@@ -382,7 +402,7 @@ class BMMDossier():
                                                    times         = XDI['_user']['times'],
                                                    reference     = re.sub(r'(\d+)', r'<sub>\1</sub>', this_ref),
                                                    seqstart      = datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[0]].start['time']).strftime('%A, %B %d, %Y %I:%M %p'),
-                                                   seqend        = datetime.datetime.fromtimestamp(bmm_catalog[self.uidlist[-1]].stop['time']).strftime('%A, %B %d, %Y %I:%M %p'),
+                                                   seqend        = seqend,
                                                    mono          = self.mono_text(bmm_catalog),
                                                    pdsmode       = '%s  (%s)' % self.pdstext(bmm_catalog),
                                                    pccenergy     = '%.1f' % XDI['_user']['pccenergy'],
@@ -1163,7 +1183,22 @@ class XASFile():
         '''Write an XDI-style file for an XAS scan.
 
         '''
-        r = catalog[uid]
+
+        r, count = None, 0
+        while r is None:
+            try:
+                r = catalog[uid]
+            except:
+                pass
+            if r is not None:
+                break
+            count  += 1
+            if count >= 7:
+                return
+            this_pause = 0.1 * 2**count
+            print(f"retrying record read in to_xdi {count = }, {this_pause = }", flush=True)
+            time.sleep(this_pause)
+        # r = catalog[uid]
         metadata = r.metadata
         xdi = r.start["XDI"]
         if filename is None:
@@ -1215,11 +1250,10 @@ class XASFile():
             
 
         start  = datetime.datetime.fromtimestamp(r.start['time']).strftime("%Y-%m-%dT%H:%M:%S")
-        end = 'approximately ' + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        # try:
-        #     end = datetime.datetime.fromtimestamp(r.stop['time']).strftime("%Y-%m-%dT%H:%M:%S")
-        # except:
-        #     end = 'unavailable'
+        try:
+            end = datetime.datetime.fromtimestamp(r.stop['time']).strftime("%Y-%m-%dT%H:%M:%S")
+        except:
+            end = 'approximately ' + datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
         handle.write(f'# Scan.start_time: {start}\n')
         handle.write(f'# Scan.end_time: {end}\n')
@@ -1228,10 +1262,14 @@ class XASFile():
         
         if any(x in r.start['detectors'] for x in ('1-element SDD', '4-element SDD', '7-element SDD')):
             hdf5files = file_resource(catalog, uid)
+            hdf5file_identified = False
             for h in hdf5files:
                 relative = '/'.join(h.split('/')[-6:])
                 if 'xspress3' in relative:
-                    handle.write(f'# Scan.xspress3_hdf5_file: {relative}\n')
+                    #print(relative)
+                    if hdf5file_identified is False:
+                        handle.write(f'# Scan.xspress3_hdf5_file: {relative}\n')
+                        hdf5file_identified = True
                 elif 'pilatus' in relative:
                     handle.write(f'# Scan.pilatus100k_hdf5_file: {relative}\n')
         ## is this correct?  need to test....
@@ -1295,8 +1333,17 @@ class XASFile():
 
                     
         ## prepare data table and insert xmu column
-        xa = catalog[uid].primary.read(column_list)
-        p = xa.to_pandas()
+        if catalog.is_sql is True:
+            xa = catalog[uid].primary.read(column_list)
+            p = xa.to_pandas()
+        else:
+            dc = catalog[uid].primary['data']
+            p = pandas.DataFrame()
+            for col in column_list:
+                #print(col, flush=True)
+                p[col] = numpy.array(dc[col])
+            #print(p, flush=True)
+                
         column_list.insert(3, 'xmu')
         if '1-element SDD' in r.start['detectors']:
             p['xmu'] = p[f'{el}8']/p['I0']

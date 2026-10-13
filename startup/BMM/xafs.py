@@ -57,7 +57,7 @@ except ImportError:
 
 
 
-def next_index(folder=None, stub=None, maxtries=6, verbose=False):
+def next_index(folder=None, stub=None, maxtries=7, verbose=False):
     '''Find the next numeric filename extension for a filename stub in the
     specified folder in the proposals directory.
 
@@ -89,7 +89,7 @@ def next_index(folder=None, stub=None, maxtries=6, verbose=False):
     rkvs = user_ns['rkvs']
     rkvs.set('BMM:next_index', 'None')
     kafka.message({'next_index': True, 'folder': folder, 'stub': stub})
-    time.sleep(1)
+    time.sleep(4)
     answer = rkvs.get('BMM:next_index').decode('utf8')
     count = 0
     if verbose: print(f"{count = }, {answer = }")
@@ -1070,6 +1070,7 @@ def xafs(inifile=None, **kwargs):
                     
                 uidlist.append(uid)
                 kafka.message({'xasxdi': True, 'uid' : uid, 'filename': os.path.basename(datafile)})
+                kafka.message({'verify_sql': True, 'uid': uid})
                 bold_msg('wrote %s' % datafile)
                 if not is_re_worker_active():
                     BMM_log_info(f'energy scan finished, uid = {uid}, scan_id = {bmm_catalog[uid].metadata["start"]["scan_id"]}\ndata file written to {datafile}')

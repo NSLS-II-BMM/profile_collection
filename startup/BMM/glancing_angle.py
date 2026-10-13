@@ -39,6 +39,9 @@ user_ns = vars(user_ns_module)
 from BMM.user_ns.motors     import xafs_garot, xafs_pitch, xafs_x, xafs_y
 from BMM.user_ns.suspenders import suspenders
 
+ABUNDANCE_OF_CAUTION = 0
+
+
 class GlancingAngle(Device):
     '''A class capturing the movement and control of the glancing angle
     spinner stage.
@@ -259,7 +262,9 @@ class GlancingAngle(Device):
                        'motor_name' : motor.name,
                        'signal'     : 'It',
                        'spinner'    : self.current() })
-        target = fetch_peak_position_via_redis(verbose=True)
+        yield from sleep(ABUNDANCE_OF_CAUTION)
+        maxtries = 7
+        target = fetch_peak_position_via_redis(maxtries=maxtries, verbose=True)
         if target is None:
             uid = bmm_catalog[-1].metadata['start']['uid']
             error_msg(f'Failed to retrieve result of step fit to alignment in {motor.name}.')

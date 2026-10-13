@@ -13,6 +13,7 @@ from tools import echo_slack, experiment_folder, profile_configuration
 
 from bmm_tools.devices.attenuators import KNOWN_ATTENUATION
 from bmm_tools.tools.db import file_resource
+from bmm_tools.devices.cameras import camera_descriptions
 
 from tools import experiment_folder, file_resource, profile_configuration
 
@@ -775,6 +776,9 @@ class XRRFile():
 
         thiscontent = ''
         pfolder = experiment_folder(catalog, uid)
+
+        if stub is None:
+            stub = metadata['start']['XDI']['Sample']['name']  # is this correct?  do we need a sample name AND a stub
         
         ## top of HTML file
         with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_top.tmpl')) as f:
@@ -806,6 +810,8 @@ class XRRFile():
                                                hdffile       = file_resource(catalog, uid)[0].replace(pfolder+'/', ''),
                                                monitor       = metadata['start']['XDI']['Detector']['I0'],
                                                detector      = metadata['start']['XDI']['Detector']['XRR'],
+                                               energy        = 8600,     # metadata['start']['XDI']['Mono']['energy'],
+                                               wavelength    = 1.441697, # metadata['start']['XDI']['Mono']['wavelength'],
         )            
 
         ## cameras section
@@ -813,104 +819,167 @@ class XRRFile():
             content = f.readlines()
         thiscontent += ''.join(content).format(stub = stub,)
 
+        try:
+            results = metadata['start']['XDI']['Beamline']['camera_metadata']
+        except:
+            ## fix me!
+            # results = {}
+            results = {'webcam-2': {'uid': '9379a4d7-78b9-4f23-a7d3-727afd7a304f',
+                                    'asset': 'assets/webcam-2/2026/10/07/webcam-2_ec55235d-f764-476a-8063-3b741f87bc2d.jpeg',
+                                    'description': 'XRD Webcam'},
+                       'webcam-1': {'uid': '111e5ee7-6d0a-43dc-90b7-f6bd265e41ee',
+                                    'asset': 'assets/webcam-1/2026/10/07/webcam-1_6ba059d5-ebe0-41eb-8003-a4f095e8a825.jpeg',
+                                    'description': 'XAS Webcam'},
+                       'usbcam-5': {'uid': '3bfb865e-7539-46d3-818b-230ef8f426a9',
+                                    'asset': 'assets/usbcam-5/2026/10/07/8c73ea96-807b-47d6-91fb_000000.jpeg',
+                                    'description': 'USB camwera 5'},
+                       'usbcam-6': {'uid': '663f4597-25e5-47c1-937d-e2342d8388ed',
+                                    'asset': 'assets/usbcam-6/2026/10/07/0391c5a2-0586-4ad4-9194_000000.jpeg',
+                                    'description': 'USB camera 6'}}
+
+        for k in ['webcam-2', 'webcam-1', 'usbcam-5', 'usbcam-6']:
+            try:
+                with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_onecamera.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(stub = stub,
+                                                       description = camera_descriptions[k],
+                                                       camuid = results[k]['uid'],
+                                                       imagefile = results[k]['asset'],
+                                                       
+                )
+            except Exception as E:
+                print(E)
+                with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_onecamera_unavailable.tmpl')) as f:
+                    content = f.readlines()
+                thiscontent += ''.join(content).format(stub = stub,
+                                                       description = camera_descriptions[k],
+                )
+        
+        with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_cameras_end.tmpl')) as f:
+            content = f.readlines()
+        thiscontent += ''.join(content).format(stub = stub,)
+        
         
         ## sample alignment section
-        with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_align.tmpl')) as f:
-            content = f.readlines()
-        results = metadata['start']['XDI']['Beamline']['sample_alignment']
-        thiscontent += ''.join(content).format(stub  = stub,
-                                               
-                                               euid1 = results[0]['e_uid'],
-                                               vuid1 = results[0]['v_uid'],
-                                               sz1   = round(results[0]['samplez'],4),
-                                               peak1 = round(results[0]['eta_peakpos'],4),
-                                               com1  = round(results[0]['eta_com'],4),
-                                               cen1  = round(results[0]['eta_fwhm_center'],4),
-                                               
-                                               euid2 = results[1]['e_uid'],
-                                               vuid2 = results[1]['v_uid'],
-                                               sz2   = round(results[1]['samplez'],4),
-                                               peak2 = round(results[1]['eta_peakpos'],4),
-                                               com2  = round(results[1]['eta_com'],4),
-                                               cen2  = round(results[1]['eta_fwhm_center'],4),
+        try:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_align.tmpl')) as f:
+                content = f.readlines()
+            results = metadata['start']['XDI']['Beamline']['sample_alignment']
+            thiscontent += ''.join(content).format(stub  = stub,
 
-                                               euid3 = results[2]['e_uid'],
-                                               vuid3 = results[2]['v_uid'],
-                                               sz3   = round(results[2]['samplez'],4),
-                                               peak3 = round(results[2]['eta_peakpos'],4),
-                                               com3  = round(results[2]['eta_com'],4),
-                                               cen3  = round(results[2]['eta_fwhm_center'],4),
-        )
+                                                   euid1 = results[0]['e_uid'],
+                                                   vuid1 = results[0]['v_uid'],
+                                                   sz1   = round(results[0]['samplez'],4),
+                                                   peak1 = round(results[0]['eta_peakpos'],4),
+                                                   com1  = round(results[0]['eta_com'],4),
+                                                   cen1  = round(results[0]['eta_fwhm_center'],4),
 
+                                                   euid2 = results[1]['e_uid'],
+                                                   vuid2 = results[1]['v_uid'],
+                                                   sz2   = round(results[1]['samplez'],4),
+                                                   peak2 = round(results[1]['eta_peakpos'],4),
+                                                   com2  = round(results[1]['eta_com'],4),
+                                                   cen2  = round(results[1]['eta_fwhm_center'],4),
+
+                                                   euid3 = results[2]['e_uid'],
+                                                   vuid3 = results[2]['v_uid'],
+                                                   sz3   = round(results[2]['samplez'],4),
+                                                   peak3 = round(results[2]['eta_peakpos'],4),
+                                                   com3  = round(results[2]['eta_com'],4),
+                                                   cen3  = round(results[2]['eta_fwhm_center'],4),
+            )
+        except:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_unavailable.tmpl')) as f:
+                content = f.readlines()
+            thiscontent += ''.join(content).format(stub  = stub,
+                                                   which = 'Alignment details')
 
         ## spine refinement section
-        with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_eta.tmpl')) as f:
-            content = f.readlines()
-        results = metadata['start']['XDI']['Beamline']['eta_refinement']
-        answer = 0
-        for r in results:
-            answer += r['diff']
-        answer = answer / len(results)
-        thiscontent += ''.join(content).format(stub  = stub,
-                                               
-                                               uid1        = results[0]['uid'],
-                                               nominal1    = results[0]['eta_nominal'],
-                                               delta1      = round(results[0]['delta'],4),
-                                               attenuator1 = results[0]['attenuator'],
-                                               found1      = round(results[0]['eta_found'],4),
-                                               diff1       = round(results[0]['diff'],4),
-                                               
-                                               uid2        = results[1]['uid'],
-                                               nominal2    = results[1]['eta_nominal'],
-                                               delta2      = round(results[1]['delta'],4),
-                                               attenuator2 = results[1]['attenuator'],
-                                               found2      = round(results[1]['eta_found'],4),
-                                               diff2       = round(results[1]['diff'],4),
-                                               
-                                               uid3        = results[2]['uid'],
-                                               nominal3    = results[2]['eta_nominal'],
-                                               delta3      = round(results[2]['delta'],4),
-                                               attenuator3 = results[2]['attenuator'],
-                                               found3      = round(results[2]['eta_found'],4),
-                                               diff3       = round(results[2]['diff'],4),
-                                               
-                                               uid4        = results[3]['uid'],
-                                               nominal4    = results[3]['eta_nominal'],
-                                               delta4      = round(results[3]['delta'],4),
-                                               attenuator4 = results[3]['attenuator'],
-                                               found4      = round(results[3]['eta_found'],4),
-                                               diff4       = round(results[3]['diff'],4),
+        try:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_eta.tmpl')) as f:
+                content = f.readlines()
+            results = metadata['start']['XDI']['Beamline']['eta_refinement']
+            answer = 0
+            for r in results:
+                answer += r['diff']
+            answer = answer / len(results)
+            thiscontent += ''.join(content).format(stub  = stub,
 
-                                               answer      = round(answer,4),
-                                               
-        )
+                                                   uid1        = results[0]['uid'],
+                                                   nominal1    = results[0]['eta_nominal'],
+                                                   delta1      = round(results[0]['delta'],4),
+                                                   attenuator1 = results[0]['attenuator'],
+                                                   found1      = round(results[0]['eta_found'],4),
+                                                   diff1       = round(results[0]['diff'],4),
 
+                                                   uid2        = results[1]['uid'],
+                                                   nominal2    = results[1]['eta_nominal'],
+                                                   delta2      = round(results[1]['delta'],4),
+                                                   attenuator2 = results[1]['attenuator'],
+                                                   found2      = round(results[1]['eta_found'],4),
+                                                   diff2       = round(results[1]['diff'],4),
+
+                                                   uid3        = results[2]['uid'],
+                                                   nominal3    = results[2]['eta_nominal'],
+                                                   delta3      = round(results[2]['delta'],4),
+                                                   attenuator3 = results[2]['attenuator'],
+                                                   found3      = round(results[2]['eta_found'],4),
+                                                   diff3       = round(results[2]['diff'],4),
+
+                                                   uid4        = results[3]['uid'],
+                                                   nominal4    = results[3]['eta_nominal'],
+                                                   delta4      = round(results[3]['delta'],4),
+                                                   attenuator4 = results[3]['attenuator'],
+                                                   found4      = round(results[3]['eta_found'],4),
+                                                   diff4       = round(results[3]['diff'],4),
+
+                                                   answer      = round(answer,4),
+
+            )
+        except:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_unavailable.tmpl')) as f:
+                content = f.readlines()
+            thiscontent += ''.join(content).format(stub  = stub,
+                                                   which = 'Eta refinement details')
+
+            
         ## Mythen/Eiger calibration section
-        with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_mythen.tmpl')) as f:
-            content = f.readlines()
-        thiscontent += ''.join(content).format(stub     = stub,
-                                               gap      = metadata['start']['XDI']['Detector']['mythen_gap'],
-                                               pixel0   = metadata['start']['XDI']['Detector']['mythen_pixel_zero'],
-                                               distance = metadata['start']['XDI']['Detector']['mythen_distance'],
-                                               dirroi   = metadata['start']['XDI']['Detector']['mythen_dir_roi'],
-                                               reflroi  = metadata['start']['XDI']['Detector']['mythen_refl_roi'],
-                                               angle    = metadata['start']['XDI']['Detector']['mythen_angle_per_pixel'],
-                                               ndir     = 3,
-                                               nrefl    = 9,
-                                               sizedir  = round((2*3+1)*0.05, 2),
-                                               sizerefl = round((2*9+1)*0.05, 2),
-                                               s1t      = round(float(baseline["slits_t"][0]), 2),
-                                               s1b      = round(float(baseline["slits_b"][0]), 2),
-                                               s1o      = round(float(baseline["slits_o"][0]), 2),
-                                               s1i      = round(float(baseline["slits_i"][0]), 2),
-                                               sv       = round(float(baseline["slits_t"][0])+float(baseline["slits_b"][0]), 2),
-                                               sh       = round(float(baseline["slits_o"][0])+float(baseline["slits_i"][0]), 2),
-                                               energy   = 8600,
-                                               uid      = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-                                               hdffile  = 'assets/mythen2-2/2026/09/28/xxxxxxxx-xxxx-xxxx-xxxx_000000.h5',
-        )
+        try:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_mythen.tmpl')) as f:
+                content = f.readlines()
+            # results = metadata['start']['XDI']['Beamline']['mythen_calibration']   ## fix me!
 
-        ## bottom of HTML file
+            # f"{results['pixel_zero']-results['direct_width']} to {results['pixel_zero']+results['direct_width']}"
+            # f"{results['pixel_zero']-results['refl_width']} to {results['pixel_zero']+results['refl_width']}"
+            thiscontent += ''.join(content).format(stub     = stub,
+                                                   time     = '2026-10-07T14-17-30',  # results['time']
+                                                   gap      = metadata['start']['XDI']['Detector']['mythen_gap'],  # results['gap']
+                                                   pixel0   = metadata['start']['XDI']['Detector']['mythen_pixel_zero'],  #  results['pixel_zero']
+                                                   distance = metadata['start']['XDI']['Detector']['mythen_distance'],  # results['distance']
+                                                   dirroi   = metadata['start']['XDI']['Detector']['mythen_dir_roi'], 
+                                                   reflroi  = metadata['start']['XDI']['Detector']['mythen_refl_roi'],
+                                                   angle    = metadata['start']['XDI']['Detector']['mythen_angle_per_pixel'],  # results['pixel_angle']
+                                                   ndir     = 3,  # results['direct_width']
+                                                   nrefl    = 9,  # results['refl_width']
+                                                   sizedir  = round((2*3+1)*0.05, 2),  # round((2*results['direct_width']+1)*0.05, 2)
+                                                   sizerefl = round((2*9+1)*0.05, 2),  # round((2*results['refl_width']+1)*0.05, 2)
+                                                   s1t      = round(float(baseline["slits_t"][0]), 2),
+                                                   s1b      = round(float(baseline["slits_b"][0]), 2),
+                                                   s1o      = round(float(baseline["slits_o"][0]), 2),
+                                                   s1i      = round(float(baseline["slits_i"][0]), 2),
+                                                   sv       = round(float(baseline["slits_t"][0])+float(baseline["slits_b"][0]), 2),
+                                                   sh       = round(float(baseline["slits_o"][0])+float(baseline["slits_i"][0]), 2),
+                                                   energy   = 8600,  # results['energy']
+                                                   uid      = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',  # results['uid']
+                                                   hdffile  = 'assets/mythen2-2/2026/09/28/xxxxxxxx-xxxx-xxxx-xxxx_000000.h5',  # results['hdffile']
+            )
+        except:
+            with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_unavailable.tmpl')) as f:
+                content = f.readlines()
+            thiscontent += ''.join(content).format(stub  = stub,
+                                                   which = 'Mythen calibration details')
+
+        ## baseline report
         with open(os.path.join(startup_dir, 'consumer', 'xrr_tmpl', 'dossier_baseline.tmpl')) as f:
             content = f.readlines()
         baselinetable = self.baseline_table(baseline)

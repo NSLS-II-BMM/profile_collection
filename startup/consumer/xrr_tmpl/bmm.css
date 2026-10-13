@@ -111,3 +111,17 @@ dd {
     margin: 0 0 0 230px;
     padding: 0 0 0.5em 0;
 }
+
+.unavailable {
+    font-size: 18px;
+    color: #870000;
+}
+.unavailable_container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.whisper {
+    font-size: 12px;
+    color: #777777;
+}

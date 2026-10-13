@@ -40,6 +40,8 @@ from BMM.user_ns.instruments import * #kill_mirror_jacks, m3_ydi, m3_ydo, m3_yu,
 from BMM.user_ns.motors      import *
 from BMM.user_ns.suspenders  import suspenders
 
+ABUNDANCE_OF_CAUTION = 2
+
 def show_edges():
     show_reference_wheel()
     print()
@@ -303,7 +305,7 @@ def change_edge(el, focus=False, edge='K', energy=None, slits=False, mirror=True
                 user_ns['ks'].cycle('m3')
 
             problem_is_dcm = False
-            for m in (dcm.pitch, dcm.roll, dcm.perp, dcm.roll, dcm.bragg):
+            for m in (dcm.pitch, dcm.roll, dcm.perp, dcm.para, dcm.bragg):
                 if m.amfe.get() or m.amfae.get():
                     problem_is_dcm = True
             if problem_is_dcm is True:
@@ -513,7 +515,7 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         else:
             dcm.bragg_small_move(direction=-1, verbose=True)
 
-        yield from mv(dcm.roll, predict_roll(energy+target))
+        yield from mv(dcm.roll, 3.5) #predict_roll(energy+target))
         yield from wiggle_bct()
         yield from mv(dcm.bragg.acceleration, BMMuser.acc_slow)
         print(f'mmode={mode}, edge={energy+target}, reference={el}, bender={bender}, insist={insist}, no_ref={no_ref}')
@@ -576,10 +578,20 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         #     print(f'Moving M2 lateral to {latpos:.3f}')
         #     yield from mv(m2.lateral, latpos)
 
+
+        if with_xspress3:
+            BMMuser.verify_roi(xs, el, edge)
+            BMMuser.verify_roi(xs1, el, edge)
+            #BMMuser.verify_roi(xs7, el, edge)
+            BMMuser.set_element(el, edge)
+
+        
         ############################
         # run a rocking curve scan #
         ############################
         if tune:
+            print(f'pausing {ABUNDANCE_OF_CAUTION} seconds before rocking curve scan')
+            yield from mv(user_ns['busy'], ABUNDANCE_OF_CAUTION)
             print('Optimizing rocking curve...')
             yield from mv(dcm.pitch.kill_cmd, 1)
             yield from mv(dcm.pitch, approximate_pitch(energy+target, xtal=dcm._crystal))
@@ -593,6 +605,8 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         # run a slit height scan #
         ##########################
         if slits:
+            print(f'pausing {ABUNDANCE_OF_CAUTION} seconds before slit_height scan')
+            yield from mv(user_ns['busy'], ABUNDANCE_OF_CAUTION)
             print('Optimizing slits height...')
             ok = yield from wiggle_bct()
             if ok is False:
@@ -604,6 +618,8 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         # run a mirror pitch scan #
         ###########################
         if mirror:
+            print(f'pausing {ABUNDANCE_OF_CAUTION} seconds before mirror scan')
+            yield from mv(user_ns['busy'], ABUNDANCE_OF_CAUTION)
             if mode in ('A', 'XRD'):
                 mirror = 'm2'
             else:
@@ -617,13 +633,16 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         # run a slit horizontal center scan if focused #
         ################################################
         if mode in ('A', 'B', 'C'):
-            #yield from mv(m2.yaw, 0.129)
-            yield from mv(m2.yaw, 0.0988)
-            yield from mv(m2.lateral, -1.2459)
+            #yield from mv(m2.yaw, 0.0988)
+            #yield from mv(m2.lateral, -1.2459)
             if no_hslits is False:
+                print(f'pausing {ABUNDANCE_OF_CAUTION} seconds before hcenter scan')
+                yield from mv(user_ns['busy'], ABUNDANCE_OF_CAUTION)
                 yield from hcenter(move=True)
                 kafka.message({'close': 'last'})
             if do_dcmroll is True:
+                print(f'pausing {ABUNDANCE_OF_CAUTION} seconds before dcmroll scan')
+                yield from mv(user_ns['busy'], ABUNDANCE_OF_CAUTION)
                 yield from dcmroll(move=True)
                 kafka.message({'close': 'last'})
                 
@@ -644,14 +663,9 @@ Maybe the beam has dumped, maybe there is a motor controller problem.  Check scr
         ##################################
         #if not xrd:
         ## reference channel
-        print('Moving reference foil...')
+        #print('Moving reference foil...')
         #yield from rois.select_plan(el)   # DEPRECATED
         ## Xspress3
-        if with_xspress3:
-            BMMuser.verify_roi(xs, el, edge)
-            BMMuser.verify_roi(xs1, el, edge)
-            #BMMuser.verify_roi(xs7, el, edge)
-            BMMuser.set_element(el, edge)
         ## feedback
         show_edges()
 

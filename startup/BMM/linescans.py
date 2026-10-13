@@ -8,7 +8,7 @@ except ImportError:
 
 import bluesky
 
-from bluesky.plans import rel_scan
+from bluesky.plans import rel_scan, scan
 from bluesky.plan_stubs import sleep, mv, null, mvr
 from bluesky import __version__ as bluesky_version
 import numpy, os, datetime
@@ -17,6 +17,7 @@ from lmfit.models import SkewedGaussianModel, RectangleModel
 import matplotlib
 import matplotlib.pyplot as plt
 
+from rich import print as cprint
 
 
 from bluesky.preprocessors import subs_decorator, finalize_wrapper
@@ -27,6 +28,7 @@ user_ns = vars(user_ns_module)
 from bmm_tools.tools.misc     import now
 from bmm_tools.tools.messages import *  # error_msg et al. + boxedtext
 from bmm_tools.tools.animated_prompt import PROMPTNC, animated_prompt
+#from bmm_tools.tools.math     import peak, com
 
 from BMM.resting_state import resting_state_plan
 from BMM.logging       import BMM_log_info, BMM_msg_hook
@@ -43,6 +45,8 @@ from BMM.user_ns.dwelltime   import with_ic0, with_ic1, with_ic2
 from BMM.user_ns.instruments import m2, m3, slits3, xafs_wheel
 from BMM.user_ns.motors      import *
 from BMM.user_ns.suspenders  import suspenders
+
+ABUNDANCE_OF_CAUTION = 0
 
 def get_mode():
     if m2.vertical.readback.get() < 0: # this is a focused mode
@@ -194,18 +198,6 @@ def pluck(suggested_motor=None):
 
         
 
-from scipy.ndimage import center_of_mass
-def com(signal):
-    '''Return the center of mass of a 1D array. This is used to find the
-    center of rocking curve and slit height scans.'''
-    return int(center_of_mass(signal)[0])
-import pandas
-def peak(signal):
-    '''Return the index of the maximum of a 1D array. This is used to find the
-    center of rocking curve and slit height scans.'''
-    return pandas.Series.idxmax(signal)
-
-
 def wiggle_bct(tries=3):
     '''Wiggle the dm3_bct motor to see if it prompts an amplifier fault.
     If it does, cycle the dm3 killswitch.  Give up after a few tries.
@@ -245,7 +237,7 @@ def prepare_alignment_scan(inttime=0.1):
     yield from mv(_locked_dwell_time, inttime)
     
 
-def fetch_peak_position_via_redis(maxtries=7, verbose=True):
+def fetch_peak_position_via_redis(maxtries=5, verbose=True):
     '''Retrieve a result found by the Kafka consumer and posted to redis.
 
     The function prepare_alignment_scan() should have been called
@@ -256,17 +248,20 @@ def fetch_peak_position_via_redis(maxtries=7, verbose=True):
     the kafka consumer some time to do its thing.
 
     '''
-    time.sleep(0.25)
+    color = 'thistle3'
+    time.sleep(2.0)
+    cprint(f"[{color}]obtaining results...[/{color}]")
     top = float(rkvs.get('BMM:peakposition').decode('utf8'))
     count = 0
     while top < UNSET_PEAK_POSITION:
-        this_pause = 0.1 * 2**count
+        this_pause = 0.1 * 2**(count+3)
         time.sleep(this_pause)
         top = float(rkvs.get('BMM:peakposition').decode('utf8'))
         count += 1
-        if verbose: print(f"{count = }, {top = }, {this_pause = }", flush=True)
+        if verbose: cprint(f"[{color}]{count = }, {top = }, {this_pause = }[/{color}]", flush=True)
         if count > maxtries:
             return(None)
+    if verbose: cprint(f"[{color}]obtained results {datetime.datetime.now()}[/{color}]")
     return top
 
 def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.0, choice='peak'):
@@ -340,10 +335,11 @@ def slit_height(start=-1.5, stop=1.5, nsteps=31, move=False, force=False, slp=1.
                                'motor_name' : motor.name,
                                'signal' : 'I0',
                                'choice' : choice})
+                yield from sleep(ABUNDANCE_OF_CAUTION)
                 maxtries = 7
                 top = fetch_peak_position_via_redis(maxtries)
                 if top is None:
-                    totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                    totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                     text = f'Failed to find slit height peak position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                     error_msg(text)
                     raise ValueError(text)
@@ -456,10 +452,11 @@ def mirror_pitch(start=None, stop=None, nsteps=41, mirror='m3', move=False, forc
                                'motor_name' : motor.name,
                                'signal' : 'I0',
                                'choice' : choice})
-                maxtries = 7
+                yield from sleep(ABUNDANCE_OF_CAUTION)
+                maxtries = 9
                 top = fetch_peak_position_via_redis(maxtries)
                 if top is None:
-                    totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                    totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                     text = f'Failed to find mirror pitch peak position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                     error_msg(text)
                     raise ValueError(text)
@@ -472,6 +469,7 @@ def mirror_pitch(start=None, stop=None, nsteps=41, mirror='m3', move=False, forc
                     if action[0].lower() == 'n' or action[0].lower() == 'q':
                         return(yield from null())
                 yield from pluck(suggested_motor=motor)
+            kafka.message({'verify_sql': True, 'uid': uid})
         yield from scan_pitch()
 
     def cleanup_plan():
@@ -573,21 +571,22 @@ def rocking_curve(start=-0.10, stop=0.10, nsteps=101, detector='I0', choice='pea
             uid = yield from rel_scan(dets, motor, start, stop, nsteps, md={**xdi, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka.message({'linescan': 'stop',})
             kafka.message({'close': 'last'})
-            yield from sleep(1.0)
             kafka.message({'peakfit' : True,
                            'uid' : uid,
                            'motor_name' : 'dcm_pitch',
                            'signal' : 'I0',
                            'choice' : choice})
+            yield from sleep(ABUNDANCE_OF_CAUTION)
 
             maxtries = 7
             top = fetch_peak_position_via_redis(maxtries=maxtries)
             if top is None:
-                totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                 text = f'Failed to find rocking curve peak position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                 error_msg(text)
                 raise ValueError(text)
             yield from mv(motor, top)
+            kafka.message({'verify_sql': True, 'uid': uid})
                 
             yield from mv(motor.kill_cmd, 1)
             yield from sleep(1.0)
@@ -683,7 +682,8 @@ def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak')
                            'motor' : motor.name,
                            'detector' : 'I0',
                            'fluo_detector': None,})
-            uid = yield from rel_scan([*ION_CHAMBERS], motor, start, stop, nsteps, md={**xdi, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            #uid = yield from rel_scan([*ION_CHAMBERS], motor, start, stop, nsteps, md={**xdi, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
+            uid = yield from scan([*ION_CHAMBERS], motor, 1.0, 2.2, 25, md={**xdi, 'plan_name' : f'rel_scan linescan {motor.name} I0'})
             kafka.message({'linescan': 'stop',})
             
             user_ns['RE'].msg_hook = BMM_msg_hook
@@ -695,10 +695,11 @@ def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak')
                                'motor_name' : motor.name,
                                'signal' : 'I0',
                                'choice' : choice})
+                yield from sleep(ABUNDANCE_OF_CAUTION)
                 maxtries = 7
                 top = fetch_peak_position_via_redis(maxtries)
                 if top is None:
-                    totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                    totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                     text = f'Failed to find hcenter peak position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                     error_msg(text)
                     raise ValueError(text)
@@ -734,7 +735,7 @@ def hcenter(start=-1, stop=1, nsteps=41, move=False, force=False, choice='peak')
 
 
 
-def dcmroll(start=-1.5, stop=1.5, nsteps=41, move=False, force=False, choice='peak'):
+def dcmroll(start=-2, stop=2, nsteps=41, move=False, force=False, choice='peak'):
     '''Perform a relative scan of dcm.roll to optimize the signal going
     through the slits into I0.
 
@@ -794,14 +795,16 @@ def dcmroll(start=-1.5, stop=1.5, nsteps=41, move=False, force=False, choice='pe
                                'motor_name' : motor.name,
                                'signal' : 'I0',
                                'choice' : choice})
+                yield from sleep(ABUNDANCE_OF_CAUTION)
                 maxtries = 7
                 top = fetch_peak_position_via_redis(maxtries)
                 if top is None:
-                    totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                    totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                     text = f'Failed to find dcmroll peak position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                     error_msg(text)
                     raise ValueError(text)
                 yield from mv(motor, top)
+                kafka.message({'verify_sql': True, 'uid': uid})                
 
             else:
                 print()
@@ -929,11 +932,11 @@ def rectangle_scan(motor=None, start=-20, stop=20, nsteps=41, detector='It',
                                'uid'          : uid,
                                'signal'       : detector.capitalize(),
                                'motor_name'   : motor.name })
-
+                yield from sleep(ABUNDANCE_OF_CAUTION)
                 maxtries = 7
                 top = fetch_peak_position_via_redis(maxtries)
                 if top is None:
-                    totaltime = numpy.sum(0.1*2**x for x in range(1,maxtries+1))
+                    totaltime = sum(list(0.1*2**x for x in range(1,maxtries+1)))
                     text = f'Failed to find rectangle midpoint position ({maxtries} tries, {totaltime:.2f} seconds elapsed).'
                     error_msg(text)
                     raise ValueError(text)

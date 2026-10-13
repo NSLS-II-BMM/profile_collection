@@ -266,70 +266,75 @@ def peakfit(catalog=None, uid=None, motor=None, signal='I0', choice='peak', spin
     top = 0
 
     ## be sure that the stop document is written
-    t, dwti, count = None, None, 0
+    print(f"fetching data {datetime.datetime.now()}")
+    table, dwti, count = None, None, 0
     while dwti is None:
         try:
-            t = catalog[uid].primary # ['data']
-            dwti = t['dwti_dwell_time'].read()
+            table = catalog[uid].primary.read()
+            if 'dwti_dwell_time' in t:
+                dwti = table['dwti_dwell_time']
         except:
             pass
-        if dwti is not None:
-            continue
+        if t is not None:
+            break
         count  += 1
-        if count >= 5:
+        if count >= 9:
             return
-        time.sleep(1)
-        print("retrying table read in peakfit")
+        this_pause = 0.1 * 2**count
+        print(f"retrying table read in peakfit {count = }, {this_pause = }", flush=True)
+        time.sleep(this_pause)
+    print(f"obtained {datetime.datetime.now()}")
 
     if signal == 'I0':
         ylabel = 'I0'
-        sig = t[signal].read()
+        sig = table[signal]
     elif signal == 'It':
         ylabel = 'It/I0'
-        sig = t[signal].read() / t['I0'].read()
+        sig = table[signal] / table['I0']
     elif signal == 'Ir':
         ylabel = 'Ir/It'
-        sig = t[signal].read() / t['It'].read()
+        sig = table[signal] / table['It']
     elif signal == 'If':
         ylabel = 'If/I0'
         fluo_detectors = catalog[uid].metadata['start']['detectors']
         el = ''
         if '1-element SDD' in fluo_detectors:
             #for k in catalog[uid].primary['data'].keys():
-            for k in catalog[uid].primary.read().keys():
+            for k in t.keys():
                 if element_regex8.match(k):
                     el = element_regex8.match(k).groups()[0]
                     break
-            sig = t[el+'8'].read() / t['I0'].read()
+            sig = table[el+'8'] / table['I0']
         elif '4-element SDD' in fluo_detectors:
-            for k in catalog[uid].primary.read().keys():
+            for k in t.keys():
                 if element_regex1.match(k):
                     el = element_regex1.match(k).groups()[0]
                     break
-            sig = (t[el+'1'].read() +
-                   t[el+'2'].read() +
-                   t[el+'3'].read() +
-                   t[el+'4'].read()) / t['I0'].read()
+            sig = (table[el+'1'] +
+                   table[el+'2'] +
+                   table[el+'3'] +
+                   table[el+'4']) / table['I0']
         elif '7-element SDD' in fluo_detectors:
-            for k in catalog[uid].primary.read().keys():
+            for k in t.keys():
                 if element_regex1.match(k):
                     el = element_regex1.match(k).groups()[0]
                     break
-            sig = (t[el+'1'].read() +
-                   t[el+'2'].read() +
-                   t[el+'3'].read() +
-                   t[el+'4'].read() +
-                   t[el+'5'].read() +
-                   t[el+'6'].read() +
-                   t[el+'7'].read()) / t['I0'].read()
+            sig = (table[el+'1'] +
+                   table[el+'2'] +
+                   table[el+'3'] +
+                   table[el+'4'] +
+                   table[el+'5'] +
+                   table[el+'6'] +
+                   table[el+'7']) / table['I0']
     else:
         ylabel = signal
-        sig = t[signal].read()
+        sig = table[signal]
 
     if rate is True:
-        sig = sig / t['dwti_dwell_time'].read()
+        sig = sig / table['dwti_dwell_time']
 
-    positions = t[motor].read()
+    sig = numpy.array(sig)
+    positions = numpy.array(table[motor])
     if choice.lower() == 'com':
         position = com(sig)
         top      = positions[position]
@@ -344,6 +349,7 @@ def peakfit(catalog=None, uid=None, motor=None, signal='I0', choice='peak', spin
         position = peak(sig)
         top      = positions[position]
 
+    print(f"posting results {datetime.datetime.now()}")
     rkvs.set('BMM:peakposition', float(top))
     print(f'*** peak found at {motor} position {top}')
 
@@ -387,10 +393,10 @@ def rectanglefit(catalog=None, uid=None, motor=None, signal='It', drop=None, aw=
     top = 0
 
     ## be sure that the stop document is written
-    t, count = None, 0
+    table, count = None, 0
     while t is None:
         try:
-            t = catalog[uid].primary
+            table = catalog[uid].primary.read()
         except:
             pass
         if t is not None:
@@ -400,16 +406,16 @@ def rectanglefit(catalog=None, uid=None, motor=None, signal='It', drop=None, aw=
             return
         time.sleep(1)
 
-    positions = t[motor].read()
+    positions = table[motor]
     signal = signal.capitalize()
     if signal == 'I0':
-        sig = t[signal].read()
+        sig = table[signal]
     elif signal == 'It':
-        sig = t[signal].read() / t['I0'].read()
+        sig = table[signal] / table['I0']
     elif signal == 'Ir':
-        sig = t[signal].read() / t['It'].read()
+        sig = table[signal] / table['It']
     else:
-        sig = t[signal].read()
+        sig = table[signal]
 
     if drop is not None:
         positions = positions[:-drop]
@@ -418,11 +424,13 @@ def rectanglefit(catalog=None, uid=None, motor=None, signal='It', drop=None, aw=
     #if float(sig[2]) > list(sig)[-2] :
     #    ss       = -(sig - sig[2])
     #else:
-    ss       = sig - sig[2]
-
+    ss        = sig - sig[2]
+    ss        = numpy.array(ss)
+    positions = numpy.array(positions)
+    
     mod    = RectangleModel(form='erf')
-    pars   = mod.guess(ss, x=numpy.array(positions))
-    out    = mod.fit(ss, pars, x=numpy.array(positions))
+    pars   = mod.guess(ss, x=positions)
+    out    = mod.fit(ss, pars, x=positions)
     print(out.fit_report(min_correl=0))
 
     target = float(out.params["midpoint"].value)
@@ -468,11 +476,11 @@ def stepfit(catalog=None, uid=None, motor=None, signal='It', spinner=None, fname
 
     target = 0
 
-    t, positions, count = None, None, 0
+    table, positions, count = None, None, 0
     while positions is None:
         try:
-            t  = catalog[uid].primary # ['data']
-            positions = t[motor].read()
+            table  = catalog[uid].primary.read() # ['data']
+            positions = table[motor]
         except:
             pass
         if positions is not None:
@@ -495,22 +503,22 @@ def stepfit(catalog=None, uid=None, motor=None, signal='It', spinner=None, fname
         signal = 'monitor'
 
     if signal == 'I0':
-        sig = t[signal].read()
+        sig = table[signal]
         thissig = 'I0'
     elif signal == 'It':
-        sig = t[signal].read() / t['I0'].read()
+        sig = table[signal] / table['I0']
         thissig = 'It/I0'
     elif signal == 'Ir':
-        sig = t[signal].read() / t['It'].read()
+        sig = table[signal] / table['It']
         thissig = 'Ir/It'
     elif signal == 'monitor':
-        sig = t[signal].read()
+        sig = table[signal]
         thissig = 'monitor'
     elif signal == 'mythen_dir':
-        sig = t['dir'].read() / t['dwti_dwell_time'].read()
+        sig = table['dir'] / table['dwti_dwell_time']
         thissig = 'monitor'
     else:
-        sig = t[signal].read()
+        sig = table[signal]
         thissig = signal
 
     if signal == 'monitor' and backwards is True:
@@ -534,9 +542,12 @@ def stepfit(catalog=None, uid=None, motor=None, signal='It', spinner=None, fname
         ss     = sig - fix
         inverted    = ''
 
+    ss        = numpy.array(ss)
+    positions = numpy.array(positions)
+        
     mod    = StepModel(form='erf')
-    pars   = mod.guess(ss, x=numpy.array(positions))
-    out    = mod.fit(ss, pars, x=numpy.array(positions))
+    pars   = mod.guess(ss, x=positions)
+    out    = mod.fit(ss, pars, x=positions)
     print(out.fit_report(min_correl=0.2))
 
     target = float(out.params['center'].value)

@@ -15,7 +15,7 @@ import nslsii
 import nslsii.kafka_utils
 
 from tools import echo_slack, next_index, file_exists, profile_configuration, rkvs, facility_dict, experiment_folder
-from slack import img_to_slack, post_to_slack, refresh_slack, describe_slack, test_slack
+from slack import img_to_slack, post_to_slack, refresh_slack, describe_slack, test_slack, bmmbot
 from nslsii.utils import open_redis_client
 
 import bmm_tools.tools.db
@@ -25,6 +25,8 @@ from tiled.client import from_profile, from_uri
 bmm_catalog = from_uri('https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/migration')
 bmm_tools.tools.db.bmm_catalog = bmm_catalog
 from bmm_tools.tools.db import file_resource
+
+bmm_mongo = from_uri('https://tiled.nsls2.bnl.gov/api/v1/metadata/bmm/raw')
 
 
 # #import redis
@@ -252,8 +254,35 @@ def manage_files_from_kafka_messages(beamline_acronym):
                 else:
                     logger.info('could not find requested file')
                         
-                        
 
+            elif 'verify_sql' in message:
+                uid = message['uid']
+                try:
+                    mongo_primary = bmm_mongo[uid].primary['data']
+                    mongo_ok = list(mongo_primary) != []
+                    sql_primary = bmm_catalog[uid].primary.read()
+                    sql_ok = list(sql_primary) != []
+                    primary_ok = True
+                    if sql_ok is False and mongo_ok is True:
+                        primary_ok = False
+                        bmmbot.chat(f':rotating_light: the primary stream of `{uid}` is present in mongo and absent in SQL :rotating_light:')
+                        print(f'the primary stream of `{uid}` is present in mongo and absent in SQL')
+                        
+                    mongo_baseline = bmm_mongo[uid].baseline['data']
+                    mongo_ok = list(mongo_baseline) != []
+                    sql_baseline = bmm_catalog[uid].baseline.read()
+                    sql_ok = list(sql_baseline) != []
+                    baseline_ok = True
+                    if sql_ok is False and mongo_ok is True:
+                        baseline_ok = False
+                        bmmbot.chat(f':rotating_light: the baseline stream of `{uid}` is present in mongo and absent in SQL :rotating_light:')
+                        print(f'the baseline stream of `{uid}` is present in mongo and absent in SQL')
+
+                    if primary_ok is True and baseline_ok is True:
+                        print(f"{uid = } looks fine.")
+                except:
+                    print(f"{uid = } is not an available record")
+                    
             elif 'touch' in message:
                 target = message['touch']
                 this = open(target, 'a')
@@ -265,7 +294,10 @@ def manage_files_from_kafka_messages(beamline_acronym):
                     include_yield = True
                 else:
                     include_yield = False
-                xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], logger=logger, include_yield=include_yield) # , filename=message['filename']
+                if 'mongo' in message and message['mongo'] is True:
+                    xdi.to_xdi(catalog=bmm_mongo, uid=message['uid'], logger=logger, include_yield=include_yield) # , filename=message['filename']
+                else:
+                    xdi.to_xdi(catalog=bmm_catalog, uid=message['uid'], logger=logger, include_yield=include_yield) # , filename=message['filename']
 
             elif 'everyxas' in message:
                 xdi.everyxas(catalog=bmm_catalog, gup=message['gup'], since=message['since'], until=message['until'], logger=logger)

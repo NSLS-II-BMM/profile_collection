@@ -661,17 +661,17 @@ def change_xtals(xtal=None):
      yield from dcm.kill_plan()
      yield from sleep(1.0) 
      if xtal == 'Si(111)':
-          yield from mv(dcm.pitch, 1.3,
+          yield from mv(dcm.pitch, 1.5,
                         dcm.roll,  profile_configuration['dcm']['roll_111'],
                         dcm.x,     0.5    )
-          #dcm._crystal = '111'
           dcm.set_crystal('111')  # set d-spacing and bragg offset
+          #dcm._crystal = '111'
      elif xtal == 'Si(311)':
           yield from mv(dcm.pitch, 3.9195,
                         dcm.roll,  profile_configuration['dcm']['roll_311'],
                         dcm.x,     65.3    )
-          #dcm._crystal = '311'
           dcm.set_crystal('311')  # set d-spacing and bragg offset
+          #dcm._crystal = '311'
           
      yield from sleep(1.0) 
      yield from dcm.kill_plan()
