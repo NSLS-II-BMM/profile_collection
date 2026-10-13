@@ -327,6 +327,7 @@ class BMMXspress3DetectorBase(Xspress3Trigger, Xspress3Detector):
         res = super().describe()
         for channel in self.iterate_channels():
             res[channel.name+'_xrf']["shape"] = (1, 4096)
+            res[channel.name+'_xrf']["dims"] = ("frame", "bin_count")
             res[channel.name+'_xrf']['dtype_str'] = '<f8'
         return res
 
