@@ -2,7 +2,7 @@
 channels = ["conda-forge"]
 description = "Beamline profile for xf06bm"
 name = "bmm-profile-collection"
-platforms = [{ platform = "linux-64", glibc = "2.17" }]
+platforms = [{ platform = "linux-64" }]
 version = "2026.3.0"
 requires-pixi = ">=0.82.1"
 
